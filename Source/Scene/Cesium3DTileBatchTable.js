@@ -1621,6 +1621,8 @@ function getTranslucentRenderState(renderState) {
   rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
+  rs.stencilTest = StencilConstants.setCesium3DTileBit();
+  rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
 
   return RenderState.fromCache(rs);
 }

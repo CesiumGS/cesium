@@ -76,6 +76,7 @@ import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import StencilConstants from "./StencilConstants.js";
 
 var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -4482,20 +4483,26 @@ function updateShadows(model) {
   }
 }
 
-function getTranslucentRenderState(renderState) {
+function getTranslucentRenderState(model, renderState) {
   var rs = clone(renderState, true);
   rs.cull.enabled = false;
   rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
 
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    rs.stencilTest = StencilConstants.setCesium3DTileBit();
+    rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
   return RenderState.fromCache(rs);
 }
 
-function deriveTranslucentCommand(command) {
+function deriveTranslucentCommand(model, command) {
   var translucentCommand = DrawCommand.shallowClone(command);
   translucentCommand.pass = Pass.TRANSLUCENT;
   translucentCommand.renderState = getTranslucentRenderState(
+    model,
     command.renderState
   );
   return translucentCommand;
@@ -4515,10 +4522,14 @@ function updateColor(model, frameState, forceDerive) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
-        nodeCommand.translucentCommand = deriveTranslucentCommand(command);
+        nodeCommand.translucentCommand = deriveTranslucentCommand(
+          model,
+          command
+        );
         if (!scene3DOnly) {
           var command2D = nodeCommand.command2D;
           nodeCommand.translucentCommand2D = deriveTranslucentCommand(
+            model,
             command2D
           );
         }

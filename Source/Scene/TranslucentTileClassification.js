@@ -15,7 +15,6 @@ import Texture from "../Renderer/Texture.js";
 import CompareAndPackTranslucentDepth from "../Shaders/CompareAndPackTranslucentDepth.js";
 import CompositeTranslucentClassification from "../Shaders/PostProcessStages/CompositeTranslucentClassification.js";
 import BlendingState from "./BlendingState.js";
-import DerivedCommand from "./DerivedCommand.js";
 import StencilConstants from "./StencilConstants.js";
 import StencilFunction from "./StencilFunction.js";
 
@@ -451,8 +450,9 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
       continue;
     }
 
-    var derivedCommand = getDerivedCommand(command, scene, context);
-    executeCommand(derivedCommand.depthOnlyCommand, scene, context, passState);
+    // Depth-only commands are created for all translucent 3D Tiles commands
+    var depthOnlyCommand = command.derivedCommands.depth.depthOnlyCommand;
+    executeCommand(depthOnlyCommand, scene, context, passState);
   }
 
   this._frustumsDrawn += this._hasTranslucentDepth ? 1 : 0;
@@ -584,23 +584,4 @@ TranslucentTileClassification.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function getDerivedCommand(command, scene, context) {
-  var derivedCommands = command.derivedCommands;
-  var depthForClassification = derivedCommands.depthForClassification;
-  if (!defined(depthForClassification)) {
-    depthForClassification = derivedCommands.depthForClassification = DerivedCommand.createDepthOnlyDerivedCommand(
-      scene,
-      command,
-      context,
-      derivedCommands.depthForClassification
-    );
-
-    var depthOnlyCommand = depthForClassification.depthOnlyCommand;
-    var rs = RenderState.getState(depthOnlyCommand.renderState);
-    rs.stencilTest = StencilConstants.setCesium3DTileBit();
-
-    depthOnlyCommand.renderState = RenderState.fromCache(rs);
-  }
-  return depthForClassification;
-}
 export default TranslucentTileClassification;
