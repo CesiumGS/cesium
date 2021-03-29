@@ -15,11 +15,13 @@ import { ClearCommand } from "../../Source/Cesium.js";
 import { Framebuffer } from "../../Source/Cesium.js";
 import { Pass } from "../../Source/Cesium.js";
 import { PixelDatatype } from "../../Source/Cesium.js";
+import { RenderState } from "../../Source/Cesium.js";
 import { Texture } from "../../Source/Cesium.js";
 import { ClassificationType } from "../../Source/Cesium.js";
 import { GroundPolylinePrimitive } from "../../Source/Cesium.js";
 import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
+import { StencilConstants } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 
 describe(
@@ -96,6 +98,14 @@ describe(
       scene.render(); // clear any afterRender commands
       scene.camera.lookAt(lookPosition, lookOffset);
 
+      var renderState = RenderState.fromCache({
+        stencilTest: StencilConstants.setCesium3DTileBit(),
+        stencilMask: StencilConstants.CESIUM_3D_TILE_MASK,
+        depthTest: {
+          enabled: true,
+        },
+      });
+
       var primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
@@ -112,6 +122,7 @@ describe(
         appearance: new PerInstanceColorAppearance({
           translucent: true,
           flat: true,
+          renderState: renderState,
         }),
         asynchronous: false,
       });
