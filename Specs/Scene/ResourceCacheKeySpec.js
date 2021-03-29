@@ -18,7 +18,7 @@ describe("ResourceCacheKey", function () {
       resource: schemaResource,
     });
 
-    expect(cacheKey).toBe(schemaUri);
+    expect(cacheKey).toBe("external-schema:" + schemaUri);
   });
 
   it("getSchemaCacheKey works for JSON schemas", function () {
@@ -26,7 +26,7 @@ describe("ResourceCacheKey", function () {
       schema: schemaJson,
     });
 
-    expect(cacheKey).toEqual(JSON.stringify(schemaJson));
+    expect(cacheKey).toEqual("embedded-schema:" + JSON.stringify(schemaJson));
   });
 
   it("getSchemaCacheKey throws if neither options.schema nor options.resource are defined", function () {
@@ -49,7 +49,7 @@ describe("ResourceCacheKey", function () {
       resource: bufferResource,
     });
 
-    expect(cacheKey).toEqual(bufferUri);
+    expect(cacheKey).toEqual("external-buffer:" + bufferUri);
   });
 
   it("getExternalBufferCacheKey throws if resource is undefined", function () {
@@ -64,7 +64,7 @@ describe("ResourceCacheKey", function () {
       bufferId: bufferId,
     });
 
-    expect(cacheKey).toEqual(parentUri + "-buffer-0");
+    expect(cacheKey).toEqual("embedded-buffer:" + parentUri + "-buffer-0");
   });
 
   it("getEmbeddedBufferCacheKey throws if parentResource is undefined", function () {

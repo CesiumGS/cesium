@@ -41,10 +41,10 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
   //>>includeEnd('debug');
 
   if (defined(schema)) {
-    return JSON.stringify(schema);
+    return "embedded-schema:" + JSON.stringify(schema);
   }
 
-  return getExternalResourceCacheKey(resource);
+  return "external-schema:" + getExternalResourceCacheKey(resource);
 };
 
 /**
@@ -63,7 +63,7 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
   Check.typeOf.object("options.resource", resource);
   //>>includeEnd('debug');
 
-  return getExternalResourceCacheKey(resource);
+  return "external-buffer:" + getExternalResourceCacheKey(resource);
 };
 
 /**
@@ -86,7 +86,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
   //>>includeEnd('debug');
 
   var parentCacheKey = getExternalResourceCacheKey(parentResource);
-  return parentCacheKey + "-buffer-" + bufferId;
+  return "embedded-buffer:" + parentCacheKey + "-buffer-" + bufferId;
 };
 
 export default ResourceCacheKey;

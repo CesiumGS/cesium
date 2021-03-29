@@ -40,7 +40,9 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   it("throws if neither options.schema nor options.resource are defined", function () {
     expect(function () {
-      return new MetadataSchemaLoader({});
+      return new MetadataSchemaLoader({
+        cacheKey: "cacheKey",
+      });
     }).toThrowDeveloperError();
   });
 
