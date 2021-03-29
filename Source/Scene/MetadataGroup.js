@@ -5,9 +5,6 @@ import MetadataEntity from "./MetadataEntity.js";
 
 /**
  * Metadata about a group of content.
- * <p>
- * Implements the {@link MetadataEntity} interface.
- * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the group.

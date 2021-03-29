@@ -5,9 +5,6 @@ import MetadataEntity from "./MetadataEntity.js";
 
 /**
  * Metadata about the tileset.
- * <p>
- * Implements the {@link MetadataEntity} interface.
- * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.tileset The tileset metadata JSON object.
