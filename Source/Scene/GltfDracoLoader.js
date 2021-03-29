@@ -127,7 +127,7 @@ GltfDracoLoader.prototype.load = function () {
         that.unload();
         return;
       }
-      // Now wait for the Draco resources to be created in the update loop.
+      // Now wait for the Draco resources to be created during processing.
       that._bufferViewTypedArray = bufferViewLoader.typedArray;
     })
     .otherwise(function (error) {
@@ -143,11 +143,11 @@ function handleError(dracoLoader, error) {
 }
 
 /**
- * Updates the resource.
+ * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfDracoLoader.prototype.update = function (frameState) {
+GltfDracoLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');

@@ -171,7 +171,7 @@ function loadFromDraco(vertexBufferLoader) {
         vertexBufferLoader.unload();
         return;
       }
-      // Now wait for the GPU buffer to be created in the update loop.
+      // Now wait for the GPU buffer to be created during processing.
       var decodedData = dracoLoader.decodedData;
       var dracoSemantic = vertexBufferLoader._dracoAttributeSemantic;
       vertexBufferLoader._typedArray = decodedData[dracoSemantic];
@@ -199,7 +199,7 @@ function loadFromBufferView(vertexBufferLoader) {
         vertexBufferLoader.unload();
         return;
       }
-      // Now wait for the GPU buffer to be created in the update loop.
+      // Now wait for the GPU buffer to be created during processing.
       vertexBufferLoader._typedArray = bufferViewLoader.typedArray;
     })
     .otherwise(function (error) {
@@ -243,11 +243,11 @@ function createVertexBuffer(typedArray, context) {
 var scratchVertexBufferJob = new CreateVertexBufferJob();
 
 /**
- * Updates the resource.
+ * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfVertexBufferLoader.prototype.update = function (frameState) {
+GltfVertexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');

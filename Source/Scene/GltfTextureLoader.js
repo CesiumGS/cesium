@@ -163,7 +163,7 @@ GltfTextureLoader.prototype.load = function () {
         that.unload();
         return;
       }
-      // Now wait for the GPU texture to be created in the update loop.
+      // Now wait for the GPU texture to be created during processing.
       that._image = imageLoader.image;
     })
     .otherwise(function (error) {
@@ -290,11 +290,11 @@ function createTexture(gltf, textureInfo, image, context) {
 var scratchTextureJob = new CreateTextureJob();
 
 /**
- * Updates the resource.
+ * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfTextureLoader.prototype.update = function (frameState) {
+GltfTextureLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');

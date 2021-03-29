@@ -145,7 +145,7 @@ function loadFromDraco(indexBufferLoader) {
         indexBufferLoader.unload();
         return;
       }
-      // Now wait for the GPU buffer to be created in the update loop.
+      // Now wait for the GPU buffer to be created during processing.
       var decodedIndices = dracoLoader.decodedData.indices;
       indexBufferLoader._typedArray = createIndicesTypedArray(
         indexBufferLoader,
@@ -180,7 +180,7 @@ function loadFromBufferView(indexBufferLoader) {
         indexBufferLoader.unload();
         return;
       }
-      // Now wait for the GPU buffer to be created in the update loop.
+      // Now wait for the GPU buffer to be created during processing.
       var bufferViewTypedArray = bufferViewLoader.typedArray;
       indexBufferLoader._typedArray = createIndicesTypedArray(
         indexBufferLoader,
@@ -261,11 +261,11 @@ function createIndexBuffer(typedArray, indexDatatype, context) {
 var scratchIndexBufferJob = new CreateIndexBufferJob();
 
 /**
- * Updates the resource.
+ * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfIndexBufferLoader.prototype.update = function (frameState) {
+GltfIndexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');

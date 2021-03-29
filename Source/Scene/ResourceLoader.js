@@ -63,11 +63,11 @@ ResourceLoader.prototype.load = function () {
 ResourceLoader.prototype.unload = function () {};
 
 /**
- * Updates the resource.
+ * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-ResourceLoader.prototype.update = function (frameState) {};
+ResourceLoader.prototype.process = function (frameState) {};
 
 /**
  * Constructs a {@link RuntimeError} from an errorMessage and an error.

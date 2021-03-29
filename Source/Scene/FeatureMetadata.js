@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import MetadataTable from "./MetadataTable.js";
 import MetadataTexture from "./MetadataTexture.js";
+import FeatureTable from "./FeatureTable.js";
 
 /**
  * An object containing per-feature metadata.
@@ -39,10 +39,9 @@ function FeatureMetadata(options) {
     for (var featureTableId in extension.featureTables) {
       if (extension.featureTables.hasOwnProperty(featureTableId)) {
         var featureTable = extension.featureTables[featureTableId];
-        featureTables[featureTableId] = new MetadataTable({
-          count: featureTable.count,
-          properties: featureTable.properties,
-          class: schema.classes[featureTable.class],
+        featureTables[featureTableId] = new FeatureTable({
+          featureTable: featureTable,
+          schema: schema,
           bufferViews: options.bufferViews,
         });
       }
@@ -90,7 +89,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * Feature tables.
    *
    * @memberof FeatureMetadata.prototype
-   * @type {Object.<String, MetadataTable>}
+   * @type {Object.<String, FeatureTable>}
    * @readonly
    * @private
    */

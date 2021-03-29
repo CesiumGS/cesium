@@ -320,11 +320,11 @@ function loadSchema(featureMetadataLoader) {
 }
 
 /**
- * Updates the resource.
+ * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfFeatureMetadataLoader.prototype.update = function (frameState) {
+GltfFeatureMetadataLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
@@ -338,7 +338,7 @@ GltfFeatureMetadataLoader.prototype.update = function (frameState) {
 
   for (var i; i < textureLoadersLength; ++i) {
     var textureLoader = textureLoaders[i];
-    textureLoader.update(frameState);
+    textureLoader.process(frameState);
   }
 };
 
