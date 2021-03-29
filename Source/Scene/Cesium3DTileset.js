@@ -27,6 +27,7 @@ import Axis from "./Axis.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
+import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
@@ -39,7 +40,6 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
-import Metadata3DTilesExtension from "./Metadata3DTilesExtension.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -924,12 +924,11 @@ function Cesium3DTileset(options) {
 
   /**
    * If the 3DTILES_metadata extension is used, this stores
-   * a {@link Metadata3DTilesExtension} object to access metadata.
+   * a {@link Cesium3DTilesetMetadata} object to access metadata.
    *
-   * @type {Metadata3DTilesExtension}
-   * @private
+   * @type {Cesium3DTilesetMetadata}
    */
-  this._metadataExtension = undefined;
+  this.metadata = undefined;
 
   this._schemaLoader = undefined;
 
@@ -1873,7 +1872,7 @@ function processMetadataExtension(tileset, tilesetJson) {
   tileset._schemaLoader = schemaLoader;
 
   return schemaLoader.promise.then(function (schemaLoader) {
-    tileset._metadataExtension = new Metadata3DTilesExtension({
+    tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
       extension: extension,
     });
@@ -2719,106 +2718,6 @@ Cesium3DTileset.prototype.hasExtension = function (extensionName) {
   }
 
   return this._extensionsUsed.indexOf(extensionName) > -1;
-};
-
-/**
- * Check if a property in the <code>3DTILES_metadata.tileset</code> exists.
- *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
- */
-Cesium3DTileset.prototype.hasProperty = function (propertyId) {
-  var metadata = this._metadataExtension;
-  if (!defined(metadata)) {
-    return false;
-  }
-
-  var tilesetMetadata = metadata.tileset;
-  if (!defined(metadata)) {
-    return false;
-  }
-
-  return tilesetMetadata.hasProperty(propertyId);
-};
-
-/**
- * Get a list of property IDs from the <code>3DTILES_metadata.tileset</code>
- * object. Returns an array of property IDs.
- *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
- */
-Cesium3DTileset.prototype.getPropertyIds = function () {
-  var metadata = this._metadataExtension;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-
-  var tilesetMetadata = metadata.tileset;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-
-  return tilesetMetadata.getPropertyIds();
-};
-
-/**
- * Get a property from the <code>3DTILES_metadata.tileset</code> object.
- * Returns a copy of the value of the property with the given ID.
- * <p>
- * If the property is normalized the normalized value is returned.
- * </p>
- *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
- */
-Cesium3DTileset.prototype.getProperty = function (propertyId) {
-  var metadata = this._metadataExtension;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-
-  var tilesetMetadata = metadata.tileset;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-
-  return tilesetMetadata.getProperty(propertyId);
-};
-
-/**
- * Get a property from the <code>3DTILES_metadata.tileset</code> object.
- * Returns a copy of the value of the property with the given semantic.
- *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
- */
-Cesium3DTileset.prototype.getPropertyBySemantic = function (semantic) {
-  var metadata = this._metadataExtension;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-
-  var tilesetMetadata = metadata.tileset;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-
-  return tilesetMetadata.getPropertyBySemantic(semantic);
-};
-
-/**
- * Get the metadata schema from the <code>3DTILES_metadata</code> extension
- * if present.
- *
- * @return {MetadataSchema} The metadata schema if it exists, otherwise <code>undefined</code>
- */
-Cesium3DTileset.prototype.getSchema = function () {
-  var metadata = this._metadataExtension;
-  if (!defined(metadata)) {
-    return undefined;
-  }
-  return metadata.schema;
 };
 
 /**

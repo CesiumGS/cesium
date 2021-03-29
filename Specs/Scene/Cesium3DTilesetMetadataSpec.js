@@ -1,9 +1,9 @@
 import {
-  Metadata3DTilesExtension,
+  Cesium3DTilesetMetadata,
   MetadataSchema,
 } from "../../Source/Cesium.js";
 
-describe("Scene/Metadata3DTilesExtension", function () {
+describe("Scene/Cesium3DTilesetMetadata", function () {
   var schemaJson = {
     classes: {
       city: {
@@ -33,7 +33,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
   it("creates 3D Tiles metadata with default values", function () {
     var schema = new MetadataSchema(schemaJson);
 
-    var metadata = new Metadata3DTilesExtension({
+    var metadata = new Cesium3DTilesetMetadata({
       extension: {},
       schema: schema,
     });
@@ -98,7 +98,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
 
     var schema = new MetadataSchema(schemaJson);
 
-    var metadata = new Metadata3DTilesExtension({
+    var metadata = new Cesium3DTilesetMetadata({
       extension: extension,
       schema: schema,
     });
@@ -130,7 +130,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
 
   it("constructor throws without extension", function () {
     expect(function () {
-      return new Metadata3DTilesExtension();
+      return new Cesium3DTilesetMetadata();
     }).toThrowDeveloperError();
   });
 });

@@ -9,17 +9,19 @@ import MetadataTileset from "./MetadataTileset.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles.
  * </p>
+ * <p>
+ * This object represents the <code>3DTILES_metadata</code> object which
+ * contains the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link MetadataGroup}), and metadata statistics (dictionary)
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.extension The extension JSON object.
  * @param {MetadataSchema} options.schema The parsed schema.
  *
- * @alias Metadata3DTilesExtension
+ * @alias Cesium3DTilesetMetadata
  * @constructor
- *
- * @private
  */
-function Metadata3DTilesExtension(options) {
+function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var extension = options.extension;
 
@@ -62,14 +64,13 @@ function Metadata3DTilesExtension(options) {
   this._extensions = extension.extensions;
 }
 
-Object.defineProperties(Metadata3DTilesExtension.prototype, {
+Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   /**
    * Schema containing classes and enums.
    *
-   * @memberof Metadata3DTilesExtension.prototype
+   * @memberof Cesium3DTilesetMetadata.prototype
    * @type {MetadataSchema}
    * @readonly
-   * @private
    */
   schema: {
     get: function () {
@@ -80,10 +81,9 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
   /**
    * Metadata about groups of content.
    *
-   * @memberof Metadata3DTilesExtension.prototype
+   * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object.<String, MetadataGroup>}
    * @readonly
-   * @private
    */
   groups: {
     get: function () {
@@ -94,10 +94,9 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
   /**
    * Metadata about the tileset as a whole.
    *
-   * @memberof Metadata3DTilesExtension.prototype
+   * @memberof Cesium3DTilesetMetadata.prototype
    * @type {MetadataTileset}
    * @readonly
-   * @private
    */
   tileset: {
     get: function () {
@@ -112,10 +111,9 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
    * in the 3D Tiles spec for the full set of properties.
    * </p>
    *
-   * @memberof Metadata3DTilesExtension.prototype
+   * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   statistics: {
     get: function () {
@@ -126,10 +124,9 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof Metadata3DTilesExtension.prototype
+   * @memberof Cesium3DTilesetMetadata.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -140,10 +137,9 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof Metadata3DTilesExtension.prototype
+   * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {
@@ -152,4 +148,4 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
   },
 });
 
-export default Metadata3DTilesExtension;
+export default Cesium3DTilesetMetadata;
