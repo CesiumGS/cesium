@@ -23,7 +23,6 @@ import when from "../ThirdParty/when.js";
  * @alias ImplicitSubtree
  * @constructor
  *
- * @param {Cesium3DTileset} tileset The tileset this subtree belongs to. Used for accessing metadata properties
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
  * @param {Uint8Array} subtreeView The contents of a subtree binary in a Uint8Array.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees

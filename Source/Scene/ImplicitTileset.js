@@ -16,6 +16,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @alias ImplicitTileset
  * @constructor
  *
+ * @param {Cesium3DTileset} tileset The tileset this implicit tileset belongs to. Used for accessing metadata properties
  * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
  * @private
