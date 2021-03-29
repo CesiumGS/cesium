@@ -113,12 +113,11 @@ describe("Scene/BufferLoader", function () {
     expect(bufferLoader.typedArray).not.toBeDefined();
 
     bufferLoader.load();
-    expect(bufferLoader._state).toBe(ResourceLoaderState.LOADING);
     bufferLoader.destroy();
 
     deferredPromise.resolve(arrayBuffer);
 
     expect(bufferLoader.typedArray).not.toBeDefined();
-    expect(bufferLoader._state).toBe(ResourceLoaderState.DESTROYED);
+    expect(bufferLoader.isDestroyed()).toBe(true);
   });
 });

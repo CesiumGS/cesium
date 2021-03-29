@@ -12,30 +12,34 @@ describe("Scene/ResourceLoader", function () {
     expect(function () {
       resourceLoader.load();
     }).toThrowDeveloperError();
-    expect(function () {
-      resourceLoader.unload();
-    }).toThrowDeveloperError();
-    expect(function () {
-      resourceLoader.update();
-    }).toThrowDeveloperError();
   });
 
   it("getError from error message", function () {
+    var resourceLoader = new ResourceLoader();
     var errorMessage = "Resource failed";
-    var runtimeError = ResourceLoader.getError(errorMessage);
+    var runtimeError = resourceLoader.getError(errorMessage);
     expect(runtimeError.message).toBe(errorMessage);
   });
 
   it("getError from error message and error", function () {
+    var resourceLoader = new ResourceLoader();
     var errorMessage = "Resource failed";
     var error = new Error("404 Not Found");
-    var runtimeError = ResourceLoader.getError(errorMessage, error);
+    var runtimeError = resourceLoader.getError(errorMessage, error);
     expect(runtimeError.message).toBe("Resource failed\n404 Not Found");
   });
 
   it("getError throws if errorMessage is undefined", function () {
+    var resourceLoader = new ResourceLoader();
     expect(function () {
-      ResourceLoader.getError();
+      resourceLoader.getError();
     }).toThrowDeveloperError();
+  });
+
+  it("destroys", function () {
+    var resourceLoader = new ResourceLoader();
+    expect(resourceLoader.isDestroyed()).toBe(false);
+    resourceLoader.destroy();
+    expect(resourceLoader.isDestroyed()).toBe(true);
   });
 });

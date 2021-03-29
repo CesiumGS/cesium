@@ -159,6 +159,6 @@ describe("Scene/MetadataSchemaLoader", function () {
     deferredPromise.resolve(schemaJson);
 
     expect(schemaLoader.schema).not.toBeDefined();
-    expect(schemaLoader._state).toBe(ResourceLoaderState.DESTROYED);
+    expect(schemaLoader.isDestroyed()).toBe(true);
   });
 });

@@ -1,6 +1,5 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import MetadataSchema from "./MetadataSchema.js";
@@ -45,6 +44,11 @@ export default function MetadataSchemaLoader(options) {
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
+}
+
+if (defined(Object.create)) {
+  MetadataSchemaLoader.prototype = Object.create(ResourceLoader.prototype);
+  MetadataSchemaLoader.prototype.constructor = MetadataSchemaLoader;
 }
 
 Object.defineProperties(MetadataSchemaLoader.prototype, {
@@ -107,7 +111,7 @@ function loadExternalSchema(schemaLoader) {
   resource
     .fetchJson()
     .then(function (json) {
-      if (schemaLoader._state === ResourceLoaderState.DESTROYED) {
+      if (schemaLoader.isDestroyed()) {
         return;
       }
       schemaLoader._schema = new MetadataSchema(json);
@@ -117,43 +121,13 @@ function loadExternalSchema(schemaLoader) {
     .otherwise(function (error) {
       schemaLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load schema: " + resource.url;
-      schemaLoader._promise.reject(
-        ResourceLoader.getError(errorMessage, error)
-      );
+      schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }
 
 /**
- * Returns true if this object was destroyed; otherwise, false.
- * <br /><br />
- * If this object was destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
- * @see SchemaLoader#destroy
+ * Unloads the resource.
  */
-MetadataSchemaLoader.prototype.isDestroyed = function () {
-  return false;
-};
-
-/**
- * Destroys the loaded resource.
- * <br /><br />
- * Once an object is destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
- * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- * @example
- * schemaLoader = schemaLoader && schemaLoader.destroy();
- *
- * @see SchemaLoader#isDestroyed
- */
-MetadataSchemaLoader.prototype.destroy = function () {
+MetadataSchemaLoader.prototype.unload = function () {
   this._schema = undefined;
-  this._state = ResourceLoaderState.DESTROYED;
-
-  return destroyObject(this);
 };
