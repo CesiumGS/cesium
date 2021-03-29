@@ -15,8 +15,6 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @alias MetadataTileset
  * @constructor
- *
- * @private
  */
 function MetadataTileset(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -43,7 +41,6 @@ Object.defineProperties(MetadataTileset.prototype, {
    * @memberof MetadataTileset.prototype
    * @type {MetadataClass}
    * @readonly
-   * @private
    */
   class: {
     get: function () {
@@ -57,7 +54,6 @@ Object.defineProperties(MetadataTileset.prototype, {
    * @memberof MetadataTileset.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   properties: {
     get: function () {
@@ -71,7 +67,6 @@ Object.defineProperties(MetadataTileset.prototype, {
    * @memberof MetadataTileset.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -85,7 +80,6 @@ Object.defineProperties(MetadataTileset.prototype, {
    * @memberof MetadataTileset.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -99,7 +93,6 @@ Object.defineProperties(MetadataTileset.prototype, {
    * @memberof MetadataTileset.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -110,10 +103,9 @@ Object.defineProperties(MetadataTileset.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof MetadataClass.prototype
+   * @memberof MetadataTileset.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {
