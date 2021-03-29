@@ -17,11 +17,13 @@
             "properties": {
               "author": {
                 "description": "The person or entity that made the tileset",
-                "type": "STRING"
+                "type": "STRING",
+                "semantic": "AUTHOR"
               },
               "date": {
                 "description": "Date of tileset creation in YYYY-MM-DD format",
-                "type": "STRING"
+                "type": "STRING",
+                "semantic": "DATE_ISO_8601"
               },
               "centerCartographic": {
                 "description": "Center of the tileset as [longitude, latitude, height] where longitude and latitude are in radians, and height is in meters].",

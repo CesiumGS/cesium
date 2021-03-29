@@ -27,6 +27,7 @@ import Axis from "./Axis.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
+import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
@@ -39,7 +40,6 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
-import Metadata3DTilesExtension from "./Metadata3DTilesExtension.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -924,10 +924,9 @@ function Cesium3DTileset(options) {
 
   /**
    * If the 3DTILES_metadata extension is used, this stores
-   * a {@link Metadata3DTilesExtension} object to access metadata.
+   * a {@link Cesium3DTilesetMetadata} object to access metadata.
    *
-   * @type {Metadata3DTilesExtension}
-   * @private
+   * @type {Cesium3DTilesetMetadata}
    */
   this.metadata = undefined;
 
@@ -1870,11 +1869,10 @@ function processMetadataExtension(tileset, tilesetJson) {
       schema: extension.schema,
     });
   }
-
   tileset._schemaLoader = schemaLoader;
 
   return schemaLoader.promise.then(function (schemaLoader) {
-    tileset.metadata = new Metadata3DTilesExtension({
+    tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
       extension: extension,
     });
