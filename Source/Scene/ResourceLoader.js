@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
@@ -57,20 +58,16 @@ ResourceLoader.prototype.load = function () {
 };
 
 /**
- * Unloads the resource. Does not need to be defined for all implementations of this interface.
+ * Unloads the resource.
  */
-ResourceLoader.prototype.unload = function () {
-  DeveloperError.throwInstantiationError();
-};
+ResourceLoader.prototype.unload = function () {};
 
 /**
- * Updates the resource. Does not need to be defined for all implementations of this interface.
+ * Updates the resource.
  *
  * @param {FrameState} frameState The frame state.
  */
-ResourceLoader.prototype.update = function (frameState) {
-  DeveloperError.throwInstantiationError();
-};
+ResourceLoader.prototype.update = function (frameState) {};
 
 /**
  * Constructs a {@link RuntimeError} from an errorMessage and an error.
@@ -80,7 +77,7 @@ ResourceLoader.prototype.update = function (frameState) {
  *
  * @returns {RuntimeError} The runtime error.
  */
-ResourceLoader.getError = function (errorMessage, error) {
+ResourceLoader.prototype.getError = function (errorMessage, error) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("errorMessage", errorMessage);
   //>>includeEnd('debug');
@@ -89,4 +86,37 @@ ResourceLoader.getError = function (errorMessage, error) {
     errorMessage += "\n" + error.message;
   }
   return new RuntimeError(errorMessage);
+};
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see ResourceLoader#destroy
+ */
+ResourceLoader.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the loaded resource.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @example
+ * resourceLoader = resourceLoader && resourceLoader.destroy();
+ *
+ * @see ResourceLoader#isDestroyed
+ */
+ResourceLoader.prototype.destroy = function () {
+  this.unload();
+  return destroyObject(this);
 };

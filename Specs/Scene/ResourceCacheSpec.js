@@ -52,47 +52,15 @@ describe("ResourceCache", function () {
     });
   });
 
-  it("removes resource from cache if load fails", function () {
-    var deferredPromise = when.defer();
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      deferredPromise.promise
-    );
-
-    var cacheKey = ResourceCacheKey.getSchemaCacheKey({
-      resource: schemaResource,
-    });
-    var resourceLoader = new MetadataSchemaLoader({
-      resource: schemaResource,
-      cacheKey: cacheKey,
-    });
-
-    ResourceCache.load({
-      resourceLoader: resourceLoader,
-    });
-
-    var cacheEntry = ResourceCache.cacheEntries[cacheKey];
-    expect(cacheEntry.referenceCount).toBe(1);
-    expect(cacheEntry.resourceLoader).toBe(resourceLoader);
-    expect(cacheEntry.keepResident).toBe(false);
-
-    deferredPromise.reject("Error");
-
-    return resourceLoader.promise
-      .then(function () {
-        fail();
-      })
-      .otherwise(function (error) {
-        expect(ResourceCache.cacheEntries[cacheKey]).toBeUndefined();
-      });
-  });
-
   it("load throws if resourceLoader is undefined", function () {
     expect(function () {
-      ResourceCache.load({});
+      ResourceCache.load({
+        keepResident: true,
+      });
     }).toThrowDeveloperError();
   });
 
-  it("load throws if resourceLoader cacheKey is undefined", function () {
+  it("load throws if resourceLoader's cacheKey is undefined", function () {
     var resourceLoader = new MetadataSchemaLoader({
       resource: schemaResource,
     });
@@ -125,7 +93,7 @@ describe("ResourceCache", function () {
     }).toThrowDeveloperError();
   });
 
-  it("unloads resource", function () {
+  it("destroys resource when reference count reaches 0", function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       when.resolve(schemaJson)
     );
@@ -336,7 +304,9 @@ describe("ResourceCache", function () {
 
   it("loadSchema throws if neither options.schema nor options.resource are defined", function () {
     expect(function () {
-      ResourceCache.loadSchema({});
+      ResourceCache.loadSchema({
+        keepResident: true,
+      });
     }).toThrowDeveloperError();
   });
 
@@ -439,7 +409,9 @@ describe("ResourceCache", function () {
 
   it("loadExternalBuffer throws if resource is undefined", function () {
     expect(function () {
-      ResourceCache.loadExternalBuffer({});
+      ResourceCache.loadExternalBuffer({
+        keepResident: true,
+      });
     }).toThrowDeveloperError();
   });
 });

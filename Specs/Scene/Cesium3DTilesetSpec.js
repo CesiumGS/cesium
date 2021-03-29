@@ -5188,11 +5188,19 @@ describe(
             expect(metadata).toBeDefined();
 
             var tilesetMetadata = metadata.tileset;
-            expect(tilesetMetadata).toBeDefined();
-
-            expect(tilesetMetadata.name).toBe("Sample Tileset");
-            expect(tilesetMetadata.class.id).toBe("tileset");
-            expect(tilesetMetadata.properties).toEqual(tilesetProperties);
+            expect(tilesetMetadata.getProperty("name")).not.toBeDefined();
+            expect(tilesetMetadata.getProperty("author")).toBe(
+              tilesetProperties.author
+            );
+            expect(tilesetMetadata.getPropertyBySemantic("DATE_ISO_8601")).toBe(
+              tilesetProperties.date
+            );
+            expect(tilesetMetadata.getProperty("centerCartographic")).toEqual(
+              tilesetProperties.centerCartographic
+            );
+            expect(tilesetMetadata.getProperty("tileCount")).toBe(
+              tilesetProperties.tileCount
+            );
           }
         );
       });
@@ -5200,10 +5208,7 @@ describe(
       it("loads metadata with embedded schema", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            var metadata = tileset.metadata;
-            expect(metadata).toBeDefined();
-
-            var schema = metadata.schema;
+            var schema = tileset.metadata.schema;
             expect(schema).toBeDefined();
 
             var classes = schema.classes;
@@ -5217,10 +5222,7 @@ describe(
           scene,
           tilesetWithExternalSchemaUrl
         ).then(function (tileset) {
-          var metadata = tileset.metadata;
-          expect(metadata).toBeDefined();
-
-          var schema = metadata.schema;
+          var schema = tileset.metadata.schema;
           expect(schema).toBeDefined();
 
           var classes = schema.classes;

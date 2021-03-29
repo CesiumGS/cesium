@@ -1,6 +1,5 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import MetadataSchema from "./MetadataSchema.js";
@@ -26,7 +25,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function MetadataSchemaLoader(options) {
+export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var schema = options.schema;
   var resource = options.resource;
@@ -45,6 +44,11 @@ function MetadataSchemaLoader(options) {
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
+}
+
+if (defined(Object.create)) {
+  MetadataSchemaLoader.prototype = Object.create(ResourceLoader.prototype);
+  MetadataSchemaLoader.prototype.constructor = MetadataSchemaLoader;
 }
 
 Object.defineProperties(MetadataSchemaLoader.prototype, {
@@ -107,62 +111,23 @@ function loadExternalSchema(schemaLoader) {
   resource
     .fetchJson()
     .then(function (json) {
-      if (schemaLoader._state === ResourceLoaderState.DESTROYED) {
-        unload(schemaLoader);
+      if (schemaLoader.isDestroyed()) {
         return;
       }
-      unload(schemaLoader);
       schemaLoader._schema = new MetadataSchema(json);
       schemaLoader._state = ResourceLoaderState.READY;
       schemaLoader._promise.resolve(schemaLoader);
     })
     .otherwise(function (error) {
-      unload(schemaLoader);
       schemaLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load schema: " + resource.url;
-      schemaLoader._promise.reject(
-        ResourceLoader.getError(errorMessage, error)
-      );
+      schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }
 
-function unload(schemaLoader) {
-  schemaLoader._schema = undefined;
-}
-
 /**
- * Returns true if this object was destroyed; otherwise, false.
- * <br /><br />
- * If this object was destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
- * @see SchemaLoader#destroy
+ * Unloads the resource.
  */
-MetadataSchemaLoader.prototype.isDestroyed = function () {
-  return false;
+MetadataSchemaLoader.prototype.unload = function () {
+  this._schema = undefined;
 };
-
-/**
- * Destroys the loaded resource.
- * <br /><br />
- * Once an object is destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
- * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- * @example
- * schemaLoader = schemaLoader && schemaLoader.destroy();
- *
- * @see SchemaLoader#isDestroyed
- */
-MetadataSchemaLoader.prototype.destroy = function () {
-  unload(this);
-  this._state = ResourceLoaderState.DESTROYED;
-
-  return destroyObject(this);
-};
-
-export default MetadataSchemaLoader;

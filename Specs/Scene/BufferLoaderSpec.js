@@ -1,9 +1,4 @@
-import {
-  BufferLoader,
-  Resource,
-  ResourceLoaderState,
-  when,
-} from "../../Source/Cesium.js";
+import { BufferLoader, Resource, when } from "../../Source/Cesium.js";
 
 describe("Scene/BufferLoader", function () {
   var typedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
@@ -12,7 +7,9 @@ describe("Scene/BufferLoader", function () {
 
   it("throws if neither options.typedArray nor options.resource are defined", function () {
     expect(function () {
-      return new BufferLoader({});
+      return new BufferLoader({
+        cacheKey: "cacheKey",
+      });
     }).toThrowDeveloperError();
   });
 
@@ -113,12 +110,11 @@ describe("Scene/BufferLoader", function () {
     expect(bufferLoader.typedArray).not.toBeDefined();
 
     bufferLoader.load();
-    expect(bufferLoader._state).toBe(ResourceLoaderState.LOADING);
     bufferLoader.destroy();
 
     deferredPromise.resolve(arrayBuffer);
 
     expect(bufferLoader.typedArray).not.toBeDefined();
-    expect(bufferLoader._state).toBe(ResourceLoaderState.DESTROYED);
+    expect(bufferLoader.isDestroyed()).toBe(true);
   });
 });

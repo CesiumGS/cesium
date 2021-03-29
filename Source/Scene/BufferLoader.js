@@ -1,6 +1,5 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -25,7 +24,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function BufferLoader(options) {
+export default function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var typedArray = options.typedArray;
   var resource = options.resource;
@@ -44,6 +43,11 @@ function BufferLoader(options) {
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
+}
+
+if (defined(Object.create)) {
+  BufferLoader.prototype = Object.create(ResourceLoader.prototype);
+  BufferLoader.prototype.constructor = BufferLoader;
 }
 
 Object.defineProperties(BufferLoader.prototype, {
@@ -106,61 +110,23 @@ function loadExternalBuffer(bufferLoader) {
   resource
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
-      if (bufferLoader._state === ResourceLoaderState.DESTROYED) {
-        unload(bufferLoader);
+      if (bufferLoader.isDestroyed()) {
         return;
       }
-      unload(bufferLoader);
       bufferLoader._typedArray = new Uint8Array(arrayBuffer);
       bufferLoader._state = ResourceLoaderState.READY;
       bufferLoader._promise.resolve(bufferLoader);
     })
     .otherwise(function (error) {
-      unload(bufferLoader);
       bufferLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load external buffer: " + resource.url;
-      bufferLoader._promise.reject(
-        ResourceLoader.getError(errorMessage, error)
-      );
+      bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }
 
-function unload(bufferLoader) {
-  bufferLoader._typedArray = undefined;
-}
 /**
- * Returns true if this object was destroyed; otherwise, false.
- * <br /><br />
- * If this object was destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
- * @see BufferLoader#destroy
+ * Unloads the resource.
  */
-BufferLoader.prototype.isDestroyed = function () {
-  return false;
+BufferLoader.prototype.unload = function () {
+  this._typedArray = undefined;
 };
-
-/**
- * Destroys the loaded resource.
- * <br /><br />
- * Once an object is destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
- * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- * @example
- * bufferLoader = bufferLoader && bufferLoader.destroy();
- *
- * @see BufferLoader#isDestroyed
- */
-BufferLoader.prototype.destroy = function () {
-  unload(this);
-  this._state = ResourceLoaderState.DESTROYED;
-
-  return destroyObject(this);
-};
-
-export default BufferLoader;

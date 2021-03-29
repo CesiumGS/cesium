@@ -91,11 +91,6 @@ ResourceCache.load = function (options) {
   });
 
   resourceLoader.load();
-
-  resourceLoader.promise.otherwise(function () {
-    // If the resource fails to load remove it from the cache
-    delete ResourceCache.cacheEntries[cacheKey];
-  });
 };
 
 /**
@@ -127,9 +122,7 @@ ResourceCache.unload = function (resourceLoader) {
   --cacheEntry.referenceCount;
 
   if (cacheEntry.referenceCount === 0 && !cacheEntry.keepResident) {
-    if (defined(resourceLoader.destroy)) {
-      resourceLoader.destroy();
-    }
+    resourceLoader.destroy();
     delete ResourceCache.cacheEntries[cacheKey];
   }
 };
@@ -281,9 +274,7 @@ ResourceCache.clearForSpecs = function () {
   for (var cacheKey in cacheEntries) {
     if (cacheEntries.hasOwnProperty(cacheKey)) {
       var cacheEntry = cacheEntries[cacheKey];
-      if (defined(cacheEntry.resourceLoader.destroy)) {
-        cacheEntry.resourceLoader.destroy();
-      }
+      cacheEntry.resourceLoader.destroy();
       delete cacheEntries[cacheKey];
     }
   }
