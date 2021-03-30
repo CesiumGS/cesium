@@ -3,6 +3,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
@@ -25,19 +26,23 @@ import when from "../ThirdParty/when.js";
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
  * @param {Uint8Array} subtreeView The contents of a subtree binary in a Uint8Array.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
  * @private
  */
 export default function ImplicitSubtree(
   resource,
   subtreeView,
-  implicitTileset
+  implicitTileset,
+  implicitCoordinates
 ) {
   this._resource = resource;
   this._subtreeJson = undefined;
   this._bufferLoader = undefined;
   this._tileAvailability = undefined;
+  this._implicitCoordinates = implicitCoordinates;
   this._contentAvailabilityBitstreams = [];
   this._childSubtreeAvailability = undefined;
+  this._subtreeLevels = implicitTileset.subtreeLevels;
   this._subdivisionScheme = implicitTileset.subdivisionScheme;
   this._branchingFactor = implicitTileset.branchingFactor;
   this._readyPromise = when.defer();
@@ -665,6 +670,45 @@ function makeJumpBuffer(subtree) {
   }
   subtree._jumpBuffer = jumpBuffer;
 }
+
+/**
+ * Given the implicit tiling coordinates for a tile, get the index within the
+ * subtree's tile availability bitstream.
+ * @property {ImplicitTileCoordinates} implicitCoordinates The coordinates of a tile
+ * @return {Number} The tile's index within the subtree.
+ * @private
+ */
+ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
+  var localLevel = implicitCoordinates.level - this._implicitCoordinates.level;
+
+  if (localLevel < 0 || this._subtreeLevels <= localLevel) {
+    throw new RuntimeError("level is out of bounds for this subtree");
+  }
+
+  var levelOffset = this.getLevelOffset(localLevel);
+  var mortonIndex = implicitCoordinates.mortonIndex;
+  return levelOffset + mortonIndex;
+};
+
+/**
+ * Get the entity ID for a tile within this subtree.
+ * @property {Cesium3DTile} tile A transcoded tile from this subtree. tile.implicitTileCoordinates must be defined.
+ * @return {Number} The entity ID for this tile for accessing tile metadata, or <code>undefined</code> if not applicable.
+ *
+ * @private
+ */
+ImplicitSubtree.prototype.getEntityId = function (implicitCoordinates) {
+  if (!defined(this._metadataTable)) {
+    return undefined;
+  }
+
+  var tileIndex = this.getTileIndex(implicitCoordinates);
+  if (this._tileAvailability.getBit(tileIndex)) {
+    return this._jumpBuffer[tileIndex];
+  }
+
+  return undefined;
+};
 
 /**
  * @private

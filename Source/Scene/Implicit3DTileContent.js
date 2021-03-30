@@ -155,7 +155,8 @@ function initialize(content, arrayBuffer, byteOffset) {
   var subtree = new ImplicitSubtree(
     content._resource,
     uint8Array,
-    content._implicitTileset
+    content._implicitTileset,
+    content.implicitCoordinates.level
   );
   content._implicitSubtree = subtree;
 
