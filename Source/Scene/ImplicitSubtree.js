@@ -536,10 +536,17 @@ function parseAvailability(
     (Math.pow(branchingFactor, subtreeLevels) - 1) / (branchingFactor - 1);
   var childSubtreeBits = Math.pow(branchingFactor, subtreeLevels);
 
+  // availableCount is only needed for the metadata jump buffer, which
+  // corresponds to the tile availability bitstream.
+  var computeAvailableCountEnabled = has3DTilesExtension(
+    subtreeJson,
+    "3DTILES_metadata"
+  );
   subtree._tileAvailability = parseAvailabilityBitstream(
     subtreeJson.tileAvailability,
     bufferViewsU8,
-    tileAvailabilityBits
+    tileAvailabilityBits,
+    computeAvailableCountEnabled
   );
 
   for (var i = 0; i < subtreeJson.contentAvailabilityHeaders.length; i++) {
@@ -567,13 +574,15 @@ function parseAvailability(
  * @param {Object} availabilityJson A JSON object representing the availability
  * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @param {Number} lengthBits The length of the availability bitstream in bits
+ * @param {Boolean} [computeAvailableCountEnabled] If true and availabilityJson.availableCount is undefined, the availableCount will be computed.
  * @returns {ImplicitAvailabilityBitstream} The parsed bitstream object
  * @private
  */
 function parseAvailabilityBitstream(
   availabilityJson,
   bufferViewsU8,
-  lengthBits
+  lengthBits,
+  computeAvailableCountEnabled
 ) {
   if (defined(availabilityJson.constant)) {
     return new ImplicitAvailabilityBitstream({
@@ -589,6 +598,7 @@ function parseAvailabilityBitstream(
     bitstream: bufferView,
     lengthBits: lengthBits,
     availableCount: availabilityJson.availableCount,
+    computeAvailableCountEnabled: computeAvailableCountEnabled,
   });
 }
 

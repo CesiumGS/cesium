@@ -66,4 +66,21 @@ describe("Scene/ImplicitAvailabilityBitstream", function () {
     });
     expect(bitstream.availableCount).toEqual(3);
   });
+
+  it("computes availableCount if enabled and availableCount is undefined", function () {
+    var bitstream = new ImplicitAvailabilityBitstream({
+      lengthBits: 10,
+      bitstream: new Uint8Array([0xff, 0x02]),
+      computeAvailableCountEnabled: true,
+    });
+    expect(bitstream.availableCount).toBe(9);
+  });
+
+  it("does not compute availableCount if disabled and availableCount is undefined", function () {
+    var bitstream = new ImplicitAvailabilityBitstream({
+      lengthBits: 10,
+      bitstream: new Uint8Array([0xff, 0x02]),
+    });
+    expect(bitstream.availableCount).not.toBeDefined();
+  });
 });

@@ -876,6 +876,7 @@ describe("Scene/ImplicitSubtree", function () {
           descriptor: 1,
           lengthBits: 5,
           isInternal: true,
+          includeAvailableCount: true,
         },
         contentAvailability: [
           {
@@ -931,6 +932,7 @@ describe("Scene/ImplicitSubtree", function () {
           descriptor: 1,
           lengthBits: 5,
           isInternal: true,
+          includeAvailableCount: true,
         },
         contentAvailability: [
           {
@@ -980,6 +982,62 @@ describe("Scene/ImplicitSubtree", function () {
       });
     });
 
+    it("works correctly if availableCount is undefined", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: false,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree
+      );
+
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal).not.toHaveBeenCalled();
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
+      });
+    });
+
     it("handles unavailable tiles correctly", function () {
       var highlightColors = [
         [255, 0, 0],
@@ -1009,6 +1067,7 @@ describe("Scene/ImplicitSubtree", function () {
           descriptor: "10011",
           lengthBits: 5,
           isInternal: true,
+          includeAvailableCount: true,
         },
         contentAvailability: [
           {
@@ -1100,6 +1159,7 @@ describe("Scene/ImplicitSubtree", function () {
           descriptor: 1,
           lengthBits: 5,
           isInternal: true,
+          includeAvailableCount: true,
         },
         contentAvailability: [
           {

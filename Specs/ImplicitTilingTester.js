@@ -15,6 +15,7 @@ export default function ImplicitTilingTester() {}
  * @property {Number} lengthBits How many bits are in the bitstream. This must be specified, even if descriptor is a string of <code>0</code>s and <code>1</code>s
  * @property {Boolean} isInternal <code>true</code> if an internal bufferView should be created. <code>false</code> indicates the bufferview is stored in an external buffer instead.
  * @property {Boolean} [shareBuffer=false] This is only used for content availability. If <code>true</code>, then the content availability will share the same buffer as the tile availaibility, as this is a common optimization
+ * @property {Boolean} [includeAvailableCount=false] If true, set availableCount
  */
 
 /**
@@ -297,7 +298,7 @@ function parseAvailability(availability) {
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
 
-  if (defined(parsed.constant)) {
+  if (defined(parsed.constant) && availability.includeAvailableCount) {
     // Only set available count to the number of bits if the constant is 1
     parsed.availableCount = parsed.constant * availability.lengthBits;
   }
@@ -308,7 +309,7 @@ function parseAvailability(availability) {
   return parsed;
 }
 
-function parseAvailabilityDescriptor(descriptor) {
+function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
   if (typeof descriptor === "number") {
     return {
       constant: descriptor,
@@ -334,6 +335,10 @@ function parseAvailabilityDescriptor(descriptor) {
     var byte = i >> 3;
     var bitIndex = i % 8;
     bitstream[byte] |= bit << bitIndex;
+  }
+
+  if (!includeAvailableCount) {
+    availableCount = undefined;
   }
 
   return {

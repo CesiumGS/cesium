@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
+import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
@@ -15,6 +16,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @param {Boolean} [options.constant] A single boolean value indicating the value of all the bits in the bitstream if they are all the same
  * @param {Uint8Array} [options.bitstream] An array of bytes storing the bitstream in binary
  * @param {Number} [options.availableCount] A number indicating how many 1 bits are found in the bitstream
+ * @param {Boolean} [options.computeAvailableCountEnabled=false] If true, and options.availableCount is undefined, the availableCount will be computed from the bitstream.
  * @private
  */
 export default function ImplicitAvailabilityBitstream(options) {
@@ -44,9 +46,16 @@ export default function ImplicitAvailabilityBitstream(options) {
           " bytes long."
       );
     }
-    availableCount = defined(availableCount)
-      ? availableCount
-      : count1Bits(bitstream, lengthBits);
+
+    // Only compute the available count if requested, as this involves looping
+    // over the bitstream.
+    var computeAvailableCountEnabled = defaultValue(
+      options.computeAvailableCountEnabled,
+      false
+    );
+    if (!defined(availableCount) && computeAvailableCountEnabled) {
+      availableCount = count1Bits(bitstream, lengthBits);
+    }
   }
 
   this._lengthBits = lengthBits;
