@@ -657,6 +657,47 @@ describe("Scene/ImplicitSubtree", function () {
       });
   });
 
+  it("destroys", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: false,
+      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: "1111000010100000",
+        lengthBits: 16,
+        isInternal: false,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    spyOn(ResourceCache, "load").and.callFake(fakeLoad(results.externalBuffer));
+    var unload = spyOn(ResourceCache, "unload");
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree
+    );
+    return subtree.readyPromise.then(function () {
+      var bufferLoader = subtree._bufferLoader;
+      expect(bufferLoader).toBeDefined();
+
+      expect(subtree.isDestroyed()).toBe(false);
+      subtree.destroy();
+      expect(subtree.isDestroyed()).toBe(true);
+      expect(unload).toHaveBeenCalled();
+    });
+  });
+
   describe("3DTILES_multiple_contents", function () {
     var multipleContentsQuadtree = new ImplicitTileset(
       mockTileset,

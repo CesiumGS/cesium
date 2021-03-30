@@ -512,6 +512,25 @@ describe("Scene/Implicit3DTileContent", function () {
     });
   });
 
+  it("destroys", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    return content.readyPromise.then(function () {
+      var subtree = content._implicitSubtree;
+      expect(content.isDestroyed()).toBe(false);
+      expect(subtree.isDestroyed()).toBe(false);
+
+      content.destroy();
+      expect(content.isDestroyed()).toBe(true);
+      expect(subtree.isDestroyed()).toBe(true);
+    });
+  });
+
   describe("_deriveBoundingBox", function () {
     var deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
     var simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];

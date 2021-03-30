@@ -1,6 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
@@ -33,6 +34,7 @@ export default function ImplicitSubtree(
 ) {
   this._resource = resource;
   this._subtreeJson = undefined;
+  this._bufferLoader = undefined;
   this._tileAvailability = undefined;
   this._contentAvailabilityBitstreams = [];
   this._childSubtreeAvailability = undefined;
@@ -452,7 +454,7 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
     if (!bufferHeader.isActive) {
       promises.push(when.resolve(undefined));
     } else if (bufferHeader.isExternal) {
-      var promise = requestExternalBuffer(bufferHeader, subtree._resource);
+      var promise = requestExternalBuffer(subtree, bufferHeader);
       promises.push(promise);
     } else {
       promises.push(when.resolve(internalBuffer));
@@ -470,7 +472,8 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
   });
 }
 
-function requestExternalBuffer(bufferHeader, baseResource) {
+function requestExternalBuffer(subtree, bufferHeader) {
+  var baseResource = subtree._resource;
   var bufferResource = baseResource.getDerivedResource({
     url: bufferHeader.uri,
   });
@@ -478,6 +481,7 @@ function requestExternalBuffer(bufferHeader, baseResource) {
   var bufferLoader = ResourceCache.loadExternalBuffer({
     resource: bufferResource,
   });
+  subtree._bufferLoader = bufferLoader;
 
   return bufferLoader.promise.then(function (bufferLoader) {
     return bufferLoader.typedArray;
@@ -651,3 +655,21 @@ function makeJumpBuffer(subtree) {
   }
   subtree._jumpBuffer = jumpBuffer;
 }
+
+/**
+ * @private
+ */
+ImplicitSubtree.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * @private
+ */
+ImplicitSubtree.prototype.destroy = function () {
+  if (defined(this._bufferLoader)) {
+    ResourceCache.unload(this._bufferLoader);
+  }
+
+  return destroyObject(this);
+};

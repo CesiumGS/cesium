@@ -48,6 +48,7 @@ export default function Implicit3DTileContent(
 
   this._implicitTileset = implicitTileset;
   this._implicitCoordinates = implicitCoordinates;
+  this._implicitSubtree = undefined;
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -156,6 +157,8 @@ function initialize(content, arrayBuffer, byteOffset) {
     uint8Array,
     content._implicitTileset
   );
+  content._implicitSubtree = subtree;
+
   subtree.readyPromise
     .then(function () {
       expandSubtree(content, subtree);
@@ -689,6 +692,8 @@ Implicit3DTileContent.prototype.isDestroyed = function () {
 };
 
 Implicit3DTileContent.prototype.destroy = function () {
+  this._implicitSubtree =
+    this._implicitSubtree && this._implicitSubtree.destroy();
   return destroyObject(this);
 };
 
