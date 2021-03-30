@@ -156,7 +156,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     content._resource,
     uint8Array,
     content._implicitTileset,
-    content.implicitCoordinates.level
+    content.implicitCoordinates
   );
   content._implicitSubtree = subtree;
 
