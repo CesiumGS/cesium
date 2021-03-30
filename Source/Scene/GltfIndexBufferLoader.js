@@ -265,7 +265,7 @@ var scratchIndexBufferJob = new CreateIndexBufferJob();
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfIndexBufferLoader.prototype.update = function (frameState) {
+GltfIndexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');

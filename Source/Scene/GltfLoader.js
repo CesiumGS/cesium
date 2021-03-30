@@ -9,7 +9,6 @@ import when from "../ThirdParty/when.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import ModelComponents from "./ModelComponents.js";
-import ModelLoaderResults from "./ModelLoaderResults.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 
@@ -25,13 +24,22 @@ var Node = ModelComponents.Node;
 var Texture = ModelComponents.Texture;
 var Material = ModelComponents.Material;
 
+var GltfLoaderState = {
+  UNLOADED: 0,
+  LOADING: 1,
+  PROCESSING: 2,
+  READY_EXCEPT_TEXTURES: 3,
+  READY: 4,
+  FAILED: 5,
+};
+
 var defaultAccept =
   "model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01";
 
 /**
- * TODO: from ArrayBuffer
- *
  * Loads a glTF model.
+ *
+ * TODO: load directly from ArrayBuffer
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource|String} options.uri The uri to the glTF file.
@@ -70,18 +78,87 @@ export default function GltfLoader(options) {
   this._keepResident = keepResident;
   this._asynchronous = asynchronous;
   this._gltfJsonLoader = undefined;
-  this._promise = when.defer();
+  this._error = undefined;
+  this._state = GltfLoaderState.UNLOADED;
 
-  // Resources that need to be updated manually in the update loop before the
-  // loader is ready
+  // Resources that need to be loaded manually before the loader becomes ready
   this._vertexAttributesToLoad = [];
   this._indicesToLoad = [];
   this._texturesToLoad = [];
   this._featureMetadataLoader = undefined;
 
-  // Final results sent back to Model
-  this._loaderResults = new ModelLoaderResults();
+  // Loaded results for Model
+  this._nodes = [];
+  this._featureMetadata = undefined;
 }
+
+Object.defineProperties(GltfLoader.prototype, {
+  /**
+   * The loaded nodes.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {ModelComponents.Node}
+   * @readonly
+   */
+  nodes: {
+    get: function () {
+      return this._nodes;
+    },
+  },
+  /**
+   * The loaded feature metadata.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {FeatureMetadata}
+   * @readonly
+   */
+  featureMetadata: {
+    get: function () {
+      return this._featureMetadata;
+    },
+  },
+  /**
+   * An error if the glTF fails to load.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {Error}
+   * @readonly
+   */
+  error: {
+    get: function () {
+      return this._error;
+    },
+  },
+  /**
+   * Whether the glTF is ready.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {Boolean}
+   * @readonly
+   */
+  ready: {
+    get: function () {
+      return this._state === GltfLoaderState.READY;
+    },
+  },
+  /**
+   * Whether the glTF is ready except for loading textures.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {Boolean}
+   * @readonly
+   */
+  readyExceptTextures: {
+    get: function () {
+      return this._state === GltfLoaderState.READY_EXCEPT_TEXTURES;
+    },
+  },
+});
 
 /**
  * Loads the glTF.
@@ -103,6 +180,7 @@ GltfLoader.prototype.load = function (frameState) {
   });
 
   this._gltfJsonLoader = gltfJsonLoader;
+  this._state = GltfLoaderState.LOADING;
 
   var that = this;
   gltfJsonLoader.promise
@@ -112,14 +190,14 @@ GltfLoader.prototype.load = function (frameState) {
         return;
       }
       var gltf = gltfJsonLoader.gltf;
-      unload(that); // Unload the gltfJsonLoader
+      unload(that); // Unloads the gltfJsonLoader
       parse(that, gltf, supportedImageFormats);
+      that._state = GltfLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
       unload(that);
       var errorMessage = "Failed to load glTF";
-      error = ResourceLoader.getError(error, errorMessage);
-      that._promise.reject(error);
+      that._error = ResourceLoader.getError(error, errorMessage);
     });
 };
 
@@ -169,6 +247,8 @@ function loadVertexAttribute(loader, gltf, accessorId, semantic, draco) {
   vertexAttribute.normalized = accessor.normalized;
   vertexAttribute.count = accessor.count;
   vertexAttribute.type = accessor.type;
+  vertexAttribute.min = accessor.min;
+  vertexAttribute.max = accessor.max;
 
   if (defined(vertexBufferLoader)) {
     loader._vertexAttributesToLoad.push(
@@ -554,7 +634,7 @@ function loadFeatureMetadata(loader, gltf, extension, supportedImageFormats) {
     asynchronous: loader._asynchronous,
   });
   featureMetadataLoader.load();
-  loader._featureMetadataLoader = featureMetadataLoader;
+  return featureMetadataLoader;
 }
 
 function getSceneNodeIds(gltf) {
@@ -570,14 +650,13 @@ function getSceneNodeIds(gltf) {
 function parse(loader, gltf, supportedImageFormats) {
   // Load nodes, meshes, primitives, materials, textures,
   var nodeIds = getSceneNodeIds(gltf);
-  var nodes = loadNodes(loader, gltf, nodeIds, supportedImageFormats);
-  loader._loaderResults.nodes = nodes;
+  loader._nodes = loadNodes(loader, gltf, nodeIds, supportedImageFormats);
 
   // Load top-level feature metadata
   var extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   var featureMetadataExtension = extensions.EXT_feature_metadata;
   if (defined(featureMetadataExtension)) {
-    loadFeatureMetadata(
+    loader._featureMetadataLoader = loadFeatureMetadata(
       this,
       gltf,
       featureMetadataExtension,
@@ -591,10 +670,15 @@ function VertexAttributeToLoad(vertexAttribute, vertexBufferLoader) {
   this.vertexBufferLoader = vertexBufferLoader;
 }
 
+// TODO: rename update to process
 VertexAttributeToLoad.prototype.update = function (frameState) {
   this.vertexBufferLoader.update(frameState);
-  this.vertexAttribute.vertexBuffer = this.vertexBufferLoader.vertexBuffer;
-  return defined(this.vertexBufferLoader.vertexBuffer);
+  var vertexBuffer = this.vertexBufferLoader.vertexBuffer;
+  if (defined(vertexBuffer)) {
+    this.vertexAttribute.vertexBuffer = vertexBuffer;
+    return true;
+  }
+  return false;
 };
 
 VertexAttributeToLoad.prototype.unload = function () {
@@ -609,8 +693,12 @@ function IndicesToLoad(indices, indexBufferLoader) {
 
 IndicesToLoad.prototype.update = function (frameState) {
   this.indexBufferLoader.update(frameState);
-  this.indices.indexBuffer = this.indexBufferLoader.indexBuffer;
-  return defined(this.indexBufferLoader.indexBuffer);
+  var indexBuffer = this.indexBufferLoader.indexBuffer;
+  if (defined(indexBuffer)) {
+    this.indices.indexBuffer = indexBuffer;
+    return true;
+  }
+  return false;
 };
 
 IndicesToLoad.prototype.unload = function () {
@@ -625,8 +713,12 @@ function TextureToLoad(texture, textureLoader) {
 
 TextureToLoad.prototype.update = function (frameState) {
   this.textureLoader.update(frameState);
-  this.texture.texture = this.textureLoader.texture;
-  return defined(this.texture.texture);
+  var texture = this.textureLoader.texture;
+  if (defined(texture)) {
+    this.texture.texture = texture;
+    return true;
+  }
+  return false;
 };
 
 TextureToLoad.prototype.unload = function () {
@@ -635,43 +727,54 @@ TextureToLoad.prototype.unload = function () {
 };
 
 /**
- * Updates resources so that the model becomes ready.
+ * Process resources so that they become ready.
  *
  * @param {FrameState} frameState The frame state.
  */
-GltfLoader.prototype.update = function (frameState) {
+GltfLoader.prototype.process = function (frameState) {
+  if (this._state === GltfLoaderState.LOADING) {
+    return;
+  }
+
   var i;
 
-  var ready = true;
+  var attributesReady = true;
+  var indicesReady = true;
+  var texturesReady = true;
+  var featureMetadataReady = true;
 
-  var vertexAttributesToLoad = this._vertexAttributesToLoad;
-  var vertexAttributesLength = vertexAttributesToLoad.length;
-  for (i = 0; i < vertexAttributesLength; ++i) {
-    ready = vertexAttributesToLoad[i].update(frameState) && ready;
+  var attributesToLoad = this._vertexAttributesToLoad;
+  var attributesLength = attributesToLoad.length;
+  for (i = 0; i < attributesLength; ++i) {
+    attributesReady = attributesToLoad[i].update(frameState) && attributesReady;
   }
 
   var indicesToLoad = this._indicesToLoad;
   var indicesLength = indicesToLoad.length;
   for (i = 0; i < indicesLength; ++i) {
-    ready = indicesToLoad[i].update(frameState) && ready;
+    indicesReady = indicesToLoad[i].update(frameState) && indicesReady;
   }
 
   var texturesToLoad = this._texturesToLoad;
   var texturesLength = texturesToLoad.length;
   for (i = 0; i < texturesLength; ++i) {
-    ready = texturesToLoad[i].update(frameState) && ready;
+    texturesReady = texturesToLoad[i].update(frameState) && texturesReady;
   }
 
   var featureMetadataLoader = this._featureMetadataLoader;
   if (defined(featureMetadataLoader)) {
     featureMetadataLoader.update(frameState);
     var featureMetadata = featureMetadataLoader.featureMetadata;
-    this._loaderResults.featureMetadata = featureMetadata;
-    ready = defined(featureMetadata) && ready;
+    featureMetadataReady = defined(featureMetadata);
+    this._featureMetadata = featureMetadata;
   }
 
-  if (ready) {
-    this._promise.resolve(this._loaderResults);
+  if (attributesReady && indicesReady && featureMetadataReady) {
+    if (texturesReady) {
+      this._state = GltfLoaderState.READY;
+    } else {
+      this._state = GltfLoaderState.READY_EXCEPT_TEXTURES;
+    }
   }
 };
 

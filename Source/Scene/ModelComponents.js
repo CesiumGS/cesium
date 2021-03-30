@@ -17,6 +17,8 @@ function VertexAttribute() {
   this.normalized = undefined;
   this.count = undefined;
   this.type = undefined;
+  this.min = undefined;
+  this.max = undefined;
   this.vertexBuffer = undefined;
 }
 
