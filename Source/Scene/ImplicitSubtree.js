@@ -2,13 +2,11 @@ import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import BufferCacheResource from "./BufferCacheResource.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
-import ResourceCacheKey from "./ResourceCacheKey.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -476,25 +474,13 @@ function requestExternalBuffer(bufferHeader, baseResource) {
   var bufferResource = baseResource.getDerivedResource({
     url: bufferHeader.uri,
   });
-  var cacheKey = ResourceCacheKey.getExternalBufferCacheKey({
+
+  var bufferLoader = ResourceCache.loadExternalBuffer({
     resource: bufferResource,
   });
 
-  var cacheResource = ResourceCache.get(cacheKey);
-  if (!defined(cacheResource)) {
-    cacheResource = new BufferCacheResource({
-      cacheKey: cacheKey,
-      resource: bufferResource,
-    });
-
-    ResourceCache.load({
-      cacheResource: cacheResource,
-      keepResident: false,
-    });
-  }
-
-  return cacheResource.promise.then(function (resource) {
-    return resource.typedArray;
+  return bufferLoader.promise.then(function (bufferLoader) {
+    return bufferLoader.typedArray;
   });
 }
 
@@ -634,6 +620,10 @@ function parseMetadataTable(
 /**
  * Make a jump buffer, i.e. a map of tile bit index to the metadata entity ID.
  * This is stored in the subtree.
+ * <p>
+ * For unavailable tiles, the jump buffer entry will be uninitialized. Use
+ * the tile availability to determine whether a jump buffer value is valid.
+ * </p>
  *
  * @param {ImplicitSubtree} subtree The subtree
  * @private
@@ -641,7 +631,18 @@ function parseMetadataTable(
 function makeJumpBuffer(subtree) {
   var tileAvailability = subtree._tileAvailability;
   var entityId = 0;
-  var jumpBuffer = {};
+  var bufferLength = tileAvailability.lengthBits;
+  var availableCount = tileAvailability.availableCount;
+
+  var jumpBuffer;
+  if (availableCount < 256) {
+    jumpBuffer = new Uint8Array(bufferLength);
+  } else if (availableCount < 65536) {
+    jumpBuffer = new Uint16Array(bufferLength);
+  } else {
+    jumpBuffer = new Uint32Array(bufferLength);
+  }
+
   for (var i = 0; i < tileAvailability.lengthBits; i++) {
     if (tileAvailability.getBit(i)) {
       jumpBuffer[i] = entityId;

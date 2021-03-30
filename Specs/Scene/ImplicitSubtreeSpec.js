@@ -58,7 +58,7 @@ describe("Scene/ImplicitSubtree", function () {
       var fakeCacheResource = {
         typedArray: arrayBuffer,
       };
-      options.cacheResource._promise = {
+      options.resourceLoader._promise = {
         promise: when.resolve(fakeCacheResource),
       };
     };
@@ -996,11 +996,7 @@ describe("Scene/ImplicitSubtree", function () {
         metadataQuadtree
       );
       return subtree.readyPromise.then(function () {
-        expect(subtree._jumpBuffer).toEqual({
-          0: 0,
-          3: 1,
-          4: 2,
-        });
+        expect(subtree._jumpBuffer).toEqual(new Uint8Array([0, 0, 0, 1, 2]));
 
         var metadataTable = subtree.metadataTable;
         expect(metadataTable).toBeDefined();

@@ -18,33 +18,59 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @private
  */
 export default function ImplicitAvailabilityBitstream(options) {
+  var lengthBits = options.lengthBits;
+  var availableCount = options.availableCount;
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("options.lengthBits", options.lengthBits);
+  Check.typeOf.number("options.lengthBits", lengthBits);
   //>>includeEnd('debug');
 
-  this._availableCount = options.availableCount;
-  this._lengthBits = options.lengthBits;
-  this._constant = undefined;
-  this._bitstream = undefined;
+  var constant = options.constant;
+  var bitstream = options.bitstream;
 
-  if (defined(options.constant)) {
-    this._constant = options.constant;
+  if (defined(constant)) {
+    // if defined, constant must be 1 which means all tiles are available
+    availableCount = lengthBits;
   } else {
-    var expectedLength = Math.ceil(this._lengthBits / 8);
-    if (options.bitstream.length !== expectedLength) {
+    var expectedLength = Math.ceil(lengthBits / 8);
+    if (bitstream.length !== expectedLength) {
       throw new RuntimeError(
         "Availability bitstream must be exactly " +
           expectedLength +
           " bytes long to store " +
-          this._lengthBits +
+          lengthBits +
           " bits. Actual bitstream was " +
-          options.bitstream.length +
+          bitstream.length +
           " bytes long."
       );
     }
-
-    this._bitstream = options.bitstream;
+    availableCount = defined(availableCount)
+      ? availableCount
+      : count1Bits(bitstream, lengthBits);
   }
+
+  this._lengthBits = lengthBits;
+  this._availableCount = availableCount;
+  this._constant = constant;
+  this._bitstream = bitstream;
+}
+
+/**
+ * Count the number of bits with value 1 in the bitstream. This is used for
+ * computing availableCount if not precomputed
+ *
+ * @param {Uint8Array} bitstream The bitstream typed array
+ * @param {Number} lengthBits How many bits are in the bitstream
+ * @private
+ */
+function count1Bits(bitstream, lengthBits) {
+  var count = 0;
+  for (var i = 0; i < lengthBits; i++) {
+    var byteIndex = i >> 3;
+    var bitIndex = i % 8;
+    count += (bitstream[byteIndex] >> bitIndex) & 1;
+  }
+  return count;
 }
 
 Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
