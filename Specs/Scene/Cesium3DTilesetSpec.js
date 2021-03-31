@@ -5163,6 +5163,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset.json";
       var tilesetWithExternalSchemaUrl =
         "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset.json";
+      var tilesetWithImplicitTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
 
       var tilesetProperties = {
         author: "Cesium",
@@ -5225,6 +5227,56 @@ describe(
 
           var classes = schema.classes;
           expect(classes.tileset).toBeDefined();
+        });
+      });
+
+      it("loads implicit tileset with tile metadata", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile was removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitTileMetadataUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+
+          var transcodedRoot = placeholderTile.children[0];
+          var subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          var metadataTable = subtree.metadataTable;
+          expect(metadataTable).toBeDefined();
+          expect(metadataTable.count).toBe(4);
+          expect(metadataTable.properties.color).toBeDefined();
+          expect(metadataTable.properties.quadrant).toBeDefined();
+
+          var expectedQuadrants = [
+            "None",
+            "Southwest",
+            "Northwest",
+            "Northeast",
+          ];
+          var expectedColors = [
+            [255, 255, 255],
+            [255, 0, 0],
+            [0, 255, 0],
+            [0, 0, 255],
+          ];
+
+          var i;
+          for (i = 0; i < expectedQuadrants.length; i++) {
+            expect(metadataTable.getProperty(i, "quadrant")).toBe(
+              expectedQuadrants[i]
+            );
+            expect(metadataTable.getProperty(i, "color")).toEqual(
+              expectedColors[i]
+            );
+          }
+
+          var children = transcodedRoot.children;
+          expect(children.length).toBe(3);
+          for (i = 0; i < children.length; i++) {
+            expect(children[i].implicitSubtree).toBe(subtree);
+          }
         });
       });
     });

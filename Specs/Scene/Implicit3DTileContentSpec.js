@@ -52,24 +52,28 @@ describe("Scene/Implicit3DTileContent", function () {
       year: "2021",
     },
   };
-  var implicitTileset = new ImplicitTileset(tilesetResource, tileJson);
+  var implicitTileset = new ImplicitTileset(
+    mockTileset,
+    tilesetResource,
+    tileJson
+  );
 
   var quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
     tileAvailability: {
       descriptor: "11010",
-      bitLength: 5,
+      lengthBits: 5,
       isInternal: true,
     },
     contentAvailability: [
       {
         descriptor: "01010",
-        bitLength: 5,
+        lengthBits: 5,
         isInternal: true,
       },
     ],
     childSubtreeAvailability: {
       descriptor: "1111000011110000",
-      bitLength: 16,
+      lengthBits: 16,
       isInternal: true,
     },
   }).subtreeBuffer;
@@ -461,6 +465,69 @@ describe("Scene/Implicit3DTileContent", function () {
     );
     return content.readyPromise.then(function () {
       expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
+    });
+  });
+
+  it("stores a reference to the subtree in each transcoded tile", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    return content.readyPromise.then(function () {
+      expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
+
+      var subtreeRootTile = mockPlaceholderTile.children[0];
+      var subtree = subtreeRootTile.implicitSubtree;
+      expect(subtree).toBeDefined();
+
+      var tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+      for (var i = 0; i < tiles.length; i++) {
+        expect(tiles[i].implicitSubtree).toBe(subtree);
+      }
+    });
+  });
+
+  it("does not store references to subtrees in placeholder tiles", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    return content.readyPromise.then(function () {
+      expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
+
+      var subtreeRootTile = mockPlaceholderTile.children[0];
+
+      var tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
+      for (var i = 0; i < tiles.length; i++) {
+        expect(tiles[i].implicitSubtree).not.toBeDefined();
+      }
+    });
+  });
+
+  it("destroys", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    return content.readyPromise.then(function () {
+      var subtree = content._implicitSubtree;
+      expect(content.isDestroyed()).toBe(false);
+      expect(subtree.isDestroyed()).toBe(false);
+
+      content.destroy();
+      expect(content.isDestroyed()).toBe(true);
+      expect(subtree.isDestroyed()).toBe(true);
     });
   });
 

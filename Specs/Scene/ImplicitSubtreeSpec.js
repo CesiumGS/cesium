@@ -1,7 +1,11 @@
 import {
+  ImplicitSubdivisionScheme,
   ImplicitSubtree,
+  ImplicitTileCoordinates,
   ImplicitTileset,
+  MetadataSchema,
   Resource,
+  ResourceCache,
   when,
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -50,13 +54,33 @@ describe("Scene/ImplicitSubtree", function () {
     }
   }
 
+  // used for spying on ResourceCache.load()
+  function fakeLoad(arrayBuffer) {
+    return function (options) {
+      var fakeCacheResource = {
+        typedArray: arrayBuffer,
+      };
+      options.resourceLoader._promise = {
+        promise: when.resolve(fakeCacheResource),
+      };
+    };
+  }
+
   var tilesetResource = new Resource({
     url: "https://example.com/tileset.json",
   });
   var subtreeResource = new Resource({
     url: "https://example.com/test.subtree",
   });
-  var implicitQuadtree = new ImplicitTileset(tilesetResource, {
+  var mockTileset = {};
+
+  var quadtreeCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+    level: 0,
+    x: 0,
+    y: 0,
+  });
+  var implicitQuadtreeJson = {
     geometricError: 500,
     refine: "ADD",
     boundingVolume: {
@@ -75,8 +99,21 @@ describe("Scene/ImplicitSubtree", function () {
         },
       },
     },
+  };
+  var implicitQuadtree = new ImplicitTileset(
+    mockTileset,
+    tilesetResource,
+    implicitQuadtreeJson
+  );
+
+  var octreeCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+    level: 0,
+    z: 0,
+    x: 0,
+    y: 0,
   });
-  var implicitOctree = new ImplicitTileset(tilesetResource, {
+  var implicitOctree = new ImplicitTileset(mockTileset, tilesetResource, {
     geometricError: 500,
     refine: "REPLACE",
     boundingVolume: {
@@ -162,15 +199,14 @@ describe("Scene/ImplicitSubtree", function () {
     var results = ImplicitTilingTester.generateSubtreeBuffers(
       subtreeDescription
     );
-
-    var fetchExternal = spyOn(
-      Resource.prototype,
-      "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -223,7 +259,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       subtreeView,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -263,14 +300,14 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    var fetchExternal = spyOn(
-      Resource.prototype,
-      "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -310,10 +347,9 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    var fetchExternal = spyOn(
-      Resource.prototype,
-      "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
@@ -360,7 +396,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expect(fetchExternal).not.toHaveBeenCalled();
@@ -393,7 +430,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -432,7 +470,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -473,10 +512,120 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitOctree
+      implicitOctree,
+      octreeCoordinates
     );
 
     expect(subtree.getLevelOffset(2)).toEqual(9);
+  });
+
+  it("getTileIndex throws for a tile not in the subtree", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "110101111",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 1,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+
+    var deeperOctreeCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+      level: 2,
+      x: 0,
+      y: 0,
+      z: 0,
+    });
+
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree,
+      deeperOctreeCoordinates
+    );
+
+    expect(function () {
+      var implicitCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+        level: 0,
+        x: 0,
+        y: 0,
+        z: 0,
+      });
+      return subtree.getTileIndex(implicitCoordinates);
+    }).toThrowRuntimeError();
+    expect(function () {
+      var implicitCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+        level: 5,
+        x: 0,
+        y: 0,
+        z: 0,
+      });
+      return subtree.getTileIndex(implicitCoordinates);
+    }).toThrowRuntimeError();
+  });
+
+  it("getTileIndex comptues bit index for a tile in the subtree", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "110101111",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 1,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var deeperOctreeCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+      level: 2,
+      x: 0,
+      y: 0,
+      z: 0,
+    });
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree,
+      deeperOctreeCoordinates
+    );
+
+    var implicitCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+      level: 3,
+      x: 1,
+      y: 1,
+      z: 0,
+    });
+    // level offset: 1, morton index 3, so tile index is 1 + 3 = 4
+    expect(subtree.getTileIndex(implicitCoordinates)).toBe(4);
   });
 
   it("computes parent Morton index", function () {
@@ -505,7 +654,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitOctree
+      implicitOctree,
+      octreeCoordinates
     );
 
     // 341 = 0b101010101
@@ -540,7 +690,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitOctree
+      implicitOctree,
+      octreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -584,7 +735,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitOctree
+      implicitOctree,
+      octreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -628,7 +780,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise
       .then(function () {
@@ -639,34 +792,80 @@ describe("Scene/ImplicitSubtree", function () {
       });
   });
 
-  describe("3DTILES_multiple_contents", function () {
-    var multipleContentsQuadtree = new ImplicitTileset(tilesetResource, {
-      geometricError: 500,
-      refine: "ADD",
-      boundingVolume: {
-        region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+  it("destroys", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: false,
       },
-      extensions: {
-        "3DTILES_implicit_tiling": {
-          subdivisionScheme: "QUADTREE",
-          subtreeLevels: 2,
-          maximumLevel: 1,
-          subtrees: {
-            uri: "https://example.com/{level}/{x}/{y}.subtree",
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: "1111000010100000",
+        lengthBits: 16,
+        isInternal: false,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    spyOn(ResourceCache, "load").and.callFake(fakeLoad(results.externalBuffer));
+    var unload = spyOn(ResourceCache, "unload");
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree,
+      quadtreeCoordinates
+    );
+    return subtree.readyPromise.then(function () {
+      var bufferLoader = subtree._bufferLoader;
+      expect(bufferLoader).toBeDefined();
+
+      expect(subtree.isDestroyed()).toBe(false);
+      subtree.destroy();
+      expect(subtree.isDestroyed()).toBe(true);
+      expect(unload).toHaveBeenCalled();
+    });
+  });
+
+  describe("3DTILES_multiple_contents", function () {
+    var multipleContentsQuadtree = new ImplicitTileset(
+      mockTileset,
+      tilesetResource,
+      {
+        geometricError: 500,
+        refine: "ADD",
+        boundingVolume: {
+          region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+        },
+        extensions: {
+          "3DTILES_implicit_tiling": {
+            subdivisionScheme: "QUADTREE",
+            subtreeLevels: 2,
+            maximumLevel: 1,
+            subtrees: {
+              uri: "https://example.com/{level}/{x}/{y}.subtree",
+            },
+          },
+          "3DTILES_multiple_contents": {
+            content: [
+              {
+                uri: "https://example.com/{level}/{x}/{y}.b3dm",
+              },
+              {
+                uri: "https://example.com/{level}/{x}/{y}.pnts",
+              },
+            ],
           },
         },
-        "3DTILES_multiple_contents": {
-          content: [
-            {
-              uri: "https://example.com/{level}/{x}/{y}.b3dm",
-            },
-            {
-              uri: "https://example.com/{level}/{x}/{y}.pnts",
-            },
-          ],
-        },
-      },
-    });
+      }
+    );
 
     it("contentIsAvailable throws for out-of-bounds contentIndex", function () {
       var subtreeDescription = {
@@ -693,15 +892,16 @@ describe("Scene/ImplicitSubtree", function () {
           isInternal: true,
         },
       };
-
       var results = ImplicitTilingTester.generateSubtreeBuffers(
         subtreeDescription
       );
       var subtree = new ImplicitSubtree(
         subtreeResource,
         results.subtreeBuffer,
-        multipleContentsQuadtree
+        multipleContentsQuadtree,
+        quadtreeCoordinates
       );
+
       var outOfBounds = 100;
       return subtree.readyPromise.then(function () {
         expect(function () {
@@ -738,21 +938,601 @@ describe("Scene/ImplicitSubtree", function () {
       var results = ImplicitTilingTester.generateSubtreeBuffers(
         subtreeDescription
       );
-      var fetchExternal = spyOn(
-        Resource.prototype,
-        "fetchArrayBuffer"
-      ).and.returnValue(when.resolve(results.externalBuffer));
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
       var subtree = new ImplicitSubtree(
         subtreeResource,
         results.subtreeBuffer,
-        multipleContentsQuadtree
+        multipleContentsQuadtree,
+        quadtreeCoordinates
       );
       return subtree.readyPromise.then(function () {
-        expect(fetchExternal.calls.count()).toEqual(1);
-        expectContentAvailability(
-          subtree,
-          subtreeDescription.contentAvailability
-        );
+        expect(fetchExternal).toHaveBeenCalled();
+        expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      });
+    });
+  });
+
+  describe("3DTILES_metadata", function () {
+    var schema = {
+      classes: {
+        tile: {
+          properties: {
+            highlightColor: {
+              type: "ARRAY",
+              componentType: "UINT8",
+              componentCount: 3,
+            },
+            buildingCount: {
+              type: "UINT16",
+            },
+          },
+        },
+      },
+    };
+
+    var highlightColors = [
+      [255, 0, 0],
+      [0, 255, 0],
+      [0, 0, 255],
+      [255, 255, 0],
+      [255, 0, 255],
+    ];
+    var buildingCounts = [100, 800, 500, 350, 200];
+
+    var tileTableDescription = {
+      class: "tile",
+      properties: {
+        highlightColor: highlightColors,
+        buildingCount: buildingCounts,
+      },
+    };
+
+    var featureTablesDescription = {
+      schema: schema,
+      featureTables: {
+        tiles: tileTableDescription,
+      },
+    };
+
+    var mockTilesetWithMetadata = {
+      metadata: {
+        schema: new MetadataSchema(schema),
+      },
+    };
+
+    var metadataQuadtree = new ImplicitTileset(
+      mockTilesetWithMetadata,
+      tilesetResource,
+      implicitQuadtreeJson
+    );
+
+    it("creates a metadata table from internal metadata", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree
+      );
+
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal).not.toHaveBeenCalled();
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
+      });
+    });
+
+    it("creates a metadata table from external metadata", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: false,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree,
+        quadtreeCoordinates
+      );
+
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal).toHaveBeenCalled();
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
+      });
+    });
+
+    it("works correctly if availableCount is undefined", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: false,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree,
+        quadtreeCoordinates
+      );
+
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal).not.toHaveBeenCalled();
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
+      });
+    });
+
+    it("getEntityId returns undefined for subtree without metadata", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        implicitQuadtree,
+        quadtreeCoordinates
+      );
+      var coordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+        level: 1,
+        x: 1,
+        y: 1,
+      });
+      expect(subtree.getEntityId(coordinates)).not.toBeDefined();
+    });
+
+    it("getEntityId throws for out-of-bounds coordinates", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: "11001",
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "11001",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree,
+        quadtreeCoordinates
+      );
+
+      expect(function () {
+        var coordinates = new ImplicitTileCoordinates({
+          subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+          level: 4,
+          x: 1,
+          y: 1,
+        });
+        return subtree.getEntityId(coordinates);
+      }).toThrowRuntimeError();
+    });
+
+    it("getEntityId computes the entity id", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: "11001",
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "11001",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree,
+        quadtreeCoordinates
+      );
+
+      var coordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+        level: 1,
+        x: 1,
+        y: 1,
+      });
+      expect(subtree.getEntityId(coordinates)).toBe(2);
+    });
+
+    it("getEntityId returns undefined for unavailable tile", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: "11001",
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "11001",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree,
+        quadtreeCoordinates
+      );
+
+      var coordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+        level: 1,
+        x: 1,
+        y: 0,
+      });
+      expect(subtree.getEntityId(coordinates)).not.toBeDefined();
+    });
+
+    it("handles unavailable tiles correctly", function () {
+      var highlightColors = [
+        [255, 0, 0],
+        [255, 255, 0],
+        [255, 0, 255],
+      ];
+
+      var buildingCounts = [100, 350, 200];
+
+      var tileTableDescription = {
+        class: "tile",
+        properties: {
+          highlightColor: highlightColors,
+          buildingCount: buildingCounts,
+        },
+      };
+
+      var featureTablesDescription = {
+        schema: schema,
+        featureTables: {
+          tiles: tileTableDescription,
+        },
+      };
+
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: "10011",
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "10011",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        metadataQuadtree,
+        quadtreeCoordinates
+      );
+      return subtree.readyPromise.then(function () {
+        expect(subtree._jumpBuffer).toEqual(new Uint8Array([0, 0, 0, 1, 2]));
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(3);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
+      });
+    });
+
+    it("handles metadata with string and array offsets", function () {
+      var arraySchema = {
+        classes: {
+          tile: {
+            properties: {
+              stringProperty: {
+                type: "STRING",
+              },
+              arrayProperty: {
+                type: "ARRAY",
+                componentType: "INT16",
+              },
+              arrayOfStringProperty: {
+                type: "ARRAY",
+                componentType: "STRING",
+              },
+            },
+          },
+        },
+      };
+
+      var stringValues = ["foo", "bar", "baz", "qux", "quux"];
+      var arrayValues = [[1, 2], [3], [4, 5, 6], [7], []];
+      var stringArrayValues = [["foo"], ["bar", "bar"], ["qux"], ["quux"], []];
+
+      var tileTableDescription = {
+        class: "tile",
+        properties: {
+          stringProperty: stringValues,
+          arrayProperty: arrayValues,
+          arrayOfStringProperty: stringArrayValues,
+        },
+      };
+
+      var featureTablesWithOffsets = {
+        schema: arraySchema,
+        featureTables: {
+          tiles: tileTableDescription,
+        },
+      };
+
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesWithOffsets,
+        },
+      };
+
+      var mockTilesetWithArrayMetadata = {
+        metadata: {
+          schema: new MetadataSchema(arraySchema),
+        },
+      };
+
+      var arrayQuadtree = new ImplicitTileset(
+        mockTilesetWithArrayMetadata,
+        tilesetResource,
+        implicitQuadtreeJson
+      );
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        arrayQuadtree,
+        quadtreeCoordinates
+      );
+      return subtree.readyPromise.then(function () {
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "stringProperty")).toBe(
+            stringValues[i]
+          );
+          expect(metadataTable.getProperty(i, "arrayProperty")).toEqual(
+            arrayValues[i]
+          );
+          expect(metadataTable.getProperty(i, "arrayOfStringProperty")).toEqual(
+            stringArrayValues[i]
+          );
+        }
       });
     });
   });
