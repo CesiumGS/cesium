@@ -832,20 +832,25 @@ function createResources(pointCloud, frameState) {
     },
   };
 
-  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
-    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
-  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
-
-  pointCloud._translucentRenderState = RenderState.fromCache({
+  var translucentRenderState = {
     depthTest: {
       enabled: true,
     },
     depthMask: false,
     blending: BlendingState.ALPHA_BLEND,
-  });
+  };
+
+  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+    translucentRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    translucentRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
+  pointCloud._translucentRenderState = RenderState.fromCache(
+    translucentRenderState
+  );
 
   pointCloud._drawCommand = new DrawCommand({
     boundingVolume: new BoundingSphere(),
