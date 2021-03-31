@@ -41,23 +41,23 @@ Using Cesium ion helps support CesiumJS development. :heart:
 ### :clap: Featured Demos
 
 <p>
-<a href="https://cesium.com/blog/2018/08/21/cybercity/"><img src="https://cesium.com/blog/images/2018/08-21/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="https://cesium.com/blog/images/2018/03-29/comspoc-cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2018/02/05/historic-pharsalia-cabin-point-cloud/"><img src="https://cesium.com/blog/images/2018/02-05/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2017/12/12/onesky/"><img src="https://cesium.com/blog/images/2017/12-12/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2017/11/20/nasa-storm-virtual-globe/"><img src="https://cesium.com/blog/images/2017/11-20/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2017/11/16/gefs/"><img src="https://cesium.com/blog/images/2017/11-16/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2019/01/04/norad-tracks-santa/"><img src="https://cesium.com/blog/images/2019/01-04/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2017/07/23/drcog/"><img src="https://cesium.com/blog/images/2017/07-23/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://demos.cesium.com/NewYork/"><img src="https://cesium.com/blog/images/2017/05-05/nyc-cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2018/09/27/swisstopo-live/"><img src="https://cesium.com/blog/images/2018/09-27/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2016/12/12/stk-czml/"><img src="https://cesium.com/blog/images/2016/12-12/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2016/09/29/contextcapture/"><img src="https://cesium.com/blog/images/2016/09-29/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2016/04/20/flightradar24/"><img src="https://cesium.com/blog/images/2016/04-20/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2016/02/03/fodarearth/"><img src="https://cesium.com/blog/images/2016/02-03/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2015/08/19/mars-trek/"><img src="https://cesium.com/blog/images/2015/08-19/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2015/07/16/hiroshima-archive/"><img src="https://cesium.com/blog/images/2015/07-16/cover.jpg" width="30%" /></a>&nbsp;
-<a href="https://cesium.com/blog/2019/06/13/red-bull-x-alps-in-cesium/"><img src="https://cesium.com/blog/images/2019/06-12/redbullxalps.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2018/08/21/cybercity/"><img src="https://images.prismic.io/cesium/2018-08-21-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="https://images.prismic.io/cesium/2018-03-29-comspoc-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2018/02/05/historic-pharsalia-cabin-point-cloud/"><img src="https://images.prismic.io/cesium/2018-02-05-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2017/12/12/onesky/"><img src="https://images.prismic.io/cesium/2017-12-12-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2017/11/20/nasa-storm-virtual-globe/"><img src="https://images.prismic.io/cesium/2017-11-20-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2017/11/16/gefs/"><img src="https://images.prismic.io/cesium/2017-11-16-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2019/01/04/norad-tracks-santa/"><img src="https://images.prismic.io/cesium/2019-01-04-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2017/07/23/drcog/"><img src="https://images.prismic.io/cesium/2017-07-23-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://demos.cesium.com/NewYork/"><img src="https://images.prismic.io/cesium/2017-05-05-nyc-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2018/09/27/swisstopo-live/"><img src="https://images.prismic.io/cesium/2018-09-27-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2016/12/12/stk-czml/"><img src="https://images.prismic.io/cesium/2016-12-12-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2016/09/29/contextcapture/"><img src="https://images.prismic.io/cesium/2016-09-29-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2016/04/20/flightradar24/"><img src="https://images.prismic.io/cesium/2016-04-20-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2016/02/03/fodarearth/"><img src="https://images.prismic.io/cesium/2016-02-03-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2015/08/19/mars-trek/"><img src="https://images.prismic.io/cesium/2015-08-19-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2015/07/16/hiroshima-archive/"><img src="https://images.prismic.io/cesium/2015-07-16-cover.jpg" width="30%" /></a>&nbsp;
+<a href="https://cesium.com/blog/2019/06/13/red-bull-x-alps-in-cesium/"><img src="https://images.prismic.io/cesium/2015-10-02-cover.jpg" width="30%" /></a>&nbsp;
 <br/>
 <br/>
 </p>
