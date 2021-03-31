@@ -47,8 +47,9 @@ export default function ImplicitSubtree(
   this._branchingFactor = implicitTileset.branchingFactor;
   this._readyPromise = when.defer();
 
-  // Metadata table if 3DTILES_metadata is used
+  // properties for 3DTILES_metadata
   this._metadataTable = undefined;
+  this._metadataExtension = undefined;
   // Map of availability bit index to entity ID
   this._jumpBuffer = undefined;
 
@@ -81,6 +82,21 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   metadataTable: {
     get: function () {
       return this._metadataTable;
+    },
+  },
+
+  /**
+   * When the <code>3DTILES_metadata</code> extension is used, this property
+   * stores the JSON from the extension. This is used by {@link MetadataTile}
+   * to get the extras and extensions.
+   *
+   * @type {MetadataTable}
+   * @readonly
+   * @private
+   */
+  metadataExtension: {
+    get: function () {
+      return this._metadataExtension;
     },
   },
 });
@@ -184,6 +200,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
   if (has3DTilesExtension(subtreeJson, "3DTILES_metadata")) {
     metadataExtension = subtreeJson.extensions["3DTILES_metadata"];
   }
+  subtree._metadataExtension = metadataExtension;
 
   // if no contentAvailability is specified, no tile in the subtree has
   // content
@@ -612,17 +629,12 @@ function parseAvailabilityBitstream(
  * subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
- * @param {Object} metadataExtension The JSON for the 3DTILES_metadata extension
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
  * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseMetadataTable(
-  subtree,
-  metadataExtension,
-  implicitTileset,
-  bufferViewsU8
-) {
+function parseMetadataTable(subtree, implicitTileset, bufferViewsU8) {
+  var metadataExtension = subtree._metadataExtension;
   var tileCount = subtree._tileAvailability.availableCount;
   var metadataClassName = metadataExtension.class;
   var metadataSchema = implicitTileset.tileset.metadata.schema;
