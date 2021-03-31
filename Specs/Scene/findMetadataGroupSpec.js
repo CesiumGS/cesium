@@ -20,17 +20,19 @@ describe("Scene/findMetadataGroup", function () {
   });
 
   var mockTileset = {
-    getGroup: function (groupId) {
-      return new MetadataGroup({
-        id: groupId,
-        class: layerClass,
-        group: {
-          properties: {
-            name: "Test Layer " + groupId,
-            elevation: 150.0,
+    metadata: {
+      groups: {
+        testGroup: new MetadataGroup({
+          id: "testGroup",
+          class: layerClass,
+          group: {
+            properties: {
+              name: "Test Layer testGroup",
+              elevation: 150.0,
+            },
           },
-        },
-      });
+        }),
+      },
     },
   };
 
@@ -48,12 +50,11 @@ describe("Scene/findMetadataGroup", function () {
   });
 
   it("returns the group metadata if there is an extension", function () {
-    var groupId = "testGroup";
     var contentHeader = {
       uri: "https://example.com/model.b3dm",
       extensions: {
         "3DTILES_metadata": {
-          group: groupId,
+          group: "testGroup",
         },
       },
     };
