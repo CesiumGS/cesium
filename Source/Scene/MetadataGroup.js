@@ -5,9 +5,6 @@ import MetadataEntity from "./MetadataEntity.js";
 
 /**
  * Metadata about a group of content.
- * <p>
- * Implements the {@link MetadataEntity} interface.
- * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the group.
@@ -16,8 +13,6 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @alias MetadataGroup
  * @constructor
- *
- * @private
  */
 function MetadataGroup(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -47,7 +42,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {MetadataClass}
    * @readonly
-   * @private
    */
   class: {
     get: function () {
@@ -61,7 +55,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   properties: {
     get: function () {
@@ -75,7 +68,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   id: {
     get: function () {
@@ -89,7 +81,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -103,7 +94,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -117,7 +107,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -131,7 +120,6 @@ Object.defineProperties(MetadataGroup.prototype, {
    * @memberof MetadataGroup.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {

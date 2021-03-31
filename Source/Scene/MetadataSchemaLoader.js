@@ -1,44 +1,38 @@
-import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
-import CacheResourceState from "./CacheResourceState.js";
-import CacheResource from "./CacheResource.js";
 import MetadataSchema from "./MetadataSchema.js";
+import ResourceLoader from "./ResourceLoader.js";
+import ResourceLoaderState from "./ResourceLoaderState.js";
 
 /**
- * A cache resource for {@link MetadataSchema} objects, as these may be shared
- * between different objects that support the <code>3DTILES_metadata</code> and
- * <code>EXT_feature_metadata</code> extensions.
+ * A {@link MetadataSchema} loader.
  * <p>
- * Implements the {@link CacheResource} interface.
+ * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias MetadataSchemaCacheResource
+ * @alias MetadataSchemaLoader
  * @constructor
- * @augments CacheResource
+ * @augments ResourceLoader
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
- * @param {String} options.cacheKey The cache key of the resource.
+ * @param {String} [options.cacheKey] The cache key of the resource.
  *
  * @exception {DeveloperError} One of options.schema and options.resource must be defined.
  *
  * @private
  */
-function MetadataSchemaCacheResource(options) {
+export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var schema = options.schema;
   var resource = options.resource;
   var cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.cacheKey", cacheKey);
-  var hasSchema = defined(schema);
-  var hasResource = defined(resource);
-  if (hasSchema === hasResource) {
+  if (defined(schema) === defined(resource)) {
     throw new DeveloperError(
       "One of options.schema and options.resource must be defined."
     );
@@ -48,17 +42,22 @@ function MetadataSchemaCacheResource(options) {
   this._schema = defined(schema) ? new MetadataSchema(schema) : undefined;
   this._resource = resource;
   this._cacheKey = cacheKey;
-  this._state = CacheResourceState.UNLOADED;
+  this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
 }
 
-Object.defineProperties(MetadataSchemaCacheResource.prototype, {
+if (defined(Object.create)) {
+  MetadataSchemaLoader.prototype = Object.create(ResourceLoader.prototype);
+  MetadataSchemaLoader.prototype.constructor = MetadataSchemaLoader;
+}
+
+Object.defineProperties(MetadataSchemaLoader.prototype, {
   /**
    * A promise that resolves to the resource when the resource is ready.
    *
-   * @memberof MetadataSchemaCacheResource.prototype
+   * @memberof MetadataSchemaLoader.prototype
    *
-   * @type {Promise.<MetadataSchemaCacheResource>}
+   * @type {Promise.<MetadataSchemaLoader>}
    * @readonly
    */
   promise: {
@@ -69,7 +68,7 @@ Object.defineProperties(MetadataSchemaCacheResource.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof MetadataSchemaCacheResource.prototype
+   * @memberof MetadataSchemaLoader.prototype
    *
    * @type {String}
    * @readonly
@@ -80,11 +79,11 @@ Object.defineProperties(MetadataSchemaCacheResource.prototype, {
     },
   },
   /**
-   * The metadata schema object
+   * The metadata schema object.
    *
-   * @memberof MetadataSchemaCacheResource.prototype
+   * @memberof MetadataSchemaLoader.prototype
    *
-   * @type {Object}
+   * @type {MetadataSchema}
    * @readonly
    */
   schema: {
@@ -97,43 +96,38 @@ Object.defineProperties(MetadataSchemaCacheResource.prototype, {
 /**
  * Loads the resource.
  */
-MetadataSchemaCacheResource.prototype.load = function () {
+MetadataSchemaLoader.prototype.load = function () {
   if (defined(this._schema)) {
     this._promise.resolve(this);
     return;
   }
 
-  var that = this;
-  this._state = CacheResourceState.LOADING;
-  this._resource
-    .fetchJson()
-    .then(function (json) {
-      if (that._state === CacheResourceState.UNLOADED) {
-        unload(that);
-        return;
-      }
-      that._schema = new MetadataSchema(json);
-      that._state = CacheResourceState.READY;
-      that._promise.resolve(that);
-    })
-    .otherwise(function (error) {
-      unload(that);
-      that._state = CacheResourceState.FAILED;
-      var errorMessage = "Failed to load schema: " + that._resource.url;
-      that._promise.reject(CacheResource.getError(error, errorMessage));
-    });
+  loadExternalSchema(this);
 };
 
-function unload(schemaCacheResource) {
-  schemaCacheResource._schema = undefined;
+function loadExternalSchema(schemaLoader) {
+  var resource = schemaLoader._resource;
+  schemaLoader._state = ResourceLoaderState.LOADING;
+  resource
+    .fetchJson()
+    .then(function (json) {
+      if (schemaLoader.isDestroyed()) {
+        return;
+      }
+      schemaLoader._schema = new MetadataSchema(json);
+      schemaLoader._state = ResourceLoaderState.READY;
+      schemaLoader._promise.resolve(schemaLoader);
+    })
+    .otherwise(function (error) {
+      schemaLoader._state = ResourceLoaderState.FAILED;
+      var errorMessage = "Failed to load schema: " + resource.url;
+      schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
+    });
 }
 
 /**
  * Unloads the resource.
  */
-MetadataSchemaCacheResource.prototype.unload = function () {
-  unload(this);
-  this._state = CacheResourceState.UNLOADED;
+MetadataSchemaLoader.prototype.unload = function () {
+  this._schema = undefined;
 };
-
-export default MetadataSchemaCacheResource;

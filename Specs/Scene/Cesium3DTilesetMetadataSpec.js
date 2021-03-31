@@ -1,23 +1,10 @@
 import {
-  Metadata3DTilesExtension,
+  Cesium3DTilesetMetadata,
   MetadataSchema,
 } from "../../Source/Cesium.js";
 
-describe("Scene/Metadata3DTilesExtension", function () {
-  it("creates 3D Tiles metadata with default values", function () {
-    var metadata = new Metadata3DTilesExtension({
-      extension: {},
-    });
-
-    expect(metadata.schema).toBeUndefined();
-    expect(metadata.groups).toEqual({});
-    expect(metadata.tileset).toBeUndefined();
-    expect(metadata.statistics).toBeUndefined();
-    expect(metadata.extras).toBeUndefined();
-    expect(metadata.extensions).toBeUndefined();
-  });
-
-  var schema = {
+describe("Scene/Cesium3DTilesetMetadata", function () {
+  var schemaJson = {
     classes: {
       city: {
         properties: {
@@ -43,6 +30,22 @@ describe("Scene/Metadata3DTilesExtension", function () {
     },
   };
 
+  it("creates 3D Tiles metadata with default values", function () {
+    var schema = new MetadataSchema(schemaJson);
+
+    var metadata = new Cesium3DTilesetMetadata({
+      extension: {},
+      schema: schema,
+    });
+
+    expect(metadata.schema).toBe(schema);
+    expect(metadata.groups).toEqual({});
+    expect(metadata.tileset).toBeUndefined();
+    expect(metadata.statistics).toBeUndefined();
+    expect(metadata.extras).toBeUndefined();
+    expect(metadata.extensions).toBeUndefined();
+  });
+
   it("creates 3D Tiles metadata", function () {
     var statistics = {
       classes: {
@@ -67,7 +70,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
     };
 
     var extension = {
-      schema: schema,
+      schema: schemaJson,
       groups: {
         neighborhoodA: {
           class: "neighborhood",
@@ -93,9 +96,11 @@ describe("Scene/Metadata3DTilesExtension", function () {
       extensions: extensions,
     };
 
-    var metadata = new Metadata3DTilesExtension({
+    var schema = new MetadataSchema(schemaJson);
+
+    var metadata = new Cesium3DTilesetMetadata({
       extension: extension,
-      schema: new MetadataSchema(schema),
+      schema: schema,
     });
 
     var cityClass = metadata.schema.classes.city;
@@ -123,28 +128,9 @@ describe("Scene/Metadata3DTilesExtension", function () {
     expect(metadata.extensions).toBe(extensions);
   });
 
-  it("creates 3D Tiles metadata with external schema", function () {
-    var extension = {
-      schemaUri: "schema.json",
-    };
-
-    var metadata = new Metadata3DTilesExtension({
-      extension: extension,
-      schema: new MetadataSchema(schema),
-    });
-
-    var cityClass = metadata.schema.classes.city;
-    var neighborhoodClass = metadata.schema.classes.neighborhood;
-    var treeClass = metadata.schema.classes.tree;
-
-    expect(cityClass.id).toBe("city");
-    expect(neighborhoodClass.id).toBe("neighborhood");
-    expect(treeClass.id).toBe("tree");
-  });
-
   it("constructor throws without extension", function () {
     expect(function () {
-      return new Metadata3DTilesExtension();
+      return new Cesium3DTilesetMetadata();
     }).toThrowDeveloperError();
   });
 });
