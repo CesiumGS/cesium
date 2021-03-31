@@ -513,7 +513,7 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 
   var contentHeader = multipleContents._innerContentHeaders[index];
-  content.groupMetadata = findMetadataGroup(tileset, contentHeader);
+  content.metadataGroup = findMetadataGroup(tileset, contentHeader);
   return content;
 }
 

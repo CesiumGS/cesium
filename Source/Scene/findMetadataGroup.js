@@ -11,7 +11,7 @@ export default function findMetadataGroup(tileset, contentHeader) {
   if (has3DTilesExtension(contentHeader, "3DTILES_metadata")) {
     var extension = contentHeader.extensions["3DTILES_metadata"];
     var groupId = extension.group;
-    return tileset.getGroup(groupId);
+    return tileset.metadata.groups[groupId];
   }
 
   return undefined;

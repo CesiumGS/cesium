@@ -290,6 +290,9 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
+      var withGroupMetadataUrl =
+        "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset.json";
+
       var metadataClass = new MetadataClass({
         id: "test",
         class: {
@@ -335,13 +338,27 @@ describe(
       });
 
       it("initializes metadataGroup for inner contents", function () {
-        /*
-      return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(function(tileset) {
-        var content = tileset.root.content;
-        expect(content.metadataGroup).not.toBeDefined();
-      });
-      */
-        fail();
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withGroupMetadataUrl
+        ).then(function (tileset) {
+          var multipleContents = tileset.root.content;
+          var innerContents = multipleContents.innerContents;
+
+          var buildingsContent = innerContents[0];
+          var metadataGroup = buildingsContent.metadataGroup;
+          expect(metadataGroup).toBeDefined();
+          expect(metadataGroup.properties.color).toEqual([255, 127, 0]);
+          expect(metadataGroup.properties.priority).toBe(10);
+          expect(metadataGroup.properties.isInstanced).toBe(false);
+
+          var cubesContent = innerContents[1];
+          metadataGroup = cubesContent.metadataGroup;
+          expect(metadataGroup).toBeDefined();
+          expect(metadataGroup.properties.color).toEqual([0, 255, 127]);
+          expect(metadataGroup.properties.priority).toBe(5);
+          expect(metadataGroup.properties.isInstanced).toBe(true);
+        });
       });
     });
   },
