@@ -16,11 +16,12 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @alias ImplicitTileset
  * @constructor
  *
+ * @param {Cesium3DTileset} tileset The tileset this implicit tileset belongs to. Used for accessing metadata properties
  * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
  * @private
  */
-export default function ImplicitTileset(baseResource, tileJson) {
+export default function ImplicitTileset(tileset, baseResource, tileJson) {
   var extension = tileJson.extensions["3DTILES_implicit_tiling"];
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
@@ -28,6 +29,15 @@ export default function ImplicitTileset(baseResource, tileJson) {
     extension
   );
   //>>includeEnd('debug');
+
+  /**
+   * A reference to the tileset to which this implicit tileset belongs.
+   *
+   * @type {Cesium3DTileset}
+   * @readonly
+   * @private
+   */
+  this.tileset = tileset;
 
   /**
    * The base resource for the tileset. This is stored here as it is needed

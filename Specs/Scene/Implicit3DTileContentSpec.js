@@ -56,7 +56,12 @@ describe(
         year: "2021",
       },
     };
-    var implicitTileset = new ImplicitTileset(tilesetResource, tileJson);
+
+    var implicitTileset = new ImplicitTileset(
+      mockTileset,
+      tilesetResource,
+      tileJson
+    );
 
     var quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
       tileAvailability: {
@@ -86,28 +91,6 @@ describe(
       z: 0,
     });
 
-    var scene;
-
-    // This scene is the same as Composite/Composite, just rephrased
-    // using 3DTILES_multiple_contents
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
-
-    beforeAll(function () {
-      scene = createScene();
-      // One item in each data set is always located in the center, so point the camera there
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
-    });
-
-    afterAll(function () {
-      scene.destroyForSpecs();
-    });
-
-    afterEach(function () {
-      scene.primitives.removeAll();
-    });
-
     function gatherTilesPreorder(tile, minLevel, maxLevel, result) {
       var level = tile.implicitCoordinates.level;
       if (minLevel <= level && level <= maxLevel) {
@@ -127,6 +110,24 @@ describe(
       return box;
     }
 
+    var scene;
+
+    // This scene is the same as Composite/Composite, just rephrased
+    // using 3DTILES_multiple_contents
+    var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
+
+    beforeAll(function () {
+      scene = createScene();
+      // One item in each data set is always located in the center, so point the camera there
+      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
+    });
+
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
+
     var mockPlaceholderTile;
     beforeEach(function () {
       mockPlaceholderTile = new Cesium3DTile(mockTileset, tilesetResource, {
@@ -137,6 +138,10 @@ describe(
       });
       mockPlaceholderTile.implicitCoordinates = rootCoordinates;
       mockPlaceholderTile.implicitTileset = implicitTileset;
+    });
+
+    afterEach(function () {
+      scene.primitives.removeAll();
     });
 
     it("expands subtree", function () {
@@ -194,6 +199,151 @@ describe(
           });
           expect(tiles[i].implicitCoordinates).toEqual(coordinates);
         }
+      });
+    });
+
+    it("handles deeper subtrees correctly", function () {
+      mockPlaceholderTile.implicitCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitTileset.subdivisionScheme,
+        level: 2,
+        x: 2,
+        y: 1,
+      });
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      var refine =
+        implicitTileset.refine === "ADD"
+          ? Cesium3DTileRefine.ADD
+          : Cesium3DTileRefine.REPLACE;
+
+      var parentCoordinates = mockPlaceholderTile.implicitCoordinates;
+      var childCoordinates = parentCoordinates.deriveChildCoordinates(0);
+
+      var parentGeometricError = implicitTileset.geometricError / 4;
+      var childGeometricError = implicitTileset.geometricError / 8;
+
+      var rootBoundingVolume = [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
+      var parentBox = Implicit3DTileContent._deriveBoundingBox(
+        rootBoundingVolume,
+        parentCoordinates.level,
+        parentCoordinates.x,
+        parentCoordinates.y
+      );
+      var childBox = Implicit3DTileContent._deriveBoundingBox(
+        rootBoundingVolume,
+        childCoordinates.level,
+        childCoordinates.x,
+        childCoordinates.y
+      );
+
+      return content.readyPromise.then(function () {
+        var subtreeRootTile = mockPlaceholderTile.children[0];
+        var childTile = subtreeRootTile.children[0];
+        expect(subtreeRootTile.implicitCoordinates).toEqual(parentCoordinates);
+        expect(childTile.implicitCoordinates).toEqual(childCoordinates);
+
+        expect(subtreeRootTile.refine).toEqual(refine);
+        expect(childTile.refine).toEqual(refine);
+
+        expect(subtreeRootTile.geometricError).toEqual(parentGeometricError);
+        expect(childTile.geometricError).toEqual(childGeometricError);
+
+        expect(getBoundingBoxArray(subtreeRootTile)).toEqual(parentBox);
+        expect(getBoundingBoxArray(childTile)).toEqual(childBox);
+      });
+    });
+
+    it("puts the root tile inside the placeholder tile", function () {
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      return content.readyPromise.then(function () {
+        expect(mockPlaceholderTile.children.length).toEqual(1);
+      });
+    });
+
+    it("preserves tile extras", function () {
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      return content.readyPromise.then(function () {
+        expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
+      });
+    });
+
+    it("stores a reference to the subtree in each transcoded tile", function () {
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      return content.readyPromise.then(function () {
+        expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
+
+        var subtreeRootTile = mockPlaceholderTile.children[0];
+        var subtree = subtreeRootTile.implicitSubtree;
+        expect(subtree).toBeDefined();
+
+        var tiles = [];
+        gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+        for (var i = 0; i < tiles.length; i++) {
+          expect(tiles[i].implicitSubtree).toBe(subtree);
+        }
+      });
+    });
+
+    it("does not store references to subtrees in placeholder tiles", function () {
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      return content.readyPromise.then(function () {
+        expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
+
+        var subtreeRootTile = mockPlaceholderTile.children[0];
+
+        var tiles = [];
+        gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
+        for (var i = 0; i < tiles.length; i++) {
+          expect(tiles[i].implicitSubtree).not.toBeDefined();
+        }
+      });
+    });
+
+    it("destroys", function () {
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      return content.readyPromise.then(function () {
+        var subtree = content._implicitSubtree;
+        expect(content.isDestroyed()).toBe(false);
+        expect(subtree.isDestroyed()).toBe(false);
+
+        content.destroy();
+        expect(content.isDestroyed()).toBe(true);
+        expect(subtree.isDestroyed()).toBe(true);
       });
     });
 
@@ -405,88 +555,6 @@ describe(
           );
           expect(childBox).toEqual(expectedBounds);
         }
-      });
-    });
-
-    it("handles deeper subtrees correctly", function () {
-      mockPlaceholderTile.implicitCoordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: implicitTileset.subdivisionScheme,
-        level: 2,
-        x: 2,
-        y: 1,
-      });
-      var content = new Implicit3DTileContent(
-        mockTileset,
-        mockPlaceholderTile,
-        tilesetResource,
-        quadtreeBuffer,
-        0
-      );
-      var refine =
-        implicitTileset.refine === "ADD"
-          ? Cesium3DTileRefine.ADD
-          : Cesium3DTileRefine.REPLACE;
-
-      var parentCoordinates = mockPlaceholderTile.implicitCoordinates;
-      var childCoordinates = parentCoordinates.deriveChildCoordinates(0);
-
-      var parentGeometricError = implicitTileset.geometricError / 4;
-      var childGeometricError = implicitTileset.geometricError / 8;
-
-      var rootBoundingVolume = [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
-      var parentBox = Implicit3DTileContent._deriveBoundingBox(
-        rootBoundingVolume,
-        parentCoordinates.level,
-        parentCoordinates.x,
-        parentCoordinates.y
-      );
-      var childBox = Implicit3DTileContent._deriveBoundingBox(
-        rootBoundingVolume,
-        childCoordinates.level,
-        childCoordinates.x,
-        childCoordinates.y
-      );
-
-      return content.readyPromise.then(function () {
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var childTile = subtreeRootTile.children[0];
-        expect(subtreeRootTile.implicitCoordinates).toEqual(parentCoordinates);
-        expect(childTile.implicitCoordinates).toEqual(childCoordinates);
-
-        expect(subtreeRootTile.refine).toEqual(refine);
-        expect(childTile.refine).toEqual(refine);
-
-        expect(subtreeRootTile.geometricError).toEqual(parentGeometricError);
-        expect(childTile.geometricError).toEqual(childGeometricError);
-
-        expect(getBoundingBoxArray(subtreeRootTile)).toEqual(parentBox);
-        expect(getBoundingBoxArray(childTile)).toEqual(childBox);
-      });
-    });
-
-    it("puts the root tile inside the placeholder tile", function () {
-      var content = new Implicit3DTileContent(
-        mockTileset,
-        mockPlaceholderTile,
-        tilesetResource,
-        quadtreeBuffer,
-        0
-      );
-      return content.readyPromise.then(function () {
-        expect(mockPlaceholderTile.children.length).toEqual(1);
-      });
-    });
-
-    it("preserves tile extras", function () {
-      var content = new Implicit3DTileContent(
-        mockTileset,
-        mockPlaceholderTile,
-        tilesetResource,
-        quadtreeBuffer,
-        0
-      );
-      return content.readyPromise.then(function () {
-        expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
       });
     });
 

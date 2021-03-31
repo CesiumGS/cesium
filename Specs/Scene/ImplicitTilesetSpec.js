@@ -38,9 +38,14 @@ describe("Scene/ImplicitTileset", function () {
   var baseResource = new Resource("https://example.com/tileset.json");
   var contentUriTemplate = new Resource(contentUriPattern);
   var subtreeUriTemplate = new Resource(subtreeUriPattern);
+  var mockTileset = {};
 
   it("gathers information from both tile JSON and extension", function () {
-    var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
+    var implicitTileset = new ImplicitTileset(
+      mockTileset,
+      baseResource,
+      implicitTileJson
+    );
     expect(implicitTileset.subtreeLevels).toEqual(3);
     expect(implicitTileset.maximumLevel).toEqual(4);
     expect(implicitTileset.subdivisionScheme).toEqual(
@@ -56,7 +61,11 @@ describe("Scene/ImplicitTileset", function () {
   });
 
   it("stores a template of the tile JSON structure", function () {
-    var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
+    var implicitTileset = new ImplicitTileset(
+      mockTileset,
+      baseResource,
+      implicitTileJson
+    );
     var deep = true;
     var expected = clone(implicitTileJson, deep);
     delete expected.content;
@@ -69,7 +78,11 @@ describe("Scene/ImplicitTileset", function () {
     var withExtensions = clone(implicitTileJson, deep);
     withExtensions.extensions["3DTILES_extension"] = {};
 
-    var implicitTileset = new ImplicitTileset(baseResource, withExtensions);
+    var implicitTileset = new ImplicitTileset(
+      mockTileset,
+      baseResource,
+      withExtensions
+    );
     var expected = clone(withExtensions, deep);
     delete expected.content;
     delete expected.extensions["3DTILES_implicit_tiling"];
@@ -77,14 +90,22 @@ describe("Scene/ImplicitTileset", function () {
   });
 
   it("stores a template of the tile content structure", function () {
-    var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
+    var implicitTileset = new ImplicitTileset(
+      mockTileset,
+      baseResource,
+      implicitTileJson
+    );
     expect(implicitTileset.contentHeaders[0]).toEqual(implicitTileJson.content);
   });
 
   it("allows undefined content URI", function () {
     var noContentJson = clone(implicitTileJson);
     delete noContentJson.content;
-    var implicitTileset = new ImplicitTileset(baseResource, noContentJson);
+    var implicitTileset = new ImplicitTileset(
+      mockTileset,
+      baseResource,
+      noContentJson
+    );
     expect(implicitTileset.contentUriTemplates).toEqual([]);
   });
 
@@ -96,7 +117,7 @@ describe("Scene/ImplicitTileset", function () {
     };
     var tileJson = combine(sphereJson, implicitTileJson);
     expect(function () {
-      return new ImplicitTileset(baseResource, tileJson);
+      return new ImplicitTileset(mockTileset, baseResource, tileJson);
     }).toThrowRuntimeError();
   });
 
@@ -137,6 +158,7 @@ describe("Scene/ImplicitTileset", function () {
 
     it("gathers content URIs from multiple contents extension", function () {
       var implicitTileset = new ImplicitTileset(
+        mockTileset,
         baseResource,
         multipleContentTile
       );
@@ -160,7 +182,11 @@ describe("Scene/ImplicitTileset", function () {
         contents[i].extensions = extension;
       }
 
-      var implicitTileset = new ImplicitTileset(baseResource, withProperties);
+      var implicitTileset = new ImplicitTileset(
+        mockTileset,
+        baseResource,
+        withProperties
+      );
       for (i = 0; i < implicitTileset.contentHeaders.length; i++) {
         expect(implicitTileset.contentHeaders[i]).toEqual(contents[i]);
       }
@@ -168,6 +194,7 @@ describe("Scene/ImplicitTileset", function () {
 
     it("template tileHeader does not store multiple contents extension", function () {
       var implicitTileset = new ImplicitTileset(
+        mockTileset,
         baseResource,
         multipleContentTile
       );

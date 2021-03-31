@@ -1810,7 +1810,11 @@ Cesium3DTileset.prototype.loadTileset = function (
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
   if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
-    var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
+    var implicitTileset = new ImplicitTileset(
+      tileset,
+      baseResource,
+      tileHeader
+    );
     var rootCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
       level: 0,

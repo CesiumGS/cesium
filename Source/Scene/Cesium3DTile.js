@@ -365,10 +365,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.priorityDeferred = false;
 
   /**
-   * For implicit tiling, an ImplicitTileset object will be attached to the
-   * tile with the <code>3DTILES_implicit_tiling</code> extension. This way
-   * the {@link Implicit3DTileContent} can access the tile later once the
-   * content is fetched.
+   * For implicit tiling, an ImplicitTileset object will be attached to a
+   * placeholder tile with the <code>3DTILES_implicit_tiling</code> extension.
+   * This way the {@link Implicit3DTileContent} can access the tile later once the content is fetched.
    *
    * @type {ImplicitTileset}
    *
@@ -385,6 +384,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.implicitCoordinates = undefined;
+
+  /**
+   * For implicit tiling, each transcoded tile will hold a weak reference to
+   * the {@link ImplicitSubtree}.
+   *
+   * @type {ImplicitSubtree}
+   *
+   * @private
+   */
+  this.implicitSubtree = undefined;
 
   // Members that are updated every frame for tree traversal and rendering optimizations:
   this._distanceToCamera = 0.0;
