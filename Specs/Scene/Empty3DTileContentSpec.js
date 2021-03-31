@@ -25,4 +25,22 @@ describe("Scene/Empty3DTileContent", function () {
     expect(content.url).toBeUndefined();
     expect(content.batchTable).toBeUndefined();
   });
+
+  describe("3DTILES_metadata", function () {
+    it("metadataGroup returns undefined", function () {
+      var mockTileset = {};
+      var mockTile = {};
+      var content = new Empty3DTileContent(mockTileset, mockTile);
+      expect(content.metadataGroup).not.toBeDefined();
+    });
+
+    it("assigning metadataGroup throws", function () {
+      expect(function () {
+        var mockTileset = {};
+        var mockTile = {};
+        var content = new Empty3DTileContent(mockTileset, mockTile);
+        content.metadataGroup = {};
+      }).toThrowDeveloperError();
+    });
+  });
 });

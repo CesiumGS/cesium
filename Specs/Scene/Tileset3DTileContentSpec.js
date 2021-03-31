@@ -1,5 +1,9 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  HeadingPitchRange,
+  MetadataClass,
+  MetadataGroup,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -61,6 +65,43 @@ describe(
           expect(content.getFeature(0)).toBeUndefined();
         }
       );
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              type: "STRING",
+            },
+            height: {
+              type: "FLOAT32",
+            },
+          },
+        },
+      });
+      var metadataGroup = new MetadataGroup({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns metadataGroup", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetOfTilesetsUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          content.metadataGroup = metadataGroup;
+          expect(content.metadataGroup).toBe(metadataGroup);
+        });
+      });
     });
   },
   "WebGL"

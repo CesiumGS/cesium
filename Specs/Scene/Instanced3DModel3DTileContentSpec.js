@@ -1,12 +1,16 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { Model } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Transforms,
+  Cesium3DTilePass,
+  ClippingPlane,
+  ClippingPlaneCollection,
+  MetadataClass,
+  MetadataGroup,
+  Model,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -443,6 +447,43 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              type: "STRING",
+            },
+            height: {
+              type: "FLOAT32",
+            },
+          },
+        },
+      });
+      var metadataGroup = new MetadataGroup({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns metadataGroup", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withoutBatchTableUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          content.metadataGroup = metadataGroup;
+          expect(content.metadataGroup).toBe(metadataGroup);
+        });
+      });
     });
   },
   "WebGL"
