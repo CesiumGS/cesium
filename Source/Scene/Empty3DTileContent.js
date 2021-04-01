@@ -94,7 +94,7 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
       return undefined;
     },

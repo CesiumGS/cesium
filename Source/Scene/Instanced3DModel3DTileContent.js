@@ -53,7 +53,7 @@ function Instanced3DModel3DTileContent(
   this._features = undefined;
 
   this.featurePropertiesDirty = false;
-  this._metadataGroup = undefined;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -146,12 +146,12 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
     },
   },
 
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
-      return this._metadataGroup;
+      return this._groupMetadata;
     },
     set: function (value) {
-      this._metadataGroup = value;
+      this._groupMetadata = value;
     },
   },
 });

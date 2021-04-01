@@ -1261,7 +1261,7 @@ function makeContent(tile, arrayBuffer) {
   }
 
   var contentHeader = tile._header.content;
-  content.metadataGroup = findMetadataGroup(tileset, contentHeader);
+  content.groupMetadata = findMetadataGroup(tileset, contentHeader);
   return content;
 }
 

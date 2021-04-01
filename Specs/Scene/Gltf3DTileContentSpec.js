@@ -5,7 +5,7 @@ import {
   ClippingPlaneCollection,
   HeadingPitchRange,
   MetadataClass,
-  MetadataGroup,
+  GroupMetadata,
   Model,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
@@ -198,7 +198,7 @@ describe(
           },
         },
       });
-      var metadataGroup = new MetadataGroup({
+      var groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -209,12 +209,12 @@ describe(
         class: metadataClass,
       });
 
-      it("assigns metadataGroup", function () {
+      it("assigns groupMetadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
           function (tileset) {
             var content = tileset.root.content;
-            content.metadataGroup = metadataGroup;
-            expect(content.metadataGroup).toBe(metadataGroup);
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
           }
         );
       });

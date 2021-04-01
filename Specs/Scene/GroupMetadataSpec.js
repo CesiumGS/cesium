@@ -1,8 +1,8 @@
-import { MetadataClass, MetadataGroup } from "../../Source/Cesium.js";
+import { MetadataClass, GroupMetadata } from "../../Source/Cesium.js";
 
-describe("Scene/MetadataGroup", function () {
+describe("Scene/GroupMetadata", function () {
   it("creates group metadata with default values", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -42,7 +42,7 @@ describe("Scene/MetadataGroup", function () {
       position: [0.0, 0.0, 0.0],
     };
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -65,7 +65,7 @@ describe("Scene/MetadataGroup", function () {
 
   it("constructor throws without id", function () {
     expect(function () {
-      return new MetadataGroup({
+      return new GroupMetadata({
         group: {},
       });
     }).toThrowDeveloperError();
@@ -73,14 +73,14 @@ describe("Scene/MetadataGroup", function () {
 
   it("constructor throws without group", function () {
     expect(function () {
-      return new MetadataGroup({
+      return new GroupMetadata({
         id: "building",
       });
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns false when there's no properties", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -99,7 +99,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -123,7 +123,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -148,7 +148,7 @@ describe("Scene/MetadataGroup", function () {
         },
       },
     });
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {},
@@ -158,7 +158,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("hasProperty throws without propertyId", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -169,7 +169,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("getPropertyIds returns empty array when there are no properties", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -192,7 +192,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       class: buildingClass,
       group: {
@@ -222,7 +222,7 @@ describe("Scene/MetadataGroup", function () {
         },
       },
     });
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -250,7 +250,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -269,7 +269,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("getProperty returns undefined when there's no properties", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -288,7 +288,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -316,7 +316,7 @@ describe("Scene/MetadataGroup", function () {
 
     var position = [0.0, 0.0, 0.0];
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -348,7 +348,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {},
@@ -360,7 +360,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("getProperty throws without propertyId", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -371,7 +371,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("setProperty creates property if it doesn't exist", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -396,7 +396,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -413,7 +413,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("setProperty throws without propertyId", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -424,7 +424,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("setProperty throws without value", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -435,7 +435,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no class", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -454,7 +454,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -480,7 +480,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -494,7 +494,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("getPropertyBySemantic throws without semantic", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -517,7 +517,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -543,7 +543,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -558,7 +558,7 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("setPropertyBySemantic throws without semantic", function () {
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -581,7 +581,7 @@ describe("Scene/MetadataGroup", function () {
       },
     });
 
-    var groupMetadata = new MetadataGroup({
+    var groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {

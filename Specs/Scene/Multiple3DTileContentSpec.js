@@ -5,7 +5,7 @@ import {
   HeadingPitchRange,
   Multiple3DTileContent,
   MetadataClass,
-  MetadataGroup,
+  GroupMetadata,
   RequestScheduler,
   Resource,
   when,
@@ -306,7 +306,7 @@ describe(
           },
         },
       });
-      var metadataGroup = new MetadataGroup({
+      var groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -317,27 +317,27 @@ describe(
         class: metadataClass,
       });
 
-      it("metadataGroup returns undefined", function () {
+      it("groupMetadata returns undefined", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             var content = tileset.root.content;
-            expect(content.metadataGroup).not.toBeDefined();
+            expect(content.groupMetadata).not.toBeDefined();
           }
         );
       });
 
-      it("assigning metadataGroup throws", function () {
+      it("assigning groupMetadata throws", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             expect(function () {
               var content = tileset.root.content;
-              content.metadataGroup = metadataGroup;
+              content.groupMetadata = groupMetadata;
             }).toThrowDeveloperError();
           }
         );
       });
 
-      it("initializes metadataGroup for inner contents", function () {
+      it("initializes groupMetadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           withGroupMetadataUrl
@@ -346,18 +346,18 @@ describe(
           var innerContents = multipleContents.innerContents;
 
           var buildingsContent = innerContents[0];
-          var metadataGroup = buildingsContent.metadataGroup;
-          expect(metadataGroup).toBeDefined();
-          expect(metadataGroup.properties.color).toEqual([255, 127, 0]);
-          expect(metadataGroup.properties.priority).toBe(10);
-          expect(metadataGroup.properties.isInstanced).toBe(false);
+          var groupMetadata = buildingsContent.groupMetadata;
+          expect(groupMetadata).toBeDefined();
+          expect(groupMetadata.properties.color).toEqual([255, 127, 0]);
+          expect(groupMetadata.properties.priority).toBe(10);
+          expect(groupMetadata.properties.isInstanced).toBe(false);
 
           var cubesContent = innerContents[1];
-          metadataGroup = cubesContent.metadataGroup;
-          expect(metadataGroup).toBeDefined();
-          expect(metadataGroup.properties.color).toEqual([0, 255, 127]);
-          expect(metadataGroup.properties.priority).toBe(5);
-          expect(metadataGroup.properties.isInstanced).toBe(true);
+          groupMetadata = cubesContent.groupMetadata;
+          expect(groupMetadata).toBeDefined();
+          expect(groupMetadata.properties.color).toEqual([0, 255, 127]);
+          expect(groupMetadata.properties.priority).toBe(5);
+          expect(groupMetadata.properties.isInstanced).toBe(true);
         });
       });
     });

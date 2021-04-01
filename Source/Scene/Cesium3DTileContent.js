@@ -232,11 +232,11 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {MetadataGroup}
+   * @type {GroupMetadata}
    *
    * @private
    */
-  metadataGroup: {
+  groupMetadata: {
     // eslint-disable-next-line getter-return
     get: function () {
       DeveloperError.throwInstantiationError();

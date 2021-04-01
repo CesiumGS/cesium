@@ -55,7 +55,7 @@ export default function Implicit3DTileContent(
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
-  this._metadataGroup = undefined;
+  this._groupMetadata = undefined;
 
   var templateValues = implicitCoordinates.getTemplateValues();
   var subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource({
@@ -139,12 +139,12 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
     },
   },
 
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
-      return this._metadataGroup;
+      return this._groupMetadata;
     },
     set: function (value) {
-      this._metadataGroup = value;
+      this._groupMetadata = value;
     },
   },
 });

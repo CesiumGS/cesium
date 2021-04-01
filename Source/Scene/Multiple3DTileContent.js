@@ -224,11 +224,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
-   * always returns <code>undefined</code>.  Instead call <code>metadataGroup</code> for a specific inner content.
+   * always returns <code>undefined</code>.  Instead call <code>groupMetadata</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
    */
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
       return undefined;
     },
@@ -513,7 +513,7 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 
   var contentHeader = multipleContents._innerContentHeaders[index];
-  content.metadataGroup = findMetadataGroup(tileset, contentHeader);
+  content.groupMetadata = findMetadataGroup(tileset, contentHeader);
   return content;
 }
 

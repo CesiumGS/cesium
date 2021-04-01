@@ -21,7 +21,7 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
-  this._metadataGroup = undefined;
+  this._groupMetadata = undefined;
 
   initialize(this, json);
 }
@@ -99,12 +99,12 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
     },
   },
 
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
-      return this._metadataGroup;
+      return this._groupMetadata;
     },
     set: function (value) {
-      this._metadataGroup = value;
+      this._groupMetadata = value;
     },
   },
 });

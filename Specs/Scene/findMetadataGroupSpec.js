@@ -1,7 +1,7 @@
 import {
   findMetadataGroup,
   MetadataClass,
-  MetadataGroup,
+  GroupMetadata,
 } from "../../Source/Cesium.js";
 
 describe("Scene/findMetadataGroup", function () {
@@ -22,7 +22,7 @@ describe("Scene/findMetadataGroup", function () {
   var mockTileset = {
     metadata: {
       groups: {
-        testGroup: new MetadataGroup({
+        testGroup: new GroupMetadata({
           id: "testGroup",
           class: layerClass,
           group: {

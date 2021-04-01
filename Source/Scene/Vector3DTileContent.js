@@ -51,7 +51,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
-  this._metadataGroup = undefined;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -149,12 +149,12 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
-      return this._metadataGroup;
+      return this._groupMetadata;
     },
     set: function (value) {
-      this._metadataGroup = value;
+      this._groupMetadata = value;
     },
   },
 });

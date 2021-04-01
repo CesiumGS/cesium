@@ -27,19 +27,19 @@ describe("Scene/Empty3DTileContent", function () {
   });
 
   describe("3DTILES_metadata", function () {
-    it("metadataGroup returns undefined", function () {
+    it("groupMetadata returns undefined", function () {
       var mockTileset = {};
       var mockTile = {};
       var content = new Empty3DTileContent(mockTileset, mockTile);
-      expect(content.metadataGroup).not.toBeDefined();
+      expect(content.groupMetadata).not.toBeDefined();
     });
 
-    it("assigning metadataGroup throws", function () {
+    it("assigning groupMetadata throws", function () {
       expect(function () {
         var mockTileset = {};
         var mockTile = {};
         var content = new Empty3DTileContent(mockTileset, mockTile);
-        content.metadataGroup = {};
+        content.groupMetadata = {};
       }).toThrowDeveloperError();
     });
   });

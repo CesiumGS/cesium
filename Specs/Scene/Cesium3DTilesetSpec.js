@@ -5248,7 +5248,7 @@ describe(
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           var parent = tileset.root;
-          var group = parent.content.metadataGroup;
+          var group = parent.content.groupMetadata;
           expect(group).not.toBeDefined();
 
           var expected = {
@@ -5261,7 +5261,7 @@ describe(
           var childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             var uri = tile._header.content.uri;
-            expect(tile.content.metadataGroup).toBe(expected[uri]);
+            expect(tile.content.groupMetadata).toBe(expected[uri]);
           });
         });
       });

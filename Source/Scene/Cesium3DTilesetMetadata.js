@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import MetadataGroup from "./MetadataGroup.js";
+import GroupMetadata from "./GroupMetadata.js";
 import MetadataTileset from "./MetadataTileset.js";
 
 /**
@@ -11,7 +11,7 @@ import MetadataTileset from "./MetadataTileset.js";
  * </p>
  * <p>
  * This object represents the <code>3DTILES_metadata</code> object which
- * contains the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link MetadataGroup}), and metadata statistics (dictionary)
+ * contains the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -39,7 +39,7 @@ function Cesium3DTilesetMetadata(options) {
     for (var groupId in extension.groups) {
       if (extension.groups.hasOwnProperty(groupId)) {
         var group = extension.groups[groupId];
-        groups[groupId] = new MetadataGroup({
+        groups[groupId] = new GroupMetadata({
           id: groupId,
           group: extension.groups[groupId],
           class: schema.classes[group.class],
@@ -82,7 +82,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * Metadata about groups of content.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {Object.<String, MetadataGroup>}
+   * @type {Object.<String, GroupMetadata>}
    * @readonly
    */
   groups: {

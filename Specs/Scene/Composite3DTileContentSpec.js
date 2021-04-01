@@ -3,7 +3,7 @@ import {
   Color,
   HeadingPitchRange,
   MetadataClass,
-  MetadataGroup,
+  GroupMetadata,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -157,7 +157,7 @@ describe(
           },
         },
       });
-      var metadataGroup = new MetadataGroup({
+      var groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -168,16 +168,16 @@ describe(
         class: metadataClass,
       });
 
-      it("assigning metadataGroup propagates to inner contents", function () {
+      it("assigning groupMetadata propagates to inner contents", function () {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
           function (tileset) {
             var content = tileset.root.content;
-            content.metadataGroup = metadataGroup;
-            expect(content.metadataGroup).toBe(metadataGroup);
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
 
             var innerContents = content.innerContents;
             for (var i = 0; i < innerContents.length; i++) {
-              expect(innerContents[i].metadataGroup).toBe(metadataGroup);
+              expect(innerContents[i].groupMetadata).toBe(groupMetadata);
             }
           }
         );

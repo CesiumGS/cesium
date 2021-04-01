@@ -11,7 +11,7 @@ import {
   Matrix3,
   Matrix4,
   MetadataClass,
-  MetadataGroup,
+  GroupMetadata,
   Multiple3DTileContent,
   Resource,
 } from "../../Source/Cesium.js";
@@ -809,7 +809,7 @@ describe(
           },
         },
       });
-      var metadataGroup = new MetadataGroup({
+      var groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -820,12 +820,12 @@ describe(
         class: metadataClass,
       });
 
-      it("assigns metadataGroup", function () {
+      it("assigns groupMetadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
           function (tileset) {
             var content = tileset.root.content;
-            content.metadataGroup = metadataGroup;
-            expect(content.metadataGroup).toBe(metadataGroup);
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
           }
         );
       });

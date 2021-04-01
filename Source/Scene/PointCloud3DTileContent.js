@@ -41,7 +41,7 @@ function PointCloud3DTileContent(
   this._styleDirty = false;
   this._features = undefined;
   this.featurePropertiesDirty = false;
-  this._metadataGroup = undefined;
+  this._groupMetadata = undefined;
 
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
@@ -135,12 +135,12 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
     },
   },
 
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
-      return this._metadataGroup;
+      return this._groupMetadata;
     },
     set: function (value) {
-      this._metadataGroup = value;
+      this._groupMetadata = value;
     },
   },
 });

@@ -31,7 +31,7 @@ function Composite3DTileContent(
   this._resource = resource;
   this._contents = [];
   this._readyPromise = when.defer();
-  this._metadataGroup = undefined;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
 }
@@ -170,16 +170,16 @@ Object.defineProperties(Composite3DTileContent.prototype, {
    * both stores the metadata group and propagates the metadata group to all of its children.
    * @memberof Composite3DTileContent.prototype
    */
-  metadataGroup: {
+  groupMetadata: {
     get: function () {
-      return this._metadataGroup;
+      return this._groupMetadata;
     },
     set: function (value) {
-      this._metadataGroup = value;
+      this._groupMetadata = value;
       var contents = this._contents;
       var length = contents.length;
       for (var i = 0; i < length; ++i) {
-        contents[i].metadataGroup = value;
+        contents[i].groupMetadata = value;
       }
     },
   },
