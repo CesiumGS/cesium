@@ -11,10 +11,10 @@ import MetadataEntity from "./MetadataEntity.js";
  * @param {Object} options.group The group JSON object.
  * @param {MetadataClass} [options.class] The class that group metadata conforms to.
  *
- * @alias MetadataGroup
+ * @alias GroupMetadata
  * @constructor
  */
-function MetadataGroup(options) {
+function GroupMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var id = options.id;
   var group = options.group;
@@ -35,11 +35,11 @@ function MetadataGroup(options) {
   this._extensions = group.extensions;
 }
 
-Object.defineProperties(MetadataGroup.prototype, {
+Object.defineProperties(GroupMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -52,7 +52,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   /**
    * A dictionary containing properties.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -65,7 +65,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   /**
    * The ID of the group.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {String}
    * @readonly
    */
@@ -78,7 +78,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   /**
    * The name of the group.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {String}
    * @readonly
    */
@@ -91,7 +91,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   /**
    * The description of the group.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {String}
    * @readonly
    */
@@ -104,7 +104,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {*}
    * @readonly
    */
@@ -117,7 +117,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof GroupMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -134,7 +134,7 @@ Object.defineProperties(MetadataGroup.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-MetadataGroup.prototype.hasProperty = function (propertyId) {
+GroupMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(this, propertyId);
 };
 
@@ -144,7 +144,7 @@ MetadataGroup.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-MetadataGroup.prototype.getPropertyIds = function (results) {
+GroupMetadata.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this, results);
 };
 
@@ -157,7 +157,7 @@ MetadataGroup.prototype.getPropertyIds = function (results) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataGroup.prototype.getProperty = function (propertyId) {
+GroupMetadata.prototype.getProperty = function (propertyId) {
   return MetadataEntity.getProperty(this, propertyId);
 };
 
@@ -173,7 +173,7 @@ MetadataGroup.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataGroup.prototype.setProperty = function (propertyId, value) {
+GroupMetadata.prototype.setProperty = function (propertyId, value) {
   MetadataEntity.setProperty(this, propertyId, value);
 };
 
@@ -183,7 +183,7 @@ MetadataGroup.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataGroup.prototype.getPropertyBySemantic = function (semantic) {
+GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(this, semantic);
 };
 
@@ -193,8 +193,8 @@ MetadataGroup.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataGroup.prototype.setPropertyBySemantic = function (semantic, value) {
+GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   MetadataEntity.setPropertyBySemantic(this, semantic, value);
 };
 
-export default MetadataGroup;
+export default GroupMetadata;

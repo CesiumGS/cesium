@@ -20,6 +20,8 @@
       "maximum": 20
     }
   },
+  "extensionsRequired": ["3DTILES_multiple_contents"],
+  "extensionsUsed": ["3DTILES_multiple_contents"],
   "geometricError": 70,
   "root": {
     "refine": "ADD",

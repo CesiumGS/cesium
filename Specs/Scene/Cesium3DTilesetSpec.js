@@ -5163,6 +5163,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset.json";
       var tilesetWithExternalSchemaUrl =
         "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset.json";
+      var tilesetWithGroupMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset.json";
       var tilesetWithImplicitTileMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
 
@@ -5203,6 +5205,65 @@ describe(
             );
           }
         );
+      });
+
+      it("loads group metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithGroupMetadataUrl
+        ).then(function (tileset) {
+          var metadata = tileset.metadata;
+          expect(metadata).toBeDefined();
+
+          var groups = metadata.groups;
+          expect(groups).toBeDefined();
+
+          var group = groups.commercialDistrict;
+          expect(group).toBeDefined();
+          expect(group.properties.businessCount).toBe(143);
+
+          group = groups.residentialDistrict;
+          expect(group).toBeDefined();
+          expect(group.properties.population).toBe(300000);
+          expect(group.properties.neighborhoods).toEqual([
+            "Hillside",
+            "Middletown",
+            "Western Heights",
+          ]);
+
+          group = groups.port;
+          expect(group).not.toBeDefined();
+        });
+      });
+
+      it("can access group metadata through contents", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithGroupMetadataUrl
+        ).then(function (tileset) {
+          var metadata = tileset.metadata;
+          var commercialDistrict = metadata.groups.commercialDistrict;
+          var residentialDistrict = metadata.groups.residentialDistrict;
+
+          // the parent tile in this dataset does not have a group defined,
+          // but its children do.
+          var parent = tileset.root;
+          var group = parent.content.groupMetadata;
+          expect(group).not.toBeDefined();
+
+          var expected = {
+            "ul.b3dm": residentialDistrict,
+            "ll.b3dm": residentialDistrict,
+            "ur.b3dm": commercialDistrict,
+            "lr.b3dm": commercialDistrict,
+          };
+
+          var childrenTiles = parent.children;
+          childrenTiles.forEach(function (tile) {
+            var uri = tile._header.content.uri;
+            expect(tile.content.groupMetadata).toBe(expected[uri]);
+          });
+        });
       });
 
       it("loads metadata with embedded schema", function () {

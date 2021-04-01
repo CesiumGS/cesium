@@ -1,0 +1,95 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_multiple_contents",
+    "3DTILES_metadata"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_multiple_contents"
+  ],
+  "geometricError": 240,
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "layer": {
+            "properties": {
+              "color": {
+                "type": "ARRAY",
+                "componentType": "UINT8",
+                "componentCount": 3
+              },
+              "priority": {
+                "type": "UINT32"
+              }
+            }
+          }
+        }
+      },
+      "groups": {
+        "ground": {
+          "class": "layer",
+          "properties": {
+            "color": [120, 68, 32],
+            "priority": 0
+          }
+        },
+        "sky": {
+          "class": "layer",
+          "properties": {
+            "color": [206, 237, 242],
+            "priority": 1
+          }
+        }
+      }
+    }
+  },
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197309591796106,
+        0.6988324218,
+        -1.3196290408203893,
+        0.6989155782,
+        0,
+        88
+      ]
+    },
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "QUADTREE",
+        "subtreeLevels": 2,
+        "maximumLevel": 1,
+        "subtrees": {
+          "uri": "subtrees/{level}.{x}.{y}.subtree"
+        }
+      },
+      "3DTILES_multiple_contents": {
+        "content": [
+          {
+            "uri": "ground/{level}/{x}/{y}.b3dm",
+            "extensions": {
+              "3DTILES_metadata": {
+                "group": "ground"
+              }
+            }
+          },
+          {
+            "uri": "sky/{level}/{x}/{y}.b3dm",
+            "extensions": {
+              "3DTILES_metadata": {
+                "group": "sky"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "geometricError": 70,
+    "refine": "ADD"
+  }
+}
