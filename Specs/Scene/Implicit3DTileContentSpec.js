@@ -795,6 +795,8 @@ describe(
     describe("3DTILES_metadata", function () {
       var implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+      var implicitGroupMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
 
       var metadataClass = new MetadataClass({
         id: "test",
@@ -828,6 +830,39 @@ describe(
             expect(content.groupMetadata).toBe(groupMetadata);
           }
         );
+      });
+
+      it("group metadata gets transcoded correctly", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitGroupMetadataUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+
+          var groups = tileset.metadata.groups;
+          var ground = groups.ground;
+          expect(ground.getProperty("color")).toEqual([120, 68, 32]);
+          expect(ground.getProperty("priority")).toBe(0);
+
+          var sky = groups.sky;
+          expect(sky.getProperty("color")).toEqual([206, 237, 242]);
+          expect(sky.getProperty("priority")).toBe(1);
+
+          tiles.forEach(function (tile) {
+            if (tile.hasMultipleContents) {
+              // child tiles have multiple contents
+              var contents = tile.content.innerContents;
+              expect(contents[0].groupMetadata).toBe(ground);
+              expect(contents[1].groupMetadata).toBe(sky);
+            } else {
+              // parent tile is a single B3DM tile
+              expect(tile.content.groupMetadata).toBe(ground);
+            }
+          });
+        });
       });
     });
   },
