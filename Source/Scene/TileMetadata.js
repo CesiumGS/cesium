@@ -36,7 +36,7 @@ export default function TileMetadata(options) {
   //>>includeStart('debug', pragmas.debug);
   if (hasImplicitMetadata === hasExplicitMetadata) {
     throw new DeveloperError(
-      "Exactly one of options.implictSubtree and options.tileMetadata is defined"
+      "Exactly one of options.implictSubtree and options.tile is defined"
     );
   }
   //>>includeEnd('debug');
@@ -52,6 +52,9 @@ export default function TileMetadata(options) {
     var subtree = options.implicitSubtree;
     entityId = subtree.getEntityId(options.implicitCoordinates);
     metadataTable = subtree.metadataTable;
+
+    // properties is not used for implicit tile metadata
+    properties = {};
 
     var subtreeExtension = subtree.metadataExtension;
     extras = subtreeExtension.extras;
