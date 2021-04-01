@@ -5373,9 +5373,15 @@ describe(
 
           var i;
           for (i = 0; i < tileCount; i++) {
-            var metadata = tiles[i].metadata;
-            expect(metadata.getProperty("quadrant")).toBe(expectedQuadrants[i]);
-            expect(metadata.getProperty("color")).toEqual(expectedColors[i]);
+            var tile = tiles[i];
+            var entityId = subtree.getEntityId(tile.implicitCoordinates);
+            var metadata = tile.metadata;
+            expect(metadata.getProperty("quadrant")).toBe(
+              expectedQuadrants[entityId]
+            );
+            expect(metadata.getProperty("color")).toEqual(
+              expectedColors[entityId]
+            );
           }
         });
       });

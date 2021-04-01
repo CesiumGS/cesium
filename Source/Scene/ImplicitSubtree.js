@@ -240,12 +240,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
       parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
 
       if (defined(metadataExtension)) {
-        parseMetadataTable(
-          subtree,
-          metadataExtension,
-          implicitTileset,
-          bufferViewsU8
-        );
+        parseMetadataTable(subtree, implicitTileset, bufferViewsU8);
         makeJumpBuffer(subtree);
       }
 

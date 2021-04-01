@@ -167,7 +167,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     content._resource,
     uint8Array,
     content._implicitTileset,
-    content.implicitCoordinates
+    content._implicitCoordinates
   );
   content._implicitSubtree = subtree;
 
@@ -429,7 +429,7 @@ function deriveChildTile(
   childTile.implicitSubtree = subtree;
 
   if (defined(subtree.metadataExtension)) {
-    var metadataTable;
+    var metadataTable = subtree.metadataTable;
     childTile.metadata = new TileMetadata({
       class: metadataTable.class,
       implicitCoordinates: implicitCoordinates,
