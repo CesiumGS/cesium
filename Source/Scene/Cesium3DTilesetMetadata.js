@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import GroupMetadata from "./GroupMetadata.js";
-import MetadataTileset from "./MetadataTileset.js";
+import TilesetMetadata from "./TilesetMetadata.js";
 
 /**
  * An object containing metadata about a 3D Tileset.
@@ -50,7 +50,7 @@ function Cesium3DTilesetMetadata(options) {
 
   var tileset;
   if (defined(extension.tileset)) {
-    tileset = new MetadataTileset({
+    tileset = new TilesetMetadata({
       tileset: extension.tileset,
       class: schema.classes[extension.tileset.class],
     });
@@ -95,7 +95,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * Metadata about the tileset as a whole.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {MetadataTileset}
+   * @type {TilesetMetadata}
    * @readonly
    */
   tileset: {

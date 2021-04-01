@@ -1,8 +1,8 @@
-import { MetadataClass, MetadataTileset } from "../../Source/Cesium.js";
+import { MetadataClass, TilesetMetadata } from "../../Source/Cesium.js";
 
-describe("Scene/MetadataTileset", function () {
+describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -38,7 +38,7 @@ describe("Scene/MetadataTileset", function () {
       neighborhoods: ["A", "B", "C"],
     };
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: cityClass,
       tileset: {
         name: "City",
@@ -59,12 +59,12 @@ describe("Scene/MetadataTileset", function () {
 
   it("constructor throws without tileset", function () {
     expect(function () {
-      return new MetadataTileset();
+      return new TilesetMetadata();
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns false when there's no properties", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
     expect(tilesetMetadata.hasProperty("height")).toBe(false);
@@ -82,7 +82,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -105,7 +105,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -129,7 +129,7 @@ describe("Scene/MetadataTileset", function () {
         },
       },
     });
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {},
     });
@@ -138,7 +138,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("hasProperty throws without propertyId", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -148,7 +148,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("getPropertyIds returns empty array when there are no properties", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -170,7 +170,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -202,7 +202,7 @@ describe("Scene/MetadataTileset", function () {
         },
       },
     });
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -232,7 +232,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -250,7 +250,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("getProperty returns undefined when there's no properties", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
     expect(tilesetMetadata.getProperty("height")).toBeUndefined();
@@ -268,7 +268,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -295,7 +295,7 @@ describe("Scene/MetadataTileset", function () {
 
     var position = [0.0, 0.0, 0.0];
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -326,7 +326,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {},
     });
@@ -337,7 +337,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("getProperty throws without propertyId", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -347,7 +347,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("setProperty creates property if it doesn't exist", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -371,7 +371,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -387,7 +387,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("setProperty throws without propertyId", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -397,7 +397,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("setProperty throws without value", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -407,7 +407,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no class", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
     expect(tilesetMetadata.getPropertyBySemantic("_HEIGHT")).toBeUndefined();
@@ -425,7 +425,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -450,7 +450,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -463,7 +463,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("getPropertyBySemantic throws without semantic", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -485,7 +485,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -510,7 +510,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
@@ -524,7 +524,7 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("setPropertyBySemantic throws without semantic", function () {
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
@@ -546,7 +546,7 @@ describe("Scene/MetadataTileset", function () {
       },
     });
 
-    var tilesetMetadata = new MetadataTileset({
+    var tilesetMetadata = new TilesetMetadata({
       class: buildingClass,
       tileset: {
         properties: {
