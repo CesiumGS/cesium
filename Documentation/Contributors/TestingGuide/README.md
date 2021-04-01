@@ -197,10 +197,6 @@ It is also possible for Karma to run all tests against each browser installed on
 
 Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
 
-## Testing Previous Versions of CesiumJS
-
-Sometimes it is useful to see if an issue exists in a previous version of CesiumJS. The tests for all versions of CesiumJS back to b15 (April 2013) are hosted on the CesiumJS website via the [downloads page](http://cesiumjs.org/downloads.html). Use the "Documentation, Sandcastle, tests, etc." links.
-
 ## `testfailure` Label for Issues
 
 Despite our best efforts, sometimes tests fail. This is often due to a new browser, OS, or driver bug that breaks a test that previously passed. If this indicates a bug in CesiumJS, we strive to quickly fix it. Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.

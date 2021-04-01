@@ -47,6 +47,10 @@ function Batched3DModel3DTileContent(
   this._batchTable = undefined;
   this._features = undefined;
 
+  this._classificationType = tileset.vectorClassificationOnly
+    ? undefined
+    : tileset.classificationType;
+
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
   this._diffuseAttributeOrUniformName = {};
@@ -161,7 +165,7 @@ function getBatchIdAttributeName(gltf) {
 function getVertexShaderCallback(content) {
   return function (vs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -183,7 +187,7 @@ function getVertexShaderCallback(content) {
 function getFragmentShaderCallback(content) {
   return function (fs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -193,7 +197,8 @@ function getFragmentShaderCallback(content) {
     }
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
-      content._diffuseAttributeOrUniformName[programId]
+      content._diffuseAttributeOrUniformName[programId],
+      false
     );
     return defined(callback) ? callback(fs) : fs;
   };
@@ -348,7 +353,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 
   var colorChangedCallback;
-  if (defined(tileset.classificationType)) {
+  if (defined(content._classificationType)) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
@@ -403,7 +408,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     new Matrix4()
   );
 
-  if (!defined(tileset.classificationType)) {
+  if (!defined(content._classificationType)) {
     // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
     // The pick shader still needs to be patched.
     content._model = new Model({
@@ -455,7 +460,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      classificationType: tileset._classificationType,
+      classificationType: content._classificationType,
       batchTable: batchTable,
     });
   }
@@ -571,7 +576,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick) &&
-    !defined(tileset.classificationType)
+    !defined(this._classificationType)
   ) {
     this._batchTable.addDerivedCommands(frameState, commandStart);
   }
