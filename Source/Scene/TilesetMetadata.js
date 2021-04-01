@@ -10,10 +10,10 @@ import MetadataEntity from "./MetadataEntity.js";
  * @param {Object} options.tileset The tileset metadata JSON object.
  * @param {MetadataClass} [options.class] The class that tileset metadata conforms to.
  *
- * @alias MetadataTileset
+ * @alias TilesetMetadata
  * @constructor
  */
-function MetadataTileset(options) {
+function TilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var tileset = options.tileset;
 
@@ -31,11 +31,11 @@ function MetadataTileset(options) {
   this._extensions = tileset.extensions;
 }
 
-Object.defineProperties(MetadataTileset.prototype, {
+Object.defineProperties(TilesetMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof TilesetMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -48,7 +48,7 @@ Object.defineProperties(MetadataTileset.prototype, {
   /**
    * A dictionary containing properties.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof TilesetMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -61,7 +61,7 @@ Object.defineProperties(MetadataTileset.prototype, {
   /**
    * The name of the tileset.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof TilesetMetadata.prototype
    * @type {String}
    * @readonly
    */
@@ -74,7 +74,7 @@ Object.defineProperties(MetadataTileset.prototype, {
   /**
    * The description of the tileset.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof TilesetMetadata.prototype
    * @type {String}
    * @readonly
    */
@@ -87,7 +87,7 @@ Object.defineProperties(MetadataTileset.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof TilesetMetadata.prototype
    * @type {*}
    * @readonly
    */
@@ -100,7 +100,7 @@ Object.defineProperties(MetadataTileset.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof TilesetMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -117,7 +117,7 @@ Object.defineProperties(MetadataTileset.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-MetadataTileset.prototype.hasProperty = function (propertyId) {
+TilesetMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(this, propertyId);
 };
 
@@ -127,7 +127,7 @@ MetadataTileset.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-MetadataTileset.prototype.getPropertyIds = function (results) {
+TilesetMetadata.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this, results);
 };
 
@@ -140,7 +140,7 @@ MetadataTileset.prototype.getPropertyIds = function (results) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataTileset.prototype.getProperty = function (propertyId) {
+TilesetMetadata.prototype.getProperty = function (propertyId) {
   return MetadataEntity.getProperty(this, propertyId);
 };
 
@@ -156,7 +156,7 @@ MetadataTileset.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataTileset.prototype.setProperty = function (propertyId, value) {
+TilesetMetadata.prototype.setProperty = function (propertyId, value) {
   MetadataEntity.setProperty(this, propertyId, value);
 };
 
@@ -166,7 +166,7 @@ MetadataTileset.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataTileset.prototype.getPropertyBySemantic = function (semantic) {
+TilesetMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(this, semantic);
 };
 
@@ -176,8 +176,8 @@ MetadataTileset.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataTileset.prototype.setPropertyBySemantic = function (semantic, value) {
+TilesetMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   MetadataEntity.setPropertyBySemantic(this, semantic, value);
 };
 
-export default MetadataTileset;
+export default TilesetMetadata;

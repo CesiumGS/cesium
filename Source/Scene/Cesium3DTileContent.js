@@ -222,6 +222,29 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
       DeveloperError.throwInstantiationError();
     },
   },
+
+  /**
+   * Gets the group metadata for this content if the content uses the
+   * <code>3DTILES_metadata</code> extension. If the extension is not used,
+   * this property should be undefined.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @type {GroupMetadata}
+   *
+   * @private
+   */
+  groupMetadata: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+    set: function (value) {
+      DeveloperError.throwInstantiationError();
+    },
+  },
 });
 
 /**

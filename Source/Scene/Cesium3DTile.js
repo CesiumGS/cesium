@@ -30,6 +30,7 @@ import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
+import findGroupMetadata from "./findGroupMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import MetadataTile from "./MetadataTile.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
@@ -1262,24 +1263,29 @@ function makeContent(tile, arrayBuffer) {
     tile.hasTilesetContent = true;
   }
 
+  var content;
   var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
-    return contentFactory(
+    content = contentFactory(
       tileset,
       tile,
       tile._contentResource,
       preprocessed.binaryPayload.buffer,
       0
     );
+  } else {
+    // JSON formats
+    content = contentFactory(
+      tileset,
+      tile,
+      tile._contentResource,
+      preprocessed.jsonPayload
+    );
   }
 
-  // JSON formats
-  return contentFactory(
-    tileset,
-    tile,
-    tile._contentResource,
-    preprocessed.jsonPayload
-  );
+  var contentHeader = tile._header.content;
+  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
+  return content;
 }
 
 /**
