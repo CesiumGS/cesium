@@ -1,3 +1,4 @@
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
@@ -35,6 +36,13 @@ export default function ImplicitSubtree(
   implicitTileset,
   implicitCoordinates
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  Check.typeOf.object("subtreeView", subtreeView);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitCoordinates", implicitCoordinates);
+  //>>includeEnd('debug');
+
   this._resource = resource;
   this._subtreeJson = undefined;
   this._bufferLoader = undefined;

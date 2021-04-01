@@ -161,7 +161,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expectTileAvailability(subtree, subtreeDescription.tileAvailability);
@@ -353,7 +354,8 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitQuadtree
+      implicitQuadtree,
+      quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
       expect(fetchExternal.calls.count()).toEqual(1);
@@ -1043,7 +1045,8 @@ describe("Scene/ImplicitSubtree", function () {
       var subtree = new ImplicitSubtree(
         subtreeResource,
         results.subtreeBuffer,
-        metadataQuadtree
+        metadataQuadtree,
+        quadtreeCoordinates
       );
 
       return subtree.readyPromise.then(function () {
