@@ -87,7 +87,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
 
   /**
    * When the <code>3DTILES_metadata</code> extension is used, this property
-   * stores the JSON from the extension. This is used by {@link MetadataTile}
+   * stores the JSON from the extension. This is used by {@link TileMetadata}
    * to get the extras and extensions.
    *
    * @type {MetadataTable}

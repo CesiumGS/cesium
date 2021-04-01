@@ -1,6 +1,6 @@
-import { MetadataClass, MetadataTile } from "../../Source/Cesium.js";
+import { MetadataClass, TileMetadata } from "../../Source/Cesium.js";
 
-describe("Scene/MetadataTile", function () {
+describe("Scene/TileMetadata", function () {
   var buildingClass = new MetadataClass({
     id: "building",
     class: {
@@ -25,14 +25,14 @@ describe("Scene/MetadataTile", function () {
   it("options.tileMetadata and options.implicitSubtree are mutually exclusive", function () {
     // neither specified
     expect(function () {
-      return new MetadataTile({
+      return new TileMetadata({
         class: buildingClass,
       });
     }).toThrowDeveloperError();
 
     // both specified
     expect(function () {
-      return new MetadataTile({
+      return new TileMetadata({
         tileMetadata: {},
         implicitSubtree: {},
         class: buildingClass,
@@ -42,7 +42,7 @@ describe("Scene/MetadataTile", function () {
 
   describe("explicit tile metadata", function () {
     it("creates tile metadata with default values", function () {
-      var metadata = new MetadataTile({
+      var metadata = new TileMetadata({
         tileMetadata: {},
       });
 

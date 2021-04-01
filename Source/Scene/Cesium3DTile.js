@@ -32,7 +32,7 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
-import MetadataTile from "./MetadataTile.js";
+import TileMetadata from "./TileMetadata.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
@@ -298,7 +298,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     var extension = header.extensions["3DTILES_metadata"];
     var classes = tileset.metadata.schema.classes;
     var tileClass = classes[extension.class];
-    metadata = new MetadataTile({
+    metadata = new TileMetadata({
       tile: extension,
       class: tileClass,
     });
@@ -306,9 +306,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * When the <code>3DTILES_metadata</code> extension is used, this
-   * stores a {@link MetadataTile} object for accessing tile metadata.
+   * stores a {@link TileMetadata} object for accessing tile metadata.
    *
-   * @type {MetadataTile}
+   * @type {TileMetadata}
    * @readonly
    */
   this.metadata = metadata;

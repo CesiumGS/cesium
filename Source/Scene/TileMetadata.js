@@ -18,10 +18,10 @@ import MetadataEntity from "./MetadataEntity.js";
  * @param {ImplicitTileCoordinates} [options.implicitCoordinates] Implicit tiling coordinates for the tile. Required if options.implicitSubtree is defined.
  * @param {MetadataClass} [options.class] The class that group metadata conforms to.
  *
- * @alias MetadataTile
+ * @alias TileMetadata
  * @constructor
  */
-export default function MetadataTile(options) {
+export default function TileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   var entityId;
@@ -76,11 +76,11 @@ export default function MetadataTile(options) {
   this._extras = extras;
 }
 
-Object.defineProperties(MetadataTile.prototype, {
+Object.defineProperties(TileMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof MetadataTile.prototype
+   * @memberof TileMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -94,7 +94,7 @@ Object.defineProperties(MetadataTile.prototype, {
    * A dictionary containing properties. This is only defined when
    * explicit tile metadata is used.
    *
-   * @memberof MetadataTile.prototype
+   * @memberof TileMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -137,7 +137,7 @@ Object.defineProperties(MetadataTile.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-MetadataTile.prototype.hasProperty = function (propertyId) {
+TileMetadata.prototype.hasProperty = function (propertyId) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.hasProperty(propertyId);
   }
@@ -151,7 +151,7 @@ MetadataTile.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-MetadataTile.prototype.getPropertyIds = function (results) {
+TileMetadata.prototype.getPropertyIds = function (results) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyIds(results);
   }
@@ -168,7 +168,7 @@ MetadataTile.prototype.getPropertyIds = function (results) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataTile.prototype.getProperty = function (propertyId) {
+TileMetadata.prototype.getProperty = function (propertyId) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.getProperty(this._entityId, propertyId);
   }
@@ -188,7 +188,7 @@ MetadataTile.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataTile.prototype.setProperty = function (propertyId, value) {
+TileMetadata.prototype.setProperty = function (propertyId, value) {
   if (defined(this._metadataTable)) {
     this._metadataTable.setProperty(this._entityId, propertyId, value);
   }
@@ -202,7 +202,7 @@ MetadataTile.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataTile.prototype.getPropertyBySemantic = function (semantic) {
+TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyBySemantic(this._entityId, semantic);
   }
@@ -216,7 +216,7 @@ MetadataTile.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataTile.prototype.setPropertyBySemantic = function (semantic, value) {
+TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   if (defined(this._metadataTable)) {
     this._metadataTable.setPropertyBySemantic(this._entityId, semantic, value);
   }
