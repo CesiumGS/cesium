@@ -9,7 +9,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
-import findMetadataGroup from "./findMetadataGroup.js";
+import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
 /**
@@ -234,7 +234,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
     set: function () {
       throw new DeveloperError(
-        "Multiple3DTileContent cannot have a metadata group."
+        "Multiple3DTileContent cannot have group metadata"
       );
     },
   },
@@ -513,7 +513,7 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 
   var contentHeader = multipleContents._innerContentHeaders[index];
-  content.groupMetadata = findMetadataGroup(tileset, contentHeader);
+  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }
 

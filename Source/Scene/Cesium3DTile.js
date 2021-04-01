@@ -30,7 +30,7 @@ import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import findMetadataGroup from "./findMetadataGroup.js";
+import findGroupMetadata from "./findGroupMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
@@ -1261,7 +1261,7 @@ function makeContent(tile, arrayBuffer) {
   }
 
   var contentHeader = tile._header.content;
-  content.groupMetadata = findMetadataGroup(tileset, contentHeader);
+  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }
 

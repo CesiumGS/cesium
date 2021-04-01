@@ -167,7 +167,7 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
-   * both stores the metadata group and propagates the metadata group to all of its children.
+   * both stores the group metadata and propagates the group metadata to all of its children.
    * @memberof Composite3DTileContent.prototype
    */
   groupMetadata: {

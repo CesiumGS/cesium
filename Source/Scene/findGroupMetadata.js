@@ -8,10 +8,10 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
  *
  * @param {Cesium3DTileset} tileset The tileset to query for group metadata
  * @param {Object} contentHeader the JSON header for a {@link Cesium3DTileContent}
- * @return {GroupMetadata} the metadata group, or <code>undefined</code> if not found
+ * @return {GroupMetadata} the group metadata, or <code>undefined</code> if not found
  * @private
  */
-export default function findMetadataGroup(tileset, contentHeader) {
+export default function findGroupMetadata(tileset, contentHeader) {
   if (has3DTilesExtension(contentHeader, "3DTILES_metadata")) {
     var extension = contentHeader.extensions["3DTILES_metadata"];
     var groupId = extension.group;

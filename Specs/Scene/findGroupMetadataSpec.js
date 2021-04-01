@@ -1,10 +1,10 @@
 import {
-  findMetadataGroup,
+  findGroupMetadata,
   MetadataClass,
   GroupMetadata,
 } from "../../Source/Cesium.js";
 
-describe("Scene/findMetadataGroup", function () {
+describe("Scene/findGroupMetadata", function () {
   var layerClass = new MetadataClass({
     id: "layer",
     class: {
@@ -37,7 +37,7 @@ describe("Scene/findMetadataGroup", function () {
   };
 
   it("returns undefined if the content header is undefined", function () {
-    var group = findMetadataGroup(mockTileset, undefined);
+    var group = findGroupMetadata(mockTileset, undefined);
     expect(group).not.toBeDefined();
   });
 
@@ -45,7 +45,7 @@ describe("Scene/findMetadataGroup", function () {
     var contentHeader = {
       uri: "https://example.com/model.b3dm",
     };
-    var group = findMetadataGroup(mockTileset, contentHeader);
+    var group = findGroupMetadata(mockTileset, contentHeader);
     expect(group).not.toBeDefined();
   });
 
@@ -58,7 +58,7 @@ describe("Scene/findMetadataGroup", function () {
         },
       },
     };
-    var group = findMetadataGroup(mockTileset, contentHeader);
+    var group = findGroupMetadata(mockTileset, contentHeader);
     expect(group).toBeDefined();
     expect(group.getProperty("name")).toBe("Test Layer testGroup");
     expect(group.getProperty("elevation")).toBe(150.0);
