@@ -31,6 +31,7 @@ import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
+import MetadataTile from "./MetadataTile.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
@@ -288,6 +289,28 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasMultipleContents = hasMultipleContents;
+
+  var metadata;
+  if (has3DTilesExtension(header, "3DTILES_metadata")) {
+    // This assumes that tileset.metadata has been created before any
+    // tiles are constucted.
+    var extension = header.extensions["3DTILES_metadata"];
+    var classes = tileset.metadata.schema.classes;
+    var tileClass = classes[extension.class];
+    metadata = new MetadataTile({
+      tile: extension,
+      class: tileClass,
+    });
+  }
+
+  /**
+   * When the <code>3DTILES_metadata</code> extension is used, this
+   * stores a {@link MetadataTile} object for accessing tile metadata.
+   *
+   * @type {MetadataTile}
+   * @readonly
+   */
+  this.metadata = metadata;
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
