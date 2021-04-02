@@ -346,15 +346,15 @@ describe("Scene/TilesetMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setProperty creates property if it doesn't exist", function () {
+  it("setProperty throws if property doesn't exist", function () {
     var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
     var position = [0.0, 0.0, 0.0];
-    tilesetMetadata.setProperty("position", position);
-    expect(tilesetMetadata.properties.position).toEqual(position);
-    expect(tilesetMetadata.properties.position).not.toBe(position); // The value is cloned
+    expect(function () {
+      tilesetMetadata.setProperty("position", position);
+    }).toThrowDeveloperError();
   });
 
   it("setProperty sets property value", function () {
@@ -498,7 +498,7 @@ describe("Scene/TilesetMetadata", function () {
     expect(tilesetMetadata.properties.height).toBe(20.0);
   });
 
-  it("setPropertyBySemantic doesn't set property value when there's no matching semantic", function () {
+  it("setPropertyBySemantic throws if semantic does not exist", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -519,8 +519,9 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    tilesetMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
-    expect(tilesetMetadata.properties.height).toBe(10.0);
+    expect(function () {
+      tilesetMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
+    }).toThrowDeveloperError();
   });
 
   it("setPropertyBySemantic throws without semantic", function () {

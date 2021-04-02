@@ -5167,6 +5167,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset.json";
       var tilesetWithImplicitTileMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
+      var tilesetWithExplicitTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/TileMetadata/tileset.json";
 
       var tilesetProperties = {
         author: "Cesium",
@@ -5291,9 +5293,51 @@ describe(
         });
       });
 
+      it("loads explicit tileset with tile metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitTileMetadataUrl
+        ).then(function (tileset) {
+          var expected = {
+            "parent.b3dm": {
+              color: [0.5, 0.0, 1.0],
+              population: 530,
+            },
+            "ll.b3dm": {
+              color: [1.0, 1.0, 0.0],
+              population: 50,
+            },
+            "lr.b3dm": {
+              color: [1.0, 0.0, 0.5],
+              population: 230,
+            },
+            "ur.b3dm": {
+              color: [1.0, 0.5, 0.0],
+              population: 150,
+            },
+            "ul.b3dm": {
+              color: [1.0, 0.0, 0.0],
+              population: 100,
+            },
+          };
+
+          var parent = tileset.root;
+          var tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            var uri = tile._header.content.uri;
+            var expectedValues = expected[uri];
+            var metadata = tile.metadata;
+            expect(metadata.getProperty("color")).toEqual(expectedValues.color);
+            expect(metadata.getProperty("population")).toEqual(
+              expectedValues.population
+            );
+          });
+        });
+      });
+
       it("loads implicit tileset with tile metadata", function () {
         // this tileset is similar to other implicit tilesets, though
-        // one tile was removed
+        // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
           tilesetWithImplicitTileMetadataUrl
@@ -5310,6 +5354,7 @@ describe(
           expect(metadataTable.properties.color).toBeDefined();
           expect(metadataTable.properties.quadrant).toBeDefined();
 
+          var tileCount = 4;
           var expectedQuadrants = [
             "None",
             "Southwest",
@@ -5323,20 +5368,20 @@ describe(
             [0, 0, 255],
           ];
 
-          var i;
-          for (i = 0; i < expectedQuadrants.length; i++) {
-            expect(metadataTable.getProperty(i, "quadrant")).toBe(
-              expectedQuadrants[i]
-            );
-            expect(metadataTable.getProperty(i, "color")).toEqual(
-              expectedColors[i]
-            );
-          }
+          var tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
 
-          var children = transcodedRoot.children;
-          expect(children.length).toBe(3);
-          for (i = 0; i < children.length; i++) {
-            expect(children[i].implicitSubtree).toBe(subtree);
+          var i;
+          for (i = 0; i < tileCount; i++) {
+            var tile = tiles[i];
+            var entityId = subtree.getEntityId(tile.implicitCoordinates);
+            var metadata = tile.metadata;
+            expect(metadata.getProperty("quadrant")).toBe(
+              expectedQuadrants[entityId]
+            );
+            expect(metadata.getProperty("color")).toEqual(
+              expectedColors[entityId]
+            );
           }
         });
       });

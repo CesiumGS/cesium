@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import MetadataEntity from "./MetadataEntity.js";
 import MetadataTableProperty from "./MetadataTableProperty.js";
 import MetadataType from "./MetadataType.js";
@@ -178,10 +179,15 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
+ * @exception {DeveloperError} A property with the given ID doesn't exist.
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
+
+  if (!defined(this._properties[propertyId])) {
+    throw new DeveloperError("propertyId " + propertyId + " does not exist");
+  }
   //>>includeEnd('debug');
 
   var property = this._properties[propertyId];
@@ -224,6 +230,7 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
+ * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,
@@ -239,6 +246,11 @@ MetadataTable.prototype.setPropertyBySemantic = function (
     if (defined(property)) {
       this.setProperty(index, property.id, value);
     }
+    //>>includeStart('debug', pragmas.debug);
+    else {
+      throw new DeveloperError("semantic " + semantic + " does not exist");
+    }
+    //>>includeEnd('debug');
   }
 };
 

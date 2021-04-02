@@ -1,41 +1,50 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about the tileset.
+ * Metadata about a 3D tile, from a <code>3DTILES_metadata</code> extension
+ * within a subtree from the <code>3DTILES_implicit_tiling</code> extension
+ * <p>
+ * This class is used in place of a {@link TileMetadata} object, as implicit
+ * tile metadata is stored in a {@link MetadataTable} rather than a JSON object.
+ * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.tileset The tileset metadata JSON object.
- * @param {MetadataClass} [options.class] The class that tileset metadata conforms to.
+ * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
+ * @param {ImplicitTileCoordinates} options.implicitCoordinates Implicit tiling coordinates for the tile.
+ * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
  *
- * @alias TilesetMetadata
+ * @alias ImplicitTileMetadata
  * @constructor
+ *
+ * @private
  */
-function TilesetMetadata(options) {
+export default function ImplicitTileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var tileset = options.tileset;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tileset", tileset);
+  Check.typeOf.object("options.implicitSubtree", options.implicitSubtree);
+  Check.typeOf.object(
+    "options.implicitCoordinates",
+    options.implicitCoordinates
+  );
   //>>includeEnd('debug');
 
-  var properties = defined(tileset.properties) ? tileset.properties : {};
-
   this._class = options.class;
-  this._properties = properties;
-  this._name = tileset.name;
-  this._description = tileset.description;
-  this._extras = tileset.extras;
-  this._extensions = tileset.extensions;
+
+  var subtree = options.implicitSubtree;
+  this._metadataTable = subtree.metadataTable;
+  this._entityId = subtree.getEntityId(options.implicitCoordinates);
+
+  var subtreeExtension = subtree.metadataExtension;
+  this._extensions = subtreeExtension.extensions;
+  this._extras = subtreeExtension.extras;
 }
 
-Object.defineProperties(TilesetMetadata.prototype, {
+Object.defineProperties(ImplicitTileMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof TilesetMetadata.prototype
+   * @memberof ImplicitTileMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -46,48 +55,9 @@ Object.defineProperties(TilesetMetadata.prototype, {
   },
 
   /**
-   * A dictionary containing properties.
-   *
-   * @memberof TilesetMetadata.prototype
-   * @type {Object}
-   * @readonly
-   */
-  properties: {
-    get: function () {
-      return this._properties;
-    },
-  },
-
-  /**
-   * The name of the tileset.
-   *
-   * @memberof TilesetMetadata.prototype
-   * @type {String}
-   * @readonly
-   */
-  name: {
-    get: function () {
-      return this._name;
-    },
-  },
-
-  /**
-   * The description of the tileset.
-   *
-   * @memberof TilesetMetadata.prototype
-   * @type {String}
-   * @readonly
-   */
-  description: {
-    get: function () {
-      return this._description;
-    },
-  },
-
-  /**
    * Extras in the JSON object.
    *
-   * @memberof TilesetMetadata.prototype
+   * @memberof ImplicitTileMetadata.prototype
    * @type {*}
    * @readonly
    */
@@ -100,7 +70,7 @@ Object.defineProperties(TilesetMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof TilesetMetadata.prototype
+   * @memberof ImplicitTileMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -117,8 +87,8 @@ Object.defineProperties(TilesetMetadata.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-TilesetMetadata.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(this, propertyId);
+ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
+  return this._metadataTable.hasProperty(propertyId);
 };
 
 /**
@@ -127,8 +97,8 @@ TilesetMetadata.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-TilesetMetadata.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this, results);
+ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
+  return this._metadataTable.getPropertyIds(results);
 };
 
 /**
@@ -140,8 +110,8 @@ TilesetMetadata.prototype.getPropertyIds = function (results) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-TilesetMetadata.prototype.getProperty = function (propertyId) {
-  return MetadataEntity.getProperty(this, propertyId);
+ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
+  return this._metadataTable.getProperty(this._entityId, propertyId);
 };
 
 /**
@@ -154,8 +124,8 @@ TilesetMetadata.prototype.getProperty = function (propertyId) {
  * @param {*} value The value of the property that will be copied.
  * @exception {DeveloperError} A property with the given ID doesn't exist.
  */
-TilesetMetadata.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(this, propertyId, value);
+ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
+  this._metadataTable.setProperty(this._entityId, propertyId, value);
 };
 
 /**
@@ -164,8 +134,8 @@ TilesetMetadata.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-TilesetMetadata.prototype.getPropertyBySemantic = function (semantic) {
-  return MetadataEntity.getPropertyBySemantic(this, semantic);
+ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {
+  return this._metadataTable.getPropertyBySemantic(this._entityId, semantic);
 };
 
 /**
@@ -175,8 +145,9 @@ TilesetMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @param {*} value The value of the property that will be copied.
  * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
-TilesetMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(this, semantic, value);
+ImplicitTileMetadata.prototype.setPropertyBySemantic = function (
+  semantic,
+  value
+) {
+  this._metadataTable.setPropertyBySemantic(this._entityId, semantic, value);
 };
-
-export default TilesetMetadata;

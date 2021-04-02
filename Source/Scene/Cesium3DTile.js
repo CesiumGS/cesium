@@ -37,6 +37,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
+import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 
@@ -289,6 +290,28 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasMultipleContents = hasMultipleContents;
+
+  var metadata;
+  if (has3DTilesExtension(header, "3DTILES_metadata")) {
+    // This assumes that tileset.metadata has been created before any
+    // tiles are constructed.
+    var extension = header.extensions["3DTILES_metadata"];
+    var classes = tileset.metadata.schema.classes;
+    var tileClass = classes[extension.class];
+    metadata = new TileMetadata({
+      tile: extension,
+      class: tileClass,
+    });
+  }
+
+  /**
+   * When the <code>3DTILES_metadata</code> extension is used, this
+   * stores a {@link TileMetadata} object for accessing tile metadata.
+   *
+   * @type {TileMetadata}
+   * @readonly
+   */
+  this.metadata = metadata;
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.

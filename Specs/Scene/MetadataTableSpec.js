@@ -407,16 +407,7 @@ describe("Scene/MetadataTable", function () {
     }
   });
 
-  it("setProperty doesn't set property value when there's no properties", function () {
-    var metadataTable = new MetadataTable({
-      count: 10,
-    });
-
-    metadataTable.setProperty(0, "name", "A");
-    expect(metadataTable.getProperty(0, "name")).toBeUndefined();
-  });
-
-  it("setProperty doesn't set property value when there's no property with the given property ID", function () {
+  it("setProperty throws if the property ID doesn't exist", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -430,8 +421,9 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    metadataTable.setProperty(0, "name", "A");
-    expect(metadataTable.getProperty(0, "name")).toBeUndefined();
+    expect(function () {
+      metadataTable.setProperty(0, "name", "A");
+    }).toThrowDeveloperError();
   });
 
   it("setProperty throws without index", function () {
@@ -635,7 +627,7 @@ describe("Scene/MetadataTable", function () {
     expect(metadataTable.getPropertyBySemantic(0, "_HEIGHT")).toBeUndefined();
   });
 
-  it("setPropertyBySemantic doesn't set property value when there's no matching semantic", function () {
+  it("setPropertyBySemantic throws if the semantic doesn't exist", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -649,8 +641,9 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0);
-    expect(metadataTable.getPropertyBySemantic(0, "_HEIGHT")).toBeUndefined();
+    expect(function () {
+      metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0);
+    }).toThrowDeveloperError();
   });
 
   it("setPropertyBySemantic sets property value", function () {

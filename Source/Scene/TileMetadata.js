@@ -1,45 +1,38 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about a group of content.
+ * Metadata about a 3D Tile. This represents the <code>3DTILES_metadata</code>
+ * extension on a single {@link Cesium3DTile}
  *
  * @param {Object} options Object with the following properties:
- * @param {String} options.id The ID of the group.
- * @param {Object} options.group The group JSON object.
- * @param {MetadataClass} [options.class] The class that group metadata conforms to.
+ * @param {Object} options.tile The extension JSON attached to the tile.
+ * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
  *
- * @alias GroupMetadata
+ * @alias TileMetadata
  * @constructor
  */
-function GroupMetadata(options) {
+export default function TileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var group = options.group;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.id", id);
-  Check.typeOf.object("options.group", group);
+  Check.typeOf.object("options.tile", options.tile);
   //>>includeEnd('debug');
 
-  var properties = defined(group.properties) ? group.properties : {};
-
   this._class = options.class;
-  this._properties = properties;
-  this._id = id;
-  this._name = group.name;
-  this._description = group.description;
-  this._extras = group.extras;
-  this._extensions = group.extensions;
+
+  var tileMetadata = options.tile;
+  this._properties = tileMetadata.properties;
+  this._extensions = tileMetadata.extensions;
+  this._extras = tileMetadata.extras;
 }
 
-Object.defineProperties(GroupMetadata.prototype, {
+Object.defineProperties(TileMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof GroupMetadata.prototype
+   * @memberof TileMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -52,7 +45,7 @@ Object.defineProperties(GroupMetadata.prototype, {
   /**
    * A dictionary containing properties.
    *
-   * @memberof GroupMetadata.prototype
+   * @memberof TileMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -63,48 +56,9 @@ Object.defineProperties(GroupMetadata.prototype, {
   },
 
   /**
-   * The ID of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   */
-  id: {
-    get: function () {
-      return this._id;
-    },
-  },
-
-  /**
-   * The name of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   */
-  name: {
-    get: function () {
-      return this._name;
-    },
-  },
-
-  /**
-   * The description of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   */
-  description: {
-    get: function () {
-      return this._description;
-    },
-  },
-
-  /**
    * Extras in the JSON object.
    *
-   * @memberof GroupMetadata.prototype
+   * @memberof TileMetadata.prototype
    * @type {*}
    * @readonly
    */
@@ -117,7 +71,7 @@ Object.defineProperties(GroupMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof GroupMetadata.prototype
+   * @memberof TileMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -134,7 +88,7 @@ Object.defineProperties(GroupMetadata.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-GroupMetadata.prototype.hasProperty = function (propertyId) {
+TileMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(this, propertyId);
 };
 
@@ -144,7 +98,7 @@ GroupMetadata.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-GroupMetadata.prototype.getPropertyIds = function (results) {
+TileMetadata.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this, results);
 };
 
@@ -157,7 +111,7 @@ GroupMetadata.prototype.getPropertyIds = function (results) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-GroupMetadata.prototype.getProperty = function (propertyId) {
+TileMetadata.prototype.getProperty = function (propertyId) {
   return MetadataEntity.getProperty(this, propertyId);
 };
 
@@ -169,9 +123,8 @@ GroupMetadata.prototype.getProperty = function (propertyId) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given ID doesn't exist.
  */
-GroupMetadata.prototype.setProperty = function (propertyId, value) {
+TileMetadata.prototype.setProperty = function (propertyId, value) {
   MetadataEntity.setProperty(this, propertyId, value);
 };
 
@@ -181,7 +134,7 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
+TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(this, semantic);
 };
 
@@ -192,8 +145,6 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @param {*} value The value of the property that will be copied.
  * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
-GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
+TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   MetadataEntity.setPropertyBySemantic(this, semantic, value);
 };
-
-export default GroupMetadata;
