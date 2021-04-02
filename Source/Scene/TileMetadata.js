@@ -11,8 +11,8 @@ import MetadataEntity from "./MetadataEntity.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} [options.tile] The extension JSON attached to the tile.
- * @param {MetadataClass} [options.class] The class that group metadata conforms to.
+ * @param {Object} options.tile The extension JSON attached to the tile.
+ * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
  *
  * @alias TileMetadata
  * @constructor
@@ -47,8 +47,7 @@ Object.defineProperties(TileMetadata.prototype, {
   },
 
   /**
-   * A dictionary containing properties. This is only defined when
-   * explicit tile metadata is used.
+   * A dictionary containing properties.
    *
    * @memberof TileMetadata.prototype
    * @type {Object}

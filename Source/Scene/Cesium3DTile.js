@@ -32,12 +32,12 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
-import TileMetadata from "./TileMetadata.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
+import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 
@@ -294,7 +294,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   var metadata;
   if (has3DTilesExtension(header, "3DTILES_metadata")) {
     // This assumes that tileset.metadata has been created before any
-    // tiles are constucted.
+    // tiles are constructed.
     var extension = header.extensions["3DTILES_metadata"];
     var classes = tileset.metadata.schema.classes;
     var tileClass = classes[extension.class];

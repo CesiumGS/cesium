@@ -5,11 +5,13 @@ import defaultValue from "../Core/defaultValue.js";
  * Metadata about a 3D tile, from a <code>3DTILES_metadata</code> extension
  * within a subtree from the <code>3DTILES_implicit_tiling</code> extension
  * <p>
+ * This class is used in place of a {@link TileMetadata} object, as implicit
+ * tile metadata is stored in a {@link MetadataTable} rather than a JSON object.
  * </p>
  *
  * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
  * @param {ImplicitTileCoordinates} options.implicitCoordinates Implicit tiling coordinates for the tile.
- * @param {MetadataClass} [options.class] The class that group metadata conforms to.
+ * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
  *
  * @alias ImplicitTileMetadata
  * @constructor
@@ -55,7 +57,7 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof ImplicitTileMetadata.prototype
    * @type {*}
    * @readonly
    */
@@ -68,7 +70,7 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof ImplicitTileMetadata.prototype
    * @type {Object}
    * @readonly
    */
@@ -116,9 +118,6 @@ ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
  * Sets the value of the property with the given ID.
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
- * </p>
- * <p>
- * If a property with the given ID doesn't exist, it is created.
  * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
