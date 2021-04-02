@@ -217,9 +217,9 @@ describe("Scene/ImplicitTileMetadata", function () {
   });
 
   it("setProperty does not create property if it doesn't exist", function () {
-    expect(tileMetadata.getProperty("numberOfPoints")).not.toBeDefined();
-    tileMetadata.setProperty("numberOfPoints", 10);
-    expect(tileMetadata.getProperty("numberOfPoints")).not.toBeDefined();
+    expect(function () {
+      tileMetadata.setProperty("numberOfPoints", 10);
+    }).toThrowDeveloperError();
   });
 
   it("setProperty sets property value", function () {
@@ -256,9 +256,9 @@ describe("Scene/ImplicitTileMetadata", function () {
     ]);
   });
 
-  it("setPropertyBySemantic doesn't set property value when there's no matching semantic", function () {
-    expect(tileMetadata.getPropertyBySemantic("NAME")).not.toBeDefined();
-    tileMetadata.setPropertyBySemantic("NAME", "Test Tile");
-    expect(tileMetadata.getPropertyBySemantic("NAME")).not.toBeDefined();
+  it("setPropertyBySemantic throws if the semantic does not exist", function () {
+    expect(function () {
+      tileMetadata.setPropertyBySemantic("NAME", "Test Tile");
+    }).toThrowDeveloperError();
   });
 });

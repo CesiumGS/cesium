@@ -149,12 +149,10 @@ TilesetMetadata.prototype.getProperty = function (propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
- * <p>
- * If a property with the given ID doesn't exist, it is created.
- * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ * @exception {DeveloperError} If a property with the given ID doesn't exist.
  */
 TilesetMetadata.prototype.setProperty = function (propertyId, value) {
   MetadataEntity.setProperty(this, propertyId, value);
@@ -175,6 +173,7 @@ TilesetMetadata.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
+ * @exception {DeveloperError} If a property with the given semantic doesn't exist.
  */
 TilesetMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   MetadataEntity.setPropertyBySemantic(this, semantic, value);

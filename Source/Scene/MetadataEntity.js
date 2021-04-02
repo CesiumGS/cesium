@@ -85,12 +85,10 @@ MetadataEntity.prototype.getProperty = function (propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
- * <p>
- * If a property with the given ID doesn't exist, it is created.
- * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ * @exception {DeveloperError} If a property with the given ID doesn't exist.
  */
 MetadataEntity.prototype.setProperty = function (propertyId, value) {
   DeveloperError.throwInstantiationError();
@@ -111,6 +109,7 @@ MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
+ * @exception {DeveloperError} If a property with the given semantic doesn't exist.
  */
 MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
   DeveloperError.throwInstantiationError();
@@ -239,13 +238,11 @@ MetadataEntity.getProperty = function (entity, propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
- * <p>
- * If a property with the given ID doesn't exist, it is created.
- * </p>
  *
  * @param {MetadataEntity} entity The entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ * @exception {DeveloperError} If a property with the given ID doesn't exist.
  *
  * @private
  */
@@ -254,6 +251,10 @@ MetadataEntity.setProperty = function (entity, propertyId, value) {
   Check.typeOf.object("entity", entity);
   Check.typeOf.string("propertyId", propertyId);
   Check.defined("value", value);
+
+  if (!defined(entity.properties[propertyId])) {
+    throw new DeveloperError("propertyId " + propertyId + " does not exist");
+  }
   //>>includeEnd('debug');
 
   if (Array.isArray(value)) {
@@ -300,7 +301,7 @@ MetadataEntity.getPropertyBySemantic = function (entity, semantic) {
  * @param {MetadataEntity} entity The entity.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- *
+ * @exception {DeveloperError} If a property with the given semantic doesn't exist.
  * @private
  */
 MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
@@ -313,6 +314,10 @@ MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
     var property = entity.class.propertiesBySemantic[semantic];
     if (defined(property)) {
       MetadataEntity.setProperty(entity, property.id, value);
+    } else {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("semantic " + semantic + " does not exist");
+      //>>includeEnd('debug');
     }
   }
 };

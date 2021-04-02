@@ -370,16 +370,16 @@ describe("Scene/GroupMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setProperty creates property if it doesn't exist", function () {
+  it("setProperty throws if property doesn't exist", function () {
     var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
 
     var position = [0.0, 0.0, 0.0];
-    groupMetadata.setProperty("position", position);
-    expect(groupMetadata.properties.position).toEqual(position);
-    expect(groupMetadata.properties.position).not.toBe(position); // The value is cloned
+    expect(function () {
+      groupMetadata.setProperty("position", position);
+    }).toThrowDeveloperError();
   });
 
   it("setProperty sets property value", function () {
@@ -531,7 +531,7 @@ describe("Scene/GroupMetadata", function () {
     expect(groupMetadata.properties.height).toBe(20.0);
   });
 
-  it("setPropertyBySemantic doesn't set property value when there's no matching semantic", function () {
+  it("setPropertyBySemantic throws if the semantic does not exist", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -553,8 +553,9 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
-    expect(groupMetadata.properties.height).toBe(10.0);
+    expect(function () {
+      groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
+    }).toThrowDeveloperError();
   });
 
   it("setPropertyBySemantic throws without semantic", function () {
