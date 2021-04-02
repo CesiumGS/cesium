@@ -3,12 +3,8 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about a 3D tile. This can either be defined directly with
- * a <code>3DTILES_metadata</code> on the tile, or indirectly by using
- * <code>3DTILES_metadata</code> inside an implicit subtree file.
- * <p>
- * options.tile and options.implicitSubtree are mutually exclusive.
- * </p>
+ * Metadata about a 3D Tile. This represents the <code>3DTILES_metadata</code>
+ * extension on a single {@link Cesium3DTile}
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.tile The extension JSON attached to the tile.
@@ -62,7 +58,7 @@ Object.defineProperties(TileMetadata.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof TileMetadata.prototype
    * @type {*}
    * @readonly
    */
@@ -75,7 +71,7 @@ Object.defineProperties(TileMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof MetadataGroup.prototype
+   * @memberof TileMetadata.prototype
    * @type {Object}
    * @readonly
    */
