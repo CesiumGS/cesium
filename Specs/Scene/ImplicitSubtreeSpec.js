@@ -134,29 +134,82 @@ describe("Scene/ImplicitSubtree", function () {
     },
   });
 
-  it("gets availability from internal buffer", function () {
-    var subtreeDescription = {
-      tileAvailability: {
-        descriptor: "11010",
+  var internalQuadtreeDescription = {
+    tileAvailability: {
+      descriptor: "11010",
+      lengthBits: 5,
+      isInternal: true,
+    },
+    contentAvailability: [
+      {
+        descriptor: "11000",
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: [
-        {
-          descriptor: "11000",
-          lengthBits: 5,
-          isInternal: true,
-        },
-      ],
-      childSubtreeAvailability: {
-        descriptor: "1111000010100000",
-        lengthBits: 16,
-        isInternal: true,
-      },
-    };
+    ],
+    childSubtreeAvailability: {
+      descriptor: "1111000010100000",
+      lengthBits: 16,
+      isInternal: true,
+    },
+  };
 
+  it("throws without resource", function () {
+    expect(function () {
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        internalQuadtreeDescription
+      );
+      return new ImplicitSubtree(
+        undefined,
+        results.subtreeBuffer,
+        implicitQuadtree,
+        quadtreeCoordinates
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws without subtreeView", function () {
+    expect(function () {
+      return new ImplicitSubtree(
+        subtreeResource,
+        undefined,
+        implicitQuadtree,
+        quadtreeCoordinates
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws without implicitTileset", function () {
+    expect(function () {
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        internalQuadtreeDescription
+      );
+      return new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        undefined,
+        quadtreeCoordinates
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws without implicitCoordinates", function () {
+    expect(function () {
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        internalQuadtreeDescription
+      );
+      return new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        implicitQuadtree,
+        undefined
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("gets availability from internal buffer", function () {
     var results = ImplicitTilingTester.generateSubtreeBuffers(
-      subtreeDescription
+      internalQuadtreeDescription
     );
     var subtree = new ImplicitSubtree(
       subtreeResource,
@@ -165,14 +218,17 @@ describe("Scene/ImplicitSubtree", function () {
       quadtreeCoordinates
     );
     return subtree.readyPromise.then(function () {
-      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      expectTileAvailability(
+        subtree,
+        internalQuadtreeDescription.tileAvailability
+      );
       expectContentAvailability(
         subtree,
-        subtreeDescription.contentAvailability
+        internalQuadtreeDescription.contentAvailability
       );
       expectChildSubtreeAvailability(
         subtree,
-        subtreeDescription.childSubtreeAvailability
+        internalQuadtreeDescription.childSubtreeAvailability
       );
     });
   });
