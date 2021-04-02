@@ -1,62 +1,54 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about a 3D tile. This can either be defined directly with
- * a <code>3DTILES_metadata</code> on the tile, or indirectly by using
- * <code>3DTILES_metadata</code> inside an implicit subtree file.
+ * Metadata about a 3D tile, from a <code>3DTILES_metadata</code> extension
+ * within a subtree from the <code>3DTILES_implicit_tiling</code> extension
  * <p>
- * options.tile and options.implicitSubtree are mutually exclusive.
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} [options.tile] The extension JSON attached to the tile.
+ * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
+ * @param {ImplicitTileCoordinates} options.implicitCoordinates Implicit tiling coordinates for the tile.
  * @param {MetadataClass} [options.class] The class that group metadata conforms to.
  *
- * @alias TileMetadata
+ * @alias ImplicitTileMetadata
  * @constructor
+ *
+ * @private
  */
-export default function TileMetadata(options) {
+export default function ImplicitTileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tile", options.tile);
+  Check.typeOf.object("options.implicitSubtree", options.implicitSubtree);
+  Check.typeOf.object(
+    "options.implicitCoordinates",
+    options.implicitCoordinates
+  );
   //>>includeEnd('debug');
 
   this._class = options.class;
 
-  var tileMetadata = options.tile;
-  this._properties = tileMetadata.properties;
-  this._extensions = tileMetadata.extensions;
-  this._extras = tileMetadata.extras;
+  var subtree = options.implicitSubtree;
+  this._metadataTable = subtree.metadataTable;
+  this._entityId = subtree.getEntityId(options.implicitCoordinates);
+
+  var subtreeExtension = subtree.metadataExtension;
+  this._extensions = subtreeExtension.extensions;
+  this._extras = subtreeExtension.extras;
 }
 
-Object.defineProperties(TileMetadata.prototype, {
+Object.defineProperties(ImplicitTileMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof TileMetadata.prototype
+   * @memberof ImplicitTileMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    */
   class: {
     get: function () {
       return this._class;
-    },
-  },
-
-  /**
-   * A dictionary containing properties. This is only defined when
-   * explicit tile metadata is used.
-   *
-   * @memberof TileMetadata.prototype
-   * @type {Object}
-   * @readonly
-   */
-  properties: {
-    get: function () {
-      return this._properties;
     },
   },
 
@@ -93,8 +85,8 @@ Object.defineProperties(TileMetadata.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-TileMetadata.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(this, propertyId);
+ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
+  return this._metadataTable.hasProperty(propertyId);
 };
 
 /**
@@ -103,8 +95,8 @@ TileMetadata.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-TileMetadata.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this, results);
+ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
+  return this._metadataTable.getPropertyIds(results);
 };
 
 /**
@@ -116,8 +108,8 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-TileMetadata.prototype.getProperty = function (propertyId) {
-  return MetadataEntity.getProperty(this, propertyId);
+ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
+  return this._metadataTable.getProperty(this._entityId, propertyId);
 };
 
 /**
@@ -132,8 +124,8 @@ TileMetadata.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  */
-TileMetadata.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(this, propertyId, value);
+ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
+  this._metadataTable.setProperty(this._entityId, propertyId, value);
 };
 
 /**
@@ -142,8 +134,8 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
-  return MetadataEntity.getPropertyBySemantic(this, semantic);
+ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {
+  return this._metadataTable.getPropertyBySemantic(this._entityId, semantic);
 };
 
 /**
@@ -152,6 +144,9 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  */
-TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(this, semantic, value);
+ImplicitTileMetadata.prototype.setPropertyBySemantic = function (
+  semantic,
+  value
+) {
+  this._metadataTable.setPropertyBySemantic(this._entityId, semantic, value);
 };

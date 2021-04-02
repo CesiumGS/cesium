@@ -9,7 +9,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
-import TileMetadata from "./TileMetadata.js";
+import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -430,7 +430,7 @@ function deriveChildTile(
 
   if (defined(subtree.metadataExtension)) {
     var metadataTable = subtree.metadataTable;
-    childTile.metadata = new TileMetadata({
+    childTile.metadata = new ImplicitTileMetadata({
       class: metadataTable.class,
       implicitCoordinates: implicitCoordinates,
       implicitSubtree: subtree,
