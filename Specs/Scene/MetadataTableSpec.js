@@ -423,7 +423,7 @@ describe("Scene/MetadataTable", function () {
 
     expect(function () {
       metadataTable.setProperty(0, "name", "A");
-    });
+    }).toThrowDeveloperError();
   });
 
   it("setProperty throws without index", function () {

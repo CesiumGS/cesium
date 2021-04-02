@@ -179,7 +179,7 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
- * @exception {DeveloperError} a property with the given ID doesn't exist.
+ * @exception {DeveloperError} A property with the given ID doesn't exist.
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
@@ -230,7 +230,7 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
- * @exception {DeveloperError} a property with the given semantic doesn't exist.
+ * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,

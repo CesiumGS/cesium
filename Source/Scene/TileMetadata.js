@@ -143,7 +143,7 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} If a property with the given semantic doesn't exist.
+ * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
 TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   MetadataEntity.setPropertyBySemantic(this, semantic, value);
