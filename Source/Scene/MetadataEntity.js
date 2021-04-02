@@ -314,11 +314,12 @@ MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
     var property = entity.class.propertiesBySemantic[semantic];
     if (defined(property)) {
       MetadataEntity.setProperty(entity, property.id, value);
-    } else {
-      //>>includeStart('debug', pragmas.debug);
-      throw new DeveloperError("semantic " + semantic + " does not exist");
-      //>>includeEnd('debug');
     }
+    //>>includeStart('debug', pragmas.debug);
+    else {
+      throw new DeveloperError("semantic " + semantic + " does not exist");
+    }
+    //>>includeEnd('debug');
   }
 };
 

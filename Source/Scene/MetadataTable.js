@@ -245,11 +245,12 @@ MetadataTable.prototype.setPropertyBySemantic = function (
     var property = this._class.propertiesBySemantic[semantic];
     if (defined(property)) {
       this.setProperty(index, property.id, value);
-    } else {
-      //>>includeStart('debug', pragmas.debug);
-      throw new DeveloperError("semantic " + semantic + " does not exist");
-      //>>includeEnd('debug');
     }
+    //>>includeStart('debug', pragmas.debug);
+    else {
+      throw new DeveloperError("semantic " + semantic + " does not exist");
+    }
+    //>>includeEnd('debug');
   }
 };
 
