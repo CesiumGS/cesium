@@ -11,6 +11,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
+import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import when from "../ThirdParty/when.js";
@@ -32,6 +33,51 @@ export default function Model(options) {
   this._featureMetadata = undefined;
   this._state = ModelState.UNLOADED;
   this._readyPromise = when.defer();
+}
+
+function DelayLoadedTextureUniform(value, textures, defaultTexture) {
+  this._value = undefined;
+  this._textureId = value.index;
+  this._textures = textures;
+  this._defaultTexture = defaultTexture;
+}
+
+Object.defineProperties(DelayLoadedTextureUniform.prototype, {
+  value: {
+    get: function () {
+      // Use the default texture (1x1 white) until the model's texture is loaded
+      if (!defined(this._value)) {
+        var texture = this._textures[this._textureId];
+        if (defined(texture)) {
+          this._value = texture;
+        } else {
+          return this._defaultTexture;
+        }
+      }
+
+      return this._value;
+    },
+    set: function (value) {
+      this._value = value;
+    },
+  },
+});
+
+DelayLoadedTextureUniform.prototype.clone = function (source) {
+  return source;
+};
+
+DelayLoadedTextureUniform.prototype.func = undefined;
+///////////////////////////////////////////////////////////////////////////
+
+function getTextureUniformFunction(value, textures, defaultTexture) {
+  var uniform = new DelayLoadedTextureUniform(value, textures, defaultTexture);
+  // Define function here to access closure since 'this' can't be
+  // used when the Renderer sets uniforms.
+  uniform.func = function () {
+    return uniform.value;
+  };
+  return uniform;
 }
 
 /**
@@ -167,7 +213,214 @@ function sortAttributes(attributes) {
   });
 }
 
+function getShaderProgram(frameState) {
+  var context = frameState.context;
+  var shaderCache = context.cache.modelShaderCache;
+
+  var useTargetPositions = [];
+  var useTargetNormals = [];
+  var useTargetTangents = [];
+
+  var useInstancedFeatureId;
+
+
+  var useFeatureIdTexture;
+  var useFeatureTexture;
+  var perPointFeatures;
+  var vertexTextureFetchSupported = ContextLimits.maximumVertexTextureImageUnits > 0;
+
+
+  // Can only one thing do picking at a time?
+  // Which thing has precedence?
+
+  // TODO: pack attributes
+
+// NORMAL could be used in styling language or custom shaders but not for lighting
+
+// TOOD: might be breaking backwards compatability with i3dm
+// because glTF instancing extension says that instance matrix
+// is applied first before the computed node transform
+// but i3dm applies the node transform before the instance transform
+
+// Need to associate feature ids with batch table textures somehow
+
+
+  var useStyle = true;
+  var useColorStyle = true;
+  var useShowStyle = true;
+
+  // By default per-feature color/show are evaluated in JavaScript (precomputed). In some situations styles must be evaluated in GLSL:
+  // * Styles that use dynamic uniforms like https://github.com/CesiumGS/cesium/pull/5380
+  // * Styles that are time dynamic
+  // * Styles that use vertex attributes
+  // * Styles that use feature textures
+  // * Styles that use per-point properties (too expensive to have a Cesium3DTileFeature for each point)
+  var useStylePrecomputed = !useFeatureTexture; // TODO
+
+  // By default styles are applied in the vertex shader. In some situations styles must be applied in the fragment shader instead:
+  // * Feature ID textures
+  // * Feature textures
+  // * Vertex Texture Fetch not supported
+  // * When per-fragment granularity is required (e.g. styles that use interpolated vertex attributes)
+  var useStyleInVertexShader = vertexTextureFetchSupported && !useFeatureTexture && !useFeatureIdTexture;
+
+
+  var useFeatureId = 
+
+  var useTargetPositionsLength = useTargetPositions.length;
+  var useTargetNormalsLength = useTargetNormals.length;
+  var useTargetTangentsLength = useTargetTangents.length;
+
+  var flags0 =
+  useNormal |
+  useTangent << 1 |
+  useTexcoord0 << 2 |
+  useTexcoord1 << 3 |
+  useColor << 4 |
+  useFeatureId0 << 23 |
+  useFeatureId1 << 24 |
+  useInstancing << 
+  useSkinning << 5 |
+  useMorphTargets << 6 |
+  useTargetPosition0 << 7
+  useTargetPosition1 << 8
+  useTargetPosition2 << 9
+  useTargetPosition3 << 10
+  useTargetPosition4 << 11
+  useTargetPosition5 << 12
+  useTargetPosition6 << 13
+  useTargetPosition7 << 14
+  useTargetNormal0 << 15
+  useTargetNormal1 << 16
+  useTargetNormal2 << 17
+  useTargetNormal3 << 18
+  useTargetTangent0 << 19
+  useTargetTangent1 << 20
+  useTargetTangent2 << 21
+  useTargetTangent3 << 22
+  useCpuStyling << 25 |
+  useVertexShaderStyling << 26 |
+  useLighting << 27 |
+  useMetallicRoughness << 28 |
+  useBaseColorTexture << 29 |
+  useMetallicRoughnessTexture << 30 |
+  useSpecularGlossiness << 31 |
+  useDiffuseTexture << 32;
+
+  var flags1 =
+  useSpecularGlossinessTexture;
+
+  var key = flags0 + "_" + flags1 + "_" + morphTargetCount + "_" + jointCount;
+
+  var shaderProgram = shaderCache[key];
+  if (!defined(shaderProgram)) {
+    var vsDefines = [];
+    var fsDefines = [];
+
+    if (useLighting) {
+      vsDefines.push("USE_LIGHTING");
+      fsDefines.push("USE_LIGHTING");
+    }
+
+    if (useNormal) {
+      vsDefines.push("USE_NORMAL");
+      fsDefines.push("USE_NORMAL");
+    }
+
+    if (useTangent) {
+      vsDefines.push("USE_TANGENT");
+      fsDefines.push("USE_TANGENT");
+    }
+
+    if (useTexcoord0) {
+      vsDefines.push("USE_TEXCOORD_0");
+      fsDefines.push("USE_TEXCOORD_0");
+    }
+
+    if (useTexcoord1) {
+      vsDefines.push("USE_TEXCOORD_1");
+      fsDefines.push("USE_TEXCOORD_1");
+    }
+
+    if (useColor) {
+      vsDefines.push("USE_COLOR");
+      fsDefines.push("USE_COLOR");
+    }
+    
+    if (useFeatureId0) {
+      vsDefines.push("USE_FEATURE_ID_0");
+      if (!useCpuStyling) {
+        fsDefines.push("USE_FEATURE_ID_0");
+      }
+    }
+
+    if (useFeatureId1) {
+      vsDefines.push("USE_FEATURE_ID_1");
+      if (!useCpuStyling) {
+        fsDefines.push("USE_FEATURE_ID_1");
+      }
+    }
+
+    if (useSkinning) {
+      vsDefines.push("USE_SKINNING");
+      vsDefines.push("JOINT_COUNT " + jointCount);
+    }
+
+    if (useMorphTargets) {
+      vsDefines.push("USE_MORPH_TARGETS");
+      vsDefines.push("MORPH_TARGET_COUNT " + morphTargetCount);
+    }
+
+    var i;
+    for (i = 0; i < useTargetPositionsLength; ++i) {
+      vsDefines.push("USE_TARGET_POSITION_" + i);
+    }
+
+    for (i = 0; i < useTargetNormalsLength; ++i) {
+      vsDefines.push("USE_TARGET_NORMAL_" + i);
+    }
+
+    for (i = 0; i < useTargetTangentsLength; ++i) {
+      vsDefines.push("USE_TARGET_TANGENT_" + i);
+    }
+
+    var vertexShaderSource = new ShaderSource({
+      defines: vsDefines,
+      sources: [ModelVS],
+    });
+
+    var fragmentShaderSource = new ShaderSource({
+      defines: fsDefines,
+      sources: [ModelFS]
+    })
+
+    var attributeLocations = 
+
+    shaderProgram = ShaderProgram.fromCache({
+      context: context,
+      vertexShaderSource: vertexShaderSource,
+      fragmentShaderSource: fragmentShaderSource,
+      attributeLocations: attributeLocations,
+    });
+  
+
+    shaderCache[key] = new ShaderProgram
+  }
+
+  if (defined(shaderCache[key])) {
+
+  }
+
+
+}
+
 function createCommands(model, frameState) {
+  context.cache.modelShaderCache = defaultValue(
+    context.cache.modelShaderCache,
+    {}
+  );
+
+
   var i;
   var pickId;
 
@@ -201,8 +454,10 @@ function createCommands(model, frameState) {
           continue;
         }
 
-        // Sort attributes so that POSITION comes first
-        // Some devices expect POSITION to be the 0th attribute in the VAO
+        // Set the position attribute to the 0th index. In some WebGL implementations the shader
+        // will not work correctly if the 0th attribute is not active. For example, some glTF models
+        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
+        // the normal attribute.
         sortAttributes(attributes);
 
         if (attributes[0].semantic !== "POSITION") {
@@ -319,6 +574,8 @@ function createCommands(model, frameState) {
 }
 
 function update(model, frameState) {}
+
+function getShader
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
