@@ -50,19 +50,6 @@ Object.defineProperties(GroupMetadata.prototype, {
   },
 
   /**
-   * A dictionary containing properties.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {Object}
-   * @readonly
-   */
-  properties: {
-    get: function () {
-      return this._properties;
-    },
-  },
-
-  /**
    * The ID of the group.
    *
    * @memberof GroupMetadata.prototype
@@ -135,7 +122,7 @@ Object.defineProperties(GroupMetadata.prototype, {
  * @returns {Boolean} Whether this property exists.
  */
 GroupMetadata.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(this, propertyId);
+  return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
 };
 
 /**
@@ -145,7 +132,7 @@ GroupMetadata.prototype.hasProperty = function (propertyId) {
  * @returns {String[]} The property IDs.
  */
 GroupMetadata.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this, results);
+  return MetadataEntity.getPropertyIds(this._properties, this._class, results);
 };
 
 /**
@@ -158,7 +145,7 @@ GroupMetadata.prototype.getPropertyIds = function (results) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 GroupMetadata.prototype.getProperty = function (propertyId) {
-  return MetadataEntity.getProperty(this, propertyId);
+  return MetadataEntity.getProperty(propertyId, this._properties, this._class);
 };
 
 /**
@@ -172,7 +159,7 @@ GroupMetadata.prototype.getProperty = function (propertyId) {
  * @exception {DeveloperError} A property with the given ID doesn't exist.
  */
 GroupMetadata.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(this, propertyId, value);
+  MetadataEntity.setProperty(propertyId, value, this._properties, this._class);
 };
 
 /**
@@ -182,7 +169,11 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
-  return MetadataEntity.getPropertyBySemantic(this, semantic);
+  return MetadataEntity.getPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
 };
 
 /**
@@ -193,7 +184,12 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
 GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(this, semantic, value);
+  MetadataEntity.setPropertyBySemantic(
+    semantic,
+    value,
+    this._properties,
+    this._class
+  );
 };
 
 export default GroupMetadata;

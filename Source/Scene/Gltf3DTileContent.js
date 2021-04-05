@@ -12,7 +12,8 @@ import Axis from "./Axis.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import ClassificationModel from "./ClassificationModel.js";
-import MetadataGltfExtension from "./MetadataGltfExtension.js";
+import FeatureMetadata from "./FeatureMetadata.js";
+import MetadataSchema from "./MetadataSchema.js";
 import MetadataType from "./MetadataType.js";
 import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
@@ -21,7 +22,7 @@ import ModelUtility from "./ModelUtility.js";
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
  * <p>
- * Has limited support for the {@link https://github.com/CesiumGS/glTF/tree/master/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} with the following caveats:
+ * Has limited support for the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} with the following caveats:
  * </p>
  * <ul>
  *    <li>Only works with glb models with a single buffer</li>
@@ -301,8 +302,9 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     }
 
     var extension = gltf.extensions.EXT_feature_metadata;
-    var metadata = new MetadataGltfExtension({
+    var metadata = new FeatureMetadata({
       extension: extension,
+      schema: new MetadataSchema(extension.schema),
       bufferViews: bufferViews,
     });
 

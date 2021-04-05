@@ -9,7 +9,6 @@ describe("Scene/GroupMetadata", function () {
 
     expect(groupMetadata.id).toBe("building");
     expect(groupMetadata.class).toBeUndefined();
-    expect(groupMetadata.properties).toEqual({});
     expect(groupMetadata.name).toBeUndefined();
     expect(groupMetadata.description).toBeUndefined();
     expect(groupMetadata.extras).toBeUndefined();
@@ -60,7 +59,7 @@ describe("Scene/GroupMetadata", function () {
     expect(groupMetadata.description).toBe("Building Metadata");
     expect(groupMetadata.extras).toBe(extras);
     expect(groupMetadata.extensions).toBe(extensions);
-    expect(groupMetadata.properties).toBe(properties);
+    expect(groupMetadata.getProperty("position")).toEqual(properties.position);
   });
 
   it("constructor throws without id", function () {
@@ -408,8 +407,8 @@ describe("Scene/GroupMetadata", function () {
 
     var position = [1.0, 1.0, 1.0];
     groupMetadata.setProperty("position", position);
-    expect(groupMetadata.properties.position).toEqual(position);
-    expect(groupMetadata.properties.position).not.toBe(position); // The value is cloned
+    expect(groupMetadata.getProperty("position")).toEqual(position);
+    expect(groupMetadata.getProperty("position")).not.toBe(position); // The value is cloned
   });
 
   it("setProperty throws without propertyId", function () {
@@ -528,7 +527,7 @@ describe("Scene/GroupMetadata", function () {
     });
 
     groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
-    expect(groupMetadata.properties.height).toBe(20.0);
+    expect(groupMetadata.getProperty("height")).toBe(20.0);
   });
 
   it("setPropertyBySemantic throws if the semantic does not exist", function () {

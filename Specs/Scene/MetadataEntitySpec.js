@@ -7,9 +7,6 @@ describe("Scene/MetadataEntity", function () {
       return entity.class;
     }).toThrowDeveloperError();
     expect(function () {
-      return entity.properties;
-    }).toThrowDeveloperError();
-    expect(function () {
       entity.hasProperty();
     }).toThrowDeveloperError();
     expect(function () {

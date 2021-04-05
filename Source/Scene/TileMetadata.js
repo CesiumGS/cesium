@@ -43,19 +43,6 @@ Object.defineProperties(TileMetadata.prototype, {
   },
 
   /**
-   * A dictionary containing properties.
-   *
-   * @memberof TileMetadata.prototype
-   * @type {Object}
-   * @readonly
-   */
-  properties: {
-    get: function () {
-      return this._properties;
-    },
-  },
-
-  /**
    * Extras in the JSON object.
    *
    * @memberof TileMetadata.prototype
@@ -89,7 +76,7 @@ Object.defineProperties(TileMetadata.prototype, {
  * @returns {Boolean} Whether this property exists.
  */
 TileMetadata.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(this, propertyId);
+  return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
 };
 
 /**
@@ -99,7 +86,7 @@ TileMetadata.prototype.hasProperty = function (propertyId) {
  * @returns {String[]} The property IDs.
  */
 TileMetadata.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this, results);
+  return MetadataEntity.getPropertyIds(this._properties, this._class, results);
 };
 
 /**
@@ -112,7 +99,7 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 TileMetadata.prototype.getProperty = function (propertyId) {
-  return MetadataEntity.getProperty(this, propertyId);
+  return MetadataEntity.getProperty(propertyId, this._properties, this._class);
 };
 
 /**
@@ -125,7 +112,7 @@ TileMetadata.prototype.getProperty = function (propertyId) {
  * @param {*} value The value of the property that will be copied.
  */
 TileMetadata.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(this, propertyId, value);
+  MetadataEntity.setProperty(propertyId, value, this._properties, this._class);
 };
 
 /**
@@ -135,7 +122,11 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
-  return MetadataEntity.getPropertyBySemantic(this, semantic);
+  return MetadataEntity.getPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
 };
 
 /**
@@ -146,5 +137,10 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
 TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(this, semantic, value);
+  MetadataEntity.setPropertyBySemantic(
+    semantic,
+    value,
+    this._properties,
+    this._class
+  );
 };

@@ -7,7 +7,6 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     expect(tilesetMetadata.class).toBeUndefined();
-    expect(tilesetMetadata.properties).toEqual({});
     expect(tilesetMetadata.name).toBeUndefined();
     expect(tilesetMetadata.description).toBeUndefined();
     expect(tilesetMetadata.extras).toBeUndefined();
@@ -54,7 +53,9 @@ describe("Scene/TilesetMetadata", function () {
     expect(tilesetMetadata.description).toBe("City Metadata");
     expect(tilesetMetadata.extras).toBe(extras);
     expect(tilesetMetadata.extensions).toBe(extensions);
-    expect(tilesetMetadata.properties).toBe(properties);
+    expect(tilesetMetadata.getProperty("neighborhoods")).toEqual(
+      properties.neighborhoods
+    );
   });
 
   it("constructor throws without tileset", function () {
@@ -382,8 +383,8 @@ describe("Scene/TilesetMetadata", function () {
 
     var position = [1.0, 1.0, 1.0];
     tilesetMetadata.setProperty("position", position);
-    expect(tilesetMetadata.properties.position).toEqual(position);
-    expect(tilesetMetadata.properties.position).not.toBe(position); // The value is cloned
+    expect(tilesetMetadata.getProperty("position")).toEqual(position);
+    expect(tilesetMetadata.getProperty("position")).not.toBe(position); // The value is cloned
   });
 
   it("setProperty throws without propertyId", function () {
@@ -495,7 +496,7 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     tilesetMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
-    expect(tilesetMetadata.properties.height).toBe(20.0);
+    expect(tilesetMetadata.getProperty("height")).toBe(20.0);
   });
 
   it("setPropertyBySemantic throws if semantic does not exist", function () {
