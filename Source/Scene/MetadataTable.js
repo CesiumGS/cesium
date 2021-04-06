@@ -13,7 +13,7 @@ import MetadataType from "./MetadataType.js";
  * @param {Number} options.count The number of entities in the table.
  * @param {Object} [options.properties] A dictionary containing properties.
  * @param {MetadataClass} [options.class] The class that properties conform to.
- * @param {Object} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  *
  * @alias MetadataTable
  * @constructor

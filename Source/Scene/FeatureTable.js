@@ -8,7 +8,7 @@ import MetadataTable from "./MetadataTable.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.featureTable The feature table JSON.
  * @param {MetadataClass} [options.class] The class that properties conform to.
- * @param {Object} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  *
  * @alias FeatureTable
  * @constructor

@@ -9,7 +9,7 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.featureTexture The feature texture JSON.
  * @param {MetadataClass} options.class The class that properties conform to.
- * @param {Object} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
  * @alias FeatureTexture
  * @constructor

@@ -7,7 +7,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
  * @alias FeatureTextureProperty
  * @constructor
