@@ -191,6 +191,91 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 };
 
 /**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code>, tileset, group and tile metadata is inherited
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
+ */
+Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
+  var value;
+  var content = this._content;
+  var batchTable = this._content.batchTable;
+  if (defined(batchTable)) {
+    value = batchTable.getProperty(this._batchId, name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var tileMetadata = content.tile.metadata;
+  if (defined(tileMetadata)) {
+    value = tileMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = tileMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var groupMetadata = content.groupMetadata;
+  if (defined(groupMetadata)) {
+    value = groupMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = groupMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var tilesetMetadata = content.tileset.metadata;
+  if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
+    tilesetMetadata = tilesetMetadata.tileset;
+    value = tilesetMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = tilesetMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+// getPropertyInherited()
+// 1. check for batch table, and try batchTable.getProperty()
+//  (this will change with new feature table)
+// 1.5 get content.tile.metadata.getPropertyBySemantic()
+// 2. get content.tile.metadata.getProperty()
+// 2.5 get content.groupMetadata.getPropertyBySemantic()
+// 3. content.groupMetadata.getProperty()
+// 4. content.tileset.metadata.getProperty()
+// TODO: Write an issue about things to be added, namely:
+// - semantics (see existing issue)
+// - ${feature.property} ${group.property} ${tileset.property} syntax (or ${classId.property})?
+// - feature tables, esp. multiple feature tables.
+// - how to handle group and class IDs? function? built-in variables?
+// - how to handle built-in variables in general? or only on GPU?
+// - ability for glTFs to refer to vertex attributes in styling: color ramp based on primitive POSITION
+// - for spec checklist: list styling changes in 3DTILES_metadata
+
+/**
  * Sets the value of the feature's property with the given name.
  * <p>
  * If a property with the given name doesn't exist, it is created.
