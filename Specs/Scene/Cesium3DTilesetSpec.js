@@ -5222,12 +5222,12 @@ describe(
 
           var group = groups.commercialDistrict;
           expect(group).toBeDefined();
-          expect(group.properties.businessCount).toBe(143);
+          expect(group.getProperty("businessCount")).toBe(143);
 
           group = groups.residentialDistrict;
           expect(group).toBeDefined();
-          expect(group.properties.population).toBe(300000);
-          expect(group.properties.neighborhoods).toEqual([
+          expect(group.getProperty("population")).toBe(300000);
+          expect(group.getProperty("neighborhoods")).toEqual([
             "Hillside",
             "Middletown",
             "Western Heights",
@@ -5351,8 +5351,8 @@ describe(
           var metadataTable = subtree.metadataTable;
           expect(metadataTable).toBeDefined();
           expect(metadataTable.count).toBe(4);
-          expect(metadataTable.properties.color).toBeDefined();
-          expect(metadataTable.properties.quadrant).toBeDefined();
+          expect(metadataTable.hasProperty("color")).toBe(true);
+          expect(metadataTable.hasProperty("quadrant")).toBe(true);
 
           var tileCount = 4;
           var expectedQuadrants = [

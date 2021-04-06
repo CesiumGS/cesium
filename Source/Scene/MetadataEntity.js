@@ -30,21 +30,6 @@ Object.defineProperties(MetadataEntity.prototype, {
       DeveloperError.throwInstantiationError();
     },
   },
-
-  /**
-   * A dictionary containing properties.
-   *
-   * @memberof MetadataEntity.prototype
-   * @type {Object}
-   * @readonly
-   * @private
-   */
-  properties: {
-    // eslint-disable-next-line getter-return
-    get: function () {
-      DeveloperError.throwInstantiationError();
-    },
-  },
 });
 
 /**
@@ -118,24 +103,29 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
 /**
  * Returns whether this property exists.
  *
- * @param {MetadataEntity} entity The entity.
  * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
  * @returns {Boolean} Whether this property exists.
  *
  * @private
  */
-MetadataEntity.hasProperty = function (entity, propertyId) {
+MetadataEntity.hasProperty = function (
+  propertyId,
+  properties,
+  classDefinition
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("entity", entity);
   Check.typeOf.string("propertyId", propertyId);
+  Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
 
-  if (defined(entity.properties[propertyId])) {
+  if (defined(properties[propertyId])) {
     return true;
   }
 
-  if (defined(entity.class)) {
-    var classProperty = entity.class.properties[propertyId];
+  if (defined(classDefinition)) {
+    var classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty) && defined(classProperty.default)) {
       return true;
     }
@@ -147,22 +137,26 @@ MetadataEntity.hasProperty = function (entity, propertyId) {
 /**
  * Returns an array of property IDs.
  *
- * @param {MetadataEntity} entity The entity.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  *
  * @private
  */
-MetadataEntity.getPropertyIds = function (entity, results) {
+MetadataEntity.getPropertyIds = function (
+  properties,
+  classDefinition,
+  results
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("entity", entity);
+  Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
 
   results = defined(results) ? results : [];
   results.length = 0;
 
   // Add entity properties
-  var properties = entity.properties;
   for (var propertyId in properties) {
     if (
       properties.hasOwnProperty(propertyId) &&
@@ -173,8 +167,8 @@ MetadataEntity.getPropertyIds = function (entity, results) {
   }
 
   // Add default properties
-  if (defined(entity.class)) {
-    var classProperties = entity.class.properties;
+  if (defined(classDefinition)) {
+    var classProperties = classDefinition.properties;
     for (var classPropertyId in classProperties) {
       if (
         classProperties.hasOwnProperty(classPropertyId) &&
@@ -195,23 +189,28 @@ MetadataEntity.getPropertyIds = function (entity, results) {
  * If the property is normalized the normalized value is returned.
  * </p>
  *
- * @param {MetadataEntity} entity The entity.
  * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @private
  */
-MetadataEntity.getProperty = function (entity, propertyId) {
+MetadataEntity.getProperty = function (
+  propertyId,
+  properties,
+  classDefinition
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("entity", entity);
   Check.typeOf.string("propertyId", propertyId);
+  Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
 
-  var value = entity.properties[propertyId];
+  var value = properties[propertyId];
 
   var classProperty;
-  if (defined(entity.class)) {
-    classProperty = entity.class.properties[propertyId];
+  if (defined(classDefinition)) {
+    classProperty = classDefinition.properties[propertyId];
   }
 
   if (!defined(value) && defined(classProperty)) {
@@ -239,20 +238,26 @@ MetadataEntity.getProperty = function (entity, propertyId) {
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
  *
- * @param {MetadataEntity} entity The entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
  * @exception {DeveloperError} A property with the given ID doesn't exist.
  *
  * @private
  */
-MetadataEntity.setProperty = function (entity, propertyId, value) {
+MetadataEntity.setProperty = function (
+  propertyId,
+  value,
+  properties,
+  classDefinition
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("entity", entity);
   Check.typeOf.string("propertyId", propertyId);
   Check.defined("value", value);
+  Check.typeOf.object("properties", properties);
 
-  if (!defined(entity.properties[propertyId])) {
+  if (!defined(properties[propertyId])) {
     throw new DeveloperError("propertyId " + propertyId + " does not exist");
   }
   //>>includeEnd('debug');
@@ -261,35 +266,44 @@ MetadataEntity.setProperty = function (entity, propertyId, value) {
     value = value.slice(); // clone
   }
 
-  if (defined(entity.class)) {
-    var classProperty = entity.class.properties[propertyId];
+  if (defined(classDefinition)) {
+    var classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty)) {
       value = classProperty.unnormalize(value);
     }
   }
 
-  entity.properties[propertyId] = value;
+  properties[propertyId] = value;
 };
 
 /**
  * Returns a copy of the value of the property with the given semantic.
  *
- * @param {MetadataEntity} entity The entity.
  * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @private
  */
-MetadataEntity.getPropertyBySemantic = function (entity, semantic) {
+MetadataEntity.getPropertyBySemantic = function (
+  semantic,
+  properties,
+  classDefinition
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("entity", entity);
   Check.typeOf.string("semantic", semantic);
+  Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
 
-  if (defined(entity.class)) {
-    var property = entity.class.propertiesBySemantic[semantic];
+  if (defined(classDefinition)) {
+    var property = classDefinition.propertiesBySemantic[semantic];
     if (defined(property)) {
-      return MetadataEntity.getProperty(entity, property.id);
+      return MetadataEntity.getProperty(
+        property.id,
+        properties,
+        classDefinition
+      );
     }
   }
   return undefined;
@@ -298,22 +312,34 @@ MetadataEntity.getPropertyBySemantic = function (entity, semantic) {
 /**
  * Sets the value of the property with the given semantic.
  *
- * @param {MetadataEntity} entity The entity.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
  * @exception {DeveloperError} A property with the given semantic doesn't exist.
  * @private
  */
-MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
+MetadataEntity.setPropertyBySemantic = function (
+  semantic,
+  value,
+  properties,
+  classDefinition
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("entity", entity);
   Check.typeOf.string("semantic", semantic);
+  Check.defined("value", value);
+  Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
 
-  if (defined(entity.class)) {
-    var property = entity.class.propertiesBySemantic[semantic];
+  if (defined(classDefinition)) {
+    var property = classDefinition.propertiesBySemantic[semantic];
     if (defined(property)) {
-      MetadataEntity.setProperty(entity, property.id, value);
+      MetadataEntity.setProperty(
+        property.id,
+        value,
+        properties,
+        classDefinition
+      );
     }
     //>>includeStart('debug', pragmas.debug);
     else {

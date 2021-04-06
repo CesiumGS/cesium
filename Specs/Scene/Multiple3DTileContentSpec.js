@@ -348,16 +348,16 @@ describe(
           var buildingsContent = innerContents[0];
           var groupMetadata = buildingsContent.groupMetadata;
           expect(groupMetadata).toBeDefined();
-          expect(groupMetadata.properties.color).toEqual([255, 127, 0]);
-          expect(groupMetadata.properties.priority).toBe(10);
-          expect(groupMetadata.properties.isInstanced).toBe(false);
+          expect(groupMetadata.getProperty("color")).toEqual([255, 127, 0]);
+          expect(groupMetadata.getProperty("priority")).toBe(10);
+          expect(groupMetadata.getProperty("isInstanced")).toBe(false);
 
           var cubesContent = innerContents[1];
           groupMetadata = cubesContent.groupMetadata;
           expect(groupMetadata).toBeDefined();
-          expect(groupMetadata.properties.color).toEqual([0, 255, 127]);
-          expect(groupMetadata.properties.priority).toBe(5);
-          expect(groupMetadata.properties.isInstanced).toBe(true);
+          expect(groupMetadata.getProperty("color")).toEqual([0, 255, 127]);
+          expect(groupMetadata.getProperty("priority")).toBe(5);
+          expect(groupMetadata.getProperty("isInstanced")).toBe(true);
         });
       });
     });

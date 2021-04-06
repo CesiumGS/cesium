@@ -51,7 +51,6 @@ describe("Scene/TileMetadata", function () {
     });
 
     expect(metadata.class).toBeUndefined();
-    expect(metadata.properties).toBeUndefined();
     expect(metadata.extras).toBeUndefined();
     expect(metadata.extensions).toBeUndefined();
   });
@@ -79,7 +78,8 @@ describe("Scene/TileMetadata", function () {
       class: tileClass,
     });
     expect(tileMetadata.class).toBe(tileClass);
-    expect(tileMetadata.properties).toBe(properties);
+    expect(tileMetadata.getProperty("color")).toEqual(properties.color);
+    expect(tileMetadata.getProperty("isSquare")).toEqual(properties.isSquare);
     expect(tileMetadata.extras).toBe(extras);
     expect(tileMetadata.extensions).toBe(extensions);
   });

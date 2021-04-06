@@ -13,7 +13,7 @@ import MetadataType from "./MetadataType.js";
  * @param {Number} options.count The number of entities in the table.
  * @param {Object} [options.properties] A dictionary containing properties.
  * @param {MetadataClass} [options.class] The class that properties conform to.
- * @param {Object} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  *
  * @alias MetadataTable
  * @constructor
@@ -75,20 +75,6 @@ Object.defineProperties(MetadataTable.prototype, {
       return this._class;
     },
   },
-
-  /**
-   * A dictionary containing properties.
-   *
-   * @memberof MetadataTable.prototype
-   * @type {Object.<String, MetadataTableProperty>}
-   * @readonly
-   * @private
-   */
-  properties: {
-    get: function () {
-      return this._properties;
-    },
-  },
 });
 
 /**
@@ -98,7 +84,7 @@ Object.defineProperties(MetadataTable.prototype, {
  * @returns {Boolean} Whether this property exists.
  */
 MetadataTable.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(this, propertyId);
+  return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
 };
 
 /**
@@ -108,7 +94,7 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
  * @returns {String[]} The property IDs.
  */
 MetadataTable.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this, results);
+  return MetadataEntity.getPropertyIds(this._properties, this._class, results);
 };
 
 /**

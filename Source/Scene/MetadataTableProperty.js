@@ -15,7 +15,7 @@ import MetadataType from "./MetadataType.js";
  * @param {Number} options.count The number of elements in each property array.
  * @param {Object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object} options.bufferViews An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Object.<String, Uint8Array>} options.bufferViews An object mapping bufferView IDs to Uint8Array objects.
  *
  * @alias MetadataTableProperty
  * @constructor

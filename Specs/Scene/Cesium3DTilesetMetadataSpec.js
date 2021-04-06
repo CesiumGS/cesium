@@ -113,15 +113,15 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
 
     var tilesetMetadata = metadata.tileset;
     expect(tilesetMetadata.class).toBe(cityClass);
-    expect(tilesetMetadata.properties.name).toBe("City");
+    expect(tilesetMetadata.getProperty("name")).toBe("City");
 
     var neighborhoodA = metadata.groups.neighborhoodA;
     var neighborhoodB = metadata.groups.neighborhoodB;
 
     expect(neighborhoodA.class).toBe(neighborhoodClass);
-    expect(neighborhoodA.properties.color).toBe("RED");
+    expect(neighborhoodA.getProperty("color")).toBe("RED");
     expect(neighborhoodB.class).toBe(neighborhoodClass);
-    expect(neighborhoodB.properties.color).toBe("GREEN");
+    expect(neighborhoodB.getProperty("color")).toBe("GREEN");
 
     expect(metadata.statistics).toBe(statistics);
     expect(metadata.extras).toBe(extras);
@@ -129,8 +129,20 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
   });
 
   it("constructor throws without extension", function () {
+    var schema = new MetadataSchema(schemaJson);
+
     expect(function () {
-      return new Cesium3DTilesetMetadata();
+      return new Cesium3DTilesetMetadata({
+        schema: schema,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without schema", function () {
+    expect(function () {
+      return new Cesium3DTilesetMetadata({
+        extension: {},
+      });
     }).toThrowDeveloperError();
   });
 });
