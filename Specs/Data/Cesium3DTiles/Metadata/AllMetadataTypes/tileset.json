@@ -103,7 +103,8 @@
         "commercialDistrict": {
           "class": "commercial",
           "properties": {
-            "businessCount": 143
+            "businessCount": 143,
+            "majorIndustries": ["Finance", "Manufacturing"]
           }
         }
       }
@@ -189,7 +190,12 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "lr.b3dm"
+          "uri": "lr.b3dm",
+          "extensions": {
+            "3DTILES_metadata": {
+              "group": "commercialDistrict"
+            }
+          }
         },
         "extensions": {
           "3DTILES_metadata": {
@@ -197,11 +203,6 @@
             "properties": {
               "color": [255, 0, 127, 1.0],
               "population": 230
-            }
-          },
-          "extensions": {
-            "3DTILES_metadata": {
-              "group": "commercialDistrict"
             }
           }
         }
@@ -219,7 +220,12 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ur.b3dm"
+          "uri": "ur.b3dm",
+          "extensions": {
+            "3DTILES_metadata": {
+              "group": "commercialDistrict"
+            }
+          }
         },
         "extensions": {
           "3DTILES_metadata": {
@@ -227,11 +233,6 @@
             "properties": {
               "color": [255, 127, 0, 1.0],
               "population": 150
-            }
-          },
-          "extensions": {
-            "3DTILES_metadata": {
-              "group": "commercialDistrict"
             }
           }
         }
