@@ -258,23 +258,6 @@ Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
   return undefined;
 };
 
-// getPropertyInherited()
-// 1. check for batch table, and try batchTable.getProperty()
-//  (this will change with new feature table)
-// 1.5 get content.tile.metadata.getPropertyBySemantic()
-// 2. get content.tile.metadata.getProperty()
-// 2.5 get content.groupMetadata.getPropertyBySemantic()
-// 3. content.groupMetadata.getProperty()
-// 4. content.tileset.metadata.getProperty()
-// TODO: Write an issue about things to be added, namely:
-// - semantics (see existing issue)
-// - ${feature.property} ${group.property} ${tileset.property} syntax (or ${classId.property})?
-// - feature tables, esp. multiple feature tables.
-// - how to handle group and class IDs? function? built-in variables?
-// - how to handle built-in variables in general? or only on GPU?
-// - ability for glTFs to refer to vertex attributes in styling: color ramp based on primitive POSITION
-// - for spec checklist: list styling changes in 3DTILES_metadata
-
 /**
  * Sets the value of the feature's property with the given name.
  * <p>
