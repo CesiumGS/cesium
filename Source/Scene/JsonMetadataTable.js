@@ -10,7 +10,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of entities in the table.
  * @param {Object.<String, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements.
- * @param {MetadataClass} [options.class] The class that group metadata conforms to.
+ *
  * @alias JsonMetadataTable
  * @constructor
  * @private
@@ -61,7 +61,7 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   Check.typeOf.number("index", index);
   Check.typeOf.string("propertyId", propertyId);
 
-  if (index < 0 || this._count < index) {
+  if (index < 0 || index >= this._count) {
     throw new DeveloperError("index must be in [0, " + this._count + ")");
   }
   //>>includeEnd('debug');
@@ -98,8 +98,5 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   }
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
-  if (defined(property)) {
-    property[index] = clone(value, true);
-  }
+  this._properties[propertyId][index] = clone(value, true);
 };
