@@ -48,6 +48,13 @@
               "neighborhoods": {
                 "type": "ARRAY",
                 "componentType": "STRING"
+              },
+              "name": {
+                "type": "STRING",
+                "semantic": "GROUP_NAME"
+              },
+              "tileCount": {
+                "type": "UINT8"
               }
             }
           },
@@ -59,6 +66,10 @@
               "majorIndustries": {
                 "type": "ARRAY",
                 "componentType": "STRING"
+              },
+              "name": {
+                "type": "STRING",
+                "semantic": "GROUP_NAME"
               }
             }
           },
@@ -82,7 +93,7 @@
         "class": "tileset",
         "properties": {
           "author": "Cesium",
-          "date": "2021-03-23",
+          "date": "2021-04-07",
           "centerCartographic": [
             -1.3196816996258511,
             0.6988767486400521,
@@ -96,13 +107,16 @@
         "residentialDistrict": {
           "class": "residential",
           "properties": {
-            "population": 300000,
-            "neighborhoods": ["Hillside", "Middletown", "Western Heights"]
+            "name": "residential",
+            "population": 150,
+            "neighborhoods": ["Hillside", "Middletown", "Western Heights"],
+            "tileCount": 2
           }
         },
         "commercialDistrict": {
           "class": "commercial",
           "properties": {
+            "name": "commercial",
             "businessCount": 143,
             "majorIndustries": ["Finance", "Manufacturing"]
           }
