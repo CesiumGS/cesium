@@ -9,10 +9,11 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of entities in the table.
- * @param {Object.<String, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements. The value of array
+ * @param {Object.<String, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements.
  * @param {MetadataClass} [options.class] The class that group metadata conforms to.
  * @alias JsonMetadataTable
  * @constructor
+ * @private
  */
 export default function JsonMetadataTable(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -29,6 +30,7 @@ export default function JsonMetadataTable(options) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties);
@@ -39,6 +41,7 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, undefined, results);
@@ -46,13 +49,12 @@ JsonMetadataTable.prototype.getPropertyIds = function (results) {
 
 /**
  * Returns a copy of the value of the property with the given ID.
- * <p>
- * If the property is normalized the normalized value is returned.
- * </p>
  *
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @exception {DeveloperError} index is out of bounds
+ * @private
  */
 JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
@@ -79,6 +81,8 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @exception {DeveloperError} A property with the given ID doesn't exist.
+ * @exception {DeveloperError} index is out of bounds
+ * @private
  */
 JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
