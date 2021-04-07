@@ -3,7 +3,7 @@ import { StyleExpression } from "../../Source/Cesium.js";
 describe("Scene/StyleExpression", function () {
   function MockFeature() {}
 
-  MockFeature.prototype.getProperty = function (name) {
+  MockFeature.prototype.getPropertyInherited = function (name) {
     return undefined;
   };
 
