@@ -491,14 +491,4 @@ Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
   return buffer;
 };
 
-Cesium3DTilesTester.generateJsonBuffer = function (jsonPayload) {
-  var jsonString = JSON.stringify(jsonPayload);
-  var buffer = new Uint8Array(jsonString.length);
-  for (var i = 0; i < jsonString.length; i++) {
-    buffer[i] = jsonString.charCodeAt(i);
-  }
-
-  return buffer.buffer;
-};
-
 export default Cesium3DTilesTester;

@@ -1,5 +1,6 @@
 import {
   Resource,
+  ResourceCache,
   ResourceLoaderState,
   MetadataSchemaLoader,
   when,
@@ -38,10 +39,15 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   var resource = new Resource({ url: "https://example.com/schema.json" });
 
+  afterEach(function () {
+    ResourceCache.clearForSpecs();
+  });
+
   it("throws if neither options.schema nor options.resource are defined", function () {
     expect(function () {
       return new MetadataSchemaLoader({
-        cacheKey: "cacheKey",
+        schema: undefined,
+        resource: undefined,
       });
     }).toThrowDeveloperError();
   });

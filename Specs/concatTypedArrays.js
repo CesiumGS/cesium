@@ -12,10 +12,8 @@ export default function concatTypedArrays(arrays) {
   for (i = 0; i < length; ++i) {
     var array = arrays[i];
     var data = new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
-    byteLength = data.length;
-    for (var j = 0; j < byteLength; ++j) {
-      buffer[byteOffset++] = data[j];
-    }
+    buffer.set(data, byteOffset);
+    byteOffset += data.length;
   }
   return buffer;
 }
