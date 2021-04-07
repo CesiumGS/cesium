@@ -281,7 +281,7 @@ MetadataEntity.setProperty = function (
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @private
@@ -295,16 +295,13 @@ MetadataEntity.getPropertyBySemantic = function (
   Check.typeOf.string("semantic", semantic);
   Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
+  if (!defined(classDefinition)) {
+    return undefined;
+  }
 
-  if (defined(classDefinition)) {
-    var property = classDefinition.propertiesBySemantic[semantic];
-    if (defined(property)) {
-      return MetadataEntity.getProperty(
-        property.id,
-        properties,
-        classDefinition
-      );
-    }
+  var property = classDefinition.propertiesBySemantic[semantic];
+  if (defined(property)) {
+    return MetadataEntity.getProperty(property.id, properties, classDefinition);
   }
   return undefined;
 };
@@ -315,7 +312,7 @@ MetadataEntity.getPropertyBySemantic = function (
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @exception {DeveloperError} A property with the given semantic doesn't exist.
  * @private
  */
@@ -329,24 +326,18 @@ MetadataEntity.setPropertyBySemantic = function (
   Check.typeOf.string("semantic", semantic);
   Check.defined("value", value);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
-  if (defined(classDefinition)) {
-    var property = classDefinition.propertiesBySemantic[semantic];
-    if (defined(property)) {
-      MetadataEntity.setProperty(
-        property.id,
-        value,
-        properties,
-        classDefinition
-      );
-    }
-    //>>includeStart('debug', pragmas.debug);
-    else {
-      throw new DeveloperError("semantic " + semantic + " does not exist");
-    }
-    //>>includeEnd('debug');
+  var property = classDefinition.propertiesBySemantic[semantic];
+  if (defined(property)) {
+    MetadataEntity.setProperty(property.id, value, properties, classDefinition);
   }
+  //>>includeStart('debug', pragmas.debug);
+  else {
+    throw new DeveloperError("semantic " + semantic + " does not exist");
+  }
+  //>>includeEnd('debug');
 };
 
 export default MetadataEntity;
