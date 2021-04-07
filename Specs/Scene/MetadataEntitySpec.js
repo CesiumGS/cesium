@@ -87,6 +87,11 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
+  it("hasProperty works without classDefinition", function () {
+    expect(MetadataEntity.hasProperty("name", properties)).toBe(true);
+    expect(MetadataEntity.hasProperty("volume", properties)).toBe(false);
+  });
+
   it("getPropertyIds returns empty array when there are no properties", function () {
     expect(MetadataEntity.getPropertyIds({}).length).toBe(0);
   });
@@ -114,6 +119,17 @@ describe("Scene/MetadataEntity", function () {
     expect(function () {
       MetadataEntity.getPropertyIds(undefined, classDefinition);
     }).toThrowDeveloperError();
+  });
+
+  it("getPropertyIds works without classDefinition", function () {
+    var results = [];
+    var returnedResults = MetadataEntity.getPropertyIds(
+      properties,
+      undefined,
+      results
+    );
+    expect(results).toBe(returnedResults);
+    expect(results.sort()).toEqual(["name", "position"]);
   });
 
   it("getProperty returns undefined when there's no properties", function () {
@@ -152,6 +168,12 @@ describe("Scene/MetadataEntity", function () {
     expect(function () {
       MetadataEntity.hasProperty("name", undefined, classDefinition);
     }).toThrowDeveloperError();
+  });
+
+  it("getProperty works without classDefinition", function () {
+    var value = MetadataEntity.getProperty("position", properties, undefined);
+    expect(value).toEqual(properties.position);
+    expect(value).not.toBe(properties.position); // The value is cloned
   });
 
   it("setProperty throws if property doesn't exist", function () {
@@ -210,6 +232,14 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
+  it("setProperty works without classDefinition", function () {
+    var position = [1.0, 1.0, 1.0];
+    MetadataEntity.setProperty("position", position, properties);
+    var retrievedPosition = MetadataEntity.getProperty("position", properties);
+    expect(retrievedPosition).toEqual(position);
+    expect(retrievedPosition).not.toBe(position); // The value is cloned
+  });
+
   it("getPropertyBySemantic returns undefined when there's no class", function () {
     expect(
       MetadataEntity.getPropertyBySemantic("NAME", properties)
@@ -246,6 +276,12 @@ describe("Scene/MetadataEntity", function () {
     expect(function () {
       MetadataEntity.getPropertyBySemantic("NAME", undefined, classDefinition);
     }).toThrowDeveloperError();
+  });
+
+  it("getPropertyBySemantic returns undefined without classDefinition", function () {
+    expect(
+      MetadataEntity.getPropertyBySemantic("NAME", properties, undefined)
+    ).toBeUndefined();
   });
 
   it("setPropertyBySemantic sets property value", function () {
@@ -300,6 +336,17 @@ describe("Scene/MetadataEntity", function () {
         "Building B",
         undefined,
         classDefinition
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("setPropertyBySemantic throws without classDefinition", function () {
+    expect(function () {
+      MetadataEntity.setPropertyBySemantic(
+        "NAME",
+        "Building B",
+        properties,
+        undefined
       );
     }).toThrowDeveloperError();
   });
