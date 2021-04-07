@@ -93,7 +93,7 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
     throw new DeveloperError("propertyId " + propertyId + " does not exist");
   }
 
-  if (index < 0 || this._count < index) {
+  if (index < 0 || index >= this._count) {
     throw new DeveloperError("index must be in [0, " + this._count + ")");
   }
   //>>includeEnd('debug');
