@@ -1379,16 +1379,6 @@ describe(
       });
     });
 
-    it("renders textured box with embedded binary KTX texture", function () {
-      return loadModel(texturedBoxKTXBinaryUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
     it("renders textured box with embedded base64 encoded KTX texture", function () {
       return loadModel(texturedBoxKTXEmbeddedUrl, {
         incrementallyLoadTextures: false,
@@ -1404,19 +1394,6 @@ describe(
         return;
       }
       return loadModel(texturedBoxCRNUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded binary CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNBinaryUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
         verifyRender(m);
