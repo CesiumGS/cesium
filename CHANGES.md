@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.81 - 2021-04-02
+
+- Updated [gltf-pipeline](https://github.com/CesiumGS/gltf-pipeline) to 3.0.2. [#9477](https://github.com/CesiumGS/cesium/pull/9477)
+
 ### 1.80 - 2021-04-01
 
 ##### Additions :tada:
