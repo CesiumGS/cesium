@@ -51,14 +51,10 @@ describe(
       "./Data/Models/Box-Textured-BasePath/CesiumTexturedBoxTest.gltf";
     var texturedBoxKTXUrl =
       "./Data/Models/Box-Textured-KTX/CesiumTexturedBoxTest.gltf";
-    var texturedBoxKTXBinaryUrl =
-      "./Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb";
     var texturedBoxKTXEmbeddedUrl =
       "./Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf";
     var texturedBoxCRNUrl =
       "./Data/Models/Box-Textured-CRN/CesiumTexturedBoxTest.gltf";
-    var texturedBoxCRNBinaryUrl =
-      "./Data/Models/Box-Textured-CRN-Binary/CesiumTexturedBoxTest.glb";
     var texturedBoxCRNEmbeddedUrl =
       "./Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf";
     var texturedBoxCustomUrl =
