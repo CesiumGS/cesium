@@ -4,8 +4,8 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `loadCRN` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [9478](https://github.com/CesiumGS/cesium/pull/9478)
-- `loadKTX` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [9478](https://github.com/CesiumGS/cesium/pull/9478)
+- `loadCRN` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
+- `loadKTX` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
 
 ### 1.80 - 2021-04-01
 
