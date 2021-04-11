@@ -2,7 +2,7 @@ import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 
 /**
  * Represents content for a tile in a
