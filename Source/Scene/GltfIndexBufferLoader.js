@@ -145,7 +145,7 @@ function loadFromDraco(indexBufferLoader) {
       if (indexBufferLoader.isDestroyed()) {
         return;
       }
-      // Now wait for the GPU buffer to be created during processing.
+      // Now wait for process() to run to finish loading
       indexBufferLoader._typedArray =
         dracoLoader.decodedData.indices.typedArray;
     })
@@ -176,7 +176,7 @@ function loadFromBufferView(indexBufferLoader) {
       if (indexBufferLoader.isDestroyed()) {
         return;
       }
-      // Now wait for the GPU buffer to be created during processing.
+      // Now wait for process() to run to finish loading
       var bufferViewTypedArray = bufferViewLoader.typedArray;
       indexBufferLoader._typedArray = createIndicesTypedArray(
         indexBufferLoader,

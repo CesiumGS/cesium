@@ -180,7 +180,7 @@ describe("Scene/GltfLoaderUtil", function () {
     expect(sampler.magnificationFilter).toBe(TextureMagnificationFilter.LINEAR);
   });
 
-  it("createSampler creates non mipmap sampler for KHR_texture_transform", function () {
+  it("createSampler creates non-mipmap sampler for KHR_texture_transform", function () {
     var sampler = createSampler({
       minFilter: TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
       useTextureTransform: true,

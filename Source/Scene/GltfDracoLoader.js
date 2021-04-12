@@ -127,7 +127,7 @@ GltfDracoLoader.prototype.load = function () {
       if (that.isDestroyed()) {
         return;
       }
-      // Now wait for the Draco resources to be created during processing.
+      // Now wait for process() to run to finish loading
       that._bufferViewTypedArray = bufferViewLoader.typedArray;
     })
     .otherwise(function (error) {

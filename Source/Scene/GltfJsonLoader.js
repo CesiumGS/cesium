@@ -136,11 +136,6 @@ GltfJsonLoader.prototype.load = function () {
     });
 };
 
-function containsGltfMagic(typedArray) {
-  var magic = getMagic(typedArray);
-  return magic === "glTF";
-}
-
 function upgradeVersion(gltfJsonLoader, gltf) {
   if (gltf.asset.version === "2.0") {
     return when.resolve();
@@ -220,7 +215,7 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
 
 function processGltf(gltfJsonLoader, typedArray) {
   var gltf;
-  if (containsGltfMagic(typedArray)) {
+  if (getMagic(typedArray) === "glTF") {
     gltf = parseGlb(typedArray);
   } else {
     gltf = getJsonFromTypedArray(typedArray);

@@ -171,7 +171,7 @@ function loadFromDraco(vertexBufferLoader) {
       if (vertexBufferLoader.isDestroyed()) {
         return;
       }
-      // Now wait for the GPU buffer to be created during processing.
+      // Now wait for process() to run to finish loading
       var decodedVertexAttributes = dracoLoader.decodedData.vertexAttributes;
       var dracoSemantic = vertexBufferLoader._dracoAttributeSemantic;
       var typedArray = decodedVertexAttributes[dracoSemantic].array;
@@ -199,7 +199,7 @@ function loadFromBufferView(vertexBufferLoader) {
       if (vertexBufferLoader.isDestroyed()) {
         return;
       }
-      // Now wait for the GPU buffer to be created during processing.
+      // Now wait for process() to run to finish loading
       vertexBufferLoader._typedArray = bufferViewLoader.typedArray;
     })
     .otherwise(function (error) {

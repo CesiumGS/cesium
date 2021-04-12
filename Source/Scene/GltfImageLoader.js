@@ -205,16 +205,22 @@ function getMimeTypeFromTypedArray(typedArray) {
   var webpHeaderWEBPChars = typedArray.subarray(8, 12);
 
   if (header[0] === 0xff && header[1] === 0xd8) {
+    // See https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
     return "image/jpeg";
   } else if (header[0] === 0x89 && header[1] === 0x50) {
+    // See http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
     return "image/png";
   } else if (header[0] === 0xab && header[1] === 0x4b) {
+    // See http://github.khronos.org/KTX-Specification/#_identifier
     return "image/ktx";
   } else if (header[0] === 0x48 && header[1] === 0x78) {
+    // See https://github.com/BinomialLLC/crunch/blob/671a0648c8a440b4397f1d96ea5cf5700f830417/inc/crn_decomp.h#L268
     return "image/crn";
   } else if (header[0] === 0x73 && header[1] === 0x42) {
+    // See https://github.com/BinomialLLC/basis_universal/blob/ed135f03a05de315dd7ec7c1b8ef0589099b3e52/spec/basis_spec.txt#L125
     return "image/basis";
   } else if (
+    // See https://developers.google.com/speed/webp/docs/riff_container#webp_file_header
     webpHeaderRIFFChars[0] === 0x52 &&
     webpHeaderRIFFChars[1] === 0x49 &&
     webpHeaderRIFFChars[2] === 0x46 &&
