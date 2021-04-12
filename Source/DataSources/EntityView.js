@@ -22,7 +22,6 @@ var updateTransformCartesian3Scratch4 = new Cartesian3();
 var updateTransformCartesian3Scratch5 = new Cartesian3();
 var updateTransformCartesian3Scratch6 = new Cartesian3();
 var deltaTime = new JulianDate();
-var northUpAxisFactor = 1.25; // times ellipsoid's maximum radius
 
 function updateTransform(
   that,
@@ -43,17 +42,23 @@ function updateTransform(
     var zBasis;
 
     if (mode === SceneMode.SCENE3D) {
-      // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
-      // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
-      JulianDate.addSeconds(time, 0.001, deltaTime);
+      JulianDate.addSeconds(
+        time,
+        EntityView.velocityCalculationDelta,
+        deltaTime
+      );
       var deltaCartesian = positionProperty.getValue(
         deltaTime,
         updateTransformCartesian3Scratch1
       );
 
-      // If no valid position at (time + 0.001), sample at (time - 0.001) and invert the vector
+      // If no valid position at (time + delta), sample at (time - delta) and invert the vector
       if (!defined(deltaCartesian)) {
-        JulianDate.addSeconds(time, -0.001, deltaTime);
+        JulianDate.addSeconds(
+          time,
+          -EntityView.velocityCalculationDelta,
+          deltaTime
+        );
         deltaCartesian = positionProperty.getValue(
           deltaTime,
           updateTransformCartesian3Scratch1
@@ -110,7 +115,8 @@ function updateTransform(
           updateTransformCartesian3Scratch4
         );
         var inertialVelocity =
-          Cartesian3.magnitude(updateTransformCartesian3Scratch4) * 1000.0; // meters/sec
+          Cartesian3.magnitude(updateTransformCartesian3Scratch4) /
+          EntityView.velocityCalculationDelta; // meters/sec
 
         var mu = CesiumMath.GRAVITATIONALPARAMETER; // m^3 / sec^2
         var semiMajorAxis =
@@ -120,7 +126,7 @@ function updateTransform(
 
         if (
           semiMajorAxis < 0 ||
-          semiMajorAxis > northUpAxisFactor * ellipsoid.maximumRadius
+          semiMajorAxis > EntityView.northUpAxisFactor * ellipsoid.maximumRadius
         ) {
           // North-up viewing from deep space.
 
@@ -158,7 +164,7 @@ function updateTransform(
           !Cartesian3.equalsEpsilon(
             cartesian,
             deltaCartesian,
-            CesiumMath.EPSILON7
+            EntityView.fastThreshold
           )
         ) {
           // Approximation of VVLH (Vehicle Velocity Local Horizontal) with the Z-axis flipped.
@@ -272,12 +278,26 @@ function updateTransform(
 
 /**
  * A utility object for tracking an entity with the camera.
+ *
+ * The camera will automatically track the entity with one of 3 reference frames depending on the entity's
+ * velocity and static parameters.
+ *
+ * 1) Local ENU frame. Under default parameters, this will be used for slower vehicles near the surface.
+ * 2) Approximate VVLH (Vehicle Velocity Local Horizontal) frame. Under default parameters, this will be used for
+ *    non-deep, high velocity, space objects.
+ * 3) North-up frame. Under default parameters, this will be used for deep space objects.
+ *
+ * {@link Entity#viewFrom} will be with respect to the chosen reference frame.
+ *
  * @alias EntityView
  * @constructor
  *
  * @param {Entity} entity The entity to track with the camera.
  * @param {Scene} scene The scene to use.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
+ * @see EntityView.northUpAxisFactor
+ * @see EntityView.velocityCalculationDelta
+ * @see EntityView.fastThreshold
  */
 function EntityView(entity, scene, ellipsoid) {
   //>>includeStart('debug', pragmas.debug);
@@ -314,7 +334,6 @@ function EntityView(entity, scene, ellipsoid) {
   this._mode = undefined;
 
   this._lastCartesian = new Cartesian3();
-  this._defaultOffset3D = undefined;
 
   this._offset3D = new Cartesian3();
 }
@@ -339,6 +358,34 @@ Object.defineProperties(EntityView, {
 
 // Initialize the static property.
 EntityView.defaultOffset3D = new Cartesian3(-14000, 3500, 3500);
+
+/**
+ * A scalar multiple of the ellipsoid's maximum radius used to determine if the entity is in "deep space", i.e. if
+ * the entity is farther away than this multiple times the ellipsoid's maximum radius. If so, a north-up
+ * reference frame will be used.
+ * @type {Number}
+ * @default 1.25
+ */
+EntityView.northUpAxisFactor = 1.25;
+
+/**
+ * The time delta used to approximate velocity from the tracked entity's position. Depending on the entity's
+ * velocity, this value, and the {@link EntityView#fastDistanceThreshold} value, one of the different camera
+ * reference frames will be chosen.
+ * @type {Number}
+ * @default 0.001
+ */
+EntityView.velocityCalculationDelta = 0.001;
+
+/**
+ * The distance threshold between the entity's current position and future position
+ * ({@link EntityView#velocityCalculationDelta} seconds later) to determine if the entity is moving "fast".
+ * If so and the object is not in "deep space", then the VVLH reference frame will be used, otherwise a
+ * local ENU reference will be used.
+ * @type {Number}
+ * @default 0.0000001
+ */
+EntityView.fastDistanceThreshold = CesiumMath.EPSILON7;
 
 var scratchHeadingPitchRange = new HeadingPitchRange();
 var scratchCartesian = new Cartesian3();
