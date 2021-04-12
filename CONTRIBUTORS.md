@@ -159,6 +159,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Jonathan Nogueira](https://github.com/LuminousPath)
 - [Palantir Technologies, Inc.](https://palantir.com)
   - [Joey Rafidi](https://github.com/jrafidi)
+  - [Dan Cervelli](https://github.com/dcervelli)
 - [Geoplex GIS GmbH](https://www.geoplex.de)
   - [Leonard Holst](https://github.com/LHolst)
 
