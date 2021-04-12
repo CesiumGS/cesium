@@ -33,6 +33,8 @@ const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
 const rollupPluginUglify = require("rollup-plugin-uglify");
+const rollupCommonjs = require("@rollup/plugin-commonjs");
+const rollupResolve = require("@rollup/plugin-node-resolve").default;
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 
@@ -75,6 +77,7 @@ const sourceFiles = [
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/pako_inflate.js",
   "!Source/ThirdParty/crunch.js",
+  "!Source/ThirdPartyNpm/_*",
 ];
 
 const watchedFiles = [
@@ -98,6 +101,7 @@ const filesToClean = [
   "!Source/Workers/cesiumWorkerBootstrapper.js",
   "!Source/Workers/transferTypedArrayTest.js",
   "Source/ThirdParty/Shaders/*.js",
+  "Source/ThirdPartyNpm/**",
   "Specs/SpecList.js",
   "Apps/Sandcastle/jsHintOptions.js",
   "Apps/Sandcastle/gallery/gallery-index.js",
@@ -176,8 +180,41 @@ function createWorkers() {
     });
 }
 
-gulp.task("build", function () {
+async function buildThirdParty() {
+  rimraf.sync("Build/createWorkers");
+  rimraf.sync("Source/ThirdPartyNpm");
+
+  const workers = globby.sync(["ThirdParty/npm/**"]);
+
+  return rollup
+    .rollup({
+      input: workers,
+      plugins: [rollupResolve(), rollupCommonjs()],
+      onwarn: rollupWarning,
+    })
+    .then(function (bundle) {
+      return bundle.write({
+        dir: "Build/createThirdPartyNpm",
+        banner:
+          "/* This file is automatically rebuilt by the Cesium build process. */",
+        format: "es",
+      });
+    })
+    .then(function () {
+      return streamToPromise(
+        gulp
+          .src("Build/createThirdPartyNpm/**")
+          .pipe(gulp.dest("Source/ThirdPartyNpm"))
+      );
+    })
+    .then(function () {
+      rimraf.sync("Build/createThirdPartyNpm");
+    });
+}
+
+gulp.task("build", async function () {
   mkdirp.sync("Build");
+
   fs.writeFileSync(
     "Build/package.json",
     JSON.stringify({
@@ -185,6 +222,8 @@ gulp.task("build", function () {
     }),
     "utf8"
   );
+
+  await buildThirdParty();
   glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();

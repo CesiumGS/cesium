@@ -36,7 +36,7 @@ import StripeMaterial from "../Shaders/Materials/StripeMaterial.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import WaterMaterial from "../Shaders/Materials/Water.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 
 /**
  * A Material defines surface appearance through a combination of diffuse, specular,

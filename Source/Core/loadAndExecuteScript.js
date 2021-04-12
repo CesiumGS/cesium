@@ -1,4 +1,4 @@
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 
 /**
  * @private

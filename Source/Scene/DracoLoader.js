@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 
 /**
  * @private

@@ -4,6 +4,7 @@ Build/**
 Documentation/**
 Source/Shaders/**
 Source/ThirdParty/**
+Source/ThirdPartyNpm/**
 Source/Workers/**
 !Source/Workers/transferTypedArrayTest.js
 ThirdParty/**
