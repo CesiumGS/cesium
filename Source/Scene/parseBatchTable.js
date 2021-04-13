@@ -50,27 +50,21 @@ export default function parseBatchTable(options) {
     binaryBody
   );
 
-  // extras and extensions are stored in the feature table
-  var featureTableJson = binaryResults.featureTableJson;
-  featureTableJson.extensions = partitionResults.extensions;
-  featureTableJson.extras = partitionResults.extras;
-
-  var transcodedBatchTable = new FeatureTable({
-    featureTable: binaryResults.featureTableJson,
-    class: binaryResults.transcodedClass,
-    bufferViews: binaryResults.bufferViewsU8,
-    jsonMetadataTable: jsonMetadataTable,
-    batchTableHierarchy: hierarchy,
-  });
-
-  // Since the feature table is passed in directly via the batchTable option,
-  // it does not need to be defined in the extension JSON
-  var transcodedExtension = {};
+  var featureTables = {
+    _batchTable: new FeatureTable({
+      featureTable: binaryResults.featureTableJson,
+      class: binaryResults.transcodedClass,
+      bufferViews: binaryResults.bufferViewsU8,
+      jsonMetadataTable: jsonMetadataTable,
+      batchTableHierarchy: hierarchy,
+    }),
+  };
 
   return new FeatureMetadata({
-    extension: transcodedExtension,
     schema: binaryResults.transcodedSchema,
-    batchTable: transcodedBatchTable,
+    featureTables: featureTables,
+    extensions: partitionResults.extensions,
+    extras: partitionResults.extras,
   });
 }
 
