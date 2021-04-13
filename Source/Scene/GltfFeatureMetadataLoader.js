@@ -20,7 +20,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {String} options.extension The feature metadata extension object.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {String} [options.cacheKey] The cache key of the resource.

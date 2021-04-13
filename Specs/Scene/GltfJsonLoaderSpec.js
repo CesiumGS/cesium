@@ -584,6 +584,30 @@ describe("Scene/GltfJsonLoader", function () {
     });
   });
 
+  it("loads typed array", function () {
+    var gltf2Binary = clone(gltf2, true);
+    delete gltf2Binary.buffers[0].uri;
+
+    var gltf2BinaryUpdated = clone(gltf2Updated, true);
+    delete gltf2BinaryUpdated.buffers[0].uri;
+
+    var typedArray = createGlb2(gltf2Binary);
+
+    var gltfJsonLoader = new GltfJsonLoader({
+      resourceCache: ResourceCache,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+      typedArray: typedArray,
+    });
+
+    gltfJsonLoader.load();
+
+    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
+      var gltf = gltfJsonLoader.gltf;
+      expect(gltf).toEqual(gltf2BinaryUpdated);
+    });
+  });
+
   it("destroys", function () {
     var gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
@@ -659,6 +683,33 @@ describe("Scene/GltfJsonLoader", function () {
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
+    });
+
+    expect(gltfJsonLoader.gltf).not.toBeDefined();
+
+    gltfJsonLoader.load();
+    gltfJsonLoader.destroy();
+
+    deferredPromise.resolve(buffer);
+
+    expect(gltfJsonLoader.gltf).not.toBeDefined();
+    expect(gltfJsonLoader.isDestroyed()).toBe(true);
+  });
+
+  it("handles destroy before typed array is processed", function () {
+    var typedArray = generateJsonBuffer(gltf2);
+
+    var buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
+    var deferredPromise = when.defer();
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      deferredPromise.promise
+    );
+
+    var gltfJsonLoader = new GltfJsonLoader({
+      resourceCache: ResourceCache,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+      typedArray: typedArray,
     });
 
     expect(gltfJsonLoader.gltf).not.toBeDefined();
