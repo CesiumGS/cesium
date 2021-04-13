@@ -254,6 +254,77 @@ MetadataTester.createFeatureTables = function (options) {
   };
 };
 
+MetadataTester.createGltf = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  var featureTableResults = MetadataTester.createFeatureTables(options);
+
+  var bufferByteLength = 0;
+  var bufferViewsMap = featureTableResults.bufferViews;
+  var bufferViewsLength = Object.keys(bufferViewsMap).length;
+
+  var byteLengths = new Array(bufferViewsLength);
+
+  var bufferViewId;
+  var uint8Array;
+
+  for (bufferViewId in bufferViewsMap) {
+    if (bufferViewsMap.hasOwnProperty(bufferViewId)) {
+      uint8Array = bufferViewsMap[bufferViewId];
+
+      var remainder = uint8Array.byteLength % 8;
+      var padding = remainder === 0 ? 0 : 8 - remainder;
+      var byteLength = uint8Array.byteLength + padding;
+      bufferByteLength += byteLength;
+      byteLengths[bufferViewId] = byteLength;
+    }
+  }
+
+  var buffer = new Uint8Array(bufferByteLength);
+  var bufferViews = new Array(bufferViewsLength);
+  var byteOffset = 0;
+
+  for (bufferViewId in bufferViewsMap) {
+    if (bufferViewsMap.hasOwnProperty(bufferViewId)) {
+      uint8Array = bufferViewsMap[bufferViewId];
+
+      bufferViews[bufferViewId] = {
+        buffer: 0,
+        byteOffset: byteOffset,
+        byteLength: uint8Array.byteLength,
+      };
+
+      buffer.set(uint8Array, byteOffset);
+      byteOffset += byteLengths[bufferViewId];
+    }
+  }
+
+  var gltf = {
+    buffers: [
+      {
+        uri: "external.bin",
+        byteLength: buffer.byteLength,
+      },
+    ],
+    images: options.images,
+    textures: options.textures,
+    bufferViews: bufferViews,
+    extensionsUsed: ["EXT_feature_metadata"],
+    extensions: {
+      EXT_feature_metadata: {
+        schema: options.schema,
+        featureTables: featureTableResults.featureTables,
+        featureTextures: options.featureTextures,
+      },
+    },
+  };
+
+  return {
+    gltf: gltf,
+    buffer: buffer,
+  };
+};
+
 function createBuffer(values, type) {
   var typedArray;
   switch (type) {

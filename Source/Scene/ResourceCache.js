@@ -718,10 +718,41 @@ ResourceCache.loadTexture = function (options) {
  * @private
  */
 ResourceCache.clearForSpecs = function () {
+  // Unload in the order below. This prevents an unload function from unloading
+  // a resource that has already been unloaded.
+  var precedence = [
+    GltfVertexBufferLoader,
+    GltfIndexBufferLoader,
+    GltfDracoLoader,
+    GltfTextureLoader,
+    GltfImageLoader,
+    GltfBufferViewLoader,
+    BufferLoader,
+    MetadataSchemaLoader,
+    GltfJsonLoader,
+  ];
+
+  var cacheKey;
   var cacheEntries = ResourceCache.cacheEntries;
-  for (var cacheKey in cacheEntries) {
+
+  var cacheEntriesSorted = [];
+  for (cacheKey in cacheEntries) {
     if (cacheEntries.hasOwnProperty(cacheKey)) {
-      var cacheEntry = cacheEntries[cacheKey];
+      cacheEntriesSorted.push(cacheEntries[cacheKey]);
+    }
+  }
+
+  cacheEntriesSorted.sort(function (a, b) {
+    var indexA = precedence.indexOf(a.resourceLoader.constructor);
+    var indexB = precedence.indexOf(b.resourceLoader.constructor);
+    return indexA - indexB;
+  });
+
+  var cacheEntriesLength = cacheEntriesSorted.length;
+  for (var i = 0; i < cacheEntriesLength; ++i) {
+    var cacheEntry = cacheEntriesSorted[i];
+    cacheKey = cacheEntry.resourceLoader.cacheKey;
+    if (defined(cacheEntries[cacheKey])) {
       cacheEntry.resourceLoader.destroy();
       delete cacheEntries[cacheKey];
     }
