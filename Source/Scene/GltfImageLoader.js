@@ -24,7 +24,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.imageId The image ID.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {String} [options.cacheKey] The cache key of the resource.
