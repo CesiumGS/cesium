@@ -12,6 +12,8 @@ import RuntimeError from "../Core/RuntimeError.js";
 /**
  * Object for handling the <code>3DTILES_batch_table_hierarchy</code> extension
  *
+ * @function
+ *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.extension The <code>3DTILES_batch_table_hierarchy</code> extension object.
  * @param {Uint8Array} options.binaryBody the binary body of the batch table

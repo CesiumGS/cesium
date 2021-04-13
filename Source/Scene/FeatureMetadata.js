@@ -15,6 +15,7 @@ import FeatureTexture from "./FeatureTexture.js";
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
+ * @param {FeatureTable} [options.batchTable] A 3D Tiles 1.0 batch table transcoded to <code>EXT_feature_metadata</code>. This is passed in separately
  *
  * @alias FeatureMetadata
  * @constructor
@@ -46,6 +47,10 @@ function FeatureMetadata(options) {
         });
       }
     }
+  }
+
+  if (defined(options.batchTable)) {
+    featureTables._batchTable = options.batchTable;
   }
 
   var featureTextures = {};

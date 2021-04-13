@@ -3,12 +3,24 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataTable from "./MetadataTable.js";
 
 /**
- * A feature table.
+ * A feature table for use with the <code>EXT_feature_metadata</code> glTF
+ * extension. It also includes some options to be compatible with the older
+ * 3D Tiles 1.0 batch table.
+ * <p>
+ * For batch tables, properties are resolved in the following order:
+ * </p>
+ * <ol>
+ *   <li>binary properties from options.featureTable</li>
+ *   <li>JSON properties from options.jsonMetadataTable</li>
+ *   <li>batch table hierarchy properties from options.batchTableHierarchy</li>
+ * </ol>
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.featureTable The feature table JSON.
  * @param {MetadataClass} [options.class] The class that properties conform to.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ * @param {JsonMetadataTable} [options.jsonMetadataTable] For compatibility with the old batch table, free-form JSON properties can be passed in.
+ * @param {BatchTableHierarchy} [options.batchTableHierarchy] For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, a hierarchy can be provided.
  *
  * @alias FeatureTable
  * @constructor
@@ -40,6 +52,8 @@ function FeatureTable(options) {
   this._metadataTable = metadataTable;
   this._extras = extras;
   this._extensions = extensions;
+  this._jsonMetadataTable = options.jsonMetadataTable;
+  this._batchTableHierarchy = options.batchTableHierarchy;
 }
 
 Object.defineProperties(FeatureTable.prototype, {
