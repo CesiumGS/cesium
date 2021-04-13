@@ -798,33 +798,6 @@ describe(
       });
     });
 
-    it("renders with specular environment map", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-        m.specularEnvironmentMaps =
-          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx";
-
-        return pollToPromise(function () {
-          scene.highDynamicRange = true;
-          scene.render();
-          scene.highDynamicRange = false;
-          return (
-            defined(m._specularEnvironmentMapAtlas) &&
-            m._specularEnvironmentMapAtlas.ready
-          );
-        }).then(function () {
-          scene.highDynamicRange = true;
-          verifyRender(m);
-          primitives.remove(m);
-          scene.highDynamicRange = false;
-        });
-      });
-    });
-
     it("distanceDisplayCondition throws when ner >= far", function () {
       expect(function () {
         texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(
@@ -1365,75 +1338,6 @@ describe(
     it("renders textured box with external resources: .glsl, .bin, and .png files", function () {
       return loadModel(texturedBoxSeparateUrl).then(function (m) {
         verifyRender(m);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with external KTX texture", function () {
-      return loadModel(texturedBoxKTXUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded binary KTX texture", function () {
-      return loadModel(texturedBoxKTXBinaryUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded base64 encoded KTX texture", function () {
-      return loadModel(texturedBoxKTXEmbeddedUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with external CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded binary CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNBinaryUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded base64 encoded CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNEmbeddedUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
         primitives.remove(m);
       });
     });

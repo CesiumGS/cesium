@@ -20,9 +20,7 @@ import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import loadKTX from "../Core/loadKTX.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -1936,9 +1934,6 @@ function imageLoad(model, textureId) {
   };
 }
 
-var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
-var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
-
 function parseTextures(model, context, supportsWebP) {
   var gltf = model.gltf;
   var images = gltf.images;
@@ -2014,14 +2009,7 @@ function parseTextures(model, context, supportsWebP) {
         url: uri,
       });
 
-      var promise;
-      if (ktxRegex.test(uri)) {
-        promise = loadKTX(imageResource);
-      } else if (crnRegex.test(uri)) {
-        promise = loadCRN(imageResource);
-      } else {
-        promise = imageResource.fetchImage();
-      }
+      var promise = imageResource.fetchImage();
       promise
         .then(imageLoad(model, id, imageId))
         .otherwise(
@@ -2743,7 +2731,6 @@ function loadTexturesFromBufferViews(model) {
 
     var gltf = model.gltf;
     var bufferView = gltf.bufferViews[gltfTexture.bufferView];
-    var imageId = gltf.textures[gltfTexture.id].source;
 
     var onerror = ModelUtility.getFailedLoadFunction(
       model,
@@ -2751,27 +2738,15 @@ function loadTexturesFromBufferViews(model) {
       "id: " + gltfTexture.id + ", bufferView: " + gltfTexture.bufferView
     );
 
-    if (gltfTexture.mimeType === "image/ktx") {
-      loadKTX(loadResources.getBuffer(bufferView))
-        .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
-      ++model._loadResources.pendingTextureLoads;
-    } else if (gltfTexture.mimeType === "image/crn") {
-      loadCRN(loadResources.getBuffer(bufferView))
-        .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
-      ++model._loadResources.pendingTextureLoads;
-    } else {
-      var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-      loadImageFromTypedArray({
-        uint8Array: loadResources.getBuffer(bufferView),
-        format: gltfTexture.mimeType,
-        flipY: false,
-      })
-        .then(onload)
-        .otherwise(onerror);
-      ++loadResources.pendingBufferViewToImage;
-    }
+    var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
+    loadImageFromTypedArray({
+      uint8Array: loadResources.getBuffer(bufferView),
+      format: gltfTexture.mimeType,
+      flipY: false,
+    })
+      .then(onload)
+      .otherwise(onerror);
+    ++loadResources.pendingBufferViewToImage;
   }
 }
 

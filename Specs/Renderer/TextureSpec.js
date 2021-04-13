@@ -1,6 +1,5 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
-import { loadKTX } from "../../Source/Cesium.js";
 import { PixelFormat } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { ClearCommand } from "../../Source/Cesium.js";
@@ -14,7 +13,7 @@ import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 import { when } from "../../Source/Cesium.js";
 
-describe(
+fdescribe(
   "Renderer/Texture",
   function () {
     var context;
@@ -110,17 +109,6 @@ describe(
 
     afterEach(function () {
       texture = texture && texture.destroy();
-    });
-
-    it("has expected default values for pixel format and datatype", function () {
-      texture = new Texture({
-        context: context,
-        source: blueImage,
-      });
-
-      expect(texture.id).toBeDefined();
-      expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
-      expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
     it("can create a texture from the framebuffer", function () {
@@ -432,30 +420,6 @@ describe(
       }
     });
 
-    it("draws the expected DXT compressed texture color", function () {
-      if (!context.s3tc) {
-        return;
-      }
-
-      texture = new Texture({
-        context: context,
-        pixelFormat: greenDXTImage.internalFormat,
-        source: {
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          arrayBufferView: greenDXTImage.bufferView,
-        },
-      });
-
-      expect(texture.sizeInBytes).toBe(8);
-
-      expect({
-        context: context,
-        fragmentShader: fs,
-        uniformMap: uniformMap,
-      }).contextToRender([0, 255, 0, 255]);
-    });
-
     it("draws the expected PVR compressed texture color", function () {
       if (!context.pvrtc) {
         return;
@@ -478,30 +442,6 @@ describe(
         fragmentShader: fs,
         uniformMap: uniformMap,
       }).contextToRender([0, 255, 0, 255]);
-    });
-
-    it("draws the expected ETC1 compressed texture color", function () {
-      if (!context.etc1) {
-        return;
-      }
-
-      texture = new Texture({
-        context: context,
-        pixelFormat: greenETC1Image.internalFormat,
-        source: {
-          width: greenETC1Image.width,
-          height: greenETC1Image.height,
-          arrayBufferView: greenETC1Image.bufferView,
-        },
-      });
-
-      expect(texture.sizeInBytes).toBe(8);
-
-      expect({
-        context: context,
-        fragmentShader: fs,
-        uniformMap: uniformMap,
-      }).contextToRender([0, 253, 0, 255]);
     });
 
     it("renders with premultiplied alpha", function () {
@@ -1137,22 +1077,6 @@ describe(
       }
     });
 
-    it("throws when creating compressed texture when pvrtc is unsupported", function () {
-      if (!context.pvrtc) {
-        expect(function () {
-          texture = new Texture({
-            context: context,
-            width: greenPVRImage.width,
-            height: greenPVRImage.height,
-            pixelFormat: greenPVRImage.internalFormat,
-            source: {
-              arrayBufferView: greenPVRImage.bufferView,
-            },
-          });
-        }).toThrowDeveloperError();
-      }
-    });
-
     it("throws when creating compressed texture when etc1 is unsupported", function () {
       if (!context.etc1) {
         expect(function () {
@@ -1163,22 +1087,6 @@ describe(
             pixelFormat: greenETC1Image.internalFormat,
             source: {
               arrayBufferView: greenETC1Image.bufferView,
-            },
-          });
-        }).toThrowDeveloperError();
-      }
-    });
-
-    it("throws when creating compressed texture and the array buffer is not the right length", function () {
-      if (context.s3tc) {
-        expect(function () {
-          texture = new Texture({
-            context: context,
-            width: greenDXTImage.width + 1,
-            height: greenDXTImage.height,
-            pixelFormat: greenDXTImage.internalFormat,
-            source: {
-              arrayBufferView: greenDXTImage.bufferView,
             },
           });
         }).toThrowDeveloperError();
@@ -1257,24 +1165,6 @@ describe(
           height: 1,
           pixelFormat: PixelFormat.DEPTH_COMPONENT,
           pixelDatatype: PixelDatatype.UNSIGNED_SHORT,
-        });
-
-        expect(function () {
-          texture.copyFromFramebuffer();
-        }).toThrowDeveloperError();
-      }
-    });
-
-    it("throws when copying to a texture from the framebuffer with a compressed pixel format", function () {
-      if (context.s3tc) {
-        texture = new Texture({
-          context: context,
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          pixelFormat: greenDXTImage.internalFormat,
-          source: {
-            arrayBufferView: greenDXTImage.bufferView,
-          },
         });
 
         expect(function () {
@@ -1460,25 +1350,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when copyFrom is given a source with a compressed pixel format", function () {
-      if (context.s3tc) {
-        texture = new Texture({
-          context: context,
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          pixelFormat: greenDXTImage.internalFormat,
-          source: {
-            arrayBufferView: greenDXTImage.bufferView,
-          },
-        });
-
-        var image = new Image();
-        expect(function () {
-          texture.copyFrom(image);
-        }).toThrowDeveloperError();
-      }
-    });
-
     it("throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format", function () {
       if (context.depthTexture) {
         texture = new Texture({
@@ -1487,24 +1358,6 @@ describe(
           height: 1,
           pixelFormat: PixelFormat.DEPTH_COMPONENT,
           pixelDatatype: PixelDatatype.UNSIGNED_SHORT,
-        });
-
-        expect(function () {
-          texture.generateMipmap();
-        }).toThrowDeveloperError();
-      }
-    });
-
-    it("throws when generating mipmaps with a compressed pixel format", function () {
-      if (context.s3tc) {
-        texture = new Texture({
-          context: context,
-          width: greenDXTImage.width,
-          height: greenDXTImage.height,
-          pixelFormat: greenDXTImage.internalFormat,
-          source: {
-            arrayBufferView: greenDXTImage.bufferView,
-          },
         });
 
         expect(function () {
