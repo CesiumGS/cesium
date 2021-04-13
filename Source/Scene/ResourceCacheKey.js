@@ -203,7 +203,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  * Gets the glTF cache key.
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  *
  * @returns {String} The glTF cache key.
  */
@@ -224,7 +224,7 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.bufferViewId The bufferView ID.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {String} The buffer view cache key.
@@ -265,7 +265,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Object} options.draco The Draco extension object.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {String} The Draco cache key.
@@ -292,7 +292,7 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
@@ -376,7 +376,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
  *
@@ -431,7 +431,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.imageId The image ID.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
@@ -470,7 +470,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Object} options.textureInfo The texture info object.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *

@@ -278,8 +278,9 @@ ResourceCache.loadExternalBuffer = function (options) {
  * Loads a glTF JSON from the cache.
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {GltfJsonLoader} The glTF JSON.
@@ -288,6 +289,7 @@ ResourceCache.loadGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
+  var typedArray = options.typedArray;
   var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
@@ -308,6 +310,7 @@ ResourceCache.loadGltf = function (options) {
     resourceCache: ResourceCache,
     gltfResource: gltfResource,
     baseResource: baseResource,
+    typedArray: typedArray,
     cacheKey: cacheKey,
     keepResident: keepResident,
   });
@@ -326,7 +329,7 @@ ResourceCache.loadGltf = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.bufferViewId The bufferView ID.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
@@ -382,7 +385,7 @@ ResourceCache.loadBufferView = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Object} options.draco The Draco extension object.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
@@ -437,7 +440,7 @@ ResourceCache.loadDraco = function (options) {
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
@@ -531,7 +534,7 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
@@ -594,7 +597,7 @@ ResourceCache.loadIndexBuffer = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.imageId The image ID.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
@@ -655,7 +658,7 @@ ResourceCache.loadImage = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Object} options.textureInfo The texture info object.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.

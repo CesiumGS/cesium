@@ -27,8 +27,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.keepResident=false] Whether the glTF JSON and embedded buffers should stay in the cache indefinitely.
  *
@@ -39,6 +40,7 @@ export default function GltfJsonLoader(options) {
   var resourceCache = options.resourceCache;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
+  var typedArray = options.typedArray;
   var cacheKey = options.cacheKey;
   var keepResident = defaultValue(options.keepResident, false);
 
@@ -51,6 +53,7 @@ export default function GltfJsonLoader(options) {
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
+  this._typedArray = typedArray;
   this._cacheKey = cacheKey;
   this._keepResident = keepResident;
   this._gltf = undefined;
@@ -110,31 +113,59 @@ Object.defineProperties(GltfJsonLoader.prototype, {
  * Loads the resource.
  */
 GltfJsonLoader.prototype.load = function () {
-  var that = this;
-  this._state = ResourceLoaderState.LOADING;
-  this._fetchGltf()
+  if (defined(this._typedArray)) {
+    loadFromTypedArray(this);
+  } else {
+    loadFromUri(this);
+  }
+};
+
+function loadFromTypedArray(gltfJsonLoader) {
+  gltfJsonLoader._state = ResourceLoaderState.LOADING;
+  return processGltf(gltfJsonLoader, gltfJsonLoader._typedArray)
+    .then(function (gltf) {
+      if (gltfJsonLoader.isDestroyed()) {
+        return;
+      }
+      gltfJsonLoader._gltf = gltf;
+      gltfJsonLoader._state = ResourceLoaderState.READY;
+      gltfJsonLoader._promise.resolve(gltfJsonLoader);
+    })
+    .otherwise(function (error) {
+      handleError(gltfJsonLoader, error);
+    });
+}
+
+function loadFromUri(gltfJsonLoader) {
+  gltfJsonLoader._state = ResourceLoaderState.LOADING;
+  gltfJsonLoader
+    ._fetchGltf()
     .then(function (arrayBuffer) {
-      if (that.isDestroyed()) {
+      if (gltfJsonLoader.isDestroyed()) {
         return;
       }
       var typedArray = new Uint8Array(arrayBuffer);
-      return processGltf(that, typedArray);
+      return processGltf(gltfJsonLoader, typedArray);
     })
     .then(function (gltf) {
-      if (that.isDestroyed()) {
+      if (gltfJsonLoader.isDestroyed()) {
         return;
       }
-      that._gltf = gltf;
-      that._state = ResourceLoaderState.READY;
-      that._promise.resolve(that);
+      gltfJsonLoader._gltf = gltf;
+      gltfJsonLoader._state = ResourceLoaderState.READY;
+      gltfJsonLoader._promise.resolve(gltfJsonLoader);
     })
     .otherwise(function (error) {
-      that.unload();
-      that._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load glTF: " + that._gltfResource.url;
-      that._promise.reject(that.getError(errorMessage, error));
+      handleError(gltfJsonLoader, error);
     });
-};
+}
+
+function handleError(gltfJsonLoader, error) {
+  gltfJsonLoader.unload();
+  gltfJsonLoader._state = ResourceLoaderState.FAILED;
+  var errorMessage = "Failed to load glTF: " + gltfJsonLoader._gltfResource.url;
+  gltfJsonLoader._promise.reject(gltfJsonLoader.getError(errorMessage, error));
+}
 
 function upgradeVersion(gltfJsonLoader, gltf) {
   if (gltf.asset.version === "2.0") {
