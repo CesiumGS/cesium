@@ -480,6 +480,82 @@ describe(
         });
       });
     });
+
+    it("handles destroy before all resources are loaded", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(buffer)
+      );
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(
+        when.resolve(image)
+      );
+      var deferredPromise = when.defer();
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(
+        deferredPromise.promise
+      );
+
+      var destroyBufferView = spyOn(
+        GltfBufferViewLoader.prototype,
+        "destroy"
+      ).and.callThrough();
+      var destroyTexture = spyOn(
+        GltfTextureLoader.prototype,
+        "destroy"
+      ).and.callThrough();
+      var destroySchema = spyOn(
+        MetadataSchemaLoader.prototype,
+        "destroy"
+      ).and.callThrough();
+
+      // Load a copy of feature metadata into the cache so that the resource
+      // promises resolve even if the feature metadata loader is destroyed
+      var featureMetadataLoaderCopy = new GltfFeatureMetadataLoader({
+        gltf: gltf,
+        extension: extension,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        supportedImageFormats: new SupportedImageFormats(),
+      });
+      // Also load a copy of the schema into the cache
+      var schemaResource = gltfResource.getDerivedResource({
+        url: "schema.json",
+      });
+      var schemaCopy = ResourceCache.loadSchema({
+        resource: schemaResource,
+      });
+
+      featureMetadataLoaderCopy.load();
+
+      return pollToPromise(function () {
+        featureMetadataLoaderCopy.process(scene.frameState);
+        return featureMetadataLoaderCopy._state === ResourceLoaderState.READY;
+      }).then(function () {
+        return featureMetadataLoaderCopy.promise.then(function (
+          featureMetadataLoaderCopy
+        ) {
+          var featureMetadataLoader = new GltfFeatureMetadataLoader({
+            gltf: gltfSchemaUri,
+            extension: extensionSchemaUri,
+            gltfResource: gltfResource,
+            baseResource: gltfResource,
+            supportedImageFormats: new SupportedImageFormats(),
+          });
+          expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
+          featureMetadataLoader.load();
+          featureMetadataLoader.destroy();
+          deferredPromise.resolve(schemaJson);
+          expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
+          expect(featureMetadataLoader.isDestroyed()).toBe(true);
+
+          featureMetadataLoaderCopy.destroy();
+
+          expect(destroyBufferView.calls.count()).toBe(6);
+          expect(destroyTexture.calls.count()).toBe(2);
+          expect(destroySchema.calls.count()).toBe(1);
+
+          ResourceCache.unload(schemaCopy);
+        });
+      });
+    });
   },
   "WebGL"
 );
