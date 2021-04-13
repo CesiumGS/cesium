@@ -35,6 +35,7 @@ import { ClippingPlaneCollection } from "../../Source/Cesium.js";
 import { CullFace } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
+import generateJsonBuffer from "../generateJsonBuffer.js";
 import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
 
@@ -190,6 +191,7 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
+      ResourceCache.clearForSpecs();
     });
 
     function setZoom(distance) {
@@ -3863,7 +3865,7 @@ describe(
       var json = getJsonFromTypedArray(uint8Array);
       json.root.children.splice(0, 1);
 
-      return Cesium3DTilesTester.generateJsonBuffer(json);
+      return generateJsonBuffer(json).buffer;
     }
 
     it("tile with tileset content expires", function () {
@@ -5080,7 +5082,7 @@ describe(
             },
             geometricError: 100.0,
           };
-          var buffer = Cesium3DTilesTester.generateJsonBuffer(externalTileset);
+          var buffer = generateJsonBuffer(externalTileset).buffer;
           return when.resolve(buffer);
         });
 
@@ -5180,10 +5182,6 @@ describe(
         ],
         tileCount: 5,
       };
-
-      beforeEach(function () {
-        ResourceCache.clearForSpecs();
-      });
 
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(

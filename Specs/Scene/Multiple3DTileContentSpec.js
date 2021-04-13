@@ -12,6 +12,7 @@ import {
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
+import generateJsonBuffer from "../generateJsonBuffer.js";
 
 describe(
   "Scene/Multiple3DTileContent",
@@ -46,7 +47,7 @@ describe(
           version: "1.0",
         },
       };
-      return Cesium3DTilesTester.generateJsonBuffer(gltf);
+      return generateJsonBuffer(gltf).buffer;
     }
 
     var originalRequestsPerServer;

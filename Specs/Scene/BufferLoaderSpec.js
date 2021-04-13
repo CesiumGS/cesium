@@ -1,14 +1,24 @@
-import { BufferLoader, Resource, when } from "../../Source/Cesium.js";
+import {
+  BufferLoader,
+  Resource,
+  ResourceCache,
+  when,
+} from "../../Source/Cesium.js";
 
 describe("Scene/BufferLoader", function () {
   var typedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
   var arrayBuffer = typedArray.buffer;
-  var resource = new Resource({ url: "https://example.com/buffer.bin" });
+  var resource = new Resource({ url: "https://example.com/external.bin" });
+
+  afterEach(function () {
+    ResourceCache.clearForSpecs();
+  });
 
   it("throws if neither options.typedArray nor options.resource are defined", function () {
     expect(function () {
       return new BufferLoader({
-        cacheKey: "cacheKey",
+        typedArray: undefined,
+        resource: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -40,7 +50,7 @@ describe("Scene/BufferLoader", function () {
       })
       .otherwise(function (runtimeError) {
         expect(runtimeError.message).toBe(
-          "Failed to load external buffer: https://example.com/buffer.bin\n404 Not Found"
+          "Failed to load external buffer: https://example.com/external.bin\n404 Not Found"
         );
       });
   });
