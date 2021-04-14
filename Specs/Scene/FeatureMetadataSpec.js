@@ -1,12 +1,4 @@
-import {
-  FeatureMetadata,
-  MetadataSchema,
-  PixelDatatype,
-  PixelFormat,
-  Texture,
-} from "../../Source/Cesium.js";
-import createContext from "../createContext.js";
-import MetadataTester from "../MetadataTester.js";
+import { FeatureMetadata, MetadataSchema } from "../../Source/Cesium.js";
 
 describe("Scene/FeatureMetadata", function () {
   var featureTablesSchema = {
@@ -58,7 +50,6 @@ describe("Scene/FeatureMetadata", function () {
 
   it("creates feature metadata with default values", function () {
     var metadata = new FeatureMetadata({
-      extension: {},
       schema: new MetadataSchema(featureTablesSchema),
     });
 
@@ -69,6 +60,84 @@ describe("Scene/FeatureMetadata", function () {
   });
 
   it("creates feature metadata", function () {
+    var mockFeatureTables = {
+      buildings: {},
+      trees: {},
+    };
+    var metadata = new FeatureMetadata({
+      schema: new MetadataSchema(featureTablesSchema),
+      featureTables: mockFeatureTables,
+    });
+
+    var buildingClass = metadata.schema.classes.building;
+    var treeClass = metadata.schema.classes.tree;
+
+    expect(buildingClass.id).toBe("building");
+    expect(treeClass.id).toBe("tree");
+
+    var buildingsTable = metadata.getFeatureTable("buildings");
+    var treesTable = metadata.getFeatureTable("trees");
+
+    expect(buildingsTable).toBe(mockFeatureTables.buildings);
+    expect(treesTable).toBe(mockFeatureTables.trees);
+  });
+
+  it("creates feature metadata with feature textures", function () {
+    var schema = new MetadataSchema(featureTexturesSchema);
+    var mapClass = schema.classes.map;
+    var orthoClass = schema.classes.ortho;
+
+    var mockTextures = {
+      mapTexture: {
+        class: mapClass,
+      },
+      orthoTexture: {
+        class: orthoClass,
+      },
+    };
+
+    var metadata = new FeatureMetadata({
+      schema: schema,
+      featureTextures: mockTextures,
+    });
+
+    expect(mapClass.id).toBe("map");
+    expect(orthoClass.id).toBe("ortho");
+
+    var mapTexture = metadata.getFeatureTexture("mapTexture");
+    var orthoTexture = metadata.getFeatureTexture("orthoTexture");
+
+    expect(mapTexture.class).toBe(mapClass);
+    expect(orthoTexture.class).toBe(orthoClass);
+  });
+
+  it("creates feature metadata with extras", function () {
+    var extras = {
+      date: "2021-04-14",
+    };
+
+    var metadata = new FeatureMetadata({
+      extras: extras,
+      schema: new MetadataSchema(featureTablesSchema),
+    });
+
+    expect(metadata.extras).toBe(extras);
+  });
+
+  it("creates feature metadata with extensions", function () {
+    var extensions = {
+      "3DTILES_extension": {},
+    };
+
+    var metadata = new FeatureMetadata({
+      extensions: extensions,
+      schema: new MetadataSchema(featureTablesSchema),
+    });
+
+    expect(metadata.extensions).toBe(extensions);
+  });
+
+  it("creates feature metadata with statistics", function () {
     var statistics = {
       classes: {
         tree: {
@@ -83,163 +152,12 @@ describe("Scene/FeatureMetadata", function () {
       },
     };
 
-    var extras = {
-      description: "Extra",
-    };
-
-    var extensions = {
-      EXT_other_extension: {},
-    };
-
-    var featureTableResults = MetadataTester.createFeatureTables({
-      schema: featureTablesSchema,
-      featureTables: {
-        buildings: {
-          class: "building",
-          properties: {
-            name: ["Building A", "Building B", "Building C"],
-            height: [10.0, 20.0, 30.0],
-          },
-        },
-        trees: {
-          class: "tree",
-          properties: {
-            species: ["Oak", "Pine"],
-          },
-        },
-      },
-    });
-
-    var extension = {
-      schema: featureTablesSchema,
-      featureTables: featureTableResults.featureTables,
-      statistics: statistics,
-      extras: extras,
-      extensions: extensions,
-    };
-
     var metadata = new FeatureMetadata({
-      extension: extension,
+      statistics: statistics,
       schema: new MetadataSchema(featureTablesSchema),
-      bufferViews: featureTableResults.bufferViews,
     });
-
-    var buildingClass = metadata.schema.classes.building;
-    var treeClass = metadata.schema.classes.tree;
-
-    expect(buildingClass.id).toBe("building");
-    expect(treeClass.id).toBe("tree");
-
-    var buildingsTable = metadata.getFeatureTable("buildings");
-    var treesTable = metadata.getFeatureTable("trees");
-
-    expect(buildingsTable.count).toBe(3);
-    expect(buildingsTable.class).toBe(buildingClass);
-    expect(buildingsTable.getPropertyIds().length).toBe(2);
-    expect(buildingsTable.getProperty(0, "name")).toBe("Building A");
-    expect(buildingsTable.getProperty(1, "name")).toBe("Building B");
-    expect(buildingsTable.getProperty(2, "name")).toBe("Building C");
-    expect(buildingsTable.getProperty(0, "height")).toBe(10.0);
-    expect(buildingsTable.getProperty(1, "height")).toBe(20.0);
-    expect(buildingsTable.getProperty(2, "height")).toBe(30.0);
-
-    expect(treesTable.count).toBe(2);
-    expect(treesTable.class).toBe(treeClass);
-    expect(treesTable.getPropertyIds().length).toBe(1);
-    expect(treesTable.getProperty(0, "species")).toBe("Oak");
-    expect(treesTable.getProperty(1, "species")).toBe("Pine");
 
     expect(metadata.statistics).toBe(statistics);
-    expect(metadata.extras).toBe(extras);
-    expect(metadata.extensions).toBe(extensions);
-  });
-
-  it("creates feature metadata with feature textures", function () {
-    var context = createContext();
-    var texture0 = new Texture({
-      context: context,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      source: {
-        arrayBufferView: new Uint8Array([1, 2, 3, 4]),
-        width: 1,
-        height: 1,
-      },
-    });
-    var texture1 = new Texture({
-      context: context,
-      pixelFormat: PixelFormat.LUMINANCE,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      source: {
-        arrayBufferView: new Uint8Array([5]),
-        width: 1,
-        height: 1,
-      },
-    });
-
-    var textures = {
-      0: texture0,
-      1: texture1,
-    };
-
-    var extension = {
-      schema: featureTexturesSchema,
-      featureTextures: {
-        mapTexture: {
-          class: "map",
-          properties: {
-            color: {
-              channels: "rgb",
-              texture: {
-                index: 0,
-                texCoord: 0,
-              },
-            },
-            intensity: {
-              channels: "a",
-              texture: {
-                index: 0,
-                texCoord: 0,
-              },
-            },
-          },
-        },
-        orthoTexture: {
-          class: "ortho",
-          properties: {
-            vegetation: {
-              channels: "r",
-              texture: {
-                index: 1,
-                texCoord: 1,
-              },
-            },
-          },
-        },
-      },
-    };
-
-    var metadata = new FeatureMetadata({
-      extension: extension,
-      schema: new MetadataSchema(featureTexturesSchema),
-      textures: textures,
-    });
-
-    var mapClass = metadata.schema.classes.map;
-    var orthoClass = metadata.schema.classes.ortho;
-
-    expect(mapClass.id).toBe("map");
-    expect(orthoClass.id).toBe("ortho");
-
-    var mapTexture = metadata.getFeatureTexture("mapTexture");
-    var orthoTexture = metadata.getFeatureTexture("orthoTexture");
-
-    expect(mapTexture.class).toBe(mapClass);
-    expect(orthoTexture.class).toBe(orthoClass);
-
-    texture0.destroy();
-    texture1.destroy();
-    context.destroyForSpecs();
   });
 
   it("getFeatureTable throws without featureTableId", function () {
