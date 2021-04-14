@@ -1,4 +1,9 @@
-import { MetadataClass, FeatureTable } from "../../Source/Cesium.js";
+import {
+  BatchTableHierarchy,
+  FeatureTable,
+  MetadataClass,
+  JsonMetadataTable,
+} from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/FeatureTable", function () {
@@ -140,15 +145,63 @@ describe("Scene/FeatureTable", function () {
   });
 
   describe("batch table compatibility", function () {
+    var jsonProperties = {
+      priority: [2, 1, 0],
+      uri: ["tree.las", "building.gltf", "map.tif"],
+    };
+    var count = 3;
+
+    var hierarchyExtension = {};
+
+    var batchTable;
+    beforeEach(function () {
+      var jsonTable = new JsonMetadataTable({
+        count: count,
+        properties: jsonProperties,
+      });
+
+      var hierarchy = new BatchTableHierarchy({
+        extension: hierarchyExtension,
+        binaryBody: new Uint8Array(),
+      });
+
+      batchTable = new FeatureTable({
+        jsonMetadataTable: jsonTable,
+        batchTableHierarchy: hierarchy,
+      });
+    });
+
     it("getProperty uses feature metadata", function () {
       fail();
     });
 
     it("getProperty uses JSON metadata", function () {
-      fail();
+      expect(batchTable.getProperty(0, "priority")).toBe(2);
+      expect(batchTable.getProperty(1, "priority")).toBe(1);
+      expect(batchTable.getProperty(2, "priority")).toBe(0);
+
+      expect(batchTable.getProperty(0, "uri")).toBe("tree.las");
+      expect(batchTable.getProperty(1, "uri")).toBe("building.gltf");
+      expect(batchTable.getProperty(2, "uri")).toBe("map.tif");
     });
 
     it("getProperty uses batch table hierarchy", function () {
+      fail();
+    });
+
+    it("getProperty returns undefined for unknown propertyId", function () {
+      fail();
+    });
+
+    it("setProperty uses feature metadata", function () {
+      fail();
+    });
+
+    it("setProperty uses JSON metadata", function () {
+      fail();
+    });
+
+    it("setProperty uses batch table hierarchy", function () {
       fail();
     });
   });

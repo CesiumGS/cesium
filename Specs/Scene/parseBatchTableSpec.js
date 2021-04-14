@@ -18,8 +18,24 @@ var x = {
 */
 
 describe("Scene/parseBatchTable", function () {
+  /*
+  var batchTableJson = {
+  };
+
+  var binaryBody = new Uint8Array();
+  var count = 3;
+  */
+
   it("throws without count", function () {
     fail();
+    /*
+    expect(function() {
+      return parseBatchTable({
+        count: undefined,
+        binaryBody: binaryBody
+      });
+    }).toThrowDeveloperError();
+    */
   });
 
   it("throws without batchTable", function () {
@@ -39,6 +55,14 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with binary properties", function () {
+    fail();
+  });
+
+  it("transcodes scalars to correct types", function () {
+    fail();
+  });
+
+  it("transcodes binary vectors to array types", function () {
     fail();
   });
 

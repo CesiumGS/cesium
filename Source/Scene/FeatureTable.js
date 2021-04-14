@@ -134,6 +134,8 @@ FeatureTable.prototype.hasProperty = function (propertyId) {
   );
 };
 
+var scratchResults = [];
+
 /**
  * Returns an array of property IDs. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
  *
@@ -142,13 +144,27 @@ FeatureTable.prototype.hasProperty = function (propertyId) {
  * @returns {String[]} The property IDs.
  */
 FeatureTable.prototype.getPropertyIds = function (index, results) {
-  results = this._metadataTable.getPropertyIds(results);
+  results = defined(results) ? results : [];
+  results.length = 0;
+
+  // concat in place to avoid unnecessary array allocation
+  Array.prototype.push.apply(
+    results,
+    this._metadataTable.getPropertyIds(scratchResults)
+  );
+
   if (defined(this._jsonMetadataTable)) {
-    results = this._jsonMetadataTable.getPropertyIds(results);
+    Array.prototype.push.apply(
+      results,
+      this._jsonMetadataTable.getPropertyIds(scratchResults)
+    );
   }
 
   if (defined(this._batchTableHierarchy)) {
-    results = this._batchTableHierarchy.getPropertyIds(index, results);
+    Array.prototype.push.apply(
+      results,
+      this._batchTableHierarchy.getPropertyIds(index, scratchResults)
+    );
   }
 
   return results;

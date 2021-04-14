@@ -1,5 +1,6 @@
 import arrayFill from "../Core/arrayFill.js";
 import AttributeType from "./AttributeType.js";
+import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -28,6 +29,11 @@ export default function BatchTableHierarchy(options) {
   this._parentCounts = undefined;
   this._parentIndexes = undefined;
   this._parentIds = undefined;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.extension", options.extension);
+  Check.typeOf.object("options.binaryBody", options.binaryBody);
+  //>>includeEnd('debug');
 
   initialize(this, options.extension, options.binaryBody);
 
@@ -362,6 +368,9 @@ BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
  * @private
  */
 BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
+  results = defined(results) ? results : [];
+  results.length = 0;
+
   traverseHierarchy(this, batchId, function (hierarchy, instanceIndex) {
     var classId = hierarchy._classIds[instanceIndex];
     var instances = hierarchy._classes[classId].instances;
@@ -373,6 +382,8 @@ BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
       }
     }
   });
+
+  return results;
 };
 
 /**
