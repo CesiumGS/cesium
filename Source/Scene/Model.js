@@ -5532,10 +5532,6 @@ Model.prototype.update = function (frameState) {
     // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
     var clippingPlanes = this._clippingPlanes;
     var currentClippingPlanesState = 0;
-    var useClippingPlanes =
-      defined(clippingPlanes) &&
-      clippingPlanes.enabled &&
-      clippingPlanes.length > 0;
 
     // If defined, use the reference matrix to transform miscellaneous properties like
     // clipping planes and IBL instead of the modelMatrix. This is so that when
@@ -5543,7 +5539,7 @@ Model.prototype.update = function (frameState) {
     // a common reference (such as the root).
     var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
 
-    if (useClippingPlanes) {
+    if (isClippingEnabled(this)) {
       var clippingPlanesMatrix = scratchClippingPlanesMatrix;
       clippingPlanesMatrix = Matrix4.multiply(
         context.uniformState.view3D,
