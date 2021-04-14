@@ -53,6 +53,7 @@ JsonMetadataTable.prototype.getPropertyIds = function (results) {
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ *
  * @exception {DeveloperError} index is out of bounds
  * @private
  */
@@ -80,7 +81,8 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given ID doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ *
  * @exception {DeveloperError} index is out of bounds
  * @private
  */
@@ -89,14 +91,16 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   Check.typeOf.number("index", index);
   Check.typeOf.string("propertyId", propertyId);
 
-  if (!defined(this._properties[propertyId])) {
-    throw new DeveloperError("propertyId " + propertyId + " does not exist");
-  }
-
   if (index < 0 || index >= this._count) {
     throw new DeveloperError("index must be in [0, " + this._count + ")");
   }
   //>>includeEnd('debug');
 
-  this._properties[propertyId][index] = clone(value, true);
+  var property = this._properties[propertyId];
+  if (defined(property)) {
+    property[index] = clone(value, true);
+    return true;
+  }
+
+  return false;
 };

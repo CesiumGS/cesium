@@ -106,9 +106,7 @@ describe("Scene/FeatureTable", function () {
 
   it("setProperty does not create property if it doesn't exist", function () {
     var featureTable = createFeatureTable();
-    expect(function () {
-      featureTable.setProperty(0, "numberOfPoints", 10);
-    }).toThrowDeveloperError();
+    expect(featureTable.setProperty(0, "numberOfPoints", 10)).toBe(false);
   });
 
   it("setProperty sets property value", function () {
@@ -131,16 +129,27 @@ describe("Scene/FeatureTable", function () {
   it("setPropertyBySemantic sets property value", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.getPropertyBySemantic(0, "NAME")).toEqual("Building A");
-    featureTable.setPropertyBySemantic(0, "NAME", "Building New");
-    expect(featureTable.getPropertyBySemantic(0, "NAME")).toEqual(
-      "Building New"
+    expect(featureTable.setPropertyBySemantic(0, "NAME", "Building New")).toBe(
+      true
     );
   });
 
   it("setPropertyBySemantic throws if the semantic does not exist", function () {
     var featureTable = createFeatureTable();
-    expect(function () {
-      featureTable.setPropertyBySemantic(0, "ID", 10);
-    }).toThrowDeveloperError();
+    expect(featureTable.setPropertyBySemantic(0, "ID", 10)).toBe(false);
+  });
+
+  describe("batch table compatibility", function () {
+    it("getProperty uses feature metadata", function () {
+      fail();
+    });
+
+    it("getProperty uses JSON metadata", function () {
+      fail();
+    });
+
+    it("getProperty uses batch table hierarchy", function () {
+      fail();
+    });
   });
 });

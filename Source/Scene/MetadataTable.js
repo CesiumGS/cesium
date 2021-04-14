@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import MetadataEntity from "./MetadataEntity.js";
 import MetadataTableProperty from "./MetadataTableProperty.js";
 import MetadataType from "./MetadataType.js";
@@ -160,26 +159,25 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
- * @exception {DeveloperError} A property with the given ID doesn't exist.
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
-
-  if (!defined(this._properties[propertyId])) {
-    throw new DeveloperError("propertyId " + propertyId + " does not exist");
-  }
   //>>includeEnd('debug');
 
   var property = this._properties[propertyId];
   if (defined(property)) {
     property.set(index, value);
+    return true;
   }
+
+  return false;
 };
 
 /**
@@ -211,6 +209,7 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @param {Number} index The index of the entity.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @exception {DeveloperError} value does not match type
@@ -230,14 +229,11 @@ MetadataTable.prototype.setPropertyBySemantic = function (
   if (defined(this._class)) {
     var property = this._class.propertiesBySemantic[semantic];
     if (defined(property)) {
-      this.setProperty(index, property.id, value);
+      return this.setProperty(index, property.id, value);
     }
-    //>>includeStart('debug', pragmas.debug);
-    else {
-      throw new DeveloperError("semantic " + semantic + " does not exist");
-    }
-    //>>includeEnd('debug');
   }
+
+  return false;
 };
 
 function getDefault(classDefinition, propertyId) {

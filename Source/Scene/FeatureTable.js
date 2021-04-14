@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import MetadataTable from "./MetadataTable.js";
 
 /**
@@ -120,17 +121,37 @@ Object.defineProperties(FeatureTable.prototype, {
  * @returns {Boolean} Whether this property exists.
  */
 FeatureTable.prototype.hasProperty = function (propertyId) {
-  return this._metadataTable.hasProperty(propertyId);
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
+  return (
+    this._metadataTable.hasProperty(propertyId) ||
+    (defined(this._jsonMetadataTable) &&
+      this._jsonMetadataTable.hasProperty(propertyId)) ||
+    (defined(this._batchTableHierarchy) &&
+      this._batchTableHierarchy.hasProperty(propertyId))
+  );
 };
 
 /**
- * Returns an array of property IDs.
+ * Returns an array of property IDs. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
  *
+ * @param {Number} index The index of the feature.
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  */
-FeatureTable.prototype.getPropertyIds = function (results) {
-  return this._metadataTable.getPropertyIds(results);
+FeatureTable.prototype.getPropertyIds = function (index, results) {
+  results = this._metadataTable.getPropertyIds(results);
+  if (defined(this._jsonMetadataTable)) {
+    results = this._jsonMetadataTable.getPropertyIds(results);
+  }
+
+  if (defined(this._batchTableHierarchy)) {
+    results = this._batchTableHierarchy.getPropertyIds(index, results);
+  }
+
+  return results;
 };
 
 /**
@@ -144,7 +165,26 @@ FeatureTable.prototype.getPropertyIds = function (results) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 FeatureTable.prototype.getProperty = function (index, propertyId) {
-  return this._metadataTable.getProperty(index, propertyId);
+  var result = this._metadataTable.getProperty(index, propertyId);
+  if (defined(result)) {
+    return result;
+  }
+
+  if (defined(this._jsonMetadataTable)) {
+    result = this._jsonMetadataTable.getProperty(index, propertyId);
+    if (defined(result)) {
+      return result;
+    }
+  }
+
+  if (defined(this._batchTableHierarchy)) {
+    result = this._batchTableHierarchy.getProperty(index, propertyId);
+    if (defined(result)) {
+      return result;
+    }
+  }
+
+  return undefined;
 };
 
 /**
@@ -156,10 +196,24 @@ FeatureTable.prototype.getProperty = function (index, propertyId) {
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given ID doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 FeatureTable.prototype.setProperty = function (index, propertyId, value) {
-  this._metadataTable.setProperty(index, propertyId, value);
+  if (this._metadataTable.setProperty(index, propertyId, value)) {
+    return true;
+  }
+
+  if (
+    defined(this._jsonMetadataTable) &&
+    this._jsonMetadataTable.setProperty(index, propertyId, value)
+  ) {
+    return true;
+  }
+
+  return (
+    defined(this._batchTableHierarchy) &&
+    this._batchTableHierarchy.setProperty(index, propertyId, value)
+  );
 };
 
 /**
@@ -179,14 +233,14 @@ FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given semantic doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 FeatureTable.prototype.setPropertyBySemantic = function (
   index,
   semantic,
   value
 ) {
-  this._metadataTable.setPropertyBySemantic(index, semantic, value);
+  return this._metadataTable.setPropertyBySemantic(index, semantic, value);
 };
 
 export default FeatureTable;

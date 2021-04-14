@@ -217,14 +217,12 @@ describe("Scene/ImplicitTileMetadata", function () {
   });
 
   it("setProperty does not create property if it doesn't exist", function () {
-    expect(function () {
-      tileMetadata.setProperty("numberOfPoints", 10);
-    }).toThrowDeveloperError();
+    expect(tileMetadata.setProperty("numberOfPoints", 10)).toBe(false);
   });
 
   it("setProperty sets property value", function () {
     expect(tileMetadata.getProperty("buildingCount")).toBe(350);
-    tileMetadata.setProperty("buildingCount", 400);
+    expect(tileMetadata.setProperty("buildingCount", 400)).toBe(true);
     expect(tileMetadata.getProperty("buildingCount")).toBe(400);
   });
 
@@ -248,7 +246,9 @@ describe("Scene/ImplicitTileMetadata", function () {
       255,
       0,
     ]);
-    tileMetadata.setPropertyBySemantic("_HIGHLIGHT_COLOR", [0, 0, 0]);
+    expect(
+      tileMetadata.setPropertyBySemantic("_HIGHLIGHT_COLOR", [0, 0, 0])
+    ).toBe(true);
     expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual([
       0,
       0,
@@ -256,9 +256,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     ]);
   });
 
-  it("setPropertyBySemantic throws if the semantic does not exist", function () {
-    expect(function () {
-      tileMetadata.setPropertyBySemantic("NAME", "Test Tile");
-    }).toThrowDeveloperError();
+  it("setPropertyBySemantic returns false if the semantic does not exist", function () {
+    expect(tileMetadata.setPropertyBySemantic("NAME", "Test Tile")).toBe(false);
   });
 });
