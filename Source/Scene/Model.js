@@ -2719,6 +2719,7 @@ function loadTexturesFromBufferViews(model) {
 
     var gltf = model.gltf;
     var bufferView = gltf.bufferViews[gltfTexture.bufferView];
+    var imageId = gltf.textures[gltfTexture.id].source;
 
     var onerror = ModelUtility.getFailedLoadFunction(
       model,
