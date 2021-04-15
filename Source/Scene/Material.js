@@ -7,6 +7,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -775,6 +776,8 @@ var matrixMap = {
   mat4: Matrix4,
 };
 
+var ktx2Regex = /\.ktx2$/i;
+
 function createTexture2DUpdateFunction(uniformId) {
   var oldUniformValue;
   return function (material, context) {
@@ -872,7 +875,13 @@ function createTexture2DUpdateFunction(uniformId) {
           ? uniformValue
           : Resource.createIfNeeded(uniformValue);
 
-        var promise = resource.fetchImage();
+        var promise;
+        if (ktx2Regex.test(resource.url)) {
+          promise = loadKTX2(resource.url);
+        } else {
+          promise = resource.fetchImage();
+        }
+
         when(promise, function (image) {
           material._loadedImages.push({
             id: uniformId,

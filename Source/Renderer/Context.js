@@ -9,6 +9,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
@@ -315,6 +316,7 @@ function Context(canvas, options) {
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+  loadKTX2.setKTX2SupportedFormats(this._etc1, this._s3tc, this._pvrtc);
 
   var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
     ? getExtension(gl, [

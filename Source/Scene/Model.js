@@ -21,6 +21,7 @@ import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -173,6 +174,8 @@ var uriToGuid = {};
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
  * </li>
  * </ul>
  * </p>
@@ -1923,6 +1926,16 @@ function imageLoad(model, textureId) {
   return function (image) {
     var loadResources = model._loadResources;
     --loadResources.pendingTextureLoads;
+
+    // Images transcoded from KTX2 can contain multiple mip levels:
+    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+    var mipLevels;
+    if (Array.isArray(image)) {
+      // highest detail mip should be level 0
+      mipLevels = image.slice(1, image.length);
+      image = image[0];
+    }
+
     loadResources.texturesToCreate.enqueue({
       id: textureId,
       image: image,
@@ -1930,11 +1943,14 @@ function imageLoad(model, textureId) {
       width: image.width,
       height: image.height,
       internalFormat: image.internalFormat,
+      mipLevels: mipLevels,
     });
   };
 }
 
-function parseTextures(model, context, supportsWebP) {
+var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
+
+function parseTextures(model, context, supportsWebP, supportsBasis) {
   var gltf = model.gltf;
   var images = gltf.images;
   var uri;
@@ -1947,6 +1963,12 @@ function parseTextures(model, context, supportsWebP) {
       supportsWebP
     ) {
       imageId = texture.extensions.EXT_texture_webp.source;
+    } else if (
+      defined(texture.extensions) &&
+      defined(texture.extensions.KHR_texture_basisu) &&
+      FeatureDetection.supportsBasis
+    ) {
+      imageId = texture.extensions.KHR_texture_basisu.source;
     }
 
     var gltfImage = images[imageId];
@@ -1970,7 +1992,12 @@ function parseTextures(model, context, supportsWebP) {
         url: uri,
       });
 
-      var promise = imageResource.fetchImage();
+      var promise;
+      if (ktx2Regex.test(uri)) {
+        promise = loadKTX2(imageResource);
+      } else {
+        promise = imageResource.fetchImage();
+      }
       promise
         .then(imageLoad(model, id, imageId))
         .otherwise(
@@ -2699,15 +2726,22 @@ function loadTexturesFromBufferViews(model) {
       "id: " + gltfTexture.id + ", bufferView: " + gltfTexture.bufferView
     );
 
-    var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-    loadImageFromTypedArray({
-      uint8Array: loadResources.getBuffer(bufferView),
-      format: gltfTexture.mimeType,
-      flipY: false,
-    })
-      .then(onload)
-      .otherwise(onerror);
-    ++loadResources.pendingBufferViewToImage;
+    if (gltfTexture.mimeType === "image/ktx2") {
+      loadKTX2(loadResources.getBuffer(bufferView))
+        .then(imageLoad(model, gltfTexture.id, imageId))
+        .otherwise(onerror);
+      ++model._loadResources.pendingTextureLoads;
+    } else {
+      var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
+      loadImageFromTypedArray({
+        uint8Array: loadResources.getBuffer(bufferView),
+        format: gltfTexture.mimeType,
+        flipY: false,
+      })
+        .then(onload)
+        .otherwise(onerror);
+      ++loadResources.pendingBufferViewToImage;
+    }
   }
 }
 
@@ -2849,6 +2883,7 @@ function createTexture(gltfTexture, model, context) {
       height: gltfTexture.height,
       pixelFormat: internalFormat,
       sampler: sampler,
+      mipLevels: gltfTexture.mipLevels,
     });
   } else if (defined(source)) {
     var npot =
@@ -5069,10 +5104,12 @@ Model.prototype.update = function (frameState) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
-  var supportsWebP = FeatureDetection.supportsWebP();
 
   var context = frameState.context;
   this._defaultTexture = context.defaultTexture;
+
+  var supportsWebP = FeatureDetection.supportsWebP();
+  var supportsBasis = FeatureDetection.supportsBasis(context);
 
   if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
     // Use renderer resources from cache instead of loading/creating them?
@@ -5204,7 +5241,7 @@ Model.prototype.update = function (frameState) {
           parseBufferViews(this);
           parseShaders(this);
           parsePrograms(this);
-          parseTextures(this, context, supportsWebP);
+          parseTextures(this, context, supportsWebP, supportsBasis);
         }
         parseMaterials(this);
         parseMeshes(this);

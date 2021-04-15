@@ -1,13 +1,14 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Resource from "../Core/Resource.js";
 
 /**
  * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
  * interface and is not intended to be instantiated directly.
  *
- * @alias ImageryProvider
+ * @alias ImageryProviderMOZ_WEBGL_compressed_texture_s3tc
  * @constructor
  * @abstract
  *
@@ -335,6 +336,8 @@ ImageryProvider.prototype.pickFeatures = function (
   DeveloperError.throwInstantiationError();
 };
 
+var ktx2Regex = /\.ktx2$/i;
+
 /**
  * Loads an image from a given URL.  If the server referenced by the URL already has
  * too many requests pending, this function will instead return undefined, indicating
@@ -354,7 +357,12 @@ ImageryProvider.loadImage = function (imageryProvider, url) {
 
   var resource = Resource.createIfNeeded(url);
 
-  if (defined(imageryProvider) && defined(imageryProvider.tileDiscardPolicy)) {
+  if (ktx2Regex.test(resource.url)) {
+    return loadKTX2(resource);
+  } else if (
+    defined(imageryProvider) &&
+    defined(imageryProvider.tileDiscardPolicy)
+  ) {
     return resource.fetchImage({
       preferBlob: true,
       preferImageBitmap: true,

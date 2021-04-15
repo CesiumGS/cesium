@@ -181,6 +181,10 @@ function supportsPointerEvents() {
   return hasPointerEvents;
 }
 
+function supportsBasis(context) {
+  return context.etc1 || context.s3tc || context.pvrtc;
+}
+
 var imageRenderingValueResult;
 var supportsImageRenderingPixelatedResult;
 function supportsImageRenderingPixelated() {
@@ -304,6 +308,7 @@ var FeatureDetection = {
   supportsPointerEvents: supportsPointerEvents,
   supportsImageRenderingPixelated: supportsImageRenderingPixelated,
   supportsWebP: supportsWebP,
+  supportsBasis: supportsBasis,
   imageRenderingValue: imageRenderingValue,
   typedArrayTypes: typedArrayTypes,
 };
