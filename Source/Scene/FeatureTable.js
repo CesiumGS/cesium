@@ -17,8 +17,8 @@ import MetadataTable from "./MetadataTable.js";
  * </ol>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.featureTable The feature table JSON.
- * @param {MetadataClass} [options.class] The class that properties conform to.
+ * @param {Object} options.featureTable The feature table JSON for binary properties.
+ * @param {MetadataClass} [options.class] The class that binary properties conform to.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {JsonMetadataTable} [options.jsonMetadataTable] For compatibility with the old batch table, free-form JSON properties can be passed in.
  * @param {BatchTableHierarchy} [options.batchTableHierarchy] For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, a hierarchy can be provided.

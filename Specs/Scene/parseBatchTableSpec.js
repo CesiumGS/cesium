@@ -1,22 +1,4 @@
 import { parseBatchTable, MetadataType } from "../../Source/Cesium.js";
-/*
-var x = {
- schema: {
-   classes: {
-     _batchTable: {
-       properties: {}
-     }
-   },
-   featureTables: {
-     _batchTable: {
-       class: "_batchTable",
-       count: 10
-       properties: {}
-     }
-   }
- }
-};
-*/
 
 describe("Scene/parseBatchTable", function () {
   var batchTableJson = {};

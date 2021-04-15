@@ -2,6 +2,7 @@ import {
   BatchTableHierarchy,
   FeatureTable,
   MetadataClass,
+  MetadataSchema,
   JsonMetadataTable,
 } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
@@ -145,13 +146,70 @@ describe("Scene/FeatureTable", function () {
   });
 
   describe("batch table compatibility", function () {
+    var schemaJson = {
+      classes: {
+        box: {
+          properties: {
+            itemId: {
+              type: "UINT8",
+            },
+            itemCount: {
+              type: "UINT16",
+            },
+          },
+        },
+      },
+    };
+    var schema = new MetadataSchema(schemaJson);
+
+    var featureTableJson = {
+      count: 3,
+      class: "box",
+      properties: {
+        itemId: {
+          bufferView: 0,
+        },
+        itemCount: {
+          bufferView: 1,
+        },
+      },
+    };
+
+    var bufferViews = {
+      0: new Uint8Array([25, 32, 57]),
+      1: new Uint8Array([25, 0, 5, 1, 50, 0]),
+    };
+
     var jsonProperties = {
       priority: [2, 1, 0],
       uri: ["tree.las", "building.gltf", "map.tif"],
     };
     var count = 3;
 
-    var hierarchyExtension = {};
+    var hierarchyExtension = {
+      classes: [
+        {
+          name: "Wheels",
+          length: 2,
+          instances: {
+            tire_location: ["front", "back"],
+          },
+        },
+        {
+          name: "Car",
+          length: 1,
+          instances: {
+            color: ["blue"],
+            type: ["sedan"],
+            year: ["2020"],
+          },
+        },
+      ],
+      instancesLength: 3,
+      classIds: [0, 0, 1],
+      parentIds: [2, 2, 2],
+      parentCounts: [1, 1, 0],
+    };
 
     var batchTable;
     beforeEach(function () {
@@ -166,13 +224,23 @@ describe("Scene/FeatureTable", function () {
       });
 
       batchTable = new FeatureTable({
+        featureTable: featureTableJson,
+        bufferViews: bufferViews,
+        class: schema.classes.box,
         jsonMetadataTable: jsonTable,
         batchTableHierarchy: hierarchy,
       });
     });
 
     it("getProperty uses feature metadata", function () {
-      fail();
+      expect(batchTable.getProperty(0, "itemId")).toBe(25);
+      expect(batchTable.getProperty(0, "itemCount")).toBe(25);
+
+      expect(batchTable.getProperty(1, "itemId")).toBe(32);
+      expect(batchTable.getProperty(1, "itemCount")).toBe(261);
+
+      expect(batchTable.getProperty(2, "itemId")).toBe(57);
+      expect(batchTable.getProperty(2, "itemCount")).toBe(50);
     });
 
     it("getProperty uses JSON metadata", function () {
@@ -186,23 +254,57 @@ describe("Scene/FeatureTable", function () {
     });
 
     it("getProperty uses batch table hierarchy", function () {
-      fail();
+      expect(batchTable.getProperty(0, "tire_location")).toBe("front");
+      expect(batchTable.getProperty(0, "color")).toBe("blue");
+      expect(batchTable.getProperty(0, "type")).toBe("sedan");
+      expect(batchTable.getProperty(0, "year")).toBe("2020");
+
+      expect(batchTable.getProperty(1, "tire_location")).toBe("back");
+      expect(batchTable.getProperty(1, "color")).toBe("blue");
+      expect(batchTable.getProperty(1, "type")).toBe("sedan");
+      expect(batchTable.getProperty(1, "year")).toBe("2020");
+
+      expect(batchTable.getProperty(2, "tire_location")).not.toBeDefined();
+      expect(batchTable.getProperty(2, "color")).toBe("blue");
+      expect(batchTable.getProperty(2, "type")).toBe("sedan");
+      expect(batchTable.getProperty(2, "year")).toBe("2020");
     });
 
     it("getProperty returns undefined for unknown propertyId", function () {
-      fail();
+      expect(batchTable.getProperty(0, "widgets")).not.toBeDefined();
     });
 
     it("setProperty uses feature metadata", function () {
-      fail();
+      expect(batchTable.getProperty(0, "itemCount")).toBe(25);
+      expect(batchTable.setProperty(0, "itemCount", 24)).toBe(true);
+      expect(batchTable.getProperty(0, "itemCount")).toBe(24);
     });
 
     it("setProperty uses JSON metadata", function () {
-      fail();
+      expect(batchTable.getProperty(0, "uri")).toBe("tree.las");
+      expect(batchTable.setProperty(0, "uri", "tree_final.las")).toBe(true);
+      expect(batchTable.getProperty(0, "uri")).toBe("tree_final.las");
     });
 
     it("setProperty uses batch table hierarchy", function () {
-      fail();
+      expect(batchTable.getProperty(0, "tire_location")).toBe("front");
+      expect(batchTable.getProperty(0, "color")).toBe("blue");
+
+      expect(batchTable.getProperty(2, "tire_location")).not.toBeDefined();
+      expect(batchTable.getProperty(2, "color")).toBe("blue");
+
+      expect(batchTable.setProperty(0, "tire_location", "back")).toBe(true);
+      expect(batchTable.setProperty(2, "color", "navy")).toBe(true);
+
+      expect(batchTable.getProperty(0, "tire_location")).toBe("back");
+      expect(batchTable.getProperty(0, "color")).toBe("navy");
+
+      expect(batchTable.getProperty(2, "tire_location")).not.toBeDefined();
+      expect(batchTable.getProperty(2, "color")).toBe("navy");
+    });
+
+    it("setProperty returns false for unknown propertyId", function () {
+      expect(batchTable.setProperty(0, "widgets", 5)).toBe(false);
     });
   });
 });
