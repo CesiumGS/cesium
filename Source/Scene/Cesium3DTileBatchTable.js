@@ -523,11 +523,14 @@ Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   results = defined(results) ? results : [];
   results.length = 0;
 
-  var propertyNames = Object.keys(this._properties);
-  results.push.apply(results, propertyNames);
+  var scratchPropertyNames = Object.keys(this._properties);
+  results.push.apply(results, scratchPropertyNames);
 
   if (defined(this._batchTableHierarchy)) {
-    this._batchTableHierarchy.getPropertyIds(batchId, results);
+    results.push.apply(
+      results,
+      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyNames)
+    );
   }
 
   return results;

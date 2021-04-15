@@ -148,20 +148,20 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
   results.length = 0;
 
   // concat in place to avoid unnecessary array allocation
-  Array.prototype.push.apply(
+  results.push.apply(
     results,
     this._metadataTable.getPropertyIds(scratchResults)
   );
 
   if (defined(this._jsonMetadataTable)) {
-    Array.prototype.push.apply(
+    results.push.apply(
       results,
       this._jsonMetadataTable.getPropertyIds(scratchResults)
     );
   }
 
   if (defined(this._batchTableHierarchy)) {
-    Array.prototype.push.apply(
+    results.push.apply(
       results,
       this._batchTableHierarchy.getPropertyIds(index, scratchResults)
     );
