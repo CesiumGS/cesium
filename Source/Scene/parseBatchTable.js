@@ -42,7 +42,7 @@ export default function parseBatchTable(options) {
     properties: partitionResults.jsonProperties,
   });
 
-  var hierarchy = initializeHierarchy(partitionResults.extensions);
+  var hierarchy = initializeHierarchy(partitionResults.extensions, binaryBody);
 
   var binaryResults = transcodeBinaryProperties(
     featureCount,
@@ -259,7 +259,7 @@ function initializeHierarchy(extensions, binaryBody) {
   }
 
   return new BatchTableHierarchy({
-    extensions: extensions,
+    extension: hierarchy,
     binaryBody: binaryBody,
   });
 }
