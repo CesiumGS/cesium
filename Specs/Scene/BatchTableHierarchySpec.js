@@ -37,38 +37,47 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(function () {
       return new BatchTableHierarchy({
         extension: undefined,
-        binaryBody: new Uint8Array(),
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws without binaryBody", function () {
-    expect(function () {
-      return new BatchTableHierarchy({
-        extension: hierarchyExtension,
-        binaryBody: undefined,
       });
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns true if property exists", function () {
-    fail();
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.hasProperty(0, "color")).toBe(true);
   });
 
   it("hasProperty returns false if property does not exist", function () {
-    fail();
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.hasProperty(0, "height")).toBe(false);
   });
 
   it("hasProperty returns false if feature does not inherit property", function () {
-    fail();
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.hasProperty(6, "color")).toBe(false);
   });
 
   it("getProperty returns property value", function () {
-    fail();
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.getProperty(0, "color")).toBe("white");
+    expect(hierarchy.getProperty(0, "name")).toBe("unit29");
+    expect(hierarchy.getProperty(0, "address")).toBe("100 Main St");
+    expect(hierarchy.getProperty(0, "type")).toBe("resident");
+    expect(hierarchy.getProperty(0, "id")).toBe(1250);
   });
 
-  it("getProperty returns property value", function () {
-    fail();
+  it("getProperty returns undefined for unknown property", function () {
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.getProperty(0, "occupancy")).not.toBeDefined();
   });
 
   it("validates hierarchy with multiple parents", function () {
@@ -109,7 +118,6 @@ describe("Scene/BatchTableHierarchy", function () {
 
     var hierarchy = new BatchTableHierarchy({
       extension: extension,
-      binaryBody: new Uint8Array(),
     });
 
     expect(hierarchy.getPropertyIds(0).sort()).toEqual([
@@ -166,7 +174,6 @@ describe("Scene/BatchTableHierarchy", function () {
 
     var hierarchy = new BatchTableHierarchy({
       extension: extension,
-      binaryBody: new Uint8Array(),
     });
     expect(hierarchy.getPropertyIds(0).sort()).toEqual([
       "building_name",
@@ -214,7 +221,6 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(function () {
       return new BatchTableHierarchy({
         extension: extension,
-        binaryBody: new Uint8Array(),
       });
     }).toThrowDeveloperError();
   });
@@ -253,7 +259,6 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(function () {
       return new BatchTableHierarchy({
         extension: extension,
-        binaryBody: new Uint8Array(),
       });
     }).toThrowDeveloperError();
   });
@@ -285,7 +290,6 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(function () {
       return new BatchTableHierarchy({
         extension: extension,
-        binaryBody: new Uint8Array(),
       });
     }).toThrowDeveloperError();
   });

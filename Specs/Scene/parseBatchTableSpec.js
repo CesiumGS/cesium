@@ -2,7 +2,6 @@ import { parseBatchTable, MetadataType } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
   var batchTableJson = {};
-  var binaryBody = new Uint8Array();
   var count = 3;
 
   it("throws without count", function () {
@@ -10,7 +9,6 @@ describe("Scene/parseBatchTable", function () {
       return parseBatchTable({
         count: undefined,
         batchTable: batchTableJson,
-        binaryBody: binaryBody,
       });
     }).toThrowDeveloperError();
   });
@@ -20,17 +18,6 @@ describe("Scene/parseBatchTable", function () {
       return parseBatchTable({
         count: count,
         batchTable: undefined,
-        binaryBody: binaryBody,
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws without binary body", function () {
-    expect(function () {
-      return parseBatchTable({
-        count: count,
-        batchTable: batchTableJson,
-        binaryBody: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -39,7 +26,6 @@ describe("Scene/parseBatchTable", function () {
     var metadata = parseBatchTable({
       count: count,
       batchTable: {},
-      binaryBody: new Uint8Array(),
     });
 
     expect(metadata).toBeDefined();
@@ -163,7 +149,7 @@ describe("Scene/parseBatchTable", function () {
         type: "VEC4",
       },
     };
-    // largest type is a double
+    // largest type is a vec4 of doubles
     var binaryBody = new Uint8Array(8 * 4);
 
     var metadata = parseBatchTable({
@@ -217,7 +203,6 @@ describe("Scene/parseBatchTable", function () {
     var metadata = parseBatchTable({
       count: 2,
       batchTable: jsonBatchTable,
-      binaryBody: new Uint8Array(),
     });
 
     var properties = metadata.schema.classes._batchTable.properties;
@@ -281,7 +266,6 @@ describe("Scene/parseBatchTable", function () {
     var metadata = parseBatchTable({
       count: 10,
       batchTable: oldHierarchyBatchTable,
-      binaryBody: new Uint8Array(),
     });
 
     expect(warn).toHaveBeenCalled();
@@ -321,7 +305,6 @@ describe("Scene/parseBatchTable", function () {
     var metadata = parseBatchTable({
       count: 10,
       batchTable: oldHierarchyBatchTable,
-      binaryBody: new Uint8Array(),
     });
 
     var properties = metadata.schema.classes._batchTable.properties;
@@ -363,7 +346,6 @@ describe("Scene/parseBatchTable", function () {
     var metadata = parseBatchTable({
       count: 1,
       batchTable: batchTable,
-      binaryBody: new Uint8Array(),
     });
 
     expect(metadata.extras).toBe(batchTable.extras);

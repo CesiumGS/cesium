@@ -17,7 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.extension The <code>3DTILES_batch_table_hierarchy</code> extension object.
- * @param {Uint8Array} options.binaryBody the binary body of the batch table
+ * @param {Uint8Array} [options.binaryBody] the binary body of the batch table
  *
  * @alias BatchTableHierarchy
  * @constructor
@@ -32,7 +32,6 @@ export default function BatchTableHierarchy(options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.extension", options.extension);
-  Check.typeOf.object("options.binaryBody", options.binaryBody);
   //>>includeEnd('debug');
 
   initialize(this, options.extension, options.binaryBody);
@@ -48,7 +47,7 @@ export default function BatchTableHierarchy(options) {
  *
  * @param {BatchTableHierarchy} hierarchy the hierarchy instance
  * @param {Object} hierarchyJson the JSON of the extension
- * @param {Uint8Array} binaryBody the binary body of the batch table for accessing binary properties
+ * @param {Uint8Array} [binaryBody] the binary body of the batch table for accessing binary properties
  * @private
  */
 function initialize(hierarchy, hierarchyJson, binaryBody) {

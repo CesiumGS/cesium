@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import FeatureMetadata from "./FeatureMetadata.js";
 import FeatureTable from "./FeatureTable.js";
@@ -18,7 +19,7 @@ import MetadataSchema from "./MetadataSchema.js";
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of features in the batch table.
  * @param {Object} options.batchTable The batch table JSON
- * @param {Uint8Array} options.binaryBody The batch table binary body
+ * @param {Uint8Array} [options.binaryBody] The batch table binary body
  * @return {FeatureMetadata} a transcoded feature metadata object
  *
  * @private
@@ -27,7 +28,6 @@ export default function parseBatchTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);
   Check.typeOf.object("options.batchTable", options.batchTable);
-  Check.typeOf.object("options.binaryBody", options.binaryBody);
   //>>includeEnd('debug');
 
   var featureCount = options.count;
@@ -126,7 +126,7 @@ function partitionProperties(batchTable) {
  *
  * @param {Number} featureCount The number of features in the batch table
  * @param {Object.<String, Object>} binaryProperties A dictionary of property ID to property definition
- * @param {Uint8Array} binaryBody The binary body of the batch table
+ * @param {Uint8Array} [binaryBody] The binary body of the batch table
  * @return {Object} Transcoded data needed for constructing a {@link FeatureMetadata} object.
  *
  * @private
@@ -140,6 +140,13 @@ function transcodeBinaryProperties(featureCount, binaryProperties, binaryBody) {
     if (!binaryProperties.hasOwnProperty(propertyId)) {
       continue;
     }
+
+    if (!defined(binaryBody)) {
+      throw new RuntimeError(
+        "Property " + propertyId + " requires a batch table binary."
+      );
+    }
+
     var property = binaryProperties[propertyId];
     var binaryAccessor = getBinaryAccessor(property);
 
