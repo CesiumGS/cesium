@@ -57,6 +57,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
    * Gets the interval collection.
    * @memberof TimeIntervalCollectionPositionProperty.prototype
    * @type {TimeIntervalCollection}
+   * @readonly
    */
   intervals: {
     get: function () {
