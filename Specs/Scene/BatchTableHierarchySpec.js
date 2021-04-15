@@ -41,6 +41,67 @@ describe("Scene/BatchTableHierarchy", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws for invalid binary property", function () {
+    var missingType = {
+      classes: [
+        {
+          name: "Resources",
+          length: 2,
+          instances: {
+            foodUnits: {
+              byteOffset: 0,
+              componentType: "UNSIGNED_SHORT",
+            },
+            waterUnits: [15, 13],
+          },
+        },
+      ],
+      instancesLength: 2,
+      classIds: [0, 0],
+      parentIds: [1, 1],
+    };
+
+    // Using 16 bits because this is the default size
+    var foodUnits = new Uint16Array([10, 20]);
+    var binaryBody = new Uint8Array(foodUnits.buffer);
+
+    expect(function () {
+      return new BatchTableHierarchy({
+        extension: missingType,
+        binaryBody: binaryBody,
+      });
+    }).toThrowRuntimeError();
+
+    var missingComponentType = {
+      classes: [
+        {
+          name: "Resources",
+          length: 2,
+          instances: {
+            foodUnits: {
+              byteOffset: 0,
+              type: "SCALAR",
+            },
+            waterUnits: [15, 13],
+          },
+        },
+      ],
+      instancesLength: 2,
+      classIds: [0, 0],
+      parentIds: {
+        byteOffset: 0,
+        type: "SCALAR",
+      },
+    };
+
+    expect(function () {
+      return new BatchTableHierarchy({
+        extension: missingComponentType,
+        binaryBody: binaryBody,
+      });
+    }).toThrowRuntimeError();
+  });
+
   it("hasProperty returns true if property exists", function () {
     var hierarchy = new BatchTableHierarchy({
       extension: hierarchyExtension,
@@ -78,6 +139,73 @@ describe("Scene/BatchTableHierarchy", function () {
       extension: hierarchyExtension,
     });
     expect(hierarchy.getProperty(0, "occupancy")).not.toBeDefined();
+  });
+
+  it("getProperty works with binary properties", function () {
+    var binaryHierarchy = {
+      classes: [
+        {
+          name: "Box",
+          length: 3,
+          instances: {
+            items: {
+              type: "SCALAR",
+              componentType: "UNSIGNED_BYTE",
+              byteOffset: 0,
+            },
+          },
+        },
+        {
+          name: "Pallet",
+          length: 1,
+          instances: {
+            boxCount: [1],
+          },
+        },
+      ],
+      instancesLength: 4,
+      classIds: [0, 1, 0, 0],
+      parentIds: [1, 1, 2, 3],
+    };
+    var binaryBody = new Uint8Array([1, 2, 3]);
+
+    var hierarchy = new BatchTableHierarchy({
+      extension: binaryHierarchy,
+      binaryBody: binaryBody,
+    });
+    expect(hierarchy.getProperty(0, "items")).toBe(1);
+    expect(hierarchy.getProperty(0, "boxCount")).toBe(1);
+    expect(hierarchy.getProperty(1, "items")).not.toBeDefined();
+    expect(hierarchy.getProperty(1, "boxCount")).toBe(1);
+    expect(hierarchy.getProperty(2, "items")).toBe(2);
+    expect(hierarchy.getProperty(2, "boxCount")).not.toBeDefined();
+    expect(hierarchy.getProperty(3, "items")).toBe(3);
+    expect(hierarchy.getProperty(3, "boxCount")).not.toBeDefined();
+  });
+
+  it("setProperty throws when trying to set an inherited property", function () {
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(function () {
+      hierarchy.setProperty(0, "type", "city");
+    }).toThrowDeveloperError();
+  });
+
+  it("setProperty returns false when property does not exist", function () {
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.setProperty(0, "occupancy", 100)).toBe(false);
+  });
+
+  it("setProperty sets property value", function () {
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.getProperty(0, "color")).toBe("white");
+    expect(hierarchy.setProperty(0, "color", "brown")).toBe(true);
+    expect(hierarchy.getProperty(0, "color")).toBe("brown");
   });
 
   it("validates hierarchy with multiple parents", function () {

@@ -115,13 +115,15 @@ Object.defineProperties(FeatureTable.prototype, {
 });
 
 /**
- * Returns whether this property exists.
+ * Returns whether this property exists. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
  *
+ * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  */
-FeatureTable.prototype.hasProperty = function (propertyId) {
+FeatureTable.prototype.hasProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
@@ -130,7 +132,7 @@ FeatureTable.prototype.hasProperty = function (propertyId) {
     (defined(this._jsonMetadataTable) &&
       this._jsonMetadataTable.hasProperty(propertyId)) ||
     (defined(this._batchTableHierarchy) &&
-      this._batchTableHierarchy.hasProperty(propertyId))
+      this._batchTableHierarchy.hasProperty(index, propertyId))
   );
 };
 

@@ -351,4 +351,22 @@ describe("Scene/parseBatchTable", function () {
     expect(metadata.extras).toBe(batchTable.extras);
     expect(metadata.extensions).toBe(batchTable.extensions);
   });
+
+  it("throws if binaryBody is needed and not provided", function () {
+    var binaryBatchTable = {
+      height: {
+        byteOffset: 0,
+        componentType: "FLOAT",
+        type: "SCALAR",
+      },
+    };
+
+    expect(function () {
+      return parseBatchTable({
+        count: 1,
+        batchTable: binaryBatchTable,
+        binaryBody: undefined,
+      });
+    }).toThrowRuntimeError();
+  });
 });
