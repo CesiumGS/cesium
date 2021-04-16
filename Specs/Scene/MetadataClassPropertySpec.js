@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   FeatureDetection,
   MetadataClassProperty,
   MetadataEnum,
@@ -339,10 +340,23 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    expect(property.validate([1.0, 2.0, 3.0])).toBeUndefined();
+    expect(property.validate(new Cartesian3(1.0, 2.0, 3.0))).toBeUndefined();
   });
 
   it("validate returns error message if type is ARRAY and value is not an array", function () {
+    var property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 8,
+      },
+    });
+
+    expect(property.validate(8.0)).toBe("value 8 does not match type ARRAY");
+  });
+
+  it("validate returns error message if type is a vector and value is not a Cartesian", function () {
     var property = new MetadataClassProperty({
       id: "position",
       property: {
@@ -352,7 +366,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    expect(property.validate(8.0)).toBe("value 8 does not match type ARRAY");
+    expect(property.validate(8.0)).toBe("vector value 8 must be a Cartesian3");
   });
 
   it("validate returns error message if type is ARRAY and the array length does not match componentCount", function () {

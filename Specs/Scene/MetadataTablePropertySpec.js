@@ -1,5 +1,6 @@
 import {
   defaultValue,
+  Cartesian3,
   MetadataClassProperty,
   MetadataTableProperty,
 } from "../../Source/Cesium.js";
@@ -824,30 +825,12 @@ describe("Scene/MetadataTableProperty", function () {
     };
 
     var valuesToSet = {
-      propertyInt8: [
-        [-2, -1, 0],
-        [1, 2, 3],
-      ],
-      propertyUint8: [
-        [0, 1, 2],
-        [3, 4, 5],
-      ],
-      propertyInt16: [
-        [-2, -1, 0],
-        [1, 2, 3],
-      ],
-      propertyUint16: [
-        [0, 1, 2],
-        [3, 4, 5],
-      ],
-      propertyInt32: [
-        [-2, -1, 0],
-        [1, 2, 3],
-      ],
-      propertyUint32: [
-        [0, 1, 2],
-        [3, 4, 5],
-      ],
+      propertyInt8: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
+      propertyUint8: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
+      propertyInt16: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
+      propertyUint16: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
+      propertyInt32: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
+      propertyUint32: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
       propertyInt64: [
         [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
         [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
@@ -857,12 +840,12 @@ describe("Scene/MetadataTableProperty", function () {
         [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
       ],
       propertyFloat32: [
-        [-2.0, -1.0, 0.0],
-        [1.0, 2.0, 3.0],
+        new Cartesian3(-2.0, -1.0, 0.0),
+        new Cartesian3(1.0, 2.0, 3.0),
       ],
       propertyFloat64: [
-        [-2.0, -1.0, 0.0],
-        [1.0, 2.0, 3.0],
+        new Cartesian3(-2.0, -1.0, 0.0),
+        new Cartesian3(1.0, 2.0, 3.0),
       ],
       propertyBoolean: [
         [false, true, false],

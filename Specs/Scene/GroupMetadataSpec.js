@@ -1,4 +1,8 @@
-import { MetadataClass, GroupMetadata } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  MetadataClass,
+  GroupMetadata,
+} from "../../Source/Cesium.js";
 
 describe("Scene/GroupMetadata", function () {
   it("creates group metadata with default values", function () {
@@ -59,7 +63,9 @@ describe("Scene/GroupMetadata", function () {
     expect(groupMetadata.description).toBe("Building Metadata");
     expect(groupMetadata.extras).toBe(extras);
     expect(groupMetadata.extensions).toBe(extensions);
-    expect(groupMetadata.getProperty("position")).toEqual(properties.position);
+    expect(groupMetadata.getProperty("position")).toEqual(
+      Cartesian3.unpack(properties.position)
+    );
   });
 
   it("constructor throws without id", function () {
@@ -326,8 +332,7 @@ describe("Scene/GroupMetadata", function () {
     });
 
     var value = groupMetadata.getProperty("position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty returns the default value when the property is missing", function () {
@@ -354,8 +359,7 @@ describe("Scene/GroupMetadata", function () {
     });
 
     var value = groupMetadata.getProperty("position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty throws without propertyId", function () {
@@ -405,10 +409,10 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var position = [1.0, 1.0, 1.0];
+    var position = new Cartesian3(1.0, 1.0, 1.0);
     groupMetadata.setProperty("position", position);
     expect(groupMetadata.getProperty("position")).toEqual(position);
-    expect(groupMetadata.getProperty("position")).not.toBe(position); // The value is cloned
+    expect(groupMetadata.getProperty("position")).not.toBe(position); // copies value
   });
 
   it("setProperty throws without propertyId", function () {

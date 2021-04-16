@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cartesian4,
   Cesium3DTileFeature,
   HeadingPitchRange,
 } from "../../Source/Cesium.js";
@@ -55,22 +56,16 @@ describe(
 
       it("getPropertyInherited returns tile property by semantic", function () {
         var feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
-        expect(feature.getPropertyInherited("COLOR")).toEqual([
-          255,
-          255,
-          0,
-          1.0,
-        ]);
+        expect(feature.getPropertyInherited("COLOR")).toEqual(
+          new Cartesian4(255, 255, 0, 1.0)
+        );
       });
 
       it("getPropertyInherited returns tile property", function () {
         var feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
-        expect(feature.getPropertyInherited("color")).toEqual([
-          255,
-          255,
-          0,
-          1.0,
-        ]);
+        expect(feature.getPropertyInherited("color")).toEqual(
+          new Cartesian4(255, 255, 0, 1.0)
+        );
         expect(feature.getPropertyInherited("population")).toBe(50);
       });
 
@@ -92,12 +87,9 @@ describe(
 
       it("getPropertyInherited returns tileset property by semantic", function () {
         var feature = new Cesium3DTileFeature(parentContent, 0);
-        expect(feature.getPropertyInherited("COLOR")).toEqual([
-          255,
-          0,
-          255,
-          1.0,
-        ]);
+        expect(feature.getPropertyInherited("COLOR")).toEqual(
+          new Cartesian4(255, 0, 255, 1.0)
+        );
         expect(feature.getPropertyInherited("DATE_ISO_8601")).toBe(
           "2021-04-07"
         );
@@ -106,17 +98,16 @@ describe(
 
       it("getPropertyInherited returns tileset property", function () {
         var feature = new Cesium3DTileFeature(parentContent, 0);
-        expect(feature.getPropertyInherited("color")).toEqual([
-          255,
-          0,
-          255,
-          1.0,
-        ]);
-        expect(feature.getPropertyInherited("centerCartographic")).toEqual([
-          -1.3196816996258511,
-          0.6988767486400521,
-          45.78600543644279,
-        ]);
+        expect(feature.getPropertyInherited("color")).toEqual(
+          new Cartesian4(255, 0, 255, 1.0)
+        );
+        expect(feature.getPropertyInherited("centerCartographic")).toEqual(
+          new Cartesian3(
+            -1.3196816996258511,
+            0.6988767486400521,
+            45.78600543644279
+          )
+        );
         expect(feature.getPropertyInherited("date")).toBe("2021-04-07");
         expect(feature.getPropertyInherited("author")).toBe("Cesium");
         expect(feature.getPropertyInherited("tileCount")).toBe(5);
@@ -126,12 +117,9 @@ describe(
         // tile metadata is more specific than tileset metadata so this returns
         // yellow not magenta
         var feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
-        expect(feature.getPropertyInherited("color")).toEqual([
-          255,
-          255,
-          0,
-          1.0,
-        ]);
+        expect(feature.getPropertyInherited("color")).toEqual(
+          new Cartesian4(255, 255, 0, 1.0)
+        );
 
         // group metadata is more specific than tileset metadata, so this returns
         // 2 not 5

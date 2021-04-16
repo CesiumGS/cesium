@@ -227,6 +227,7 @@ MetadataEntity.getProperty = function (
 
   if (defined(classProperty)) {
     value = classProperty.normalize(value);
+    value = classProperty.unpackVectorTypes(value);
   }
 
   return value;
@@ -269,6 +270,7 @@ MetadataEntity.setProperty = function (
   if (defined(classDefinition)) {
     var classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty)) {
+      value = classProperty.packVectorTypes(value);
       value = classProperty.unnormalize(value);
     }
   }
