@@ -148,7 +148,7 @@ describe("Scene/MetadataSchemaLoader", function () {
     });
   });
 
-  it("handles destroy before load finishes", function () {
+  function resolveJsonAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       deferredPromise.promise
@@ -164,9 +164,21 @@ describe("Scene/MetadataSchemaLoader", function () {
     expect(schemaLoader._state).toBe(ResourceLoaderState.LOADING);
     schemaLoader.destroy();
 
-    deferredPromise.resolve(schemaJson);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(schemaJson);
+    }
 
     expect(schemaLoader.schema).not.toBeDefined();
     expect(schemaLoader.isDestroyed()).toBe(true);
+  }
+
+  it("handles resolving json after destroy", function () {
+    resolveJsonAfterDestroy(false);
+  });
+
+  it("handles rejecting json after destroy", function () {
+    resolveJsonAfterDestroy(true);
   });
 });

@@ -13,6 +13,9 @@ describe("Scene/GltfJsonLoader", function () {
   var gltfResource = new Resource({
     url: gltfUri,
   });
+  var bufferResource = new Resource({
+    url: "https://example.com/external.bin",
+  });
 
   var gltf1 = {
     asset: {
@@ -414,6 +417,34 @@ describe("Scene/GltfJsonLoader", function () {
       });
   });
 
+  it("rejects promise if glTF fails to process from typed array", function () {
+    var typedArray = createGlb1(gltf1);
+
+    var error = new Error("404 Not Found");
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      when.reject(error)
+    );
+
+    var gltfJsonLoader = new GltfJsonLoader({
+      resourceCache: ResourceCache,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+      typedArray: typedArray,
+    });
+
+    gltfJsonLoader.load();
+
+    return gltfJsonLoader.promise
+      .then(function (gltfJsonLoader) {
+        fail();
+      })
+      .otherwise(function (runtimeError) {
+        expect(runtimeError.message).toBe(
+          "Failed to load glTF: https://example.com/model.glb\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+        );
+      });
+  });
+
   it("loads glTF 1.0", function () {
     var arrayBuffer = generateJsonBuffer(gltf1).buffer;
 
@@ -643,7 +674,7 @@ describe("Scene/GltfJsonLoader", function () {
     });
   });
 
-  it("handles destroy before glTF is loaded", function () {
+  function resolvesGltfAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       deferredPromise.promise
@@ -662,13 +693,25 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
     gltfJsonLoader.destroy();
 
-    deferredPromise.resolve(arrayBuffer);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(arrayBuffer);
+    }
 
     expect(gltfJsonLoader.gltf).not.toBeDefined();
     expect(gltfJsonLoader.isDestroyed()).toBe(true);
+  }
+
+  it("handles resolving glTF after destroy", function () {
+    resolvesGltfAfterDestroy(false);
   });
 
-  it("handles destroy before glTF is processed", function () {
+  it("handles rejecting glTF after destroy", function () {
+    resolvesGltfAfterDestroy(true);
+  });
+
+  function resolvesProcessedGltfAfterDestroy(reject) {
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(generateJsonBuffer(gltf2).buffer)
     );
@@ -694,16 +737,30 @@ describe("Scene/GltfJsonLoader", function () {
 
     expect(gltfJsonLoader.gltf).not.toBeDefined();
     expect(gltfJsonLoader.isDestroyed()).toBe(true);
+  }
+
+  it("handles resolving processed glTF after destroy", function () {
+    resolvesProcessedGltfAfterDestroy(false);
   });
 
-  it("handles destroy before typed array is processed", function () {
-    var typedArray = generateJsonBuffer(gltf2);
+  it("handles rejecting processed glTF after destroy", function () {
+    resolvesProcessedGltfAfterDestroy(true);
+  });
+
+  function resolvesTypedArrayAfterDestroy(reject) {
+    var typedArray = generateJsonBuffer(gltf1);
 
     var buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
+
+    // Load a copy of the buffer into the cache so that the buffer loader
+    // promise resolves even if the glTF loader is destroyed
+    var bufferLoaderCopy = ResourceCache.loadExternalBuffer({
+      resource: bufferResource,
+    });
 
     var gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
@@ -717,9 +774,23 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
     gltfJsonLoader.destroy();
 
-    deferredPromise.resolve(buffer);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(buffer);
+    }
 
     expect(gltfJsonLoader.gltf).not.toBeDefined();
     expect(gltfJsonLoader.isDestroyed()).toBe(true);
+
+    ResourceCache.unload(bufferLoaderCopy);
+  }
+
+  it("handles resolving typed array after destroy", function () {
+    return resolvesTypedArrayAfterDestroy(false);
+  });
+
+  it("handles rejecting typed array after destroy", function () {
+    return resolvesTypedArrayAfterDestroy(true);
   });
 });

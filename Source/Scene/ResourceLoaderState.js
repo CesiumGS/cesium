@@ -6,7 +6,8 @@
 var ResourceLoaderState = {
   UNLOADED: 0,
   LOADING: 1,
-  READY: 2,
-  FAILED: 3,
+  PROCESSING: 2,
+  READY: 3,
+  FAILED: 4,
 };
 export default Object.freeze(ResourceLoaderState);

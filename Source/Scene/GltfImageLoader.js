@@ -164,6 +164,9 @@ function loadFromBufferView(imageLoader) {
       });
     })
     .otherwise(function (error) {
+      if (imageLoader.isDestroyed()) {
+        return;
+      }
       handleError(imageLoader, error, "Failed to load embedded image");
     });
 }
@@ -189,6 +192,9 @@ function loadFromUri(imageLoader) {
       imageLoader._promise.resolve(imageLoader);
     })
     .otherwise(function (error) {
+      if (imageLoader.isDestroyed()) {
+        return;
+      }
       handleError(imageLoader, error, "Failed to load image:" + uri);
     });
 }
