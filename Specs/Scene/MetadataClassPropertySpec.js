@@ -375,7 +375,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "ARRAY",
         componentType: "FLOAT32",
-        componentCount: 3,
+        componentCount: 6,
       },
     });
 

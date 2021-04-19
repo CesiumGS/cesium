@@ -382,7 +382,12 @@ MetadataClassProperty.prototype.validate = function (value) {
     var componentCount = this._componentCount;
 
     // arrays of length 2, 3, and 4 are implicitly converted to CartesianN
-    if (defined(componentCount) && componentCount >= 2 && componentCount <= 4) {
+    if (
+      defined(componentCount) &&
+      componentCount >= 2 &&
+      componentCount <= 4 &&
+      MetadataType.isVectorCompatible(this._componentType)
+    ) {
       return validateVector(value, componentCount);
     }
 
