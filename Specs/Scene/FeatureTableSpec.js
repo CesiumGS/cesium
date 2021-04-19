@@ -1,7 +1,6 @@
 import {
   BatchTableHierarchy,
   FeatureTable,
-  MetadataClass,
   MetadataSchema,
   MetadataTable,
   JsonMetadataTable,
@@ -23,13 +22,6 @@ describe("Scene/FeatureTable", function () {
     name: ["Building A", "Building B", "Building C"],
     height: [10.0, 20.0, 30.0],
   };
-
-  var classDefinition = new MetadataClass({
-    id: "test",
-    class: {
-      properties: properties,
-    },
-  });
 
   var extras = {
     description: "Extra",
@@ -72,12 +64,9 @@ describe("Scene/FeatureTable", function () {
     expect(featureTable.extensions).toBe(extensions);
   });
 
-  it("constructor throws without featureTable", function () {
+  it("constructor throws without count", function () {
     expect(function () {
-      return new FeatureTable({
-        class: classDefinition,
-        bufferViews: {},
-      });
+      return new FeatureTable({});
     }).toThrowDeveloperError();
   });
 
@@ -145,6 +134,13 @@ describe("Scene/FeatureTable", function () {
     expect(featureTable.getPropertyBySemantic(0, "NAME")).toEqual("Building A");
   });
 
+  it("getPropertyBySemantic returns undefined if there is no metadataTable", function () {
+    var featureTable = new FeatureTable({
+      count: 3,
+    });
+    expect(featureTable.getPropertyBySemantic(0, "NAME")).not.toBeDefined();
+  });
+
   it("setPropertyBySemantic sets property value", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.getPropertyBySemantic(0, "NAME")).toEqual("Building A");
@@ -153,9 +149,16 @@ describe("Scene/FeatureTable", function () {
     );
   });
 
-  it("setPropertyBySemantic throws if the semantic does not exist", function () {
+  it("setPropertyBySemantic returns false if the semantic does not exist", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.setPropertyBySemantic(0, "ID", 10)).toBe(false);
+  });
+
+  it("setPropertyBySemantic returns false if there is no metadata table", function () {
+    var featureTable = new FeatureTable({
+      count: 3,
+    });
+    expect(featureTable.setPropertyBySemantic(0, "NAME")).toBe(false);
   });
 
   describe("batch table compatibility", function () {
