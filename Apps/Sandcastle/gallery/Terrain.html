@@ -34,6 +34,7 @@
       <div id="terrainMenu"></div>
       <div id="zoomButtons"></div>
       <div id="showQuadtreeLevel"></div>
+      <div id="showOctreeLevel"></div>
       <div id="showTestedTriangles"></div>
       <div id="showTileRectangle"></div>
       <div id="sampleButtons"></div>
@@ -42,6 +43,26 @@
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
         "use strict";
+
+        // function addDropdownOption(viewer, name, options, onSelect) {
+        //   var primitives = new Cesium.PrimitiveCollection();
+        //   viewer.scene.primitives.add(primitives);
+        //
+        //   function internalOnSelect(value) {
+        //     primitives.removeAll();
+        //     onSelect(primitives, value);
+        //   }
+        //
+        //   var actualOptions = []
+        //   for (var v of options) {
+        //     actualOptions.push({
+        //       text: v,
+        //       onselect: internalOnSelect.bind(this, v)
+        //     })
+        //   }
+        //
+        //   Sandcastle.addToolbarMenu(actualOptions, name);
+        // }
 
         //Sandcastle_Begin
         var worldTerrain = Cesium.createWorldTerrain({
@@ -99,7 +120,7 @@
         ];
 
         var viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: arcGisTerrainProvider,
+          terrainProvider: worldTerrain,
         });
         viewer.scene.globe.enableLighting = false;
         // viewer.scene.globe.depthTestAgainstTerrain = false;
@@ -108,6 +129,7 @@
         window.viewer = viewer;
 
         var selectedQuadTreeAtLevel = null;
+        var selectedOctreeLevel = null;
         var showTestedTriangles = false;
         var selectedShowTileRectangle = false;
         var selectedShowOBB = false;
@@ -128,6 +150,7 @@
         );
         var obbDataSource = new Cesium.CustomDataSource("obbDataSource");
         var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
+        var octreePrimitives = new Cesium.PrimitiveCollection();
 
         viewer.dataSources.add(quadTreeDataSource);
         viewer.dataSources.add(intersectedTriangleDataSource);
@@ -136,6 +159,7 @@
         viewer.dataSources.add(testedPointsDataSource);
         viewer.dataSources.add(obbDataSource);
         viewer.scene.primitives.add(axisPrimitiveCollection);
+        viewer.scene.primitives.add(octreePrimitives);
 
         function localToWorld(transform, local) {
           return Cesium.Matrix4.multiplyByPoint(
@@ -143,6 +167,55 @@
             local,
             new Cesium.Cartesian3()
           );
+        }
+
+        function rainbow(numOfSteps, step) {
+          // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
+          // Adam Cole, 2011-Sept-14
+          // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+          var r, g, b;
+          var h = step / numOfSteps;
+          var i = ~~(h * 6);
+          var f = h * 6 - i;
+          var q = 1 - f;
+          switch (i % 6) {
+            case 0:
+              r = 1;
+              g = f;
+              b = 0;
+              break;
+            case 1:
+              r = q;
+              g = 1;
+              b = 0;
+              break;
+            case 2:
+              r = 0;
+              g = 1;
+              b = f;
+              break;
+            case 3:
+              r = 0;
+              g = q;
+              b = 1;
+              break;
+            case 4:
+              r = f;
+              g = 0;
+              b = 1;
+              break;
+            case 5:
+              r = 1;
+              g = 0;
+              b = q;
+              break;
+          }
+          var c =
+            "#" +
+            ("00" + (~~(r * 255)).toString(16)).slice(-2) +
+            ("00" + (~~(g * 255)).toString(16)).slice(-2) +
+            ("00" + (~~(b * 255)).toString(16)).slice(-2);
+          return c;
         }
 
         function drawQuadTreeNode(transform, node, obb, color) {
@@ -226,6 +299,172 @@
               outlineColor: Cesium.Color.BLACK,
             },
           });
+        }
+
+        function onTheFlyNodeAABB(level, x, y, z) {
+          var sizeAtLevel = 1.0 / Math.pow(2, level);
+          return {
+            aabbMinX: x * sizeAtLevel - 0.5,
+            aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
+            aabbCenterX: (x + 0.5) * sizeAtLevel - 0.5,
+            aabbMinY: y * sizeAtLevel - 0.5,
+            aabbMaxY: (y + 1) * sizeAtLevel - 0.5,
+            aabbCenterY: (y + 0.5) * sizeAtLevel - 0.5,
+            aabbMinZ: z * sizeAtLevel - 0.5,
+            aabbMaxZ: (z + 1) * sizeAtLevel - 0.5,
+            aabbCenterZ: (z + 0.5) * sizeAtLevel - 0.5,
+          };
+        }
+
+        function drawOctreeLayer(prims, level) {
+          prims.removeAll();
+          if (level == null) {
+            return;
+          }
+          var root =
+            window.lastPickDetails &&
+            window.lastPickDetails.mesh &&
+            window.lastPickDetails.mesh._octree;
+          if (!root) {
+            return;
+          }
+          var unpackedOctreeNodes = root._unpackedOctree;
+          var transform = root._transform;
+          var nodesToDraw = unpackedOctreeNodes.filter(
+            (n) => n.level === level
+          );
+
+          var colors = rainbow(nodesToDraw.length, 1);
+
+          let i = 0;
+          for (var node of nodesToDraw) {
+            i++;
+            var c = rainbow(nodesToDraw.length, i);
+            var color = Cesium.Color.fromCssColorString(c);
+            // var color = Cesium.Color.fromRandom({
+            //   minimumRed: 0.5,
+            //   maximumRed: 0.75,
+            //   minimumGreen: 0.5,
+            //   maximumGreen: 0.75,
+            //   minimumBlue: 0.5,
+            //   maximumBlue: 0.75,
+            //   alpha: 1.0,
+            // });
+
+            var aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
+            var min = new Cesium.Cartesian3(
+              aabb.aabbMinX,
+              aabb.aabbMinY,
+              aabb.aabbMinZ
+            );
+            var max = new Cesium.Cartesian3(
+              aabb.aabbMaxX,
+              aabb.aabbMaxY,
+              aabb.aabbMaxZ
+            );
+            var box = new Cesium.BoxGeometry({
+              maximum: max,
+              minimum: min,
+            });
+            var outline = new Cesium.BoxOutlineGeometry({
+              maximum: max,
+              minimum: min,
+            });
+            prims.add(
+              new Cesium.Primitive({
+                asynchronous: false,
+                appearance: new Cesium.PerInstanceColorAppearance(),
+                geometryInstances: [
+                  new Cesium.GeometryInstance({
+                    geometry: box,
+                    modelMatrix: transform,
+                    attributes: {
+                      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        color.withAlpha(0.2)
+                      ),
+                    },
+                  }),
+                ],
+              })
+            );
+            prims.add(
+              new Cesium.Primitive({
+                asynchronous: false,
+                appearance: new Cesium.PerInstanceColorAppearance({
+                  translucent: false,
+                  flat: true,
+                }),
+                geometryInstances: [
+                  new Cesium.GeometryInstance({
+                    geometry: outline,
+                    modelMatrix: transform,
+                    attributes: {
+                      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        color.withAlpha(1)
+                      ),
+                    },
+                  }),
+                ],
+              })
+            );
+
+            var trianglePolygons = [];
+            var trianglePolygonOutlines = [];
+            for (var triangleIdx of node.triangles) {
+              var v0 = new Cesium.Cartesian3();
+              var v1 = new Cesium.Cartesian3();
+              var v2 = new Cesium.Cartesian3();
+              root._triangleVerticesCallback(triangleIdx, v0, v1, v2);
+
+              var outlineGeometry = new Cesium.PolygonOutlineGeometry({
+                polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
+                perPositionHeight: true,
+              });
+              var outlineInstance = new Cesium.GeometryInstance({
+                geometry: outlineGeometry,
+                attributes: {
+                  color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                    color.withAlpha(1)
+                  ),
+                },
+              });
+              trianglePolygonOutlines.push(outlineInstance);
+
+              var geometry = new Cesium.PolygonGeometry({
+                polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
+                perPositionHeight: true,
+              });
+              var instance = new Cesium.GeometryInstance({
+                geometry: geometry,
+                attributes: {
+                  color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                    color.withAlpha(0.7)
+                  ),
+                },
+              });
+              trianglePolygons.push(instance);
+            }
+            prims.add(
+              new Cesium.Primitive({
+                asynchronous: false,
+                appearance: new Cesium.PerInstanceColorAppearance({
+                  translucent: false,
+                  flat: true,
+                }),
+                geometryInstances: trianglePolygonOutlines,
+              })
+            );
+            prims.add(
+              new Cesium.Primitive({
+                asynchronous: false,
+                appearance: new Cesium.PerInstanceColorAppearance({
+                  translucent: true,
+                  flat: true,
+                }),
+                geometryInstances: trianglePolygons,
+              })
+            );
+          }
         }
 
         function addDot(transform, local, color, radius, dataSource) {
@@ -469,14 +708,15 @@
           }
 
           var C = Cesium.Color;
-          var transform = window.lastPickDetails.traceDetails.transform;
+          var transform = window.lastPickDetails.mesh._octree._transform;
 
           var x;
           var y;
           var z;
-          for (x = -0.5; x <= 0.5; x += 0.1) {
-            for (y = -0.5; y <= 0.5; y += 0.1) {
-              for (z = -0.5; z <= 0.5; z += 0.1) {
+          var amount = 0.2;
+          for (x = -0.5; x <= 0.5; x += amount) {
+            for (y = -0.5; y <= 0.5; y += amount) {
+              for (z = -0.5; z <= 0.5; z += amount) {
                 var color = C.VIOLET;
                 if (x < 0 && y < 0) {
                   // TOP LEFT
@@ -546,6 +786,28 @@
         }
 
         Sandcastle.addToolbarMenu(showQuadTreeOptions, "showQuadtreeLevel");
+
+        function onSelectShowOctree(value) {
+          selectedOctreeLevel = value;
+          drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
+        }
+
+        var showOctreeOptions = [
+          {
+            text: "Hide Octree",
+            onselect: onSelectShowOctree.bind(this, null),
+          },
+        ];
+        optionLevel = 0;
+        while (optionLevel < 6) {
+          showOctreeOptions.push({
+            text: "Octree Level " + optionLevel,
+            onselect: onSelectShowOctree.bind(this, optionLevel),
+          });
+          optionLevel++;
+        }
+        Sandcastle.addToolbarMenu(showOctreeOptions, "showOctreeLevel");
+
         Sandcastle.addToolbarMenu(
           [
             {
@@ -650,6 +912,8 @@
             showQuadTreeAtLevel(selectedQuadTreeAtLevel);
             showTileRectangle(selectedShowTileRectangle);
             showOBB(selectedShowOBB, obbDataSource);
+
+            drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 

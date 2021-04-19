@@ -17,6 +17,8 @@ import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
 import QuadtreeTrianglePicker from "./QuadtreeTrianglePicker.js";
+import TrianglePicking from "./TrianglePicking.js";
+import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -294,6 +296,15 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       indicesAndEdges.indices
     );
 
+    var octreeTrianglePicker = new TrianglePicking(
+      result.packedOctree,
+      createTriangleVerticesCallback(
+        vertices,
+        indicesAndEdges.indices,
+        encoding
+      )
+    );
+
     that._mesh = new TerrainMesh(
       center,
       vertices,
@@ -312,7 +323,8 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
       indicesAndEdges.northIndicesWestToEast,
-      quadtreeTrianglePicker
+      quadtreeTrianglePicker,
+      octreeTrianglePicker
     );
 
     // Free memory received from server after mesh is created.

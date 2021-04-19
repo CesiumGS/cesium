@@ -54,7 +54,8 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  trianglePicking
+  trianglePicking,
+  octreeTrianglePicking
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -181,6 +182,7 @@ function TerrainMesh(
   if (!this._trianglePicking) {
     this._trianglePicking = this._defaultPickStrategy;
   }
+  this._octree = octreeTrianglePicking;
 }
 
 function isCartesianAlmostEqual(a, b) {
