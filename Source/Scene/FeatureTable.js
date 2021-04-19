@@ -18,7 +18,6 @@ import defined from "../Core/defined.js";
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of features in the table.
  * @param {MetadataTable} [options.metadataTable] A table of binary properties.
- *
  * @param {JsonMetadataTable} [options.jsonMetadataTable] For compatibility with the old batch table, free-form JSON properties can be passed in.
  * @param {BatchTableHierarchy} [options.batchTableHierarchy] For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, a hierarchy can be provided.
  * @param {Object} [options.extras] Extra user-defined properties

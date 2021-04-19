@@ -421,7 +421,7 @@ function getBinaryProperty(binaryProperty, index) {
  * Sets the value of the property with the given ID. Only properties of the
  * instance may be set; parent properties may not be set.
  *
- * @param {Number} batchId The batchId of the featuer
+ * @param {Number} batchId The batchId of the feature
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
