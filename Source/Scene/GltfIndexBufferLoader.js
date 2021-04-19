@@ -148,8 +148,12 @@ function loadFromDraco(indexBufferLoader) {
       // Now wait for process() to run to finish loading
       indexBufferLoader._typedArray =
         dracoLoader.decodedData.indices.typedArray;
+      indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
+      if (indexBufferLoader.isDestroyed()) {
+        return;
+      }
       handleError(indexBufferLoader, error);
     });
 }
@@ -182,8 +186,12 @@ function loadFromBufferView(indexBufferLoader) {
         indexBufferLoader,
         bufferViewTypedArray
       );
+      indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
+      if (indexBufferLoader.isDestroyed()) {
+        return;
+      }
       handleError(indexBufferLoader, error);
     });
 }

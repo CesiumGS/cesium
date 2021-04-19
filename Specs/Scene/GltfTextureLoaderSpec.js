@@ -403,7 +403,7 @@ describe(
       });
     });
 
-    it("handles destroy before image is finished loading", function () {
+    function resolveImageAfterDestroy(reject) {
       var deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         deferredPromise.promise
@@ -433,12 +433,24 @@ describe(
       textureLoader.load();
       textureLoader.destroy();
 
-      deferredPromise.resolve(image);
+      if (reject) {
+        deferredPromise.reject(new Error());
+      } else {
+        deferredPromise.resolve(image);
+      }
 
       expect(textureLoader.texture).not.toBeDefined();
       expect(textureLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(imageLoaderCopy);
+    }
+
+    it("handles resolving image after destroy", function () {
+      resolveImageAfterDestroy(false);
+    });
+
+    it("handles rejecting image after destroy", function () {
+      resolveImageAfterDestroy(true);
     });
   },
   "WebGL"

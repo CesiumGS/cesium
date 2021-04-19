@@ -347,7 +347,7 @@ describe("Scene/GltfDracoLoader", function () {
     });
   });
 
-  it("handles destroy before buffer view is finished loading", function () {
+  function resolveBufferViewAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
@@ -379,15 +379,27 @@ describe("Scene/GltfDracoLoader", function () {
     dracoLoader.load();
     dracoLoader.destroy();
 
-    deferredPromise.resolve(bufferArrayBuffer);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(bufferArrayBuffer);
+    }
 
     expect(dracoLoader.decodedData).not.toBeDefined();
     expect(dracoLoader.isDestroyed()).toBe(true);
 
     ResourceCache.unload(bufferViewLoaderCopy);
+  }
+
+  it("handles resolving buffer view after destroy", function () {
+    resolveBufferViewAfterDestroy(false);
   });
 
-  it("handles destroy before draco data is finished decoding", function () {
+  it("handles rejecting buffer view after destroy", function () {
+    resolveBufferViewAfterDestroy(true);
+  });
+
+  function resolveDracoAfterDestroy(reject) {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       when.resolve(bufferArrayBuffer)
     );
@@ -414,9 +426,22 @@ describe("Scene/GltfDracoLoader", function () {
     expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
     dracoLoader.destroy();
-    deferredPromise.resolve(decodeDracoResults);
+
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(decodeDracoResults);
+    }
 
     expect(dracoLoader.decodedData).not.toBeDefined();
     expect(dracoLoader.isDestroyed()).toBe(true);
+  }
+
+  it("handles resolving draco after destroy", function () {
+    resolveDracoAfterDestroy(false);
+  });
+
+  it("handles rejecting draco after destroy", function () {
+    resolveDracoAfterDestroy(true);
   });
 });

@@ -628,7 +628,7 @@ describe(
       });
     });
 
-    it("handles destroy before buffer view is finished loading", function () {
+    function resolveBufferViewAfterDestroy(reject) {
       var deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         deferredPromise.promise
@@ -638,7 +638,7 @@ describe(
       // promise resolves even if the index buffer loader is destroyed
       var bufferViewLoaderCopy = ResourceCache.loadBufferView({
         gltf: gltfUncompressed,
-        bufferViewId: 2,
+        bufferViewId: 3,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
@@ -656,15 +656,27 @@ describe(
       indexBufferLoader.load();
       indexBufferLoader.destroy();
 
-      deferredPromise.resolve(arrayBuffer);
+      if (reject) {
+        deferredPromise.reject(new Error());
+      } else {
+        deferredPromise.resolve(arrayBuffer);
+      }
 
       expect(indexBufferLoader.indexBuffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(bufferViewLoaderCopy);
+    }
+
+    it("handles resolving buffer view after destroy", function () {
+      resolveBufferViewAfterDestroy(false);
     });
 
-    it("handles destroy before draco data is finished loading", function () {
+    it("handles rejecting buffer view after destroy", function () {
+      resolveBufferViewAfterDestroy(true);
+    });
+
+    function resolveDracoAfterDestroy(reject) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(arrayBuffer)
       );
@@ -702,12 +714,25 @@ describe(
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
       indexBufferLoader.destroy();
-      deferredPromise.resolve(decodeDracoResults);
+
+      if (reject) {
+        deferredPromise.reject(new Error());
+      } else {
+        deferredPromise.resolve(decodeDracoResults);
+      }
 
       expect(indexBufferLoader.indexBuffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(dracoLoaderCopy);
+    }
+
+    it("handles resolving draco after destroy", function () {
+      resolveDracoAfterDestroy(false);
+    });
+
+    it("handles rejecting draco after destroy", function () {
+      resolveDracoAfterDestroy(true);
     });
   },
   "WebGL"

@@ -107,7 +107,7 @@ describe("Scene/BufferLoader", function () {
     });
   });
 
-  it("handles destroy before load finishes", function () {
+  function resolveAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
@@ -122,9 +122,21 @@ describe("Scene/BufferLoader", function () {
     bufferLoader.load();
     bufferLoader.destroy();
 
-    deferredPromise.resolve(arrayBuffer);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(arrayBuffer);
+    }
 
     expect(bufferLoader.typedArray).not.toBeDefined();
     expect(bufferLoader.isDestroyed()).toBe(true);
+  }
+
+  it("handles resolving uri after destroy", function () {
+    resolveAfterDestroy(false);
+  });
+
+  it("handles rejecting uri after destroy", function () {
+    resolveAfterDestroy(true);
   });
 });

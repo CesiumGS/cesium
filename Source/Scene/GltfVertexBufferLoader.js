@@ -1,3 +1,4 @@
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -6,6 +7,7 @@ import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
 import JobType from "./JobType.js";
+import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -89,6 +91,7 @@ export default function GltfVertexBufferLoader(options) {
   this._asynchronous = asynchronous;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
+  this._quantization = undefined;
   this._typedArray = undefined;
   this._vertexBuffer = undefined;
   this._state = ResourceLoaderState.UNLOADED;
@@ -140,6 +143,19 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
       return this._vertexBuffer;
     },
   },
+  /**
+   * Information about the quantized vertex attribute after Draco decode.
+   *
+   * @memberof GltfVertexBufferLoader.prototype
+   *
+   * @type {ModelComponents.Quantization}
+   * @readonly
+   */
+  quantization: {
+    get: function () {
+      return this._quantization;
+    },
+  },
 });
 
 /**
@@ -152,6 +168,27 @@ GltfVertexBufferLoader.prototype.load = function () {
     loadFromBufferView(this);
   }
 };
+
+function getQuantizationInformation(dracoQuantization, componentDatatype) {
+  var quantizationBits = dracoQuantization.quantizationBits;
+  var range = (1 << quantizationBits) - 1;
+
+  var quantization = new ModelComponents.Quantization();
+  quantization.componentDatatype = componentDatatype;
+  quantization.octEncoded = dracoQuantization.octEncoded;
+  quantization.normalizationRange = range;
+
+  if (!quantization.octEncoded) {
+    quantization.quantizedVolumeOffset = Cartesian3.unpack(
+      dracoQuantization.minValues
+    );
+    quantization.quantizedVolumeDimensions = new Cartesian3(
+      dracoQuantization.range
+    );
+  }
+
+  return quantization;
+}
 
 function loadFromDraco(vertexBufferLoader) {
   var resourceCache = vertexBufferLoader._resourceCache;
@@ -171,13 +208,27 @@ function loadFromDraco(vertexBufferLoader) {
       if (vertexBufferLoader.isDestroyed()) {
         return;
       }
-      // Now wait for process() to run to finish loading
+      // Get the typed array and quantization information
       var decodedVertexAttributes = dracoLoader.decodedData.vertexAttributes;
       var dracoSemantic = vertexBufferLoader._dracoAttributeSemantic;
-      var typedArray = decodedVertexAttributes[dracoSemantic].array;
+      var dracoAttribute = decodedVertexAttributes[dracoSemantic];
+      var typedArray = dracoAttribute.array;
+      var dracoQuantization = dracoAttribute.data.quantization;
+      if (defined(dracoQuantization)) {
+        vertexBufferLoader._quantization = getQuantizationInformation(
+          dracoQuantization,
+          dracoAttribute.data.componentDatatype
+        );
+      }
+
+      // Now wait for process() to run to finish loading
       vertexBufferLoader._typedArray = typedArray;
+      vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
+      if (vertexBufferLoader.isDestroyed()) {
+        return;
+      }
       handleError(vertexBufferLoader, error);
     });
 }
@@ -201,8 +252,12 @@ function loadFromBufferView(vertexBufferLoader) {
       }
       // Now wait for process() to run to finish loading
       vertexBufferLoader._typedArray = bufferViewLoader.typedArray;
+      vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
+      if (vertexBufferLoader.isDestroyed()) {
+        return;
+      }
       handleError(vertexBufferLoader, error);
     });
 }

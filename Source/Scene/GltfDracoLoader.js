@@ -129,8 +129,12 @@ GltfDracoLoader.prototype.load = function () {
       }
       // Now wait for process() to run to finish loading
       that._bufferViewTypedArray = bufferViewLoader.typedArray;
+      that._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
+      if (that.isDestroyed()) {
+        return;
+      }
       handleError(that, error);
     });
 };
@@ -200,6 +204,9 @@ GltfDracoLoader.prototype.process = function (frameState) {
       that._promise.resolve(that);
     })
     .otherwise(function (error) {
+      if (that.isDestroyed()) {
+        return;
+      }
       handleError(that, error);
     });
 };
