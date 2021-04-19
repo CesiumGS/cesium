@@ -152,8 +152,12 @@ GltfTextureLoader.prototype.load = function () {
       }
       // Now wait for process() to run to finish loading
       that._image = imageLoader.image;
+      that._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
+      if (that.isDestroyed()) {
+        return;
+      }
       that.unload();
       that._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load texture";

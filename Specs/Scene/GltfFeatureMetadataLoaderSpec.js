@@ -481,7 +481,7 @@ describe(
       });
     });
 
-    it("handles destroy before all resources are loaded", function () {
+    function resolveAfterDestroy(reject) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -542,7 +542,13 @@ describe(
           expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
           featureMetadataLoader.load();
           featureMetadataLoader.destroy();
-          deferredPromise.resolve(schemaJson);
+
+          if (reject) {
+            deferredPromise.reject(new Error());
+          } else {
+            deferredPromise.resolve(schemaJson);
+          }
+
           expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
           expect(featureMetadataLoader.isDestroyed()).toBe(true);
 
@@ -555,6 +561,14 @@ describe(
           ResourceCache.unload(schemaCopy);
         });
       });
+    }
+
+    it("handles resolving resources after destroy", function () {
+      resolveAfterDestroy(false);
+    });
+
+    it("handles rejecting resources after destroy", function () {
+      resolveAfterDestroy(true);
     });
   },
   "WebGL"

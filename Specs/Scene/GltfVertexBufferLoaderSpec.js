@@ -1,5 +1,6 @@
 import {
   Buffer,
+  Cartesian3,
   ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
@@ -434,7 +435,7 @@ describe(
       });
     });
 
-    it("loads from draco", function () {
+    it("loads positions from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(arrayBuffer)
       );
@@ -468,6 +469,60 @@ describe(
           vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
           expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
             decodedPositions.byteLength
+          );
+
+          var quantization = vertexBufferLoader.quantization;
+          expect(quantization.octEncoded).toBe(false);
+          expect(quantization.quantizedVolumeOffset).toEqual(
+            new Cartesian3(-1.0, -1.0, -1.0)
+          );
+          expect(quantization.quantizedVolumeDimensions).toEqual(
+            new Cartesian3(2.0, 0.0, 0.0)
+          );
+          expect(quantization.normalizationRange).toBe(16383);
+          expect(quantization.componentDatatype).toBe(
+            ComponentDatatype.UNSIGNED_SHORT
+          );
+        });
+      });
+    });
+
+    it("loads normals from draco", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
+        return when.resolve(decodeDracoResults);
+      });
+
+      var vertexBufferLoader = new GltfVertexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        draco: dracoExtension,
+        dracoAttributeSemantic: "NORMAL",
+      });
+
+      vertexBufferLoader.load();
+
+      return pollToPromise(function () {
+        vertexBufferLoader.process(scene.frameState);
+        return vertexBufferLoader._state === ResourceLoaderState.READY;
+      }).then(function () {
+        return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
+          expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
+            decodedNormals.byteLength
+          );
+
+          var quantization = vertexBufferLoader.quantization;
+          expect(quantization.octEncoded).toBe(true);
+          expect(quantization.quantizedVolumeOffset).toBeUndefined();
+          expect(quantization.quantizedVolumeDimensions).toBeUndefined();
+          expect(quantization.normalizationRange).toBe(1023);
+          expect(quantization.componentDatatype).toBe(
+            ComponentDatatype.UNSIGNED_BYTE
           );
         });
       });
@@ -564,7 +619,7 @@ describe(
       });
     });
 
-    it("handles destroy before buffer view is finished loading", function () {
+    function resolveBufferViewAfterDestroy(reject) {
       var deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         deferredPromise.promise
@@ -592,15 +647,27 @@ describe(
       vertexBufferLoader.load();
       vertexBufferLoader.destroy();
 
-      deferredPromise.resolve(arrayBuffer);
+      if (reject) {
+        deferredPromise.reject(new Error());
+      } else {
+        deferredPromise.resolve(arrayBuffer);
+      }
 
       expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
       expect(vertexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(bufferViewLoaderCopy);
+    }
+
+    it("handles resolving buffer view after destroy", function () {
+      resolveBufferViewAfterDestroy(false);
     });
 
-    it("handles destroy before draco data is finished loading", function () {
+    it("handles rejecting buffer view after destroy", function () {
+      resolveBufferViewAfterDestroy(true);
+    });
+
+    function resolveDracoAfterDestroy(reject) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(arrayBuffer)
       );
@@ -638,12 +705,25 @@ describe(
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
       vertexBufferLoader.destroy();
-      deferredPromise.resolve(decodeDracoResults);
+
+      if (reject) {
+        deferredPromise.reject(new Error());
+      } else {
+        deferredPromise.resolve(decodeDracoResults);
+      }
 
       expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
       expect(vertexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(dracoLoaderCopy);
+    }
+
+    it("handles resolving draco after destroy", function () {
+      resolveDracoAfterDestroy(false);
+    });
+
+    it("handles rejecting draco after destroy", function () {
+      resolveDracoAfterDestroy(true);
     });
   },
   "WebGL"

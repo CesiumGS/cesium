@@ -110,9 +110,15 @@ TileMetadata.prototype.getProperty = function (propertyId) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 TileMetadata.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(propertyId, value, this._properties, this._class);
+  return MetadataEntity.setProperty(
+    propertyId,
+    value,
+    this._properties,
+    this._class
+  );
 };
 
 /**
@@ -134,10 +140,10 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given semantic doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(
+  return MetadataEntity.setPropertyBySemantic(
     semantic,
     value,
     this._properties,

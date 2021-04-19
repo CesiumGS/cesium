@@ -329,7 +329,7 @@ describe("Scene/GltfImageLoader", function () {
     });
   });
 
-  it("handles destroy before buffer view is finished loading", function () {
+  function resolveBufferViewAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
@@ -358,15 +358,27 @@ describe("Scene/GltfImageLoader", function () {
     imageLoader.load();
     imageLoader.destroy();
 
-    deferredPromise.resolve(pngBuffer);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(pngBuffer);
+    }
 
     expect(imageLoader.image).not.toBeDefined();
     expect(imageLoader.isDestroyed()).toBe(true);
 
     ResourceCache.unload(bufferViewLoaderCopy);
+  }
+
+  it("handles resolving buffer view after destroy", function () {
+    resolveBufferViewAfterDestroy(false);
   });
 
-  it("handles destroy before image is finished loading from buffer", function () {
+  it("handles rejecting buffer view after destroy", function () {
+    resolveBufferViewAfterDestroy(true);
+  });
+
+  function resolveImageFromTypedArrayAfterDestroy(reject) {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       when.resolve(pngBuffer)
     );
@@ -399,15 +411,27 @@ describe("Scene/GltfImageLoader", function () {
     imageLoader.load();
     imageLoader.destroy();
 
-    deferredPromise.resolve(image);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(image);
+    }
 
     expect(imageLoader.image).not.toBeDefined();
     expect(imageLoader.isDestroyed()).toBe(true);
 
     ResourceCache.unload(bufferViewLoaderCopy);
+  }
+
+  it("handles resolving image from typed array after destroy", function () {
+    resolveImageFromTypedArrayAfterDestroy(false);
   });
 
-  it("handles destroy before uri is finished loading", function () {
+  it("handles rejecting image from typed array after destroy", function () {
+    resolveImageFromTypedArrayAfterDestroy(true);
+  });
+
+  function resolveUriAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchImage").and.returnValue(
       deferredPromise.promise
@@ -427,9 +451,21 @@ describe("Scene/GltfImageLoader", function () {
     imageLoader.load();
     imageLoader.destroy();
 
-    deferredPromise.resolve(image);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(image);
+    }
 
     expect(imageLoader.image).not.toBeDefined();
     expect(imageLoader.isDestroyed()).toBe(true);
+  }
+
+  it("handles resolving uri after destroy", function () {
+    resolveUriAfterDestroy(false);
+  });
+
+  it("handles rejecting uri after destroy", function () {
+    resolveUriAfterDestroy(true);
   });
 });

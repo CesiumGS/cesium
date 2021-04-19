@@ -215,7 +215,6 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
- * @exception {DeveloperError} A property with the given semantic doesn't exist.
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,

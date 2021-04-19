@@ -214,7 +214,7 @@ describe("Scene/GltfBufferViewLoader", function () {
     });
   });
 
-  it("handles destroy before load finishes", function () {
+  function resolveAfterDestroy(reject) {
     var deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
@@ -239,11 +239,23 @@ describe("Scene/GltfBufferViewLoader", function () {
     bufferViewLoader.load();
     bufferViewLoader.destroy();
 
-    deferredPromise.resolve(bufferArrayBuffer);
+    if (reject) {
+      deferredPromise.reject(new Error());
+    } else {
+      deferredPromise.resolve(bufferArrayBuffer);
+    }
 
     expect(bufferViewLoader.typedArray).not.toBeDefined();
     expect(bufferViewLoader.isDestroyed()).toBe(true);
 
     ResourceCache.unload(bufferLoaderCopy);
+  }
+
+  it("handles resolving buffer after destroy", function () {
+    resolveAfterDestroy(false);
+  });
+
+  it("handles rejecting buffer after destroy", function () {
+    resolveAfterDestroy(true);
   });
 });

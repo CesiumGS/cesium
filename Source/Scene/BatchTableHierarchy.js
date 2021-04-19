@@ -13,14 +13,14 @@ import RuntimeError from "../Core/RuntimeError.js";
 /**
  * Object for handling the <code>3DTILES_batch_table_hierarchy</code> extension
  *
- * @function
- *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.extension The <code>3DTILES_batch_table_hierarchy</code> extension object.
- * @param {Uint8Array} [options.binaryBody] the binary body of the batch table
+ * @param {Uint8Array} [options.binaryBody] The binary body of the batch table
  *
  * @alias BatchTableHierarchy
  * @constructor
+ *
+ * @private
  */
 export default function BatchTableHierarchy(options) {
   this._classes = undefined;
@@ -45,9 +45,9 @@ export default function BatchTableHierarchy(options) {
  * Parse the batch table hierarchy from the
  * <code>3DTILES_batch_table_hierarchy</code> extension.
  *
- * @param {BatchTableHierarchy} hierarchy the hierarchy instance
- * @param {Object} hierarchyJson the JSON of the extension
- * @param {Uint8Array} [binaryBody] the binary body of the batch table for accessing binary properties
+ * @param {BatchTableHierarchy} hierarchy The hierarchy instance
+ * @param {Object} hierarchyJson The JSON of the extension
+ * @param {Uint8Array} [binaryBody] The binary body of the batch table for accessing binary properties
  * @private
  */
 function initialize(hierarchy, hierarchyJson, binaryBody) {
@@ -417,6 +417,18 @@ function getBinaryProperty(binaryProperty, index) {
   return binaryProperty.type.unpack(typedArray, index * componentCount);
 }
 
+/**
+ * Sets the value of the property with the given ID. Only properties of the
+ * instance may be set; parent properties may not be set.
+ *
+ * @param {Number} batchId The batchId of the feature
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {*} value The value of the property that will be copied.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ *
+ * @exception {DeveloperError} when setting an inherited property
+ * @private
+ */
 BatchTableHierarchy.prototype.setProperty = function (
   batchId,
   propertyId,
@@ -434,7 +446,7 @@ BatchTableHierarchy.prototype.setProperty = function (
       //>>includeStart('debug', pragmas.debug);
       if (instanceIndex !== batchId) {
         throw new DeveloperError(
-          'Inherited property "' + name + '" is read-only.'
+          'Inherited property "' + propertyId + '" is read-only.'
         );
       }
       //>>includeEnd('debug');
@@ -459,6 +471,14 @@ function setBinaryProperty(binaryProperty, index, value) {
   }
 }
 
+/**
+ * Check if a feature belongs to a class with the given name
+ *
+ * @param {Number} batchId The batch ID of the feature
+ * @param {String} className The name of the class
+ * @return {Boolean} <code>true</code> if the feature belongs to the class given by className, or <code>false</code> otherwise
+ * @private
+ */
 BatchTableHierarchy.prototype.isClass = function (batchId, className) {
   // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
   // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
@@ -475,6 +495,12 @@ BatchTableHierarchy.prototype.isClass = function (batchId, className) {
   return defined(result);
 };
 
+/**
+ * Get the name of the class a given feature belongs to
+ *
+ * @param {Number} batchId The batch ID of the feature
+ * @return {String} The name of the class this feature belongs to
+ */
 BatchTableHierarchy.prototype.getClassName = function (batchId) {
   var classId = this._classIds[batchId];
   var instanceClass = this._classes[classId];

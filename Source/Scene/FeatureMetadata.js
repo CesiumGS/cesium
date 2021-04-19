@@ -11,7 +11,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, FeatureTable>} [options.featureTables] A dictionary mapping feature table IDs to feature table objects.
  * @param {Object.<String, FeatureTexture>} [options.featureTextures] A dictionary mapping feature texture IDs to feature texture objects.
- * @param {Object} [options.statistics] statistics about metadata
+ * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
  *

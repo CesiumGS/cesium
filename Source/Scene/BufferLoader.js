@@ -118,6 +118,9 @@ function loadExternalBuffer(bufferLoader) {
       bufferLoader._promise.resolve(bufferLoader);
     })
     .otherwise(function (error) {
+      if (bufferLoader.isDestroyed()) {
+        return;
+      }
       bufferLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load external buffer: " + resource.url;
       bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));

@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import MetadataTable from "./MetadataTable.js";
 
 /**
  * A feature table for use with the <code>EXT_feature_metadata</code> glTF
@@ -17,11 +16,12 @@ import MetadataTable from "./MetadataTable.js";
  * </ol>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.featureTable The feature table JSON for binary properties.
- * @param {MetadataClass} [options.class] The class that binary properties conform to.
- * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Number} options.count The number of features in the table.
+ * @param {MetadataTable} [options.metadataTable] A table of binary properties.
  * @param {JsonMetadataTable} [options.jsonMetadataTable] For compatibility with the old batch table, free-form JSON properties can be passed in.
  * @param {BatchTableHierarchy} [options.batchTableHierarchy] For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, a hierarchy can be provided.
+ * @param {Object} [options.extras] Extra user-defined properties
+ * @param {Object} [options.extensions] An object containing extensions
  *
  * @alias FeatureTable
  * @constructor
@@ -30,29 +30,15 @@ import MetadataTable from "./MetadataTable.js";
  */
 function FeatureTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var featureTable = options.featureTable;
-  var classDefinition = options.class;
-  var bufferViews = options.bufferViews;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.featureTable", featureTable);
+  Check.typeOf.number("options.count", options.count);
   //>>includeEnd('debug');
 
-  var count = featureTable.count;
-  var properties = featureTable.properties;
-  var extensions = featureTable.extensions;
-  var extras = featureTable.extras;
-
-  var metadataTable = new MetadataTable({
-    count: count,
-    properties: properties,
-    class: classDefinition,
-    bufferViews: bufferViews,
-  });
-
-  this._metadataTable = metadataTable;
-  this._extras = extras;
-  this._extensions = extensions;
+  this._count = options.count;
+  this._extras = options.extras;
+  this._extensions = options.extensions;
+  this._metadataTable = options.metadataTable;
   this._jsonMetadataTable = options.jsonMetadataTable;
   this._batchTableHierarchy = options.batchTableHierarchy;
 }
@@ -68,7 +54,7 @@ Object.defineProperties(FeatureTable.prototype, {
    */
   count: {
     get: function () {
-      return this._metadataTable.count;
+      return this._count;
     },
   },
 
@@ -81,7 +67,11 @@ Object.defineProperties(FeatureTable.prototype, {
    */
   class: {
     get: function () {
-      return this._metadataTable.class;
+      if (defined(this._metadataTable)) {
+        return this._metadataTable.class;
+      }
+
+      return undefined;
     },
   },
 
@@ -127,13 +117,28 @@ FeatureTable.prototype.hasProperty = function (index, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  return (
-    this._metadataTable.hasProperty(propertyId) ||
-    (defined(this._jsonMetadataTable) &&
-      this._jsonMetadataTable.hasProperty(propertyId)) ||
-    (defined(this._batchTableHierarchy) &&
-      this._batchTableHierarchy.hasProperty(index, propertyId))
-  );
+  if (
+    defined(this._metadataTable) &&
+    this._metadataTable.hasProperty(propertyId)
+  ) {
+    return true;
+  }
+
+  if (
+    defined(this._jsonMetadataTable) &&
+    this._jsonMetadataTable.hasProperty(propertyId)
+  ) {
+    return true;
+  }
+
+  if (
+    defined(this._batchTableHierarchy) &&
+    this._batchTableHierarchy.hasProperty(index, propertyId)
+  ) {
+    return true;
+  }
+
+  return false;
 };
 
 var scratchResults = [];
@@ -149,11 +154,13 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
   results = defined(results) ? results : [];
   results.length = 0;
 
-  // concat in place to avoid unnecessary array allocation
-  results.push.apply(
-    results,
-    this._metadataTable.getPropertyIds(scratchResults)
-  );
+  if (defined(this._metadataTable)) {
+    // concat in place to avoid unnecessary array allocation
+    results.push.apply(
+      results,
+      this._metadataTable.getPropertyIds(scratchResults)
+    );
+  }
 
   if (defined(this._jsonMetadataTable)) {
     results.push.apply(
@@ -183,9 +190,12 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 FeatureTable.prototype.getProperty = function (index, propertyId) {
-  var result = this._metadataTable.getProperty(index, propertyId);
-  if (defined(result)) {
-    return result;
+  var result;
+  if (defined(this._metadataTable)) {
+    result = this._metadataTable.getProperty(index, propertyId);
+    if (defined(result)) {
+      return result;
+    }
   }
 
   if (defined(this._jsonMetadataTable)) {
@@ -217,7 +227,10 @@ FeatureTable.prototype.getProperty = function (index, propertyId) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 FeatureTable.prototype.setProperty = function (index, propertyId, value) {
-  if (this._metadataTable.setProperty(index, propertyId, value)) {
+  if (
+    defined(this._metadataTable) &&
+    this._metadataTable.setProperty(index, propertyId, value)
+  ) {
     return true;
   }
 
@@ -242,7 +255,11 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
 FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
-  return this._metadataTable.getPropertyBySemantic(index, semantic);
+  if (defined(this._metadataTable)) {
+    return this._metadataTable.getPropertyBySemantic(index, semantic);
+  }
+
+  return undefined;
 };
 
 /**
@@ -258,7 +275,11 @@ FeatureTable.prototype.setPropertyBySemantic = function (
   semantic,
   value
 ) {
-  return this._metadataTable.setPropertyBySemantic(index, semantic, value);
+  if (defined(this._metadataTable)) {
+    return this._metadataTable.setPropertyBySemantic(index, semantic, value);
+  }
+
+  return false;
 };
 
 export default FeatureTable;

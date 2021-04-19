@@ -141,6 +141,9 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       that._promise.resolve(that);
     })
     .otherwise(function (error) {
+      if (that.isDestroyed()) {
+        return;
+      }
       that.unload();
       that._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load feature metadata";

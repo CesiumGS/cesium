@@ -119,6 +119,9 @@ function loadExternalSchema(schemaLoader) {
       schemaLoader._promise.resolve(schemaLoader);
     })
     .otherwise(function (error) {
+      if (schemaLoader.isDestroyed()) {
+        return;
+      }
       schemaLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load schema: " + resource.url;
       schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));

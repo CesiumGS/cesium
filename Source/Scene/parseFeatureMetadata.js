@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import FeatureTable from "./FeatureTable.js";
 import FeatureTexture from "./FeatureTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
+import MetadataTable from "./MetadataTable.js";
 
 /**
  * parse the <code>EXT_feature_metadata</code> glTF extension to create a
@@ -14,7 +15,7 @@ import FeatureMetadata from "./FeatureMetadata.js";
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
- * @return {FeatureMetadata} a feature metadata object
+ * @return {FeatureMetadata} A feature metadata object
  */
 export default function parseFeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -34,10 +35,20 @@ export default function parseFeatureMetadata(options) {
     for (var featureTableId in extension.featureTables) {
       if (extension.featureTables.hasOwnProperty(featureTableId)) {
         var featureTable = extension.featureTables[featureTableId];
-        featureTables[featureTableId] = new FeatureTable({
-          featureTable: featureTable,
-          class: schema.classes[featureTable.class],
+        var classDefinition = schema.classes[featureTable.class];
+
+        var metadataTable = new MetadataTable({
+          count: featureTable.count,
+          properties: featureTable.properties,
+          class: classDefinition,
           bufferViews: options.bufferViews,
+        });
+
+        featureTables[featureTableId] = new FeatureTable({
+          count: featureTable.count,
+          metadataTable: metadataTable,
+          extras: featureTable.extras,
+          extensions: featureTable.extensions,
         });
       }
     }

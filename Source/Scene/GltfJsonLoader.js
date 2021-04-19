@@ -132,6 +132,9 @@ function loadFromTypedArray(gltfJsonLoader) {
       gltfJsonLoader._promise.resolve(gltfJsonLoader);
     })
     .otherwise(function (error) {
+      if (gltfJsonLoader.isDestroyed()) {
+        return;
+      }
       handleError(gltfJsonLoader, error);
     });
 }
@@ -156,6 +159,9 @@ function loadFromUri(gltfJsonLoader) {
       gltfJsonLoader._promise.resolve(gltfJsonLoader);
     })
     .otherwise(function (error) {
+      if (gltfJsonLoader.isDestroyed()) {
+        return;
+      }
       handleError(gltfJsonLoader, error);
     });
 }
