@@ -42,7 +42,7 @@ export default function parseBatchTable(options) {
     properties: partitionResults.jsonProperties,
   });
 
-  var hierarchy = initializeHierarchy(partitionResults.extensions, binaryBody);
+  var hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
 
   var binaryResults = transcodeBinaryProperties(
     featureCount,
@@ -73,7 +73,7 @@ export default function parseBatchTable(options) {
  * extension as each is handled separately
  *
  * @param {Object} batchTable The batch table JSON
- * @returns {Object} The batch table divided into binary, JSON and hierarchy portions.
+ * @returns {Object} The batch table divided into binary, JSON and hierarchy portions. Extras and extensions are also divided out for ease of processing.
  *
  * @private
  */
@@ -82,13 +82,15 @@ function partitionProperties(batchTable) {
   var extras = batchTable.extras;
   var extensions = batchTable.extensions;
 
+  var hierarchyExtension;
   if (defined(legacyHierarchy)) {
     parseBatchTable._deprecationWarning(
       "batchTableHierarchyExtension",
       "The batch table HIERARCHY property has been moved to an extension. Use extensions.3DTILES_batch_table_hierarchy instead."
     );
-    extensions = defined(extensions) ? extensions : {};
-    extensions["3DTILES_batch_table_hierarchy"] = legacyHierarchy;
+    hierarchyExtension = legacyHierarchy;
+  } else if (defined(extensions)) {
+    hierarchyExtension = extensions["3DTILES_batch_table_hierarchy"];
   }
 
   var jsonProperties = {};
@@ -115,6 +117,7 @@ function partitionProperties(batchTable) {
   return {
     binaryProperties: binaryProperties,
     jsonProperties: jsonProperties,
+    hierarchy: hierarchyExtension,
     extras: extras,
     extensions: extensions,
   };
@@ -247,28 +250,23 @@ function transcodeComponentType(componentType) {
 }
 
 /**
- * Construct a batch table hierarchy object if the 3DTILES_batch_table_hierarchy extension is present
+ * Construct a batch table hierarchy object if the <code>3DTILES_batch_table_hierarchy</code> extension is present
  *
- * @param {Object} [extensions] The extensions
+ * @param {Object} [hierarchyExtension] The <code>3DTILES_batch_table_hierarchy</code> extension object.
  * @param {Uint8Array} binaryBody The binary body of the batch table
  * @return {BatchTableHierarchy} A batch table hierarchy, or <code>undefined</code> if the extension is not present.
  *
  * @private
  */
-function initializeHierarchy(extensions, binaryBody) {
-  if (!defined(extensions)) {
-    return undefined;
+function initializeHierarchy(hierarchyExtension, binaryBody) {
+  if (defined(hierarchyExtension)) {
+    return new BatchTableHierarchy({
+      extension: hierarchyExtension,
+      binaryBody: binaryBody,
+    });
   }
 
-  var hierarchy = extensions["3DTILES_batch_table_hierarchy"];
-  if (!defined(hierarchy)) {
-    return undefined;
-  }
-
-  return new BatchTableHierarchy({
-    extension: hierarchy,
-    binaryBody: binaryBody,
-  });
+  return undefined;
 }
 
 // exposed for testing
