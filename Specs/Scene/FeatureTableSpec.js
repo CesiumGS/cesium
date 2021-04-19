@@ -3,6 +3,7 @@ import {
   FeatureTable,
   MetadataClass,
   MetadataSchema,
+  MetadataTable,
   JsonMetadataTable,
 } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
@@ -48,9 +49,7 @@ describe("Scene/FeatureTable", function () {
 
   it("creates feature table with default values", function () {
     var featureTable = new FeatureTable({
-      featureTable: {
-        count: 3,
-      },
+      count: 3,
     });
     expect(featureTable.count).toBe(3);
     expect(featureTable.class).toBeUndefined();
@@ -236,10 +235,16 @@ describe("Scene/FeatureTable", function () {
         extension: hierarchyExtension,
       });
 
-      batchTable = new FeatureTable({
-        featureTable: featureTableJson,
-        bufferViews: bufferViews,
+      var metadataTable = new MetadataTable({
+        count: count,
+        properties: featureTableJson.properties,
         class: schema.classes.box,
+        bufferViews: bufferViews,
+      });
+
+      batchTable = new FeatureTable({
+        count: count,
+        metadataTable: metadataTable,
         jsonMetadataTable: jsonTable,
         batchTableHierarchy: hierarchy,
       });

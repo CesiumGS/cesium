@@ -8,6 +8,7 @@ import FeatureTable from "./FeatureTable.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
 import MetadataSchema from "./MetadataSchema.js";
+import MetadataTable from "./MetadataTable.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -50,11 +51,19 @@ export default function parseBatchTable(options) {
     binaryBody
   );
 
+  var featureTableJson = binaryResults.featureTableJson;
+
+  var metadataTable = new MetadataTable({
+    count: featureTableJson.count,
+    properties: featureTableJson.properties,
+    class: binaryResults.transcodedClass,
+    bufferViews: binaryResults.bufferViewsU8,
+  });
+
   var featureTables = {
     _batchTable: new FeatureTable({
-      featureTable: binaryResults.featureTableJson,
-      class: binaryResults.transcodedClass,
-      bufferViews: binaryResults.bufferViewsU8,
+      count: featureTableJson.count,
+      metadataTable: metadataTable,
       jsonMetadataTable: jsonMetadataTable,
       batchTableHierarchy: hierarchy,
     }),
