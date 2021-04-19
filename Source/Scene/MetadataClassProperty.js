@@ -305,6 +305,7 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
  *
  * @param {*} value the original, normalized values.
  * @returns {*} The appropriate vector type if the value is a vector type. Otherwise, the value is returned unaltered.
+ * @private
  */
 MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
   var type = this._type;
@@ -341,6 +342,7 @@ MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
  *
  * @param {*} value The value of this property
  * @returns {*} An array of the appropriate length if the property is a vector type. Otherwise, the value is returned unaltered.
+ * @private
  */
 MetadataClassProperty.prototype.packVectorTypes = function (value) {
   var type = this._type;

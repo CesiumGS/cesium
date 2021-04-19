@@ -1,5 +1,7 @@
 import {
+  Cartesian2,
   Cartesian3,
+  Cartesian4,
   FeatureDetection,
   MetadataClassProperty,
   MetadataEnum,
@@ -325,6 +327,258 @@ describe("Scene/MetadataClassProperty", function () {
           var value = propertyValues[propertyId][i];
           var normalizeValue = property.normalize(value);
           expect(normalizeValue).toEqual(value);
+        }
+      }
+    }
+  });
+
+  it("packVectorTypes packs vectors", function () {
+    var properties = {
+      propertyVec2: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 2,
+      },
+      propertyIVec3: {
+        type: "ARRAY",
+        componentType: "INT32",
+        componentCount: 3,
+      },
+      propertyDVec4: {
+        type: "ARRAY",
+        componentType: "FLOAT64",
+        componentCount: 4,
+      },
+    };
+
+    var propertyValues = {
+      propertyVec2: [
+        new Cartesian2(0.1, 0.8),
+        new Cartesian2(0.3, 0.5),
+        new Cartesian2(0.7, 0.2),
+      ],
+      propertyIVec3: [
+        new Cartesian3(1, 2, 3),
+        new Cartesian3(4, 5, 6),
+        new Cartesian3(7, 8, 9),
+      ],
+      propertyDVec4: [
+        new Cartesian4(0.1, 0.2, 0.3, 0.4),
+        new Cartesian4(0.3, 0.2, 0.1, 0.0),
+        new Cartesian4(0.1, 0.2, 0.4, 0.5),
+      ],
+    };
+
+    var packedValues = {
+      propertyVec2: [
+        [0.1, 0.8],
+        [0.3, 0.5],
+        [0.7, 0.2],
+      ],
+      propertyIVec3: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      propertyDVec4: [
+        [0.1, 0.2, 0.3, 0.4],
+        [0.3, 0.2, 0.1, 0.0],
+        [0.1, 0.2, 0.4, 0.5],
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = propertyValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var packed = property.packVectorTypes(value);
+          expect(packed).toEqual(packedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
+  it("packVectorTypes does not affect non-vectors", function () {
+    if (!FeatureDetection.supportsBigInt()) {
+      return;
+    }
+
+    var properties = {
+      propertyString: {
+        type: "STRING",
+      },
+      propertyBoolean: {
+        type: "BOOLEAN",
+      },
+      propertyArray: {
+        type: "ARRAY",
+        componentType: "UINT8",
+        componentCount: 5,
+      },
+      propertyBigIntArray: {
+        type: "ARRAY",
+        componentType: "UINT64",
+        componentCount: 2,
+      },
+    };
+
+    var propertyValues = {
+      propertyString: ["a", "bc", ""],
+      propertyBoolean: [true, false, false],
+      propertyArray: [
+        [1, 2, 3, 4, 5],
+        [0, 1, 2, 3, 4],
+        [1, 4, 9, 16, 25],
+      ],
+      propertyBigIntArray: [
+        [BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(1), BigInt(3)], // eslint-disable-line
+        [BigInt(45), BigInt(32)], // eslint-disable-line
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = propertyValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var packed = property.packVectorTypes(value);
+          expect(packed).toEqual(value);
+        }
+      }
+    }
+  });
+
+  it("unpackVectorTypes unpacks vectors", function () {
+    var properties = {
+      propertyVec2: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 2,
+      },
+      propertyIVec3: {
+        type: "ARRAY",
+        componentType: "INT32",
+        componentCount: 3,
+      },
+      propertyDVec4: {
+        type: "ARRAY",
+        componentType: "FLOAT64",
+        componentCount: 4,
+      },
+    };
+
+    var propertyValues = {
+      propertyVec2: [
+        new Cartesian2(0.1, 0.8),
+        new Cartesian2(0.3, 0.5),
+        new Cartesian2(0.7, 0.2),
+      ],
+      propertyIVec3: [
+        new Cartesian3(1, 2, 3),
+        new Cartesian3(4, 5, 6),
+        new Cartesian3(7, 8, 9),
+      ],
+      propertyDVec4: [
+        new Cartesian4(0.1, 0.2, 0.3, 0.4),
+        new Cartesian4(0.3, 0.2, 0.1, 0.0),
+        new Cartesian4(0.1, 0.2, 0.4, 0.5),
+      ],
+    };
+
+    var packedValues = {
+      propertyVec2: [
+        [0.1, 0.8],
+        [0.3, 0.5],
+        [0.7, 0.2],
+      ],
+      propertyIVec3: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      propertyDVec4: [
+        [0.1, 0.2, 0.3, 0.4],
+        [0.3, 0.2, 0.1, 0.0],
+        [0.1, 0.2, 0.4, 0.5],
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = propertyValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = packedValues[propertyId][i];
+          var unpacked = property.unpackVectorTypes(value);
+          expect(unpacked).toEqual(propertyValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
+  it("unpackVectorTypes does not affect non-vectors", function () {
+    if (!FeatureDetection.supportsBigInt()) {
+      return;
+    }
+
+    var properties = {
+      propertyString: {
+        type: "STRING",
+      },
+      propertyBoolean: {
+        type: "BOOLEAN",
+      },
+      propertyArray: {
+        type: "ARRAY",
+        componentType: "UINT8",
+        componentCount: 5,
+      },
+      propertyBigIntArray: {
+        type: "ARRAY",
+        componentType: "UINT64",
+        componentCount: 2,
+      },
+    };
+
+    var propertyValues = {
+      propertyString: ["a", "bc", ""],
+      propertyBoolean: [true, false, false],
+      propertyArray: [
+        [1, 2, 3, 4, 5],
+        [0, 1, 2, 3, 4],
+        [1, 4, 9, 16, 25],
+      ],
+      propertyBigIntArray: [
+        [BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(1), BigInt(3)], // eslint-disable-line
+        [BigInt(45), BigInt(32)], // eslint-disable-line
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = propertyValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var unpacked = property.unpackVectorTypes(value);
+          expect(unpacked).toEqual(value);
         }
       }
     }
