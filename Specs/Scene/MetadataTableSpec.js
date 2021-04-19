@@ -377,7 +377,7 @@ describe("Scene/MetadataTable", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setProperty", function () {
+  it("setProperty sets values", function () {
     var properties = {
       propertyInt8: {
         type: "INT8",
@@ -396,17 +396,21 @@ describe("Scene/MetadataTable", function () {
 
     var length = valuesToSet.length;
     for (var i = 0; i < length; ++i) {
-      metadataTable.setProperty(i, "propertyInt8", valuesToSet[i]);
+      expect(metadataTable.setProperty(i, "propertyInt8", valuesToSet[i])).toBe(
+        true
+      );
       var value = metadataTable.getProperty(i, "propertyInt8");
       expect(value).toEqual(valuesToSet[i]);
       // Test setting / getting again
-      metadataTable.setProperty(i, "propertyInt8", valuesToSet[i]);
+      expect(metadataTable.setProperty(i, "propertyInt8", valuesToSet[i])).toBe(
+        true
+      );
       value = metadataTable.getProperty(i, "propertyInt8");
       expect(value).toEqual(valuesToSet[i]);
     }
   });
 
-  it("setProperty throws if the property ID doesn't exist", function () {
+  it("setProperty returns false if the property ID doesn't exist", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -420,9 +424,7 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    expect(function () {
-      metadataTable.setProperty(0, "name", "A");
-    }).toThrowDeveloperError();
+    expect(metadataTable.setProperty(0, "name", "A")).toBe(false);
   });
 
   it("setProperty throws without index", function () {
@@ -626,7 +628,7 @@ describe("Scene/MetadataTable", function () {
     expect(metadataTable.getPropertyBySemantic(0, "_HEIGHT")).toBeUndefined();
   });
 
-  it("setPropertyBySemantic throws if the semantic doesn't exist", function () {
+  it("setPropertyBySemantic returns false if the semantic doesn't exist", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -640,9 +642,7 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    expect(function () {
-      metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0);
-    }).toThrowDeveloperError();
+    expect(metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0)).toBe(false);
   });
 
   it("setPropertyBySemantic sets property value", function () {
@@ -660,7 +660,7 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0);
+    expect(metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0)).toBe(true);
     expect(metadataTable.getPropertyBySemantic(0, "_HEIGHT")).toBe(20.0);
   });
 

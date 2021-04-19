@@ -5,7 +5,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
@@ -22,7 +21,7 @@ import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
-import AttributeType from "./AttributeType.js";
+import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import CullFace from "./CullFace.js";
@@ -170,163 +169,11 @@ function initializeHierarchy(batchTable, jsonHeader, binaryBody) {
     return;
   }
 
-  return initializeHierarchyValues(hierarchy, binaryBody);
+  return new BatchTableHierarchy({
+    extension: hierarchy,
+    binaryBody: binaryBody,
+  });
 }
-
-function initializeHierarchyValues(hierarchyJson, binaryBody) {
-  var i;
-  var classId;
-  var binaryAccessor;
-
-  var instancesLength = hierarchyJson.instancesLength;
-  var classes = hierarchyJson.classes;
-  var classIds = hierarchyJson.classIds;
-  var parentCounts = hierarchyJson.parentCounts;
-  var parentIds = hierarchyJson.parentIds;
-  var parentIdsLength = instancesLength;
-
-  if (defined(classIds.byteOffset)) {
-    classIds.componentType = defaultValue(
-      classIds.componentType,
-      ComponentDatatype.UNSIGNED_SHORT
-    );
-    classIds.type = AttributeType.SCALAR;
-    binaryAccessor = getBinaryAccessor(classIds);
-    classIds = binaryAccessor.createArrayBufferView(
-      binaryBody.buffer,
-      binaryBody.byteOffset + classIds.byteOffset,
-      instancesLength
-    );
-  }
-
-  var parentIndexes;
-  if (defined(parentCounts)) {
-    if (defined(parentCounts.byteOffset)) {
-      parentCounts.componentType = defaultValue(
-        parentCounts.componentType,
-        ComponentDatatype.UNSIGNED_SHORT
-      );
-      parentCounts.type = AttributeType.SCALAR;
-      binaryAccessor = getBinaryAccessor(parentCounts);
-      parentCounts = binaryAccessor.createArrayBufferView(
-        binaryBody.buffer,
-        binaryBody.byteOffset + parentCounts.byteOffset,
-        instancesLength
-      );
-    }
-    parentIndexes = new Uint16Array(instancesLength);
-    parentIdsLength = 0;
-    for (i = 0; i < instancesLength; ++i) {
-      parentIndexes[i] = parentIdsLength;
-      parentIdsLength += parentCounts[i];
-    }
-  }
-
-  if (defined(parentIds) && defined(parentIds.byteOffset)) {
-    parentIds.componentType = defaultValue(
-      parentIds.componentType,
-      ComponentDatatype.UNSIGNED_SHORT
-    );
-    parentIds.type = AttributeType.SCALAR;
-    binaryAccessor = getBinaryAccessor(parentIds);
-    parentIds = binaryAccessor.createArrayBufferView(
-      binaryBody.buffer,
-      binaryBody.byteOffset + parentIds.byteOffset,
-      parentIdsLength
-    );
-  }
-
-  var classesLength = classes.length;
-  for (i = 0; i < classesLength; ++i) {
-    var classInstancesLength = classes[i].length;
-    var properties = classes[i].instances;
-    var binaryProperties = getBinaryProperties(
-      classInstancesLength,
-      properties,
-      binaryBody
-    );
-    classes[i].instances = combine(binaryProperties, properties);
-  }
-
-  var classCounts = arrayFill(new Array(classesLength), 0);
-  var classIndexes = new Uint16Array(instancesLength);
-  for (i = 0; i < instancesLength; ++i) {
-    classId = classIds[i];
-    classIndexes[i] = classCounts[classId];
-    ++classCounts[classId];
-  }
-
-  var hierarchy = {
-    classes: classes,
-    classIds: classIds,
-    classIndexes: classIndexes,
-    parentCounts: parentCounts,
-    parentIndexes: parentIndexes,
-    parentIds: parentIds,
-  };
-
-  //>>includeStart('debug', pragmas.debug);
-  validateHierarchy(hierarchy);
-  //>>includeEnd('debug');
-
-  return hierarchy;
-}
-
-//>>includeStart('debug', pragmas.debug);
-var scratchValidateStack = [];
-function validateHierarchy(hierarchy) {
-  var stack = scratchValidateStack;
-  stack.length = 0;
-
-  var classIds = hierarchy.classIds;
-  var instancesLength = classIds.length;
-
-  for (var i = 0; i < instancesLength; ++i) {
-    validateInstance(hierarchy, i, stack);
-  }
-}
-
-function validateInstance(hierarchy, instanceIndex, stack) {
-  var parentCounts = hierarchy.parentCounts;
-  var parentIds = hierarchy.parentIds;
-  var parentIndexes = hierarchy.parentIndexes;
-  var classIds = hierarchy.classIds;
-  var instancesLength = classIds.length;
-
-  if (!defined(parentIds)) {
-    // No need to validate if there are no parents
-    return;
-  }
-
-  if (instanceIndex >= instancesLength) {
-    throw new DeveloperError(
-      "Parent index " +
-        instanceIndex +
-        " exceeds the total number of instances: " +
-        instancesLength
-    );
-  }
-  if (stack.indexOf(instanceIndex) > -1) {
-    throw new DeveloperError(
-      "Circular dependency detected in the batch table hierarchy."
-    );
-  }
-
-  stack.push(instanceIndex);
-  var parentCount = defined(parentCounts) ? parentCounts[instanceIndex] : 1;
-  var parentIndex = defined(parentCounts)
-    ? parentIndexes[instanceIndex]
-    : instanceIndex;
-  for (var i = 0; i < parentCount; ++i) {
-    var parentId = parentIds[parentIndex + i];
-    // Stop the traversal when the instance has no parent (its parentId equals itself), else continue the traversal.
-    if (parentId !== instanceIndex) {
-      validateInstance(hierarchy, parentId, stack);
-    }
-  }
-  stack.pop(instanceIndex);
-}
-//>>includeEnd('debug');
 
 function getBinaryProperties(featuresLength, properties, binaryBody) {
   var binaryProperties;
@@ -617,198 +464,18 @@ function setBinaryProperty(binaryProperty, index, value) {
   }
 }
 
-// The size of this array equals the maximum instance count among all loaded tiles, which has the potential to be large.
-var scratchVisited = [];
-var scratchStack = [];
-var marker = 0;
-function traverseHierarchyMultipleParents(
-  hierarchy,
-  instanceIndex,
-  endConditionCallback
-) {
-  var classIds = hierarchy.classIds;
-  var parentCounts = hierarchy.parentCounts;
-  var parentIds = hierarchy.parentIds;
-  var parentIndexes = hierarchy.parentIndexes;
-  var instancesLength = classIds.length;
-
-  // Ignore instances that have already been visited. This occurs in diamond inheritance situations.
-  // Use a marker value to indicate that an instance has been visited, which increments with each run.
-  // This is more efficient than clearing the visited array every time.
-  var visited = scratchVisited;
-  visited.length = Math.max(visited.length, instancesLength);
-  var visitedMarker = ++marker;
-
-  var stack = scratchStack;
-  stack.length = 0;
-  stack.push(instanceIndex);
-
-  while (stack.length > 0) {
-    instanceIndex = stack.pop();
-    if (visited[instanceIndex] === visitedMarker) {
-      // This instance has already been visited, stop traversal
-      continue;
-    }
-    visited[instanceIndex] = visitedMarker;
-    var result = endConditionCallback(hierarchy, instanceIndex);
-    if (defined(result)) {
-      // The end condition was met, stop the traversal and return the result
-      return result;
-    }
-    var parentCount = parentCounts[instanceIndex];
-    var parentIndex = parentIndexes[instanceIndex];
-    for (var i = 0; i < parentCount; ++i) {
-      var parentId = parentIds[parentIndex + i];
-      // Stop the traversal when the instance has no parent (its parentId equals itself)
-      // else add the parent to the stack to continue the traversal.
-      if (parentId !== instanceIndex) {
-        stack.push(parentId);
-      }
-    }
-  }
-}
-
-function traverseHierarchySingleParent(
-  hierarchy,
-  instanceIndex,
-  endConditionCallback
-) {
-  var hasParent = true;
-  while (hasParent) {
-    var result = endConditionCallback(hierarchy, instanceIndex);
-    if (defined(result)) {
-      // The end condition was met, stop the traversal and return the result
-      return result;
-    }
-    var parentId = hierarchy.parentIds[instanceIndex];
-    hasParent = parentId !== instanceIndex;
-    instanceIndex = parentId;
-  }
-}
-
-function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
-  // Traverse over the hierarchy and process each instance with the endConditionCallback.
-  // When the endConditionCallback returns a value, the traversal stops and that value is returned.
-  var parentCounts = hierarchy.parentCounts;
-  var parentIds = hierarchy.parentIds;
-  if (!defined(parentIds)) {
-    return endConditionCallback(hierarchy, instanceIndex);
-  } else if (defined(parentCounts)) {
-    return traverseHierarchyMultipleParents(
-      hierarchy,
-      instanceIndex,
-      endConditionCallback
-    );
-  }
-  return traverseHierarchySingleParent(
-    hierarchy,
-    instanceIndex,
-    endConditionCallback
-  );
-}
-
-function hasPropertyInHierarchy(batchTable, batchId, name) {
-  var hierarchy = batchTable._batchTableHierarchy;
-  var result = traverseHierarchy(hierarchy, batchId, function (
-    hierarchy,
-    instanceIndex
-  ) {
-    var classId = hierarchy.classIds[instanceIndex];
-    var instances = hierarchy.classes[classId].instances;
-    if (defined(instances[name])) {
-      return true;
-    }
-  });
-  return defined(result);
-}
-
-function getPropertyNamesInHierarchy(batchTable, batchId, results) {
-  var hierarchy = batchTable._batchTableHierarchy;
-  traverseHierarchy(hierarchy, batchId, function (hierarchy, instanceIndex) {
-    var classId = hierarchy.classIds[instanceIndex];
-    var instances = hierarchy.classes[classId].instances;
-    for (var name in instances) {
-      if (instances.hasOwnProperty(name)) {
-        if (results.indexOf(name) === -1) {
-          results.push(name);
-        }
-      }
-    }
-  });
-}
-
-function getHierarchyProperty(batchTable, batchId, name) {
-  var hierarchy = batchTable._batchTableHierarchy;
-  return traverseHierarchy(hierarchy, batchId, function (
-    hierarchy,
-    instanceIndex
-  ) {
-    var classId = hierarchy.classIds[instanceIndex];
-    var instanceClass = hierarchy.classes[classId];
-    var indexInClass = hierarchy.classIndexes[instanceIndex];
-    var propertyValues = instanceClass.instances[name];
-    if (defined(propertyValues)) {
-      if (defined(propertyValues.typedArray)) {
-        return getBinaryProperty(propertyValues, indexInClass);
-      }
-      return clone(propertyValues[indexInClass], true);
-    }
-  });
-}
-
-function setHierarchyProperty(batchTable, batchId, name, value) {
-  var hierarchy = batchTable._batchTableHierarchy;
-  var result = traverseHierarchy(hierarchy, batchId, function (
-    hierarchy,
-    instanceIndex
-  ) {
-    var classId = hierarchy.classIds[instanceIndex];
-    var instanceClass = hierarchy.classes[classId];
-    var indexInClass = hierarchy.classIndexes[instanceIndex];
-    var propertyValues = instanceClass.instances[name];
-    if (defined(propertyValues)) {
-      //>>includeStart('debug', pragmas.debug);
-      if (instanceIndex !== batchId) {
-        throw new DeveloperError(
-          'Inherited property "' + name + '" is read-only.'
-        );
-      }
-      //>>includeEnd('debug');
-      if (defined(propertyValues.typedArray)) {
-        setBinaryProperty(propertyValues, indexInClass, value);
-      } else {
-        propertyValues[indexInClass] = clone(value, true);
-      }
-      return true;
-    }
-  });
-  return defined(result);
-}
-
 Cesium3DTileBatchTable.prototype.isClass = function (batchId, className) {
   //>>includeStart('debug', pragmas.debug);
   checkBatchId(batchId, this.featuresLength);
   Check.typeOf.string("className", className);
   //>>includeEnd('debug');
 
-  // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
   var hierarchy = this._batchTableHierarchy;
   if (!defined(hierarchy)) {
     return false;
   }
 
-  // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
-  var result = traverseHierarchy(hierarchy, batchId, function (
-    hierarchy,
-    instanceIndex
-  ) {
-    var classId = hierarchy.classIds[instanceIndex];
-    var instanceClass = hierarchy.classes[classId];
-    if (instanceClass.name === className) {
-      return true;
-    }
-  });
-  return defined(result);
+  return hierarchy.isClass(batchId, className);
 };
 
 Cesium3DTileBatchTable.prototype.isExactClass = function (batchId, className) {
@@ -828,9 +495,8 @@ Cesium3DTileBatchTable.prototype.getExactClassName = function (batchId) {
   if (!defined(hierarchy)) {
     return undefined;
   }
-  var classId = hierarchy.classIds[batchId];
-  var instanceClass = hierarchy.classes[classId];
-  return instanceClass.name;
+
+  return hierarchy.getClassName(batchId);
 };
 
 Cesium3DTileBatchTable.prototype.hasProperty = function (batchId, name) {
@@ -842,7 +508,7 @@ Cesium3DTileBatchTable.prototype.hasProperty = function (batchId, name) {
   return (
     defined(this._properties[name]) ||
     (defined(this._batchTableHierarchy) &&
-      hasPropertyInHierarchy(this, batchId, name))
+      this._batchTableHierarchy.hasProperty(batchId, name))
   );
 };
 
@@ -857,11 +523,14 @@ Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   results = defined(results) ? results : [];
   results.length = 0;
 
-  var propertyNames = Object.keys(this._properties);
-  results.push.apply(results, propertyNames);
+  var scratchPropertyNames = Object.keys(this._properties);
+  results.push.apply(results, scratchPropertyNames);
 
   if (defined(this._batchTableHierarchy)) {
-    getPropertyNamesInHierarchy(this, batchId, results);
+    results.push.apply(
+      results,
+      this._batchTableHierarchy.getPropertyIds(batchId, scratchPropertyNames)
+    );
   }
 
   return results;
@@ -886,7 +555,10 @@ Cesium3DTileBatchTable.prototype.getProperty = function (batchId, name) {
   }
 
   if (defined(this._batchTableHierarchy)) {
-    var hierarchyProperty = getHierarchyProperty(this, batchId, name);
+    var hierarchyProperty = this._batchTableHierarchy.getProperty(
+      batchId,
+      name
+    );
     if (defined(hierarchyProperty)) {
       return hierarchyProperty;
     }
@@ -911,7 +583,7 @@ Cesium3DTileBatchTable.prototype.setProperty = function (batchId, name, value) {
   }
 
   if (defined(this._batchTableHierarchy)) {
-    if (setHierarchyProperty(this, batchId, name, value)) {
+    if (this._batchTableHierarchy.setProperty(batchId, name, value)) {
       return;
     }
   }

@@ -1,8 +1,5 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import FeatureTable from "./FeatureTable.js";
-import FeatureTexture from "./FeatureTexture.js";
 
 /**
  * An object containing feature metadata.
@@ -11,10 +8,12 @@ import FeatureTexture from "./FeatureTexture.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} options.extension The extension JSON object.
  * @param {MetadataSchema} options.schema The parsed schema.
- * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
- * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object.<String, FeatureTable>} [options.featureTables] A dictionary mapping feature table IDs to feature table objects.
+ * @param {Object.<String, FeatureTexture>} [options.featureTextures] A dictionary mapping feature texture IDs to feature texture objects.
+ * @param {Object} [options.statistics] Statistics about metadata
+ * @param {Object} [options.extras] Extra user-defined properties
+ * @param {Object} [options.extensions] An object containing extensions
  *
  * @alias FeatureMetadata
  * @constructor
@@ -23,51 +22,17 @@ import FeatureTexture from "./FeatureTexture.js";
  */
 function FeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var extension = options.extension;
-
-  // The calling code is responsible for loading the schema.
-  // This keeps metadata parsing synchronous.
-  var schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.extension", extension);
-  Check.typeOf.object("options.schema", schema);
+  Check.typeOf.object("options.schema", options.schema);
   //>>includeEnd('debug');
 
-  var featureTables = {};
-  if (defined(extension.featureTables)) {
-    for (var featureTableId in extension.featureTables) {
-      if (extension.featureTables.hasOwnProperty(featureTableId)) {
-        var featureTable = extension.featureTables[featureTableId];
-        featureTables[featureTableId] = new FeatureTable({
-          featureTable: featureTable,
-          class: schema.classes[featureTable.class],
-          bufferViews: options.bufferViews,
-        });
-      }
-    }
-  }
-
-  var featureTextures = {};
-  if (defined(extension.featureTextures)) {
-    for (var featureTextureId in extension.featureTextures) {
-      if (extension.featureTextures.hasOwnProperty(featureTextureId)) {
-        var featureTexture = extension.featureTextures[featureTextureId];
-        featureTextures[featureTextureId] = new FeatureTexture({
-          featureTexture: featureTexture,
-          class: schema.classes[featureTexture.class],
-          textures: options.textures,
-        });
-      }
-    }
-  }
-
-  this._schema = schema;
-  this._featureTables = featureTables;
-  this._featureTextures = featureTextures;
-  this._statistics = extension.statistics;
-  this._extras = extension.extras;
-  this._extensions = extension.extensions;
+  this._schema = options.schema;
+  this._featureTables = options.featureTables;
+  this._featureTextures = options.featureTextures;
+  this._statistics = options.statistics;
+  this._extras = options.extras;
+  this._extensions = options.extensions;
 }
 
 Object.defineProperties(FeatureMetadata.prototype, {

@@ -122,10 +122,10 @@ ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given ID doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
-  this._metadataTable.setProperty(this._entityId, propertyId, value);
+  return this._metadataTable.setProperty(this._entityId, propertyId, value);
 };
 
 /**
@@ -143,11 +143,15 @@ ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given semantic doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  */
 ImplicitTileMetadata.prototype.setPropertyBySemantic = function (
   semantic,
   value
 ) {
-  this._metadataTable.setPropertyBySemantic(this._entityId, semantic, value);
+  return this._metadataTable.setPropertyBySemantic(
+    this._entityId,
+    semantic,
+    value
+  );
 };

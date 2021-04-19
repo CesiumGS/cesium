@@ -12,7 +12,7 @@ import Axis from "./Axis.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import ClassificationModel from "./ClassificationModel.js";
-import FeatureMetadata from "./FeatureMetadata.js";
+import parseFeatureMetadata from "./parseFeatureMetadata.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataType from "./MetadataType.js";
 import Model from "./Model.js";
@@ -302,7 +302,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     }
 
     var extension = gltf.extensions.EXT_feature_metadata;
-    var metadata = new FeatureMetadata({
+    var metadata = parseFeatureMetadata({
       extension: extension,
       schema: new MetadataSchema(extension.schema),
       bufferViews: bufferViews,

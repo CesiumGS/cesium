@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import when from "../ThirdParty/when.js";
-import FeatureMetadata from "./FeatureMetadata.js";
+import parseFeatureMetadata from "./parseFeatureMetadata.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -131,7 +131,7 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       var textures = results[1];
       var schema = results[2];
 
-      that._featureMetadata = new FeatureMetadata({
+      that._featureMetadata = parseFeatureMetadata({
         extension: that._extension,
         schema: schema,
         bufferViews: bufferViews,

@@ -209,16 +209,18 @@ MetadataTester.createFeatureTable = function (options) {
     spyOn(FeatureDetection, "supportsBigUint64Array").and.returnValue(false);
   }
 
-  return new FeatureTable({
-    featureTable: {
-      class: "classId",
-      count: count,
-      properties: properties,
-      extras: options.extras,
-      extensions: options.extensions,
-    },
+  var metadataTable = new MetadataTable({
+    count: count,
     class: classDefinition,
     bufferViews: bufferViews,
+    properties: properties,
+  });
+
+  return new FeatureTable({
+    metadataTable: metadataTable,
+    count: count,
+    extras: options.extras,
+    extensions: options.extensions,
   });
 };
 
