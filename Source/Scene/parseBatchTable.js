@@ -20,7 +20,7 @@ import MetadataSchema from "./MetadataSchema.js";
  * @param {Number} options.count The number of features in the batch table.
  * @param {Object} options.batchTable The batch table JSON
  * @param {Uint8Array} [options.binaryBody] The batch table binary body
- * @return {FeatureMetadata} a transcoded feature metadata object
+ * @return {FeatureMetadata} A transcoded feature metadata object
  *
  * @private
  */
@@ -193,7 +193,7 @@ function transcodeBinaryProperties(featureCount, binaryProperties, binaryBody) {
  * <code>EXT_feature_metadata</code> type definition
  *
  * @param {Object} property The batch table property definition
- * @param {Object} The corresponding feature metadata property definition
+ * @return {Object} The corresponding feature metadata property definition
  * @private
  */
 function transcodePropertyType(property) {

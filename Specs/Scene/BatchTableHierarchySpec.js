@@ -374,7 +374,6 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(hierarchy.hasProperty(2, "zone_name")).toEqual(true); // check door1
   });
 
-  //>>includeStart('debug', pragmas.debug);
   // Circular dependencies are only caught in debug builds.
   it("throws if hierarchy has a circular dependency", function () {
     // window0 -> door0 -> building0 -> window0
@@ -451,7 +450,6 @@ describe("Scene/BatchTableHierarchy", function () {
       });
     }).toThrowDeveloperError();
   });
-  //>>includeEnd('debug');
 
   it("throws if an instance's parentId exceeds instancesLength", function () {
     var extension = {

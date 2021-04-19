@@ -14,7 +14,7 @@ import FeatureMetadata from "./FeatureMetadata.js";
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
- * @return {FeatureMetadata} a feature metadata object
+ * @return {FeatureMetadata} A feature metadata object
  */
 export default function parseFeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
