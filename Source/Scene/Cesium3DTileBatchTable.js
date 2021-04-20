@@ -44,8 +44,6 @@ function Cesium3DTileBatchTable(
    */
   this.featuresLength = featuresLength;
 
-  this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
-
   var extensions;
   if (defined(batchTableJson)) {
     extensions = batchTableJson.extensions;
@@ -954,7 +952,8 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
 };
 
 function getStyleCommandsNeeded(batchTable) {
-  var translucentFeaturesLength = batchTable._translucentFeaturesLength;
+  var translucentFeaturesLength =
+    batchTable._batchTexture.translucentFeaturesLength;
 
   if (translucentFeaturesLength === 0) {
     return StyleCommandsNeeded.ALL_OPAQUE;

@@ -93,29 +93,12 @@ describe(
     it("setShow sets show", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
-      // Batch table resources are undefined by default
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-
-      // Check that batch table resources are still undefined because value is true by default
-      batchTable.setShow(0, true);
-      batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-      expect(batchTable.getShow(0)).toEqual(true);
+      // Show is true by default
+      expect(batchTable.getShow(0)).toBe(true);
 
       // Check that batch values are dirty and resources are created when value changes
       batchTable.setShow(0, false);
-      expect(batchTable._batchValuesDirty).toEqual(true);
       batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeDefined();
-      expect(batchTable._batchTexture).toBeDefined();
-      expect(batchTable._batchValuesDirty).toEqual(false);
-      expect(batchTable.getShow(0)).toEqual(false);
-
-      // Check that dirty stays false when value is the same
-      batchTable.setShow(0, false);
-      expect(batchTable._batchValuesDirty).toEqual(false);
       expect(batchTable.getShow(0)).toEqual(false);
     });
 
@@ -163,29 +146,8 @@ describe(
     it("setColor", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
-      // Batch table resources are undefined by default
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-
-      // Check that batch table resources are still undefined because value is true by default
-      batchTable.setColor(0, Color.WHITE);
-      batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-      expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
-
-      // Check that batch values are dirty and resources are created when value changes
       batchTable.setColor(0, Color.YELLOW);
-      expect(batchTable._batchValuesDirty).toEqual(true);
       batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeDefined();
-      expect(batchTable._batchTexture).toBeDefined();
-      expect(batchTable._batchValuesDirty).toEqual(false);
-      expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
-
-      // Check that dirty stays false when value is the same
-      batchTable.setColor(0, Color.YELLOW);
-      expect(batchTable._batchValuesDirty).toEqual(false);
       expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
     });
 

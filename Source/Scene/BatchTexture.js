@@ -63,6 +63,7 @@ export default function BatchTexture(options) {
     textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
   }
 
+  this._translucentFeaturesLength = 0;
   this._featuresLength = featuresLength;
   this._textureDimensions = textureDimensions;
   this._textureStep = textureStep;
@@ -71,6 +72,20 @@ export default function BatchTexture(options) {
 }
 
 Object.defineProperties(BatchTexture.prototype, {
+  /**
+   * Number of features that are translucent
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  translucentFeaturesLength: {
+    get: function () {
+      return this._translucentFeaturesLength;
+    },
+  },
+
   /**
    * Total size of all GPU resources used by this batch texture.
    *
