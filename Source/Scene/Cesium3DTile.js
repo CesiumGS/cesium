@@ -32,7 +32,6 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
-import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
@@ -197,20 +196,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   var content;
   var hasEmptyContent = false;
-  var hasMultipleContents = false;
   var contentState;
   var contentResource;
   var serverKey;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
-    hasMultipleContents = true;
-    contentState = Cesium3DTileContentState.UNLOADED;
-    // Each content may have its own URI, but they all need to be resolved
-    // relative to the tileset, so the base resource is used.
-    contentResource = baseResource.clone();
-  } else if (defined(contentHeader)) {
+  if (defined(contentHeader)) {
     var contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
       Cesium3DTile._deprecationWarning(
@@ -277,19 +269,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasImplicitContent = false;
-
-  /**
-   * When <code>true</code>, the tile has multiple contents via the
-   * <code>3DTILES_multiple_contents</code> extension.
-   *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
-   *
-   * @type {Boolean}
-   * @readonly
-   *
-   * @private
-   */
-  this.hasMultipleContents = hasMultipleContents;
 
   var metadata;
   if (has3DTilesExtension(header, "3DTILES_metadata")) {
@@ -982,12 +961,7 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
  * @private
  */
 Cesium3DTile.prototype.updateExpiration = function () {
-  if (
-    defined(this.expireDate) &&
-    this.contentReady &&
-    !this.hasEmptyContent &&
-    !this.hasMultipleContents
-  ) {
+  if (defined(this.expireDate) && this.contentReady && !this.hasEmptyContent) {
     var now = JulianDate.now(scratchJulianDate);
     if (JulianDate.lessThan(this.expireDate, now)) {
       this._contentState = Cesium3DTileContentState.EXPIRED;
@@ -1036,107 +1010,8 @@ Cesium3DTile.prototype.requestContent = function () {
     return 0;
   }
 
-  if (this.hasMultipleContents) {
-    return requestMultipleContents(this);
-  }
-
   return requestSingleContent(this);
 };
-
-/**
- * The <code>3DTILES_multiple_contents</code> extension allows multiple
- * {@link Cesium3DTileContent} within a single tile. Due to differences
- * in request scheduling, this is handled separately.
- * <p>
- * This implementation of <code>3DTILES_multiple_contents</code> does not
- * support tile expiry like requestSingleContent does. If this changes,
- * note that the resource.setQueryParameters() details must go inside {@link Multiple3DTileContent} since that is per-request.
- * </p>
- *
- * @private
- */
-function requestMultipleContents(tile) {
-  var multipleContents = tile._content;
-  var tileset = tile._tileset;
-
-  if (!defined(multipleContents)) {
-    // Create the content object immediately, it will handle scheduling
-    // requests for inner contents.
-    var extensionHeader = tile._header.extensions["3DTILES_multiple_contents"];
-    multipleContents = new Multiple3DTileContent(
-      tileset,
-      tile,
-      tile._contentResource.clone(),
-      extensionHeader
-    );
-    tile._content = multipleContents;
-  }
-
-  var backloggedRequestCount = multipleContents.requestInnerContents();
-  if (backloggedRequestCount > 0) {
-    return backloggedRequestCount;
-  }
-
-  tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = when.defer();
-  tile._contentReadyPromise = when.defer();
-
-  multipleContents.contentsFetchedPromise
-    .then(function () {
-      if (tile._contentState !== Cesium3DTileContentState.LOADING) {
-        // tile was canceled, short circuit.
-        return;
-      }
-
-      if (tile.isDestroyed()) {
-        multipleContentFailed(
-          tile,
-          tileset,
-          "Tile was unloaded while content was loading"
-        );
-        return;
-      }
-
-      tile._contentState = Cesium3DTileContentState.PROCESSING;
-      tile._contentReadyToProcessPromise.resolve(multipleContents);
-
-      return multipleContents.readyPromise.then(function (content) {
-        if (tile.isDestroyed()) {
-          multipleContentFailed(
-            tile,
-            tileset,
-            "Tile was unloaded while content was processing"
-          );
-          return;
-        }
-
-        // Refresh style for expired content
-        tile._selectedFrame = 0;
-        tile.lastStyleTime = 0.0;
-
-        JulianDate.now(tile._loadTimestamp);
-        tile._contentState = Cesium3DTileContentState.READY;
-        tile._contentReadyPromise.resolve(content);
-      });
-    })
-    .otherwise(function (error) {
-      multipleContentFailed(tile, tileset, error);
-    });
-
-  return 0;
-}
-
-function multipleContentFailed(tile, tileset, error) {
-  // note: The Multiple3DTileContent handles decrementing the number of pending
-  // requests if the state is LOADING.
-  if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
-    --tileset.statistics.numberOfTilesProcessing;
-  }
-
-  tile._contentState = Cesium3DTileContentState.FAILED;
-  tile._contentReadyPromise.reject(error);
-  tile._contentReadyToProcessPromise.reject(error);
-}
 
 function requestSingleContent(tile) {
   // it is important to clone here. The fetchArrayBuffer() below uses
@@ -1295,11 +1170,7 @@ function makeContent(tile, arrayBuffer) {
  * @private
  */
 Cesium3DTile.prototype.cancelRequests = function () {
-  if (this.hasMultipleContents) {
-    this._content.cancelRequests();
-  } else {
-    this._request.cancel();
-  }
+  this._request.cancel();
 };
 
 /**
@@ -1820,8 +1691,7 @@ function updateContent(tile, tileset, frameState) {
   var content = tile._content;
   var expiredContent = tile._expiredContent;
 
-  // expired content is not supported for 3DTILES_multiple_contents
-  if (!tile.hasMultipleContents && defined(expiredContent)) {
+  if (defined(expiredContent)) {
     if (!tile.contentReady) {
       // Render the expired content while the content loads
       expiredContent.update(tileset, frameState);

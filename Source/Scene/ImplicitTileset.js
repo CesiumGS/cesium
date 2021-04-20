@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
@@ -213,7 +214,11 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
  */
 function gatherContentHeaders(tileJson) {
   if (has3DTilesExtension(tileJson, "3DTILES_multiple_contents")) {
-    return tileJson.extensions["3DTILES_multiple_contents"].content;
+    // This extension is disabled temporarily as the specification and Cesium3DTile implementation need revision.
+    throw new DeveloperError(
+      "3DTILES_multiple_contents is not currently supported"
+    );
+    //return tileJson.extensions["3DTILES_multiple_contents"].content;
   }
 
   if (defined(tileJson.content)) {

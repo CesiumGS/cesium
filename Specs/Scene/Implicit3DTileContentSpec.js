@@ -1,9 +1,7 @@
 import {
-  Batched3DModel3DTileContent,
   Cartesian3,
   Cesium3DTile,
   Cesium3DTileRefine,
-  Cesium3DTileset,
   HeadingPitchRange,
   Implicit3DTileContent,
   ImplicitTileCoordinates,
@@ -12,7 +10,6 @@ import {
   Matrix4,
   MetadataClass,
   GroupMetadata,
-  Multiple3DTileContent,
   Resource,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
@@ -688,115 +685,9 @@ describe(
       });
     });
 
-    describe("3DTILES_multiple_contents", function () {
-      var implicitMultipleContentsUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
-
-      it("a single content is transcoded as a regular tile", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitMultipleContentsUrl
-        ).then(function (tileset) {
-          // The root tile of this tileset only has one available content
-          var transcodedRoot = tileset.root.children[0];
-          var transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRoot.content).toBeInstanceOf(
-            Batched3DModel3DTileContent
-          );
-          expect(transcodedRootHeader.content).toEqual({
-            uri: "ground/0/0/0.b3dm",
-          });
-          expect(transcodedRootHeader.extensions).not.toBeDefined();
-        });
-      });
-
-      it("multiple contents are transcoded to a tile with a 3DTILES_multiple_contents extension", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitMultipleContentsUrl
-        ).then(function (tileset) {
-          var childTiles = tileset.root.children[0].children;
-          for (var i = 0; i < childTiles.length; i++) {
-            var childTile = childTiles[i];
-            var content = childTile.content;
-            expect(content).toBeInstanceOf(Multiple3DTileContent);
-
-            var childTileHeader = childTile._header;
-            expect(childTileHeader.content).not.toBeDefined();
-          }
-        });
-      });
-
-      it("passes extensions through correctly", function () {
-        var originalLoadJson = Cesium3DTileset.loadJson;
-        var metadataExtension = {
-          group: "buildings",
-        };
-        var otherExtension = {
-          someKey: "someValue",
-        };
-
-        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
-          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-            var multiContent =
-              tilesetJson.root.extensions["3DTILES_multiple_contents"];
-            multiContent.content.forEach(function (content) {
-              content.extensions = {
-                "3DTILES_metadata": metadataExtension,
-              };
-            });
-
-            tilesetJson.root.extensions["3DTILES_extension"] = otherExtension;
-            return tilesetJson;
-          });
-        });
-
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitMultipleContentsUrl
-        ).then(function (tileset) {
-          // the placeholder tile does not have any extensions.
-          var placeholderTile = tileset.root;
-          var placeholderHeader = placeholderTile._header;
-          expect(placeholderHeader.extensions).not.toBeDefined();
-          expect(placeholderHeader.content.extensions).not.toBeDefined();
-
-          var transcodedRoot = placeholderTile.children[0];
-          var transcodedRootHeader = transcodedRoot._header;
-          expect(transcodedRootHeader.extensions).toEqual({
-            "3DTILES_extension": otherExtension,
-          });
-          expect(transcodedRootHeader.content.extensions).toEqual({
-            "3DTILES_metadata": metadataExtension,
-          });
-
-          var childTiles = transcodedRoot.children;
-          for (var i = 0; i < childTiles.length; i++) {
-            var childTile = childTiles[i];
-
-            var childTileHeader = childTile._header;
-            expect(childTileHeader.extensions["3DTILES_extension"]).toEqual(
-              otherExtension
-            );
-
-            var innerContentHeaders =
-              childTileHeader.extensions["3DTILES_multiple_contents"].content;
-
-            innerContentHeaders.forEach(function (header) {
-              expect(header.extensions).toEqual({
-                "3DTILES_metadata": metadataExtension,
-              });
-            });
-          }
-        });
-      });
-    });
-
     describe("3DTILES_metadata", function () {
       var implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
-      var implicitGroupMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
 
       var metadataClass = new MetadataClass({
         id: "test",
@@ -830,39 +721,6 @@ describe(
             expect(content.groupMetadata).toBe(groupMetadata);
           }
         );
-      });
-
-      it("group metadata gets transcoded correctly", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitGroupMetadataUrl
-        ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
-          var tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-
-          var groups = tileset.metadata.groups;
-          var ground = groups.ground;
-          expect(ground.getProperty("color")).toEqual([120, 68, 32]);
-          expect(ground.getProperty("priority")).toBe(0);
-
-          var sky = groups.sky;
-          expect(sky.getProperty("color")).toEqual([206, 237, 242]);
-          expect(sky.getProperty("priority")).toBe(1);
-
-          tiles.forEach(function (tile) {
-            if (tile.hasMultipleContents) {
-              // child tiles have multiple contents
-              var contents = tile.content.innerContents;
-              expect(contents[0].groupMetadata).toBe(ground);
-              expect(contents[1].groupMetadata).toBe(sky);
-            } else {
-              // parent tile is a single B3DM tile
-              expect(tile.content.groupMetadata).toBe(ground);
-            }
-          });
-        });
       });
     });
   },
