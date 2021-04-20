@@ -12,6 +12,20 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 
+/**
+ * An object that manages color, show/hide and picking textures for a batch
+ * table or feature table.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Number} featuresLength The number of features in the batch table or feature table
+ * @param {Cesium3DTileContent} content The content this batch texture belongs to. Used for creating the picking texture.
+ * @param {Function} [colorChangedCallback] A callback function that is called whenever the color of a feature changes.
+ *
+ * @alias BatchTexture
+ * @constructor
+ *
+ * @private
+ */
 export default function BatchTexture(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.featuresLength", options.featuresLength);
@@ -49,13 +63,22 @@ export default function BatchTexture(options) {
     textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
   }
 
+  this._featuresLength = featuresLength;
   this._textureDimensions = textureDimensions;
   this._textureStep = textureStep;
-
+  this._content = options.content;
   this._colorChangedCallback = options.colorChangedCallback;
 }
 
 Object.defineProperties(BatchTexture.prototype, {
+  /**
+   * Total size of all GPU resources used by this batch texture.
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
   memorySizeInBytes: {
     get: function () {
       var memory = 0;
@@ -69,9 +92,77 @@ Object.defineProperties(BatchTexture.prototype, {
     },
   },
 
+  /**
+   * Dimensions of the underlying batch texture.
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Cartesian2}
+   * @readonly
+   * @private
+   */
   textureDimensions: {
     get: function () {
       return this._textureDimensions;
+    },
+  },
+
+  /**
+   * Size of each texture and distance from side to center of a texel in
+   * each direction. Stored as (stepX, centerX, stepY, centerY)
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Cartesian4}
+   * @readonly
+   * @private
+   */
+  textureStep: {
+    get: function () {
+      return this._textureStep;
+    },
+  },
+
+  /**
+   * The underlying texture used for styling. The texels are accessed
+   * by batch ID, and the value is the color of this feature after accounting
+   * for show/hide settings.
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Texture}
+   * @readonly
+   * @private
+   */
+  batchTexture: {
+    get: function () {
+      return this._batchTexture;
+    },
+  },
+
+  /**
+   * The default texture to use when there are no batch values
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Texture}
+   * @readonly
+   * @private
+   */
+  defaultTexture: {
+    get: function () {
+      return this._defaultTexture;
+    },
+  },
+
+  /**
+   * The underlying texture used for picking. The texels are accessed by
+   * batch ID, and the value is the pick color.
+   *
+   * @memberof BatchTexture.prototype
+   * @type {Texture}
+   * @readonly
+   * @private
+   */
+  pickTexture: {
+    get: function () {
+      return this._pickTexture;
     },
   },
 });
@@ -98,7 +189,7 @@ function getBatchValues(batchTexture) {
 
 function getShowAlphaProperties(batchTexture) {
   if (!defined(batchTexture._showAlphaProperties)) {
-    var byteLength = 2 * batchTexture.featuresLength;
+    var byteLength = 2 * batchTexture._featuresLength;
     var bytes = new Uint8Array(byteLength);
     // [Show = true, Alpha = 255]
     arrayFill(bytes, 255);
@@ -117,9 +208,16 @@ function checkBatchId(batchId, featuresLength) {
   }
 }
 
+/**
+ * Set whether a feature is visible.
+ *
+ * @param {Number} batchId the ID of the feature
+ * @param {Boolean} show <code>true</code> if the feature should be shown, <code>false</code> otherwise
+ * @private
+ */
 BatchTexture.prototype.setShow = function (batchId, show) {
   //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
+  checkBatchId(batchId, this._featuresLength);
   Check.typeOf.bool("show", show);
   //>>includeEnd('debug');
 
@@ -145,20 +243,33 @@ BatchTexture.prototype.setShow = function (batchId, show) {
   }
 };
 
+/**
+ * Set the show for all features at once.
+ *
+ * @param {Boolean} show <code>true</code> if the feature should be shown, <code>false</code> otherwise
+ * @private
+ */
 BatchTexture.prototype.setAllShow = function (show) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.bool("show", show);
   //>>includeEnd('debug');
 
-  var featuresLength = this.featuresLength;
+  var featuresLength = this._featuresLength;
   for (var i = 0; i < featuresLength; ++i) {
     this.setShow(i, show);
   }
 };
 
+/**
+ * Check the current show value for a feature
+ *
+ * @param {Number} batchId the ID of the feature
+ * @return {Boolean} <code>true</code> if the feature is shown, or <code>false</code> otherwise
+ * @private
+ */
 BatchTexture.prototype.getShow = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
+  checkBatchId(batchId, this._featuresLength);
   //>>includeEnd('debug');
 
   if (!defined(this._showAlphaProperties)) {
@@ -171,9 +282,18 @@ BatchTexture.prototype.getShow = function (batchId) {
 };
 
 var scratchColorBytes = new Array(4);
+
+/**
+ * Set the styling color of a feature
+ *
+ * @param {Number} batchId the ID of the feature
+ * @param {Color} color the color to assign to this feature.
+ *
+ * @private
+ */
 BatchTexture.prototype.setColor = function (batchId, color) {
   //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
+  checkBatchId(batchId, this._featuresLength);
   Check.typeOf.object("color", color);
   //>>includeEnd('debug');
 
@@ -228,20 +348,36 @@ BatchTexture.prototype.setColor = function (batchId, color) {
   }
 };
 
+/**
+ * Set the styling color for all features at once
+ *
+ * @param {Color} color the color to assign to all features.
+ *
+ * @private
+ */
 BatchTexture.prototype.setAllColor = function (color) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("color", color);
   //>>includeEnd('debug');
 
-  var featuresLength = this.featuresLength;
+  var featuresLength = this._featuresLength;
   for (var i = 0; i < featuresLength; ++i) {
     this.setColor(i, color);
   }
 };
 
+/**
+ * Get the current color of a feature
+ *
+ * @param {Number} batchId The ID of the feature
+ * @param {Color} result A color object where the result will be stored.
+ * @return {Color} The color assigned to the selected feature
+ *
+ * @private
+ */
 BatchTexture.prototype.getColor = function (batchId, result) {
   //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
+  checkBatchId(batchId, this._featuresLength);
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
@@ -264,9 +400,18 @@ BatchTexture.prototype.getColor = function (batchId, result) {
   );
 };
 
+/**
+ * Get the pick color of a feature. This feature is an RGBA encoding of the
+ * pick ID.
+ *
+ * @param {Number} batchId The ID of the feature
+ * @return {PickId} The picking color assigned to this feature
+ *
+ * @private
+ */
 BatchTexture.prototype.getPickColor = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
+  checkBatchId(batchId, this._featuresLength);
   //>>includeEnd('debug');
   return this._pickIds[batchId];
 };
@@ -288,7 +433,7 @@ function createTexture(batchTexture, context, bytes) {
 }
 
 function createPickTexture(batchTexture, context) {
-  var featuresLength = batchTexture.featuresLength;
+  var featuresLength = batchTexture._featuresLength;
   if (!defined(batchTexture._pickTexture) && featuresLength > 0) {
     var pickIds = batchTexture._pickIds;
     var byteLength = getByteLength(batchTexture);
@@ -351,10 +496,38 @@ BatchTexture.prototype.update = function (tileset, frameState) {
   }
 };
 
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <p>
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ * </p>
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see BatchTexture#destroy
+ * @private
+ */
 BatchTexture.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <p>
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ * </p>
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @example
+ * e = e && e.destroy();
+ *
+ * @see BatchTexture#isDestroyed
+ */
 BatchTexture.prototype.destroy = function () {
   this._batchTexture = this._batchTexture && this._batchTexture.destroy();
   this._pickTexture = this._pickTexture && this._pickTexture.destroy();

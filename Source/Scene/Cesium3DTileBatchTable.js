@@ -71,6 +71,7 @@ function Cesium3DTileBatchTable(
   this._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
+    content: content,
   });
 }
 
@@ -811,19 +812,22 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
     var batchUniformMap = {
       tile_batchTexture: function () {
         // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
-        return defaultValue(that._batchTexture, that._defaultTexture);
+        return defaultValue(
+          that._batchTexture.batchTexture,
+          that._batchTexture.defaultTexture
+        );
       },
       tile_textureDimensions: function () {
-        return that._textureDimensions;
+        return that._batchTexture.textureDimensions;
       },
       tile_textureStep: function () {
-        return that._textureStep;
+        return that._batchTexture.textureStep;
       },
       tile_colorBlend: function () {
         return getColorBlend(that);
       },
       tile_pickTexture: function () {
-        return that._pickTexture;
+        return that._batchTexture.pickTexture;
       },
     };
 
