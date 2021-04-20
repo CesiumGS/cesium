@@ -92,7 +92,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Vector3DTilePoints.prototype
-   * @type {Promise}
+   * @type {Promise<void>}
    * @readonly
    */
   readyPromise: {
@@ -122,7 +122,10 @@ function packBuffer(points, ellipsoid) {
   return packedBuffer;
 }
 
-var createVerticesTaskProcessor = new TaskProcessor("createVectorTilePoints");
+var createVerticesTaskProcessor = new TaskProcessor(
+  "createVectorTilePoints",
+  5
+);
 var scratchPosition = new Cartesian3();
 
 function createPoints(points, ellipsoid) {

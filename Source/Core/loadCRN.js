@@ -4,11 +4,9 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Resource from "./Resource.js";
 import TaskProcessor from "./TaskProcessor.js";
+import deprecationWarning from "./deprecationWarning.js";
 
-var transcodeTaskProcessor = new TaskProcessor(
-  "transcodeCRNToDXT",
-  Number.POSITIVE_INFINITY
-);
+var transcodeTaskProcessor = new TaskProcessor("transcodeCRNToDXT");
 
 /**
  * Asynchronously loads and parses the given URL to a CRN file or parses the raw binary data of a CRN file.
@@ -17,7 +15,7 @@ var transcodeTaskProcessor = new TaskProcessor(
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
- * @exports loadCRN
+ * @function loadCRN
  *
  * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
@@ -39,8 +37,13 @@ var transcodeTaskProcessor = new TaskProcessor(
  * @see {@link https://github.com/BinomialLLC/crunch|crunch DXTc texture compression and transcoding library}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+ * @deprecated This function has been deprecated and will be removed in CesiumJS 1.82.
  */
 function loadCRN(resourceOrUrlOrBuffer) {
+  deprecationWarning(
+    "loadCRN",
+    "loadCRN is deprecated and will be removed in CesiumJS 1.82."
+  );
   //>>includeStart('debug', pragmas.debug);
   if (!defined(resourceOrUrlOrBuffer)) {
     throw new DeveloperError("resourceOrUrlOrBuffer is required.");

@@ -616,6 +616,7 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
  * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
  *
  * @exception {DeveloperError} This instance does not represent dynamic geometry.
+ * @private
  */
 PolylineGeometryUpdater.prototype.createDynamicUpdater = function (
   primitives,

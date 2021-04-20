@@ -29,7 +29,7 @@ In addition to contributing core CesiumJS code, we appreciate many types of cont
 
 - Being active on the [Cesium community forum](https://community.cesium.com/) by answering questions and providing input on Cesium's direction.
 - Showcasing your Cesium apps on [Cesium blog](https://cesium.com/blog/categories/userstories/). Contact us at hello@cesium.com.
-- Writing tutorials, creating examples, and improving the reference documentation. See the issues labeled [doc](https://github.com/CesiumGS/cesium/labels/doc).
+- Writing tutorials, creating examples, and improving the reference documentation. See the issues labeled [category - doc](https://github.com/CesiumGS/cesium/labels/category%20-%20doc).
 - Submitting issues as [described above](#submitting-an-issue).
 - Triaging issues. Browse the [issues](https://github.com/CesiumGS/cesium/issues) and comment on issues that are no longer reproducible or on issues which you have additional information.
 - Creating ecosystem projects for [glTF](https://github.com/KhronosGroup/glTF/issues/456), [CZML](https://github.com/CesiumGS/cesium/wiki/CZML-Guide), and [3D Tiles](https://github.com/CesiumGS/3d-tiles).
@@ -37,7 +37,7 @@ In addition to contributing core CesiumJS code, we appreciate many types of cont
 For ideas for CesiumJS code contributions, see:
 
 - issues labeled [`good first issue`](https://github.com/CesiumGS/cesium/labels/good%20first%20issue) and
-- issues labeled [`roadmap`](https://github.com/CesiumGS/cesium/labels/roadmap).
+- issues labeled [`type - roadmap`](https://github.com/CesiumGS/cesium/labels/type%20-%20roadmap).
 
 See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
 
@@ -79,7 +79,7 @@ Our code is our lifeblood so maintaining CesiumJS's high code quality is importa
   - If you added new identifiers to the CesiumJS API:
     - Update [CHANGES.md](CHANGES.md).
     - Include reference documentation with code examples. Follow the [Documentation Guide](Documentation/Contributors/DocumentationGuide/README.md).
-    - If the change is significant, add a new [Sandcastle](https://sandcastle.cesium.com) example or extend and existing one.
+    - If the change is significant, add a new [Sandcastle](https://sandcastle.cesium.com) example or extend an existing one.
   - If you added third-party libraries, including new version of existing libraries, update [LICENSE.md](LICENSE.md). Mention it in [CHANGES.md](CHANGES.md). If you plan to add a third-party library, start a [GitHub issue](https://github.com/CesiumGS/cesium/issues/new) discussing it first.
 
 ## Code of Conduct

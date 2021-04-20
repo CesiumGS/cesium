@@ -10,28 +10,121 @@ var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
 var defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
 /**
+ * @typedef {Object} GridImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the GridImageryProvider constructor
+ *
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+ *                    parameter is specified, the WGS84 ellipsoid is used.
+ * @property {Number} [cells=8] The number of grids cells.
+ * @property {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
+ * @property {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
+ * @property {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
+ * @property {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
+ * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @property {Number} [canvasSize=256] The size of the canvas used for rendering.
+ */
+
+/**
  * An {@link ImageryProvider} that draws a wireframe grid on every tile with controllable background and glow.
  * May be useful for custom rendering effects or debugging terrain.
  *
  * @alias GridImageryProvider
  * @constructor
+ * @param {GridImageryProvider.ConstructorOptions} options Object describing initialization options
  *
- * @param {Object} [options] Object with the following properties:
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
- *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.cells=8] The number of grids cells.
- * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
- * @param {Color} [options.glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
- * @param {Number} [options.glowWidth=6] The width of lines used for rendering the line glow effect.
- * @param {Color} [options.backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
- * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
- * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
  */
 function GridImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   this._tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
@@ -102,7 +195,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link GridImageryProvider#ready} returns true.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -315,7 +408,7 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

@@ -5,8 +5,20 @@ describe("Renderer/modernizeShader", function () {
     var simple =
       "#define OUTPUT_DECLARATION \n" + "void main() \n" + "{ \n" + "} \n";
     var output = modernizeShader(simple, true);
-    var expected = "#version 300 es";
-    expect(output.split("\n")[0]).toEqual(expected);
+    var expected = "#version 300 es\n#define WEBGL_2";
+    expect(output.startsWith(expected)).toBe(true);
+  });
+
+  it("replace existing version string", function () {
+    var simple =
+      "#version 200 es" +
+      "#define OUTPUT_DECLARATION \n" +
+      "void main() \n" +
+      "{ \n" +
+      "} \n";
+    var output = modernizeShader(simple, true);
+    var expected = "#version 300 es\n#define WEBGL_2";
+    expect(output.startsWith(expected)).toBe(true);
   });
 
   it("removes extensions", function () {
@@ -19,6 +31,28 @@ describe("Renderer/modernizeShader", function () {
     var output = modernizeShader(extensions, true);
     var notExpected = "#extension GL_EXT_draw_buffers : enable \n";
     expect(output).not.toContain(notExpected);
+  });
+
+  it("replace extension macro check with WEBGL_2", function () {
+    var extensions =
+      "#define OUTPUT_DECLARATION \n" +
+      "#extension GL_EXT_draw_buffers : enable \n" +
+      "void main() \n" +
+      "{ \n" +
+      "    #ifdef GL_EXT_draw_buffers\n" +
+      "    #endif //GL_EXT_draw_buffers\n" +
+      "    #if defined(GL_EXT_draw_buffers)\n" +
+      "    #endif //GL_EXT_draw_buffers\n" +
+      "} \n";
+    var output = modernizeShader(extensions, true);
+    var notExpected = "#extension GL_EXT_draw_buffers : enable \n";
+    var expected =
+      "    #ifdef WEBGL_2\n" +
+      "    #endif //WEBGL_2\n" +
+      "    #if defined(WEBGL_2)\n" +
+      "    #endif //WEBGL_2\n";
+    expect(output).not.toContain(notExpected);
+    expect(output).toContain(expected);
   });
 
   it("throws exception if no output declaration", function () {

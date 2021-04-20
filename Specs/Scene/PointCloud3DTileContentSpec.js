@@ -58,6 +58,8 @@ describe(
       "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
     var pointCloudWithPerPointPropertiesUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json";
+    var pointCloudWithUnicodePropertyNamesUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyNames/tileset.json";
     var pointCloudWithTransformUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json";
     var pointCloudTilesetUrl =
@@ -789,6 +791,24 @@ describe(
       });
     });
 
+    it("applies shader style with unicode property names", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        pointCloudWithUnicodePropertyNamesUrl
+      ).then(function (tileset) {
+        tileset.style = new Cesium3DTileStyle({
+          color: "color() * ${feature['temperature ℃']}",
+        });
+        expect(scene).toRenderAndCall(function (rgba) {
+          // Pixel color is some shade of gray
+          expect(rgba[0]).toBe(rgba[1]);
+          expect(rgba[0]).toBe(rgba[2]);
+          expect(rgba[0]).toBeGreaterThan(0);
+          expect(rgba[0]).toBeLessThan(255);
+        });
+      });
+    });
+
     it("rebuilds shader style when expression changes", function () {
       return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl).then(
         function (tileset) {
@@ -1135,7 +1155,7 @@ describe(
           tileset.clippingPlanes = new ClippingPlaneCollection({
             planes: [
               new ClippingPlane(Cartesian3.UNIT_Z, -10.0),
-              new ClippingPlane(Cartesian3.UNIT_X, 0.0),
+              new ClippingPlane(Cartesian3.UNIT_X, 1.0),
             ],
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               tileset.boundingSphere.center

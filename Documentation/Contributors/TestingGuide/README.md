@@ -197,10 +197,6 @@ It is also possible for Karma to run all tests against each browser installed on
 
 Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
 
-## Testing Previous Versions of CesiumJS
-
-Sometimes it is useful to see if an issue exists in a previous version of CesiumJS. The tests for all versions of CesiumJS back to b15 (April 2013) are hosted on the CesiumJS website via the [downloads page](http://cesiumjs.org/downloads.html). Use the "Documentation, Sandcastle, tests, etc." links.
-
 ## `testfailure` Label for Issues
 
 Despite our best efforts, sometimes tests fail. This is often due to a new browser, OS, or driver bug that breaks a test that previously passed. If this indicates a bug in CesiumJS, we strive to quickly fix it. Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.
@@ -236,16 +232,14 @@ Tests are written in JavaScript using Jasmine. It is important to realize that t
 Here is a stripped down version of the tests:
 
 ```javascript
-define(["Core/Cartesian3"], function (Cartesian3) {
-  "use strict";
+import { Cartesian3 } from "../../Source/Cesium.js";
 
-  describe("Cartesian3", function () {
-    it("construct with default values", function () {
-      var cartesian = new Cartesian3();
-      expect(cartesian.x).toEqual(0.0);
-      expect(cartesian.y).toEqual(0.0);
-      expect(cartesian.z).toEqual(0.0);
-    });
+describe("Cartesian3", function () {
+  it("construct with default values", function () {
+    var cartesian = new Cartesian3();
+    expect(cartesian.x).toEqual(0.0);
+    expect(cartesian.y).toEqual(0.0);
+    expect(cartesian.z).toEqual(0.0);
   });
 });
 ```
@@ -724,30 +718,26 @@ This test is more cohesive and easier to debug than if it were written using a _
 As mentioned above, some tests are in the `'WebGL'` category. To assign a category to a suite, pass the category to `describe`.
 
 ```javascript
-define(["Scene/DebugModelMatrixPrimitive", "Specs/createScene"], function (
-  DebugModelMatrixPrimitive,
-  createScene
-) {
-  "use strict";
+import { DebugModelMatrixPrimitive } from "../../Source/Cesium.js";
+import createScene from "../createScene.js";
 
-  describe(
-    "Scene/DebugModelMatrixPrimitive",
-    function () {
-      var scene;
+describe(
+  "Scene/DebugModelMatrixPrimitive",
+  function () {
+    var scene;
 
-      beforeAll(function () {
-        scene = createScene();
-      });
+    beforeAll(function () {
+      scene = createScene();
+    });
 
-      afterAll(function () {
-        scene.destroyForSpecs();
-      });
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
 
-      // ...
-    },
-    "WebGL"
-  );
-});
+    // ...
+  },
+  "WebGL"
+);
 ```
 
 CesiumJS uses a customized `describe` function that wraps Jasmine describe calls and provides the category capability.

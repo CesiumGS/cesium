@@ -1685,7 +1685,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
  * Gets the color shader function for this style.
  *
  * @param {String} functionName Name to give to the generated function.
- * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+ * @param {String} propertyNameMap Maps property variable names to shader attribute names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1694,7 +1694,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
  */
 Cesium3DTileStyle.prototype.getColorShaderFunction = function (
   functionName,
-  attributePrefix,
+  propertyNameMap,
   shaderState
 ) {
   if (this._colorShaderFunctionReady) {
@@ -1707,7 +1707,7 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
   this._colorShaderFunction = defined(this.color)
     ? this.color.getShaderFunction(
         functionName,
-        attributePrefix,
+        propertyNameMap,
         shaderState,
         "vec4"
       )
@@ -1720,7 +1720,7 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
  * Gets the show shader function for this style.
  *
  * @param {String} functionName Name to give to the generated function.
- * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+ * @param {String} propertyNameMap Maps property variable names to shader attribute names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1729,7 +1729,7 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
  */
 Cesium3DTileStyle.prototype.getShowShaderFunction = function (
   functionName,
-  attributePrefix,
+  propertyNameMap,
   shaderState
 ) {
   if (this._showShaderFunctionReady) {
@@ -1741,7 +1741,7 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
   this._showShaderFunction = defined(this.show)
     ? this.show.getShaderFunction(
         functionName,
-        attributePrefix,
+        propertyNameMap,
         shaderState,
         "bool"
       )
@@ -1753,7 +1753,7 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
  * Gets the pointSize shader function for this style.
  *
  * @param {String} functionName Name to give to the generated function.
- * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+ * @param {String} propertyNameMap Maps property variable names to shader attribute names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1762,7 +1762,7 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
  */
 Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
   functionName,
-  attributePrefix,
+  propertyNameMap,
   shaderState
 ) {
   if (this._pointSizeShaderFunctionReady) {
@@ -1774,7 +1774,7 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
   this._pointSizeShaderFunction = defined(this.pointSize)
     ? this.pointSize.getShaderFunction(
         functionName,
-        attributePrefix,
+        propertyNameMap,
         shaderState,
         "float"
       )

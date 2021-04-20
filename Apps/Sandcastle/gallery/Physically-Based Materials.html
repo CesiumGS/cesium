@@ -51,13 +51,11 @@
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        Sandcastle.addToggleButton(
-          "Shadows",
-          viewer.shadows,
-          function (checked) {
-            viewer.shadows = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
+          checked
+        ) {
+          viewer.shadows = checked;
+        });
 
         viewer.scene.globe.enableLighting = true;
         viewer.scene.globe.depthTestAgainstTerrain = true;

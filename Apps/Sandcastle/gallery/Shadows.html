@@ -234,13 +234,11 @@
 
         Sandcastle.addToolbarMenu(entityToolbarOptions);
 
-        Sandcastle.addToggleButton(
-          "Shadows",
-          viewer.shadows,
-          function (checked) {
-            viewer.shadows = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
+          checked
+        ) {
+          viewer.shadows = checked;
+        });
 
         Sandcastle.addToggleButton("Entity Shadows", true, function (checked) {
           var entityShadows = checked

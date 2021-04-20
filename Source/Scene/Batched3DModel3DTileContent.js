@@ -6,7 +6,7 @@ import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -18,6 +18,7 @@ import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ClassificationModel from "./ClassificationModel.js";
 import Model from "./Model.js";
 import ModelUtility from "./ModelUtility.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a
@@ -45,6 +46,10 @@ function Batched3DModel3DTileContent(
   this._model = undefined;
   this._batchTable = undefined;
   this._features = undefined;
+
+  this._classificationType = tileset.vectorClassificationOnly
+    ? undefined
+    : tileset.classificationType;
 
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
@@ -160,7 +165,7 @@ function getBatchIdAttributeName(gltf) {
 function getVertexShaderCallback(content) {
   return function (vs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -182,7 +187,7 @@ function getVertexShaderCallback(content) {
 function getFragmentShaderCallback(content) {
   return function (fs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -192,7 +197,8 @@ function getFragmentShaderCallback(content) {
     }
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
-      content._diffuseAttributeOrUniformName[programId]
+      content._diffuseAttributeOrUniformName[programId],
+      false
     );
     return defined(callback) ? callback(fs) : fs;
   };
@@ -295,12 +301,11 @@ function initialize(content, arrayBuffer, byteOffset) {
       BATCH_LENGTH: defaultValue(batchLength, 0),
     };
   } else {
-    var featureTableString = getStringFromTypedArray(
+    featureTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       featureTableJsonByteLength
     );
-    featureTableJson = JSON.parse(featureTableString);
     byteOffset += featureTableJsonByteLength;
   }
 
@@ -327,12 +332,11 @@ function initialize(content, arrayBuffer, byteOffset) {
     //
     // We could also make another request for it, but that would make the property set/get
     // API async, and would double the number of numbers in some cases.
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJsonByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -349,7 +353,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 
   var colorChangedCallback;
-  if (defined(tileset.classificationType)) {
+  if (defined(content._classificationType)) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
@@ -404,7 +408,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     new Matrix4()
   );
 
-  if (!defined(tileset.classificationType)) {
+  if (!defined(content._classificationType)) {
     // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
     // The pick shader still needs to be patched.
     content._model = new Model({
@@ -431,6 +435,12 @@ function initialize(content, arrayBuffer, byteOffset) {
       luminanceAtZenith: tileset.luminanceAtZenith,
       sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      backFaceCulling: tileset.backFaceCulling,
+    });
+    content._model.readyPromise.then(function (model) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
     });
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -450,7 +460,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      classificationType: tileset._classificationType,
+      classificationType: content._classificationType,
       batchTable: batchTable,
     });
   }
@@ -533,11 +543,12 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
   this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
   this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
+  this._model.backFaceCulling = this._tileset.backFaceCulling;
   this._model.debugWireframe = this._tileset.debugWireframe;
 
   // Update clipping planes
   var tilesetClippingPlanes = this._tileset.clippingPlanes;
-  this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+  this._model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
   if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.
     // Link/Dereference directly to avoid ownership checks.
@@ -565,7 +576,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick) &&
-    !defined(tileset.classificationType)
+    !defined(this._classificationType)
   ) {
     this._batchTable.addDerivedCommands(frameState, commandStart);
   }

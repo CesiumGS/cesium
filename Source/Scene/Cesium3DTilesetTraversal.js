@@ -652,11 +652,14 @@ function executeEmptyTraversal(tileset, root, frameState) {
     var childrenLength = children.length;
 
     // Only traverse if the tile is empty - traversal stop at descendants with content
-    var traverse = hasEmptyContent(tile) && canTraverse(tileset, tile);
+    var emptyContent = hasEmptyContent(tile);
+    var traverse = emptyContent && canTraverse(tileset, tile);
+    var emptyLeaf = emptyContent && tile.children.length === 0;
 
-    // Traversal stops but the tile does not have content yet.
-    // There will be holes if the parent tries to refine to its children, so don't refine.
-    if (!traverse && !tile.contentAvailable) {
+    // Traversal stops but the tile does not have content yet
+    // There will be holes if the parent tries to refine to its children, so don't refine
+    // One exception: a parent may refine even if one of its descendants is an empty leaf
+    if (!traverse && !tile.contentAvailable && !emptyLeaf) {
       allDescendantsLoaded = false;
     }
 
@@ -693,6 +696,7 @@ function executeEmptyTraversal(tileset, root, frameState) {
  *
  * NOTE: 3D Tiles uses 3 bits from the stencil buffer meaning this will not work when there is a chain of
  * selected tiles that is deeper than 7. This is not very likely.
+ * @private
  */
 function traverseAndSelect(tileset, root, frameState) {
   var stack = selectionTraversal.stack;

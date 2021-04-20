@@ -12,6 +12,7 @@ import RuntimeError from "./RuntimeError.js";
  * Constructor parameters are in row-major order for code readability.
  * @alias Matrix4
  * @constructor
+ * @implements {ArrayLike<number>}
  *
  * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
  * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
@@ -943,10 +944,10 @@ Matrix4.computeInfinitePerspectiveOffCenter = function (
 /**
  * Computes a Matrix4 instance that transforms from normalized device coordinates to window coordinates.
  *
- * @param {Object}[viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
- * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
- * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
- * @param {Matrix4} result The object in which the result will be stored.
+ * @param {Object} [viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
+ * @param {Number} [nearDepthRange=0.0] The near plane distance in window coordinates.
+ * @param {Number} [farDepthRange=1.0] The far plane distance in window coordinates.
+ * @param {Matrix4} [result] The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
  *
  * @example
@@ -964,9 +965,9 @@ Matrix4.computeViewportTransformation = function (
   farDepthRange,
   result
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("result", result);
-  //>>includeEnd('debug');
+  if (!defined(result)) {
+    result = new Matrix4();
+  }
 
   viewport = defaultValue(viewport, defaultValue.EMPTY_OBJECT);
   var x = defaultValue(viewport.x, 0.0);
@@ -2257,7 +2258,7 @@ Matrix4.equals = function (left, right) {
  *
  * @param {Matrix4} [left] The first matrix.
  * @param {Matrix4} [right] The second matrix.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  *
  * @example
@@ -2282,9 +2283,7 @@ Matrix4.equals = function (left, right) {
  * //Prints "Difference between both the matrices is not less than 0.1" on the console
  */
 Matrix4.equalsEpsilon = function (left, right, epsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("epsilon", epsilon);
-  //>>includeEnd('debug');
+  epsilon = defaultValue(epsilon, 0);
 
   return (
     left === right ||
@@ -2648,6 +2647,27 @@ Matrix4.inverseTransformation = function (matrix, result) {
   return result;
 };
 
+var scratchTransposeMatrix = new Matrix4();
+
+/**
+ * Computes the inverse transpose of a matrix.
+ *
+ * @param {Matrix4} matrix The matrix to transpose and invert.
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The modified result parameter.
+ */
+Matrix4.inverseTranspose = function (matrix, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  return Matrix4.inverse(
+    Matrix4.transpose(matrix, scratchTransposeMatrix),
+    result
+  );
+};
+
 /**
  * An immutable Matrix4 instance initialized to the identity matrix.
  *
@@ -2895,7 +2915,7 @@ Matrix4.equalsArray = function (matrix, array, offset) {
  * <code>false</code> otherwise.
  *
  * @param {Matrix4} [right] The right hand side matrix.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix4.prototype.equalsEpsilon = function (right, epsilon) {

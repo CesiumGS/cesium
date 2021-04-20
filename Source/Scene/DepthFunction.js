@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines the function used to compare two depths for the depth test.
  *
- * @exports DepthFunction
+ * @enum {Number}
  */
 var DepthFunction = {
   /**

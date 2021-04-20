@@ -12,6 +12,7 @@ import { Rectangle } from "../../Source/Cesium.js";
 import { Visibility } from "../../Source/Cesium.js";
 import { Camera } from "../../Source/Cesium.js";
 import { GlobeSurfaceTileProvider } from "../../Source/Cesium.js";
+import { GlobeTranslucencyState } from "../../Source/Cesium.js";
 import { ImageryLayerCollection } from "../../Source/Cesium.js";
 import { QuadtreePrimitive } from "../../Source/Cesium.js";
 import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
@@ -62,6 +63,7 @@ describe("Scene/QuadtreePrimitive", function () {
         ]),
         afterRender: [],
         pixelRatio: 1.0,
+        globeTranslucencyState: new GlobeTranslucencyState(),
       };
 
       frameState.cullingVolume.computeVisibility.and.returnValue(
@@ -932,12 +934,11 @@ describe("Scene/QuadtreePrimitive", function () {
           tileProvider: tileProvider,
         });
 
-        quadtree.updateHeight(
-          Cartographic.fromDegrees(-72.0, 40.0),
-          function (p) {
-            Cartesian3.clone(p, position);
-          }
-        );
+        quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function (
+          p
+        ) {
+          Cartesian3.clone(p, position);
+        });
 
         // determine what tiles to load
         quadtree.update(scene.frameState);

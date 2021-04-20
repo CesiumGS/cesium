@@ -46,7 +46,8 @@ import SceneMode from "./SceneMode.js";
  * @param {Scene} scene The scene.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html|Cesium Sandcastle Camera Tutorial Example}
+ * @demo {@link https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
  *
  * @example
  * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -136,7 +137,7 @@ function Camera(scene) {
   /**
    * The region of space in view.
    *
-   * @type {Frustum}
+   * @type {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum}
    * @default PerspectiveFrustum()
    *
    * @see PerspectiveFrustum
@@ -1111,10 +1112,57 @@ Camera.prototype._setTransform = function (transform) {
   updateMembers(this);
 };
 
-var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
-var pickGlobeScratchRay = new Ray();
+var scratchAdjustOrthographicFrustumMousePosition = new Cartesian2();
+var scratchPickRay = new Ray();
 var scratchRayIntersection = new Cartesian3();
 var scratchDepthIntersection = new Cartesian3();
+
+function calculateOrthographicFrustumWidth(camera) {
+  // Camera is fixed to an object, so keep frustum width constant.
+  if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
+    return Cartesian3.magnitude(camera.position);
+  }
+
+  var scene = camera._scene;
+  var globe = scene.globe;
+
+  var mousePosition = scratchAdjustOrthographicFrustumMousePosition;
+  mousePosition.x = scene.drawingBufferWidth / 2.0;
+  mousePosition.y = scene.drawingBufferHeight / 2.0;
+
+  var rayIntersection;
+  if (defined(globe)) {
+    var ray = camera.getPickRay(mousePosition, scratchPickRay);
+    rayIntersection = globe.pickWorldCoordinates(
+      ray,
+      scene,
+      true,
+      scratchRayIntersection
+    );
+  }
+
+  var depthIntersection;
+  if (scene.pickPositionSupported) {
+    depthIntersection = scene.pickPositionWorldCoordinates(
+      mousePosition,
+      scratchDepthIntersection
+    );
+  }
+
+  var distance;
+  if (defined(rayIntersection) || defined(depthIntersection)) {
+    var depthDistance = defined(depthIntersection)
+      ? Cartesian3.distance(depthIntersection, camera.positionWC)
+      : Number.POSITIVE_INFINITY;
+    var rayDistance = defined(rayIntersection)
+      ? Cartesian3.distance(rayIntersection, camera.positionWC)
+      : Number.POSITIVE_INFINITY;
+    distance = Math.min(depthDistance, rayDistance);
+  } else {
+    distance = Math.max(camera.positionCartographic.height, 0.0);
+  }
+  return distance;
+}
 
 Camera.prototype._adjustOrthographicFrustum = function (zooming) {
   if (!(this.frustum instanceof OrthographicFrustum)) {
@@ -1125,63 +1173,7 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
     return;
   }
 
-  if (!Matrix4.equals(Matrix4.IDENTITY, this.transform)) {
-    this.frustum.width = Cartesian3.magnitude(this.position);
-    return;
-  }
-
-  var scene = this._scene;
-  var globe = scene.globe;
-  var rayIntersection;
-  var depthIntersection;
-
-  if (defined(globe)) {
-    var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
-    mousePosition.x = scene.drawingBufferWidth / 2.0;
-    mousePosition.y = scene.drawingBufferHeight / 2.0;
-
-    var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-    rayIntersection = globe.pickWorldCoordinates(
-      ray,
-      scene,
-      scratchRayIntersection
-    );
-
-    if (scene.pickPositionSupported) {
-      depthIntersection = scene.pickPositionWorldCoordinates(
-        mousePosition,
-        scratchDepthIntersection
-      );
-    }
-
-    if (defined(rayIntersection) && defined(depthIntersection)) {
-      var depthDistance = defined(depthIntersection)
-        ? Cartesian3.distance(depthIntersection, this.positionWC)
-        : Number.POSITIVE_INFINITY;
-      var rayDistance = defined(rayIntersection)
-        ? Cartesian3.distance(rayIntersection, this.positionWC)
-        : Number.POSITIVE_INFINITY;
-      this.frustum.width = Math.min(depthDistance, rayDistance);
-    } else if (defined(depthIntersection)) {
-      this.frustum.width = Cartesian3.distance(
-        depthIntersection,
-        this.positionWC
-      );
-    } else if (defined(rayIntersection)) {
-      this.frustum.width = Cartesian3.distance(
-        rayIntersection,
-        this.positionWC
-      );
-    }
-  }
-
-  if (
-    !defined(globe) ||
-    (!defined(rayIntersection) && !defined(depthIntersection))
-  ) {
-    var distance = Math.max(this.positionCartographic.height, 0.0);
-    this.frustum.width = distance;
-  }
+  this.frustum.width = calculateOrthographicFrustumWidth(this);
 };
 
 var scratchSetViewCartesian = new Cartesian3();
@@ -2803,8 +2795,9 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
- * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+ * @returns {Cartesian3 | undefined} If the ellipsoid or map was picked,
+ * returns the point on the surface of the ellipsoid or map in world
+ * coordinates. If the ellipsoid or map was not picked, returns undefined.
  *
  * @example
  * var canvas = viewer.scene.canvas;
@@ -3171,12 +3164,44 @@ var newOptions = {
 };
 
 /**
- * Cancels the current camera flight if one is in progress.
- * The camera is left at it's current location.
+ * Cancels the current camera flight and leaves the camera at its current location.
+ * If no flight is in progress, this this function does nothing.
  */
 Camera.prototype.cancelFlight = function () {
   if (defined(this._currentFlight)) {
     this._currentFlight.cancelTween();
+    this._currentFlight = undefined;
+  }
+};
+
+/**
+ * Completes the current camera flight and moves the camera immediately to its final destination.
+ * If no flight is in progress, this this function does nothing.
+ */
+Camera.prototype.completeFlight = function () {
+  if (defined(this._currentFlight)) {
+    this._currentFlight.cancelTween();
+
+    var options = {
+      destination: undefined,
+      orientation: {
+        heading: undefined,
+        pitch: undefined,
+        roll: undefined,
+      },
+    };
+
+    options.destination = newOptions.destination;
+    options.orientation.heading = newOptions.heading;
+    options.orientation.pitch = newOptions.pitch;
+    options.orientation.roll = newOptions.roll;
+
+    this.setView(options);
+
+    if (defined(this._currentFlight.complete)) {
+      this._currentFlight.complete();
+    }
+
     this._currentFlight = undefined;
   }
 };
@@ -3190,15 +3215,15 @@ Camera.prototype.cancelFlight = function () {
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view.  Orientation is not used in 2D when in infinite scrolling mode.
  * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
- * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
- * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
+ * @param {Camera.FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+ * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
  * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
- * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
+ * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  *
  * @exception {DeveloperError} If either direction or up is given, then both are required.
  *
@@ -3458,14 +3483,14 @@ var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
  * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
- * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
- * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
+ * @param {Camera.FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+ * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
- * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
+ * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  */
 Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -3815,19 +3840,15 @@ Camera.prototype.switchToOrthographicFrustum = function () {
     return;
   }
 
+  // This must be called before changing the frustum because it uses the previous
+  // frustum to reconstruct the world space position from the depth buffer.
+  var frustumWidth = calculateOrthographicFrustumWidth(this);
+
   var scene = this._scene;
   this.frustum = new OrthographicFrustum();
   this.frustum.aspectRatio =
     scene.drawingBufferWidth / scene.drawingBufferHeight;
-
-  // It doesn't matter what we set this to. The adjust below will correct the width based on the camera position.
-  this.frustum.width = Cartesian3.magnitude(this.position);
-
-  // Check the projection matrix. It will always be defined, but we need to force an off-center update.
-  var projectionMatrix = this.frustum.projectionMatrix;
-  if (defined(projectionMatrix)) {
-    this._adjustOrthographicFrustum(true);
-  }
+  this.frustum.width = frustumWidth;
 };
 
 /**
@@ -3851,11 +3872,11 @@ Camera.clone = function (camera, result) {
 
 /**
  * A function that will execute when a flight completes.
- * @callback Camera~FlightCompleteCallback
+ * @callback Camera.FlightCompleteCallback
  */
 
 /**
  * A function that will execute when a flight is cancelled.
- * @callback Camera~FlightCancelledCallback
+ * @callback Camera.FlightCancelledCallback
  */
 export default Camera;

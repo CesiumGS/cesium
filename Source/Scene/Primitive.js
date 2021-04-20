@@ -1132,17 +1132,10 @@ function depthClampVS(vertexShaderSource) {
     vertexShaderSource,
     "czm_non_depth_clamp_main"
   );
-  // The varying should be surround by #ifdef GL_EXT_frag_depth as an optimization.
-  // It is not to workaround an issue with Edge:
-  //     https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/12120362/
   modifiedVS +=
-    "varying float v_WindowZ;\n" +
     "void main() {\n" +
     "    czm_non_depth_clamp_main();\n" +
-    "    vec4 position = gl_Position;\n" +
-    "    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n" +
-    "    position.z = min(position.z, position.w);\n" +
-    "    gl_Position = position;\n" +
+    "    gl_Position = czm_depthClamp(gl_Position);" +
     "}\n";
   return modifiedVS;
 }
@@ -1153,14 +1146,13 @@ function depthClampFS(fragmentShaderSource) {
     "czm_non_depth_clamp_main"
   );
   modifiedFS +=
-    "varying float v_WindowZ;\n" +
     "void main() {\n" +
     "    czm_non_depth_clamp_main();\n" +
     "#if defined(GL_EXT_frag_depth)\n" +
     "    #if defined(LOG_DEPTH)\n" +
     "        czm_writeLogDepth();\n" +
     "    #else\n" +
-    "        gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n" +
+    "        czm_writeDepthClamp();\n" +
     "    #endif\n" +
     "#endif\n" +
     "}\n";
@@ -1210,10 +1202,7 @@ var numberOfCreationWorkers = Math.max(
   1
 );
 var createGeometryTaskProcessors;
-var combineGeometryTaskProcessor = new TaskProcessor(
-  "combineGeometry",
-  Number.POSITIVE_INFINITY
-);
+var combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
 
 function loadAsynchronous(primitive, frameState) {
   var instances;
@@ -1252,10 +1241,7 @@ function loadAsynchronous(primitive, frameState) {
     if (!defined(createGeometryTaskProcessors)) {
       createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
       for (i = 0; i < numberOfCreationWorkers; i++) {
-        createGeometryTaskProcessors[i] = new TaskProcessor(
-          "createGeometry",
-          Number.POSITIVE_INFINITY
-        );
+        createGeometryTaskProcessors[i] = new TaskProcessor("createGeometry");
       }
     }
 

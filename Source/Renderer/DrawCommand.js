@@ -43,6 +43,11 @@ function DrawCommand(options) {
   this._pickId = options.pickId;
   this._pickOnly = defaultValue(options.pickOnly, false);
 
+  this._depthForTranslucentClassification = defaultValue(
+    options.depthForTranslucentClassification,
+    false
+  );
+
   this.dirty = true;
   this.lastDirtyTime = 0;
 
@@ -513,6 +518,24 @@ Object.defineProperties(DrawCommand.prototype, {
       }
     },
   },
+  /**
+   * Whether this command should be derived to draw depth for classification of translucent primitives.
+   *
+   * @memberof DrawCommand.prototype
+   * @type {Boolean}
+   * @default false
+   */
+  depthForTranslucentClassification: {
+    get: function () {
+      return this._depthForTranslucentClassification;
+    },
+    set: function (value) {
+      if (this._depthForTranslucentClassification !== value) {
+        this._depthForTranslucentClassification = value;
+        this.dirty = true;
+      }
+    },
+  },
 });
 
 /**
@@ -549,6 +572,8 @@ DrawCommand.shallowClone = function (command, result) {
   result._receiveShadows = command._receiveShadows;
   result._pickId = command._pickId;
   result._pickOnly = command._pickOnly;
+  result._depthForTranslucentClassification =
+    command._depthForTranslucentClassification;
 
   result.dirty = true;
   result.lastDirtyTime = 0;

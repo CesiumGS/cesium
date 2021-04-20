@@ -29,7 +29,7 @@ Object.defineProperties(TerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof TerrainData.prototype
-   * @type {Uint8Array|Image|Canvas}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
    */
   waterMask: {
     get: DeveloperError.throwInstantiationError,
@@ -71,10 +71,13 @@ TerrainData.prototype.isChildAvailable = DeveloperError.throwInstantiationError;
  *
  * @private
  *
- * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
- * @param {Number} x The X coordinate of the tile for which to create the terrain data.
- * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
- * @param {Number} level The level of the tile for which to create the terrain data.
+ * @param {Object} options Object with the following properties:
+ * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+ * @param {Number} options.x The X coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.level The level of the tile for which to create the terrain data.
+ * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
@@ -109,4 +112,13 @@ TerrainData.prototype.upsample = DeveloperError.throwInstantiationError;
  */
 TerrainData.prototype.wasCreatedByUpsampling =
   DeveloperError.throwInstantiationError;
+
+/**
+ * The maximum number of asynchronous tasks used for terrain processing.
+ *
+ * @type {Number}
+ * @private
+ */
+TerrainData.maximumAsynchronousTasks = 5;
+
 export default TerrainData;

@@ -25,6 +25,7 @@ Generally, just follow the patterns that are already in comparable parts of the 
   - [Property](#property)
   - [Property Getter/Setter](#property-gettersetter)
   - [Standalone Function](#standalone-function)
+- [TypeScript type definitions](#typescript)
 
 ## Building the Doc
 
@@ -52,7 +53,7 @@ Consider one of the simplest functions in CesiumJS, `defined`:
 
 ```javascript
 /**
- * @exports defined
+ * @function
  *
  * @param {*} value The object.
  * @returns {Boolean} Returns true if the object is defined, returns false otherwise.
@@ -70,7 +71,7 @@ function defined(value) {
 ```
 
 - The doc for `defined` is in the comment starting with `/**`. JSDoc tags begin with `@`.
-- `@exports` describes the name of the function that is exported from the module.
+- `@function` tells JSDoc that this is a function.
 - `@param` describes the function's parameters, and `@returns` describes the function's return value.
 - `@example` describes a code sample.
 
@@ -379,7 +380,7 @@ Cartesian4.fromArray = Cartesian4.unpack;
 /**
  * Sort the items in the queue in-place.
  *
- * @param {Queue~Comparator} compareFunction A function that defines the sort order.
+ * @param {Queue.Comparator} compareFunction A function that defines the sort order.
  */
 Queue.prototype.sort = function (compareFunction) {
   if (this._offset > 0) {
@@ -393,7 +394,7 @@ Queue.prototype.sort = function (compareFunction) {
 
 /**
  * A function used to compare two items while sorting a queue.
- * @callback Queue~Comparator
+ * @callback Queue.Comparator
  *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
@@ -535,7 +536,7 @@ DESCRIPTION.
 ```
 DESCRIPTION.
 
-@exports NAME
+@function
 
 @param {TYPE} NAME DESCRIPTION.
 @param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG
@@ -552,3 +553,13 @@ DESCRIPTION.
 
 [@private]
 ```
+
+# TypeScript
+
+We also use JSDoc to build official TypeScript type definitions. Normally this behavior is transparent to the developer and happens as part of CI, however incorrect or non-standard JSDoc can lead to failures. If CI is failing because of the `build-ts` step, you can debug it locally by running:
+
+```
+npm run build-ts
+```
+
+In most cases, the TypeScript compiler will provide a very obvious error and line number which will help you track down the offending, most likely incorrect, JSDoc.

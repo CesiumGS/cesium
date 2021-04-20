@@ -2,6 +2,7 @@ import when from "../ThirdParty/when.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
+import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -10,6 +11,7 @@ import Intersections2D from "./Intersections2D.js";
 import CesiumMath from "./Math.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TaskProcessor from "./TaskProcessor.js";
+import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 
@@ -222,7 +224,7 @@ Object.defineProperties(QuantizedMeshTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof QuantizedMeshTerrainData.prototype
-   * @type {Uint8Array|Image|Canvas}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
    */
   waterMask: {
     get: function () {
@@ -262,8 +264,11 @@ function sortIndicesIfNecessary(indices, sortFunction, vertexCount) {
   return indices;
 }
 
-var createMeshTaskProcessor = new TaskProcessor(
-  "createVerticesFromQuantizedTerrainMesh"
+var createMeshTaskName = "createVerticesFromQuantizedTerrainMesh";
+var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
+var createMeshTaskProcessorThrottle = new TaskProcessor(
+  createMeshTaskName,
+  TerrainData.maximumAsynchronousTasks
 );
 
 /**
@@ -271,40 +276,40 @@ var createMeshTaskProcessor = new TaskProcessor(
  *
  * @private
  *
- * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
- * @param {Number} x The X coordinate of the tile for which to create the terrain data.
- * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
- * @param {Number} level The level of the tile for which to create the terrain data.
- * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Object} options Object with the following properties:
+ * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+ * @param {Number} options.x The X coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.level The level of the tile for which to create the terrain data.
+ * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
  */
-QuantizedMeshTerrainData.prototype.createMesh = function (
-  tilingScheme,
-  x,
-  y,
-  level,
-  exaggeration
-) {
+QuantizedMeshTerrainData.prototype.createMesh = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(tilingScheme)) {
-    throw new DeveloperError("tilingScheme is required.");
-  }
-  if (!defined(x)) {
-    throw new DeveloperError("x is required.");
-  }
-  if (!defined(y)) {
-    throw new DeveloperError("y is required.");
-  }
-  if (!defined(level)) {
-    throw new DeveloperError("level is required.");
-  }
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
   //>>includeEnd('debug');
+
+  var tilingScheme = options.tilingScheme;
+  var x = options.x;
+  var y = options.y;
+  var level = options.level;
+  var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var throttle = defaultValue(options.throttle, true);
 
   var ellipsoid = tilingScheme.ellipsoid;
   var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
-  exaggeration = defaultValue(exaggeration, 1.0);
+
+  var createMeshTaskProcessor = throttle
+    ? createMeshTaskProcessorThrottle
+    : createMeshTaskProcessorNoThrottle;
 
   var verticesPromise = createMeshTaskProcessor.scheduleTask({
     minimumHeight: this._minimumHeight,
@@ -405,7 +410,10 @@ QuantizedMeshTerrainData.prototype.createMesh = function (
   });
 };
 
-var upsampleTaskProcessor = new TaskProcessor("upsampleQuantizedTerrainMesh");
+var upsampleTaskProcessor = new TaskProcessor(
+  "upsampleQuantizedTerrainMesh",
+  TerrainData.maximumAsynchronousTasks
+);
 
 /**
  * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the

@@ -407,6 +407,22 @@ Cartesian2.dot = function (left, right) {
 };
 
 /**
+ * Computes the magnitude of the cross product that would result from implicitly setting the Z coordinate of the input vectors to 0
+ *
+ * @param {Cartesian2} left The first Cartesian.
+ * @param {Cartesian2} right The second Cartesian.
+ * @returns {Number} The cross product.
+ */
+Cartesian2.cross = function (left, right) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
+
+  return left.x * right.y - left.y * right.x;
+};
+
+/**
  * Computes the componentwise product of two Cartesians.
  *
  * @param {Cartesian2} left The first Cartesian.
@@ -665,7 +681,7 @@ Cartesian2.equalsArray = function (cartesian, array, offset) {
  *
  * @param {Cartesian2} [left] The first Cartesian.
  * @param {Cartesian2} [right] The second Cartesian.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
@@ -745,7 +761,7 @@ Cartesian2.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {Cartesian2} [right] The right hand side Cartesian.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */

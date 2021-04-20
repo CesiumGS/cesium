@@ -160,31 +160,25 @@ describe(
 
           return updateUntilDone(scene.globe).then(function () {
             // All tiles should have one or more associated images.
-            forEachRenderedTile(
-              scene.globe._surface,
-              1,
-              undefined,
-              function (tile) {
-                expect(tile.data.imagery.length).toBeGreaterThan(0);
-                for (var i = 0; i < tile.data.imagery.length; ++i) {
-                  expect(
-                    tile.data.imagery[i].readyImagery.imageryLayer
-                  ).toEqual(layer);
-                }
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              for (var i = 0; i < tile.data.imagery.length; ++i) {
+                expect(tile.data.imagery[i].readyImagery.imageryLayer).toEqual(
+                  layer
+                );
               }
-            );
+            });
 
             scene.imageryLayers.remove(layer);
 
             // All associated images should be gone.
-            forEachRenderedTile(
-              scene.globe._surface,
-              1,
-              undefined,
-              function (tile) {
-                expect(tile.data.imagery.length).toEqual(0);
-              }
-            );
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              expect(tile.data.imagery.length).toEqual(0);
+            });
           });
         });
 
@@ -205,25 +199,22 @@ describe(
 
             return updateUntilDone(scene.globe).then(function () {
               // All tiles should have one or more associated images.
-              forEachRenderedTile(
-                scene.globe._surface,
-                1,
-                undefined,
-                function (tile) {
-                  expect(tile.data.imagery.length).toBeGreaterThan(0);
-                  var hasImageFromLayer2 = false;
-                  for (var i = 0; i < tile.data.imagery.length; ++i) {
-                    var imageryTile = tile.data.imagery[i].readyImagery;
-                    if (!defined(imageryTile)) {
-                      imageryTile = tile.data.imagery[i].loadingImagery;
-                    }
-                    if (imageryTile.imageryLayer === layer2) {
-                      hasImageFromLayer2 = true;
-                    }
+              forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+                tile
+              ) {
+                expect(tile.data.imagery.length).toBeGreaterThan(0);
+                var hasImageFromLayer2 = false;
+                for (var i = 0; i < tile.data.imagery.length; ++i) {
+                  var imageryTile = tile.data.imagery[i].readyImagery;
+                  if (!defined(imageryTile)) {
+                    imageryTile = tile.data.imagery[i].loadingImagery;
                   }
-                  expect(hasImageFromLayer2).toEqual(true);
+                  if (imageryTile.imageryLayer === layer2) {
+                    hasImageFromLayer2 = true;
+                  }
                 }
-              );
+                expect(hasImageFromLayer2).toEqual(true);
+              });
             });
           });
         });
@@ -241,62 +232,54 @@ describe(
           );
 
           return updateUntilDone(scene.globe).then(function () {
-            forEachRenderedTile(
-              scene.globe._surface,
-              1,
-              undefined,
-              function (tile) {
-                expect(tile.data.imagery.length).toBeGreaterThan(0);
-                var indexOfFirstLayer1 = tile.data.imagery.length;
-                var indexOfLastLayer1 = -1;
-                var indexOfFirstLayer2 = tile.data.imagery.length;
-                for (var i = 0; i < tile.data.imagery.length; ++i) {
-                  if (
-                    tile.data.imagery[i].readyImagery.imageryLayer === layer1
-                  ) {
-                    indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
-                    indexOfLastLayer1 = i;
-                  } else {
-                    expect(
-                      tile.data.imagery[i].readyImagery.imageryLayer
-                    ).toEqual(layer2);
-                    indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
-                  }
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              expect(tile.data.imagery.length).toBeGreaterThan(0);
+              var indexOfFirstLayer1 = tile.data.imagery.length;
+              var indexOfLastLayer1 = -1;
+              var indexOfFirstLayer2 = tile.data.imagery.length;
+              for (var i = 0; i < tile.data.imagery.length; ++i) {
+                if (tile.data.imagery[i].readyImagery.imageryLayer === layer1) {
+                  indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
+                  indexOfLastLayer1 = i;
+                } else {
+                  expect(
+                    tile.data.imagery[i].readyImagery.imageryLayer
+                  ).toEqual(layer2);
+                  indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
                 }
-                expect(indexOfFirstLayer1).toBeLessThan(indexOfFirstLayer2);
-                expect(indexOfLastLayer1).toBeLessThan(indexOfFirstLayer2);
               }
-            );
+              expect(indexOfFirstLayer1).toBeLessThan(indexOfFirstLayer2);
+              expect(indexOfLastLayer1).toBeLessThan(indexOfFirstLayer2);
+            });
 
             scene.imageryLayers.raiseToTop(layer1);
 
             return updateUntilDone(scene.globe).then(function () {
-              forEachRenderedTile(
-                scene.globe._surface,
-                1,
-                undefined,
-                function (tile) {
-                  expect(tile.data.imagery.length).toBeGreaterThan(0);
-                  var indexOfFirstLayer2 = tile.data.imagery.length;
-                  var indexOfLastLayer2 = -1;
-                  var indexOfFirstLayer1 = tile.data.imagery.length;
-                  for (var i = 0; i < tile.data.imagery.length; ++i) {
-                    if (
-                      tile.data.imagery[i].readyImagery.imageryLayer === layer2
-                    ) {
-                      indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
-                      indexOfLastLayer2 = i;
-                    } else {
-                      expect(
-                        tile.data.imagery[i].readyImagery.imageryLayer
-                      ).toEqual(layer1);
-                      indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
-                    }
+              forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+                tile
+              ) {
+                expect(tile.data.imagery.length).toBeGreaterThan(0);
+                var indexOfFirstLayer2 = tile.data.imagery.length;
+                var indexOfLastLayer2 = -1;
+                var indexOfFirstLayer1 = tile.data.imagery.length;
+                for (var i = 0; i < tile.data.imagery.length; ++i) {
+                  if (
+                    tile.data.imagery[i].readyImagery.imageryLayer === layer2
+                  ) {
+                    indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
+                    indexOfLastLayer2 = i;
+                  } else {
+                    expect(
+                      tile.data.imagery[i].readyImagery.imageryLayer
+                    ).toEqual(layer1);
+                    indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
                   }
-                  expect(indexOfFirstLayer2).toBeLessThan(indexOfFirstLayer1);
-                  expect(indexOfLastLayer2).toBeLessThan(indexOfFirstLayer1);
                 }
-              );
+                expect(indexOfFirstLayer2).toBeLessThan(indexOfFirstLayer1);
+                expect(indexOfLastLayer2).toBeLessThan(indexOfFirstLayer1);
+              });
             });
           });
         });
@@ -318,25 +301,22 @@ describe(
 
             return updateUntilDone(scene.globe).then(function () {
               // All tiles should have one or more associated images.
-              forEachRenderedTile(
-                scene.globe._surface,
-                1,
-                undefined,
-                function (tile) {
-                  expect(tile.data.imagery.length).toBeGreaterThan(0);
-                  var tilesFromLayer2 = 0;
-                  for (var i = 0; i < tile.data.imagery.length; ++i) {
-                    var imageryTile = tile.data.imagery[i].readyImagery;
-                    if (!defined(imageryTile)) {
-                      imageryTile = tile.data.imagery[i].loadingImagery;
-                    }
-                    if (imageryTile.imageryLayer === layer2) {
-                      ++tilesFromLayer2;
-                    }
+              forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+                tile
+              ) {
+                expect(tile.data.imagery.length).toBeGreaterThan(0);
+                var tilesFromLayer2 = 0;
+                for (var i = 0; i < tile.data.imagery.length; ++i) {
+                  var imageryTile = tile.data.imagery[i].readyImagery;
+                  if (!defined(imageryTile)) {
+                    imageryTile = tile.data.imagery[i].loadingImagery;
                   }
-                  expect(tilesFromLayer2).toBe(1);
+                  if (imageryTile.imageryLayer === layer2) {
+                    ++tilesFromLayer2;
+                  }
                 }
-              );
+                expect(tilesFromLayer2).toBe(1);
+              });
             });
           });
         });
@@ -356,15 +336,12 @@ describe(
 
           return updateUntilDone(scene.globe).then(function () {
             // Verify that each tile has 2 imagery objects and no loaded callbacks
-            forEachRenderedTile(
-              scene.globe._surface,
-              1,
-              undefined,
-              function (tile) {
-                expect(tile.data.imagery.length).toBe(2);
-                expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
-              }
-            );
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              expect(tile.data.imagery.length).toBe(2);
+              expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+            });
 
             // Reload each layer
             layer1._imageryProvider._reload();
@@ -376,27 +353,21 @@ describe(
 
             // Verify that each tile has 4 imagery objects (the old imagery and the reloaded imagery for each layer)
             //  and also has 2 callbacks so the old imagery will be removed once loaded.
-            forEachRenderedTile(
-              scene.globe._surface,
-              1,
-              undefined,
-              function (tile) {
-                expect(tile.data.imagery.length).toBe(4);
-                expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
-              }
-            );
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              expect(tile.data.imagery.length).toBe(4);
+              expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
+            });
 
             return updateUntilDone(scene.globe).then(function () {
               // Verify the old imagery was removed and the callbacks are no longer there
-              forEachRenderedTile(
-                scene.globe._surface,
-                1,
-                undefined,
-                function (tile) {
-                  expect(tile.data.imagery.length).toBe(2);
-                  expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
-                }
-              );
+              forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+                tile
+              ) {
+                expect(tile.data.imagery.length).toBe(2);
+                expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+              });
             });
           });
         });
@@ -651,6 +622,8 @@ describe(
       );
 
       layer.alpha = 0.123;
+      layer.nightAlpha = 0.658;
+      layer.dayAlpha = 0.356;
       layer.brightness = 0.456;
       layer.contrast = 0.654;
       layer.gamma = 0.321;
@@ -680,6 +653,8 @@ describe(
           ++tileCommandCount;
 
           expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
+          expect(uniforms.u_dayTextureNightAlpha()).toEqual([0.658]);
+          expect(uniforms.u_dayTextureDayAlpha()).toEqual([0.356]);
           expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
           expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
           expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0 / 0.321]);

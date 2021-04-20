@@ -3,6 +3,10 @@ import { Rectangle } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { Globe } from "../../Source/Cesium.js";
 import { SingleTileImageryProvider } from "../../Source/Cesium.js";
+import { Color } from "../../Source/Cesium.js";
+import { Cartesian3 } from "../../Source/Cesium.js";
+import { HeadingPitchRoll } from "../../Source/Cesium.js";
+import { NearFarScalar } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -411,6 +415,78 @@ describe(
           command.owner.data.renderedMesh.indexCountWithoutSkirts
         );
       });
+    });
+
+    it("gets underground color", function () {
+      expect(globe.undergroundColor).toEqual(Color.BLACK);
+    });
+
+    it("sets underground color", function () {
+      globe.undergroundColor = Color.RED;
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -524251.65918537375,
+          -5316355.5357514685,
+          3400179.253223899
+        ),
+        orientation: new HeadingPitchRoll(
+          0.22779127099032603,
+          -0.7030060668670961,
+          0.0024147223687949193
+        ),
+      });
+
+      return updateUntilDone(globe).then(function () {
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
+    });
+
+    it("gets underground color by distance", function () {
+      expect(globe.undergroundColorAlphaByDistance).toBeDefined();
+    });
+
+    it("sets underground color by distance", function () {
+      globe.baseColor = Color.BLACK;
+      globe.undergroundColor = Color.RED;
+      var radius = globe.ellipsoid.maximumRadius;
+      globe.undergroundColorAlphaByDistance = new NearFarScalar(
+        radius * 0.25,
+        0.0,
+        radius * 2.0,
+        1.0
+      );
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -524251.65918537375,
+          -5316355.5357514685,
+          3400179.253223899
+        ),
+        orientation: new HeadingPitchRoll(
+          0.24245689061958142,
+          -0.445653254172905,
+          0.0024147223687949193
+        ),
+      });
+
+      return updateUntilDone(globe).then(function () {
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(0);
+          expect(rgba[0]).toBeLessThan(255);
+        });
+      });
+    });
+
+    it("throws if underground color by distance far is less than near", function () {
+      expect(function () {
+        globe.undergroundColorAlphaByDistance = new NearFarScalar(
+          1.0,
+          0.0,
+          0.0,
+          1.0
+        );
+      }).toThrowDeveloperError();
     });
   },
   "WebGL"

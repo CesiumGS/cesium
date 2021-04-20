@@ -40,10 +40,6 @@ function PointCloud3DTileContent(
   this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
   this._styleDirty = false;
   this._features = undefined;
-
-  /**
-   * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
-   */
   this.featurePropertiesDirty = false;
 
   this._pointCloud = new PointCloud({
@@ -157,7 +153,8 @@ function getFragmentShaderLoaded(content) {
     if (defined(content._batchTable)) {
       return content._batchTable.getFragmentShaderCallback(
         false,
-        undefined
+        undefined,
+        false
       )(fs);
     }
     return "uniform vec4 czm_pickColor;\n" + fs;

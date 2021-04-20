@@ -323,14 +323,12 @@
           modelEntityClippingPlanes = undefined;
         }
 
-        Sandcastle.addToggleButton(
-          "union",
-          clippingModeUnion,
-          function (checked) {
-            clippingModeUnion = checked;
-            modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
-          }
-        );
+        Sandcastle.addToggleButton("union", clippingModeUnion, function (
+          checked
+        ) {
+          clippingModeUnion = checked;
+          modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
+        });
 
         Sandcastle.addToggleButton("enabled", enabled, function (checked) {
           enabled = checked;

@@ -25,6 +25,7 @@ import kdbush from "../ThirdParty/kdbush.js";
  * @param {Boolean} [options.clusterBillboards=true] Whether or not to cluster the billboards of an entity.
  * @param {Boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
  * @param {Boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
+ * @param {Boolean} [options.show=true] Determines if the entities in the cluster will be shown.
  *
  * @alias EntityCluster
  * @constructor
@@ -65,6 +66,14 @@ function EntityCluster(options) {
   this._removeEventListener = undefined;
 
   this._clusterEvent = new Event();
+
+  /**
+   * Determines if entities in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 }
 
 function getX(point) {
@@ -547,7 +556,7 @@ Object.defineProperties(EntityCluster.prototype, {
     },
   },
   /**
-   * Gets the event that will be raised when a new cluster will be displayed. The signature of the event listener is {@link EntityCluster~newClusterCallback}.
+   * Gets the event that will be raised when a new cluster will be displayed. The signature of the event listener is {@link EntityCluster.newClusterCallback}.
    * @memberof EntityCluster.prototype
    * @type {Event}
    */
@@ -844,6 +853,10 @@ function updateEnable(entityCluster) {
  * @private
  */
 EntityCluster.prototype.update = function (frameState) {
+  if (!this.show) {
+    return;
+  }
+
   // If clustering is enabled before the label collection is updated,
   // the glyphs haven't been created so the screen space bounding boxes
   // are incorrect.
@@ -960,7 +973,7 @@ EntityCluster.prototype.destroy = function () {
 
 /**
  * A event listener function used to style clusters.
- * @callback EntityCluster~newClusterCallback
+ * @callback EntityCluster.newClusterCallback
  *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
  * @param {Object} cluster An object containing billboard, label, and point properties. The values are the same as

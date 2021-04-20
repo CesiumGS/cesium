@@ -70,18 +70,23 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
 
       var jointAccessorId = primitive.attributes.JOINTS_0;
       var componentType;
-      var type;
+      var accessorType;
       if (defined(jointAccessorId)) {
         var jointAccessor = accessors[jointAccessorId];
         componentType = jointAccessor.componentType;
-        type = jointAccessor.type;
+        accessorType = jointAccessor.type;
       }
-      var isSkinned = defined(jointAccessorId);
+      var isSkinned = defined(jointAccessorId) && accessorType === "VEC4";
       var hasVertexColors = defined(primitive.attributes.COLOR_0);
       var hasMorphTargets = defined(primitive.targets);
       var hasNormals = defined(primitive.attributes.NORMAL);
       var hasTangents = defined(primitive.attributes.TANGENT);
       var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+      var hasTexCoord1 =
+        hasTexCoords && defined(primitive.attributes.TEXCOORD_1);
+      var hasOutline =
+        defined(primitive.extensions) &&
+        defined(primitive.extensions.CESIUM_primitive_outline);
 
       var primitiveInfo = primitiveInfoByMaterial[materialIndex];
       if (!defined(primitiveInfo)) {
@@ -89,27 +94,30 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           skinning: {
             skinned: isSkinned,
             componentType: componentType,
-            type: type,
           },
           hasVertexColors: hasVertexColors,
           hasMorphTargets: hasMorphTargets,
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasTexCoord1: hasTexCoord1,
+          hasOutline: hasOutline,
         };
       } else if (
         primitiveInfo.skinning.skinned !== isSkinned ||
-        primitiveInfo.skinning.type !== type ||
         primitiveInfo.hasVertexColors !== hasVertexColors ||
         primitiveInfo.hasMorphTargets !== hasMorphTargets ||
         primitiveInfo.hasNormals !== hasNormals ||
         primitiveInfo.hasTangents !== hasTangents ||
-        primitiveInfo.hasTexCoords !== hasTexCoords
+        primitiveInfo.hasTexCoords !== hasTexCoords ||
+        primitiveInfo.hasTexCoord1 !== hasTexCoord1 ||
+        primitiveInfo.hasOutline !== hasOutline
       ) {
         // This primitive uses the same material as another one that either:
         // * Isn't skinned
         // * Uses a different type to store joints and weights
         // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
+        // * Doesn't have a CESIUM_primitive_outline extension.
         var clonedMaterial = clone(material, true);
         // Split this off as a separate material
         materialIndex = addToArray(materials, clonedMaterial);
@@ -118,13 +126,14 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           skinning: {
             skinned: isSkinned,
             componentType: componentType,
-            type: type,
           },
           hasVertexColors: hasVertexColors,
           hasMorphTargets: hasMorphTargets,
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasTexCoord1: hasTexCoord1,
+          hasOutline: hasOutline,
         };
       }
     });
@@ -223,9 +232,10 @@ ModelUtility.computeBoundingSphere = function (model) {
           var positionAccessor = primitives[m].attributes.POSITION;
           if (defined(positionAccessor)) {
             var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-            if (defined(min) && defined(max)) {
+            if (defined(minMax.min) && defined(minMax.max)) {
+              var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+              var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+
               Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
               Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
               Cartesian3.minimumByComponent(min, aMin, min);
@@ -279,14 +289,14 @@ ModelUtility.computeBoundingSphere = function (model) {
 };
 
 function techniqueAttributeForSemantic(technique, semantic) {
-  return ForEach.techniqueAttribute(
-    technique,
-    function (attribute, attributeName) {
-      if (attribute.semantic === semantic) {
-        return attributeName;
-      }
+  return ForEach.techniqueAttribute(technique, function (
+    attribute,
+    attributeName
+  ) {
+    if (attribute.semantic === semantic) {
+      return attributeName;
     }
-  );
+  });
 }
 
 function ensureSemanticExistenceForPrimitive(gltf, primitive) {
@@ -633,15 +643,15 @@ function getAttributeVariableName(gltf, primitive, attributeSemantic) {
   var techniqueId = material.extensions.KHR_techniques_webgl.technique;
   var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
   var technique = techniquesWebgl.techniques[techniqueId];
-  return ForEach.techniqueAttribute(
-    technique,
-    function (attribute, attributeName) {
-      var semantic = attribute.semantic;
-      if (semantic === attributeSemantic) {
-        return attributeName;
-      }
+  return ForEach.techniqueAttribute(technique, function (
+    attribute,
+    attributeName
+  ) {
+    var semantic = attribute.semantic;
+    if (semantic === attributeSemantic) {
+      return attributeName;
     }
-  );
+  });
 }
 
 ModelUtility.modifyShaderForDracoQuantizedAttributes = function (
@@ -896,85 +906,6 @@ ModelUtility.modifyShaderForQuantizedAttributes = function (
     shader: shader,
     uniforms: quantizedUniforms,
   };
-};
-
-ModelUtility.toClipCoordinatesGLSL = function (gltf, shader) {
-  var positionName = ModelUtility.getAttributeOrUniformBySemantic(
-    gltf,
-    "POSITION"
-  );
-  var decodedPositionName = positionName.replace("a_", "gltf_a_dec_");
-  if (shader.indexOf(decodedPositionName) !== -1) {
-    positionName = decodedPositionName;
-  }
-
-  var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(
-    gltf,
-    "MODELVIEWPROJECTION",
-    undefined,
-    true
-  );
-  if (
-    !defined(modelViewProjectionName) ||
-    shader.indexOf(modelViewProjectionName) === -1
-  ) {
-    var projectionName = ModelUtility.getAttributeOrUniformBySemantic(
-      gltf,
-      "PROJECTION",
-      undefined,
-      true
-    );
-    var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(
-      gltf,
-      "MODELVIEW",
-      undefined,
-      true
-    );
-    if (shader.indexOf("czm_instanced_modelView ") !== -1) {
-      modelViewName = "czm_instanced_modelView";
-    } else if (!defined(modelViewName)) {
-      modelViewName = ModelUtility.getAttributeOrUniformBySemantic(
-        gltf,
-        "CESIUM_RTC_MODELVIEW",
-        undefined,
-        true
-      );
-    }
-    modelViewProjectionName = projectionName + " * " + modelViewName;
-  }
-
-  return modelViewProjectionName + " * vec4(" + positionName + ".xyz, 1.0)";
-};
-
-ModelUtility.modifyFragmentShaderForLogDepth = function (shader) {
-  shader = ShaderSource.replaceMain(shader, "czm_depth_main");
-  shader +=
-    "\n" +
-    "void main() \n" +
-    "{ \n" +
-    "    czm_depth_main(); \n" +
-    "    czm_writeLogDepth(); \n" +
-    "} \n";
-
-  return shader;
-};
-
-ModelUtility.modifyVertexShaderForLogDepth = function (
-  shader,
-  toClipCoordinatesGLSL
-) {
-  shader = ShaderSource.replaceMain(shader, "czm_depth_main");
-  shader +=
-    "\n" +
-    "void main() \n" +
-    "{ \n" +
-    "    czm_depth_main(); \n" +
-    "    czm_vertexLogDepth(" +
-    toClipCoordinatesGLSL +
-    "); \n" +
-    "} \n";
-
-  return shader;
 };
 
 function getScalarUniformFunction(value) {

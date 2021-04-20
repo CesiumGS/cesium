@@ -73,6 +73,7 @@ import PolylineDashMaterialProperty from "./PolylineDashMaterialProperty.js";
 import PolylineGlowMaterialProperty from "./PolylineGlowMaterialProperty.js";
 import PolylineGraphics from "./PolylineGraphics.js";
 import PolylineOutlineMaterialProperty from "./PolylineOutlineMaterialProperty.js";
+import PolylineVolumeGraphics from "./PolylineVolumeGraphics.js";
 import PositionPropertyArray from "./PositionPropertyArray.js";
 import Property from "./Property.js";
 import PropertyArray from "./PropertyArray.js";
@@ -1166,6 +1167,44 @@ function processPositionPacketData(
   }
 }
 
+function processShapePacketData(
+  object,
+  propertyName,
+  packetData,
+  entityCollection
+) {
+  if (defined(packetData.references)) {
+    processReferencesArrayPacketData(
+      object,
+      propertyName,
+      packetData.references,
+      packetData.interval,
+      entityCollection,
+      PropertyArray,
+      CompositeProperty
+    );
+  } else {
+    if (defined(packetData.cartesian2)) {
+      packetData.array = Cartesian2.unpackArray(packetData.cartesian2);
+    } else if (defined(packetData.cartesian)) {
+      // for backwards compatibility, also accept `cartesian`
+      packetData.array = Cartesian2.unpackArray(packetData.cartesian);
+    }
+
+    if (defined(packetData.array)) {
+      processPacketData(
+        Array,
+        object,
+        propertyName,
+        packetData,
+        undefined,
+        undefined,
+        entityCollection
+      );
+    }
+  }
+}
+
 function processMaterialProperty(
   object,
   propertyName,
@@ -1921,6 +1960,25 @@ function processPositionArrayOfArrays(
       packetData,
       entityCollection
     );
+  }
+}
+
+function processShape(object, propertyName, packetData, entityCollection) {
+  if (!defined(packetData)) {
+    return;
+  }
+
+  if (Array.isArray(packetData)) {
+    for (var i = 0, length = packetData.length; i < length; i++) {
+      processShapePacketData(
+        object,
+        propertyName,
+        packetData[i],
+        entityCollection
+      );
+    }
+  } else {
+    processShapePacketData(object, propertyName, packetData, entityCollection);
   }
 }
 
@@ -4119,6 +4177,121 @@ function processPolyline(entity, packet, entityCollection, sourceUri) {
   }
 }
 
+function processPolylineVolume(entity, packet, entityCollection, sourceUri) {
+  var polylineVolumeData = packet.polylineVolume;
+  if (!defined(polylineVolumeData)) {
+    return;
+  }
+
+  var interval = intervalFromString(polylineVolumeData.interval);
+  var polylineVolume = entity.polylineVolume;
+  if (!defined(polylineVolume)) {
+    entity.polylineVolume = polylineVolume = new PolylineVolumeGraphics();
+  }
+
+  processPositionArray(
+    polylineVolume,
+    "positions",
+    polylineVolumeData.positions,
+    entityCollection
+  );
+  processShape(
+    polylineVolume,
+    "shape",
+    polylineVolumeData.shape,
+    entityCollection
+  );
+  processPacketData(
+    Boolean,
+    polylineVolume,
+    "show",
+    polylineVolumeData.show,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    CornerType,
+    polylineVolume,
+    "cornerType",
+    polylineVolumeData.cornerType,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Boolean,
+    polylineVolume,
+    "fill",
+    polylineVolumeData.fill,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processMaterialPacketData(
+    polylineVolume,
+    "material",
+    polylineVolumeData.material,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Boolean,
+    polylineVolume,
+    "outline",
+    polylineVolumeData.outline,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Color,
+    polylineVolume,
+    "outlineColor",
+    polylineVolumeData.outlineColor,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Number,
+    polylineVolume,
+    "outlineWidth",
+    polylineVolumeData.outlineWidth,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Number,
+    polylineVolume,
+    "granularity",
+    polylineVolumeData.granularity,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    ShadowMode,
+    polylineVolume,
+    "shadows",
+    polylineVolumeData.shadows,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    DistanceDisplayCondition,
+    polylineVolume,
+    "distanceDisplayCondition",
+    polylineVolumeData.distanceDisplayCondition,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+}
+
 function processRectangle(entity, packet, entityCollection, sourceUri) {
   var rectangleData = packet.rectangle;
   if (!defined(rectangleData)) {
@@ -4649,6 +4822,15 @@ function DocumentPacket() {
 }
 
 /**
+ * @typedef {Object} CzmlDataSource.LoadOptions
+ *
+ * Initialization options for the `load` method.
+ *
+ * @property {Resource|string} [sourceUri] Overrides the url to use for resolving relative links.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/czml-writer/wiki/CZML-Guide|CZML}.
  * @alias CzmlDataSource
  * @constructor
@@ -4676,9 +4858,8 @@ function CzmlDataSource(name) {
  * Creates a Promise to a new instance loaded with the provided CZML data.
  *
  * @param {Resource|String|Object} czml A url or CZML object to be processed.
- * @param {Object} [options] An object with the following properties:
- * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
+ *
  * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
  */
 CzmlDataSource.load = function (czml, options) {
@@ -4823,6 +5004,7 @@ CzmlDataSource.updaters = [
   processPoint, //
   processPolygon, //
   processPolyline, //
+  processPolylineVolume, //
   processProperties, //
   processRectangle, //
   processPosition, //
@@ -4849,13 +5031,25 @@ CzmlDataSource.prototype.process = function (czml, options) {
  * Loads the provided url or CZML object, replacing any existing data.
  *
  * @param {Resource|String|Object} czml A url or CZML object to be processed.
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
+
  * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.load = function (czml, options) {
   return load(this, czml, options, true);
+};
+
+/**
+ * Updates the data source to the provided time.  This function is optional and
+ * is not required to be implemented.  It is provided for data sources which
+ * retrieve data based on the current animation time or scene state.
+ * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
+ *
+ * @param {JulianDate} time The simulation time.
+ * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ */
+CzmlDataSource.prototype.update = function (time) {
+  return true;
 };
 
 /**

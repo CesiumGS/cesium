@@ -146,30 +146,30 @@ function createVerticesFromQuantizedTerrainMesh(
     Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
   }
 
-  var westIndicesSouthToNorth = copyAndSort(
-    parameters.westIndices,
-    function (a, b) {
-      return uvs[a].y - uvs[b].y;
-    }
-  );
-  var eastIndicesNorthToSouth = copyAndSort(
-    parameters.eastIndices,
-    function (a, b) {
-      return uvs[b].y - uvs[a].y;
-    }
-  );
-  var southIndicesEastToWest = copyAndSort(
-    parameters.southIndices,
-    function (a, b) {
-      return uvs[b].x - uvs[a].x;
-    }
-  );
-  var northIndicesWestToEast = copyAndSort(
-    parameters.northIndices,
-    function (a, b) {
-      return uvs[a].x - uvs[b].x;
-    }
-  );
+  var westIndicesSouthToNorth = copyAndSort(parameters.westIndices, function (
+    a,
+    b
+  ) {
+    return uvs[a].y - uvs[b].y;
+  });
+  var eastIndicesNorthToSouth = copyAndSort(parameters.eastIndices, function (
+    a,
+    b
+  ) {
+    return uvs[b].y - uvs[a].y;
+  });
+  var southIndicesEastToWest = copyAndSort(parameters.southIndices, function (
+    a,
+    b
+  ) {
+    return uvs[b].x - uvs[a].x;
+  });
+  var northIndicesWestToEast = copyAndSort(parameters.northIndices, function (
+    a,
+    b
+  ) {
+    return uvs[a].x - uvs[b].x;
+  });
 
   var orientedBoundingBox;
   var boundingSphere;

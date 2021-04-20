@@ -56,7 +56,7 @@ restart VSCode after you are done installing extensions.
 ## VSCode Tasks and Files
 
 You can launch any of CesiumJS's npm tasks from within VSCode by pressing
-CTRL-P and typing `task ` (with a trailing space). Autocomplete will
+CTRL-P and typing `task` (with a trailing space). Autocomplete will
 offer the list of npm tasks for you to run. The first time you do this,
 allow a moment for it to read the available tasks from the gulpfile.
 

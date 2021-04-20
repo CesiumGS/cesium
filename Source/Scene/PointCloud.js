@@ -3,13 +3,14 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -234,12 +235,11 @@ function initialize(pointCloud, options) {
   var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  var featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJsonByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJsonByteLength;
 
   var featureTableBinary = new Uint8Array(
@@ -254,12 +254,11 @@ function initialize(pointCloud, options) {
   var batchTableBinary;
   if (batchTableJsonByteLength > 0) {
     // Has a batch table JSON
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJsonByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -612,7 +611,8 @@ var normalLocation = 2;
 var batchIdLocation = 3;
 var numberOfAttributes = 4;
 
-var scratchClippingPlaneMatrix = new Matrix4();
+var scratchClippingPlanesMatrix = new Matrix4();
+var scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 
 function createResources(pointCloud, frameState) {
   var context = frameState.context;
@@ -832,20 +832,25 @@ function createResources(pointCloud, frameState) {
     },
   };
 
-  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
-    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
-  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
-
-  pointCloud._translucentRenderState = RenderState.fromCache({
+  var translucentRenderState = {
     depthTest: {
       enabled: true,
     },
     depthMask: false,
     blending: BlendingState.ALPHA_BLEND,
-  });
+  };
+
+  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+    translucentRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    translucentRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
+  pointCloud._translucentRenderState = RenderState.fromCache(
+    translucentRenderState
+  );
 
   pointCloud._drawCommand = new DrawCommand({
     boundingVolume: new BoundingSphere(),
@@ -945,12 +950,17 @@ function createUniformMap(pointCloud, style, frameState) {
       Matrix4.multiply(
         context.uniformState.view3D,
         clippingPlanesOriginMatrix,
-        scratchClippingPlaneMatrix
+        scratchClippingPlanesMatrix
       );
-      return Matrix4.multiply(
-        scratchClippingPlaneMatrix,
+      var transform = Matrix4.multiply(
+        scratchClippingPlanesMatrix,
         clippingPlanes.modelMatrix,
-        scratchClippingPlaneMatrix
+        scratchClippingPlanesMatrix
+      );
+
+      return Matrix4.inverseTranspose(
+        transform,
+        scratchInverseTransposeClippingPlanesMatrix
       );
     },
   };
@@ -996,16 +1006,27 @@ function createUniformMap(pointCloud, style, frameState) {
   pointCloud._drawCommand.uniformMap = uniformMap;
 }
 
-var defaultProperties = ["POSITION", "COLOR", "NORMAL", "POSITION_ABSOLUTE"];
+function getStyleablePropertyIds(source, propertyIds) {
+  // Get all the property IDs used by this style
+  var regex = /czm_3dtiles_property_(\d+)/g;
+  var matches = regex.exec(source);
+  while (matches !== null) {
+    var id = parseInt(matches[1]);
+    if (propertyIds.indexOf(id) === -1) {
+      propertyIds.push(id);
+    }
+    matches = regex.exec(source);
+  }
+}
 
-function getStyleableProperties(source, properties) {
-  // Get all the properties used by this style
-  var regex = /czm_tiles3d_style_(\w+)/g;
+function getBuiltinPropertyNames(source, propertyNames) {
+  // Get all the builtin property names used by this style
+  var regex = /czm_3dtiles_builtin_property_(\w+)/g;
   var matches = regex.exec(source);
   while (matches !== null) {
     var name = matches[1];
-    if (properties.indexOf(name) === -1) {
-      properties.push(name);
+    if (propertyNames.indexOf(name) === -1) {
+      propertyNames.push(name);
     }
     matches = regex.exec(source);
   }
@@ -1037,27 +1058,28 @@ function getVertexAttribute(vertexArray, index) {
   }
 }
 
+var builtinPropertyNameMap = {
+  POSITION: "czm_3dtiles_builtin_property_POSITION",
+  POSITION_ABSOLUTE: "czm_3dtiles_builtin_property_POSITION_ABSOLUTE",
+  COLOR: "czm_3dtiles_builtin_property_COLOR",
+  NORMAL: "czm_3dtiles_builtin_property_NORMAL",
+};
+
 function modifyStyleFunction(source, mutables) {
-  var styleName;
-  var replaceName;
+  // Edit the function header to accept the point position, color, and normal
+  var functionHeader =
+    "(" +
+    "vec3 czm_3dtiles_builtin_property_POSITION, " +
+    "vec3 czm_3dtiles_builtin_property_POSITION_ABSOLUTE, " +
+    "vec4 czm_3dtiles_builtin_property_COLOR, " +
+    "vec3 czm_3dtiles_builtin_property_NORMAL" +
+    ")";
 
-  // Replace occurrences of czm_tiles3d_style_DEFAULTPROPERTY
-  var length = defaultProperties.length;
-  for (var i = 0; i < length; ++i) {
-    var property = defaultProperties[i];
-    styleName = "czm_tiles3d_style_" + property;
-    replaceName = property.toLowerCase();
-    source = source.replace(
-      new RegExp(styleName + "(\\W)", "g"),
-      replaceName + "$1"
-    );
-  }
-
-  // Replace occurences of czm_tiles3d_style_MUTABLENAME
+  // Replace occurrences of czm_tiles3d_style_MUTABLENAME
   for (var name in mutables) {
     if (mutables.hasOwnProperty(name)) {
-      styleName = "czm_tiles3d_style_" + name;
-      replaceName = "u_mutable" + name;
+      var styleName = "czm_tiles3d_style_" + name;
+      var replaceName = "u_mutable" + name;
       source = source.replace(
         new RegExp(styleName + "(\\W)", "g"),
         replaceName + "$1"
@@ -1065,11 +1087,7 @@ function modifyStyleFunction(source, mutables) {
     }
   }
 
-  // Edit the function header to accept the point position, color, and normal
-  return source.replace(
-    "()",
-    "(vec3 position, vec3 position_absolute, vec4 color, vec3 normal)"
-  );
+  return source.replace("()", functionHeader);
 }
 
 function createShaders(pointCloud, frameState, style) {
@@ -1100,24 +1118,43 @@ function createShaders(pointCloud, frameState, style) {
   var pointSizeStyleFunction;
   var styleTranslucent = isTranslucent;
 
-  if (hasStyle) {
+  var propertyNameMap = clone(builtinPropertyNameMap);
+  var propertyIdToAttributeMap = {};
+  var styleableShaderAttributes = pointCloud._styleableShaderAttributes;
+  for (name in styleableShaderAttributes) {
+    if (styleableShaderAttributes.hasOwnProperty(name)) {
+      attribute = styleableShaderAttributes[name];
+      propertyNameMap[name] = "czm_3dtiles_property_" + attribute.location;
+      propertyIdToAttributeMap[attribute.location] = attribute;
+    }
+  }
+
+  if (hasStyle && defined(style.mutables)) {
     mutables = style.mutables;
+    for (name in mutables) {
+      if (mutables.hasOwnProperty(name)) {
+        propertyNameMap[name] = "u_mutable" + name;
+      }
+    }
+  }
+
+  if (hasStyle) {
     var shaderState = {
       translucent: false,
     };
     colorStyleFunction = style.getColorShaderFunction(
       "getColorFromStyle",
-      "czm_tiles3d_style_",
+      propertyNameMap,
       shaderState
     );
     showStyleFunction = style.getShowShaderFunction(
       "getShowFromStyle",
-      "czm_tiles3d_style_",
+      propertyNameMap,
       shaderState
     );
     pointSizeStyleFunction = style.getPointSizeShaderFunction(
       "getPointSizeFromStyle",
-      "czm_tiles3d_style_",
+      propertyNameMap,
       shaderState
     );
     if (defined(colorStyleFunction) && shaderState.translucent) {
@@ -1133,34 +1170,30 @@ function createShaders(pointCloud, frameState, style) {
   var hasClippedContent = pointCloud.isClipped;
 
   // Get the properties in use by the style
-  var styleableProperties = [];
+  var styleablePropertyIds = [];
+  var builtinPropertyNames = [];
 
   if (hasColorStyle) {
-    getStyleableProperties(colorStyleFunction, styleableProperties);
+    getStyleablePropertyIds(colorStyleFunction, styleablePropertyIds);
+    getBuiltinPropertyNames(colorStyleFunction, builtinPropertyNames);
     colorStyleFunction = modifyStyleFunction(colorStyleFunction, mutables);
   }
   if (hasShowStyle) {
-    getStyleableProperties(showStyleFunction, styleableProperties);
+    getStyleablePropertyIds(showStyleFunction, styleablePropertyIds);
+    getBuiltinPropertyNames(showStyleFunction, builtinPropertyNames);
     showStyleFunction = modifyStyleFunction(showStyleFunction, mutables);
   }
   if (hasPointSizeStyle) {
-    getStyleableProperties(pointSizeStyleFunction, styleableProperties);
+    getStyleablePropertyIds(pointSizeStyleFunction, styleablePropertyIds);
+    getBuiltinPropertyNames(pointSizeStyleFunction, builtinPropertyNames);
     pointSizeStyleFunction = modifyStyleFunction(
       pointSizeStyleFunction,
       mutables
     );
   }
 
-  var usesColorSemantic = styleableProperties.indexOf("COLOR") >= 0;
-  var usesNormalSemantic = styleableProperties.indexOf("NORMAL") >= 0;
-
-  // Split default properties from user properties
-  var userProperties = styleableProperties.filter(function (property) {
-    return (
-      defaultProperties.indexOf(property) === -1 &&
-      !(defined(mutables) && defined(mutables[property]))
-    );
-  });
+  var usesColorSemantic = builtinPropertyNames.indexOf("COLOR") >= 0;
+  var usesNormalSemantic = builtinPropertyNames.indexOf("NORMAL") >= 0;
 
   if (usesNormalSemantic && !hasNormals) {
     throw new RuntimeError(
@@ -1169,11 +1202,10 @@ function createShaders(pointCloud, frameState, style) {
   }
 
   // Disable vertex attributes that aren't used in the style, enable attributes that are
-  var styleableShaderAttributes = pointCloud._styleableShaderAttributes;
   for (name in styleableShaderAttributes) {
     if (styleableShaderAttributes.hasOwnProperty(name)) {
       attribute = styleableShaderAttributes[name];
-      var enabled = userProperties.indexOf(name) >= 0;
+      var enabled = styleablePropertyIds.indexOf(attribute.location) >= 0;
       var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
       vertexAttribute.enabled = enabled;
     }
@@ -1209,20 +1241,12 @@ function createShaders(pointCloud, frameState, style) {
 
   var attributeDeclarations = "";
 
-  var length = userProperties.length;
+  var length = styleablePropertyIds.length;
   for (i = 0; i < length; ++i) {
-    name = userProperties[i];
-    attribute = styleableShaderAttributes[name];
-    if (!defined(attribute)) {
-      throw new RuntimeError(
-        'Style references a property "' +
-          name +
-          '" that does not exist or is not styleable.'
-      );
-    }
-
+    var propertyId = styleablePropertyIds[i];
+    attribute = propertyIdToAttributeMap[propertyId];
     var componentCount = attribute.componentCount;
-    var attributeName = "czm_tiles3d_style_" + name;
+    var attributeName = "czm_3dtiles_property_" + propertyId;
     var attributeType;
     if (componentCount === 1) {
       attributeType = "float";
@@ -1419,7 +1443,7 @@ function createShaders(pointCloud, frameState, style) {
 
   if (hasClippedContent) {
     fs +=
-      "uniform sampler2D u_clippingPlanes; \n" +
+      "uniform highp sampler2D u_clippingPlanes; \n" +
       "uniform mat4 u_clippingPlanesMatrix; \n" +
       "uniform vec4 u_clippingPlanesEdgeStyle; \n";
     fs += "\n";

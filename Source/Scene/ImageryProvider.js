@@ -11,6 +11,7 @@ import Resource from "../Core/Resource.js";
  *
  * @alias ImageryProvider
  * @constructor
+ * @abstract
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
@@ -19,6 +20,7 @@ import Resource from "../Core/Resource.js";
  * @see GoogleEarthEnterpriseImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
  * @see GridImageryProvider
+ * @see IonImageryProvider
  * @see MapboxImageryProvider
  * @see MapboxStyleImageryProvider
  * @see SingleTileImageryProvider
@@ -35,16 +37,34 @@ function ImageryProvider() {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
 
   /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -53,7 +73,7 @@ function ImageryProvider() {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -61,7 +81,7 @@ function ImageryProvider() {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -70,7 +90,7 @@ function ImageryProvider() {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -78,7 +98,7 @@ function ImageryProvider() {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -160,7 +180,7 @@ Object.defineProperties(ImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link ImageryProvider#ready} returns true.
    * @memberof ImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -257,7 +277,6 @@ Object.defineProperties(ImageryProvider.prototype, {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- * @function
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -266,26 +285,28 @@ Object.defineProperties(ImageryProvider.prototype, {
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
-ImageryProvider.prototype.getTileCredits =
-  DeveloperError.throwInstantiationError;
+ImageryProvider.prototype.getTileCredits = function (x, y, level) {
+  DeveloperError.throwInstantiationError();
+};
 
 /**
  * Requests the image for a given tile.  This function should
  * not be called before {@link ImageryProvider#ready} returns true.
- * @function
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
-ImageryProvider.prototype.requestImage = DeveloperError.throwInstantiationError;
+ImageryProvider.prototype.requestImage = function (x, y, level, request) {
+  DeveloperError.throwInstantiationError();
+};
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
@@ -306,7 +327,15 @@ ImageryProvider.prototype.requestImage = DeveloperError.throwInstantiationError;
  *
  * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
-ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
+ImageryProvider.prototype.pickFeatures = function (
+  x,
+  y,
+  level,
+  longitude,
+  latitude
+) {
+  DeveloperError.throwInstantiationError();
+};
 
 var ktxRegex = /\.ktx$/i;
 var crnRegex = /\.crn$/i;
@@ -318,7 +347,7 @@ var crnRegex = /\.crn$/i;
  *
  * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
  * @param {Resource|String} url The URL of the image.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

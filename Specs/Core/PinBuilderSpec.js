@@ -51,13 +51,12 @@ describe("Core/PinBuilder", function () {
     var builder = new PinBuilder();
 
     //Solid square icon
-    return when(
-      builder.fromMakiIconId("square", Color.YELLOW, 128),
-      function (canvas) {
-        expect(getPinColor(canvas)).toEqual(Color.YELLOW);
-        expect(getIconColor(canvas)).toEqual(Color.WHITE);
-      }
-    );
+    return when(builder.fromMakiIconId("square", Color.YELLOW, 128), function (
+      canvas
+    ) {
+      expect(getPinColor(canvas)).toEqual(Color.YELLOW);
+      expect(getIconColor(canvas)).toEqual(Color.WHITE);
+    });
   });
 
   it("caches and returns existing canvas", function () {

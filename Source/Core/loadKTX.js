@@ -6,6 +6,7 @@ import PixelFormat from "./PixelFormat.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 import WebGLConstants from "./WebGLConstants.js";
+import deprecationWarning from "./deprecationWarning.js";
 
 /**
  * Asynchronously loads and parses the given URL to a KTX file or parses the raw binary data of a KTX file.
@@ -25,7 +26,7 @@ import WebGLConstants from "./WebGLConstants.js";
  * </ul>
  * </p>
  *
- * @exports loadKTX
+ * @function loadKTX
  *
  * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
@@ -57,8 +58,13 @@ import WebGLConstants from "./WebGLConstants.js";
  * @see {@link https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/|KTX file format}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+ * @deprecated This function has been deprecated and will be removed in CesiumJS 1.82.
  */
 function loadKTX(resourceOrUrlOrBuffer) {
+  deprecationWarning(
+    "loadKTX",
+    "loadKTX is deprecated and will be removed in CesiumJS 1.82."
+  );
   //>>includeStart('debug', pragmas.debug);
   Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
   //>>includeEnd('debug');

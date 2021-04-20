@@ -315,13 +315,11 @@
 
         Sandcastle.addToolbarMenu(options);
 
-        Sandcastle.addToggleButton(
-          "Shadows",
-          viewer.shadows,
-          function (checked) {
-            viewer.shadows = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
+          checked
+        ) {
+          viewer.shadows = checked;
+        });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();

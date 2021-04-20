@@ -6,7 +6,7 @@ var coords = new Cartesian3();
 /**
  * Determines if a point is inside a triangle.
  *
- * @exports pointInsideTriangle
+ * @function pointInsideTriangle
  *
  * @param {Cartesian2|Cartesian3} point The point to test.
  * @param {Cartesian2|Cartesian3} p0 The first point of the triangle.

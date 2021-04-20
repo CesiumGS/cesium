@@ -104,23 +104,18 @@ describe(
     }
 
     function expectCubeMapAndOctahedralMapEqual(octahedralMap, direction, lod) {
-      return sampleCubeMap(
-        octahedralMap._cubeMaps[lod],
-        direction,
-        function (cubeMapColor) {
-          var directionFlipY = direction.clone();
-          directionFlipY.y *= -1;
+      return sampleCubeMap(octahedralMap._cubeMaps[lod], direction, function (
+        cubeMapColor
+      ) {
+        var directionFlipY = direction.clone();
+        directionFlipY.y *= -1;
 
-          sampleOctahedralMap(
-            octahedralMap,
-            directionFlipY,
-            lod,
-            function (octahedralMapColor) {
-              return expect(cubeMapColor).toEqualEpsilon(octahedralMapColor, 5);
-            }
-          );
-        }
-      );
+        sampleOctahedralMap(octahedralMap, directionFlipY, lod, function (
+          octahedralMapColor
+        ) {
+          return expect(cubeMapColor).toEqualEpsilon(octahedralMapColor, 5);
+        });
+      });
     }
 
     it("creates a packed texture with the right dimensions", function () {

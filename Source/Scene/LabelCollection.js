@@ -407,7 +407,10 @@ function repositionAllGlyphs(label) {
     horizontalOrigin,
     backgroundPadding
   );
-  var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
+  var lineSpacing =
+    (defined(label._lineHeight)
+      ? label._lineHeight
+      : defaultLineSpacingPercent * label._fontSize) / label._relativeSize;
   var otherLinesHeight = lineSpacing * (numberOfLines - 1);
   var totalLineWidth = maxLineWidth;
   var totalLineHeight = maxLineHeight + otherLinesHeight;
@@ -573,6 +576,7 @@ function destroyLabel(labelCollection, label) {
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the labels in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
@@ -627,6 +631,14 @@ function LabelCollection(options) {
   this._totalGlyphCount = 0;
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+
+  /**
+   * Determines if labels in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -884,6 +896,10 @@ LabelCollection.prototype.get = function (index) {
  *
  */
 LabelCollection.prototype.update = function (frameState) {
+  if (!this.show) {
+    return;
+  }
+
   var billboardCollection = this._billboardCollection;
   var backgroundBillboardCollection = this._backgroundBillboardCollection;
 

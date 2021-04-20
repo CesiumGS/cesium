@@ -36,6 +36,7 @@ var DEFAULT_SHOW_VALUE = true;
 
 /**
  * @private
+ * @constructor
  */
 function Cesium3DTileBatchTable(
   content,
@@ -708,17 +709,16 @@ function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
 
 function hasPropertyInHierarchy(batchTable, batchId, name) {
   var hierarchy = batchTable._batchTableHierarchy;
-  var result = traverseHierarchy(
+  var result = traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instances = hierarchy.classes[classId].instances;
-      if (defined(instances[name])) {
-        return true;
-      }
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instances = hierarchy.classes[classId].instances;
+    if (defined(instances[name])) {
+      return true;
     }
-  );
+  });
   return defined(result);
 }
 
@@ -739,51 +739,49 @@ function getPropertyNamesInHierarchy(batchTable, batchId, results) {
 
 function getHierarchyProperty(batchTable, batchId, name) {
   var hierarchy = batchTable._batchTableHierarchy;
-  return traverseHierarchy(
+  return traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instanceClass = hierarchy.classes[classId];
-      var indexInClass = hierarchy.classIndexes[instanceIndex];
-      var propertyValues = instanceClass.instances[name];
-      if (defined(propertyValues)) {
-        if (defined(propertyValues.typedArray)) {
-          return getBinaryProperty(propertyValues, indexInClass);
-        }
-        return clone(propertyValues[indexInClass], true);
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instanceClass = hierarchy.classes[classId];
+    var indexInClass = hierarchy.classIndexes[instanceIndex];
+    var propertyValues = instanceClass.instances[name];
+    if (defined(propertyValues)) {
+      if (defined(propertyValues.typedArray)) {
+        return getBinaryProperty(propertyValues, indexInClass);
       }
+      return clone(propertyValues[indexInClass], true);
     }
-  );
+  });
 }
 
 function setHierarchyProperty(batchTable, batchId, name, value) {
   var hierarchy = batchTable._batchTableHierarchy;
-  var result = traverseHierarchy(
+  var result = traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instanceClass = hierarchy.classes[classId];
-      var indexInClass = hierarchy.classIndexes[instanceIndex];
-      var propertyValues = instanceClass.instances[name];
-      if (defined(propertyValues)) {
-        //>>includeStart('debug', pragmas.debug);
-        if (instanceIndex !== batchId) {
-          throw new DeveloperError(
-            'Inherited property "' + name + '" is read-only.'
-          );
-        }
-        //>>includeEnd('debug');
-        if (defined(propertyValues.typedArray)) {
-          setBinaryProperty(propertyValues, indexInClass, value);
-        } else {
-          propertyValues[indexInClass] = clone(value, true);
-        }
-        return true;
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instanceClass = hierarchy.classes[classId];
+    var indexInClass = hierarchy.classIndexes[instanceIndex];
+    var propertyValues = instanceClass.instances[name];
+    if (defined(propertyValues)) {
+      //>>includeStart('debug', pragmas.debug);
+      if (instanceIndex !== batchId) {
+        throw new DeveloperError(
+          'Inherited property "' + name + '" is read-only.'
+        );
       }
+      //>>includeEnd('debug');
+      if (defined(propertyValues.typedArray)) {
+        setBinaryProperty(propertyValues, indexInClass, value);
+      } else {
+        propertyValues[indexInClass] = clone(value, true);
+      }
+      return true;
     }
-  );
+  });
   return defined(result);
 }
 
@@ -800,17 +798,16 @@ Cesium3DTileBatchTable.prototype.isClass = function (batchId, className) {
   }
 
   // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
-  var result = traverseHierarchy(
+  var result = traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instanceClass = hierarchy.classes[classId];
-      if (instanceClass.name === className) {
-        return true;
-      }
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instanceClass = hierarchy.classes[classId];
+    if (instanceClass.name === className) {
+      return true;
     }
-  );
+  });
   return defined(result);
 };
 
@@ -1198,7 +1195,8 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
 
 Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
   handleTranslucent,
-  diffuseAttributeOrUniformName
+  diffuseAttributeOrUniformName,
+  hasPremultipliedAlpha
 ) {
   if (this.featuresLength === 0) {
     return;
@@ -1213,8 +1211,13 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
         "varying vec4 tile_featureColor; \n" +
         "void main() \n" +
         "{ \n" +
-        "    tile_color(tile_featureColor); \n" +
-        "}";
+        "    tile_color(tile_featureColor); \n";
+
+      if (hasPremultipliedAlpha) {
+        source += "    gl_FragColor.rgb *= gl_FragColor.a; \n";
+      }
+
+      source += "}";
     } else {
       if (handleTranslucent) {
         source += "uniform bool tile_translucentCommand; \n";
@@ -1249,7 +1252,13 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
           "    } \n";
       }
 
-      source += "    tile_color(featureProperties); \n" + "} \n";
+      source += "    tile_color(featureProperties); \n";
+
+      if (hasPremultipliedAlpha) {
+        source += "    gl_FragColor.rgb *= gl_FragColor.a; \n";
+      }
+
+      source += "} \n";
     }
     return source;
   };
@@ -1271,6 +1280,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "{ \n" +
         "    tile_main(); \n" +
         "    gl_FragColor = tile_featureColor; \n" +
+        "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
         "}";
     } else {
       source +=
@@ -1285,6 +1295,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "        discard; \n" +
         "    } \n" +
         "    gl_FragColor = featureProperties; \n" +
+        "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
         "} \n";
     }
     return source;
@@ -1610,6 +1621,8 @@ function getTranslucentRenderState(renderState) {
   rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
+  rs.stencilTest = StencilConstants.setCesium3DTileBit();
+  rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
 
   return RenderState.fromCache(rs);
 }

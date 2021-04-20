@@ -1,7 +1,7 @@
 /**
  * Provides the type of time standards which JulianDate can take as input.
  *
- * @exports TimeStandard
+ * @enum {Number}
  *
  * @see JulianDate
  */

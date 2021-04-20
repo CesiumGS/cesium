@@ -274,23 +274,19 @@
           primitives.equator.show = checked;
         });
 
-        Sandcastle.addToggleButton(
-          "Show prime meridian",
-          true,
-          function (checked) {
-            primitives.primeMeridian.show = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Show prime meridian", true, function (
+          checked
+        ) {
+          primitives.primeMeridian.show = checked;
+        });
 
-        Sandcastle.addToggleButton(
-          "Show low-resolution grid",
-          false,
-          function (checked) {
-            primitives.lowResolutionGrid.forEach(function (line) {
-              line.show = checked;
-            });
-          }
-        );
+        Sandcastle.addToggleButton("Show low-resolution grid", false, function (
+          checked
+        ) {
+          primitives.lowResolutionGrid.forEach(function (line) {
+            line.show = checked;
+          });
+        });
 
         Sandcastle.addToggleButton(
           "Show higher-resolution grid",
@@ -302,20 +298,18 @@
           }
         );
 
-        Sandcastle.addToggleButton(
-          "Show antipodal point",
-          false,
-          function (checked) {
-            showAntipodalPoint = checked;
-            var antipodalPoint = primitives.antipodalPoint;
+        Sandcastle.addToggleButton("Show antipodal point", false, function (
+          checked
+        ) {
+          showAntipodalPoint = checked;
+          var antipodalPoint = primitives.antipodalPoint;
 
-            if (Cesium.defined(antipodalPoint.parallel)) {
-              antipodalPoint.parallel.show = showAntipodalPoint;
-              antipodalPoint.meridian.show = showAntipodalPoint;
-              antipodalPoint.label.show = showAntipodalPoint;
-            }
+          if (Cesium.defined(antipodalPoint.parallel)) {
+            antipodalPoint.parallel.show = showAntipodalPoint;
+            antipodalPoint.meridian.show = showAntipodalPoint;
+            antipodalPoint.label.show = showAntipodalPoint;
           }
-        );
+        });
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }

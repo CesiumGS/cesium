@@ -56,7 +56,7 @@
          * The function called to geocode using this geocoder service.
          *
          * @param {String} input The query to be sent to the geocoder service
-         * @returns {Promise<GeocoderService~Result[]>}
+         * @returns {Promise<GeocoderService.Result[]>}
          */
         OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
           var endpoint = "https://nominatim.openstreetmap.org/search";

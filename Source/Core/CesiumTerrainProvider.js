@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
-import getStringFromTypedArray from "./getStringFromTypedArray.js";
+import getJsonFromTypedArray from "./getJsonFromTypedArray.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import IndexDatatype from "./IndexDatatype.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
@@ -34,7 +34,6 @@ function LayerInformation(layer) {
   this.availabilityLevels = layer.availabilityLevels;
   this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
-  this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.availabilityPromiseCache = {};
 }
 
@@ -485,7 +484,7 @@ function CesiumTerrainProvider(options) {
  * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
  * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
  *
- * @exports QuantizedMeshExtensionIds
+ * @namespace QuantizedMeshExtensionIds
  * @see CesiumTerrainProvider
  * @private
  */
@@ -711,12 +710,11 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     ) {
       var stringLength = view.getUint32(pos, true);
       if (stringLength > 0) {
-        var jsonString = getStringFromTypedArray(
+        var metadata = getJsonFromTypedArray(
           new Uint8Array(buffer),
           pos + Uint32Array.BYTES_PER_ELEMENT,
           stringLength
         );
-        var metadata = JSON.parse(jsonString);
         var availableTiles = metadata.available;
         if (defined(availableTiles)) {
           for (var offset = 0; offset < availableTiles.length; ++offset) {
@@ -1201,7 +1199,7 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
@@ -1278,7 +1276,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
           // For cutout terrain, if this isn't the top layer the availability tiles
           //  may never get loaded, so request it here.
           var request = new Request({
-            throttle: true,
+            throttle: false,
             throttleByServer: true,
             type: RequestType.TERRAIN,
           });
