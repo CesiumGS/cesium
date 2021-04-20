@@ -1,4 +1,4 @@
-import { MetadataTable } from "../../Source/Cesium.js";
+import { Cartesian3, MetadataTable } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/MetadataTable", function () {
@@ -308,8 +308,7 @@ describe("Scene/MetadataTable", function () {
     });
 
     var value = metadataTable.getProperty(0, "position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
 
     expect(metadataTable.getProperty(0, "type")).toBe("Other");
   });

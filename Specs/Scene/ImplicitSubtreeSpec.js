@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   ImplicitSubdivisionScheme,
   ImplicitSubtree,
   ImplicitTileCoordinates,
@@ -1114,7 +1115,7 @@ describe("Scene/ImplicitSubtree", function () {
 
         for (var i = 0; i < buildingCounts.length; i++) {
           expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
-            highlightColors[i]
+            Cartesian3.unpack(highlightColors[i])
           );
           expect(metadataTable.getProperty(i, "buildingCount")).toBe(
             buildingCounts[i]
@@ -1171,7 +1172,7 @@ describe("Scene/ImplicitSubtree", function () {
 
         for (var i = 0; i < buildingCounts.length; i++) {
           expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
-            highlightColors[i]
+            Cartesian3.unpack(highlightColors[i])
           );
           expect(metadataTable.getProperty(i, "buildingCount")).toBe(
             buildingCounts[i]
@@ -1228,7 +1229,7 @@ describe("Scene/ImplicitSubtree", function () {
 
         for (var i = 0; i < buildingCounts.length; i++) {
           expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
-            highlightColors[i]
+            Cartesian3.unpack(highlightColors[i])
           );
           expect(metadataTable.getProperty(i, "buildingCount")).toBe(
             buildingCounts[i]
@@ -1480,7 +1481,7 @@ describe("Scene/ImplicitSubtree", function () {
 
         for (var i = 0; i < buildingCounts.length; i++) {
           expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
-            highlightColors[i]
+            Cartesian3.unpack(highlightColors[i])
           );
           expect(metadataTable.getProperty(i, "buildingCount")).toBe(
             buildingCounts[i]

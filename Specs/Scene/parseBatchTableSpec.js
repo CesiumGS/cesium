@@ -1,4 +1,10 @@
-import { parseBatchTable, MetadataType } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  parseBatchTable,
+  MetadataType,
+} from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
   var batchTableJson = {};
@@ -170,14 +176,15 @@ describe("Scene/parseBatchTable", function () {
     expect(properties.dvec4Property.componentCount).toBe(4);
 
     var featureTable = metadata.getFeatureTable("_batchTable");
-    expect(featureTable.getProperty(0, "vec2Property")).toEqual([0.0, 0.0]);
-    expect(featureTable.getProperty(0, "uvec3Property")).toEqual([0, 0, 0]);
-    expect(featureTable.getProperty(0, "dvec4Property")).toEqual([
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-    ]);
+    expect(featureTable.getProperty(0, "vec2Property")).toEqual(
+      new Cartesian2(0.0, 0.0)
+    );
+    expect(featureTable.getProperty(0, "uvec3Property")).toEqual(
+      new Cartesian3(0, 0, 0)
+    );
+    expect(featureTable.getProperty(0, "dvec4Property")).toEqual(
+      new Cartesian4(0.0, 0.0, 0.0, 0.0)
+    );
   });
 
   it("parses batch table with JSON properties", function () {

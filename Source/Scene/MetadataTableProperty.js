@@ -187,7 +187,8 @@ MetadataTableProperty.prototype.get = function (index) {
   //>>includeEnd('debug');
 
   var value = get(this, index);
-  return this._classProperty.normalize(value);
+  value = this._classProperty.normalize(value);
+  return this._classProperty.unpackVectorTypes(value);
 };
 
 /**
@@ -209,6 +210,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   }
   //>>includeEnd('debug');
 
+  value = classProperty.packVectorTypes(value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);

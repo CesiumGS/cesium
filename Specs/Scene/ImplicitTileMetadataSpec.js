@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   ImplicitSubdivisionScheme,
   ImplicitSubtree,
   ImplicitTileCoordinates,
@@ -212,7 +213,9 @@ describe("Scene/ImplicitTileMetadata", function () {
   });
 
   it("getProperty returns the property value", function () {
-    expect(tileMetadata.getProperty("highlightColor")).toEqual([255, 255, 0]);
+    expect(tileMetadata.getProperty("highlightColor")).toEqual(
+      new Cartesian3(255, 255, 0)
+    );
     expect(tileMetadata.getProperty("buildingCount")).toBe(350);
   });
 
@@ -233,27 +236,24 @@ describe("Scene/ImplicitTileMetadata", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual([
-      255,
-      255,
-      0,
-    ]);
+    expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
+      new Cartesian3(255, 255, 0)
+    );
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual([
-      255,
-      255,
-      0,
-    ]);
+    expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
+      new Cartesian3(255, 255, 0)
+    );
     expect(
-      tileMetadata.setPropertyBySemantic("_HIGHLIGHT_COLOR", [0, 0, 0])
+      tileMetadata.setPropertyBySemantic(
+        "_HIGHLIGHT_COLOR",
+        new Cartesian3(0, 0, 0)
+      )
     ).toBe(true);
-    expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual([
-      0,
-      0,
-      0,
-    ]);
+    expect(tileMetadata.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
+      new Cartesian3(0, 0, 0)
+    );
   });
 
   it("setPropertyBySemantic returns false if the semantic does not exist", function () {

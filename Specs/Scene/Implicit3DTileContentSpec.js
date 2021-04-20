@@ -844,11 +844,15 @@ describe(
 
           var groups = tileset.metadata.groups;
           var ground = groups.ground;
-          expect(ground.getProperty("color")).toEqual([120, 68, 32]);
+          expect(ground.getProperty("color")).toEqual(
+            new Cartesian3(120, 68, 32)
+          );
           expect(ground.getProperty("priority")).toBe(0);
 
           var sky = groups.sky;
-          expect(sky.getProperty("color")).toEqual([206, 237, 242]);
+          expect(sky.getProperty("color")).toEqual(
+            new Cartesian3(206, 237, 242)
+          );
           expect(sky.getProperty("priority")).toBe(1);
 
           tiles.forEach(function (tile) {

@@ -5198,7 +5198,7 @@ describe(
               tilesetProperties.date
             );
             expect(tilesetMetadata.getProperty("centerCartographic")).toEqual(
-              tilesetProperties.centerCartographic
+              Cartesian3.unpack(tilesetProperties.centerCartographic)
             );
             expect(tilesetMetadata.getProperty("tileCount")).toBe(
               tilesetProperties.tileCount
@@ -5298,23 +5298,23 @@ describe(
         ).then(function (tileset) {
           var expected = {
             "parent.b3dm": {
-              color: [0.5, 0.0, 1.0],
+              color: new Cartesian3(0.5, 0.0, 1.0),
               population: 530,
             },
             "ll.b3dm": {
-              color: [1.0, 1.0, 0.0],
+              color: new Cartesian3(1.0, 1.0, 0.0),
               population: 50,
             },
             "lr.b3dm": {
-              color: [1.0, 0.0, 0.5],
+              color: new Cartesian3(1.0, 0.0, 0.5),
               population: 230,
             },
             "ur.b3dm": {
-              color: [1.0, 0.5, 0.0],
+              color: new Cartesian3(1.0, 0.5, 0.0),
               population: 150,
             },
             "ul.b3dm": {
-              color: [1.0, 0.0, 0.0],
+              color: new Cartesian3(1.0, 0.0, 0.0),
               population: 100,
             },
           };
@@ -5360,10 +5360,10 @@ describe(
             "Northeast",
           ];
           var expectedColors = [
-            [255, 255, 255],
-            [255, 0, 0],
-            [0, 255, 0],
-            [0, 0, 255],
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
           ];
 
           var tiles = [transcodedRoot].concat(transcodedRoot.children);
