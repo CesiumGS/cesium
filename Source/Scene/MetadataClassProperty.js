@@ -335,10 +335,9 @@ MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
 };
 
 /**
- * Unpack Pack a {@link Cartesian2}, {@link Cartesian3}, or
- * {@link Cartesian4} into an array if this property is an <code>ARRAY</code> of length 2, 3,
- * or 4, respectively. All other values (including arrays of other sizes) are
- * passed through unaltered.
+ * Pack a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} into an
+ * array if this property is an <code>ARRAY</code> of length 2, 3, or 4, respectively.
+ * All other values (including arrays of other sizes) are passed through unaltered.
  *
  * @param {*} value The value of this property
  * @returns {*} An array of the appropriate length if the property is a vector type. Otherwise, the value is returned unaltered.
