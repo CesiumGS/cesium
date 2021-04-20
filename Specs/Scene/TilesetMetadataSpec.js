@@ -1,4 +1,8 @@
-import { MetadataClass, TilesetMetadata } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  MetadataClass,
+  TilesetMetadata,
+} from "../../Source/Cesium.js";
 
 describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {
@@ -306,8 +310,7 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     var value = tilesetMetadata.getProperty("position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty returns the default value when the property is missing", function () {
@@ -333,8 +336,7 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     var value = tilesetMetadata.getProperty("position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty throws without propertyId", function () {
@@ -379,7 +381,7 @@ describe("Scene/TilesetMetadata", function () {
       },
     });
 
-    var position = [1.0, 1.0, 1.0];
+    var position = new Cartesian3(1.0, 1.0, 1.0);
     expect(tilesetMetadata.setProperty("position", position)).toBe(true);
     expect(tilesetMetadata.getProperty("position")).toEqual(position);
     expect(tilesetMetadata.getProperty("position")).not.toBe(position); // The value is cloned

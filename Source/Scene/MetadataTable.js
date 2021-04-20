@@ -243,7 +243,8 @@ function getDefault(classDefinition, propertyId) {
       if (classProperty.type === MetadataType.ARRAY) {
         value = value.slice(); // clone
       }
-      return classProperty.normalize(value);
+      value = classProperty.normalize(value);
+      return classProperty.unpackVectorTypes(value);
     }
   }
 }

@@ -213,6 +213,31 @@ MetadataType.isUnsignedIntegerType = function (type) {
 };
 
 /**
+ * Returns whether a type can be used in a vector, i.e. the {@link Cartesian2},
+ * {@link Cartesian3}, or {@link Cartesian4} classes. This includes all numeric
+ * types except for types requiring 64-bits
+ */
+MetadataType.isVectorCompatible = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
+
+  switch (type) {
+    case MetadataType.INT8:
+    case MetadataType.UINT8:
+    case MetadataType.INT16:
+    case MetadataType.UINT16:
+    case MetadataType.INT32:
+    case MetadataType.UINT32:
+    case MetadataType.FLOAT32:
+    case MetadataType.FLOAT64:
+      return true;
+    default:
+      return false;
+  }
+};
+
+/**
  * Normalizes signed integers to the range [-1.0, 1.0] and unsigned integers to
  * the range [0.0, 1.0].
  * <p>
