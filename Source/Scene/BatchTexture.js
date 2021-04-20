@@ -29,6 +29,7 @@ import Texture from "../Renderer/Texture.js";
 export default function BatchTexture(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.featuresLength", options.featuresLength);
+  Check.typeOf.object("options.content", options.content);
   //>>includeEnd('debug');
 
   var featuresLength = options.featuresLength;

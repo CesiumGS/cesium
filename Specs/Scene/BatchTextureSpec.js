@@ -19,6 +19,50 @@ describe(
 
     var result = new Color();
 
+    it("throws without featuresLength", function () {
+      expect(function () {
+        return new BatchTexture({
+          featuresLength: undefined,
+          content: mockContent,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws without content", function () {
+      expect(function () {
+        return new BatchTexture({
+          featuresLength: 1,
+          content: undefined,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("setShow throws with invalid batchId", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.setShow();
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.setShow(-1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.setShow(2);
+      }).toThrowDeveloperError();
+    });
+
+    it("setShow throws with undefined value", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.setShow(0);
+      }).toThrowDeveloperError();
+    });
+
     it("setShow sets show", function () {
       var batchTexture = new BatchTexture({
         content: mockContent,
@@ -51,6 +95,59 @@ describe(
       expect(batchTexture.getShow(0)).toEqual(false);
     });
 
+    it("getShow throws with invalid batchId", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.getShow();
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.getShow(-1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.getShow(2);
+      }).toThrowDeveloperError();
+    });
+
+    it("getShow", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      // Show is true by default
+      expect(batchTexture.getShow(0)).toEqual(true);
+      batchTexture.setShow(0, false);
+      expect(batchTexture.getShow(0)).toEqual(false);
+    });
+
+    it("setColor throws with invalid batchId", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.setColor();
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.setColor(-1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.setColor(2);
+      }).toThrowDeveloperError();
+    });
+
+    it("setColor throws with undefined value", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.setColor(0);
+      }).toThrowDeveloperError();
+    });
+
     it("setColor", function () {
       var batchTexture = new BatchTexture({
         content: mockContent,
@@ -80,6 +177,83 @@ describe(
       // Check that dirty stays false when value is the same
       batchTexture.setColor(0, Color.YELLOW);
       expect(batchTexture._batchValuesDirty).toEqual(false);
+      expect(batchTexture.getColor(0, result)).toEqual(Color.YELLOW);
+    });
+
+    it("setAllColor throws with undefined value", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.setAllColor();
+      }).toThrowDeveloperError();
+    });
+
+    it("setAllColor", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 2,
+      });
+      batchTexture.setAllColor(Color.YELLOW);
+      expect(batchTexture.getColor(0, result)).toEqual(Color.YELLOW);
+      expect(batchTexture.getColor(1, result)).toEqual(Color.YELLOW);
+    });
+
+    it("setAllShow throws with undefined value", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.setAllShow();
+      }).toThrowDeveloperError();
+    });
+
+    it("setAllShow", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      batchTexture.setAllShow(false);
+      expect(batchTexture.getShow(0)).toBe(false);
+      expect(batchTexture.getShow(1)).toBe(false);
+    });
+
+    it("getColor throws with invalid batchId", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.getColor();
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.getColor(-1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTexture.getColor(2);
+      }).toThrowDeveloperError();
+    });
+
+    it("getColor throws with undefined result", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      expect(function () {
+        batchTexture.getColor(0);
+      }).toThrowDeveloperError();
+    });
+
+    it("getColor", function () {
+      var batchTexture = new BatchTexture({
+        content: mockContent,
+        featuresLength: 1,
+      });
+      // Color is true by default
+      expect(batchTexture.getColor(0, result)).toEqual(Color.WHITE);
+      batchTexture.setColor(0, Color.YELLOW);
       expect(batchTexture.getColor(0, result)).toEqual(Color.YELLOW);
     });
   },
