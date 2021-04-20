@@ -1,6 +1,4 @@
-import arrayFill from "../Core/arrayFill.js";
 import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
@@ -11,16 +9,13 @@ import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
-import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
-import Texture from "../Renderer/Texture.js";
+import BatchTexture from "./BatchTexture.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
@@ -30,8 +25,8 @@ import StencilConstants from "./StencilConstants.js";
 import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
 
-var DEFAULT_COLOR_VALUE = Color.WHITE;
-var DEFAULT_SHOW_VALUE = true;
+var DEFAULT_COLOR_VALUE = BatchTexture.DEFAULT_COLOR_VALUE;
+var DEFAULT_SHOW_VALUE = BatchTexture.DEFAULT_SHOW_VALUE;
 
 /**
  * @private
@@ -48,8 +43,6 @@ function Cesium3DTileBatchTable(
    * @readonly
    */
   this.featuresLength = featuresLength;
-
-  this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
 
   var extensions;
   if (defined(batchTableJson)) {
@@ -71,42 +64,13 @@ function Cesium3DTileBatchTable(
     batchTableBinary
   );
 
-  // PERFORMANCE_IDEA: These parallel arrays probably generate cache misses in get/set color/show
-  // and use A LOT of memory.  How can we use less memory?
-  this._showAlphaProperties = undefined; // [Show (0 or 255), Alpha (0 to 255)] property for each feature
-  this._batchValues = undefined; // Per-feature RGBA (A is based on the color's alpha and feature's show property)
-
-  this._batchValuesDirty = false;
-  this._batchTexture = undefined;
-  this._defaultTexture = undefined;
-
-  this._pickTexture = undefined;
-  this._pickIds = [];
-
   this._content = content;
 
-  this._colorChangedCallback = colorChangedCallback;
-
-  // Dimensions for batch and pick textures
-  var textureDimensions;
-  var textureStep;
-
-  if (featuresLength > 0) {
-    // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
-    // when more than one row is needed (e.g., > 16K features in one tile)
-    var width = Math.min(featuresLength, ContextLimits.maximumTextureSize);
-    var height = Math.ceil(featuresLength / ContextLimits.maximumTextureSize);
-    var stepX = 1.0 / width;
-    var centerX = stepX * 0.5;
-    var stepY = 1.0 / height;
-    var centerY = stepY * 0.5;
-
-    textureDimensions = new Cartesian2(width, height);
-    textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
-  }
-
-  this._textureDimensions = textureDimensions;
-  this._textureStep = textureStep;
+  this._batchTexture = new BatchTexture({
+    featuresLength: featuresLength,
+    colorChangedCallback: colorChangedCallback,
+    content: content,
+  });
 }
 
 // This can be overridden for testing purposes
@@ -115,14 +79,7 @@ Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 Object.defineProperties(Cesium3DTileBatchTable.prototype, {
   memorySizeInBytes: {
     get: function () {
-      var memory = 0;
-      if (defined(this._pickTexture)) {
-        memory += this._pickTexture.sizeInBytes;
-      }
-      if (defined(this._batchTexture)) {
-        memory += this._batchTexture.sizeInBytes;
-      }
-      return memory;
+      return this._batchTexture.memorySizeInBytes;
     },
   },
 });
@@ -231,194 +188,32 @@ Cesium3DTileBatchTable.getBinaryProperties = function (
   return getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
 };
 
-function getByteLength(batchTable) {
-  var dimensions = batchTable._textureDimensions;
-  return dimensions.x * dimensions.y * 4;
-}
-
-function getBatchValues(batchTable) {
-  if (!defined(batchTable._batchValues)) {
-    // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
-    var byteLength = getByteLength(batchTable);
-    var bytes = new Uint8Array(byteLength);
-    arrayFill(bytes, 255);
-    batchTable._batchValues = bytes;
-  }
-
-  return batchTable._batchValues;
-}
-
-function getShowAlphaProperties(batchTable) {
-  if (!defined(batchTable._showAlphaProperties)) {
-    var byteLength = 2 * batchTable.featuresLength;
-    var bytes = new Uint8Array(byteLength);
-    // [Show = true, Alpha = 255]
-    arrayFill(bytes, 255);
-    batchTable._showAlphaProperties = bytes;
-  }
-  return batchTable._showAlphaProperties;
-}
-
-function checkBatchId(batchId, featuresLength) {
-  if (!defined(batchId) || batchId < 0 || batchId > featuresLength) {
-    throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        featuresLength -
-        +")."
-    );
-  }
-}
-
 Cesium3DTileBatchTable.prototype.setShow = function (batchId, show) {
-  //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
-  Check.typeOf.bool("show", show);
-  //>>includeEnd('debug');
-
-  if (show && !defined(this._showAlphaProperties)) {
-    // Avoid allocating since the default is show = true
-    return;
-  }
-
-  var showAlphaProperties = getShowAlphaProperties(this);
-  var propertyOffset = batchId * 2;
-
-  var newShow = show ? 255 : 0;
-  if (showAlphaProperties[propertyOffset] !== newShow) {
-    showAlphaProperties[propertyOffset] = newShow;
-
-    var batchValues = getBatchValues(this);
-
-    // Compute alpha used in the shader based on show and color.alpha properties
-    var offset = batchId * 4 + 3;
-    batchValues[offset] = show ? showAlphaProperties[propertyOffset + 1] : 0;
-
-    this._batchValuesDirty = true;
-  }
+  this._batchTexture.setShow(batchId, show);
 };
 
 Cesium3DTileBatchTable.prototype.setAllShow = function (show) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bool("show", show);
-  //>>includeEnd('debug');
-
-  var featuresLength = this.featuresLength;
-  for (var i = 0; i < featuresLength; ++i) {
-    this.setShow(i, show);
-  }
+  this._batchTexture.setAllShow(show);
 };
 
 Cesium3DTileBatchTable.prototype.getShow = function (batchId) {
-  //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
-  //>>includeEnd('debug');
-
-  if (!defined(this._showAlphaProperties)) {
-    // Avoid allocating since the default is show = true
-    return true;
-  }
-
-  var offset = batchId * 2;
-  return this._showAlphaProperties[offset] === 255;
+  return this._batchTexture.getShow(batchId);
 };
 
-var scratchColorBytes = new Array(4);
-
 Cesium3DTileBatchTable.prototype.setColor = function (batchId, color) {
-  //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
-  Check.typeOf.object("color", color);
-  //>>includeEnd('debug');
-
-  if (Color.equals(color, DEFAULT_COLOR_VALUE) && !defined(this._batchValues)) {
-    // Avoid allocating since the default is white
-    return;
-  }
-
-  var newColor = color.toBytes(scratchColorBytes);
-  var newAlpha = newColor[3];
-
-  var batchValues = getBatchValues(this);
-  var offset = batchId * 4;
-
-  var showAlphaProperties = getShowAlphaProperties(this);
-  var propertyOffset = batchId * 2;
-
-  if (
-    batchValues[offset] !== newColor[0] ||
-    batchValues[offset + 1] !== newColor[1] ||
-    batchValues[offset + 2] !== newColor[2] ||
-    showAlphaProperties[propertyOffset + 1] !== newAlpha
-  ) {
-    batchValues[offset] = newColor[0];
-    batchValues[offset + 1] = newColor[1];
-    batchValues[offset + 2] = newColor[2];
-
-    var wasTranslucent = showAlphaProperties[propertyOffset + 1] !== 255;
-
-    // Compute alpha used in the shader based on show and color.alpha properties
-    var show = showAlphaProperties[propertyOffset] !== 0;
-    batchValues[offset + 3] = show ? newAlpha : 0;
-    showAlphaProperties[propertyOffset + 1] = newAlpha;
-
-    // Track number of translucent features so we know if this tile needs
-    // opaque commands, translucent commands, or both for rendering.
-    var isTranslucent = newAlpha !== 255;
-    if (isTranslucent && !wasTranslucent) {
-      ++this._translucentFeaturesLength;
-    } else if (!isTranslucent && wasTranslucent) {
-      --this._translucentFeaturesLength;
-    }
-
-    this._batchValuesDirty = true;
-
-    if (defined(this._colorChangedCallback)) {
-      this._colorChangedCallback(batchId, color);
-    }
-  }
+  this._batchTexture.setColor(batchId, color);
 };
 
 Cesium3DTileBatchTable.prototype.setAllColor = function (color) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("color", color);
-  //>>includeEnd('debug');
-
-  var featuresLength = this.featuresLength;
-  for (var i = 0; i < featuresLength; ++i) {
-    this.setColor(i, color);
-  }
+  this._batchTexture.setAllColor(color);
 };
 
 Cesium3DTileBatchTable.prototype.getColor = function (batchId, result) {
-  //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
-  Check.typeOf.object("result", result);
-  //>>includeEnd('debug');
-
-  if (!defined(this._batchValues)) {
-    return Color.clone(DEFAULT_COLOR_VALUE, result);
-  }
-
-  var batchValues = this._batchValues;
-  var offset = batchId * 4;
-
-  var showAlphaProperties = this._showAlphaProperties;
-  var propertyOffset = batchId * 2;
-
-  return Color.fromBytes(
-    batchValues[offset],
-    batchValues[offset + 1],
-    batchValues[offset + 2],
-    showAlphaProperties[propertyOffset + 1],
-    result
-  );
+  return this._batchTexture.getColor(batchId, result);
 };
 
 Cesium3DTileBatchTable.prototype.getPickColor = function (batchId) {
-  //>>includeStart('debug', pragmas.debug);
-  checkBatchId(batchId, this.featuresLength);
-  //>>includeEnd('debug');
-  return this._pickIds[batchId];
+  return this._batchTexture.getPickColor(batchId);
 };
 
 var scratchColor = new Color();
@@ -461,6 +256,16 @@ function setBinaryProperty(binaryProperty, index, value) {
     typedArray[index] = value;
   } else {
     binaryProperty.type.pack(value, typedArray, index * componentCount);
+  }
+}
+
+function checkBatchId(batchId, featuresLength) {
+  if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
+    throw new DeveloperError(
+      "batchId is required and between zero and featuresLength - 1 (" +
+        featuresLength -
+        +")."
+    );
   }
 }
 
@@ -600,7 +405,7 @@ Cesium3DTileBatchTable.prototype.setProperty = function (batchId, name, value) {
 
 function getGlslComputeSt(batchTable) {
   // GLSL batchId is zero-based: [0, featuresLength - 1]
-  if (batchTable._textureDimensions.y === 1) {
+  if (batchTable._batchTexture.textureDimensions.y === 1) {
     return (
       "uniform vec4 tile_textureStep; \n" +
       "vec2 computeSt(float batchId) \n" +
@@ -1005,19 +810,22 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
     var batchUniformMap = {
       tile_batchTexture: function () {
         // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
-        return defaultValue(that._batchTexture, that._defaultTexture);
+        return defaultValue(
+          that._batchTexture.batchTexture,
+          that._batchTexture.defaultTexture
+        );
       },
       tile_textureDimensions: function () {
-        return that._textureDimensions;
+        return that._batchTexture.textureDimensions;
       },
       tile_textureStep: function () {
-        return that._textureStep;
+        return that._batchTexture.textureStep;
       },
       tile_colorBlend: function () {
         return getColorBlend(that);
       },
       tile_pickTexture: function () {
-        return that._pickTexture;
+        return that._batchTexture.pickTexture;
       },
     };
 
@@ -1144,7 +952,8 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
 };
 
 function getStyleCommandsNeeded(batchTable) {
-  var translucentFeaturesLength = batchTable._translucentFeaturesLength;
+  var translucentFeaturesLength =
+    batchTable._batchTexture.translucentFeaturesLength;
 
   if (translucentFeaturesLength === 0) {
     return StyleCommandsNeeded.ALL_OPAQUE;
@@ -1307,86 +1116,8 @@ function getOpaqueRenderState(renderState) {
   return RenderState.fromCache(rs);
 }
 
-///////////////////////////////////////////////////////////////////////////
-
-function createTexture(batchTable, context, bytes) {
-  var dimensions = batchTable._textureDimensions;
-  return new Texture({
-    context: context,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    source: {
-      width: dimensions.x,
-      height: dimensions.y,
-      arrayBufferView: bytes,
-    },
-    flipY: false,
-    sampler: Sampler.NEAREST,
-  });
-}
-
-function createPickTexture(batchTable, context) {
-  var featuresLength = batchTable.featuresLength;
-  if (!defined(batchTable._pickTexture) && featuresLength > 0) {
-    var pickIds = batchTable._pickIds;
-    var byteLength = getByteLength(batchTable);
-    var bytes = new Uint8Array(byteLength);
-    var content = batchTable._content;
-
-    // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
-    // a continuous range of pickIds and then converting the base pickId + batchId
-    // to RGBA in the shader.  The only consider is precision issues, which might
-    // not be an issue in WebGL 2.
-    for (var i = 0; i < featuresLength; ++i) {
-      var pickId = context.createPickId(content.getFeature(i));
-      pickIds.push(pickId);
-
-      var pickColor = pickId.color;
-      var offset = i * 4;
-      bytes[offset] = Color.floatToByte(pickColor.red);
-      bytes[offset + 1] = Color.floatToByte(pickColor.green);
-      bytes[offset + 2] = Color.floatToByte(pickColor.blue);
-      bytes[offset + 3] = Color.floatToByte(pickColor.alpha);
-    }
-
-    batchTable._pickTexture = createTexture(batchTable, context, bytes);
-    content.tileset._statistics.batchTableByteLength +=
-      batchTable._pickTexture.sizeInBytes;
-  }
-}
-
-function updateBatchTexture(batchTable) {
-  var dimensions = batchTable._textureDimensions;
-  // PERFORMANCE_IDEA: Instead of rewriting the entire texture, use fine-grained
-  // texture updates when less than, for example, 10%, of the values changed.  Or
-  // even just optimize the common case when one feature show/color changed.
-  batchTable._batchTexture.copyFrom({
-    width: dimensions.x,
-    height: dimensions.y,
-    arrayBufferView: batchTable._batchValues,
-  });
-}
-
 Cesium3DTileBatchTable.prototype.update = function (tileset, frameState) {
-  var context = frameState.context;
-  this._defaultTexture = context.defaultTexture;
-
-  var passes = frameState.passes;
-  if (passes.pick || passes.postProcess) {
-    createPickTexture(this, context);
-  }
-
-  if (this._batchValuesDirty) {
-    this._batchValuesDirty = false;
-
-    // Create batch texture on-demand
-    if (!defined(this._batchTexture)) {
-      this._batchTexture = createTexture(this, context, this._batchValues);
-      tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
-    }
-
-    updateBatchTexture(this); // Apply per-feature show/color updates
-  }
+  this._batchTexture.update(tileset, frameState);
 };
 
 Cesium3DTileBatchTable.prototype.isDestroyed = function () {
@@ -1395,14 +1126,6 @@ Cesium3DTileBatchTable.prototype.isDestroyed = function () {
 
 Cesium3DTileBatchTable.prototype.destroy = function () {
   this._batchTexture = this._batchTexture && this._batchTexture.destroy();
-  this._pickTexture = this._pickTexture && this._pickTexture.destroy();
-
-  var pickIds = this._pickIds;
-  var length = pickIds.length;
-  for (var i = 0; i < length; ++i) {
-    pickIds[i].destroy();
-  }
-
   return destroyObject(this);
 };
 export default Cesium3DTileBatchTable;
