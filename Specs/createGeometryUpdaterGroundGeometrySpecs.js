@@ -1,26 +1,13 @@
-define([
-        'Core/Color',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/SampledProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection'
-    ], function(
-        Color,
-        GeometryOffsetAttribute,
-        JulianDate,
-        ColorMaterialProperty,
-        ConstantProperty,
-        SampledProperty,
-        ClassificationType,
-        GroundPrimitive,
-        HeightReference,
-        PrimitiveCollection) {
-    'use strict';
+import { Color } from '../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../Source/Cesium.js';
+import { JulianDate } from '../Source/Cesium.js';
+import { ColorMaterialProperty } from '../Source/Cesium.js';
+import { ConstantProperty } from '../Source/Cesium.js';
+import { SampledProperty } from '../Source/Cesium.js';
+import { ClassificationType } from '../Source/Cesium.js';
+import { GroundPrimitive } from '../Source/Cesium.js';
+import { HeightReference } from '../Source/Cesium.js';
+import { PrimitiveCollection } from '../Source/Cesium.js';
 
     function createGeometryUpdaterGroundGeometrySpecs(Updater, geometryPropertyName, createEntity, createDynamicEntity, getScene) {
         var time = JulianDate.now();
@@ -40,14 +27,14 @@ define([
             expect(updater.zIndex.getValue()).toBe(22);
         });
 
-        it('A time-varying color causes ground geometry to be dynamic', function() {
+        it('A time-varying color does not cause ground geometry to be dynamic', function() {
             var entity = createEntity();
             var color = new SampledProperty(Color);
             color.addSample(time, Color.WHITE);
             entity[geometryPropertyName].material = new ColorMaterialProperty(color);
             var updater = new Updater(entity, getScene());
 
-            expect(updater.isDynamic).toBe(true);
+            expect(updater.isDynamic).toBe(false);
         });
 
         it('Checks that an entity without height and extrudedHeight is on terrain', function() {
@@ -288,6 +275,4 @@ define([
             updater.destroy();
         });
     }
-
-    return createGeometryUpdaterGroundGeometrySpecs;
-});
+export default createGeometryUpdaterGroundGeometrySpecs;

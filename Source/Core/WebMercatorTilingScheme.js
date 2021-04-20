@@ -1,20 +1,9 @@
-define([
-        './Cartesian2',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './Rectangle',
-        './WebMercatorProjection'
-    ], function(
-        Cartesian2,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        Rectangle,
-        WebMercatorProjection) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import Rectangle from './Rectangle.js';
+import WebMercatorProjection from './WebMercatorProjection.js';
 
     /**
      * A tiling scheme for geometry referenced to a {@link WebMercatorProjection}, EPSG:3857.  This is
@@ -40,7 +29,7 @@ define([
      *        direction, resulting in a square projection.
      */
     function WebMercatorTilingScheme(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 1);
@@ -64,7 +53,7 @@ define([
                                   northeast.longitude, northeast.latitude);
     }
 
-    defineProperties(WebMercatorTilingScheme.prototype, {
+    Object.defineProperties(WebMercatorTilingScheme.prototype, {
         /**
          * Gets the ellipsoid that is tiled by this tiling scheme.
          * @memberof WebMercatorTilingScheme.prototype
@@ -254,6 +243,4 @@ define([
         result.y = yTileCoordinate;
         return result;
     };
-
-    return WebMercatorTilingScheme;
-});
+export default WebMercatorTilingScheme;

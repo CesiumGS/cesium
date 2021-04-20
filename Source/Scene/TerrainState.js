@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * @private
@@ -16,6 +11,4 @@ define([
         TRANSFORMED : 5,
         READY : 6
     };
-
-    return freezeObject(TerrainState);
-});
+export default Object.freeze(TerrainState);

@@ -1,18 +1,8 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../ThirdParty/knockout'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        knockout) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import knockout from '../ThirdParty/knockout.js';
 
     /**
      * Create a Command from a given function, for use with ViewModels.
@@ -63,7 +53,7 @@ define([
         command.canExecute = canExecute;
         knockout.track(command, ['canExecute']);
 
-        defineProperties(command, {
+        Object.defineProperties(command, {
             beforeExecute : {
                 value : beforeExecute
             },
@@ -74,6 +64,4 @@ define([
 
         return command;
     }
-
-    return createCommand;
-});
+export default createCommand;

@@ -1,22 +1,10 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/FeatureDetection',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        './GeocoderViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        knockout,
-        getElement,
-        GeocoderViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import FeatureDetection from '../../Core/FeatureDetection.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import GeocoderViewModel from './GeocoderViewModel.js';
 
     var startSearchPath = 'M29.772,26.433l-7.126-7.126c0.96-1.583,1.523-3.435,1.524-5.421C24.169,8.093,19.478,3.401,13.688,3.399C7.897,3.401,3.204,8.093,3.204,13.885c0,5.789,4.693,10.481,10.484,10.481c1.987,0,3.839-0.563,5.422-1.523l7.128,7.127L29.772,26.433zM7.203,13.885c0.006-3.582,2.903-6.478,6.484-6.486c3.579,0.008,6.478,2.904,6.484,6.486c-0.007,3.58-2.905,6.476-6.484,6.484C10.106,20.361,7.209,17.465,7.203,13.885z';
     var stopSearchPath = 'M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z';
@@ -112,17 +100,26 @@ css: { active: $data === $parent._selectedSuggestion }');
         this._form = form;
 
         this._onInputBegin = function(e) {
-            if (!container.contains(e.target)) {
+            // e.target will not be correct if we are inside of the Shadow DOM
+            // and contains will always fail. To retrieve the correct target,
+            // we need to access the first element of the composedPath.
+            // This allows us to use shadow DOM if it exists and fall
+            // back to legacy behavior if its not being used.
+
+            var target = e.target;
+            if (typeof e.composedPath === 'function') {
+                target = e.composedPath()[0];
+            }
+
+            if (!container.contains(target)) {
                 viewModel._focusTextbox = false;
                 viewModel.hideSuggestions();
             }
         };
 
         this._onInputEnd = function(e) {
-            if (container.contains(e.target)) {
-                viewModel._focusTextbox = true;
-                viewModel.showSuggestions();
-            }
+            viewModel._focusTextbox = true;
+            viewModel.showSuggestions();
         };
 
         //We subscribe to both begin and end events in order to give the text box
@@ -130,19 +127,19 @@ css: { active: $data === $parent._selectedSuggestion }');
 
         if (FeatureDetection.supportsPointerEvents()) {
             document.addEventListener('pointerdown', this._onInputBegin, true);
-            document.addEventListener('pointerup', this._onInputEnd, true);
-            document.addEventListener('pointercancel', this._onInputEnd, true);
+            container.addEventListener('pointerup', this._onInputEnd, true);
+            container.addEventListener('pointercancel', this._onInputEnd, true);
         } else {
             document.addEventListener('mousedown', this._onInputBegin, true);
-            document.addEventListener('mouseup', this._onInputEnd, true);
+            container.addEventListener('mouseup', this._onInputEnd, true);
             document.addEventListener('touchstart', this._onInputBegin, true);
-            document.addEventListener('touchend', this._onInputEnd, true);
-            document.addEventListener('touchcancel', this._onInputEnd, true);
+            container.addEventListener('touchend', this._onInputEnd, true);
+            container.addEventListener('touchcancel', this._onInputEnd, true);
         }
 
     }
 
-    defineProperties(Geocoder.prototype, {
+    Object.defineProperties(Geocoder.prototype, {
         /**
          * Gets the parent container.
          * @memberof Geocoder.prototype
@@ -192,20 +189,21 @@ css: { active: $data === $parent._selectedSuggestion }');
      * removing the widget from layout.
      */
     Geocoder.prototype.destroy = function() {
+        var container = this._container;
         if (FeatureDetection.supportsPointerEvents()) {
             document.removeEventListener('pointerdown', this._onInputBegin, true);
-            document.removeEventListener('pointerup', this._onInputEnd, true);
+            container.removeEventListener('pointerup', this._onInputEnd, true);
         } else {
             document.removeEventListener('mousedown', this._onInputBegin, true);
-            document.removeEventListener('mouseup', this._onInputEnd, true);
+            container.removeEventListener('mouseup', this._onInputEnd, true);
             document.removeEventListener('touchstart', this._onInputBegin, true);
-            document.removeEventListener('touchend', this._onInputEnd, true);
+            container.removeEventListener('touchend', this._onInputEnd, true);
         }
         this._viewModel.destroy();
         knockout.cleanNode(this._form);
         knockout.cleanNode(this._searchSuggestionsContainer);
-        this._container.removeChild(this._form);
-        this._container.removeChild(this._searchSuggestionsContainer);
+        container.removeChild(this._form);
+        container.removeChild(this._searchSuggestionsContainer);
         this._textBox.removeEventListener('focus', this._onTextBoxFocus, false);
 
         return destroyObject(this);
@@ -217,6 +215,4 @@ css: { active: $data === $parent._selectedSuggestion }');
      * @param {GeocoderViewModel} viewModel The view model.
      * @param {Cartesian3|Rectangle} destination The destination result of the geocode.
      */
-
-    return Geocoder;
-});
+export default Geocoder;

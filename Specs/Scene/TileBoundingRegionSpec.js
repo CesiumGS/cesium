@@ -1,32 +1,18 @@
-defineSuite([
-        'Scene/TileBoundingRegion',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Intersect',
-        'Core/Math',
-        'Core/Plane',
-        'Core/Rectangle',
-        'Scene/SceneMode',
-        'Specs/createFrameState'
-    ], function(
-        TileBoundingRegion,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Color,
-        Ellipsoid,
-        GeographicTilingScheme,
-        Intersect,
-        CesiumMath,
-        Plane,
-        Rectangle,
-        SceneMode,
-        createFrameState) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { TileBoundingRegion } from '../../Source/Cesium.js';
+import createFrameState from '../createFrameState.js';
+
+describe('Scene/TileBoundingRegion', function() {
 
     var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
     var regionBox = boundingVolumeRegion.slice(0, 4);

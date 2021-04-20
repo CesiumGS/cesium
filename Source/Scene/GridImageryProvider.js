@@ -1,20 +1,9 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../ThirdParty/when'
-    ], function(
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        GeographicTilingScheme,
-        when) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Event from '../Core/Event.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import when from '../ThirdParty/when.js';
 
     var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
     var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
@@ -65,7 +54,7 @@ define([
         this._readyPromise = when.resolve(true);
     }
 
-    defineProperties(GridImageryProvider.prototype, {
+    Object.defineProperties(GridImageryProvider.prototype, {
         /**
          * Gets the proxy used by this provider.
          * @memberof GridImageryProvider.prototype
@@ -347,6 +336,4 @@ define([
     GridImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    return GridImageryProvider;
-});
+export default GridImageryProvider;

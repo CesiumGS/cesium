@@ -1,28 +1,13 @@
-define([
-        './binarySearch',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Event',
-        './GregorianDate',
-        './isLeapYear',
-        './Iso8601',
-        './JulianDate',
-        './TimeInterval'
-    ], function(
-        binarySearch,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GregorianDate,
-        isLeapYear,
-        Iso8601,
-        JulianDate,
-        TimeInterval) {
-    'use strict';
+import binarySearch from './binarySearch.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Event from './Event.js';
+import GregorianDate from './GregorianDate.js';
+import isLeapYear from './isLeapYear.js';
+import Iso8601 from './Iso8601.js';
+import JulianDate from './JulianDate.js';
+import TimeInterval from './TimeInterval.js';
 
     function compareIntervalStartTimes(left, right) {
         return JulianDate.compare(left.start, right.start);
@@ -47,7 +32,7 @@ define([
         }
     }
 
-    defineProperties(TimeIntervalCollection.prototype, {
+    Object.defineProperties(TimeIntervalCollection.prototype, {
         /**
          * Gets an event that is raised whenever the collection of intervals change.
          * @memberof TimeIntervalCollection.prototype
@@ -462,7 +447,7 @@ define([
      * The data property of the input interval is ignored.
      *
      * @param {TimeInterval} interval The interval to remove.
-     * @returns <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
+     * @returns {Boolean} <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
      */
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
         //>>includeStart('debug', pragmas.debug);
@@ -1019,6 +1004,4 @@ define([
             dataCallback : options.dataCallback
         }, result);
     };
-
-    return TimeIntervalCollection;
-});
+export default TimeIntervalCollection;

@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * @private
@@ -13,6 +8,4 @@ define([
         LINES : 2,
         POLYLINES : 3
     };
-
-    return freezeObject(GeometryType);
-});
+export default Object.freeze(GeometryType);

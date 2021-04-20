@@ -1,5 +1,6 @@
-/*global require,Blob,JSHINT*/
-/*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
+/*global JSHINT */
+/*global decodeBase64Data, embedInSandcastleTemplate */
+/*global gallery_demos, has_new_gallery_demos, hello_world_index, VERSION*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
     baseUrl: '../../Source',
@@ -13,25 +14,18 @@ require({
         name: 'Sandcastle',
         location: '../Apps/Sandcastle'
     }, {
-        name: 'Source',
-        location: '.'
-    }, {
-        name: 'CesiumUnminified',
-        location: '../Build/CesiumUnminified',
-        main: 'Cesium'
-    }, {
         name: 'CodeMirror',
-        location: '../ThirdParty/codemirror-4.6'
+        location: '../ThirdParty/codemirror-5.52.0'
     }, {
         name: 'ThirdParty',
         location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
+        'CodeMirror/lib/codemirror',
         'dijit/Dialog',
         'dijit/form/Button',
         'dijit/form/Form',
         'dijit/form/Textarea',
-        'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
         'dijit/registry',
@@ -48,10 +42,9 @@ require({
         'dojo/promise/all',
         'dojo/query',
         'dojo/when',
+        'dojo/Deferred',
+        'dojo/request/script',
         'Sandcastle/LinkButton',
-        'Source/Cesium',
-        'Source/Core/defined',
-        'Source/Core/Resource',
         'ThirdParty/clipboard.min',
         'ThirdParty/pako.min',
         'CodeMirror/addon/hint/show-hint',
@@ -74,11 +67,11 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        CodeMirror,
         Dialog,
         Button,
         Form,
         TextArea,
-        CodeMirror,
         ContentPane,
         popup,
         registry,
@@ -95,20 +88,17 @@ require({
         all,
         query,
         when,
+        Deferred,
+        dojoscript,
         LinkButton,
-        Cesium,
-        defined,
-        Resource,
         ClipboardJS,
         pako) {
     'use strict';
-
     // attach clipboard handling to our Copy button
     var clipboardjs = new ClipboardJS('.copyButton');
 
-    //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
-    if (!defined(window.Cesium)) {
-        window.Cesium = Cesium;
+    function defined(value) {
+        return value !== undefined && value !== null;
     }
 
     parser.parse();
@@ -296,14 +286,14 @@ require({
         var element = document.createElement('abbr');
         element.className = className;
         switch (className) {
-        case 'hintMarker':
-            element.innerHTML = '&#9650;';
-            break;
-        case 'errorMarker':
-            element.innerHTML = '&times;';
-            break;
-        default:
-            element.innerHTML = '&#9654;';
+            case 'hintMarker':
+                element.innerHTML = '&#9650;';
+                break;
+            case 'errorMarker':
+                element.innerHTML = '&times;';
+                break;
+            default:
+                element.innerHTML = '&#9654;';
         }
         element.title = msg;
         return element;
@@ -383,7 +373,7 @@ require({
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
         /*eslint-disable new-cap*/
-        if (!JSHINT(getScriptFromEditor(false), options)) {
+        if (!JSHINT(embedInSandcastleTemplate(jsEditor.getValue(), false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
@@ -540,22 +530,6 @@ require({
         }
     });
 
-    function getScriptFromEditor(addExtraLine) {
-        return 'function startup(Cesium) {\n' +
-               '    \'use strict\';\n' +
-               '//Sandcastle_Begin\n' +
-               (addExtraLine ? '\n' : '') +
-               jsEditor.getValue() +
-               '//Sandcastle_End\n' +
-               '    Sandcastle.finishedLoading();\n' +
-               '}\n' +
-               'if (typeof Cesium !== \'undefined\') {\n' +
-               '    startup(Cesium);\n' +
-               '} else if (typeof require === \'function\') {\n' +
-               '    require([\'Cesium\'], startup);\n' +
-               '}\n';
-    }
-
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
     function activateBucketScripts(bucketDoc) {
@@ -578,6 +552,7 @@ require({
         // Apply user HTML to bucket.
         var htmlElement = bucketDoc.createElement('div');
         htmlElement.innerHTML = htmlEditor.getValue();
+        bucketDoc.body.appendChild(htmlElement);
 
         var onScriptTagError = function() {
             if (bucketFrame.contentDocument === bucketDoc) {
@@ -593,6 +568,7 @@ require({
                 return;
             }
             if (nodes.length > 0) {
+                while(nodes.length > 0){
                 node = nodes.shift();
                 var scriptElement = bucketDoc.createElement('script');
                 var hasSrc = false;
@@ -613,6 +589,7 @@ require({
                     bucketDoc.head.appendChild(scriptElement);
                     loadScript();
                 }
+            }
             } else {
                 // Apply user JS to bucket
                 var element = bucketDoc.createElement('script');
@@ -620,34 +597,12 @@ require({
                 // Firefox line numbers are zero-based, not one-based.
                 var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
 
-                element.textContent = getScriptFromEditor(isFirefox);
+                element.textContent = embedInSandcastleTemplate(jsEditor.getValue(), isFirefox);
                 bucketDoc.body.appendChild(element);
             }
         };
-        // If we just add `htmlElement` to the DOM and run
-        // loadScript(), there's a chance it will inject CSS
-        // before the HTML content is fully loaded, leading to a broken page.
-        // So instead we create an observer instance to watch for when
-        // the element has been added.
-        // See https://github.com/AnalyticalGraphicsInc/cesium/issues/5265
-        var observer = new MutationObserver(function (mutationsList) {
-            // See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-            var length = mutationsList.length;
-            for (var i = 0; i < length; i++) {
-                var mutation = mutationsList[i];
-                // Watch for an element with the data-sandcastle-loaded attribute.
-                if (defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
-                    loadScript();
-                    observer.disconnect();
-                }
-            }
-        });
 
-        // Start observing the target node for configured mutations
-        var config = { attributes: true, childList: true, subtree: true };
-        observer.observe(bucketDoc, config);
-
-        bucketDoc.body.appendChild(htmlElement);
+        loadScript();
     }
 
     function applyBucket() {
@@ -756,17 +711,18 @@ require({
 
             var json, code, html;
             if (defined(queryObject.gist)) {
-                Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
-                    .then(function(data) {
-                        var files = data.data.files;
-                        var code = files['Cesium-Sandcastle.js'].content;
-                        var htmlFile = files['Cesium-Sandcastle.html'];
-                        var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
-                        applyLoadedDemo(code, html);
-                    }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
-                        console.log(error);
-                    });
+                dojoscript.get('https://api.github.com/gists/' + queryObject.gist, {
+                    jsonp: 'callback'
+                }).then(function(data) {
+                    var files = data.data.files;
+                    var code = files['Cesium-Sandcastle.js'].content;
+                    var htmlFile = files['Cesium-Sandcastle.html'];
+                    var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
+                    applyLoadedDemo(code, html);
+                }).otherwise(function(error) {
+                    appendConsole('consoleError', 'Unable to GET gist from GitHub API. This could be due to too many requests from your IP. Try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
+                    console.log(error);
+                });
             } else if (defined(queryObject.code)) {
                 //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
                 json = JSON.parse(window.atob(queryObject.code));
@@ -775,25 +731,19 @@ require({
 
                 applyLoadedDemo(code, html);
             } else if (window.location.hash.indexOf('#c=') === 0) {
-                // data stored in the hash as:
-                // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
                 var base64String = window.location.hash.substr(3);
-                // restore padding
-                while (base64String.length % 4 !== 0) {
-                    base64String += '=';
-                }
-                var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
-                // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
-                jsonString = '["' + jsonString + '"]';
-                json = JSON.parse(jsonString);
-                // index 0 is code, index 1 is html
-                code = json[0];
-                html = json[1];
+                var data = decodeBase64Data(base64String, pako);
+                code = data.code;
+                html = data.html;
 
                 applyLoadedDemo(code, html);
             } else {
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(demo.code, 'text/html');
+
+                return waitForDoc(doc, function(){
+                    return doc.querySelector('script[id="cesium_sandcastle_script"]');
+                }).then(function(){
 
                 var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
                 if (!script) {
@@ -808,6 +758,7 @@ require({
                 }
 
                 var scriptCode = scriptMatch[1];
+                scriptCode = scriptCode.replace(/^ {8}/gm, ""); //Account for Prettier spacing
 
                 var htmlText = '';
                 var childIndex = 0;
@@ -819,6 +770,7 @@ require({
                 htmlText = htmlText.replace(/^\s+/, '');
 
                 applyLoadedDemo(scriptCode, htmlText);
+                });
             }
         });
     }
@@ -953,17 +905,23 @@ require({
         return location.protocol + '//' + location.host + location.pathname;
     }
 
-    registry.byId('buttonShareDrop').on('click', function() {
-        var code = jsEditor.getValue();
-        var html = htmlEditor.getValue();
-
+    function makeCompressedBase64String(data) {
         // data stored in the hash as:
         // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-        var jsonString = JSON.stringify([code, html]);
+        var jsonString = JSON.stringify(data);
         // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
         jsonString = jsonString.substr(2, jsonString.length - 4);
         var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
         base64String = base64String.replace(/\=+$/, ''); // remove padding
+
+        return base64String;
+    }
+
+    registry.byId('buttonShareDrop').on('click', function() {
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+
+        var base64String = makeCompressedBase64String([code, html]);
 
         var shareUrlBox = document.getElementById('shareUrl');
         shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
@@ -1019,7 +977,7 @@ require({
         return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
-               getScriptFromEditor(false) +
+               embedInSandcastleTemplate(jsEditor.getValue(), false) +
                '</script>\n' +
                '</body>\n' +
                '</html>\n';
@@ -1044,25 +1002,20 @@ require({
     });
 
     registry.byId('buttonNewWindow').on('click', function() {
-        var baseHref = window.location.href;
-
-        //Handle case where demo is in a sub-directory.
-        var searchLen = window.location.search.length;
-        if (searchLen > 0) {
-            baseHref = baseHref.substring(0, baseHref.length - searchLen);
-        }
-
+        //Handle case where demo is in a sub-directory by modifying
+        //the demo's HTML to add a base href.
+        var baseHref = getBaseUrl();
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
-        var html = getDemoHtml();
-        html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-        var htmlBlob = new Blob([html], {
-            'type' : 'text/html;charset=utf-8',
-            'endings' : 'native'
-        });
-        var htmlBlobURL = URL.createObjectURL(htmlBlob);
-        window.open(htmlBlobURL, '_blank');
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+        var data = makeCompressedBase64String([code, html, baseHref]);
+
+        var url = getBaseUrl();
+        url = url.replace('index.html','') + 'standalone.html' + '#c=' + data;
+
+        window.open(url, '_blank');
         window.focus();
     });
 
@@ -1105,7 +1058,23 @@ require({
         });
     }
 
-    var newInLabel = 'New in ' + window.Cesium.VERSION;
+    // Work around Chrome 79 bug: https://github.com/CesiumGS/cesium/issues/8460
+    function waitForDoc(doc, test) {
+        var deferred = new Deferred();
+        if (test()) {
+            deferred.resolve(doc);
+        } else {
+            var counter = 1;
+            setTimeout(function() {
+                if (test() || counter++ > 10) {
+                    deferred.resolve(doc);
+                }
+            }, 100 * counter);
+        }
+        return deferred.promise;
+    }
+
+    var newInLabel = 'New in ' + VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
@@ -1113,6 +1082,10 @@ require({
 
             var parser = new DOMParser();
             var doc = parser.parseFromString(value, 'text/html');
+            return waitForDoc(doc, function(){
+                return doc.body.getAttribute('data-sandcastle-bucket');
+            });
+        }).then(function(doc) {
 
             var bucket = doc.body.getAttribute('data-sandcastle-bucket');
             demo.bucket = bucket ? bucket : 'bucket-requirejs.html';
@@ -1277,7 +1250,7 @@ require({
         registerScroll(dom.byId('showcasesContainer'));
 
         if (has_new_gallery_demos) {
-            var name = 'New in ' + window.Cesium.VERSION;
+            var name = 'New in ' + VERSION;
             subtabs[name] = new ContentPane({
                 content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
                 title: name,

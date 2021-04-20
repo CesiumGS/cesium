@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Constants to determine how an interpolated value is extrapolated
@@ -37,6 +32,4 @@ define([
          */
         EXTRAPOLATE : 2
     };
-
-    return freezeObject(ExtrapolationType);
-});
+export default Object.freeze(ExtrapolationType);

@@ -1,30 +1,18 @@
-define([
-        './ModelUtility',
-        '../Core/defined',
-        '../Core/defaultValue',
-        '../Core/WebGLConstants',
-        '../Core/webGLConstantToGlslType',
-        '../ThirdParty/GltfPipeline/addToArray',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/hasExtension',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType'
-    ], function(
-        ModelUtility,
-        defined,
-        defaultValue,
-        WebGLConstants,
-        webGLConstantToGlslType,
-        addToArray,
-        ForEach,
-        hasExtension,
-        numberOfComponentsForType) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import webGLConstantToGlslType from '../Core/webGLConstantToGlslType.js';
+import addToArray from '../ThirdParty/GltfPipeline/addToArray.js';
+import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
+import hasExtension from '../ThirdParty/GltfPipeline/hasExtension.js';
+import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
+import ModelUtility from './ModelUtility.js';
 
     /**
      * @private
      */
     function processPbrMaterials(gltf, options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         // No need to create new techniques if they already exist,
         // the shader should handle these values
@@ -87,6 +75,37 @@ define([
                defined(material.extensions.KHR_materials_pbrSpecularGlossiness);
     }
 
+    function addTextureCoordinates(gltf, textureName, generatedMaterialValues, defaultTexCoord, result) {
+        var texCoord;
+        if (defined(generatedMaterialValues[textureName + 'Offset'])) {
+            texCoord = textureName + 'Coord';
+            result.fragmentShaderMain += '    vec2 ' + texCoord + ' = computeTexCoord(' + defaultTexCoord + ', ' + textureName + 'Offset, ' + textureName + 'Rotation, ' + textureName + 'Scale);\n';
+        } else {
+            texCoord = defaultTexCoord;
+        }
+        return texCoord;
+    }
+
+    var DEFAULT_TEXTURE_OFFSET = [0.0, 0.0];
+    var DEFAULT_TEXTURE_ROTATION = [0.0];
+    var DEFAULT_TEXTURE_SCALE = [1.0, 1.0];
+
+    function handleKHRTextureTransform(parameterName, value, generatedMaterialValues) {
+        if (parameterName.indexOf('Texture') === -1 || !defined(value.extensions) || !defined(value.extensions.KHR_texture_transform)) {
+            return;
+        }
+
+        var uniformName = 'u_' + parameterName;
+        var extension = value.extensions.KHR_texture_transform;
+        generatedMaterialValues[uniformName + 'Offset'] = defaultValue(extension.offset, DEFAULT_TEXTURE_OFFSET);
+        generatedMaterialValues[uniformName + 'Rotation'] = defaultValue(extension.rotation, DEFAULT_TEXTURE_ROTATION);
+        generatedMaterialValues[uniformName + 'Scale'] = defaultValue(extension.scale, DEFAULT_TEXTURE_SCALE);
+
+        if (defined(value.texCoord) && defined(extension.texCoord)) {
+            generatedMaterialValues[uniformName].texCoord = extension.texCoord;
+        }
+    }
+
     function generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options) {
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
@@ -99,12 +118,15 @@ define([
 
         var uniformName;
         var parameterName;
+        var value;
         var pbrMetallicRoughness = material.pbrMetallicRoughness;
         if (defined(pbrMetallicRoughness) && !useSpecGloss) {
             for (parameterName in pbrMetallicRoughness) {
                 if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
+                    value = pbrMetallicRoughness[parameterName];
                     uniformName = 'u_' + parameterName;
-                    generatedMaterialValues[uniformName] = pbrMetallicRoughness[parameterName];
+                    generatedMaterialValues[uniformName] = value;
+                    handleKHRTextureTransform(parameterName, value, generatedMaterialValues);
                 }
             }
         }
@@ -113,16 +135,20 @@ define([
             var pbrSpecularGlossiness = material.extensions.KHR_materials_pbrSpecularGlossiness;
             for (parameterName in pbrSpecularGlossiness) {
                 if (pbrSpecularGlossiness.hasOwnProperty(parameterName)) {
+                    value = pbrSpecularGlossiness[parameterName];
                     uniformName = 'u_' + parameterName;
-                    generatedMaterialValues[uniformName] = pbrSpecularGlossiness[parameterName];
+                    generatedMaterialValues[uniformName] = value;
+                    handleKHRTextureTransform(parameterName, value, generatedMaterialValues);
                 }
             }
         }
 
         for (var additional in material) {
             if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || additional.indexOf('Factor') >= 0)) {
+                value = material[additional];
                 uniformName = 'u_' + additional;
-                generatedMaterialValues[uniformName] = material[additional];
+                generatedMaterialValues[uniformName] = value;
+                handleKHRTextureTransform(additional, value, generatedMaterialValues);
             }
         }
 
@@ -292,7 +318,6 @@ define([
         vertexShader += 'attribute vec3 a_position;\n';
         if (hasNormals) {
             vertexShader += 'varying vec3 v_positionEC;\n';
-            vertexShader += 'varying vec3 v_positionWC;\n';
         }
 
         // Morph Target Weighting
@@ -331,9 +356,6 @@ define([
         } else {
             vertexShaderMain += '    vec4 position = vec4(weightedPosition, 1.0);\n';
         }
-        if (hasNormals) {
-            vertexShaderMain += '    v_positionWC = (czm_model * position).xyz;\n';
-        }
         vertexShaderMain += '    position = u_modelViewMatrix * position;\n';
         if (hasNormals) {
             vertexShaderMain += '    v_positionEC = position.xyz;\n';
@@ -355,7 +377,6 @@ define([
 
             fragmentShader += 'varying vec3 v_normal;\n';
             fragmentShader += 'varying vec3 v_positionEC;\n';
-            fragmentShader += 'varying vec3 v_positionWC;\n';
         }
 
         // Read tangents if available
@@ -371,19 +392,42 @@ define([
             fragmentShader += 'varying vec4 v_tangent;\n';
         }
 
+        var fragmentShaderMain = '';
+
         // Add texture coordinates if the material uses them
-        var v_texcoord;
+        var v_texCoord;
+        var normalTexCoord;
+        var baseColorTexCoord;
+        var specularGlossinessTexCoord;
+        var diffuseTexCoord;
+        var metallicRoughnessTexCoord;
+        var occlusionTexCoord;
+        var emissiveTexCoord;
+
         if (hasTexCoords) {
             techniqueAttributes.a_texcoord_0 = {
                 semantic : 'TEXCOORD_0'
             };
 
-            v_texcoord = 'v_texcoord_0';
+            v_texCoord = 'v_texcoord_0';
             vertexShader += 'attribute vec2 a_texcoord_0;\n';
-            vertexShader += 'varying vec2 ' + v_texcoord + ';\n';
-            vertexShaderMain += '    ' + v_texcoord + ' = a_texcoord_0;\n';
+            vertexShader += 'varying vec2 ' + v_texCoord + ';\n';
+            vertexShaderMain += '    ' + v_texCoord + ' = a_texcoord_0;\n';
 
-            fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
+            fragmentShader += 'varying vec2 ' + v_texCoord + ';\n';
+
+            var result = {
+                fragmentShaderMain : fragmentShaderMain
+            };
+            normalTexCoord = addTextureCoordinates(gltf, 'u_normalTexture', generatedMaterialValues, v_texCoord, result);
+            baseColorTexCoord = addTextureCoordinates(gltf, 'u_baseColorTexture', generatedMaterialValues, v_texCoord, result);
+            specularGlossinessTexCoord = addTextureCoordinates(gltf, 'u_specularGlossinessTexture', generatedMaterialValues, v_texCoord, result);
+            diffuseTexCoord = addTextureCoordinates(gltf, 'u_diffuseTexture', generatedMaterialValues, v_texCoord, result);
+            metallicRoughnessTexCoord = addTextureCoordinates(gltf, 'u_metallicRoughnessTexture', generatedMaterialValues, v_texCoord, result);
+            occlusionTexCoord = addTextureCoordinates(gltf, 'u_occlusionTexture', generatedMaterialValues, v_texCoord, result);
+            emissiveTexCoord = addTextureCoordinates(gltf, 'u_emmissiveTexture', generatedMaterialValues, v_texCoord, result);
+
+            fragmentShaderMain = result.fragmentShaderMain;
         }
 
         // Add skinning information if available
@@ -479,6 +523,16 @@ define([
             '}\n\n';
 
         fragmentShader +=
+            'vec3 applyTonemapping(vec3 linearIn) \n' +
+            '{\n' +
+            '#ifndef HDR \n' +
+            '    return czm_acesTonemapping(linearIn);\n' +
+            '#else \n' +
+            '    return linearIn;\n' +
+            '#endif \n' +
+            '}\n\n';
+
+        fragmentShader +=
             'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
             '{\n' +
             '#ifndef HDR \n' +
@@ -486,6 +540,18 @@ define([
             '#else \n' +
             '    return linearIn;\n' +
             '#endif \n' +
+            '}\n\n';
+
+        fragmentShader +=
+            'vec2 computeTexCoord(vec2 texCoords, vec2 offset, float rotation, vec2 scale) \n' +
+            '{\n' +
+            '    rotation = -rotation; \n' +
+            '    mat3 transform = mat3(\n' +
+            '        cos(rotation) * scale.x, sin(rotation) * scale.x, 0.0, \n' +
+            '       -sin(rotation) * scale.y, cos(rotation) * scale.y, 0.0, \n' +
+            '        offset.x, offset.y, 1.0); \n' +
+            '    vec2 transformedTexCoords = (transform * vec3(fract(texCoords), 1.0)).xy; \n' +
+            '    return transformedTexCoords; \n' +
             '}\n\n';
 
         fragmentShader += '#ifdef USE_IBL_LIGHTING \n';
@@ -496,17 +562,19 @@ define([
         fragmentShader += '#endif \n';
 
         fragmentShader += 'void main(void) \n{\n';
+        fragmentShader += fragmentShaderMain;
 
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShader += '    vec3 ng = normalize(v_normal);\n';
+            fragmentShader += '    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n';
             if (defined(generatedMaterialValues.u_normalTexture)) {
                 if (hasTangents) {
                     // Read tangents from varying
                     fragmentShader += '    vec3 t = normalize(v_tangent.xyz);\n';
                     fragmentShader += '    vec3 b = normalize(cross(ng, t) * v_tangent.w);\n';
                     fragmentShader += '    mat3 tbn = mat3(t, b, ng);\n';
-                    fragmentShader += '    vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
+                    fragmentShader += '    vec3 n = texture2D(u_normalTexture, ' + normalTexCoord + ').rgb;\n';
                     fragmentShader += '    n = normalize(tbn * (2.0 * n - 1.0));\n';
                 } else {
                     // Add standard derivatives extension
@@ -518,13 +586,13 @@ define([
                     fragmentShader += '#ifdef GL_OES_standard_derivatives\n';
                     fragmentShader += '    vec3 pos_dx = dFdx(v_positionEC);\n';
                     fragmentShader += '    vec3 pos_dy = dFdy(v_positionEC);\n';
-                    fragmentShader += '    vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
-                    fragmentShader += '    vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
+                    fragmentShader += '    vec3 tex_dx = dFdx(vec3(' + normalTexCoord + ',0.0));\n';
+                    fragmentShader += '    vec3 tex_dy = dFdy(vec3(' + normalTexCoord + ',0.0));\n';
                     fragmentShader += '    vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
                     fragmentShader += '    t = normalize(t - ng * dot(ng, t));\n';
                     fragmentShader += '    vec3 b = normalize(cross(ng, t));\n';
                     fragmentShader += '    mat3 tbn = mat3(t, b, ng);\n';
-                    fragmentShader += '    vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
+                    fragmentShader += '    vec3 n = texture2D(u_normalTexture, ' + normalTexCoord + ').rgb;\n';
                     fragmentShader += '    n = normalize(tbn * (2.0 * n - 1.0));\n';
                     fragmentShader += '#else\n';
                     fragmentShader += '    vec3 n = ng;\n';
@@ -534,7 +602,8 @@ define([
                 fragmentShader += '    vec3 n = ng;\n';
             }
             if (material.doubleSided) {
-                fragmentShader += '    if (!gl_FrontFacing)\n';
+                // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
+                fragmentShader += '    if (gl_FrontFacing == false)\n';
                 fragmentShader += '    {\n';
                 fragmentShader += '        n = -n;\n';
                 fragmentShader += '    }\n';
@@ -543,7 +612,7 @@ define([
 
         // Add base color to fragment shader
         if (defined(generatedMaterialValues.u_baseColorTexture)) {
-            fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, ' + v_texcoord + '));\n';
+            fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, ' + baseColorTexCoord + '));\n';
             if (defined(generatedMaterialValues.u_baseColorFactor)) {
                 fragmentShader += '    baseColorWithAlpha *= u_baseColorFactor;\n';
             }
@@ -562,7 +631,7 @@ define([
         if (hasNormals) {
             if (useSpecGloss) {
                 if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
-                    fragmentShader += '    vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, ' + v_texcoord + '));\n';
+                    fragmentShader += '    vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, ' + specularGlossinessTexCoord + '));\n';
                     fragmentShader += '    vec3 specular = specularGlossiness.rgb;\n';
                     fragmentShader += '    float glossiness = specularGlossiness.a;\n';
                     if (defined(generatedMaterialValues.u_specularFactor)) {
@@ -584,7 +653,7 @@ define([
                     }
                 }
                 if (defined(generatedMaterialValues.u_diffuseTexture)) {
-                    fragmentShader += '    vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, ' + v_texcoord + '));\n';
+                    fragmentShader += '    vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, ' + diffuseTexCoord + '));\n';
                     if (defined(generatedMaterialValues.u_diffuseFactor)) {
                         fragmentShader += '    diffuse *= u_diffuseFactor;\n';
                     }
@@ -594,7 +663,7 @@ define([
                     fragmentShader += '    vec4 diffuse = vec4(1.0);\n';
                 }
             } else if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
-                fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
+                fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + metallicRoughnessTexCoord + ').rgb;\n';
                 fragmentShader += '    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
                 fragmentShader += '    float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
                 if (defined(generatedMaterialValues.u_metallicFactor)) {
@@ -619,13 +688,12 @@ define([
             fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
 
             // Generate fragment shader's lighting block
-            // The Sun is brighter than your average light source, and has a yellowish tint balanced by the Earth's ambient blue.
             fragmentShader += '#ifndef USE_CUSTOM_LIGHT_COLOR \n';
-            fragmentShader += '    vec3 lightColor = vec3(1.5, 1.4, 1.2);\n';
+            fragmentShader += '    vec3 lightColorHdr = czm_lightColorHdr;\n';
             fragmentShader += '#else \n';
-            fragmentShader += '    vec3 lightColor = gltf_lightColor;\n';
+            fragmentShader += '    vec3 lightColorHdr = gltf_lightColor;\n';
             fragmentShader += '#endif \n';
-            fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
+            fragmentShader += '    vec3 l = normalize(czm_lightDirectionEC);\n';
             fragmentShader += '    vec3 h = normalize(v + l);\n';
             fragmentShader += '    float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
             fragmentShader += '    float NdotV = abs(dot(n, v)) + 0.001;\n';
@@ -655,15 +723,16 @@ define([
 
             fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);\n';
             fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
-            fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
+            fragmentShader += '    vec3 color = NdotL * lightColorHdr * (diffuseContribution + specularContribution);\n';
 
-            fragmentShader += '#ifdef USE_IBL_LIGHTING \n';
-            // Figure out if the reflection vector hits the ellipsoid
+            // Use the procedural IBL if there are no environment maps
+            fragmentShader += '#if defined(USE_IBL_LIGHTING) && !defined(DIFFUSE_IBL) && !defined(SPECULAR_IBL) \n';
+
             fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
-            fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
-            fragmentShader += '    float vertexRadius = length(v_positionWC);\n';
-            fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid.radii.x / vertexRadius);\n';
-            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(v_positionWC));\n';
+            // Figure out if the reflection vector hits the ellipsoid
+            fragmentShader += '    float vertexRadius = length(positionWC);\n';
+            fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, czm_ellipsoidRadii.x / vertexRadius);\n';
+            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(positionWC));\n';
             // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
             fragmentShader += '    r.x = -r.x;\n';
             fragmentShader += '    r = -normalize(czm_temeToPseudoFixed * r);\n';
@@ -697,9 +766,66 @@ define([
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);\n';
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
-            fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
+            // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
+            fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
+            // Angle between sun and zenith
+            fragmentShader += '    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), normalize(positionWC * -1.0)), 0.001, 1.0);\n';
+            fragmentShader += '    float S = acos(LdotZenith);\n';
+            // Angle between zenith and current pixel
+            fragmentShader += '    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), normalize(positionWC * -1.0)), 0.001, 1.0);\n';
+            // Angle between sun and current pixel
+            fragmentShader += '    float gamma = acos(NdotL);\n';
+            fragmentShader += '    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));\n';
+            fragmentShader += '    float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * pow(LdotZenith,2.0)) * (1.0 - exp(-0.32));\n';
+            fragmentShader += '    float luminance = gltf_luminanceAtZenith * (numerator / denominator);\n';
+            fragmentShader += '#endif \n';
+
+            fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor * gltf_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * gltf_iblFactor.y);\n';
-            fragmentShader += '    color += IBLColor;\n';
+
+            fragmentShader += '    float maximumComponent = max(max(lightColorHdr.x, lightColorHdr.y), lightColorHdr.z);\n';
+            fragmentShader += '    vec3 lightColor = lightColorHdr / max(maximumComponent, 1.0);\n';
+            fragmentShader += '    IBLColor *= lightColor;\n';
+
+            fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
+            fragmentShader += '    color += IBLColor * luminance;\n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    color += IBLColor; \n';
+            fragmentShader += '#endif \n';
+
+            // Environment maps were provided, use them for IBL
+            fragmentShader += '#elif defined(DIFFUSE_IBL) || defined(SPECULAR_IBL) \n';
+
+            fragmentShader += '    mat3 fixedToENU = mat3(gltf_clippingPlanesMatrix[0][0], gltf_clippingPlanesMatrix[1][0], gltf_clippingPlanesMatrix[2][0], \n';
+            fragmentShader += '                           gltf_clippingPlanesMatrix[0][1], gltf_clippingPlanesMatrix[1][1], gltf_clippingPlanesMatrix[2][1], \n';
+            fragmentShader += '                           gltf_clippingPlanesMatrix[0][2], gltf_clippingPlanesMatrix[1][2], gltf_clippingPlanesMatrix[2][2]); \n';
+            fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
+            fragmentShader += '    vec3 cubeDir = normalize(yUpToZUp * fixedToENU * normalize(reflect(-v, n))); \n';
+
+            fragmentShader += '#ifdef DIFFUSE_IBL \n';
+            fragmentShader += '#ifdef CUSTOM_SPHERICAL_HARMONICS \n';
+            fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); \n';
+            fragmentShader += '#endif \n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
+            fragmentShader += '#endif \n';
+
+            fragmentShader += '#ifdef SPECULAR_IBL \n';
+            fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
+            fragmentShader += '#ifdef CUSTOM_SPECULAR_IBL \n';
+            fragmentShader += '    vec3 specularIBL = czm_sampleOctahedralProjection(gltf_specularMap, gltf_specularMapSize, cubeDir,  roughness * gltf_maxSpecularLOD, gltf_maxSpecularLOD);\n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);\n';
+            fragmentShader += '#endif \n';
+            fragmentShader += '    specularIBL *= F * brdfLut.x + brdfLut.y;\n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';
+            fragmentShader += '#endif \n';
+
+            fragmentShader += '    color += diffuseIrradiance * diffuseColor + specularColor * specularIBL;\n';
+
             fragmentShader += '#endif \n';
         } else {
             fragmentShader += '    vec3 color = baseColor;\n';
@@ -708,10 +834,10 @@ define([
         // Ignore occlusion and emissive when unlit
         if (!isUnlit) {
             if (defined(generatedMaterialValues.u_occlusionTexture)) {
-                fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
+                fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + occlusionTexCoord + ').r;\n';
             }
             if (defined(generatedMaterialValues.u_emissiveTexture)) {
-                fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb);\n';
+                fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + emissiveTexCoord + ').rgb);\n';
                 if (defined(generatedMaterialValues.u_emissiveFactor)) {
                     fragmentShader += '    emissive *= u_emissiveFactor;\n';
                 }
@@ -721,8 +847,12 @@ define([
             }
         }
 
-        // Final color
+        if (!isUnlit) {
+            fragmentShader += '    color = applyTonemapping(color);\n';
+        }
+
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
+
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
                 fragmentShader += '    if (baseColorWithAlpha.a < u_alphaCutoff) {\n';
@@ -737,6 +867,7 @@ define([
         } else {
             fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
         }
+
         fragmentShader += '}\n';
 
         // Add shaders
@@ -776,6 +907,16 @@ define([
     }
 
     function getPBRValueType(paramName) {
+        if (paramName.indexOf('Offset') !== -1) {
+            return WebGLConstants.FLOAT_VEC2;
+        } else if (paramName.indexOf('Rotation') !== -1) {
+            return WebGLConstants.FLOAT;
+        } else if (paramName.indexOf('Scale') !== -1) {
+            return WebGLConstants.FLOAT_VEC2;
+        } else if (paramName.indexOf('Texture') !== -1) {
+            return WebGLConstants.SAMPLER_2D;
+        }
+
         switch (paramName) {
             case 'u_baseColorFactor':
                 return WebGLConstants.FLOAT_VEC4;
@@ -783,16 +924,6 @@ define([
                 return WebGLConstants.FLOAT;
             case 'u_roughnessFactor':
                 return WebGLConstants.FLOAT;
-            case 'u_baseColorTexture':
-                return WebGLConstants.SAMPLER_2D;
-            case 'u_metallicRoughnessTexture':
-                return WebGLConstants.SAMPLER_2D;
-            case 'u_normalTexture':
-                return WebGLConstants.SAMPLER_2D;
-            case 'u_occlusionTexture':
-                return WebGLConstants.SAMPLER_2D;
-            case 'u_emissiveTexture':
-                return WebGLConstants.SAMPLER_2D;
             case 'u_emissiveFactor':
                 return WebGLConstants.FLOAT_VEC3;
             // Specular Glossiness Types
@@ -802,12 +933,6 @@ define([
                 return WebGLConstants.FLOAT_VEC3;
             case 'u_glossinessFactor':
                 return WebGLConstants.FLOAT;
-            case 'u_diffuseTexture':
-                return WebGLConstants.SAMPLER_2D;
-            case 'u_specularGlossinessTexture':
-                return WebGLConstants.SAMPLER_2D;
         }
     }
-
-    return processPbrMaterials;
-});
+export default processPbrMaterials;

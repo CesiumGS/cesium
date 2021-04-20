@@ -1,36 +1,17 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix4',
-        './BillboardCollection',
-        './CircleEmitter',
-        './Particle'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Event,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        BillboardCollection,
-        CircleEmitter,
-        Particle) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import BillboardCollection from './BillboardCollection.js';
+import CircleEmitter from './CircleEmitter.js';
+import Particle from './Particle.js';
 
     var defaultImageSize = new Cartesian2(1.0, 1.0);
 
@@ -59,6 +40,7 @@ define([
      * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] If set, overrides the minimumImageSize and maximumImageSize inputs that scale the particle image's dimensions in pixels.
      * @param {Cartesian2} [options.minimumImageSize] Sets the minimum bound, width by height, above which to randomly scale the particle image's dimensions in pixels.
      * @param {Cartesian2} [options.maximumImageSize] Sets the maximum bound, width by height, below which to randomly scale the particle image's dimensions in pixels.
+     * @param {Boolean} [options.sizeInMeters] Sets if the size of particles is in meters or pixels. <code>true</code> to size the particles in meters; otherwise, the size is in pixels.
      * @param {Number} [options.speed=1.0] If set, overrides the minimumSpeed and maximumSpeed inputs with this value.
      * @param {Number} [options.minimumSpeed] Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
      * @param {Number} [options.maximumSpeed] Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
@@ -69,9 +51,9 @@ define([
      * @param {Number} [options.mass=1.0] Sets the minimum and maximum mass of particles in kilograms.
      * @param {Number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
      * @param {Number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
-     * @tutorial {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
+     * @tutorial {@link https://cesium.com/docs/tutorials/particle-systems/|Particle Systems Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
+     * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
      */
     function ParticleSystem(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -134,8 +116,10 @@ define([
         this._minimumMass = defaultValue(options.mass, defaultValue(options.minimumMass, 1.0));
         this._maximumMass = defaultValue(options.mass, defaultValue(options.maximumMass, 1.0));
 
-        this._minimumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
-        this._maximumImageSize = defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize));
+        this._minimumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize)));
+        this._maximumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize)));
+
+        this._sizeInMeters = defaultValue(options.sizeInMeters, false);
 
         this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
 
@@ -156,7 +140,7 @@ define([
         this._particleEstimate = 0;
     }
 
-    defineProperties(ParticleSystem.prototype, {
+    Object.defineProperties(ParticleSystem.prototype, {
         /**
          * The particle emitter for this
          * @memberof ParticleSystem.prototype
@@ -453,6 +437,23 @@ define([
             }
         },
         /**
+         * Gets or sets if the particle size is in meters or pixels. <code>true</code> to size particles in meters; otherwise, the size is in pixels.
+         * @memberof ParticleSystem.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        sizeInMeters : {
+            get : function() {
+                return this._sizeInMeters;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.bool('value', value);
+                //>>includeEnd('debug');
+                this._sizeInMeters = value;
+            }
+        },
+        /**
          * How long the particle system will emit particles, in seconds.
          * @memberof ParticleSystem.prototype
          * @type {Number}
@@ -570,6 +571,7 @@ define([
         billboard.width = particle.imageSize.x;
         billboard.height = particle.imageSize.y;
         billboard.position = particle.position;
+        billboard.sizeInMeters = system.sizeInMeters;
         billboard.show = true;
 
         // Update the color
@@ -787,8 +789,6 @@ define([
      * A function used to modify attributes of the particle at each time step. This can include force modifications,
      * color, sizing, etc.
      *
-     * @see {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     *
      * @callback ParticleSystem~updateCallback
      *
      * @param {Particle} particle The particle being updated.
@@ -802,6 +802,4 @@ define([
      *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
      * }
      */
-
-    return ParticleSystem;
-});
+export default ParticleSystem;

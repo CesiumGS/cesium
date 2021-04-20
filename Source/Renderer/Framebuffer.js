@@ -1,24 +1,11 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/PixelFormat',
-        './ContextLimits',
-        './PixelDatatype'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        PixelFormat,
-        ContextLimits,
-        PixelDatatype) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ContextLimits from './ContextLimits.js';
+import PixelDatatype from './PixelDatatype.js';
 
     function attachTexture(framebuffer, attachment, texture) {
         var gl = framebuffer._gl;
@@ -248,7 +235,7 @@ define([
         this._unBind();
     }
 
-    defineProperties(Framebuffer.prototype, {
+    Object.defineProperties(Framebuffer.prototype, {
         /**
          * The status of the framebuffer. If the status is not WebGLConstants.FRAMEBUFFER_COMPLETE,
          * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
@@ -378,6 +365,4 @@ define([
         this._gl.deleteFramebuffer(this._framebuffer);
         return destroyObject(this);
     };
-
-    return Framebuffer;
-});
+export default Framebuffer;

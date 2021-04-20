@@ -1,18 +1,8 @@
-define([
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Spline'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Spline) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Spline from './Spline.js';
 
     /**
      * A spline that uses piecewise linear interpolation to create a curve.
@@ -73,7 +63,7 @@ define([
         this._lastTimeIndex = 0;
     }
 
-    defineProperties(LinearSpline.prototype, {
+    Object.defineProperties(LinearSpline.prototype, {
         /**
          * An array of times for the control points.
          *
@@ -159,6 +149,4 @@ define([
 
         return Cartesian3.lerp(points[i], points[i + 1], u, result);
     };
-
-    return LinearSpline;
-});
+export default LinearSpline;

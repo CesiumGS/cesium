@@ -1,12 +1,5 @@
-define([
-        './Check',
-        './defaultValue',
-        './defineProperties'
-    ], function(
-        Check,
-        defaultValue,
-        defineProperties) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
 
     /**
      * A wrapper around arrays so that the internal length of the array can be manually managed.
@@ -23,7 +16,7 @@ define([
         this._length = length;
     }
 
-    defineProperties(ManagedArray.prototype, {
+    Object.defineProperties(ManagedArray.prototype, {
         /**
          * Gets or sets the length of the array.
          * If the set length is greater than the length of the internal array, the internal array is resized.
@@ -152,6 +145,4 @@ define([
         length = defaultValue(length, this.length);
         this._array.length = length;
     };
-
-    return ManagedArray;
-});
+export default ManagedArray;

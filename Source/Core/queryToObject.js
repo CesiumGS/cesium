@@ -1,12 +1,5 @@
-define([
-        './defined',
-        './DeveloperError',
-        './isArray'
-    ], function(
-        defined,
-        DeveloperError,
-        isArray) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Parses a query string into an object, where the keys and values of the object are the
@@ -56,7 +49,7 @@ define([
             if (typeof resultValue === 'string') {
                 // expand the single value to an array
                 result[name] = [resultValue, value];
-            } else if (isArray(resultValue)) {
+            } else if (Array.isArray(resultValue)) {
                 resultValue.push(value);
             } else {
                 result[name] = value;
@@ -64,6 +57,4 @@ define([
         }
         return result;
     }
-
-    return queryToObject;
-});
+export default queryToObject;

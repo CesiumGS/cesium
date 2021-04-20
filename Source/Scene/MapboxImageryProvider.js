@@ -1,22 +1,10 @@
-define([
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/MapboxApi',
-        '../Core/Resource',
-        './UrlTemplateImageryProvider'
-    ], function(
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        MapboxApi,
-        Resource,
-        UrlTemplateImageryProvider) {
-    'use strict';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import MapboxApi from '../Core/MapboxApi.js';
+import Resource from '../Core/Resource.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>');
@@ -60,13 +48,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = options.url;
-        if (!defined(url)) {
-            url = 'https://{s}.tiles.mapbox.com/v4/';
-        }
-        this._url = url;
-
-        var resource = Resource.createIfNeeded(url);
+        var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://{s}.tiles.mapbox.com/v4/'));
 
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;
@@ -111,7 +93,7 @@ define([
         });
     }
 
-    defineProperties(MapboxImageryProvider.prototype, {
+    Object.defineProperties(MapboxImageryProvider.prototype, {
         /**
          * Gets the URL of the Mapbox server.
          * @memberof MapboxImageryProvider.prototype
@@ -120,7 +102,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._imageryProvider.url;
             }
         },
 
@@ -361,6 +343,4 @@ define([
 
     // Exposed for tests
     MapboxImageryProvider._defaultCredit = defaultCredit;
-
-    return MapboxImageryProvider;
-});
+export default MapboxImageryProvider;

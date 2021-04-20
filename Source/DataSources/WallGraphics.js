@@ -1,20 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a two dimensional wall defined as a line strip and optional maximum and minimum heights.
@@ -24,27 +13,26 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
-     * @param {Property} [options.maximumHeights] A Property specifying an array of heights to be used for the top of the wall instead of the height of each position.
-     * @param {Property} [options.minimumHeights] A Property specifying an array of heights to be used for the bottom of the wall instead of the globe surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the wall.
+     * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
+     * @param {Property} [options.minimumHeights] A Property specifying an array of heights to be used for the bottom of the wall instead of the globe surface.
+     * @param {Property} [options.maximumHeights] A Property specifying an array of heights to be used for the top of the wall instead of the height of each position.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the wall is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the wall.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the wall is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the wall casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the wall casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this wall will be displayed.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
      */
     function WallGraphics(options) {
+        this._definitionChanged = new Event();
         this._show = undefined;
         this._showSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
         this._minimumHeights = undefined;
@@ -55,6 +43,8 @@ define([
         this._granularitySubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -65,12 +55,11 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(WallGraphics.prototype, {
+    Object.defineProperties(WallGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof WallGraphics.prototype
@@ -91,14 +80,6 @@ define([
          * @default true
          */
         show : createPropertyDescriptor('show'),
-
-        /**
-         * Gets or sets the Property specifying the material used to fill the wall.
-         * @memberof WallGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
-         */
-        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
@@ -140,6 +121,14 @@ define([
         fill : createPropertyDescriptor('fill'),
 
         /**
+         * Gets or sets the Property specifying the material used to fill the wall.
+         * @memberof WallGraphics.prototype
+         * @type {MaterialProperty}
+         * @default Color.WHITE
+         */
+        material : createMaterialPropertyDescriptor('material'),
+
+        /**
          * Gets or sets the Property specifying whether the wall is outlined.
          * @memberof WallGraphics.prototype
          * @type {Property}
@@ -165,7 +154,7 @@ define([
 
         /**
          * Get or sets the enum Property specifying whether the wall
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof WallGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED
@@ -191,12 +180,12 @@ define([
             return new WallGraphics(this);
         }
         result.show = this.show;
-        result.material = this.material;
         result.positions = this.positions;
         result.minimumHeights = this.minimumHeights;
         result.maximumHeights = this.maximumHeights;
         result.granularity = this.granularity;
         result.fill = this.fill;
+        result.material = this.material;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
@@ -219,18 +208,16 @@ define([
         //>>includeEnd('debug');
 
         this.show = defaultValue(this.show, source.show);
-        this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
         this.minimumHeights = defaultValue(this.minimumHeights, source.minimumHeights);
         this.maximumHeights = defaultValue(this.maximumHeights, source.maximumHeights);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.fill = defaultValue(this.fill, source.fill);
+        this.material = defaultValue(this.material, source.material);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return WallGraphics;
-});
+export default WallGraphics;

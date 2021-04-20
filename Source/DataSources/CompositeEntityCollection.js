@@ -1,20 +1,9 @@
-define([
-        '../Core/createGuid',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        './Entity',
-        './EntityCollection'
-    ], function(
-        createGuid,
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath,
-        Entity,
-        EntityCollection) {
-    'use strict';
+import createGuid from '../Core/createGuid.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import Entity from './Entity.js';
+import EntityCollection from './EntityCollection.js';
 
     var entityOptionsScratch = {
         id : undefined
@@ -27,6 +16,8 @@ define([
         for (var i = 0; i < propertyNamesLength; i++) {
             entity[propertyNames[i]] = undefined;
         }
+        entity._name = undefined;
+        entity._availability = undefined;
     }
 
     function subscribeToEntity(that, eventHash, collectionId, entity) {
@@ -138,7 +129,7 @@ define([
         this._shouldRecomposite = false;
     }
 
-    defineProperties(CompositeEntityCollection.prototype, {
+    Object.defineProperties(CompositeEntityCollection.prototype, {
         /**
          * Gets the event that is fired when entities are added or removed from the collection.
          * The generated event is a {@link EntityCollection.collectionChangedEventCallback}.
@@ -564,6 +555,4 @@ define([
 
         compositeEntity[propertyName] = compositeProperty;
     };
-
-    return CompositeEntityCollection;
-});
+export default CompositeEntityCollection;

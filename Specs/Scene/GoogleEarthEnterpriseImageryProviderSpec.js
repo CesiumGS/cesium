@@ -1,51 +1,38 @@
-defineSuite([
-        'Scene/GoogleEarthEnterpriseImageryProvider',
-        'Core/decodeGoogleEarthEnterpriseData',
-        'Core/DefaultProxy',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/GeographicTilingScheme',
-        'Core/GoogleEarthEnterpriseMetadata',
-        'Core/GoogleEarthEnterpriseTileInformation',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Scene/DiscardMissingTileImagePolicy',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri',
-        'ThirdParty/when'
-    ], function(
-        GoogleEarthEnterpriseImageryProvider,
-        decodeGoogleEarthEnterpriseData,
-        DefaultProxy,
-        defaultValue,
-        defined,
-        GeographicTilingScheme,
-        GoogleEarthEnterpriseMetadata,
-        GoogleEarthEnterpriseTileInformation,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        DiscardMissingTileImagePolicy,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri,
-        when) {
-    'use strict';
+import { decodeGoogleEarthEnterpriseData } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMetadata } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseTileInformation } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseImageryProvider } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { Uri } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
     });
 
+    var supportsImageBitmapOptions;
     beforeAll(function() {
         decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
     });
 
     afterAll(function() {
@@ -83,10 +70,11 @@ defineSuite([
     }
 
     function installFakeImageRequest(expectedUrl, proxy) {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            var url = request.url;
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
             } else {
                 if (proxy) {
                     var uri = new Uri(url);
@@ -96,12 +84,12 @@ defineSuite([
                     expect(url).toEqual(expectedUrl);
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            if (defined(expectedUrl)) {
+            if (defined(expectedUrl) && !/^blob:/.test(url)) {
                 if (proxy) {
                     var uri = new Uri(url);
                     url = decodeURIComponent(uri.query);
@@ -224,7 +212,7 @@ defineSuite([
             installFakeImageRequest('http://fake.fake.invalid/flatfile?f1-03-i.1');
 
             return imageryProvider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -294,7 +282,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

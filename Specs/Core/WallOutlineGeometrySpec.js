@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/WallOutlineGeometry',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Specs/createPackableSpecs'
-    ], function(
-        WallOutlineGeometry,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { WallOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/WallOutlineGeometry', function() {
 
     var ellipsoid = Ellipsoid.WGS84;
 

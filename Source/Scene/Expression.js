@@ -1,38 +1,20 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/isArray',
-        '../Core/Math',
-        '../Core/RuntimeError',
-        '../ThirdParty/jsep',
-        './ExpressionNodeType'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Check,
-        Color,
-        defined,
-        defineProperties,
-        DeveloperError,
-        isArray,
-        CesiumMath,
-        RuntimeError,
-        jsep,
-        ExpressionNodeType) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import jsep from '../ThirdParty/jsep.js';
+import ExpressionNodeType from './ExpressionNodeType.js';
 
     /**
      * An expression for a style applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      * <p>
      * Implements the {@link StyleExpression} interface.
@@ -75,7 +57,7 @@ define([
         this._runtimeAst = createRuntimeAst(this, ast);
     }
 
-    defineProperties(Expression.prototype, {
+    Object.defineProperties(Expression.prototype, {
         /**
          * Gets the expression defined in the 3D Tiles Styling language.
          *
@@ -141,7 +123,7 @@ define([
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -1575,6 +1557,8 @@ define([
         return expressions;
     }
 
+    var nullSentinel = 'czm_infinity'; // null just needs to be some sentinel value that will cause "[expression] === null" to be false in nearly all cases. GLSL doesn't have a NaN constant so use czm_infinity.
+
     Node.prototype.getShaderExpression = function(attributePrefix, shaderState, parent) {
         var color;
         var left;
@@ -1585,7 +1569,7 @@ define([
         var value = this._value;
 
         if (defined(this._left)) {
-            if (isArray(this._left)) {
+            if (Array.isArray(this._left)) {
                 // Left can be an array if the type is LITERAL_COLOR or LITERAL_VECTOR
                 left = getExpressionArray(this._left, attributePrefix, shaderState, this);
             } else {
@@ -1601,7 +1585,7 @@ define([
             test = this._test.getShaderExpression(attributePrefix, shaderState, this);
         }
 
-        if (isArray(this._value)) {
+        if (Array.isArray(this._value)) {
             // For ARRAY type
             value = getExpressionArray(this._value, attributePrefix, shaderState, this);
         }
@@ -1619,7 +1603,13 @@ define([
                     return 'floor(' + left + ' + 0.5)';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
-                } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
+                } else if (value === 'isNaN') {
+                    // In GLSL 2.0 use isnan instead
+                    return '(' + left + ' != ' + left + ')';
+                } else if (value === 'isFinite') {
+                    // In GLSL 2.0 use isinf instead. GLSL doesn't have an infinity constant so use czm_infinity which is an arbitrarily big enough number.
+                    return '(abs(' + left + ') < czm_infinity)';
+                } else if ((value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
                     throw new RuntimeError('Error generating style shader: "' + value + '" is not supported.');
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
@@ -1675,7 +1665,7 @@ define([
             case ExpressionNodeType.VARIABLE_IN_STRING:
                 throw new RuntimeError('Error generating style shader: Converting a variable to a string is not supported.');
             case ExpressionNodeType.LITERAL_NULL:
-                throw new RuntimeError('Error generating style shader: null is not supported.');
+                return nullSentinel;
             case ExpressionNodeType.LITERAL_BOOLEAN:
                 return value ? 'true' : 'false';
             case ExpressionNodeType.LITERAL_NUMBER:
@@ -1761,13 +1751,11 @@ define([
             case ExpressionNodeType.LITERAL_REGEX:
                 throw new RuntimeError('Error generating style shader: Regular expressions are not supported.');
             case ExpressionNodeType.LITERAL_UNDEFINED:
-                throw new RuntimeError('Error generating style shader: undefined is not supported.');
+                return nullSentinel;
             case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
                     return 'u_time';
                 }
         }
     };
-
-    return Expression;
-});
+export default Expression;

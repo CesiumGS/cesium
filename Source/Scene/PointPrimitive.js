@@ -1,34 +1,16 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Matrix4',
-        '../Core/NearFarScalar',
-        './SceneMode',
-        './SceneTransforms'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Matrix4,
-        NearFarScalar,
-        SceneMode,
-        SceneTransforms) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Matrix4 from '../Core/Matrix4.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import SceneMode from './SceneMode.js';
+import SceneTransforms from './SceneTransforms.js';
 
     /**
      * A graphical point positioned in the 3D scene, that is created
@@ -54,7 +36,7 @@ define([
      * @internalConstructor
      * @class
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
     function PointPrimitive(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -135,7 +117,7 @@ define([
         }
     }
 
-    defineProperties(PointPrimitive.prototype, {
+    Object.defineProperties(PointPrimitive.prototype, {
         /**
          * Determines if this point will be shown.  Use this to hide or show a point, instead
          * of removing it and re-adding it to the collection.
@@ -604,6 +586,4 @@ define([
         this._pickId = this._pickId && this._pickId.destroy();
         this._pointPrimitiveCollection = undefined;
     };
-
-    return PointPrimitive;
-});
+export default PointPrimitive;

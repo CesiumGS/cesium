@@ -1,8 +1,3 @@
-define([
-        '../Core/defineProperties'
-    ], function(
-        defineProperties) {
-    'use strict';
 
     /**
      * A model's mesh and its materials.
@@ -30,7 +25,7 @@ define([
         this._id = id;
     }
 
-    defineProperties(ModelMesh.prototype, {
+    Object.defineProperties(ModelMesh.prototype, {
         /**
          * The value of the <code>name</code> property of this mesh.
          *
@@ -74,6 +69,4 @@ define([
             }
         }
     });
-
-    return ModelMesh;
-});
+export default ModelMesh;

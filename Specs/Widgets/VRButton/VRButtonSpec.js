@@ -1,10 +1,7 @@
-defineSuite([
-        'Widgets/VRButton/VRButton',
-        'Specs/createScene'
-    ], function(
-        VRButton,
-        createScene) {
-    'use strict';
+import createScene from '../../createScene.js';
+import { VRButton } from '../../../Source/Cesium.js';
+
+describe('Widgets/VRButton/VRButton', function() {
 
     var scene;
 

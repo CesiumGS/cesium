@@ -1,14 +1,7 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defined',
-        '../Core/Math',
-        './SceneMode'
-    ], function(
-        Cartesian3,
-        defined,
-        CesiumMath,
-        SceneMode) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defined from '../Core/defined.js';
+import CesiumMath from '../Core/Math.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -47,7 +40,7 @@ define([
          * The minimum brightness of the fog color from lighting. A value of 0.0 can cause the fog to be completely black. A value of 1.0 will not affect
          * the brightness at all.
          * @type {Number}
-         * @default 0.1
+         * @default 0.03
          */
         this.minimumBrightness = 0.03;
     }
@@ -143,6 +136,4 @@ define([
         frameState.fog.sse = this.screenSpaceErrorFactor;
         frameState.fog.minimumBrightness = this.minimumBrightness;
     };
-
-    return Fog;
-});
+export default Fog;

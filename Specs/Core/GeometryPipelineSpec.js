@@ -1,50 +1,27 @@
-defineSuite([
-        'Core/GeometryPipeline',
-        'Core/arraySlice',
-        'Core/AttributeCompression',
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/ComponentDatatype',
-        'Core/Ellipsoid',
-        'Core/EllipsoidGeometry',
-        'Core/EncodedCartesian3',
-        'Core/GeographicProjection',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryInstance',
-        'Core/GeometryType',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PolygonGeometry',
-        'Core/PrimitiveType',
-        'Core/Tipsify',
-        'Core/VertexFormat'
-    ], function(
-        GeometryPipeline,
-        arraySlice,
-        AttributeCompression,
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        Ellipsoid,
-        EllipsoidGeometry,
-        EncodedCartesian3,
-        GeographicProjection,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstance,
-        GeometryType,
-        CesiumMath,
-        Matrix4,
-        PolygonGeometry,
-        PrimitiveType,
-        Tipsify,
-        VertexFormat) {
-    'use strict';
+import { arraySlice } from '../../Source/Cesium.js';
+import { AttributeCompression } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeometry } from '../../Source/Cesium.js';
+import { EncodedCartesian3 } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { GeometryPipeline } from '../../Source/Cesium.js';
+import { GeometryType } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Tipsify } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+
+describe('Core/GeometryPipeline', function() {
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({

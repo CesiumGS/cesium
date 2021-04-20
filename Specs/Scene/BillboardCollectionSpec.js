@@ -1,54 +1,30 @@
-defineSuite([
-        'Scene/BillboardCollection',
-        'Core/BoundingRectangle',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CesiumTerrainProvider',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/OrthographicOffCenterFrustum',
-        'Core/PerspectiveFrustum',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Scene/Billboard',
-        'Scene/BlendOption',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/TextureAtlas',
-        'Scene/VerticalOrigin',
-        'Specs/createGlobe',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        BillboardCollection,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        CesiumTerrainProvider,
-        Color,
-        DistanceDisplayCondition,
-        CesiumMath,
-        NearFarScalar,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        Rectangle,
-        Resource,
-        Billboard,
-        BlendOption,
-        HeightReference,
-        HorizontalOrigin,
-        TextureAtlas,
-        VerticalOrigin,
-        createGlobe,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { createGuid } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Billboard } from '../../Source/Cesium.js';
+import { BillboardCollection } from '../../Source/Cesium.js';
+import { BlendOption } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { TextureAtlas } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createGlobe from '../createGlobe.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/BillboardCollection', function() {
 
     var scene;
     var context;
@@ -77,7 +53,8 @@ defineSuite([
             }),
             Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
-            }));
+            })
+        );
     });
 
     afterAll(function() {
@@ -174,7 +151,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.image).toEqual(greenImage.src);
+        expect(b.image).toEqual(b._imageId);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -221,7 +198,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.image).toEqual(greenImage.src);
+        expect(b.image).toEqual(b._imageId);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -822,7 +799,7 @@ defineSuite([
 
         expect(scene).toRender([0, 255, 0, 255]);
 
-        b.setImage(largeBlueImage.src, largeBlueImage);
+        b.setImage(createGuid(), largeBlueImage);
         expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -834,8 +811,10 @@ defineSuite([
 
         expect(scene).toRender([0, 255, 0, 255]);
 
-        billboards.textureAtlas.addImage(largeBlueImage.src, largeBlueImage);
-        b.setImageSubRegion(largeBlueImage.src, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
+        var guid = createGuid();
+
+        billboards.textureAtlas.addImage(guid, largeBlueImage);
+        b.setImageSubRegion(guid, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
         expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -1472,7 +1451,7 @@ defineSuite([
         var vectorProjection = Cartesian3.multiplyByScalar(camera.direction, Cartesian3.dot(diff, camera.direction), new Cartesian3());
         var distance = Math.max(0.0, Cartesian3.magnitude(vectorProjection) - bs.radius);
 
-        var pixelSize = camera.frustum.getPixelDimensions(dimensions.x, dimensions.y, distance, new Cartesian2());
+        var pixelSize = camera.frustum.getPixelDimensions(dimensions.x, dimensions.y, distance, scene.pixelRatio, new Cartesian2());
         bs.radius += pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) + pixelSize.y * one.pixelOffset.y;
 
         expect(actual.center).toEqual(bs.center);

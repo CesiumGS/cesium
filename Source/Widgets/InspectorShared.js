@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/Check'
-    ],function(
-        defined,
-        Check) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
 
     /**
      * A static class with helper functions used by the CesiumInspector and Cesium3DTilesInspector
@@ -71,6 +66,4 @@ define([
         section.appendChild(sectionContent);
         return sectionContent;
     };
-
-    return InspectorShared;
-});
+export default InspectorShared;

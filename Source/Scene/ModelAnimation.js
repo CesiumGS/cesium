@@ -1,22 +1,8 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/defined',
-        '../Core/deprecationWarning',
-        '../Core/Event',
-        '../Core/JulianDate',
-        './ModelAnimationLoop',
-        './ModelAnimationState'
-    ], function(
-        defaultValue,
-        defineProperties,
-        defined,
-        deprecationWarning,
-        Event,
-        JulianDate,
-        ModelAnimationLoop,
-        ModelAnimationState) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import ModelAnimationLoop from './ModelAnimationLoop.js';
+import ModelAnimationState from './ModelAnimationState.js';
 
     /**
      * An active glTF animation.  A glTF asset can contain animations.  An active animation
@@ -49,12 +35,6 @@ define([
          * @default false
          */
         this.removeOnStop = defaultValue(options.removeOnStop, false);
-
-        if (defined(options.speedup)) {
-            deprecationWarning('ModelAnimation.speedup', 'ModelAnimation.speedup is deprecated and will be removed in Cesium 1.54. Use ModelAnimation.multiplier instead.');
-            options.multiplier = options.speedup;
-        }
-
         this._multiplier = defaultValue(options.multiplier, 1.0);
         this._reverse = defaultValue(options.reverse, false);
         this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
@@ -133,7 +113,7 @@ define([
         };
     }
 
-    defineProperties(ModelAnimation.prototype, {
+    Object.defineProperties(ModelAnimation.prototype, {
         /**
          * The glTF animation name that identifies this animation.
          *
@@ -219,27 +199,6 @@ define([
         },
 
         /**
-         * Values greater than <code>1.0</code> increase the speed that the animation is played relative
-         * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
-         * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
-         * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
-         * will play in one second even if <code>multiplier</code> is <code>1.0</code>.
-         * @memberof ModelAnimation.prototype
-         *
-         * @type {Number}
-         * @readonly
-         * @deprecated This property has been deprecated. Use {@link ModelAnimation#multiplier} instead.
-         *
-         * @default 1.0
-         */
-        speedup : {
-            get : function() {
-                deprecationWarning('ModelAnimation.speedup', 'ModelAnimation.speedup is deprecated and will be removed in Cesium 1.54. Use ModelAnimation.multiplier instead.');
-                return this._multiplier;
-            }
-        },
-
-        /**
          * When <code>true</code>, the animation is played in reverse.
          *
          * @memberof ModelAnimation.prototype
@@ -271,6 +230,4 @@ define([
             }
         }
     });
-
-    return ModelAnimation;
-});
+export default ModelAnimation;

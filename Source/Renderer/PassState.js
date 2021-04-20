@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
 
     /**
      * The state for a particular rendering pass.  This is used to supplement the state
@@ -56,6 +54,4 @@ define([], function() {
          */
         this.viewport = undefined;
     }
-
-    return PassState;
-});
+export default PassState;

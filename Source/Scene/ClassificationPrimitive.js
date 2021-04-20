@@ -1,60 +1,28 @@
-define([
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/isArray',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeAppearanceVS',
-        '../ThirdParty/when',
-        './BlendingState',
-        './ClassificationType',
-        './DepthFunction',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './SceneMode',
-        './ShadowVolumeAppearance',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        ColorGeometryInstanceAttribute,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        GeometryInstance,
-        isArray,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        ShadowVolumeFS,
-        ShadowVolumeAppearanceVS,
-        when,
-        BlendingState,
-        ClassificationType,
-        DepthFunction,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode,
-        ShadowVolumeAppearance,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
-
-    var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import ShadowVolumeAppearanceVS from '../Shaders/ShadowVolumeAppearanceVS.js';
+import ShadowVolumeFS from '../Shaders/ShadowVolumeFS.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import ClassificationType from './ClassificationType.js';
+import DepthFunction from './DepthFunction.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+import SceneMode from './SceneMode.js';
+import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     /**
      * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
@@ -65,8 +33,7 @@ define([
      * and match most of them and add a new geometry or appearance independently of each other.
      * Only {@link PerInstanceColorAppearance} with the same color across all instances is supported at this time when using
      * ClassificationPrimitive directly.
-     * For full {@link Appearance} support when classifying terrain use {@link GroundPrimitive} instead.
-     *
+     * For full {@link Appearance} support when classifying terrain or 3D Tiles use {@link GroundPrimitive} instead.
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
@@ -180,7 +147,9 @@ define([
         this._spColor2D = undefined; // only derived if necessary
 
         this._rsStencilPreloadPass = undefined;
+        this._rsStencilPreloadPass3DTiles = undefined;
         this._rsStencilDepthPass = undefined;
+        this._rsStencilDepthPass3DTiles = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
@@ -199,11 +168,6 @@ define([
 
         this.appearance = options.appearance;
 
-        var readOnlyAttributes;
-        if (defined(geometryInstances) && isArray(geometryInstances) && geometryInstances.length > 1) {
-            readOnlyAttributes = ClassificationPrimitiveReadOnlyInstanceAttributes;
-        }
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
@@ -218,7 +182,6 @@ define([
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
-            _readOnlyInstanceAttributes : readOnlyAttributes,
             _createBoundingVolumeFunction : undefined,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
@@ -228,7 +191,7 @@ define([
         };
     }
 
-    defineProperties(ClassificationPrimitive.prototype, {
+    Object.defineProperties(ClassificationPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -379,13 +342,8 @@ define([
         return scene.context.stencilBuffer;
     };
 
-    // The stencil mask only uses the least significant 4 bits.
-    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
-    // can be classified.
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
-    function getStencilPreloadRenderState(enableStencil) {
+    function getStencilPreloadRenderState(enableStencil, mask3DTiles) {
+        var stencilFunction = mask3DTiles ? StencilFunction.EQUAL : StencilFunction.ALWAYS;
         return {
             colorMask : {
                 red : false,
@@ -395,21 +353,22 @@ define([
             },
             stencilTest : {
                 enabled : enableStencil,
-                frontFunction : StencilFunction.ALWAYS,
+                frontFunction : stencilFunction,
                 frontOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.DECREMENT_WRAP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                backFunction : StencilFunction.ALWAYS,
+                backFunction : stencilFunction,
                 backOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.INCREMENT_WRAP,
                     zPass : StencilOperation.INCREMENT_WRAP
                 },
-                reference : stencilReference,
-                mask : stencilMask
+                reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
             },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
             depthTest : {
                 enabled : false
             },
@@ -417,7 +376,8 @@ define([
         };
     }
 
-    function getStencilDepthRenderState(enableStencil) {
+    function getStencilDepthRenderState(enableStencil, mask3DTiles) {
+        var stencilFunction = mask3DTiles ? StencilFunction.EQUAL : StencilFunction.ALWAYS;
         return {
             colorMask : {
                 red : false,
@@ -427,21 +387,22 @@ define([
             },
             stencilTest : {
                 enabled : enableStencil,
-                frontFunction : StencilFunction.ALWAYS,
+                frontFunction : stencilFunction,
                 frontOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.INCREMENT_WRAP
                 },
-                backFunction : StencilFunction.ALWAYS,
+                backFunction : stencilFunction,
                 backOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : stencilReference,
-                mask : stencilMask
+                reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
             },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
             depthTest : {
                 enabled : true,
                 func : DepthFunction.LESS_OR_EQUAL
@@ -466,9 +427,10 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : stencilReference,
-                mask : stencilMask
+                reference : 0,
+                mask : StencilConstants.CLASSIFICATION_MASK
             },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
             depthTest : {
                 enabled : false
             },
@@ -492,9 +454,10 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
+        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         depthTest : {
             enabled : false
         },
@@ -507,9 +470,11 @@ define([
         }
         var stencilEnabled = !classificationPrimitive.debugShowShadowVolume;
 
-        classificationPrimitive._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(stencilEnabled));
-        classificationPrimitive._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(stencilEnabled));
-        classificationPrimitive._rsColorPass = RenderState.fromCache(getColorRenderState(stencilEnabled));
+        classificationPrimitive._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(stencilEnabled, false));
+        classificationPrimitive._rsStencilPreloadPass3DTiles = RenderState.fromCache(getStencilPreloadRenderState(stencilEnabled, true));
+        classificationPrimitive._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(stencilEnabled, false));
+        classificationPrimitive._rsStencilDepthPass3DTiles = RenderState.fromCache(getStencilDepthRenderState(stencilEnabled, true));
+        classificationPrimitive._rsColorPass = RenderState.fromCache(getColorRenderState(stencilEnabled, false));
         classificationPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
@@ -558,14 +523,9 @@ define([
         }
 
         var extrudedDefine = classificationPrimitive._extruded ? 'EXTRUDED_GEOMETRY' : '';
-        // Tesselation on ClassificationPrimitives tends to be low,
-        // which causes problems when interpolating log depth from vertices.
-        // So force computing and writing logarithmic depth in the fragment shader.
-        // Re-enable at far distances to avoid z-fighting.
-        var disableGlPositionLogDepth = 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT';
 
         var vsSource = new ShaderSource({
-            defines : [extrudedDefine, disableGlPositionLogDepth],
+            defines : [extrudedDefine],
             sources : [vs]
         });
         var fsSource = new ShaderSource({
@@ -573,7 +533,7 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance);
+        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance, context.floatTextureSixPlaces);
 
         classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
@@ -589,7 +549,7 @@ define([
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickFS3D = shadowVolumeAppearance.createPickFragmentShader(false);
-            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, false, frameState.mapProjection);
+            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine], vsPick, false, frameState.mapProjection);
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
@@ -605,7 +565,7 @@ define([
                 var pickProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spPick, '2dPick');
                 if (!defined(pickProgram2D)) {
                     var pickFS2D = shadowVolumeAppearance.createPickFragmentShader(true);
-                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, true, frameState.mapProjection);
+                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine], vsPick, true, frameState.mapProjection);
 
                     pickProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spPick, '2dPick', {
                         vertexShaderSource : pickVS2D,
@@ -626,7 +586,7 @@ define([
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vsSource = new ShaderSource({
-            defines : [extrudedDefine, disableGlPositionLogDepth],
+            defines : [extrudedDefine],
             sources : [vs]
         });
 
@@ -640,7 +600,7 @@ define([
 
         // Create a fragment shader that computes only required material hookups using screen space techniques
         var fsColorSource = shadowVolumeAppearance.createFragmentShader(false);
-        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, false, frameState.mapProjection);
+        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine], vs, false, frameState.mapProjection);
 
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
             context : context,
@@ -657,7 +617,7 @@ define([
             var colorProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spColor, '2dColor');
             if (!defined(colorProgram2D)) {
                 var fsColorSource2D = shadowVolumeAppearance.createFragmentShader(true);
-                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, true, frameState.mapProjection);
+                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine], vs, true, frameState.mapProjection);
 
                 colorProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spColor, '2dColor', {
                     vertexShaderSource : vsColorSource2D,
@@ -676,6 +636,7 @@ define([
 
         var i;
         var command;
+        var derivedCommand;
         var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
 
@@ -684,7 +645,7 @@ define([
         for (i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
 
-            // stencil preload command
+            // Stencil preload command
             command = colorCommands[i];
             if (!defined(command)) {
                 command = colorCommands[i] = new DrawCommand({
@@ -697,8 +658,14 @@ define([
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
 
-            // stencil depth command
+            derivedCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedCommand.renderState = classificationPrimitive._rsStencilPreloadPass3DTiles;
+            derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedCommand;
+
+            // Stencil depth command
             command = colorCommands[i + 1];
             if (!defined(command)) {
                 command = colorCommands[i + 1] = new DrawCommand({
@@ -711,8 +678,14 @@ define([
             command.renderState = classificationPrimitive._rsStencilDepthPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
 
-            // color command
+            derivedCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedCommand.renderState = classificationPrimitive._rsStencilDepthPass3DTiles;
+            derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedCommand;
+
+            // Color command
             command = colorCommands[i + 2];
             if (!defined(command)) {
                 command = colorCommands[i + 2] = new DrawCommand({
@@ -724,6 +697,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = classificationPrimitive._rsColorPass;
             command.shaderProgram = classificationPrimitive._spColor;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
 
             var appearance = classificationPrimitive.appearance;
             var material = appearance.material;
@@ -733,17 +707,21 @@ define([
 
             command.uniformMap = uniformMap;
 
-            // derive for 2D if texture coordinates are ever computed
+            derivedCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedCommand;
+
+            // Derive for 2D if texture coordinates are ever computed
             if (needs2DShader) {
-                var derivedColorCommand = command.derivedCommands.appearance2D;
-                if (!defined(derivedColorCommand)) {
-                    derivedColorCommand = DrawCommand.shallowClone(command);
-                    command.derivedCommands.appearance2D = derivedColorCommand;
-                }
-                derivedColorCommand.vertexArray = vertexArray;
-                derivedColorCommand.renderState = classificationPrimitive._rsColorPass;
-                derivedColorCommand.shaderProgram = classificationPrimitive._spColor2D;
-                derivedColorCommand.uniformMap = uniformMap;
+                // First derive from the terrain command
+                var derived2DCommand = DrawCommand.shallowClone(command, command.derivedCommands.appearance2D);
+                derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
+                command.derivedCommands.appearance2D = derived2DCommand;
+
+                // Then derive from the 3D Tiles command
+                derived2DCommand = DrawCommand.shallowClone(derivedCommand, derivedCommand.derivedCommands.appearance2D);
+                derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
+                derivedCommand.derivedCommands.appearance2D = derived2DCommand;
             }
         }
 
@@ -785,6 +763,7 @@ define([
 
         var j;
         var command;
+        var derivedCommand;
         var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
 
@@ -797,7 +776,7 @@ define([
                 vertexArray = primitive._va[pickOffset.index];
             }
 
-            // stencil preload command
+            // Stencil preload command
             command = pickCommands[j];
             if (!defined(command)) {
                 command = pickCommands[j] = new DrawCommand({
@@ -811,12 +790,19 @@ define([
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
             if (usePickOffsets) {
                 command.offset = pickOffset.offset;
                 command.count = pickOffset.count;
             }
 
-            // stencil depth command
+            // Derive for 3D Tiles classification
+            derivedCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedCommand.renderState = classificationPrimitive._rsStencilPreloadPass3DTiles;
+            derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedCommand;
+
+            // Stencil depth command
             command = pickCommands[j + 1];
             if (!defined(command)) {
                 command = pickCommands[j + 1] = new DrawCommand({
@@ -830,12 +816,19 @@ define([
             command.renderState = classificationPrimitive._rsStencilDepthPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
             if (usePickOffsets) {
                 command.offset = pickOffset.offset;
                 command.count = pickOffset.count;
             }
 
-            // pick color command
+            // Derive for 3D Tiles classification
+            derivedCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedCommand.renderState = classificationPrimitive._rsStencilDepthPass3DTiles;
+            derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedCommand;
+
+            // Pick color command
             command = pickCommands[j + 2];
             if (!defined(command)) {
                 command = pickCommands[j + 2] = new DrawCommand({
@@ -849,22 +842,27 @@ define([
             command.renderState = classificationPrimitive._rsPickPass;
             command.shaderProgram = classificationPrimitive._spPick;
             command.uniformMap = uniformMap;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
             if (usePickOffsets) {
                 command.offset = pickOffset.offset;
                 command.count = pickOffset.count;
             }
 
-            // derive for 2D if texture coordinates are ever computed
+            derivedCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedCommand;
+
+            // Derive for 2D if texture coordinates are ever computed
             if (needs2DShader) {
-                var derivedPickCommand = command.derivedCommands.pick2D;
-                if (!defined(derivedPickCommand)) {
-                    derivedPickCommand = DrawCommand.shallowClone(command);
-                    command.derivedCommands.pick2D = derivedPickCommand;
-                }
-                derivedPickCommand.vertexArray = vertexArray;
-                derivedPickCommand.renderState = classificationPrimitive._rsPickPass;
-                derivedPickCommand.shaderProgram = classificationPrimitive._spPick2D;
-                derivedPickCommand.uniformMap = uniformMap;
+                // First derive from the terrain command
+                var derived2DCommand = DrawCommand.shallowClone(command, command.derivedCommands.pick2D);
+                derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;
+                command.derivedCommands.pick2D = derived2DCommand;
+
+                // Then derive from the 3D Tiles command
+                derived2DCommand = DrawCommand.shallowClone(derivedCommand, derivedCommand.derivedCommands.pick2D);
+                derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;
+                derivedCommand.derivedCommands.pick2D = derived2DCommand;
             }
         }
     }
@@ -876,6 +874,23 @@ define([
 
     function boundingVolumeIndex(commandIndex, length) {
         return Math.floor((commandIndex % length) / 3);
+    }
+
+    function updateAndQueueRenderCommand(command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume) {
+        command.modelMatrix = modelMatrix;
+        command.boundingVolume = boundingVolume;
+        command.cull = cull;
+        command.debugShowBoundingVolume = debugShowBoundingVolume;
+
+        frameState.commandList.push(command);
+    }
+
+    function updateAndQueuePickCommand(command, frameState, modelMatrix, cull, boundingVolume) {
+        command.modelMatrix = modelMatrix;
+        command.boundingVolume = boundingVolume;
+        command.cull = cull;
+
+        frameState.commandList.push(command);
     }
 
     function updateAndQueueCommands(classificationPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -893,49 +908,37 @@ define([
             boundingVolumes = primitive._boundingSphereMorph;
         }
 
-        var commandList = frameState.commandList;
+        var classificationType = classificationPrimitive.classificationType;
+        var queueTerrainCommands = (classificationType !== ClassificationType.CESIUM_3D_TILE);
+        var queue3DTilesCommands = (classificationType !== ClassificationType.TERRAIN);
+
         var passes = frameState.passes;
 
         var i;
-        var pass;
-        switch (classificationPrimitive.classificationType) {
-            case ClassificationType.TERRAIN:
-                pass = Pass.TERRAIN_CLASSIFICATION;
-                break;
-            case ClassificationType.CESIUM_3D_TILE:
-                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-                break;
-            default:
-                pass = Pass.CLASSIFICATION;
-        }
+        var boundingVolume;
+        var command;
 
         if (passes.render) {
-            var colorCommand;
             var colorLength = colorCommands.length;
             for (i = 0; i < colorLength; ++i) {
-                colorCommand = colorCommands[i];
-                colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
-                colorCommand.cull = cull;
-                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-                colorCommand.pass = pass;
-
-                commandList.push(colorCommand);
+                boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
+                if (queueTerrainCommands) {
+                    command = colorCommands[i];
+                    updateAndQueueRenderCommand(command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
+                }
+                if (queue3DTilesCommands) {
+                    command = colorCommands[i].derivedCommands.tileset;
+                    updateAndQueueRenderCommand(command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
+                }
             }
 
             if (frameState.invertClassification) {
                 var ignoreShowCommands = classificationPrimitive._commandsIgnoreShow;
                 var ignoreShowCommandsLength = ignoreShowCommands.length;
-
                 for (i = 0; i < ignoreShowCommandsLength; ++i) {
-                    var bvIndex = Math.floor(i / 2);
-                    colorCommand = ignoreShowCommands[i];
-                    colorCommand.modelMatrix = modelMatrix;
-                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
-                    colorCommand.cull = cull;
-                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-
-                    commandList.push(colorCommand);
+                    boundingVolume = boundingVolumes[Math.floor(i / 2)];
+                    command = ignoreShowCommands[i];
+                    updateAndQueueRenderCommand(command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
                 }
             }
         }
@@ -945,13 +948,15 @@ define([
             var pickOffsets = primitive._pickOffsets;
             for (i = 0; i < pickLength; ++i) {
                 var pickOffset = pickOffsets[boundingVolumeIndex(i, pickLength)];
-                var pickCommand = pickCommands[i];
-                pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = boundingVolumes[pickOffset.index];
-                pickCommand.cull = cull;
-                pickCommand.pass = pass;
-
-                commandList.push(pickCommand);
+                boundingVolume = boundingVolumes[pickOffset.index];
+                if (queueTerrainCommands) {
+                    command = pickCommands[i];
+                    updateAndQueuePickCommand(command, frameState, modelMatrix, cull, boundingVolume);
+                }
+                if (queue3DTilesCommands) {
+                    command = pickCommands[i].derivedCommands.tileset;
+                    updateAndQueuePickCommand(command, frameState, modelMatrix, cull, boundingVolume);
+                }
             }
         }
     }
@@ -982,7 +987,7 @@ define([
         var primitiveOptions = this._primitiveOptions;
 
         if (!defined(this._primitive)) {
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var instances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
 
             var i;
@@ -1107,13 +1112,17 @@ define([
 
         if (this.debugShowShadowVolume && !this._debugShowShadowVolume && this._ready) {
             this._debugShowShadowVolume = true;
-            this._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(false));
-            this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(false));
+            this._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(false, false));
+            this._rsStencilPreloadPass3DTiles = RenderState.fromCache(getStencilPreloadRenderState(false, true));
+            this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(false, false));
+            this._rsStencilDepthPass3DTiles = RenderState.fromCache(getStencilDepthRenderState(false, true));
             this._rsColorPass = RenderState.fromCache(getColorRenderState(false));
         } else if (!this.debugShowShadowVolume && this._debugShowShadowVolume) {
             this._debugShowShadowVolume = false;
-            this._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(true));
-            this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(true));
+            this._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(true, false));
+            this._rsStencilPreloadPass3DTiles = RenderState.fromCache(getStencilPreloadRenderState(true, true));
+            this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(true, false));
+            this._rsStencilDepthPass3DTiles = RenderState.fromCache(getStencilDepthRenderState(true, true));
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
         // Update primitive appearance
@@ -1199,6 +1208,4 @@ define([
         this._spColor2D = undefined;
         return destroyObject(this);
     };
-
-    return ClassificationPrimitive;
-});
+export default ClassificationPrimitive;

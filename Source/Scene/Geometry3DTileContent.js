@@ -1,46 +1,14 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
-        '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../ThirdParty/when',
-        './Cesium3DTileBatchTable',
-        './Vector3DTileGeometry'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        getMagic,
-        getStringFromTypedArray,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        RuntimeError,
-        when,
-        Cesium3DTileBatchTable,
-        Vector3DTileGeometry) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import Matrix4 from '../Core/Matrix4.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Vector3DTileGeometry from './Vector3DTileGeometry.js';
 
     /**
      * <p>
@@ -72,7 +40,7 @@ define([
         initialize(this, arrayBuffer, byteOffset);
     }
 
-    defineProperties(Geometry3DTileContent.prototype, {
+    Object.defineProperties(Geometry3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
@@ -437,6 +405,4 @@ define([
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
-
-    return Geometry3DTileContent;
-});
+export default Geometry3DTileContent;

@@ -1,12 +1,5 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defineProperties',
-        '../Core/EllipsoidalOccluder'
-    ], function(
-        Cartesian3,
-        defineProperties,
-        EllipsoidalOccluder) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 
     /**
      * A set of occluders that can be used to test quadtree tiles for occlusion.
@@ -21,7 +14,7 @@ define([
         this._ellipsoid = new EllipsoidalOccluder(options.ellipsoid, Cartesian3.ZERO);
     }
 
-    defineProperties(QuadtreeOccluders.prototype, {
+    Object.defineProperties(QuadtreeOccluders.prototype, {
         /**
          * Gets the {@link EllipsoidalOccluder} that can be used to determine if a point is
          * occluded by an {@link Ellipsoid}.
@@ -34,6 +27,4 @@ define([
             }
         }
     });
-
-    return QuadtreeOccluders;
-});
+export default QuadtreeOccluders;

@@ -1,43 +1,25 @@
-define([
-        '../Core/defaultValue',
-        '../Core/AssociativeArray',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/GroundPolylinePrimitive',
-        '../Scene/PolylineColorAppearance',
-        '../Scene/PolylineMaterialAppearance',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './MaterialProperty',
-        './Property'
-    ], function(
-        defaultValue,
-        AssociativeArray,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        GroundPolylinePrimitive,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        MaterialProperty,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
+import PolylineColorAppearance from '../Scene/PolylineColorAppearance.js';
+import PolylineMaterialAppearance from '../Scene/PolylineMaterialAppearance.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
 
     var scratchColor = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(orderedGroundPrimitives, materialProperty, zIndex, asynchronous) {
+    function Batch(orderedGroundPrimitives, classificationType, materialProperty, zIndex, asynchronous) {
         var appearanceType;
         if (materialProperty instanceof ColorMaterialProperty) {
             appearanceType = PolylineColorAppearance;
@@ -46,6 +28,7 @@ define([
         }
 
         this.orderedGroundPrimitives = orderedGroundPrimitives; // scene level primitive collection
+        this.classificationType = classificationType;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
@@ -138,8 +121,9 @@ define([
                 primitive = new GroundPolylinePrimitive({
                     show : false,
                     asynchronous : this._asynchronous,
-                    geometryInstances : geometries,
-                    appearance : new this.appearanceType()
+                    geometryInstances : geometries.slice(),
+                    appearance : new this.appearanceType(),
+                    classificationType : this.classificationType
                 });
 
                 if (this.appearanceType === PolylineMaterialAppearance) {
@@ -278,9 +262,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives, asynchronous) {
+    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives, classificationType, asynchronous) {
         this._items = [];
         this._orderedGroundPrimitives = orderedGroundPrimitives;
+        this._classificationType = classificationType;
         this._asynchronous = defaultValue(asynchronous, true);
     }
 
@@ -299,7 +284,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._orderedGroundPrimitives, updater.fillMaterialProperty, zIndex, this._asynchronous);
+        var batch = new Batch(this._orderedGroundPrimitives, this._classificationType, updater.fillMaterialProperty, zIndex, this._asynchronous);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };
@@ -364,6 +349,4 @@ define([
         }
         this._items.length = 0;
     };
-
-    return StaticGroundPolylinePerMaterialBatch;
-});
+export default StaticGroundPolylinePerMaterialBatch;

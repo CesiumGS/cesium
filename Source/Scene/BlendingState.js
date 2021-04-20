@@ -1,12 +1,5 @@
-define([
-        '../Core/freezeObject',
-        './BlendEquation',
-        './BlendFunction'
-    ], function(
-        freezeObject,
-        BlendEquation,
-        BlendFunction) {
-    'use strict';
+import BlendEquation from './BlendEquation.js';
+import BlendFunction from './BlendFunction.js';
 
     /**
      * The blending state combines {@link BlendEquation} and {@link BlendFunction} and the
@@ -25,7 +18,7 @@ define([
          * @type {Object}
          * @constant
          */
-        DISABLED : freezeObject({
+        DISABLED : Object.freeze({
             enabled : false
         }),
 
@@ -35,12 +28,12 @@ define([
          * @type {Object}
          * @constant
          */
-        ALPHA_BLEND : freezeObject({
+        ALPHA_BLEND : Object.freeze({
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-            functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+            functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
             functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
         }),
@@ -51,7 +44,7 @@ define([
          * @type {Object}
          * @constant
          */
-        PRE_MULTIPLIED_ALPHA_BLEND : freezeObject({
+        PRE_MULTIPLIED_ALPHA_BLEND : Object.freeze({
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -67,16 +60,14 @@ define([
          * @type {Object}
          * @constant
          */
-        ADDITIVE_BLEND : freezeObject({
+        ADDITIVE_BLEND : Object.freeze({
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-            functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+            functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE,
             functionDestinationAlpha : BlendFunction.ONE
         })
     };
-
-    return freezeObject(BlendingState);
-});
+export default Object.freeze(BlendingState);

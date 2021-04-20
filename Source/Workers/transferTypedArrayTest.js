@@ -1,6 +1,6 @@
-/*global self:true*/
 // make sure self is defined so that the Dojo build can evaluate this file without crashing.
 if (typeof self === 'undefined') {
+    //eslint-disable-next-line no-implicit-globals, no-global-assign
     self = {};
 }
 

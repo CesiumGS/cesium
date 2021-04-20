@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * A tonemapping algorithm when rendering with high dynamic range.
@@ -53,6 +48,4 @@ define([
                    tonemapper === Tonemapper.ACES;
         }
     };
-
-    return freezeObject(Tonemapper);
-});
+export default Object.freeze(Tonemapper);

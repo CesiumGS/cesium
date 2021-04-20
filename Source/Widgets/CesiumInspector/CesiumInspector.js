@@ -1,22 +1,10 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        '../InspectorShared',
-        './CesiumInspectorViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        knockout,
-        getElement,
-        InspectorShared,
-        CesiumInspectorViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import InspectorShared from '../InspectorShared.js';
+import CesiumInspectorViewModel from './CesiumInspectorViewModel.js';
 
     /**
      * Inspector widget to aid in debugging
@@ -27,7 +15,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      */
     function CesiumInspector(container, scene) {
         //>>includeStart('debug', pragmas.debug);
@@ -88,7 +76,7 @@ define([
         shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
         generalSection.appendChild(shaderCacheDisplay);
 
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6763
+        // https://github.com/CesiumGS/cesium/issues/6763
         // var globeDepth = createCheckbox('Show globe depth', 'globeDepth');
         // generalSection.appendChild(globeDepth);
         //
@@ -234,7 +222,7 @@ define([
         knockout.applyBindings(viewModel, this._element);
     }
 
-    defineProperties(CesiumInspector.prototype, {
+    Object.defineProperties(CesiumInspector.prototype, {
         /**
          * Gets the parent container.
          * @memberof CesiumInspector.prototype
@@ -278,6 +266,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return CesiumInspector;
-});
+export default CesiumInspector;

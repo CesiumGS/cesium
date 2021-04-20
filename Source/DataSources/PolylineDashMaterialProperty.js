@@ -1,20 +1,9 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     var defaultColor = Color.WHITE;
     var defaultGapColor = Color.TRANSPARENT;
@@ -29,7 +18,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
      * @param {Property} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
-     * @param {Property} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixel.s
+     * @param {Property} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixels.
      * @param {Property} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
      */
     function PolylineDashMaterialProperty(options) {
@@ -51,7 +40,7 @@ define([
         this.dashPattern = options.dashPattern;
     }
 
-    defineProperties(PolylineDashMaterialProperty.prototype, {
+    Object.defineProperties(PolylineDashMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -86,18 +75,21 @@ define([
          * @type {Property}
          */
         color : createPropertyDescriptor('color'),
+
         /**
          * Gets or sets the Property specifying the {@link Color} of the gaps in the line.
          * @memberof PolylineDashMaterialProperty.prototype
          * @type {Property}
          */
         gapColor : createPropertyDescriptor('gapColor'),
+
         /**
          * Gets or sets the numeric Property specifying the length of a dash cycle
          * @memberof PolylineDashMaterialProperty.prototype
          * @type {Property}
          */
         dashLength : createPropertyDescriptor('dashLength'),
+
         /**
          * Gets or sets the numeric Property specifying a dash pattern
          * @memberof PolylineDashMaterialProperty.prototype
@@ -147,9 +139,6 @@ define([
                 Property.equals(this._color, other._color) &&
                 Property.equals(this._gapColor, other._gapColor) &&
                 Property.equals(this._dashLength, other._dashLength) &&
-                Property.equals(this._dashPattern, other._dashPattern)
-                );
+                Property.equals(this._dashPattern, other._dashPattern));
     };
-
-    return PolylineDashMaterialProperty;
-});
+export default PolylineDashMaterialProperty;

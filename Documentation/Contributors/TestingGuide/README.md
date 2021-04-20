@@ -14,7 +14,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only WebGL Tests](#run-only-webgl-tests)
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
-   * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
+   * [Run All Tests with Coverage](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
    * [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of CesiumJS](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
@@ -37,7 +37,6 @@ All new code should have 100% code coverage and should pass all tests.  Always r
 * [Pragmatic Advice](#pragmatic-advice)
    * [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
    * [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
-* [Testing in WebStorm](#testing-in-webstorm)
 * [Resources](#resources)
 
 ## Running the Tests
@@ -106,27 +105,27 @@ However, many users build apps using the built Cesium.js in `Build/Cesium` (whic
 
 The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`).  The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
 
-See the [Build Guide](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
+See the [Build Guide](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
-### Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)
+## Run Coverage
 
-[JSCoverage](http://siliconforks.com/jscoverage/) is used for code coverage.  It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
+We use [istanbul](https://istanbul.js.org/) via [karma-coverage](https://github.com/karma-runner/karma-coverage) to generate code coverage reports. It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
 
-To run code coverage, first create a build of CesiumJS that is instrumented for coverage by running `npm run instrumentForCoverage`.  Currently, this is Windows only.
+To generate a coverage report, run: `npm run coverage`. This will place a report inside of the `Build/Coverage/<browser>` folder and open your default browser with the result.
 
-Then use this test option to run the tests with code coverage.  Click on the `Summary` tab to see the total code coverage and coverage for each individual source file.
+You'll see a source tree that matches Cesium's own code layout. Each directory shows aggregated results for all files it contains.
 
 ![](4.jpg)
 
-Click on a file to see line-by-line coverage for just that file.  For example, here is `AssociativeArray`:
+Click on a directory to see results for each file in that directory.  Click on a specific file to see line-by-line coverage for just that file.  For example, here is `Core/AssociativeArray`:
 
 ![](5.jpg)
 
-In the left margin, green indicates a line that was executed, and red indicates a line that was not.  Many lines, such as comments and semicolons, are not colored since they are not executable.
+In the left margin, green indicates how many times a line was executed. Many lines, such as comments and semicolons, are not colored since they are not executable.
 
 For the `contains` function above
    * `AssociativeArray.prototype.contains = function(key) {` is executed once when CesiumJS is loaded to assign the `contains` function to the `AssociativeArray`'s prototype.
-   * The `if` statement and return statement are executed 3,425 times.
+   * The `if` statement and return statement are executed 8,022 times.
    * The `throw` statement is not executed, which indicates that test coverage should be improved here.  We strive to test _all_ error conditions.
 
 When writing tests, do not confuse 100% code coverage with 100% tested.  For example, it is possible to have 100% code coverage without having any expectations.  Also consider the following code:
@@ -192,7 +191,7 @@ It is also possible for Karma to run all tests against each browser installed on
 
 #### Run a Single Test or Suite
 
-Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdefineSuite` instead of `defineSuite`.
+Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
 
 ## Testing Previous Versions of CesiumJS
 
@@ -200,9 +199,9 @@ Sometimes it is useful to see if an issue exists in a previous version of Cesium
 
 ## `testfailure` Label for Issues
 
-Despite our best efforts, sometimes tests fail.  This is often due to a new browser, OS, or driver bug that breaks a test that previously passed.  If this indicates a bug in CesiumJS, we strive to quickly fix it.  Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)), we also strive to quickly fix it.
+Despite our best efforts, sometimes tests fail.  This is often due to a new browser, OS, or driver bug that breaks a test that previously passed.  If this indicates a bug in CesiumJS, we strive to quickly fix it.  Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.
 
-If a test failure is likely due to a browser, OS, or driver bug, or a poorly written test, and the failure does not impact actual CesiumJS apps, we sometimes submit an issue with the [testfailure](https://github.com/AnalyticalGraphicsInc/cesium/labels/test%20failure) label to fix it at a later time.  A great way to contribute to CesiumJS is to help fix these issues.
+If a test failure is likely due to a browser, OS, or driver bug, or a poorly written test, and the failure does not impact actual CesiumJS apps, we sometimes submit an issue with the [testfailure](https://github.com/CesiumGS/cesium/labels/test%20failure) label to fix it at a later time.  A great way to contribute to CesiumJS is to help fix these issues.
 
 ## Writing Tests
 
@@ -210,17 +209,17 @@ We _love_ to write tests.  We often write them as we write engine code (meaning 
 
 ### Directory Organization
 
-Tests are located in the [Specs](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs) directory (recall, Jasmine calls a test a "spec"), which has a directory structure that mirrors the [Source](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Source) directory.  For example, all the tests for files in `Source/Core` are in `Specs/Core`.  Likewise, all the tests for `Source/Core/Cartesian3.js` are in `Specs/Core/Cartesian3Spec.js`.  The filenames are the same except for the `Spec` suffix.  Each spec file corresponds to at least one suite (sometimes suites are nested inside).
+Tests are located in the [Specs](https://github.com/CesiumGS/cesium/tree/master/Specs) directory (recall, Jasmine calls a test a "spec"), which has a directory structure that mirrors the [Source](https://github.com/CesiumGS/cesium/tree/master/Source) directory.  For example, all the tests for files in `Source/Core` are in `Specs/Core`.  Likewise, all the tests for `Source/Core/Cartesian3.js` are in `Specs/Core/Cartesian3Spec.js`.  The filenames are the same except for the `Spec` suffix.  Each spec file corresponds to at least one suite (sometimes suites are nested inside).
 
 ### Bottom-Up Unit Testing
 
 The CesiumJS tests are largely **unit tests** because they test individual units, e.g., functions or classes.  The simplest units are tested individually, and then units built upon other units are also tested.  This allows us to build CesiumJS on well-tested foundations and to quickly narrow down issues.
 
-For example, a [`BoundingSphere`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/BoundingSphere.js) is composed of a `Cartesian3` that defines its center and a number that defines its radius.  Even though tests for `BoundingSphere` implicitly test parts of `Cartesian3`, there are separate tests that explicitly test `Cartesian3` as a unit so anything that relies on `Cartesian3` knows it is already tested.
+For example, a [`BoundingSphere`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/BoundingSphere.js) is composed of a `Cartesian3` that defines its center and a number that defines its radius.  Even though tests for `BoundingSphere` implicitly test parts of `Cartesian3`, there are separate tests that explicitly test `Cartesian3` as a unit so anything that relies on `Cartesian3` knows it is already tested.
 
-Often, we also test private units individually for the same reason.  For example, [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js) is a private class in CesiumJS used by primitives, but it is still individually tested in [ShaderCacheSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Renderer/ShaderCacheSpec.js).
+Often, we also test private units individually for the same reason.  For example, [`ShaderCache`](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/ShaderCache.js) is a private class in CesiumJS used by primitives, but it is still individually tested in [ShaderCacheSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Renderer/ShaderCacheSpec.js).
 
-Sometimes classes or functions are even designed with a separation specifically to enable more precise testing.  For example, see [`getStringFromTypedArray`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/getStringFromTypedArray.js) and [getStringFromTypedArraySpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Core/getStringFromTypedArraySpec.js).
+Sometimes classes or functions are even designed with a separation specifically to enable more precise testing.  For example, see [`getStringFromTypedArray`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/getStringFromTypedArray.js) and [getStringFromTypedArraySpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Core/getStringFromTypedArraySpec.js).
 
 ### Test Code is Code
 
@@ -228,27 +227,29 @@ Tests are written in JavaScript using Jasmine.  It is important to realize that 
 
 ### Testing Basics
 
-[Cartesian3Spec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Core/Cartesian3Spec.js) contains the tests for [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js), which is a class representing a 3D point or vector with `x`, `y`, and `z` properties, and typical functions like adding two `Cartesian3` objects.
+[Cartesian3Spec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Core/Cartesian3Spec.js) contains the tests for [`Cartesian3`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/Cartesian3.js), which is a class representing a 3D point or vector with `x`, `y`, and `z` properties, and typical functions like adding two `Cartesian3` objects.
 
 Here is a stripped down version of the tests:
 
 ```javascript
-defineSuite([
+define([
         'Core/Cartesian3'
     ], function(
         Cartesian3) {
     'use strict';
 
-    it('construct with default values', function() {
-        var cartesian = new Cartesian3();
-        expect(cartesian.x).toEqual(0.0);
-        expect(cartesian.y).toEqual(0.0);
-        expect(cartesian.z).toEqual(0.0);
+    describe('Cartesian3', function(){
+        it('construct with default values', function() {
+            var cartesian = new Cartesian3();
+            expect(cartesian.x).toEqual(0.0);
+            expect(cartesian.y).toEqual(0.0);
+            expect(cartesian.z).toEqual(0.0);
+        });
     });
 });
 ```
 
-`defineSuite` identifies this file as a test suite and include modules the same way `define` is used in engine code.  The modules are listed in alphabetical order as usual _except_ that the module being tested is listed first.
+`describe` identifies this file as a test suite and we include modules the same way `define` is used in engine code.
 
 Using Jasmine, each test is defined by calling `it` and passing a string that describes the test and a function that is the test.
 
@@ -273,7 +274,7 @@ it('angleBetween works for acute angles', function() {
 });
 ```
 
-`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/addDefaultMatchers.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/addDefaultMatchers.js) for all the custom matchers.  In general, all test utility functions are in files in the `Specs` root directory.
+`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/addDefaultMatchers.js](https://github.com/CesiumGS/cesium/blob/master/Specs/addDefaultMatchers.js) for all the custom matchers.  In general, all test utility functions are in files in the `Specs` root directory.
 
 For more on comparing floating-point numbers, see [Comparing Floating Point Numbers, 2012 Edition](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
 
@@ -305,7 +306,7 @@ it('fromDegrees throws with no latitude', function() {
 
 ### Before and After Tests and Suites
 
-The Jasmine functions `beforeAll` and `afterAll` are used to run a function before and after, respectively, all the tests in a suite.  Likewise, `beforeEach` and `afterEach` run a function before and after each test is run.  For example, here is a common pattern from [DebugModelMatrixPrimitiveSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/DebugModelMatrixPrimitiveSpec.js):
+The Jasmine functions `beforeAll` and `afterAll` are used to run a function before and after, respectively, all the tests in a suite.  Likewise, `beforeEach` and `afterEach` run a function before and after each test is run.  For example, here is a common pattern from [DebugModelMatrixPrimitiveSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/DebugModelMatrixPrimitiveSpec.js):
 
 ```javascript
 var scene;
@@ -458,7 +459,7 @@ it('can declare automatic uniforms', function() {
 
 ### GLSL
 
-GLSL is the shading language used by WebGL to run small graphics programs in parallel on the GPU.  Under-the-hood, CesiumJS contains a library of GLSL identifiers and functions.  These are unit tested by writing a simple fragment shader that outputs white if the test passes.  For example, here is an excerpt from [BuiltinFunctionsSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Renderer/BuiltinFunctionsSpec.js);
+GLSL is the shading language used by WebGL to run small graphics programs in parallel on the GPU.  Under-the-hood, CesiumJS contains a library of GLSL identifiers and functions.  These are unit tested by writing a simple fragment shader that outputs white if the test passes.  For example, here is an excerpt from [BuiltinFunctionsSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Renderer/BuiltinFunctionsSpec.js);
 
 ```javascript
 var context;
@@ -493,7 +494,7 @@ In the test above, the expectation is implicit in the GLSL string for the fragme
 
 It can be useful to expect if a function was called and inspect information about the function call such as the arguments passed to it.  Jasmine spies are used for this.
 
-Here is an excerpt from [TweenCollectionSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/TweenCollectionSpec.js):
+Here is an excerpt from [TweenCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/TweenCollectionSpec.js):
 
 ```javascript
 it('add() adds with a duration of zero', function() {
@@ -513,7 +514,7 @@ it('add() adds with a duration of zero', function() {
 ```
 Tweens are used for animation.  This test creates a spy with `jasmine.createSpy` to verify that a tween calls the provided `complete` function when a tween finishes animating using `toHaveBeenCalled()`, which is immediately in this case given `duration` is `0.0`.
 
-Spies can also provide more information about the function call (or calls).  Here is an excerpt from [GeocoderViewModelSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Widgets/Geocoder/GeocoderViewModelSpec.js):
+Spies can also provide more information about the function call (or calls).  Here is an excerpt from [GeocoderViewModelSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Widgets/Geocoder/GeocoderViewModelSpec.js):
 
 ```javascript
 it('Zooms to longitude, latitude, height', function() {
@@ -535,7 +536,7 @@ it('Zooms to longitude, latitude, height', function() {
 ```
 Here, `spyOn` is used to replace `Camera.flyTo` (prototype function on instances) with a spy.  When the Geocoder is used to search for a location, the test expects that `Camera.flyTo` was called with the right arguments.
 
-Spies can also be used on non-prototype functions.  Here is an excerpt from [ModelSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/ModelSpec.js):
+Spies can also be used on non-prototype functions.  Here is an excerpt from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/ModelSpec.js):
 
 ```javascript
 it('Applies the right render state', function() {
@@ -564,9 +565,9 @@ Beware of too tightly coupling a test with an implementation; it makes engine co
 
 ### Test Data and Services
 
-Sometimes, a test requires sample data, like a CZML file or glTF model, or a service.  When possible, we try to procedurally create data or mock a response in the test instead of reading a local file or making an external request.  For example, [loadArrayBufferSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Core/loadArrayBufferSpec.js) uses a spy to simulate an XHR response.
+Sometimes, a test requires sample data, like a CZML file or glTF model, or a service.  When possible, we try to procedurally create data or mock a response in the test instead of reading a local file or making an external request.  For example, [loadArrayBufferSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Core/loadArrayBufferSpec.js) uses a spy to simulate an XHR response.
 
-When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs/Data).  Avoid bloating the repo with an unnecessarily large file.  Update [LICENSE.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/LICENSE.md) if the data requires a license or attribution.  Include a README file when useful, for example, see [Specs/Data/Models/Box-Textured-Custom](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs/Data/Models/Box-Textured-Custom).
+When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/CesiumGS/cesium/tree/master/Specs/Data).  Avoid bloating the repo with an unnecessarily large file.  Update [LICENSE.md](https://github.com/CesiumGS/cesium/blob/master/LICENSE.md) if the data requires a license or attribution.  Include a README file when useful, for example, see [Specs/Data/Models/Box-Textured-Custom](https://github.com/CesiumGS/cesium/tree/master/Specs/Data/Models/Box-Textured-Custom).
 
 Make external requests that assume the tests are being used with an Internet connection very sparingly.  We anticipate being able to run the tests offline.
 
@@ -576,7 +577,7 @@ Make external requests that assume the tests are being used with an Internet con
 
 For asynchronous testing, Jasmine's `it` function uses a `done` callback.  For better integration with CesiumJS's asynchronous patterns, CesiumJS replaces `it` with a function that can return promises.
 
-Here is an excerpt from [ModelSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/ModelSpec.js):
+Here is an excerpt from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/ModelSpec.js):
 
 ```javascript
 var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
@@ -617,7 +618,7 @@ function loadModelJson(gltf) {
 
 Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's `pollToPromise` is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
 
-`pollToPromise` is used in many places where a test needs to wait for an asynchronous event before testing its expectations.  Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/BillboardCollectionSpec.js):
+`pollToPromise` is used in many places where a test needs to wait for an asynchronous event before testing its expectations.  Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/BillboardCollectionSpec.js):
 
 ```javascript
 it('can create a billboard using a URL', function() {
@@ -636,7 +637,7 @@ it('can create a billboard using a URL', function() {
 
 Here a billboard is loaded using a url to image.  Internally, `Billboard` makes an asynchronous request for the image and then sets its `ready` property to `true`.  The function passed to `pollToPromise` just returns the value of `ready`; it does not need to render the scene to progressively complete the request like `Model`.  Finally, the resolve function (passed to `then`) verifies that the billboard is green.
 
-To test if a promises rejects, we call `fail` in the resolve function and put the expectation in the reject function.  Here is an excerpt from [ArcGisMapServerImageryProviderSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/ArcGisMapServerImageryProviderSpec.js):
+To test if a promises rejects, we call `fail` in the resolve function and put the expectation in the reject function.  Here is an excerpt from [ArcGisMapServerImageryProviderSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/ArcGisMapServerImageryProviderSpec.js):
 
 ```javascript
 it('rejects readyPromise on error', function() {
@@ -657,7 +658,7 @@ it('rejects readyPromise on error', function() {
 
 ### Mocks
 
-To isolate testing, mock objects can be used to simulate real objects.  Here is an excerpt from [SceneSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/SceneSpec.js);
+To isolate testing, mock objects can be used to simulate real objects.  Here is an excerpt from [SceneSpec.js](https://github.com/CesiumGS/cesium/blob/master/Specs/Scene/SceneSpec.js);
 
 ```javascript
 function MockPrimitive(command) {
@@ -692,10 +693,10 @@ This test is more cohesive and easier to debug than if it were written using a _
 
 ### Categories
 
-As mentioned above, some tests are in the `'WebGL'` category.  To  assign a category to a suite, pass the category to `defineSuite`.
+As mentioned above, some tests are in the `'WebGL'` category.  To  assign a category to a suite, pass the category to `describe`.
 
 ```javascript
-defineSuite([
+define([
         'Scene/DebugModelMatrixPrimitive',
         'Specs/createScene'
     ], function(
@@ -703,6 +704,7 @@ defineSuite([
         createScene) {
     'use strict';
 
+describe('Scene/DebugModelMatrixPrimitive', function(){
     var scene;
 
     beforeAll(function() {
@@ -716,9 +718,10 @@ defineSuite([
     // ...
 
 }, 'WebGL');
+});
 ```
 
-`defineSuite` is a custom CesiumJS function that wraps Jasmine define calls and provides the category capability.
+CesiumJS uses a customized `describe` function that wraps Jasmine describe calls and provides the category capability.
 
 ## Manual Testing
 
@@ -745,20 +748,6 @@ The first 73 CesiumJS tests from March 2011.
 > Even today, with modern tools and experience, I never code for hours straight without testing, and I rarely write new code without seeing it execute in the debugger.  Debuggers are not a reactive tool for when a bug is found, they are a proactive tool for gaining insight and avoiding surprises.
 
 > Try this approach for yourself!
-
-## Testing in WebStorm
-
-When you load the CesiumJS WebStorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
-
-![](webstorm-test-configuration.png)
-
-You can run or debug the tests by using the first two buttons.  The third button is for coverage, which is currently not supported.  It will pop up the WebStorm test runner:
-
-![](webstorm-test-runner.png)
-
-This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
-
-To make jumping between the source and spec files easier download the  [Cesium WebStorm plugin](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin).
 
 ## Resources
 

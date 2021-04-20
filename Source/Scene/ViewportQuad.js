@@ -1,28 +1,14 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderSource',
-        '../Shaders/ViewportQuadFS',
-        './BlendingState',
-        './Material'
-    ], function(
-        BoundingRectangle,
-        Color,
-        defined,
-        destroyObject,
-        DeveloperError,
-        Pass,
-        RenderState,
-        ShaderSource,
-        ViewportQuadFS,
-        BlendingState,
-        Material) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import ViewportQuadFS from '../Shaders/ViewportQuadFS.js';
+import BlendingState from './BlendingState.js';
+import Material from './Material.js';
 
     /**
      * A viewport aligned quad.
@@ -68,7 +54,7 @@ define([
 
         /**
          * The surface appearance of the viewport quad.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -82,7 +68,7 @@ define([
          * // 2. Change material to horizontal stripes
          * viewportQuad.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = material;
         this._material = undefined;
@@ -190,6 +176,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return ViewportQuad;
-});
+export default ViewportQuad;

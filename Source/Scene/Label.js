@@ -1,40 +1,24 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/freezeObject',
-        '../Core/NearFarScalar',
-        './Billboard',
-        './HeightReference',
-        './HorizontalOrigin',
-        './LabelStyle',
-        './VerticalOrigin'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        freezeObject,
-        NearFarScalar,
-        Billboard,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        VerticalOrigin) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import Billboard from './Billboard.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import LabelStyle from './LabelStyle.js';
+import SDFSettings from './SDFSettings.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
-    var textTypes = freezeObject({
+    var fontInfoCache = {};
+    var fontInfoCacheLength = 0;
+    var fontInfoCacheMaxSize = 256;
+
+    var textTypes = Object.freeze({
         LTR : 0,
         RTL : 1,
         WEAK : 2,
@@ -57,6 +41,38 @@ define([
         label._repositionAllGlyphs = true;
     }
 
+    function getCSSValue(element, property) {
+        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
+    }
+
+    function parseFont(label) {
+        var fontInfo = fontInfoCache[label._font];
+        if (!defined(fontInfo)) {
+            var div = document.createElement('div');
+            div.style.position = 'absolute';
+            div.style.opacity = 0;
+            div.style.font = label._font;
+            document.body.appendChild(div);
+
+            fontInfo = {
+                family : getCSSValue(div, 'font-family'),
+                size : getCSSValue(div, 'font-size').replace('px', ''),
+                style : getCSSValue(div, 'font-style'),
+                weight : getCSSValue(div, 'font-weight')
+            };
+
+            document.body.removeChild(div);
+            if (fontInfoCacheLength < fontInfoCacheMaxSize) {
+                fontInfoCache[label._font] = fontInfo;
+                fontInfoCacheLength++;
+            }
+        }
+        label._fontFamily = fontInfo.family;
+        label._fontSize = fontInfo.size;
+        label._fontStyle = fontInfo.style;
+        label._fontWeight = fontInfo.weight;
+    }
+
     /**
      * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
      * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
@@ -72,7 +88,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -161,10 +177,14 @@ define([
 
         this.text = defaultValue(options.text, '');
 
+        this._relativeSize = 1.0;
+
+        parseFont(this);
+
         this._updateClamping();
     }
 
-    defineProperties(Label.prototype, {
+    Object.defineProperties(Label.prototype, {
         /**
          * Determines if this label will be shown.  Use this to hide or show a label, instead
          * of removing it and re-adding it to the collection.
@@ -322,6 +342,7 @@ define([
                 if (this._font !== value) {
                     this._font = value;
                     rebindAllGlyphs(this);
+                    parseFont(this);
                 }
             }
         },
@@ -878,16 +899,29 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            glyph.billboard.scale = value;
+                            glyph.billboard.scale = value * this._relativeSize;
                         }
                     }
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
-                        backgroundBillboard.scale = value;
+                        backgroundBillboard.scale = value * this._relativeSize;
                     }
 
                     repositionAllGlyphs(this);
                 }
+            }
+        },
+
+        /**
+         * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
+         * of the desired font compared to the generated glyph size.
+         * @memberof Label.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        totalScale: {
+            get : function() {
+                return this._scale * this._relativeSize;
             }
         },
 
@@ -1113,13 +1147,12 @@ define([
         var y = 0;
         var width = 0;
         var height = 0;
-        var scale = label.scale;
-        var resolutionScale = label._labelCollection._resolutionScale;
+        var scale = label.totalScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
-            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y);
             width = backgroundBillboard.width * scale;
             height = backgroundBillboard.height * scale;
 
@@ -1142,15 +1175,22 @@ define([
                     continue;
                 }
 
-                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
-                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
-                var glyphWidth = billboard.width * scale;
-                var glyphHeight = billboard.height * scale;
+                var glyphX = screenSpacePosition.x + (billboard._translate.x);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y);
+                var glyphWidth = glyph.dimensions.width * scale;
+                var glyphHeight = glyph.dimensions.height * scale;
 
                 if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
                     glyphY -= glyphHeight;
                 } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
                     glyphY -= glyphHeight * 0.5;
+                }
+
+                if (label._verticalOrigin === VerticalOrigin.TOP) {
+                    glyphY += SDFSettings.PADDING * scale;
+                }
+                else if (label._verticalOrigin === VerticalOrigin.BOTTOM || label._verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphY -= SDFSettings.PADDING * scale;
                 }
 
                 x = Math.min(x, glyphX);
@@ -1340,6 +1380,7 @@ define([
         var result = '';
         for (var i = 0; i < texts.length; i++) {
             var text = texts[i];
+            // first character of the line is a RTL character, so need to manage different cases
             var rtlDir = rtlChars.test(text.charAt(0));
             var parsedText = convertTextToTypes(text, rtlChars);
 
@@ -1347,10 +1388,10 @@ define([
             var line = '';
             for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
                 var subText = parsedText[wordIndex];
-                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
+                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : reverseWord(subText.Word);
                 if (rtlDir) {
                     if (subText.Type === textTypes.RTL) {
-                        line = reverseWord(subText.Word) + line;
+                        line = reverse + line;
                         splicePointer = 0;
                     }
                     else if (subText.Type === textTypes.LTR) {
@@ -1358,14 +1399,18 @@ define([
                         splicePointer += subText.Word.length;
                     }
                     else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                        // current word is weak, last one was bracket
                         if (subText.Type === textTypes.WEAK && parsedText[wordIndex - 1].Type === textTypes.BRACKETS) {
-                            line = reverseWord(subText.Word) + line;
+                            line = reverse + line;
                         }
+                        // current word is weak or bracket, last one was rtl
                         else if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
                             line = reverse + line;
                             splicePointer = 0;
                         }
+                        // current word is weak or bracket, there is at least one more word
                         else if (parsedText.length > wordIndex + 1) {
+                            // next word is rtl
                             if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                 line = reverse + line;
                                 splicePointer = 0;
@@ -1375,22 +1420,30 @@ define([
                                 splicePointer += subText.Word.length;
                             }
                         }
+                        // current word is weak or bracket, and it the last in this line
                         else {
                             line = spliceWord(line, 0, reverse);
                         }
                     }
                 }
+                // ltr line, rtl word
                 else if (subText.Type === textTypes.RTL) {
-                    line = spliceWord(line, splicePointer, reverseWord(subText.Word));
+                    line = spliceWord(line, splicePointer, reverse);
                 }
+                // ltr line, ltr word
                 else if (subText.Type === textTypes.LTR) {
                     line += subText.Word;
                     splicePointer = line.length;
                 }
+                // ltr line, weak or bracket word
                 else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                    // not first word in line
                     if (wordIndex > 0) {
+                        // last word was rtl
                         if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
+                            // there is at least one more word
                             if (parsedText.length > wordIndex + 1) {
+                                // next word is rtl
                                 if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                     line = spliceWord(line, splicePointer, reverse);
                                 }
@@ -1422,6 +1475,4 @@ define([
         }
         return result;
     }
-
-    return Label;
-});
+export default Label;

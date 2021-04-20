@@ -1,10 +1,4 @@
-define([
-        '../Core/defineProperties',
-        '../Core/Matrix4'
-    ], function(
-        defineProperties,
-        Matrix4) {
-    'use strict';
+import Matrix4 from '../Core/Matrix4.js';
 
     /**
      * @private
@@ -15,7 +9,7 @@ define([
         this._instanceId = instanceId;
     }
 
-    defineProperties(ModelInstance.prototype, {
+    Object.defineProperties(ModelInstance.prototype, {
         instanceId : {
             get : function() {
                 return this._instanceId;
@@ -37,6 +31,4 @@ define([
             }
         }
     });
-
-    return ModelInstance;
-});
+export default ModelInstance;

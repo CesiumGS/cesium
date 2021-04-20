@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/SphereGeometry',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        SphereGeometry,
-        Cartesian3,
-        CesiumMath,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { SphereGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/SphereGeometry', function() {
 
     it('constructor throws with invalid stackPartitions', function() {
         expect(function() {
@@ -36,8 +30,12 @@ defineSuite([
             slicePartitions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(16 * 3); // 4 positions * 4 rows
-        expect(m.indices.length).toEqual(12 * 3); //3 top + 3 bottom + 2 triangles * 3 sides
+        // The vertices are 6x6 because an additional slice and stack are added
+        // and the first and last clock and cone angles are duplicated (3 + 1 + 2 = 6)
+        var numVertices = 36; // 6 rows * 6 positions
+        var numTriangles = 18; // 6 top + 6 bottom + 6 around the sides
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3); // 4 positions * 4 rows
+        expect(m.indices.length).toEqual(numTriangles * 3); //3 top + 3 bottom + 2 triangles * 3 sides
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -49,8 +47,8 @@ defineSuite([
             slicePartitions: 3
         }));
 
-        var numVertices = 16;
-        var numTriangles = 12;
+        var numVertices = 36;
+        var numTriangles = 18;
         expect(m.attributes.position.values.length).toEqual(numVertices * 3);
         expect(m.attributes.st.values.length).toEqual(numVertices * 2);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -102,6 +100,7 @@ defineSuite([
         stackPartitions : 3,
         slicePartitions: 3
     });
-    var packedInstance = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, -1.0];
+    // Adding TWO_PI and PI here for maximum clock/cone and other options from partial ellipsoids
+    var packedInstance = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.TWO_PI, 0.0, CesiumMath.PI, 3.0, 3.0, -1.0];
     createPackableSpecs(SphereGeometry, sphere, packedInstance);
 });

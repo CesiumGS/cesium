@@ -1,24 +1,14 @@
-defineSuite([
-        'Scene/ParticleSystem',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Matrix4',
-        'Core/Resource',
-        'Scene/CircleEmitter',
-        'Scene/ParticleBurst',
-        'Specs/createScene'
-    ], function(
-        ParticleSystem,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        Matrix4,
-        Resource,
-        CircleEmitter,
-        ParticleBurst,
-        createScene) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { CircleEmitter } from '../../Source/Cesium.js';
+import { ParticleBurst } from '../../Source/Cesium.js';
+import { ParticleSystem } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/ParticleSystem', function() {
 
     var scene;
     var greenImage;
@@ -62,6 +52,7 @@ defineSuite([
         expect(p.lifetime).toEqual(Number.MAX_VALUE);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
+        expect(p.sizeInMeters).toEqual(false);
     });
 
     it('constructor', function() {
@@ -87,7 +78,8 @@ defineSuite([
             image : 'url/to/image',
             minimumImageSize : new Cartesian2(28.0, 30.0),
             maximumImageSize : new Cartesian2(29.0, 31.0),
-            lifetime : 32.0
+            lifetime : 32.0,
+            sizeInMeters : true
         };
         var p = new ParticleSystem(options);
         expect(p.show).toEqual(options.show);
@@ -114,6 +106,7 @@ defineSuite([
         expect(p.lifetime).toEqual(options.lifetime);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
+        expect(p.sizeInMeters).toEqual(true);
     });
 
     it('getters/setters', function() {
@@ -139,6 +132,7 @@ defineSuite([
         var minimumImageSize = new Cartesian2(28.0, 30.0);
         var maximumImageSize = new Cartesian2(29.0, 31.0);
         var lifetime = 32.0;
+        var sizeInMeters = true;
 
         var p = new ParticleSystem();
         p.show = show;
@@ -163,6 +157,7 @@ defineSuite([
         p.minimumImageSize = Cartesian2.clone(minimumImageSize, new Cartesian2());
         p.maximumImageSize = Cartesian2.clone(maximumImageSize, new Cartesian2());
         p.lifetime = lifetime;
+        p.sizeInMeters = sizeInMeters;
 
         expect(p.show).toEqual(show);
         expect(p.forces).toEqual(forces);
@@ -188,6 +183,7 @@ defineSuite([
         expect(p.lifetime).toEqual(lifetime);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
+        expect(p.sizeInMeters).toEqual(sizeInMeters);
     });
 
     it('throws with invalid emitter', function() {
@@ -321,6 +317,11 @@ defineSuite([
         expect(function() {
             p.lifetime = -1.0;
         }).toThrowDeveloperError();
+    });
+
+    it('clones default image size', function() {
+        var p = new ParticleSystem();
+        expect(p.maximumImageSize).not.toBe(p.minimumImageSize);
     });
 
     it('renders', function() {

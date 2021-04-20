@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Determines if and how a glTF animation is looped.
@@ -36,6 +31,4 @@ define([
          */
         MIRRORED_REPEAT : 2
     };
-
-    return freezeObject(ModelAnimationLoop);
-});
+export default Object.freeze(ModelAnimationLoop);

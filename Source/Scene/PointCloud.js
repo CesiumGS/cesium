@@ -1,92 +1,39 @@
-define([
-        '../Core/arraySlice',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Math',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/FeatureDetection',
-        '../Core/getStringFromTypedArray',
-        '../Core/Matrix4',
-        '../Core/oneTimeWarning',
-        '../Core/OrthographicFrustum',
-        '../Core/Plane',
-        '../Core/PrimitiveType',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../ThirdParty/when',
-        './BlendingState',
-        './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable',
-        './DracoLoader',
-        './getClipAndStyleCode',
-        './getClippingFunction',
-        './SceneMode',
-        './ShadowMode'
-    ], function(
-        arraySlice,
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Check,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        FeatureDetection,
-        getStringFromTypedArray,
-        Matrix4,
-        oneTimeWarning,
-        OrthographicFrustum,
-        Plane,
-        PrimitiveType,
-        RuntimeError,
-        Transforms,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        when,
-        BlendingState,
-        Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
-        Cesium3DTileFeatureTable,
-        DracoLoader,
-        getClipAndStyleCode,
-        getClippingFunction,
-        SceneMode,
-        ShadowMode) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import arraySlice from '../Core/arraySlice.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Transforms from '../Core/Transforms.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
+import DracoLoader from './DracoLoader.js';
+import getClipAndStyleCode from './getClipAndStyleCode.js';
+import getClippingFunction from './getClippingFunction.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
+import StencilConstants from './StencilConstants.js';
 
     var DecodingState = {
         NEEDS_DECODE : 0,
@@ -97,7 +44,7 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
      * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
      *
      * @alias PointCloud
@@ -201,7 +148,7 @@ define([
         initialize(this, options);
     }
 
-    defineProperties(PointCloud.prototype, {
+    Object.defineProperties(PointCloud.prototype, {
         pointsLength : {
             get : function() {
                 return this._pointsLength;
@@ -240,9 +187,10 @@ define([
                 if (defined(this._drawCommand)) {
                     return this._drawCommand.boundingVolume;
                 }
+                return undefined;
             },
             set : function(value) {
-                this._boundingSphere = BoundingSphere.clone(value);
+                this._boundingSphere = BoundingSphere.clone(value, this._boundingSphere);
             }
         }
     });
@@ -514,7 +462,7 @@ define([
         return boundingSphere;
     }
 
-    function prepareVertexAttribute(typedArray) {
+    function prepareVertexAttribute(typedArray, name) {
         // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
         var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
         if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
@@ -571,7 +519,7 @@ define([
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
-                    var typedArray = prepareVertexAttribute(property.typedArray);
+                    var typedArray = prepareVertexAttribute(property.typedArray, name);
                     componentsPerAttribute = property.componentCount;
                     componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
@@ -632,7 +580,7 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
-            batchIds = prepareVertexAttribute(batchIds);
+            batchIds = prepareVertexAttribute(batchIds, 'batchIds');
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,
@@ -737,11 +685,18 @@ define([
             attributes : attributes
         });
 
-        pointCloud._opaqueRenderState = RenderState.fromCache({
+        var opaqueRenderState = {
             depthTest : {
                 enabled : true
             }
-        });
+        };
+
+        if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+            opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+            opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+        }
+
+        pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
 
         pointCloud._translucentRenderState = RenderState.fromCache({
             depthTest : {
@@ -786,6 +741,8 @@ define([
             u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier : function() {
                 var scratch = scratchPointSizeAndTimeAndGeometricErrorAndDepthMultiplier;
                 scratch.x = pointCloud._attenuation ? pointCloud.maximumAttenuation : pointCloud._pointSize;
+                scratch.x *= frameState.pixelRatio;
+
                 scratch.y = pointCloud.time;
 
                 if (pointCloud._attenuation) {
@@ -1186,6 +1143,7 @@ define([
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
+            vs += '    vec3 normalEC = czm_normal * normal; \n';
         } else {
             vs += '    vec3 normal = vec3(1.0); \n';
         }
@@ -1199,7 +1157,7 @@ define([
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal) * czm_pixelRatio; \n';
         } else if (attenuation) {
             vs += '    vec4 positionEC = czm_modelView * vec4(position, 1.0); \n' +
                   '    float depth = -positionEC.z; \n' +
@@ -1212,24 +1170,23 @@ define([
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    normal = czm_normal * normal; \n' +
-                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
-                  '    color.xyz *= diffuseStrength; \n';
+                  '    color.xyz *= diffuseStrength * czm_lightColor; \n';
         }
 
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (usesNormals && backFaceCulling) {
-            vs += '    float visible = step(-normal.z, 0.0); \n' +
+            vs += '    float visible = step(-normalEC.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
         }
 
         if (hasShowStyle) {
-            vs += '    gl_Position *= show; \n' +
-                  '    gl_PointSize *= show; \n';
+            vs += '    gl_Position.w *= float(show); \n' +
+                  '    gl_PointSize *= float(show); \n';
         }
 
         vs += '} \n';
@@ -1461,6 +1418,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return PointCloud;
-});
+export default PointCloud;

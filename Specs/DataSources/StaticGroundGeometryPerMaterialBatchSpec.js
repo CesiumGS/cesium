@@ -1,60 +1,26 @@
-defineSuite([
-        'DataSources/StaticGroundGeometryPerMaterialBatch',
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/PolylineArrowMaterialProperty',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/GroundPrimitive',
-        'Scene/MaterialAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/PolylineMaterialAppearance',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        StaticGroundGeometryPerMaterialBatch,
-        ApproximateTerrainHeights,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGeometryUpdater,
-        EllipseGraphics,
-        Entity,
-        GridMaterialProperty,
-        PolylineArrowMaterialProperty,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
-        TimeIntervalCollectionProperty,
-        GroundPrimitive,
-        MaterialAppearance,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { StaticGroundGeometryPerMaterialBatch } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/StaticGroundGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -80,7 +46,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -135,6 +101,7 @@ defineSuite([
         }
 
         var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
             iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
@@ -151,7 +118,7 @@ defineSuite([
             }
         });
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
 
         var updater = new EllipseGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -167,12 +134,63 @@ defineSuite([
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqualEpsilon([1.0, 2.0], CesiumMath.EPSILON6);
 
-            batch.update(time);
-            scene.render(time);
+            batch.update(outOfRangeTime);
+            scene.render(outOfRangeTime);
 
             primitive = scene.primitives.get(0);
             attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqual([0.0, Infinity]);
+
+            batch.removeAllPrimitives();
+        });
+    });
+
+    it('updates with sampled show out of range', function() {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
+        var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
+        var show = new TimeIntervalCollectionProperty();
+        show.intervals.addInterval(TimeInterval.fromIso8601({
+            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data: true
+        }));
+        var entity = new Entity({
+            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse: {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : new GridMaterialProperty(),
+                show: show
+            }
+        });
+
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(validTime, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(validTime);
+            scene.render(validTime);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.show).toEqual([1]);
+
+            batch.update(outOfRangeTime);
+            scene.render(outOfRangeTime);
+
+            primitive = scene.primitives.get(0);
+            attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.show).toEqual([0]);
 
             batch.removeAllPrimitives();
         });
@@ -184,7 +202,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
 
         function buildEntity(x, y, z) {
             var material = new GridMaterialProperty({
@@ -258,7 +276,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -303,7 +321,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
             ellipse : {
@@ -349,7 +367,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
 
         function buildEntity(x, y, z) {
             var material = new GridMaterialProperty({

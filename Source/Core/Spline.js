@@ -1,16 +1,8 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * Creates a curve parameterized and evaluated by time. This type describes an interface
@@ -164,6 +156,4 @@ define([
         var times = this.times;
         return CesiumMath.clamp(time, times[0], times[times.length - 1]);
     };
-
-    return Spline;
-});
+export default Spline;

@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/RequestScheduler',
-        'Core/Request',
-        'Core/RequestState',
-        'ThirdParty/when'
-    ], function(
-        RequestScheduler,
-        Request,
-        RequestState,
-        when) {
-    'use strict';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { RequestState } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/RequestScheduler', function() {
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;
@@ -610,6 +605,7 @@ defineSuite([
             return new Request({
                 url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
+                throttle : throttleByServer,
                 throttleByServer : throttleByServer
             });
         }
@@ -631,7 +627,7 @@ defineSuite([
         }
     });
 
-    it('throttleRequests', function() {
+    it('does not throttle requests when throttleRequests is false', function() {
         RequestScheduler.maximumRequests = 0;
 
         function requestFunction() {
@@ -650,6 +646,34 @@ defineSuite([
         RequestScheduler.throttleRequests = false;
         request = new Request({
             throttle : true,
+            url : 'https://test.invalid/1',
+            requestFunction : requestFunction
+        });
+        promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        RequestScheduler.throttleRequests = true;
+    });
+
+    it('does not throttle requests by server when throttleRequests is false', function() {
+        RequestScheduler.maximumRequestsPerServer = 0;
+
+        function requestFunction() {
+            return when.resolve();
+        }
+
+        RequestScheduler.throttleRequests = true;
+        var request = new Request({
+            throttleByServer : true,
+            url : 'https://test.invalid/1',
+            requestFunction : requestFunction
+        });
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.throttleRequests = false;
+        request = new Request({
+            throttleByServer : true,
             url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });
@@ -678,21 +702,23 @@ defineSuite([
             });
         }
 
-        var requestToCancel = createRequest();
-        RequestScheduler.request(createRequest());
-        RequestScheduler.request(createRequest());
-        RequestScheduler.request(requestToCancel);
+        var requests = [createRequest(),
+                        createRequest(),
+                        createRequest()];
+        RequestScheduler.request(requests[0]);
+        RequestScheduler.request(requests[1]);
+        RequestScheduler.request(requests[2]);
+        RequestScheduler.update();
+
+        deferreds[0].reject();
+        requests[0].cancel();
+        requests[1].cancel();
+        requests[2].cancel();
         RequestScheduler.update();
 
         expect(console.log).toHaveBeenCalledWith('Number of attempted requests: 3');
-        expect(console.log).toHaveBeenCalledWith('Number of active requests: 3');
-
-        deferreds[0].reject();
-        requestToCancel.cancel();
-        RequestScheduler.update();
-
-        expect(console.log).toHaveBeenCalledWith('Number of cancelled requests: 1');
-        expect(console.log).toHaveBeenCalledWith('Number of cancelled active requests: 1');
+        expect(console.log).toHaveBeenCalledWith('Number of cancelled requests: 3');
+        expect(console.log).toHaveBeenCalledWith('Number of cancelled active requests: 2');
         expect(console.log).toHaveBeenCalledWith('Number of failed requests: 1');
 
         var length = deferreds.length;

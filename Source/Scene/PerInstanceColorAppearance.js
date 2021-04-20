@@ -1,22 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/PerInstanceColorAppearanceFS',
-        '../Shaders/Appearances/PerInstanceColorAppearanceVS',
-        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
-        '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS',
-        './Appearance'
-    ], function(
-        defaultValue,
-        defineProperties,
-        VertexFormat,
-        PerInstanceColorAppearanceFS,
-        PerInstanceColorAppearanceVS,
-        PerInstanceFlatColorAppearanceFS,
-        PerInstanceFlatColorAppearanceVS,
-        Appearance) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import PerInstanceColorAppearanceFS from '../Shaders/Appearances/PerInstanceColorAppearanceFS.js';
+import PerInstanceColorAppearanceVS from '../Shaders/Appearances/PerInstanceColorAppearanceVS.js';
+import PerInstanceFlatColorAppearanceFS from '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js';
+import PerInstanceFlatColorAppearanceVS from '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS.js';
+import Appearance from './Appearance.js';
 
     /**
      * An appearance for {@link GeometryInstance} instances with color attributes.
@@ -61,7 +49,7 @@ define([
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
      *   attributes : {
-     *     color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 0.5)
      *   }
      * });
      *
@@ -70,7 +58,7 @@ define([
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
      *   attributes : {
-     *     color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 0.5)
      *   }
      * });
      *
@@ -121,7 +109,7 @@ define([
         this._faceForward = defaultValue(options.faceForward, !closed);
     }
 
-    defineProperties(PerInstanceColorAppearance.prototype, {
+    Object.defineProperties(PerInstanceColorAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *
@@ -242,7 +230,7 @@ define([
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
-     * are compatible with.  This requires only <code>position</code> and <code>st</code>
+     * are compatible with.  This requires only <code>position</code> and <code>normal</code>
      * attributes.
      *
      * @type VertexFormat
@@ -253,7 +241,7 @@ define([
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
-     * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>false</code>.
+     * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>true</code>.
      * This requires only a <code>position</code> attribute.
      *
      * @type VertexFormat
@@ -292,6 +280,4 @@ define([
      * @returns {Object} The render state.
      */
     PerInstanceColorAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-
-    return PerInstanceColorAppearance;
-});
+export default PerInstanceColorAppearance;

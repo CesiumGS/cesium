@@ -1,44 +1,21 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/clone',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/RuntimeError',
-        '../Core/WebGLConstants',
-        '../Renderer/ShaderSource',
-        '../ThirdParty/GltfPipeline/addToArray',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/hasExtension',
-        './AttributeType',
-        './Axis'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        clone,
-        defined,
-        defineProperties,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        RuntimeError,
-        WebGLConstants,
-        ShaderSource,
-        addToArray,
-        ForEach,
-        hasExtension,
-        AttributeType,
-        Axis) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import clone from '../Core/clone.js';
+import defined from '../Core/defined.js';
+import Matrix2 from '../Core/Matrix2.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Quaternion from '../Core/Quaternion.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import addToArray from '../ThirdParty/GltfPipeline/addToArray.js';
+import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
+import hasExtension from '../ThirdParty/GltfPipeline/hasExtension.js';
+import AttributeType from './AttributeType.js';
+import Axis from './Axis.js';
 
     /**
      * @private
@@ -483,7 +460,9 @@ define([
     };
 
     ModelUtility.supportedExtensions = {
+        'AGI_articulations' : true,
         'CESIUM_RTC' : true,
+        'EXT_texture_webp' : true,
         'KHR_blend' : true,
         'KHR_binary_glTF' : true,
         'KHR_draco_mesh_compression' : true,
@@ -491,14 +470,19 @@ define([
         'KHR_techniques_webgl' : true,
         'KHR_materials_unlit' : true,
         'KHR_materials_pbrSpecularGlossiness' : true,
+        'KHR_texture_transform' : true,
         'WEB3D_quantized_attributes' : true
     };
 
-    ModelUtility.checkSupportedExtensions = function(extensionsRequired) {
+    ModelUtility.checkSupportedExtensions = function(extensionsRequired, browserSupportsWebp) {
         for (var extension in extensionsRequired) {
             if (extensionsRequired.hasOwnProperty(extension)) {
                 if (!ModelUtility.supportedExtensions[extension]) {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                }
+
+                if (extension === 'EXT_texture_webp' && browserSupportsWebp === false) {
+                    throw new RuntimeError('Loaded model requires WebP but browser does not support it.');
                 }
             }
         }
@@ -595,6 +579,12 @@ define([
                     }
                     shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
 
+                    // The gltf 2.0 COLOR_0 vertex attribute can be VEC4 or VEC3
+                    var vec3Color = size === 3 && attributeSemantic === 'COLOR_0';
+                    if (vec3Color) {
+                        shader = replaceAllButFirstInString(shader, decodedAttributeVarName, 'vec4(' + decodedAttributeVarName + ', 1.0)');
+                    }
+
                     // splice decode function into the shader
                     var decode = '';
                     if (quantization.octEncoded) {
@@ -611,9 +601,10 @@ define([
                         var decodeUniformVarNameMin = decodeUniformVarName + '_min';
                         shader = 'uniform float ' + decodeUniformVarNameNormConstant + ';\n' +
                                 'uniform ' + variableType + ' ' + decodeUniformVarNameMin + ';\n' + shader;
+                        var attributeVarAccess = vec3Color ? '.xyz' : '';
                         decode = '\n' +
                                 'void main() {\n' +
-                                '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameMin + ' + ' + attributeVarName + ' * ' + decodeUniformVarNameNormConstant + ';\n' +
+                                '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameMin + ' + ' + attributeVarName + attributeVarAccess + ' * ' + decodeUniformVarNameNormConstant + ';\n' +
                                 '    ' + newMain + '();\n' +
                                 '}\n';
                     }
@@ -835,7 +826,7 @@ define([
         this._defaultTexture = defaultTexture;
     }
 
-    defineProperties(DelayLoadedTextureUniform.prototype, {
+    Object.defineProperties(DelayLoadedTextureUniform.prototype, {
         value : {
             get : function() {
                 // Use the default texture (1x1 white) until the model's texture is loaded
@@ -1119,6 +1110,4 @@ define([
     ModelUtility.getGltfSemanticUniforms = function() {
         return gltfSemanticUniforms;
     };
-
-    return ModelUtility;
-});
+export default ModelUtility;

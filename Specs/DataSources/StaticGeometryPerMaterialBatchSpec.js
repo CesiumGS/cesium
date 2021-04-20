@@ -1,64 +1,34 @@
-defineSuite([
-        'DataSources/StaticGeometryPerMaterialBatch',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/BoxGeometryUpdater',
-        'DataSources/CheckerboardMaterialProperty',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/PolylineArrowMaterialProperty',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
-        'DataSources/StripeMaterialProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/MaterialAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/PolylineMaterialAppearance',
-        'Scene/ShadowMode',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        StaticGeometryPerMaterialBatch,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        BoxGeometryUpdater,
-        CheckerboardMaterialProeprty,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGeometryUpdater,
-        EllipseGraphics,
-        Entity,
-        GridMaterialProperty,
-        PolylineArrowMaterialProperty,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
-        StripeMaterialProperty,
-        TimeIntervalCollectionProperty,
-        MaterialAppearance,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        ShadowMode,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BoxGeometryUpdater } from '../../Source/Cesium.js';
+import { CheckerboardMaterialProperty } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineArrowMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineGeometryUpdater } from '../../Source/Cesium.js';
+import { PolylineGraphics } from '../../Source/Cesium.js';
+import { StaticGeometryPerMaterialBatch } from '../../Source/Cesium.js';
+import { StripeMaterialProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PolylineColorAppearance } from '../../Source/Cesium.js';
+import { PolylineMaterialAppearance } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/StaticGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -119,6 +89,7 @@ defineSuite([
 
     it('updates with sampled distance display condition out of range', function() {
         var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
             iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
@@ -152,12 +123,59 @@ defineSuite([
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqualEpsilon([1.0, 2.0], CesiumMath.EPSILON6);
 
-            batch.update(time);
-            scene.render(time);
+            batch.update(outOfRangeTime);
+            scene.render(outOfRangeTime);
 
             primitive = scene.primitives.get(0);
             attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqual([0.0, Infinity]);
+
+            batch.removeAllPrimitives();
+        });
+    });
+
+    it('updates with sampled show out of range', function() {
+        var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
+        var show = new TimeIntervalCollectionProperty();
+        show.intervals.addInterval(TimeInterval.fromIso8601({
+            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data: true
+        }));
+        var entity = new Entity({
+            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse: {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                extrudedHeight: 20,
+                material : new GridMaterialProperty(),
+                show: show
+            }
+        });
+
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, undefined, false, ShadowMode.DISABLED);
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(validTime, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(validTime);
+            scene.render(validTime);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.show).toEqual([1]);
+
+            batch.update(outOfRangeTime);
+            scene.render(outOfRangeTime);
+
+            primitive = scene.primitives.get(0);
+            attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.show).toEqual([0]);
 
             batch.removeAllPrimitives();
         });
@@ -347,9 +365,9 @@ defineSuite([
         }
 
         var entity1 = buildEntity(StripeMaterialProperty);
-        var entity2 = buildEntity(CheckerboardMaterialProeprty);
+        var entity2 = buildEntity(CheckerboardMaterialProperty);
         var entity3 = buildEntity(StripeMaterialProperty);
-        var entity4 = buildEntity(CheckerboardMaterialProeprty);
+        var entity4 = buildEntity(CheckerboardMaterialProperty);
 
         var updater1 = new EllipseGeometryUpdater(entity1, scene);
         var updater2 = new EllipseGeometryUpdater(entity2, scene);

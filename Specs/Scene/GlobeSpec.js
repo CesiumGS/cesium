@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/Globe',
-        'Core/CesiumTerrainProvider',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Scene/SingleTileImageryProvider',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Globe,
-        CesiumTerrainProvider,
-        Rectangle,
-        Resource,
-        SingleTileImageryProvider,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Globe', function() {
 
     var scene;
     var globe;
@@ -67,6 +59,43 @@ defineSuite([
 
     it('renders with enableLighting', function() {
         globe.enableLighting = true;
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('renders with dynamicAtmosphereLighting', function() {
+        globe.enableLighting = true;
+        globe.dynamicAtmosphereLighting = true;
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('renders with dynamicAtmosphereLightingFromSun', function() {
+        globe.enableLighting = true;
+        globe.dynamicAtmosphereLighting = true;
+        globe.dynamicAtmosphereLightingFromSun = true;
 
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
@@ -265,6 +294,39 @@ defineSuite([
                 expect(scene).notToRender([0, 0, 0, 255]);
                 expect(scene).notToRender(rgba);
             });
+        });
+    });
+
+    it('applies back face culling', function() {
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            globe.backFaceCulling = true;
+            scene.render();
+            var command = scene.frameState.commandList[0];
+            expect(command.renderState.cull.enabled).toBe(true);
+            globe.backFaceCulling = false;
+            scene.render();
+            command = scene.frameState.commandList[0];
+            expect(command.renderState.cull.enabled).toBe(false);
+        });
+    });
+
+    it('shows terrain skirts', function() {
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            globe.showSkirts = true;
+            scene.render();
+            var command = scene.frameState.commandList[0];
+            var indexCount = command.count;
+            expect(indexCount).toBe(command.owner.data.renderedMesh.indices.length);
+
+            globe.showSkirts = false;
+            scene.render();
+            command = scene.frameState.commandList[0];
+            expect(command.count).toBeLessThan(indexCount);
+            expect(command.count).toBe(command.owner.data.renderedMesh.indexCountWithoutSkirts);
         });
     });
 }, 'WebGL');

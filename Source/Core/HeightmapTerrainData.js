@@ -1,36 +1,23 @@
-define([
-        '../ThirdParty/when',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './GeographicProjection',
-        './HeightmapTessellator',
-        './Math',
-        './Rectangle',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh',
-        './TerrainProvider'
-    ], function(
-        when,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        GeographicProjection,
-        HeightmapTessellator,
-        CesiumMath,
-        Rectangle,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh,
-        TerrainProvider) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import GeographicProjection from './GeographicProjection.js';
+import HeightmapEncoding from './HeightmapEncoding.js';
+import HeightmapTessellator from './HeightmapTessellator.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import Rectangle from './Rectangle.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
+import TerrainProvider from './TerrainProvider.js';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
-     * is a rectangular array of heights in row-major order from south to north and west to east.
+     * is a rectangular array of heights in row-major order from north to south and west to east.
      *
      * @alias HeightmapTerrainData
      * @constructor
@@ -50,6 +37,9 @@ define([
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
      *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
      *                 </table>
+     * @param {Uint8Array} [options.waterMask] The water mask included in this terrain data, if any.  A water mask is a square
+     *                     Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+     *                     Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
@@ -80,6 +70,7 @@ define([
      *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
      *                 buffer is a `Uint16Array`, this value should be `256 * 256 - 1` or 65535 because a `Uint16Array` cannot store numbers larger
      *                 than 65535.  If this parameter is not specified, no maximum value is enforced.
+     * @param {HeightmapEncoding} [options.encoding=HeightmapEncoding.NONE] The encoding that is used on the buffer.
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
@@ -99,6 +90,7 @@ define([
      *
      * @see TerrainData
      * @see QuantizedMeshTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -117,6 +109,7 @@ define([
         this._width = options.width;
         this._height = options.height;
         this._childTileMask = defaultValue(options.childTileMask, 15);
+        this._encoding = defaultValue(options.encoding, HeightmapEncoding.NONE);
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         var structure = options.structure;
@@ -136,11 +129,11 @@ define([
         this._waterMask = options.waterMask;
 
         this._skirtHeight = undefined;
-        this._bufferType = this._buffer.constructor;
+        this._bufferType = (this._encoding === HeightmapEncoding.LERC) ? Float32Array : this._buffer.constructor;
         this._mesh = undefined;
     }
 
-    defineProperties(HeightmapTerrainData.prototype, {
+    Object.defineProperties(HeightmapTerrainData.prototype, {
         /**
          * An array of credits for this tile.
          * @memberof HeightmapTerrainData.prototype
@@ -152,7 +145,7 @@ define([
             }
         },
         /**
-         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * The water mask included in this terrain data, if any.  A water mask is a square
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
          * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
          * @memberof HeightmapTerrainData.prototype
@@ -161,6 +154,12 @@ define([
         waterMask : {
             get : function() {
                 return this._waterMask;
+            }
+        },
+
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
             }
         }
     });
@@ -223,7 +222,8 @@ define([
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
             isGeographic : tilingScheme.projection instanceof GeographicProjection,
-            exaggeration : exaggeration
+            exaggeration : exaggeration,
+            encoding : this._encoding
         });
 
         if (!defined(verticesPromise)) {
@@ -233,23 +233,122 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
+            var indicesAndEdges;
+            if (that._skirtHeight > 0.0) {
+                indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(result.gridWidth, result.gridHeight);
+            } else {
+                indicesAndEdges = TerrainProvider.getRegularGridIndicesAndEdgeIndices(result.gridWidth, result.gridHeight);
+            }
+
+            var vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
+
+            // Clone complex result objects because the transfer from the web worker
+            // has stripped them down to JSON-style objects.
             that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
-                    TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
+                    indicesAndEdges.indices,
+                    indicesAndEdges.indexCountWithoutSkirts,
+                    vertexCountWithoutSkirts,
                     result.minimumHeight,
                     result.maximumHeight,
-                    result.boundingSphere3D,
-                    result.occludeePointInScaledSpace,
+                    BoundingSphere.clone(result.boundingSphere3D),
+                    Cartesian3.clone(result.occludeePointInScaledSpace),
                     result.numberOfAttributes,
-                    result.orientedBoundingBox,
+                    OrientedBoundingBox.clone(result.orientedBoundingBox),
                     TerrainEncoding.clone(result.encoding),
-                    exaggeration);
+                    exaggeration,
+                    indicesAndEdges.westIndicesSouthToNorth,
+                    indicesAndEdges.southIndicesEastToWest,
+                    indicesAndEdges.eastIndicesNorthToSouth,
+                    indicesAndEdges.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._buffer = undefined;
             return that._mesh;
         });
+    };
+
+    /**
+     * @private
+     */
+    HeightmapTerrainData.prototype._createMeshSync = function(tilingScheme, x, y, level, exaggeration) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(level)) {
+            throw new DeveloperError('level is required.');
+        }
+        //>>includeEnd('debug');
+
+        var ellipsoid = tilingScheme.ellipsoid;
+        var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
+        var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
+
+        // Compute the center of the tile for RTC rendering.
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+
+        var structure = this._structure;
+
+        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
+        var thisLevelMaxError = levelZeroMaxError / (1 << level);
+        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
+
+        var result = HeightmapTessellator.computeVertices({
+            heightmap : this._buffer,
+            structure : structure,
+            includeWebMercatorT : true,
+            width : this._width,
+            height : this._height,
+            nativeRectangle : nativeRectangle,
+            rectangle : rectangle,
+            relativeToCenter : center,
+            ellipsoid : ellipsoid,
+            skirtHeight : this._skirtHeight,
+            isGeographic : tilingScheme.projection instanceof GeographicProjection,
+            exaggeration : exaggeration
+        });
+
+        // Free memory received from server after mesh is created.
+        this._buffer = undefined;
+
+        var indicesAndEdges;
+        if (this._skirtHeight > 0.0) {
+            indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(this._width, this._height);
+        } else {
+            indicesAndEdges = TerrainProvider.getRegularGridIndicesAndEdgeIndices(this._width, this._height);
+        }
+
+        var vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
+
+        // No need to clone here (as we do in the async version) because the result
+        // is not coming from a web worker.
+        return new TerrainMesh(
+            center,
+            result.vertices,
+            indicesAndEdges.indices,
+            indicesAndEdges.indexCountWithoutSkirts,
+            vertexCountWithoutSkirts,
+            result.minimumHeight,
+            result.maximumHeight,
+            result.boundingSphere3D,
+            result.occludeePointInScaledSpace,
+            result.encoding.getStride(),
+            result.orientedBoundingBox,
+            result.encoding,
+            exaggeration,
+            indicesAndEdges.westIndicesSouthToNorth,
+            indicesAndEdges.southIndicesEastToWest,
+            indicesAndEdges.eastIndicesNorthToSouth,
+            indicesAndEdges.northIndicesWestToEast);
     };
 
     /**
@@ -278,9 +377,8 @@ define([
         if (defined(this._mesh)) {
             var buffer = this._mesh.vertices;
             var encoding = this._mesh.encoding;
-            var skirtHeight = this._skirtHeight;
             var exaggeration = this._mesh.exaggeration;
-            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude, exaggeration);
+            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, rectangle, width, height, longitude, latitude, exaggeration);
         } else {
             heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
             heightSample = heightSample * heightScale + heightOffset;
@@ -333,17 +431,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        var width = this._width;
-        var height = this._height;
-        var structure = this._structure;
-        var skirtHeight = this._skirtHeight;
-        var stride = structure.stride;
-
-        var heights = new this._bufferType(width * height * stride);
         var meshData = this._mesh;
         if (!defined(meshData)) {
             return undefined;
         }
+
+        var width = this._width;
+        var height = this._height;
+        var structure = this._structure;
+        var stride = structure.stride;
+
+        var heights = new this._bufferType(width * height * stride);
 
         var buffer = meshData.vertices;
         var encoding = meshData.encoding;
@@ -366,7 +464,7 @@ define([
             var latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
             for (var i = 0; i < width; ++i) {
                 var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration);
+                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, sourceRectangle, width, height, longitude, latitude, exaggeration);
 
                 // Use conditionals here instead of Math.min and Math.max so that an undefined
                 // lowestEncodedHeight or highestEncodedHeight has no effect.
@@ -470,31 +568,21 @@ define([
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
 
-    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration) {
+    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, sourceRectangle, width, height, longitude, latitude, exaggeration) {
         // returns a height encoded according to the structure's heightScale and heightOffset.
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
-        if (skirtHeight > 0) {
-            fromWest += 1.0;
-            fromSouth += 1.0;
-
-            width += 2;
-            height += 2;
-        }
-
-        var widthEdge = (skirtHeight > 0) ? width - 1 : width;
         var westInteger = fromWest | 0;
         var eastInteger = westInteger + 1;
-        if (eastInteger >= widthEdge) {
+        if (eastInteger >= width) {
             eastInteger = width - 1;
             westInteger = width - 2;
         }
 
-        var heightEdge = (skirtHeight > 0) ? height - 1 : height;
         var southInteger = fromSouth | 0;
         var northInteger = southInteger + 1;
-        if (northInteger >= heightEdge) {
+        if (northInteger >= height) {
             northInteger = height - 1;
             southInteger = height - 2;
         }
@@ -562,6 +650,4 @@ define([
         }
         heights[index + i] = height;
     }
-
-    return HeightmapTerrainData;
-});
+export default HeightmapTerrainData;

@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -154,7 +149,7 @@ dataSourcePromise.then(function(dataSource) {
         var pickedLabel = viewer.scene.pick(movement.position);
         if (Cesium.defined(pickedLabel)) {
             var ids = pickedLabel.id;
-            if (Cesium.isArray(ids)) {
+            if (Array.isArray(ids)) {
                 for (var i = 0; i < ids.length; ++i) {
                     ids[i].billboard.color = Cesium.Color.RED;
                 }
@@ -166,9 +161,8 @@ dataSourcePromise.then(function(dataSource) {
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

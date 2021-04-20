@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/Expression',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Math',
-        'Scene/ExpressionNodeType'
-    ], function(
-        Expression,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        CesiumMath,
-        ExpressionNodeType) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Expression } from '../../Source/Cesium.js';
+import { ExpressionNodeType } from '../../Source/Cesium.js';
+
+describe('Scene/Expression', function() {
 
     function MockFeature() {
         this._properties = {};
@@ -3554,6 +3546,34 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
+    it('gets shader expression for isNaN', function() {
+        var expression = new Expression('isNaN(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = '(1.0 != 1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for isFinite', function() {
+        var expression = new Expression('isFinite(1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = '(abs(1.0) < czm_infinity)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for null', function() {
+        var expression = new Expression('null');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'czm_infinity';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for undefined', function() {
+        var expression = new Expression('undefined');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'czm_infinity';
+        expect(shaderExpression).toEqual(expected);
+    });
+
     it('throws when getting shader expression for regex', function() {
         var expression = new Expression('regExp("a").test("abc")');
         expect(function() {
@@ -3613,34 +3633,6 @@ defineSuite([
 
     it('throws when getting shader expression for variable in string', function() {
         var expression = new Expression('"${property}"');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowRuntimeError();
-    });
-
-    it('throws when getting shader expression for literal undefined', function() {
-        var expression = new Expression('undefined');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowRuntimeError();
-    });
-
-    it('throws when getting shader expression for literal null', function() {
-        var expression = new Expression('null');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowRuntimeError();
-    });
-
-    it('throws when getting shader expression for isNaN', function() {
-        var expression = new Expression('isNaN(1.0)');
-        expect(function() {
-            return expression.getShaderExpression('', {});
-        }).toThrowRuntimeError();
-    });
-
-    it('throws when getting shader expression for isFinite', function() {
-        var expression = new Expression('isFinite(1.0)');
         expect(function() {
             return expression.getShaderExpression('', {});
         }).toThrowRuntimeError();

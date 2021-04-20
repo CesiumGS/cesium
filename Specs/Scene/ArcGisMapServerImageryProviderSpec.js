@@ -1,54 +1,39 @@
-defineSuite([
-        'Scene/ArcGisMapServerImageryProvider',
-        'Core/appendForwardSlash',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/DefaultProxy',
-        'Core/defined',
-        'Core/GeographicTilingScheme',
-        'Core/getAbsoluteUri',
-        'Core/objectToQuery',
-        'Core/queryToObject',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/DiscardMissingTileImagePolicy',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryLayerFeatureInfo',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri'
-    ], function(
-        ArcGisMapServerImageryProvider,
-        appendForwardSlash,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        DefaultProxy,
-        defined,
-        GeographicTilingScheme,
-        getAbsoluteUri,
-        objectToQuery,
-        queryToObject,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        DiscardMissingTileImagePolicy,
-        Imagery,
-        ImageryLayer,
-        ImageryLayerFeatureInfo,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri) {
-    'use strict';
+import { appendForwardSlash } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { objectToQuery } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { ArcGisMapServerImageryProvider } from '../../Source/Cesium.js';
+import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { Uri } from '../../Source/Cesium.js';
+
+describe('Scene/ArcGisMapServerImageryProvider', function() {
+
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -205,15 +190,15 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
             expect(provider.hasAlphaChannel).toBeDefined();
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
                 if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -225,7 +210,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -282,15 +267,16 @@ defineSuite([
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
             expect(provider.usingPrecachedTiles).toEqual(true);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -302,7 +288,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -334,8 +320,8 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(false);
             expect(provider.enablePickFeatures).toBe(true);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                var uri = new Uri(url);
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var uri = new Uri(request.url);
                 var params = queryToObject(uri.query);
 
                 var uriWithoutQuery = new Uri(uri);
@@ -351,11 +337,11 @@ defineSuite([
                 expect(params.size).toEqual('256,256');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -396,8 +382,8 @@ defineSuite([
             expect(provider.enablePickFeatures).toBe(false);
             expect(provider.layers).toEqual('foo,bar');
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                var uri = new Uri(url);
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var uri = new Uri(request.url);
                 var params = queryToObject(uri.query);
 
                 var uriWithoutQuery = new Uri(uri);
@@ -415,11 +401,11 @@ defineSuite([
                 expect(params.token).toEqual(token);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -455,15 +441,16 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
             expect(provider.hasAlphaChannel).toBeDefined();
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual(expectedTileUrl);
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -475,7 +462,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -586,10 +573,10 @@ defineSuite([
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -609,7 +596,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -728,10 +715,10 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.rectangle.west >= -Math.PI).toBe(true);
-            expect(provider.rectangle.east <= Math.PI).toBe(true);
-            expect(provider.rectangle.south >= -WebMercatorProjection.MaximumLatitude).toBe(true);
-            expect(provider.rectangle.north <= WebMercatorProjection.MaximumLatitude).toBe(true);
+            expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(-Math.PI);
+            expect(provider.rectangle.east).toBeLessThanOrEqualTo(Math.PI);
+            expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(-WebMercatorProjection.MaximumLatitude);
+            expect(provider.rectangle.north).toBeLessThanOrEqualTo(WebMercatorProjection.MaximumLatitude);
         });
     });
 

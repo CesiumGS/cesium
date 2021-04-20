@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/getStringFromTypedArray'
-    ], function(
-        getStringFromTypedArray) {
-    'use strict';
+import { getStringFromTypedArray } from '../../Source/Cesium.js';
+
+describe('Core/getStringFromTypedArray', function() {
 
     function verifyString() {
         var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);

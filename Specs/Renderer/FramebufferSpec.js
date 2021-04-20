@@ -1,44 +1,24 @@
-defineSuite([
-        'Renderer/Framebuffer',
-        'Core/Color',
-        'Core/PixelFormat',
-        'Core/PrimitiveType',
-        'Core/WebGLConstants',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/ContextLimits',
-        'Renderer/CubeMap',
-        'Renderer/DrawCommand',
-        'Renderer/PixelDatatype',
-        'Renderer/Renderbuffer',
-        'Renderer/RenderbufferFormat',
-        'Renderer/RenderState',
-        'Renderer/ShaderProgram',
-        'Renderer/Texture',
-        'Renderer/VertexArray',
-        'Specs/createContext'
-    ], function(
-        Framebuffer,
-        Color,
-        PixelFormat,
-        PrimitiveType,
-        WebGLConstants,
-        Buffer,
-        BufferUsage,
-        ClearCommand,
-        ContextLimits,
-        CubeMap,
-        DrawCommand,
-        PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
-        RenderState,
-        ShaderProgram,
-        Texture,
-        VertexArray,
-        createContext) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { CubeMap } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { Framebuffer } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Renderbuffer } from '../../Source/Cesium.js';
+import { RenderbufferFormat } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Framebuffer', function() {
 
     var context;
     var sp;

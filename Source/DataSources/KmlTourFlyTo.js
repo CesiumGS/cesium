@@ -1,14 +1,7 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/combine',
-        '../Core/defined',
-        '../Core/EasingFunction'
-    ], function(
-        BoundingSphere,
-        combine,
-        defined,
-        EasingFunction) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import combine from '../Core/combine.js';
+import defined from '../Core/defined.js';
+import EasingFunction from '../Core/EasingFunction.js';
     /**
      * @alias KmlTourFlyTo
      * @constructor
@@ -109,6 +102,4 @@ define([
      * @param {Boolean} terminated true if {@link KmlTourFlyTo#stop} was
      * called before entry done playback.
      */
-
-    return KmlTourFlyTo;
-});
+export default KmlTourFlyTo;

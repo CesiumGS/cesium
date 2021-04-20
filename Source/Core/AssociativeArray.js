@@ -1,12 +1,5 @@
-define([
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * A collection of key-value pairs that is stored as a hash for easy
@@ -19,7 +12,7 @@ define([
         this._hash = {};
     }
 
-    defineProperties(AssociativeArray.prototype, {
+    Object.defineProperties(AssociativeArray.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof AssociativeArray.prototype
@@ -131,6 +124,4 @@ define([
             array.length = 0;
         }
     };
-
-    return AssociativeArray;
-});
+export default AssociativeArray;

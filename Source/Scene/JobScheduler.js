@@ -1,16 +1,7 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/getTimestamp',
-        './JobType'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        getTimestamp,
-        JobType) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import JobType from './JobType.js';
 
     function JobTypeBudget(total) {
         /**
@@ -41,7 +32,7 @@ define([
         this.starvedLastFrame = false;
     }
 
-    defineProperties(JobTypeBudget.prototype, {
+    Object.defineProperties(JobTypeBudget.prototype, {
         total : {
             get : function() {
                 return this._total;
@@ -104,7 +95,7 @@ define([
     // For unit testing
     JobScheduler.getTimestamp = getTimestamp;
 
-    defineProperties(JobScheduler.prototype, {
+    Object.defineProperties(JobScheduler.prototype, {
         totalBudget : {
             get : function() {
                 return this._totalBudget;
@@ -189,6 +180,4 @@ define([
 
         return true;
     };
-
-    return JobScheduler;
-});
+export default JobScheduler;

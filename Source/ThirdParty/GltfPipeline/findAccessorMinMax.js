@@ -1,18 +1,9 @@
-define([
-        './getAccessorByteStride',
-        './getComponentReader',
-        './numberOfComponentsForType',
-        '../../Core/arrayFill',
-        '../../Core/ComponentDatatype',
-        '../../Core/defined'
-    ], function(
-        getAccessorByteStride,
-        getComponentReader,
-        numberOfComponentsForType,
-        arrayFill,
-        ComponentDatatype,
-        defined) {
-    'use strict';
+import getAccessorByteStride from './getAccessorByteStride.js'
+import getComponentReader from './getComponentReader.js'
+import numberOfComponentsForType from './numberOfComponentsForType.js'
+import arrayFill from '../../Core/arrayFill.js'
+import ComponentDatatype from '../../Core/ComponentDatatype.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Finds the min and max values of the accessor.
@@ -70,5 +61,4 @@ define([
         };
     }
 
-    return findAccessorMinMax;
-});
+    export default findAccessorMinMax;

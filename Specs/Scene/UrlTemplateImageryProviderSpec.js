@@ -1,40 +1,22 @@
-defineSuite([
-        'Scene/UrlTemplateImageryProvider',
-        'Core/DefaultProxy',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/GetFeatureInfoFormat',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        UrlTemplateImageryProvider,
-        DefaultProxy,
-        Ellipsoid,
-        GeographicTilingScheme,
-        CesiumMath,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        GetFeatureInfoFormat,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GetFeatureInfoFormat } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/UrlTemplateImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -110,14 +92,14 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -155,16 +137,16 @@ defineSuite([
             expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toContain('/0/0/0');
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toContain('/0/0/0');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -203,10 +185,10 @@ defineSuite([
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -226,7 +208,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -243,16 +225,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/3/2/1/4/3.PNG');
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqual('made/up/tms/server/2/3/2/1/4/3.PNG');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -272,16 +254,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/0002/3/2/0001/4/0003.PNG');
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqual('made/up/tms/server/0002/3/2/0001/4/0003.PNG');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -301,16 +283,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/0003/0002/1/0004/3.PNG');
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqual('made/up/tms/server/2/0003/0002/1/0004/3.PNG');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -330,16 +312,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/0005/0/21/0010/51/0012.PNG');
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqual('made/up/tms/server/0005/0/21/0010/51/0012.PNG');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(12, 10, 5).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -353,16 +335,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(45.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(45.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -376,16 +358,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -399,16 +381,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -422,16 +404,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(-45.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(-45.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -445,16 +427,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -467,16 +449,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 0, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -489,16 +471,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -511,16 +493,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqualEpsilon(-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(1, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -533,8 +515,8 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual(
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqual(
                     '-90 ' +
                     (-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0) + ' ' +
                     '0 ' +
@@ -545,12 +527,12 @@ defineSuite([
                     (Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0));
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(1, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -563,16 +545,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(['a', 'b', 'c'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(['a', 'b', 'c'].indexOf(request.url)).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -586,16 +568,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(['1', '2', '3'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(['1', '2', '3'].indexOf(request.url)).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -609,16 +591,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(['foo', 'bar'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(['foo', 'bar'].indexOf(request.url)).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -637,16 +619,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/foo/bar/2/1/3.PNG');
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                expect(request.url).toEqual('made/up/tms/server/foo/bar/2/1/3.PNG');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });

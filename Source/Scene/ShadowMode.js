@@ -1,11 +1,6 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
-     * Specifies whether the object casts or receives shadows from each light source when
+     * Specifies whether the object casts or receives shadows from light sources when
      * shadows are enabled.
      *
      * @exports ShadowMode
@@ -76,6 +71,4 @@ define([
         }
         return ShadowMode.DISABLED;
     };
-
-    return freezeObject(ShadowMode);
-});
+export default Object.freeze(ShadowMode);

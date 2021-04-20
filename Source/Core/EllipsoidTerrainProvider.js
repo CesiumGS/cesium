@@ -1,24 +1,11 @@
-define([
-        '../ThirdParty/when',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './Event',
-        './GeographicTilingScheme',
-        './HeightmapTerrainData',
-        './TerrainProvider'
-    ], function(
-        when,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        Event,
-        GeographicTilingScheme,
-        HeightmapTerrainData,
-        TerrainProvider) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import Event from './Event.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import HeightmapTerrainData from './HeightmapTerrainData.js';
+import TerrainProvider from './TerrainProvider.js';
 
     /**
      * A very simple {@link TerrainProvider} that produces geometry by tessellating an ellipsoidal
@@ -38,7 +25,7 @@ define([
      * @see TerrainProvider
      */
     function EllipsoidTerrainProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._tilingScheme = options.tilingScheme;
         if (!defined(this._tilingScheme)) {
@@ -55,7 +42,7 @@ define([
         this._readyPromise = when.resolve(true);
     }
 
-    defineProperties(EllipsoidTerrainProvider.prototype, {
+    Object.defineProperties(EllipsoidTerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
@@ -200,6 +187,4 @@ define([
     EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
         return undefined;
     };
-
-    return EllipsoidTerrainProvider;
-});
+export default EllipsoidTerrainProvider;

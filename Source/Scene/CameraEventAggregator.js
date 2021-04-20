@@ -1,26 +1,12 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/KeyboardEventModifier',
-        '../Core/Math',
-        '../Core/ScreenSpaceEventHandler',
-        '../Core/ScreenSpaceEventType',
-        './CameraEventType'
-    ], function(
-        Cartesian2,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        KeyboardEventModifier,
-        CesiumMath,
-        ScreenSpaceEventHandler,
-        ScreenSpaceEventType,
-        CameraEventType) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import KeyboardEventModifier from '../Core/KeyboardEventModifier.js';
+import CesiumMath from '../Core/Math.js';
+import ScreenSpaceEventHandler from '../Core/ScreenSpaceEventHandler.js';
+import ScreenSpaceEventType from '../Core/ScreenSpaceEventType.js';
+import CameraEventType from './CameraEventType.js';
 
     function getKey(type, modifier) {
         var key = type;
@@ -262,7 +248,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._eventHandler = new ScreenSpaceEventHandler(canvas, true);
+        this._eventHandler = new ScreenSpaceEventHandler(canvas);
 
         this._update = {};
         this._movement = {};
@@ -298,7 +284,7 @@ define([
         }
     }
 
-    defineProperties(CameraEventAggregator.prototype, {
+    Object.defineProperties(CameraEventAggregator.prototype, {
         /**
          * Gets the current mouse position.
          * @memberof CameraEventAggregator.prototype
@@ -506,6 +492,4 @@ define([
         this._eventHandler = this._eventHandler && this._eventHandler.destroy();
         return destroyObject(this);
     };
-
-    return CameraEventAggregator;
-});
+export default CameraEventAggregator;

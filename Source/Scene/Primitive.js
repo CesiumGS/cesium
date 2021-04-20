@@ -1,92 +1,44 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EncodedCartesian3',
-        '../Core/FeatureDetection',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/GeometryAttributes',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/Intersect',
-        '../Core/isArray',
-        '../Core/Matrix4',
-        '../Core/Plane',
-        '../Core/RuntimeError',
-        '../Core/subdivideArray',
-        '../Core/TaskProcessor',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../ThirdParty/when',
-        './BatchTable',
-        './CullFace',
-        './DepthFunction',
-        './PrimitivePipeline',
-        './PrimitiveState',
-        './SceneMode',
-        './ShadowMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        clone,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EncodedCartesian3,
-        FeatureDetection,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        Intersect,
-        isArray,
-        Matrix4,
-        Plane,
-        RuntimeError,
-        subdivideArray,
-        TaskProcessor,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        when,
-        BatchTable,
-        CullFace,
-        DepthFunction,
-        PrimitivePipeline,
-        PrimitiveState,
-        SceneMode,
-        ShadowMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import Geometry from '../Core/Geometry.js';
+import GeometryAttribute from '../Core/GeometryAttribute.js';
+import GeometryAttributes from '../Core/GeometryAttributes.js';
+import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
+import Intersect from '../Core/Intersect.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Plane from '../Core/Plane.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import subdivideArray from '../Core/subdivideArray.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import when from '../ThirdParty/when.js';
+import BatchTable from './BatchTable.js';
+import CullFace from './CullFace.js';
+import DepthFunction from './DepthFunction.js';
+import PrimitivePipeline from './PrimitivePipeline.js';
+import PrimitiveState from './PrimitiveState.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
@@ -115,6 +67,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Appearance} [options.depthFailAppearance] The appearance used to shade this primitive when it fails the depth test.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
@@ -125,7 +78,7 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -320,13 +273,13 @@ define([
         this.rtcCenter = options.rtcCenter;
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (Array.isArray(this.geometryInstances) && this.geometryInstances.length !== 1))) {
             throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
         }
         //>>includeEnd('debug');
 
         /**
-         * Determines whether this primitive casts or receives shadows from each light source.
+         * Determines whether this primitive casts or receives shadows from light sources.
          *
          * @type {ShadowMode}
          *
@@ -368,8 +321,6 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
-        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
@@ -396,7 +347,7 @@ define([
         this._batchTableBoundingSphereAttributeIndices = undefined;
     }
 
-    defineProperties(Primitive.prototype, {
+    Object.defineProperties(Primitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -576,7 +527,7 @@ define([
 
     function createBatchTable(primitive, context) {
         var geometryInstances = primitive.geometryInstances;
-        var instances = (isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
+        var instances = (Array.isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
         var numberOfInstances = instances.length;
         if (numberOfInstances === 0) {
             return;
@@ -699,7 +650,7 @@ define([
 
     function cloneAttribute(attribute) {
         var clonedValues;
-        if (isArray(attribute.values)) {
+        if (Array.isArray(attribute.values)) {
             clonedValues = attribute.values.slice(0);
         } else {
             clonedValues = new attribute.values.constructor(attribute.values);
@@ -724,7 +675,7 @@ define([
         var indices;
         if (defined(geometry.indices)) {
             var sourceValues = geometry.indices;
-            if (isArray(sourceValues)) {
+            if (Array.isArray(sourceValues)) {
                 indices = sourceValues.slice(0);
             } else {
                 indices = new sourceValues.constructor(sourceValues);
@@ -1065,8 +1016,12 @@ define([
             'varying float v_WindowZ;\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
-            '#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)\n' +
-            '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '#if defined(GL_EXT_frag_depth)\n' +
+            '    #if defined(LOG_DEPTH)\n' +
+            '        czm_writeLogDepth();\n' +
+            '    #else\n' +
+            '        gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '    #endif\n' +
             '#endif\n' +
             '}\n';
         modifiedFS =
@@ -1120,7 +1075,7 @@ define([
         var instanceIds = primitive._instanceIds;
 
         if (primitive._state === PrimitiveState.READY) {
-            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
             var length = primitive._numberOfInstances = instances.length;
 
             var promises = [];
@@ -1195,7 +1150,7 @@ define([
             });
         } else if (primitive._state === PrimitiveState.CREATED) {
             var transferableObjects = [];
-            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
 
             var scene3DOnly = frameState.scene3DOnly;
             var projection = frameState.mapProjection;
@@ -1239,7 +1194,7 @@ define([
     }
 
     function loadSynchronous(primitive, frameState) {
-        var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+        var instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
         var length = primitive._numberOfInstances = instances.length;
         var clonedInstances = new Array(length);
         var instanceIds = primitive._instanceIds;
@@ -1859,7 +1814,7 @@ define([
      */
     Primitive.prototype.update = function(frameState) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && frameState.scene3DOnly) ||
             (!frameState.passes.render && !frameState.passes.pick)) {
@@ -2113,30 +2068,15 @@ define([
             if (perInstanceAttributeIndices.hasOwnProperty(name)) {
                 var attributeIndex = perInstanceAttributeIndices[name];
                 properties[name] = {
-                    get : createGetFunction(batchTable, index, attributeIndex)
+                    get : createGetFunction(batchTable, index, attributeIndex),
+                    set : createSetFunction(batchTable, index, attributeIndex, this, name)
                 };
-
-                var createSetter = true;
-                var readOnlyAttributes = this._readOnlyInstanceAttributes;
-                if (createSetter && defined(readOnlyAttributes)) {
-                    length = readOnlyAttributes.length;
-                    for (var k = 0; k < length; ++k) {
-                        if (name === readOnlyAttributes[k]) {
-                            createSetter = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (createSetter) {
-                    properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
-                }
             }
         }
 
         createBoundingSphereProperties(this, properties, index);
         createPickIdProperty(this, properties, index);
-        defineProperties(attributes, properties);
+        Object.defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
         this._perInstanceAttributeCache[index] = attributes;
@@ -2180,7 +2120,7 @@ define([
         var i;
 
         this._sp = this._sp && this._sp.destroy();
-        this._pickSP = this._pickSP && this._pickSP.destroy();
+        this._spDepthFail = this._spDepthFail && this._spDepthFail.destroy();
 
         var va = this._va;
         length = va.length;
@@ -2220,6 +2160,4 @@ define([
             }
         });
     }
-
-    return Primitive;
-});
+export default Primitive;

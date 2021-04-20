@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -31,6 +26,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain()
 });
 var scene = viewer.scene;
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 function offsetPositions(positions, degreeOffset) {
     positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
@@ -325,6 +321,26 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
         }),
         classificationType : Cesium.ClassificationType.TERRAIN
     }));
+
+    // Rhumb line polygon geometry
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolygonGeometry({
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
+                    -130, 55,
+                    -100, 55,
+                    -100, 45,
+                    -130, 45
+                ])),
+                arcType : Cesium.ArcType.RHUMB
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 0.0, 0.5))
+            },
+            id : 'rhumbPolygon'
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
+    }));
 });
 
 Sandcastle.reset = function() {
@@ -340,9 +356,8 @@ Sandcastle.reset = function() {
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

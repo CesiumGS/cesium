@@ -1,16 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        './Appearance'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Appearance) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Appearance from './Appearance.js';
 
     /**
      * Visualizes a vertex attribute by displaying it as a color for debugging.
@@ -141,7 +132,7 @@ define([
         this._glslDatatype = glslDatatype;
     }
 
-    defineProperties(DebugAppearance.prototype, {
+    Object.defineProperties(DebugAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *
@@ -260,6 +251,4 @@ define([
      * @returns {Object} The render state.
      */
     DebugAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-
-    return DebugAppearance;
-});
+export default DebugAppearance;

@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Determines how opaque and translucent parts of billboards, points, and labels are blended with the scene.
@@ -31,6 +26,4 @@ define([
          */
         OPAQUE_AND_TRANSLUCENT : 2
     };
-
-    return freezeObject(BlendOption);
-});
+export default Object.freeze(BlendOption);

@@ -1,16 +1,7 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        './ShaderProgram',
-        './ShaderSource'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        ShaderProgram,
-        ShaderSource) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import ShaderProgram from './ShaderProgram.js';
+import ShaderSource from './ShaderSource.js';
 
     /**
      * @private
@@ -22,7 +13,7 @@ define([
         this._shadersToRelease = {};
     }
 
-    defineProperties(ShaderCache.prototype, {
+    Object.defineProperties(ShaderCache.prototype, {
         numberOfShaders : {
             get : function() {
                 return this._numberOfShaders;
@@ -138,6 +129,21 @@ define([
         return cachedShader.shaderProgram;
     };
 
+    ShaderCache.prototype.replaceDerivedShaderProgram = function(shaderProgram, keyword, options) {
+        var cachedShader = shaderProgram._cachedShader;
+        var derivedKeyword = keyword + cachedShader.keyword;
+        var cachedDerivedShader = this._shaders[derivedKeyword];
+        if (defined(cachedDerivedShader)) {
+            destroyShader(this, cachedDerivedShader);
+            var index = cachedShader.derivedKeywords.indexOf(keyword);
+            if (index > -1) {
+                cachedShader.derivedKeywords.splice(index, 1);
+            }
+        }
+
+        return this.createDerivedShaderProgram(shaderProgram, keyword, options);
+    };
+
     ShaderCache.prototype.getDerivedShaderProgram = function(shaderProgram, keyword) {
         var cachedShader = shaderProgram._cachedShader;
         var derivedKeyword = keyword + cachedShader.keyword;
@@ -248,6 +254,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return ShaderCache;
-});
+export default ShaderCache;

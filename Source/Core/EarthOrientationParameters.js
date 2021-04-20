@@ -1,30 +1,14 @@
-define([
-        '../ThirdParty/when',
-        './binarySearch',
-        './defaultValue',
-        './defined',
-        './EarthOrientationParametersSample',
-        './freezeObject',
-        './JulianDate',
-        './LeapSecond',
-        './Resource',
-        './RuntimeError',
-        './TimeConstants',
-        './TimeStandard'
-    ], function(
-        when,
-        binarySearch,
-        defaultValue,
-        defined,
-        EarthOrientationParametersSample,
-        freezeObject,
-        JulianDate,
-        LeapSecond,
-        Resource,
-        RuntimeError,
-        TimeConstants,
-        TimeStandard) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import binarySearch from './binarySearch.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import EarthOrientationParametersSample from './EarthOrientationParametersSample.js';
+import JulianDate from './JulianDate.js';
+import LeapSecond from './LeapSecond.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import TimeConstants from './TimeConstants.js';
+import TimeStandard from './TimeStandard.js';
 
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
@@ -97,9 +81,9 @@ define([
 
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(resource.fetchJson(), function(eopData) {
+            this._downloadPromise = resource.fetchJson().then(function(eopData) {
                 onDataReady(that, eopData);
-            }, function() {
+            }).otherwise(function() {
                 that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + resource.url + '.';
             });
         } else {
@@ -114,9 +98,9 @@ define([
     /**
      * A default {@link EarthOrientationParameters} instance that returns zero for all EOP values.
      */
-    EarthOrientationParameters.NONE = freezeObject({
+    EarthOrientationParameters.NONE = Object.freeze({
             getPromiseToLoad : function() {
-                return when();
+                return when.resolve();
             },
             compute : function(date, result) {
                 if (!defined(result)) {
@@ -136,9 +120,7 @@ define([
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
      * ready to use.
      *
-     * @returns {Promise.<undefined>} The promise.
-     *
-     * @see when
+     * @returns {Promise} The promise.
      */
     EarthOrientationParameters.prototype.getPromiseToLoad = function() {
         return when(this._downloadPromise);
@@ -379,6 +361,4 @@ define([
         result.ut1MinusUtc = linearInterp(factor, beforeUt1MinusUtc, afterUt1MinusUtc);
         return result;
     }
-
-    return EarthOrientationParameters;
-});
+export default EarthOrientationParameters;

@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/CircleGeometry',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        CircleGeometry,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CircleGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/CircleGeometry', function() {
 
     it('throws without a center', function() {
         expect(function() {

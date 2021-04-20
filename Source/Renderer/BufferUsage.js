@@ -1,10 +1,4 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * @private
@@ -20,6 +14,4 @@ define([
                     (bufferUsage === BufferUsage.DYNAMIC_DRAW));
         }
     };
-
-    return freezeObject(BufferUsage);
-});
+export default Object.freeze(BufferUsage);

@@ -1,26 +1,12 @@
-define([
-        '../../Core/buildModuleUrl',
-        '../../Core/Check',
-        '../../Core/Color',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        '../subscribeAndEvaluate',
-        './InfoBoxViewModel'
-    ], function(
-        buildModuleUrl,
-        Check,
-        Color,
-        defined,
-        defineProperties,
-        destroyObject,
-        knockout,
-        getElement,
-        subscribeAndEvaluate,
-        InfoBoxViewModel) {
-    'use strict';
+import buildModuleUrl from '../../Core/buildModuleUrl.js';
+import Check from '../../Core/Check.js';
+import Color from '../../Core/Color.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import subscribeAndEvaluate from '../subscribeAndEvaluate.js';
+import InfoBoxViewModel from './InfoBoxViewModel.js';
 
     /**
      * A widget for displaying information or a description.
@@ -139,7 +125,7 @@ click: function () { closeClicked.raiseEvent(this); }');
         frame.setAttribute('src', 'about:blank');
     }
 
-    defineProperties(InfoBox.prototype, {
+    Object.defineProperties(InfoBox.prototype, {
         /**
          * Gets the parent container.
          * @memberof InfoBox.prototype
@@ -199,6 +185,4 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         return destroyObject(this);
     };
-
-    return InfoBox;
-});
+export default InfoBox;

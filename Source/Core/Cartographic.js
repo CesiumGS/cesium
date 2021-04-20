@@ -1,20 +1,9 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './freezeObject',
-        './Math',
-        './scaleToGeodeticSurface'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        freezeObject,
-        CesiumMath,
-        scaleToGeodeticSurface) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
+import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
 
     /**
      * A position defined by longitude, latitude, and height.
@@ -229,7 +218,7 @@ define([
      * @type {Cartographic}
      * @constant
      */
-    Cartographic.ZERO = freezeObject(new Cartographic(0.0, 0.0, 0.0));
+    Cartographic.ZERO = Object.freeze(new Cartographic(0.0, 0.0, 0.0));
 
     /**
      * Duplicates this instance.
@@ -273,6 +262,4 @@ define([
     Cartographic.prototype.toString = function() {
         return '(' + this.longitude + ', ' + this.latitude + ', ' + this.height + ')';
     };
-
-    return Cartographic;
-});
+export default Cartographic;

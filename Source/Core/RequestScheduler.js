@@ -1,28 +1,13 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Event',
-        './Heap',
-        './isBlobUri',
-        './isDataUri',
-        './RequestState'
-    ], function(
-        Uri,
-        when,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        Heap,
-        isBlobUri,
-        isDataUri,
-        RequestState) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Event from './Event.js';
+import Heap from './Heap.js';
+import isBlobUri from './isBlobUri.js';
+import isDataUri from './isDataUri.js';
+import RequestState from './RequestState.js';
 
     function sortRequests(a, b) {
         return a.priority - b.priority;
@@ -34,7 +19,8 @@ define([
         numberOfCancelledRequests : 0,
         numberOfCancelledActiveRequests : 0,
         numberOfFailedRequests : 0,
-        numberOfActiveRequestsEver : 0
+        numberOfActiveRequestsEver : 0,
+        lastNumberOfActiveRequests : 0
     };
 
     var priorityHeapLength = 20;
@@ -52,11 +38,13 @@ define([
     var requestCompletedEvent = new Event();
 
     /**
-     * Tracks the number of active requests and prioritizes incoming requests.
+     * The request scheduler is used to track and constrain the number of active requests in order to prioritize incoming requests. The ability
+     * to retain control over the number of requests in CesiumJS is important because due to events such as changes in the camera position,
+     * a lot of new requests may be generated and a lot of in-flight requests may become redundant. The request scheduler manually constrains the
+     * number of requests so that newer requests wait in a shorter queue and don't have to compete for bandwidth with requests that have expired.
      *
      * @exports RequestScheduler
      *
-     * @private
      */
     function RequestScheduler() {
     }
@@ -70,14 +58,20 @@ define([
 
     /**
      * The maximum number of simultaneous active requests per server. Un-throttled requests or servers specifically
-     * listed in requestsByServer do not observe this limit.
+     * listed in {@link requestsByServer} do not observe this limit.
      * @type {Number}
      * @default 6
      */
     RequestScheduler.maximumRequestsPerServer = 6;
 
     /**
-     * A per serverKey list of overrides to use for throttling instead of maximumRequestsPerServer
+     * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
+     *
+     * @example
+     * RequestScheduler.requestsByServer = {
+     *   'api.cesium.com:443': 18,
+     *   'assets.cesium.com:443': 18
+     * };
      */
     RequestScheduler.requestsByServer = {
         'api.cesium.com:443': 18,
@@ -95,6 +89,7 @@ define([
      * When true, log statistics to the console every frame
      * @type {Boolean}
      * @default false
+     * @private
      */
     RequestScheduler.debugShowStatistics = false;
 
@@ -104,10 +99,11 @@ define([
      *
      * @type {Event}
      * @default Event()
+     * @private
      */
     RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
-    defineProperties(RequestScheduler, {
+    Object.defineProperties(RequestScheduler, {
         /**
          * Returns the statistics used by the request scheduler.
          *
@@ -115,6 +111,7 @@ define([
          *
          * @type Object
          * @readonly
+         * @private
          */
         statistics : {
             get : function() {
@@ -129,6 +126,7 @@ define([
          *
          * @type {Number}
          * @default 20
+         * @private
          */
         priorityHeapLength : {
             get : function() {
@@ -228,6 +226,7 @@ define([
 
     /**
      * Sort requests by priority and start requests.
+     * @private
      */
     RequestScheduler.update = function() {
         var i;
@@ -293,6 +292,7 @@ define([
      *
      * @param {String} url The url.
      * @returns {String} The server key.
+     * @private
      */
     RequestScheduler.getServerKey = function(url) {
         //>>includeStart('debug', pragmas.debug);
@@ -322,6 +322,8 @@ define([
      * @param {Request} request The request object.
      *
      * @returns {Promise|undefined} A Promise for the requested data, or undefined if this request does not have high enough priority to be issued.
+     *
+     * @private
      */
     RequestScheduler.request = function(request) {
         //>>includeStart('debug', pragmas.debug);
@@ -342,17 +344,17 @@ define([
             request.serverKey = RequestScheduler.getServerKey(request.url);
         }
 
+        if (RequestScheduler.throttleRequests && request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+            // Server is saturated. Try again later.
+            return undefined;
+        }
+
         if (!RequestScheduler.throttleRequests || !request.throttle) {
             return startRequest(request);
         }
 
         if (activeRequests.length >= RequestScheduler.maximumRequests) {
             // Active requests are saturated. Try again later.
-            return undefined;
-        }
-
-        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
-            // Server is saturated. Try again later.
             return undefined;
         }
 
@@ -373,34 +375,34 @@ define([
         return issueRequest(request);
     };
 
-    function clearStatistics() {
-        statistics.numberOfAttemptedRequests = 0;
-        statistics.numberOfCancelledRequests = 0;
-        statistics.numberOfCancelledActiveRequests = 0;
-    }
-
     function updateStatistics() {
         if (!RequestScheduler.debugShowStatistics) {
             return;
         }
 
-        if (statistics.numberOfAttemptedRequests > 0) {
-            console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
-        }
-        if (statistics.numberOfActiveRequests > 0) {
-            console.log('Number of active requests: ' + statistics.numberOfActiveRequests);
-        }
-        if (statistics.numberOfCancelledRequests > 0) {
-            console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
-        }
-        if (statistics.numberOfCancelledActiveRequests > 0) {
-            console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
-        }
-        if (statistics.numberOfFailedRequests > 0) {
-            console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+        if (statistics.numberOfActiveRequests === 0 && statistics.lastNumberOfActiveRequests > 0) {
+            if (statistics.numberOfAttemptedRequests > 0) {
+                console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
+                statistics.numberOfAttemptedRequests = 0;
+            }
+
+            if (statistics.numberOfCancelledRequests > 0) {
+                console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
+                statistics.numberOfCancelledRequests = 0;
+            }
+
+            if (statistics.numberOfCancelledActiveRequests > 0) {
+                console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
+                statistics.numberOfCancelledActiveRequests = 0;
+            }
+
+            if (statistics.numberOfFailedRequests > 0) {
+                console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+                statistics.numberOfFailedRequests = 0;
+            }
         }
 
-        clearStatistics();
+        statistics.lastNumberOfActiveRequests = statistics.numberOfActiveRequests;
     }
 
     /**
@@ -427,6 +429,7 @@ define([
         statistics.numberOfCancelledActiveRequests = 0;
         statistics.numberOfFailedRequests = 0;
         statistics.numberOfActiveRequestsEver = 0;
+        statistics.lastNumberOfActiveRequests = 0;
     };
 
     /**
@@ -444,6 +447,4 @@ define([
      * @private
      */
     RequestScheduler.requestHeap = requestHeap;
-
-    return RequestScheduler;
-});
+export default RequestScheduler;

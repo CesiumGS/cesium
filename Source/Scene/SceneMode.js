@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
@@ -60,6 +55,4 @@ define([
         }
         return 0.0;
     };
-
-    return freezeObject(SceneMode);
-});
+export default Object.freeze(SceneMode);

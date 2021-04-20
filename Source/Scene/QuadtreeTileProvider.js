@@ -1,10 +1,4 @@
-define([
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be
@@ -31,7 +25,7 @@ define([
         return tilingScheme.ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (65 * tilingScheme.getNumberOfXTilesAtLevel(0));
     };
 
-    defineProperties(QuadtreeTileProvider.prototype, {
+    Object.defineProperties(QuadtreeTileProvider.prototype, {
         /**
          * Gets or sets the {@link QuadtreePrimitive} for which this provider is
          * providing tiles.
@@ -216,6 +210,4 @@ define([
      * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
-
-    return QuadtreeTileProvider;
-});
+export default QuadtreeTileProvider;

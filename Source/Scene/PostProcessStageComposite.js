@@ -1,18 +1,8 @@
-define([
-        '../Core/Check',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject'
-    ], function(
-        Check,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject) {
-    'use strict';
+import Check from '../Core/Check.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
 
     /**
      * A collection of {@link PostProcessStage}s or other post-process composite stages that execute together logically.
@@ -117,7 +107,7 @@ define([
         this._selectedDirty = true;
     }
 
-    defineProperties(PostProcessStageComposite.prototype, {
+    Object.defineProperties(PostProcessStageComposite.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed.
          *
@@ -353,6 +343,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return PostProcessStageComposite;
-});
+export default PostProcessStageComposite;

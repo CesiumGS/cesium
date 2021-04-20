@@ -1,20 +1,9 @@
-define([
-        '../Core/clone',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        './BlendingState',
-        './CullFace'
-    ], function(
-        clone,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        BlendingState,
-        CullFace) {
-    'use strict';
+import clone from '../Core/clone.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import BlendingState from './BlendingState.js';
+import CullFace from './CullFace.js';
 
     /**
      * An appearance defines the full GLSL vertex and fragment shaders and the
@@ -39,7 +28,7 @@ define([
      * @see PolylineColorAppearance
      * @see PolylineMaterialAppearance
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      */
     function Appearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -50,7 +39,7 @@ define([
          *
          * @type Material
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = options.material;
 
@@ -69,7 +58,7 @@ define([
         this._closed = defaultValue(options.closed, false);
     }
 
-    defineProperties(Appearance.prototype, {
+    Object.defineProperties(Appearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *
@@ -209,6 +198,4 @@ define([
 
         return rs;
     };
-
-    return Appearance;
-});
+export default Appearance;

@@ -1,28 +1,13 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/RuntimeError',
-        './AutomaticUniforms',
-        './ContextLimits',
-        './createUniform',
-        './createUniformArray'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        RuntimeError,
-        AutomaticUniforms,
-        ContextLimits,
-        createUniform,
-        createUniformArray) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import AutomaticUniforms from './AutomaticUniforms.js';
+import ContextLimits from './ContextLimits.js';
+import createUniform from './createUniform.js';
+import createUniformArray from './createUniformArray.js';
 
     var nextShaderProgramId = 0;
 
@@ -30,7 +15,18 @@ define([
      * @private
      */
     function ShaderProgram(options) {
-        var modifiedFS = handleUniformPrecisionMismatches(options.vertexShaderText, options.fragmentShaderText);
+        var vertexShaderText = options.vertexShaderText;
+        var fragmentShaderText = options.fragmentShaderText;
+
+        if (typeof spector !== 'undefined') {
+            // The #line statements common in Cesium shaders interfere with the ability of the
+            // SpectorJS to show errors on the correct line. So remove them when SpectorJS
+            // is active.
+            vertexShaderText = vertexShaderText.replace(/^#line/mg, '//#line');
+            fragmentShaderText = fragmentShaderText.replace(/^#line/mg, '//#line');
+        }
+
+        var modifiedFS = handleUniformPrecisionMismatches(vertexShaderText, fragmentShaderText);
 
         this._gl = options.gl;
         this._logShaderCompilation = options.logShaderCompilation;
@@ -83,7 +79,7 @@ define([
         return options.context.shaderCache.replaceShaderProgram(options);
     };
 
-    defineProperties(ShaderProgram.prototype, {
+    Object.defineProperties(ShaderProgram.prototype, {
         /**
          * GLSL source for the shader program's vertex shader.
          * @memberof ShaderProgram.prototype
@@ -447,6 +443,12 @@ define([
             return;
         }
 
+        reinitialize(shader);
+    }
+
+    function reinitialize(shader) {
+        var oldProgram = shader._program;
+
         var gl = shader._gl;
         var program = createAndLinkProgram(gl, shader, shader._debugShaders);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
@@ -462,6 +464,47 @@ define([
         shader._manualUniforms = partitionedUniforms.manualUniforms;
 
         shader.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
+
+        if (oldProgram) {
+            shader._gl.deleteProgram(oldProgram);
+        }
+
+        // If SpectorJS is active, add the hook to make the shader editor work.
+        // https://github.com/BabylonJS/Spector.js/blob/master/documentation/extension.md#shader-editor
+        if (typeof spector !== 'undefined') {
+            shader._program.__SPECTOR_rebuildProgram = function(
+                vertexSourceCode, // The new vertex shader source
+                fragmentSourceCode, // The new fragment shader source
+                onCompiled, // Callback triggered by your engine when the compilation is successful. It needs to send back the new linked program.
+                onError // Callback triggered by your engine in case of error. It needs to send the WebGL error to allow the editor to display the error in the gutter.
+            ) {
+                var originalVS = shader._vertexShaderText;
+                var originalFS = shader._fragmentShaderText;
+
+                // SpectorJS likes to replace `!=` with `! =` for unknown reasons,
+                // and that causes glsl compile failures. So fix that up.
+                var regex = / ! = /g;
+                shader._vertexShaderText = vertexSourceCode.replace(regex, ' != ');
+                shader._fragmentShaderText = fragmentSourceCode.replace(regex, ' != ');
+
+                try {
+                    reinitialize(shader);
+                    onCompiled(shader._program);
+                } catch (e) {
+                    shader._vertexShaderText = originalVS;
+                    shader._fragmentShaderText = originalFS;
+
+                    // Only pass on the WebGL error:
+                    var errorMatcher = /(?:Compile|Link) error: ([^]*)/;
+                    var match = errorMatcher.exec(e.message);
+                    if (match) {
+                        onError(match[1]);
+                    } else {
+                        onError(e.message);
+                    }
+                }
+            };
+        }
     }
 
     ShaderProgram.prototype._bind = function() {
@@ -527,6 +570,4 @@ define([
         this._gl.deleteProgram(this._program);
         return destroyObject(this);
     };
-
-    return ShaderProgram;
-});
+export default ShaderProgram;

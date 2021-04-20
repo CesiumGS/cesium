@@ -1,88 +1,41 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian4',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/GeographicProjection',
-        '../Core/GeographicTilingScheme',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestState',
-        '../Core/RequestType',
-        '../Core/TerrainProvider',
-        '../Core/TileProviderError',
-        '../Core/WebMercatorProjection',
-        '../Core/WebMercatorTilingScheme',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ComputeCommand',
-        '../Renderer/ContextLimits',
-        '../Renderer/MipmapHint',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../Shaders/ReprojectWebMercatorFS',
-        '../Shaders/ReprojectWebMercatorVS',
-        '../ThirdParty/when',
-        './Imagery',
-        './ImagerySplitDirection',
-        './ImageryState',
-        './TileImagery'
-    ], function(
-        Cartesian2,
-        Cartesian4,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        GeographicProjection,
-        GeographicTilingScheme,
-        IndexDatatype,
-        CesiumMath,
-        PixelFormat,
-        Rectangle,
-        Request,
-        RequestState,
-        RequestType,
-        TerrainProvider,
-        TileProviderError,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        Buffer,
-        BufferUsage,
-        ComputeCommand,
-        ContextLimits,
-        MipmapHint,
-        Sampler,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        ReprojectWebMercatorFS,
-        ReprojectWebMercatorVS,
-        when,
-        Imagery,
-        ImagerySplitDirection,
-        ImageryState,
-        TileImagery) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import GeographicProjection from '../Core/GeographicProjection.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Rectangle from '../Core/Rectangle.js';
+import Request from '../Core/Request.js';
+import RequestState from '../Core/RequestState.js';
+import RequestType from '../Core/RequestType.js';
+import TerrainProvider from '../Core/TerrainProvider.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import WebMercatorProjection from '../Core/WebMercatorProjection.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ComputeCommand from '../Renderer/ComputeCommand.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import MipmapHint from '../Renderer/MipmapHint.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import ReprojectWebMercatorFS from '../Shaders/ReprojectWebMercatorFS.js';
+import ReprojectWebMercatorVS from '../Shaders/ReprojectWebMercatorVS.js';
+import when from '../ThirdParty/when.js';
+import Imagery from './Imagery.js';
+import ImagerySplitDirection from './ImagerySplitDirection.js';
+import ImageryState from './ImageryState.js';
+import TileImagery from './TileImagery.js';
 
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
@@ -158,11 +111,13 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+     * @param {Color} [options.colorToAlpha] Color to be used as alpha.
+     * @param {Number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -287,9 +242,23 @@ define([
          * @type {Rectangle}
          */
         this.cutoutRectangle = options.cutoutRectangle;
+
+        /**
+         * Color value that should be set to transparent.
+         *
+         * @type {Color}
+         */
+        this.colorToAlpha = options.colorToAlpha;
+
+        /**
+         * Normalized (0-1) threshold for color-to-alpha.
+         *
+         * @type {Number}
+         */
+        this.colorToAlphaThreshold = defaultValue(options.colorToAlphaThreshold, ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD);
     }
 
-    defineProperties(ImageryLayer.prototype, {
+    Object.defineProperties(ImageryLayer.prototype, {
 
         /**
          * Gets the imagery provider for this layer.
@@ -376,6 +345,14 @@ define([
      * @default TextureMagnificationFilter.LINEAR
      */
     ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default threshold for color-to-alpha if one is not provided
+     * during construction or by the imagery provider.
+     * @type {Number}
+     * @default 0.004
+     */
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -720,9 +697,8 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
-     * @param {Function} [priorityFunction] The priority function used for sorting the imagery request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery, priorityFunction) {
+    ImageryLayer.prototype._requestImagery = function(imagery) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -765,10 +741,9 @@ define([
 
         function doRequest() {
             var request = new Request({
-                throttle : true,
+                throttle : false,
                 throttleByServer : true,
-                type : RequestType.IMAGERY,
-                priorityFunction : priorityFunction
+                type : RequestType.IMAGERY
             });
             imagery.request = request;
             imagery.state = ImageryState.TRANSITIONING;
@@ -789,6 +764,34 @@ define([
         }
 
         doRequest();
+    };
+
+    ImageryLayer.prototype._createTextureWebGL = function(context, imagery) {
+        var sampler = new Sampler({
+            minificationFilter : this.minificationFilter,
+            magnificationFilter : this.magnificationFilter
+        });
+
+        var image = imagery.image;
+
+        if (defined(image.internalFormat)) {
+            return new Texture({
+                context : context,
+                pixelFormat : image.internalFormat,
+                width : image.width,
+                height : image.height,
+                source : {
+                    arrayBufferView : image.bufferView
+                },
+                sampler : sampler
+            });
+        }
+        return new Texture({
+            context : context,
+            source : image,
+            pixelFormat : this._imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
+            sampler : sampler
+        });
     };
 
     /**
@@ -830,32 +833,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sampler = new Sampler({
-            minificationFilter : this.minificationFilter,
-            magnificationFilter : this.magnificationFilter
-        });
-
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture;
-        if (defined(image.internalFormat)) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : image.internalFormat,
-                width : image.width,
-                height : image.height,
-                source : {
-                    arrayBufferView : image.bufferView
-                },
-                sampler : sampler
-            });
-        } else {
-            texture = new Texture({
-                context : context,
-                source : image,
-                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
-                sampler : sampler
-            });
-        }
+        var texture = this._createTextureWebGL(context, imagery);
 
         if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
             imagery.textureWebMercator = texture;
@@ -870,16 +849,16 @@ define([
         return minificationFilter + ':' + magnificationFilter + ':' + maximumAnisotropy;
     }
 
-    function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
-        var minificationFilter = imageryLayer.minificationFilter;
-        var magnificationFilter = imageryLayer.magnificationFilter;
+    ImageryLayer.prototype._finalizeReprojectTexture = function(context, texture) {
+        var minificationFilter = this.minificationFilter;
+        var magnificationFilter = this.magnificationFilter;
         var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
         // Use mipmaps if this texture has power-of-two dimensions.
         // In addition, mipmaps are only generated if the texture filters are both LINEAR.
         if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
             var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy));
+            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy));
             var mipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy);
             var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
             if (!defined(mipmapSamplers)) {
@@ -916,9 +895,7 @@ define([
             }
             texture.sampler = nonMipmapSampler;
         }
-
-        imagery.state = ImageryState.READY;
-    }
+    };
 
     /**
      * Enqueues a command re-projecting a texture to a {@link GeographicProjection} on the next update, if necessary, and generate
@@ -956,7 +933,8 @@ define([
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
-                        finalizeReprojectTexture(that, context, imagery, outputTexture);
+                        that._finalizeReprojectTexture(context, outputTexture);
+                        imagery.state = ImageryState.READY;
                         imagery.releaseReference();
                     }
                 });
@@ -965,7 +943,8 @@ define([
             if (needGeographicProjection) {
                 imagery.texture = texture;
             }
-            finalizeReprojectTexture(this, context, imagery, texture);
+            this._finalizeReprojectTexture(context, texture);
+            imagery.state = ImageryState.READY;
         }
     };
 
@@ -1045,18 +1024,18 @@ define([
         // output pixel.  So we used a grid of 256x256 vertices, because most of our imagery
         // tiles are 256x256.  Fortunately the grid could be created and uploaded to the GPU just once and
         // re-used for all reprojections, so the performance was virtually unchanged from our original fragment
-        // shader approach.  See https://github.com/AnalyticalGraphicsInc/cesium/pull/714.
+        // shader approach.  See https://github.com/CesiumGS/cesium/pull/714.
         //
-        // Over a year later, we noticed (https://github.com/AnalyticalGraphicsInc/cesium/issues/2110)
+        // Over a year later, we noticed (https://github.com/CesiumGS/cesium/issues/2110)
         // that our reprojection code was creating a rare but severe artifact on some GPUs (Intel HD 4600
         // for one).  The problem was that the GLSL sin function on these GPUs had a discontinuity at fine scales in
         // a few places.
         //
         // We solved this by implementing a more reliable sin function based on the CORDIC algorithm
-        // (https://github.com/AnalyticalGraphicsInc/cesium/pull/2111).  Even though this was a fair
+        // (https://github.com/CesiumGS/cesium/pull/2111).  Even though this was a fair
         // amount of code to be executing per vertex, the performance seemed to be pretty good on most GPUs.
         // Unfortunately, on some GPUs, the performance was absolutely terrible
-        // (https://github.com/AnalyticalGraphicsInc/cesium/issues/2258).
+        // (https://github.com/CesiumGS/cesium/issues/2258).
         //
         // So that brings us to our current solution, the one you see here.  Effectively, we compute the Web
         // Mercator texture coordinates on the CPU and store the T coordinate with each vertex (the S coordinate
@@ -1229,6 +1208,4 @@ define([
         var rounded = Math.round(level);
         return rounded | 0;
     }
-
-    return ImageryLayer;
-});
+export default ImageryLayer;

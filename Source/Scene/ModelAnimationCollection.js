@@ -1,28 +1,12 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/Math',
-        './ModelAnimation',
-        './ModelAnimationLoop',
-        './ModelAnimationState'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        DeveloperError,
-        Event,
-        JulianDate,
-        CesiumMath,
-        ModelAnimation,
-        ModelAnimationLoop,
-        ModelAnimationState) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import ModelAnimation from './ModelAnimation.js';
+import ModelAnimationLoop from './ModelAnimationLoop.js';
+import ModelAnimationState from './ModelAnimationState.js';
 
     /**
      * A collection of active model animations.  Access this using {@link Model#activeAnimations}.
@@ -67,7 +51,7 @@ define([
         this._previousTime = undefined;
     }
 
-    defineProperties(ModelAnimationCollection.prototype, {
+    Object.defineProperties(ModelAnimationCollection.prototype, {
         /**
          * The number of animations in the collection.
          *
@@ -167,11 +151,6 @@ define([
             throw new DeveloperError('Either options.name or options.index must be defined.');
         }
 
-        if (defined(options.speedup)) {
-            deprecationWarning('options.speedup', 'options.speedup is deprecated and will be removed in Cesium 1.54. Use options.multiplier instead.');
-            options.multiplier = options.speedup;
-        }
-
         if (defined(options.multiplier) && (options.multiplier <= 0.0)) {
             throw new DeveloperError('options.multiplier must be greater than zero.');
         }
@@ -235,11 +214,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._model._runtime.animations)) {
             throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
-        }
-
-        if (defined(options.speedup)) {
-            deprecationWarning('options.speedup', 'options.speedup is deprecated and will be removed in Cesium 1.54. Use options.multiplier instead.');
-            options.multiplier = options.speedup;
         }
 
         if (defined(options.multiplier) && (options.multiplier <= 0.0)) {
@@ -479,6 +453,4 @@ define([
 
         return animationOccured;
     };
-
-    return ModelAnimationCollection;
-});
+export default ModelAnimationCollection;

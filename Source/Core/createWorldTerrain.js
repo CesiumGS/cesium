@@ -1,15 +1,9 @@
-define([
-        './CesiumTerrainProvider',
-        './defaultValue',
-        './IonResource'
-    ], function(
-        CesiumTerrainProvider,
-        defaultValue,
-        IonResource) {
-    'use strict';
+import CesiumTerrainProvider from './CesiumTerrainProvider.js';
+import defaultValue from './defaultValue.js';
+import IonResource from './IonResource.js';
 
     /**
-     * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/cesiumworldterrain|Cesium World Terrain}.
+     * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.
      *
      * @exports createWorldTerrain
      *
@@ -45,6 +39,4 @@ define([
             requestWaterMask: defaultValue(options.requestWaterMask, false)
         });
     }
-
-    return createWorldTerrain;
-});
+export default createWorldTerrain;

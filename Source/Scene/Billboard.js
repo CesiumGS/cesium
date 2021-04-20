@@ -1,46 +1,22 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Matrix4',
-        '../Core/NearFarScalar',
-        '../Core/Resource',
-        './HeightReference',
-        './HorizontalOrigin',
-        './SceneMode',
-        './SceneTransforms',
-        './VerticalOrigin'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Color,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Matrix4,
-        NearFarScalar,
-        Resource,
-        HeightReference,
-        HorizontalOrigin,
-        SceneMode,
-        SceneTransforms,
-        VerticalOrigin) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Matrix4 from '../Core/Matrix4.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import Resource from '../Core/Resource.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import SceneMode from './SceneMode.js';
+import SceneTransforms from './SceneTransforms.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
@@ -73,7 +49,7 @@ define([
      * @internalConstructor
      * @class
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -195,6 +171,8 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._clusterShow = true;
+        this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
+        this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
 
         this._updateClamping();
     }
@@ -216,7 +194,8 @@ define([
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
     Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
-    Billboard.NUMBER_OF_PROPERTIES = 17;
+    var SDF_INDEX = Billboard.SDF_INDEX = 17;
+    Billboard.NUMBER_OF_PROPERTIES = 18;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -226,7 +205,7 @@ define([
         }
     }
 
-    defineProperties(Billboard.prototype, {
+    Object.defineProperties(Billboard.prototype, {
         /**
          * Determines if this billboard will be shown.  Use this to hide or show a billboard, instead
          * of removing it and re-adding it to the collection.
@@ -944,6 +923,49 @@ define([
                     makeDirty(this, SHOW_INDEX);
                 }
             }
+        },
+
+        /**
+         * The outline color of this Billboard.  Effective only for SDF billboards like Label glyphs.
+         * @memberof Billboard.prototype
+         * @type {Color}
+         * @private
+         */
+        outlineColor : {
+            get : function() {
+                return this._outlineColor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                var outlineColor = this._outlineColor;
+                if (!Color.equals(outlineColor, value)) {
+                    Color.clone(value, outlineColor);
+                    makeDirty(this, SDF_INDEX);
+                }
+            }
+        },
+
+        /**
+         * The outline width of this Billboard in pixels.  Effective only for SDF billboards like Label glyphs.
+         * @memberof Billboard.prototype
+         * @type {Number}
+         * @private
+         */
+        outlineWidth : {
+            get : function() {
+                return this._outlineWidth;
+            },
+            set : function(value) {
+                if (this._outlineWidth !== value) {
+                    this._outlineWidth = value;
+                    makeDirty(this, SDF_INDEX);
+                }
+            }
         }
     });
 
@@ -1376,6 +1398,4 @@ define([
      * @param {String} id The identifier of the image to load.
      * @returns {Image|Canvas|Promise<Image|Canvas>} The image, or a promise that will resolve to an image.
      */
-
-    return Billboard;
-});
+export default Billboard;

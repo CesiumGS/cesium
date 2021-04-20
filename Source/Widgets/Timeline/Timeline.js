@@ -1,22 +1,11 @@
-define([
-        '../../Core/ClockRange',
-        '../../Core/defined',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/JulianDate',
-        '../getElement',
-        './TimelineHighlightRange',
-        './TimelineTrack'
-    ], function(
-        ClockRange,
-        defined,
-        destroyObject,
-        DeveloperError,
-        JulianDate,
-        getElement,
-        TimelineHighlightRange,
-        TimelineTrack) {
-    'use strict';
+import ClockRange from '../../Core/ClockRange.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import JulianDate from '../../Core/JulianDate.js';
+import getElement from '../getElement.js';
+import TimelineHighlightRange from './TimelineHighlightRange.js';
+import TimelineTrack from './TimelineTrack.js';
 
     var timelineWheelDelta = 1e12;
 
@@ -92,13 +81,15 @@ define([
 
         container = getElement(container);
 
+        var ownerDocument = container.ownerDocument;
+
         /**
          * Gets the parent container.
          * @type {Element}
          */
         this.container = container;
 
-        var topDiv = document.createElement('div');
+        var topDiv = ownerDocument.createElement('div');
         topDiv.className = 'cesium-timeline-main';
         container.appendChild(topDiv);
         this._topDiv = topDiv;
@@ -148,8 +139,8 @@ define([
         this._onTouchEnd = createTouchEndCallback(this);
 
         var timeBarEle = this._timeBarEle;
-        document.addEventListener('mouseup', this._onMouseUp, false);
-        document.addEventListener('mousemove', this._onMouseMove, false);
+        ownerDocument.addEventListener('mouseup', this._onMouseUp, false);
+        ownerDocument.addEventListener('mousemove', this._onMouseMove, false);
         timeBarEle.addEventListener('mousedown', this._onMouseDown, false);
         timeBarEle.addEventListener('DOMMouseScroll', this._onMouseWheel, false); // Mozilla mouse wheel
         timeBarEle.addEventListener('mousewheel', this._onMouseWheel, false);
@@ -194,8 +185,9 @@ define([
     Timeline.prototype.destroy = function() {
         this._clock.onTick.removeEventListener(this.updateFromClock, this);
 
-        document.removeEventListener('mouseup', this._onMouseUp, false);
-        document.removeEventListener('mousemove', this._onMouseMove, false);
+        var doc = this.container.ownerDocument;
+        doc.removeEventListener('mouseup', this._onMouseUp, false);
+        doc.removeEventListener('mousemove', this._onMouseMove, false);
 
         var timeBarEle = this._timeBarEle;
         timeBarEle.removeEventListener('mousedown', this._onMouseDown, false);
@@ -790,6 +782,4 @@ define([
         this._lastWidth = width;
         this._lastHeight = height;
     };
-
-    return Timeline;
-});
+export default Timeline;

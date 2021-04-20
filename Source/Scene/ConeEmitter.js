@@ -1,16 +1,7 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/Math'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defineProperties,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import CesiumMath from '../Core/Math.js';
 
     var defaultAngle = CesiumMath.toRadians(30.0);
 
@@ -27,7 +18,7 @@ define([
         this._angle = defaultValue(angle, defaultAngle);
     }
 
-    defineProperties(ConeEmitter.prototype, {
+    Object.defineProperties(ConeEmitter.prototype, {
         /**
          * The angle of the cone in radians.
          * @memberof CircleEmitter.prototype
@@ -68,6 +59,4 @@ define([
         Cartesian3.normalize(particle.velocity, particle.velocity);
         particle.position = Cartesian3.clone(Cartesian3.ZERO, particle.position);
     };
-
-    return ConeEmitter;
-});
+export default ConeEmitter;

@@ -1,30 +1,17 @@
-defineSuite([
-        'Scene/PolylineCollection',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
-        'Scene/Camera',
-        'Scene/Material',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        PolylineCollection,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
-        Camera,
-        Material,
-        SceneMode,
-        createScene) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PolylineCollection } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PolylineCollection', function() {
 
     var scene;
     var polylines;
@@ -329,7 +316,7 @@ defineSuite([
         expect(polylines.length).toEqual(0);
     });
 
-    it('removes a polyline from the updated list when removed', function() {
+    it('removal of polyline from polyLinesToUpdate is deferred until scene is updated', function() {
         var firstPolyline = polylines.add();
         var secondPolyline = polylines.add();
 
@@ -337,23 +324,24 @@ defineSuite([
         secondPolyline.width = 5;
 
         expect(polylines._polylinesToUpdate.length).toEqual(2);
-
         polylines.remove(secondPolyline);
+        polylines.update(scene.frameState);
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
 
-    it('only adds polyline to the update list once', function() {
+    it('removal of polyline from polylinesToUpdate after polyline is made dirty multiple times', function() {
         var firstPolyline = polylines.add();
         var secondPolyline = polylines.add();
 
         firstPolyline.width = 4;
         secondPolyline.width = 5;
-        secondPolyline.width = 7;
+        secondPolyline.width = 7; // Making the polyline dirty twice shouldn't affect the length of `_polylinesToUpdate`
 
         expect(polylines._polylinesToUpdate.length).toEqual(2);
 
         polylines.remove(secondPolyline);
+        polylines.update(scene.frameState);
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });

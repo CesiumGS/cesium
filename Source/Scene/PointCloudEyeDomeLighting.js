@@ -1,48 +1,21 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/FeatureDetection',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Renderer/ClearCommand',
-        '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/Pass',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Scene/BlendingState',
-        '../Shaders/PostProcessStages/PointCloudEyeDomeLighting'
-    ], function(
-        Cartesian3,
-        Color,
-        defined,
-        destroyObject,
-        FeatureDetection,
-        PixelFormat,
-        PrimitiveType,
-        ClearCommand,
-        DrawCommand,
-        Framebuffer,
-        Pass,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        BlendingState,
-        PointCloudEyeDomeLightingShader) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import Pass from '../Renderer/Pass.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import BlendingState from '../Scene/BlendingState.js';
+import StencilConstants from '../Scene/StencilConstants.js';
+import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointCloudEyeDomeLighting.js';
 
     /**
      * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
@@ -60,15 +33,6 @@ define([
 
         this._strength = 1.0;
         this._radius = 1.0;
-    }
-
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
     }
 
     function destroyFramebuffer(processor) {
@@ -100,7 +64,7 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var depthGBuffer = new Texture({
@@ -109,7 +73,7 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var depthTexture = new Texture({
@@ -118,7 +82,7 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.DEPTH_COMPONENT,
             pixelDatatype : PixelDatatype.UNSIGNED_INT,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         processor._framebuffer = new Framebuffer({
@@ -135,7 +99,7 @@ define([
         processor._depthTexture = depthTexture;
     }
 
-    var distancesAndEdlStrengthScratch = new Cartesian3();
+    var distanceAndEdlStrengthScratch = new Cartesian2();
 
     function createCommands(processor, context) {
         var blendFS = PointCloudEyeDomeLightingShader;
@@ -147,11 +111,10 @@ define([
             u_pointCloud_depthGBuffer : function() {
                 return processor._depthGBuffer;
             },
-            u_distancesAndEdlStrength : function() {
-                distancesAndEdlStrengthScratch.x = processor._radius / context.drawingBufferWidth;
-                distancesAndEdlStrengthScratch.y = processor._radius / context.drawingBufferHeight;
-                distancesAndEdlStrengthScratch.z = processor._strength;
-                return distancesAndEdlStrengthScratch;
+            u_distanceAndEdlStrength : function() {
+                distanceAndEdlStrengthScratch.x = processor._radius;
+                distanceAndEdlStrengthScratch.y = processor._strength;
+                return distanceAndEdlStrengthScratch;
             }
         };
 
@@ -160,7 +123,9 @@ define([
             depthMask : true,
             depthTest : {
                 enabled : true
-            }
+            },
+            stencilTest : StencilConstants.setCesium3DTileBit(),
+            stencilMask : StencilConstants.CESIUM_3D_TILE_MASK
         });
 
         processor._drawCommand = context.createViewportQuadCommand(blendFS, {
@@ -222,7 +187,12 @@ define([
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
-                '    gl_FragData[1] = czm_packDepth(gl_FragCoord.z); \n' +
+                '#ifdef LOG_DEPTH\n' +
+                '    czm_writeLogDepth();\n' +
+                '    gl_FragData[1] = czm_packDepth(gl_FragDepthEXT); \n' +
+                '#else\n' +
+                '    gl_FragData[1] = czm_packDepth(gl_FragCoord.z);\n' +
+                '#endif\n' +
                 '}');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
@@ -235,13 +205,13 @@ define([
         return shader;
     }
 
-    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading) {
+    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading, boundingVolume) {
         if (!isSupported(frameState.context)) {
             return;
         }
 
         this._strength = pointCloudShading.eyeDomeLightingStrength;
-        this._radius = pointCloudShading.eyeDomeLightingRadius;
+        this._radius = pointCloudShading.eyeDomeLightingRadius * frameState.pixelRatio;
 
         var dirty = createResources(this, frameState.context);
 
@@ -272,6 +242,8 @@ define([
 
         var clearCommand = this._clearCommand;
         var blendCommand = this._drawCommand;
+
+        blendCommand.boundingVolume = boundingVolume;
 
         // Blend EDL into the main FBO
         commandList.push(blendCommand);
@@ -311,6 +283,4 @@ define([
         destroyFramebuffer(this);
         return destroyObject(this);
     };
-
-    return PointCloudEyeDomeLighting;
-});
+export default PointCloudEyeDomeLighting;

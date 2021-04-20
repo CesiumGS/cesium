@@ -1,12 +1,5 @@
-define([
-        '../../Core/defineProperties',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defineProperties,
-        knockout,
-        createCommand) {
-    'use strict';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link NavigationHelpButton}.
@@ -44,7 +37,7 @@ define([
         knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
     }
 
-    defineProperties(NavigationHelpButtonViewModel.prototype, {
+    Object.defineProperties(NavigationHelpButtonViewModel.prototype, {
         /**
          * Gets the Command that is executed when the button is clicked.
          * @memberof NavigationHelpButtonViewModel.prototype
@@ -81,6 +74,4 @@ define([
             }
         }
     });
-
-    return NavigationHelpButtonViewModel;
-});
+export default NavigationHelpButtonViewModel;

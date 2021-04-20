@@ -1,20 +1,9 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        './PerformanceWatchdogViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        knockout,
-        getElement,
-        PerformanceWatchdogViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import PerformanceWatchdogViewModel from './PerformanceWatchdogViewModel.js';
 
     /**
      * Monitors performance of the application and displays a message if poor performance is detected.
@@ -68,7 +57,7 @@ define([
         this._element = element;
     }
 
-    defineProperties(PerformanceWatchdog.prototype, {
+    Object.defineProperties(PerformanceWatchdog.prototype, {
         /**
          * Gets the parent container.
          * @memberof PerformanceWatchdog.prototype
@@ -114,6 +103,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return PerformanceWatchdog;
-});
+export default PerformanceWatchdog;

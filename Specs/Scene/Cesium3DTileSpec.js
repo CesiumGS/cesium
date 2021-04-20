@@ -1,32 +1,20 @@
-defineSuite([
-        'Scene/Cesium3DTile',
-        'Core/Cartesian3',
-        'Core/clone',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Core/Transforms',
-        'Scene/Cesium3DTileRefine',
-        'Scene/TileBoundingRegion',
-        'Scene/TileOrientedBoundingBox',
-        'Specs/createScene'
-    ], function(
-        Cesium3DTile,
-        Cartesian3,
-        clone,
-        HeadingPitchRoll,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Rectangle,
-        Transforms,
-        Cesium3DTileRefine,
-        TileBoundingRegion,
-        TileOrientedBoundingBox,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { clone } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
+import { Cesium3DTileRefine } from '../../Source/Cesium.js';
+import { Cesium3DTilesetHeatmap } from '../../Source/Cesium.js';
+import { TileBoundingRegion } from '../../Source/Cesium.js';
+import { TileOrientedBoundingBox } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/Cesium3DTile', function() {
 
     var tileWithBoundingSphere = {
         geometricError : 1,
@@ -116,7 +104,8 @@ defineSuite([
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
         modelMatrix : Matrix4.IDENTITY,
-        _geometricError : 2
+        _geometricError : 2,
+        _heatmap : new Cesium3DTilesetHeatmap()
     };
 
     var centerLongitude = -1.31968;
@@ -235,6 +224,33 @@ defineSuite([
             expect(tile.boundingVolume).toEqual(obb);
         });
 
+        it('does not crash for bounding box with 0 volume', function() {
+            // Create a copy of the tile with bounding box.
+            var tileWithBoundingBox0Volume = JSON.parse(JSON.stringify(tileWithBoundingBox));
+            // Generate all the combinations of missing axes.
+            var boxes = [];
+            for (var x = 0; x < 2; ++x) {
+                for (var y = 0; y < 2; ++y) {
+                    for (var z = 0; z < 2; ++z) {
+                        boxes.push([0.0, 0.0, 0.0, x, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, z]);
+                    }
+                }
+            }
+
+            for (var i = 0; i < boxes.length; ++i) {
+                var box = boxes[i];
+
+                tileWithBoundingBox0Volume.boundingVolume.box = box;
+
+                var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox0Volume, undefined);
+                expect(tile.boundingVolume).toBeDefined();
+                var center = new Cartesian3(box[0], box[1], box[2]);
+                var halfAxes = Matrix3.fromArray(box, 3);
+                var obb = new TileOrientedBoundingBox(center, halfAxes);
+                expect(tile.boundingVolume).toEqual(obb);
+            }
+        });
+
         it('can have a content oriented bounding box', function() {
             var box = tileWithContentBoundingBox.boundingVolume.box;
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithContentBoundingBox, undefined);
@@ -332,26 +348,73 @@ defineSuite([
 
         it('can be a bounding region', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('can be an oriented bounding box', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('can be a bounding sphere', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('creates debug bounding volume for viewer request volume', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithViewerRequestVolume, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugViewerRequestVolume).toBeDefined();
         });
     });
+
+    it('updates priority', function() {
+        var tile1 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
+        tile1._priorityHolder = tile1;
+        tile1._foveatedFactor = 0.0;
+        tile1._distanceToCamera = 1.0;
+        tile1._depth = 0.0;
+        tile1._priorityProgressiveResolution = true;
+
+        var tile2 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
+        tile2._priorityHolder = tile1;
+        tile2._foveatedFactor = 1.0; // foveatedFactor (when considered for priority in certain modes) is actually 0 since its linked up to tile1
+        tile2._distanceToCamera = 0.0;
+        tile2._depth = 1.0;
+        tile2._priorityProgressiveResolution = true;
+
+        mockTileset._minimumPriority = { depth: 0.0, distance: 0.0, foveatedFactor: 0.0 };
+        mockTileset._maximumPriority = { depth: 1.0, distance: 1.0, foveatedFactor: 1.0 };
+
+        tile1.updatePriority();
+        tile2.updatePriority();
+
+        var nonPreloadFlightPenalty = 10000000000.0;
+        var tile1ExpectedPriority = nonPreloadFlightPenalty + 0.0;
+        var tile2ExpectedPriority = nonPreloadFlightPenalty + 1.0;
+        expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
+        expect(CesiumMath.equalsEpsilon(tile2._priority, tile2ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
+
+        // Penalty for not being a progressive resolution
+        tile2._priorityProgressiveResolution = false;
+        tile2.updatePriority();
+        var nonProgressiveResoutionPenalty = 100000000.0;
+        expect(tile2._priority).toBeGreaterThan(nonProgressiveResoutionPenalty);
+        tile2._priorityProgressiveResolution = true;
+
+        // Penalty for being a foveated deferral
+        tile2.priorityDeferred = true;
+        tile2.updatePriority();
+        var foveatedDeferralPenalty = 10000000.0;
+        expect(tile2._priority).toBeGreaterThanOrEqualTo(foveatedDeferralPenalty);
+        tile2._priorityDeferred = false;
+    });
+
 }, 'WebGL');

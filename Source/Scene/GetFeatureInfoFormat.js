@@ -1,16 +1,8 @@
-define([
-        '../Core/Cartographic',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/RuntimeError',
-        './ImageryLayerFeatureInfo'
-    ], function(
-        Cartographic,
-        defined,
-        DeveloperError,
-        RuntimeError,
-        ImageryLayerFeatureInfo) {
-    'use strict';
+import Cartographic from '../Core/Cartographic.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import ImageryLayerFeatureInfo from './ImageryLayerFeatureInfo.js';
 
     /**
      * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
@@ -328,6 +320,4 @@ define([
         featureInfo.data = text;
         return [featureInfo];
     }
-
-    return GetFeatureInfoFormat;
-});
+export default GetFeatureInfoFormat;

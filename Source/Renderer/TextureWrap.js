@@ -1,10 +1,4 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * @private
@@ -20,6 +14,4 @@ define([
                     (textureWrap === TextureWrap.MIRRORED_REPEAT));
         }
     };
-
-    return freezeObject(TextureWrap);
-});
+export default Object.freeze(TextureWrap);

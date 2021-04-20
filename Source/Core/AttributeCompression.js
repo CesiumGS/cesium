@@ -1,18 +1,9 @@
-define([
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     var RIGHT_SHIFT = 1.0 / 256.0;
     var LEFT_SHIFT = 256.0;
@@ -348,7 +339,7 @@ define([
      * @param {Uint16Array} vBuffer The buffer view of v values.
      * @param {Uint16Array} [heightBuffer] The buffer view of height values.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh|quantized-mesh-1.0 terrain format}
+     * @see {@link https://github.com/CesiumGS/quantized-mesh|quantized-mesh-1.0 terrain format}
      */
     AttributeCompression.zigZagDeltaDecode = function(uBuffer, vBuffer, heightBuffer) {
         //>>includeStart('debug', pragmas.debug);
@@ -379,6 +370,4 @@ define([
             }
         }
     };
-
-    return AttributeCompression;
-});
+export default AttributeCompression;

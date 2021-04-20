@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Describes how to draw a label.
@@ -36,6 +31,4 @@ define([
          */
         FILL_AND_OUTLINE : 2
     };
-
-    return freezeObject(LabelStyle);
-});
+export default Object.freeze(LabelStyle);

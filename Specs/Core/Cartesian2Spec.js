@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/Cartesian2',
-        'Core/Math',
-        'Specs/createPackableArraySpecs',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian2,
-        CesiumMath,
-        createPackableArraySpecs,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import createPackableArraySpecs from '../createPackableArraySpecs.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/Cartesian2', function() {
 
     it('construct with default values', function() {
         var cartesian = new Cartesian2();
@@ -848,5 +843,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
-    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4]);
+    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4], 2);
 });

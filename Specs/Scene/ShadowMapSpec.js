@@ -1,68 +1,37 @@
-defineSuite([
-        'Scene/ShadowMap',
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/ComponentDatatype',
-        'Core/EllipsoidTerrainProvider',
-        'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/HeightmapTerrainData',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/OrthographicOffCenterFrustum',
-        'Core/PixelFormat',
-        'Core/Transforms',
-        'Core/WebGLConstants',
-        'Renderer/Context',
-        'Renderer/Framebuffer',
-        'Renderer/PixelDatatype',
-        'Renderer/Texture',
-        'Scene/Camera',
-        'Scene/Globe',
-        'Scene/Model',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/ShadowMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        ShadowMap,
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        ComponentDatatype,
-        EllipsoidTerrainProvider,
-        GeometryInstance,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        HeightmapTerrainData,
-        JulianDate,
-        CesiumMath,
-        OrthographicOffCenterFrustum,
-        PixelFormat,
-        Transforms,
-        WebGLConstants,
-        Context,
-        Framebuffer,
-        PixelDatatype,
-        Texture,
-        Camera,
-        Globe,
-        Model,
-        PerInstanceColorAppearance,
-        Primitive,
-        ShadowMode,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Context } from '../../Source/Cesium.js';
+import { Framebuffer } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { DirectionalLight } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { ShadowMap } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/ShadowMap', function() {
 
     var scene;
     var sunShadowMap;
@@ -659,6 +628,50 @@ defineSuite([
         scene.shadowMap = undefined;
     });
 
+    it('uses scene\'s light source', function() {
+        var originalLight = scene.light;
+
+        box.show = true;
+        floor.show = true;
+
+        var lightDirectionAbove = new Cartesian3(-0.22562675028973597, 0.8893549458095356, -0.3976686433675793); // Light pointing straight above
+        var lightDirectionAngle = new Cartesian3(0.14370705890272903, 0.9062077731227641, -0.3976628636840613); // Light at an angle
+
+        var center = new Cartesian3.fromRadians(longitude, latitude, height);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
+
+        // Use the default shadow map which uses the scene's light source
+        scene.light = new DirectionalLight({
+            direction : lightDirectionAbove
+        });
+        scene.shadowMap = sunShadowMap;
+
+        // Render without shadows
+        scene.shadowMap.enabled = false;
+
+        var unshadowedColor;
+        renderAndCall(function(rgba) {
+            unshadowedColor = rgba;
+            expect(rgba).not.toEqual(backgroundColor);
+        });
+
+        // Render with shadows
+        scene.shadowMap.enabled = true;
+        renderAndCall(function(rgba) {
+            expect(rgba).not.toEqual(backgroundColor);
+            expect(rgba).not.toEqual(unshadowedColor);
+        });
+
+        // Change the light so that the shadows are no longer pointing straight down
+        scene.light = new DirectionalLight({
+            direction : lightDirectionAngle
+        });
+        renderAndExpect(unshadowedColor);
+
+        scene.shadowMap = undefined;
+        scene.light = originalLight;
+    });
+
     it('single cascade shadow map', function() {
         box.show = true;
         floor.show = true;
@@ -722,14 +735,16 @@ defineSuite([
             // Render without shadows
             scene.shadowMap.enabled = false;
             var unshadowedColor;
-            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
+            //eslint-disable-next-line no-loop-func
+            renderAndCall(function(rgba) {
                 unshadowedColor = rgba;
                 expect(rgba).not.toEqual(backgroundColor);
             });
 
             // Render with shadows
             scene.shadowMap.enabled = true;
-            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
+            //eslint-disable-next-line no-loop-func
+            renderAndCall(function(rgba) {
                 expect(rgba).not.toEqual(backgroundColor);
                 expect(rgba).not.toEqual(unshadowedColor);
             });

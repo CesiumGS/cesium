@@ -1,18 +1,8 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './CompositeProperty',
-        './Property'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        CompositeProperty,
-        Property) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CompositeProperty from './CompositeProperty.js';
+import Property from './Property.js';
 
     /**
      * A {@link CompositeProperty} which is also a {@link MaterialProperty}.
@@ -26,7 +16,7 @@ define([
         this._composite.definitionChanged.addEventListener(CompositeMaterialProperty.prototype._raiseDefinitionChanged, this);
     }
 
-    defineProperties(CompositeMaterialProperty.prototype, {
+    Object.defineProperties(CompositeMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -127,6 +117,4 @@ define([
     CompositeMaterialProperty.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
-
-    return CompositeMaterialProperty;
-});
+export default CompositeMaterialProperty;

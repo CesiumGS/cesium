@@ -1,34 +1,19 @@
-defineSuite([
-        'DataSources/ModelGraphics',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Quaternion',
-        'DataSources/ConstantProperty',
-        'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag',
-        'Scene/ClippingPlaneCollection',
-        'Scene/ColorBlendMode',
-        'Scene/HeightReference',
-        'Scene/ShadowMode'
-    ], function(
-        ModelGraphics,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        Quaternion,
-        ConstantProperty,
-        NodeTransformationProperty,
-        PropertyBag,
-        ClippingPlaneCollection,
-        ColorBlendMode,
-        HeightReference,
-        ShadowMode) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { ModelGraphics } from '../../Source/Cesium.js';
+import { NodeTransformationProperty } from '../../Source/Cesium.js';
+import { PropertyBag } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+
+describe('DataSources/ModelGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -57,6 +42,9 @@ defineSuite([
                     rotation : new Quaternion(0.5, 0.5, 0.5, 0.5),
                     scale : Cartesian3.UNIT_X
                 }
+            },
+            articulations : {
+                'articulation1 stage1' : 45
             }
         };
 
@@ -82,6 +70,7 @@ defineSuite([
         expect(model.clampAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
+        expect(model.articulations).toBeInstanceOf(PropertyBag);
 
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
@@ -110,6 +99,14 @@ defineSuite([
         actualNodeTransformations = JSON.parse(JSON.stringify(actualNodeTransformations));
         expectedNodeTransformations = JSON.parse(JSON.stringify(expectedNodeTransformations));
         expect(actualNodeTransformations).toEqual(expectedNodeTransformations);
+
+        var actualArticulations = model.articulations.getValue(new JulianDate());
+        var expectedArticulations = options.articulations;
+
+        // by default toEqual requires constructors to match.  for the purposes of this test, we only care about the structure.
+        actualArticulations = JSON.parse(JSON.stringify(actualArticulations));
+        expectedArticulations = JSON.parse(JSON.stringify(expectedArticulations));
+        expect(actualArticulations).toEqual(expectedArticulations);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -143,6 +140,10 @@ defineSuite([
                 scale : Cartesian3.UNIT_Z
             })
         };
+        source.articulations = {
+            'a1 s1' : 10,
+            'a2 s2' : 20
+        };
 
         var target = new ModelGraphics();
         target.merge(source);
@@ -167,6 +168,7 @@ defineSuite([
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.clampAnimations).toBe(source.clampAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
+        expect(target.articulations).toEqual(source.articulations);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -193,6 +195,10 @@ defineSuite([
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
         };
+        source.articulations = {
+            'a1 s1' : 10,
+            'a2 s2' : 20
+        };
 
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
@@ -216,6 +222,10 @@ defineSuite([
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
         });
+        var articulations = new PropertyBag({
+            'a1 s1' : 10,
+            'a2 s2' : 20
+        });
 
         var target = new ModelGraphics();
         target.uri = uri;
@@ -238,6 +248,7 @@ defineSuite([
         target.runAnimations = runAnimations;
         target.clampAnimations = clampAnimations;
         target.nodeTransformations = nodeTransformations;
+        target.articulations = articulations;
 
         target.merge(source);
 
@@ -261,6 +272,7 @@ defineSuite([
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.clampAnimations).toBe(clampAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
+        expect(target.articulations).toBe(articulations);
     });
 
     it('clone works', function() {
@@ -288,6 +300,10 @@ defineSuite([
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
         };
+        source.articulations = {
+            'a1 s1' : 10,
+            'a2 s2' : 20
+        };
 
         var result = source.clone();
         expect(result.uri).toBe(source.uri);
@@ -310,6 +326,7 @@ defineSuite([
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.clampAnimations).toBe(source.clampAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
+        expect(result.articulations).toEqual(source.articulations);
     });
 
     it('merge throws if source undefined', function() {

@@ -1,8 +1,6 @@
-defineSuite([
-        'Widgets/FullscreenButton/FullscreenButton'
-    ], function(
-        FullscreenButton) {
-    'use strict';
+import { FullscreenButton } from '../../../Source/Cesium.js';
+
+describe('Widgets/FullscreenButton/FullscreenButton', function() {
 
     it('constructor sets default values', function() {
         var fullscreenButton = new FullscreenButton(document.body);

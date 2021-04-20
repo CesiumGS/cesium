@@ -1,20 +1,11 @@
-define([
-        '../ThirdParty/when',
-        './Check',
-        './CompressedTextureBuffer',
-        './defined',
-        './PixelFormat',
-        './Resource',
-        './RuntimeError'
-    ], function(
-        when,
-        Check,
-        CompressedTextureBuffer,
-        defined,
-        PixelFormat,
-        Resource,
-        RuntimeError) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import CompressedTextureBuffer from './CompressedTextureBuffer.js';
+import defined from './defined.js';
+import PixelFormat from './PixelFormat.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * Asynchronously loads and parses the given URL to a KTX file or parses the raw binary data of a KTX file.
@@ -93,6 +84,7 @@ define([
 
     var fileIdentifier = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
     var endiannessTest = 0x04030201;
+    var faceOrder = ['positiveX', 'negativeX', 'positiveY', 'negativeY', 'positiveZ', 'negativeZ'];
 
     var sizeOfUint32 = 4;
 
@@ -100,7 +92,8 @@ define([
         var byteBuffer = new Uint8Array(data);
 
         var isKTX = true;
-        for (var i = 0; i < fileIdentifier.length; ++i) {
+        var i;
+        for (i = 0; i < fileIdentifier.length; ++i) {
             if (fileIdentifier[i] !== byteBuffer[i]) {
                 isKTX = false;
                 break;
@@ -170,9 +163,9 @@ define([
 
         // Some tools use a sized internal format.
         // See table 2: https://www.opengl.org/sdk/docs/man/html/glTexImage2D.xhtml
-        if (glInternalFormat === 0x8051) {         // GL_RGB8
+        if (glInternalFormat === WebGLConstants.RGB8) {
             glInternalFormat = PixelFormat.RGB;
-        } else if (glInternalFormat === 0x8058) {  // GL_RGBA8
+        } else if (glInternalFormat === WebGLConstants.RGBA8) {
             glInternalFormat = PixelFormat.RGBA;
         }
 
@@ -190,6 +183,8 @@ define([
             if (glFormat !== 0) {
                 throw new RuntimeError('glFormat must be zero when the texture is compressed.');
             }
+        } else if (glType !== WebGLConstants.UNSIGNED_BYTE) {
+            throw new RuntimeError('Only unsigned byte buffers are supported.');
         } else if (glBaseInternalFormat !== glFormat) {
             throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
         }
@@ -201,20 +196,34 @@ define([
         if (numberOfArrayElements !== 0) {
             throw new RuntimeError('Texture arrays are unsupported.');
         }
-        if (numberOfFaces !== 1) {
-            throw new RuntimeError('Cubemaps are unsupported.');
+
+        var offset = texture.byteOffset;
+        var mipmaps = new Array(numberOfMipmapLevels);
+        for (i = 0; i < numberOfMipmapLevels; ++i) {
+            var level = mipmaps[i] = {};
+            for (var j = 0; j < numberOfFaces; ++j) {
+                var width = pixelWidth >> i;
+                var height = pixelHeight >> i;
+                var levelSize = PixelFormat.isCompressedFormat(glInternalFormat) ?
+                                PixelFormat.compressedTextureSizeInBytes(glInternalFormat, width, height) :
+                                PixelFormat.textureSizeInBytes(glInternalFormat, glType, width, height);
+                var levelBuffer = new Uint8Array(texture.buffer, offset, levelSize);
+                level[faceOrder[j]] = new CompressedTextureBuffer(glInternalFormat, width, height, levelBuffer);
+                offset += levelSize;
+            }
+            offset += 3 - ((offset + 3) % 4) + 4;
         }
 
-        // Only use the level 0 mipmap
-        if (numberOfMipmapLevels > 1) {
-            var levelSize = PixelFormat.isCompressedFormat(glInternalFormat) ?
-                PixelFormat.compressedTextureSizeInBytes(glInternalFormat, pixelWidth, pixelHeight) :
-                PixelFormat.textureSizeInBytes(glInternalFormat, pixelWidth, pixelHeight);
-            texture = new Uint8Array(texture.buffer, texture.byteOffset, levelSize);
+        var result = mipmaps;
+        if (numberOfFaces === 1) {
+            for (i = 0; i < numberOfMipmapLevels; ++i) {
+                result[i] = result[i][faceOrder[0]];
+            }
+        }
+        if (numberOfMipmapLevels === 1) {
+            result = result[0];
         }
 
-        return new CompressedTextureBuffer(glInternalFormat, pixelWidth, pixelHeight, texture);
+        return result;
     }
-
-    return loadKTX;
-});
+export default loadKTX;

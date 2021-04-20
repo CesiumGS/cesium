@@ -1,26 +1,13 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        './PositionProperty',
-        './Property',
-        './SampledProperty'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ReferenceFrame,
-        PositionProperty,
-        Property,
-        SampledProperty) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import PositionProperty from './PositionProperty.js';
+import Property from './Property.js';
+import SampledProperty from './SampledProperty.js';
 
     /**
      * A {@link SampledProperty} which is also a {@link PositionProperty}.
@@ -52,7 +39,7 @@ define([
         }, this);
     }
 
-    defineProperties(SampledPositionProperty.prototype, {
+    Object.defineProperties(SampledPositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -210,12 +197,8 @@ define([
      */
     SampledPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(referenceFrame)) {
-            throw new DeveloperError('referenceFrame is required.');
-        }
+        Check.defined('time', time);
+        Check.defined('referenceFrame', referenceFrame);
         //>>includeEnd('debug');
 
         result = this._property.getValue(time, result);
@@ -278,6 +261,25 @@ define([
     };
 
     /**
+     * Removes a sample at the given time, if present.
+     *
+     * @param {JulianDate} time The sample time.
+     * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
+     */
+    SampledPositionProperty.prototype.removeSample = function(time) {
+        this._property.removeSample(time);
+    };
+
+    /**
+     * Removes all samples for the given time interval.
+     *
+     * @param {TimeInterval} time The time interval for which to remove all samples.
+     */
+    SampledPositionProperty.prototype.removeSamples = function(timeInterval) {
+        this._property.removeSamples(timeInterval);
+    };
+
+    /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      *
@@ -290,6 +292,4 @@ define([
                 Property.equals(this._property, other._property) && //
                 this._referenceFrame === other._referenceFrame);
     };
-
-    return SampledPositionProperty;
-});
+export default SampledPositionProperty;

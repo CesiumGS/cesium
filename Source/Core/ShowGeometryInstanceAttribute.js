@@ -1,16 +1,7 @@
-define([
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
@@ -52,7 +43,7 @@ define([
         this.value = ShowGeometryInstanceAttribute.toValue(show);
     }
 
-    defineProperties(ShowGeometryInstanceAttribute.prototype, {
+    Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
          * {@link ColorGeometryInstanceAttribute#value}.
@@ -129,6 +120,4 @@ define([
         result[0] = show;
         return result;
     };
-
-    return ShowGeometryInstanceAttribute;
-});
+export default ShowGeometryInstanceAttribute;

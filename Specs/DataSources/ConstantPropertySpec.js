@@ -1,12 +1,8 @@
-defineSuite([
-        'DataSources/ConstantProperty',
-        'Core/Cartesian3',
-        'Core/JulianDate'
-    ], function(
-        ConstantProperty,
-        Cartesian3,
-        JulianDate) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/ConstantProperty', function() {
 
     var time = JulianDate.now();
 

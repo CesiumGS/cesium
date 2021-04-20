@@ -1,10 +1,4 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * Enumerates all possible filters used when minifying WebGL textures.
@@ -91,6 +85,4 @@ define([
                     (textureMinificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         }
     };
-
-    return freezeObject(TextureMinificationFilter);
-});
+export default Object.freeze(TextureMinificationFilter);

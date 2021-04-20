@@ -1,36 +1,14 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
-    ], function(
-        Color,
-        defined,
-        destroyObject,
-        PixelFormat,
-        ClearCommand,
-        Framebuffer,
-        PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Renderbuffer from '../Renderer/Renderbuffer.js';
+import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
 
     /**
      * @private
@@ -92,12 +70,7 @@ define([
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : pixelDatatype,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         this._idTexture = new Texture({
@@ -106,12 +79,7 @@ define([
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         if (context.depthTexture) {
@@ -121,12 +89,7 @@ define([
                 height : height,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
+                sampler : Sampler.NEAREST
             });
             this._depthStencilIdTexture = new Texture({
                 context : context,
@@ -134,12 +97,7 @@ define([
                 height : height,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
+                sampler : Sampler.NEAREST
             });
         } else {
             this._depthStencilRenderbuffer = new Renderbuffer({
@@ -203,6 +161,4 @@ define([
         destroyResources(this);
         return destroyObject(this);
     };
-
-    return SceneFramebuffer;
-});
+export default SceneFramebuffer;

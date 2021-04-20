@@ -1,36 +1,17 @@
-define([
-        '../ThirdParty/when',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './IndexDatatype',
-        './Intersections2D',
-        './Math',
-        './OrientedBoundingBox',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh'
-    ], function(
-        when,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        Intersections2D,
-        CesiumMath,
-        OrientedBoundingBox,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
+import Intersections2D from './Intersections2D.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -107,6 +88,7 @@ define([
      *
      * @see TerrainData
      * @see HeightmapTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
@@ -199,7 +181,7 @@ define([
         this._mesh = undefined;
     }
 
-    defineProperties(QuantizedMeshTerrainData.prototype, {
+    Object.defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
          * An array of credits for this tile.
          * @memberof QuantizedMeshTerrainData.prototype
@@ -220,6 +202,18 @@ define([
         waterMask : {
             get : function() {
                 return this._waterMask;
+            }
+        },
+
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
+            }
+        },
+
+        canUpsample : {
+            get : function() {
+                return defined(this._mesh);
             }
         }
     });
@@ -306,35 +300,40 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
-            var vertexCount = that._quantizedVertices.length / 3;
-            vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
+            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+            var vertexCount = vertexCountWithoutSkirts + that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
             var vertices = new Float32Array(result.vertices);
             var rtc = result.center;
             var minimumHeight = result.minimumHeight;
             var maximumHeight = result.maximumHeight;
-            var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
-            var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
-            var occlusionPoint = that._horizonOcclusionPoint;
+            var boundingSphere = defaultValue(BoundingSphere.clone(result.boundingSphere), that._boundingSphere);
+            var obb = defaultValue(OrientedBoundingBox.clone(result.orientedBoundingBox), that._orientedBoundingBox);
+            var occludeePointInScaledSpace = defaultValue(Cartesian3.clone(result.occludeePointInScaledSpace), that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
-            that._skirtIndex = result.skirtIndex;
-            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
-
+            // Clone complex result objects because the transfer from the web worker
+            // has stripped them down to JSON-style objects.
             that._mesh = new TerrainMesh(
                     rtc,
                     vertices,
                     indicesTypedArray,
+                    result.indexCountWithoutSkirts,
+                    vertexCountWithoutSkirts,
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
-                    occlusionPoint,
+                    occludeePointInScaledSpace,
                     stride,
                     obb,
                     terrainEncoding,
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._quantizedVertices = undefined;
@@ -413,9 +412,9 @@ define([
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            indexCountWithoutSkirts : mesh.indexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
@@ -498,6 +497,14 @@ define([
         return interpolateMeshHeight(this, u, v);
     };
 
+    function pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2) {
+        var minU = Math.min(u0, u1, u2);
+        var maxU = Math.max(u0, u1, u2);
+        var minV = Math.min(v0, v1, v2);
+        var maxV = Math.max(v0, v1, v2);
+        return (u >= minU && u <= maxU && v >= minV && v <= maxV);
+    }
+
     var texCoordScratch0 = new Cartesian2();
     var texCoordScratch1 = new Cartesian2();
     var texCoordScratch2 = new Cartesian2();
@@ -517,12 +524,14 @@ define([
             var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
             var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
 
-            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
-            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
-                var h0 = encoding.decodeHeight(vertices, i0);
-                var h1 = encoding.decodeHeight(vertices, i1);
-                var h2 = encoding.decodeHeight(vertices, i2);
-                return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+            if (pointInBoundingBox(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y)) {
+                var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
+                if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                    var h0 = encoding.decodeHeight(vertices, i0);
+                    var h1 = encoding.decodeHeight(vertices, i1);
+                    var h2 = encoding.decodeHeight(vertices, i2);
+                    return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+                }
             }
         }
 
@@ -549,12 +558,14 @@ define([
             var v1 = vBuffer[i1];
             var v2 = vBuffer[i2];
 
-            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
-            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
-                var quantizedHeight = barycentric.x * heightBuffer[i0] +
-                                      barycentric.y * heightBuffer[i1] +
-                                      barycentric.z * heightBuffer[i2];
-                return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
+            if (pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2)) {
+                var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
+                if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                    var quantizedHeight = barycentric.x * heightBuffer[i0] +
+                                          barycentric.y * heightBuffer[i1] +
+                                          barycentric.z * heightBuffer[i2];
+                    return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
+                }
             }
         }
 
@@ -612,6 +623,4 @@ define([
     QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function() {
         return this._createdByUpsampling;
     };
-
-    return QuantizedMeshTerrainData;
-});
+export default QuantizedMeshTerrainData;

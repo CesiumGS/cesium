@@ -1,20 +1,9 @@
-define([
-        '../Core/Clock',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/EventHelper',
-        '../Core/JulianDate',
-        '../ThirdParty/knockout'
-    ], function(
-        Clock,
-        defined,
-        defineProperties,
-        destroyObject,
-        EventHelper,
-        JulianDate,
-        knockout) {
-    'use strict';
+import Clock from '../Core/Clock.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import EventHelper from '../Core/EventHelper.js';
+import JulianDate from '../Core/JulianDate.js';
+import knockout from '../ThirdParty/knockout.js';
 
     /**
      * A view model which exposes a {@link Clock} for user interfaces.
@@ -144,7 +133,7 @@ define([
         knockout.track(this, ['systemTime', 'startTime', 'stopTime', 'currentTime', 'multiplier', 'clockStep', 'clockRange', 'canAnimate', 'shouldAnimate']);
     }
 
-    defineProperties(ClockViewModel.prototype, {
+    Object.defineProperties(ClockViewModel.prototype, {
         /**
          * Gets the underlying Clock.
          * @memberof ClockViewModel.prototype
@@ -192,6 +181,4 @@ define([
 
         destroyObject(this);
     };
-
-    return ClockViewModel;
-});
+export default ClockViewModel;

@@ -1,20 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        './Property'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Event,
-        ReferenceFrame,
-        Property) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import Property from './Property.js';
 
     /**
      * This is a temporary class for scaling position properties to the WGS84 surface.
@@ -28,7 +17,7 @@ define([
         this.setValue(value);
     }
 
-    defineProperties(ScaledPositionProperty.prototype, {
+    Object.defineProperties(ScaledPositionProperty.prototype, {
         isConstant : {
             get : function() {
                 return Property.isConstant(this._value);
@@ -91,6 +80,4 @@ define([
     ScaledPositionProperty.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
-
-    return ScaledPositionProperty;
-});
+export default ScaledPositionProperty;

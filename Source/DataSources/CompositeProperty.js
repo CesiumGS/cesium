@@ -1,20 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/EventHelper',
-        '../Core/TimeIntervalCollection',
-        './Property'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        EventHelper,
-        TimeIntervalCollection,
-        Property) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import EventHelper from '../Core/EventHelper.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import Property from './Property.js';
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {
         function callback() {
@@ -70,7 +59,7 @@ define([
         this._intervals.changedEvent.addEventListener(CompositeProperty.prototype._intervalsChanged, this);
     }
 
-    defineProperties(CompositeProperty.prototype, {
+    Object.defineProperties(CompositeProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -152,6 +141,4 @@ define([
         subscribeAll(this, this._eventHelper, this._definitionChanged, this._intervals);
         this._definitionChanged.raiseEvent(this);
     };
-
-    return CompositeProperty;
-});
+export default CompositeProperty;

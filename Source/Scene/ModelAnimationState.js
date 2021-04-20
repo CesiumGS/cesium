@@ -1,14 +1,8 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * @private
      */
-    return freezeObject({
+export default Object.freeze({
         STOPPED : 0,
         ANIMATING : 1
     });
-});

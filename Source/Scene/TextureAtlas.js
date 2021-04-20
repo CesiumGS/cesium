@@ -1,34 +1,16 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/PixelFormat',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Renderer/Framebuffer',
-        '../Renderer/Texture',
-        '../ThirdParty/when'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        PixelFormat,
-        Resource,
-        RuntimeError,
-        Framebuffer,
-        Texture,
-        when) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import Texture from '../Renderer/Texture.js';
+import when from '../ThirdParty/when.js';
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
     function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
@@ -90,7 +72,7 @@ define([
         this._root = undefined;
     }
 
-    defineProperties(TextureAtlas.prototype, {
+    Object.defineProperties(TextureAtlas.prototype, {
         /**
          * The amount of spacing between adjacent images in pixels.
          * @memberof TextureAtlas.prototype
@@ -469,6 +451,4 @@ define([
      * @param {String} id The identifier of the image to load.
      * @returns {Image|Promise} The image, or a promise that will resolve to an image.
      */
-
-    return TextureAtlas;
-});
+export default TextureAtlas;

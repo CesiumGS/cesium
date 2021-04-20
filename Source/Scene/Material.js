@@ -1,84 +1,47 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/isArray',
-        '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Resource',
-        '../Renderer/CubeMap',
-        '../Renderer/Texture',
-        '../Shaders/Materials/BumpMapMaterial',
-        '../Shaders/Materials/CheckerboardMaterial',
-        '../Shaders/Materials/DotMaterial',
-        '../Shaders/Materials/ElevationContourMaterial',
-        '../Shaders/Materials/ElevationRampMaterial',
-        '../Shaders/Materials/FadeMaterial',
-        '../Shaders/Materials/GridMaterial',
-        '../Shaders/Materials/NormalMapMaterial',
-        '../Shaders/Materials/PolylineArrowMaterial',
-        '../Shaders/Materials/PolylineDashMaterial',
-        '../Shaders/Materials/PolylineGlowMaterial',
-        '../Shaders/Materials/PolylineOutlineMaterial',
-        '../Shaders/Materials/RimLightingMaterial',
-        '../Shaders/Materials/SlopeRampMaterial',
-        '../Shaders/Materials/StripeMaterial',
-        '../Shaders/Materials/Water',
-        '../ThirdParty/when'
-    ], function(
-        Cartesian2,
-        clone,
-        Color,
-        combine,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        isArray,
-        loadCRN,
-        loadKTX,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        Resource,
-        CubeMap,
-        Texture,
-        BumpMapMaterial,
-        CheckerboardMaterial,
-        DotMaterial,
-        ElevationContourMaterial,
-        ElevationRampMaterial,
-        FadeMaterial,
-        GridMaterial,
-        NormalMapMaterial,
-        PolylineArrowMaterial,
-        PolylineDashMaterial,
-        PolylineGlowMaterial,
-        PolylineOutlineMaterial,
-        RimLightingMaterial,
-        SlopeRampMaterial,
-        StripeMaterial,
-        WaterMaterial,
-        when) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadKTX from '../Core/loadKTX.js';
+import Matrix2 from '../Core/Matrix2.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Resource from '../Core/Resource.js';
+import CubeMap from '../Renderer/CubeMap.js';
+import Texture from '../Renderer/Texture.js';
+import AspectRampMaterial from '../Shaders/Materials/AspectRampMaterial.js';
+import BumpMapMaterial from '../Shaders/Materials/BumpMapMaterial.js';
+import CheckerboardMaterial from '../Shaders/Materials/CheckerboardMaterial.js';
+import DotMaterial from '../Shaders/Materials/DotMaterial.js';
+import ElevationContourMaterial from '../Shaders/Materials/ElevationContourMaterial.js';
+import ElevationRampMaterial from '../Shaders/Materials/ElevationRampMaterial.js';
+import FadeMaterial from '../Shaders/Materials/FadeMaterial.js';
+import GridMaterial from '../Shaders/Materials/GridMaterial.js';
+import NormalMapMaterial from '../Shaders/Materials/NormalMapMaterial.js';
+import PolylineArrowMaterial from '../Shaders/Materials/PolylineArrowMaterial.js';
+import PolylineDashMaterial from '../Shaders/Materials/PolylineDashMaterial.js';
+import PolylineGlowMaterial from '../Shaders/Materials/PolylineGlowMaterial.js';
+import PolylineOutlineMaterial from '../Shaders/Materials/PolylineOutlineMaterial.js';
+import RimLightingMaterial from '../Shaders/Materials/RimLightingMaterial.js';
+import Sampler from '../Renderer/Sampler.js';
+import SlopeRampMaterial from '../Shaders/Materials/SlopeRampMaterial.js';
+import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import WaterMaterial from '../Shaders/Materials/Water.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * A Material defines surface appearance through a combination of diffuse, specular,
      * normal, emission, and alpha components. These values are specified using a
      * JSON schema called Fabric which gets parsed and assembled into glsl shader code
-     * behind-the-scenes. Check out the {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|wiki page}
+     * behind-the-scenes. Check out the {@link https://github.com/CesiumGS/cesium/wiki/Fabric|wiki page}
      * for more details on Fabric.
      * <br /><br />
      * <style type="text/css">
@@ -225,6 +188,7 @@ define([
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
      *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
+     *      <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -246,7 +210,11 @@ define([
      *  </ul>
      *  <li>SlopeRamp</li>
      *  <ul>
-     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain by slope.</li>
+     *  </ul>
+     *  <li>AspectRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
      *  </ul>
      * </ul>
      * </ul>
@@ -258,6 +226,8 @@ define([
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
+     * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
      * @param {Object} options.fabric The fabric JSON used to generate the material.
      *
      * @constructor
@@ -271,9 +241,9 @@ define([
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -331,6 +301,9 @@ define([
          */
         this.translucent = undefined;
 
+        this._minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
+        this._magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
+
         this._strict = undefined;
         this._template = undefined;
         this._count = undefined;
@@ -346,7 +319,7 @@ define([
         this._defaultTexture = undefined;
 
         initializeMaterial(options, this);
-        defineProperties(this, {
+        Object.defineProperties(this, {
             type : {
                 value : this.type,
                 writable : false
@@ -404,7 +377,7 @@ define([
 
     /**
      * Gets whether or not this material is translucent.
-     * @returns <code>true</code> if this material is translucent, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
      */
     Material.prototype.isTranslucent = function() {
         if (defined(this.translucent)) {
@@ -448,6 +421,11 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
+            var sampler = new Sampler({
+                minificationFilter : this._minificationFilter,
+                magnificationFilter : this._magnificationFilter
+            });
+
             var texture;
             if (defined(image.internalFormat)) {
                 texture = new Texture({
@@ -457,12 +435,14 @@ define([
                     height : image.height,
                     source : {
                         arrayBufferView : image.bufferView
-                    }
+                    },
+                    sampler : sampler
                 });
             } else {
                 texture = new Texture({
                     context : context,
-                    source : image
+                    source : image,
+                    sampler : sampler
                 });
             }
 
@@ -495,7 +475,11 @@ define([
                         negativeY : images[3],
                         positiveZ : images[4],
                         negativeZ : images[5]
-                    }
+                    },
+                    sampler : new Sampler({
+                        minificationFilter : this._minificationFilter,
+                        magnificationFilter : this._magnificationFilter
+                    })
                 });
 
             this._textures[uniformId] = cubeMap;
@@ -683,6 +667,19 @@ define([
         checkForValidProperties(uniforms, materialNames, duplicateNameError, false);
     }
 
+    function isMaterialFused(shaderComponent, material) {
+        var materials = material._template.materials;
+        for (var subMaterialId in materials) {
+            if (materials.hasOwnProperty(subMaterialId)) {
+                if (shaderComponent.indexOf(subMaterialId) > -1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     // Create the czm_getMaterial method body using source or components.
     function createMethodDefinition(material) {
         var components = material._template.components;
@@ -693,12 +690,15 @@ define([
             material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
             material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (defined(components)) {
+                var isMultiMaterial = Object.keys(material._template.materials).length > 0;
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
-                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
+                            var isFusion = isMultiMaterial && isMaterialFused(components[component], material);
+                            var componentSource = isFusion ? components[component] : 'czm_gammaCorrect(' + components[component]  + ')';
+                            material.shaderSource += 'material.' + component + ' = ' + componentSource + '; \n';
                         } else if (component === 'alpha') {
-                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
+                            material.shaderSource += 'material.alpha = ' + components.alpha + '; \n';
                         } else {
                             material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                         }
@@ -742,9 +742,14 @@ define([
                     }
 
                     if (!defined(texture) || texture === context.defaultTexture) {
+                        var sampler = new Sampler({
+                            minificationFilter : material._minificationFilter,
+                            magnificationFilter : material._magnificationFilter
+                        });
                         texture = new Texture({
                             context : context,
-                            source : uniformValue
+                            source : uniformValue,
+                            sampler : sampler
                         });
                         material._textures[uniformId] = texture;
                         return;
@@ -806,9 +811,9 @@ define([
                     var resource = isResource ? uniformValue : Resource.createIfNeeded(uniformValue);
 
                     var promise;
-                    if (ktxRegex.test(uniformValue)) {
+                    if (ktxRegex.test(resource.url)) {
                         promise = loadKTX(resource);
-                    } else if (crnRegex.test(uniformValue)) {
+                    } else if (crnRegex.test(resource.url)) {
                         promise = loadCRN(resource);
                     } else {
                         promise = resource.fetchImage();
@@ -986,7 +991,7 @@ define([
                     uniformType = 'sampler2D';
                 }
             } else if (type === 'object') {
-                if (isArray(uniformValue)) {
+                if (Array.isArray(uniformValue)) {
                     if (uniformValue.length === 4 || uniformValue.length === 9 || uniformValue.length === 16) {
                         uniformType = 'mat' + Math.sqrt(uniformValue.length);
                     }
@@ -1477,7 +1482,8 @@ define([
             type : Material.PolylineGlowType,
             uniforms : {
                 color : new Color(0.0, 0.5, 1.0, 1.0),
-                glowPower : 0.25
+                glowPower : 0.25,
+                taperPower : 1.0
             },
             source : PolylineGlowMaterial
         },
@@ -1554,12 +1560,27 @@ define([
         fabric : {
             type : Material.SlopeRampMaterialType,
             uniforms : {
-                image: Material.DefaultImageId
+                image : Material.DefaultImageId
             },
             source : SlopeRampMaterial
         },
         translucent : false
     });
 
-    return Material;
-});
+    /**
+     * Gets the name of the aspect ramp material.
+     * @type {String}
+     * @readonly
+     */
+    Material.AspectRampMaterialType = 'AspectRamp';
+    Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
+        fabric: {
+            type : Material.AspectRampMaterialType,
+            uniforms : {
+                image : Material.DefaultImageId
+            },
+            source : AspectRampMaterial
+        },
+        translucent : false
+    });
+export default Material;

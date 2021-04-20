@@ -1,26 +1,12 @@
-define([
-        '../../Core/buildModuleUrl',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/FeatureDetection',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        './NavigationHelpButtonViewModel'
-    ], function(
-        buildModuleUrl,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        knockout,
-        getElement,
-        NavigationHelpButtonViewModel) {
-    'use strict';
+import buildModuleUrl from '../../Core/buildModuleUrl.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import FeatureDetection from '../../Core/FeatureDetection.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import NavigationHelpButtonViewModel from './NavigationHelpButtonViewModel.js';
 
     /**
      * <p>The NavigationHelpButton is a single button widget for displaying instructions for
@@ -193,7 +179,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         }
     }
 
-    defineProperties(NavigationHelpButton.prototype, {
+    Object.defineProperties(NavigationHelpButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof NavigationHelpButton.prototype
@@ -243,6 +229,4 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         return destroyObject(this);
     };
-
-    return NavigationHelpButton;
-});
+export default NavigationHelpButton;

@@ -1,24 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './FeatureDetection',
-        './freezeObject',
-        './WebGLConstants'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        FeatureDetection,
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * WebGL component datatypes.  Components are intrinsics,
@@ -334,6 +317,4 @@ define([
             //>>includeEnd('debug');
         }
     };
-
-    return freezeObject(ComponentDatatype);
-});
+export default Object.freeze(ComponentDatatype);

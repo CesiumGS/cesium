@@ -1,14 +1,6 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * The interface for all properties, which represent a value that can optionally vary over time.
@@ -16,6 +8,7 @@ define([
      *
      * @alias Property
      * @constructor
+     * @abstract
      *
      * @see CompositeProperty
      * @see ConstantProperty
@@ -29,7 +22,7 @@ define([
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(Property.prototype, {
+    Object.defineProperties(Property.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -135,6 +128,4 @@ define([
         }
         return value;
     };
-
-    return Property;
-});
+export default Property;

@@ -1,60 +1,26 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './AttributeCompression',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Credit',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './deprecationWarning',
-        './DeveloperError',
-        './Event',
-        './GeographicTilingScheme',
-        './getStringFromTypedArray',
-        './HeightmapTerrainData',
-        './IndexDatatype',
-        './Math',
-        './OrientedBoundingBox',
-        './QuantizedMeshTerrainData',
-        './Request',
-        './RequestType',
-        './Resource',
-        './RuntimeError',
-        './TerrainProvider',
-        './TileAvailability',
-        './TileProviderError'
-    ], function(
-        Uri,
-        when,
-        AttributeCompression,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        getStringFromTypedArray,
-        HeightmapTerrainData,
-        IndexDatatype,
-        CesiumMath,
-        OrientedBoundingBox,
-        QuantizedMeshTerrainData,
-        Request,
-        RequestType,
-        Resource,
-        RuntimeError,
-        TerrainProvider,
-        TileAvailability,
-        TileProviderError) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import AttributeCompression from './AttributeCompression.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Credit from './Credit.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Event from './Event.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
+import getStringFromTypedArray from './getStringFromTypedArray.js';
+import HeightmapTerrainData from './HeightmapTerrainData.js';
+import IndexDatatype from './IndexDatatype.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import QuantizedMeshTerrainData from './QuantizedMeshTerrainData.js';
+import Request from './Request.js';
+import RequestType from './RequestType.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import TerrainProvider from './TerrainProvider.js';
+import TileAvailability from './TileAvailability.js';
+import TileProviderError from './TileProviderError.js';
 
     function LayerInformation(layer) {
         this.resource = layer.resource;
@@ -74,7 +40,6 @@ define([
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
@@ -107,18 +72,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._tilingScheme = new GeographicTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 1,
-            ellipsoid : options.ellipsoid
-        });
-
         this._heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
-
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
         this._hasVertexNormals = false;
+        this._ellipsoid = options.ellipsoid;
 
         /**
          * Boolean flag that indicates if the client should request vertex normals from the server.
@@ -177,19 +135,8 @@ define([
                     url: 'layer.json'
                 });
 
-                var uri = new Uri(layerJsonResource.url);
-                if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
-                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
-                    var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
-                    that._tileCredits = [
-                        new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
-                    ];
-                    deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
-                } else {
-                    // ion resources have a credits property we can use for additional attribution.
-                    that._tileCredits = resource.credits;
-                }
+                // ion resources have a credits property we can use for additional attribution.
+                that._tileCredits = resource.credits;
 
                 requestLayerJson();
             })
@@ -244,6 +191,38 @@ define([
             var maxZoom = data.maxzoom;
             overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
             // Keeps track of which of the availablity containing tiles have been loaded
+
+            if (!data.projection || data.projection === 'EPSG:4326') {
+              that._tilingScheme = new GeographicTilingScheme({
+                  numberOfLevelZeroTilesX : 2,
+                  numberOfLevelZeroTilesY : 1,
+                  ellipsoid : that._ellipsoid
+              });
+            } else if (data.projection === 'EPSG:3857') {
+              that._tilingScheme = new WebMercatorTilingScheme({
+                  numberOfLevelZeroTilesX : 1,
+                  numberOfLevelZeroTilesY : 1,
+                  ellipsoid : that._ellipsoid
+              });
+            } else {
+              message = 'The projection "' + data.projection + '" is invalid or not supported.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
+              return;
+            }
+
+            that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+                that._tilingScheme.ellipsoid,
+                that._heightmapWidth,
+                that._tilingScheme.getNumberOfXTilesAtLevel(0)
+            );
+            if (!data.scheme || data.scheme === 'tms' || data.scheme === 'slippyMap') {
+              that._scheme = data.scheme;
+            } else {
+              message = 'The scheme "' + data.scheme + '" is invalid or not supported.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
+              return;
+            }
+
             var availabilityTilesLoaded;
 
             // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
@@ -448,7 +427,7 @@ define([
         };
     }
 
-    function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
+    function createHeightmapTerrainData(provider, buffer, level, x, y) {
         var heightBuffer = new Uint16Array(buffer, 0, provider._heightmapWidth * provider._heightmapWidth);
         return new HeightmapTerrainData({
             buffer : heightBuffer,
@@ -461,7 +440,7 @@ define([
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
         var littleEndianExtensionSize = layer.littleEndianExtensionSize;
         var pos = 0;
         var cartesian3Elements = 3;
@@ -594,19 +573,13 @@ define([
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
+        // The skirt is not included in the OBB computation. If this ever
+        // causes any rendering artifacts (cracks), they are expected to be
+        // minor and in the corners of the screen. It's possible that this
+        // might need to be changed - just change to `minimumHeight - skirtHeight`
+        // A similar change might also be needed in `upsampleQuantizedTerrainMesh.js`.
         var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
-        var orientedBoundingBox;
-        if (rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
-            // Here, rectangle.width < pi/2, and rectangle.height < pi
-            // (though it would still work with rectangle.width up to pi)
-
-            // The skirt is not included in the OBB computation. If this ever
-            // causes any rendering artifacts (cracks), they are expected to be
-            // minor and in the corners of the screen. It's possible that this
-            // might need to be changed - just change to `minimumHeight - skirtHeight`
-            // A similar change might also be needed in `upsampleQuantizedTerrainMesh.js`.
-            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, provider._tilingScheme.ellipsoid);
-        }
+        var orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, provider._tilingScheme.ellipsoid);
 
         return new QuantizedMeshTerrainData({
             center : center,
@@ -685,9 +658,14 @@ define([
             return undefined;
         }
 
-        var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
-
-        var tmsY = (yTiles - y - 1);
+        // The TileMapService scheme counts from the bottom left
+        var terrainY;
+        if (!provider._scheme || provider._scheme === 'tms') {
+          var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
+          terrainY = (yTiles - y - 1);
+        } else {
+          terrainY = y;
+        }
 
         var extensionList = [];
         if (provider._requestVertexNormals && layerToUse.hasVertexNormals) {
@@ -702,7 +680,8 @@ define([
 
         var headers;
         var query;
-        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
+        var url = urlTemplates[(x + terrainY + level) % urlTemplates.length];
+
         var resource = layerToUse.resource;
         if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
             // ion uses query paremeters to request extensions
@@ -721,7 +700,7 @@ define([
                 version: layerToUse.version,
                 z: level,
                 x: x,
-                y: tmsY
+                y: terrainY
             },
             queryParameters: query,
             headers: headers,
@@ -734,13 +713,13 @@ define([
 
         return promise.then(function (buffer) {
             if (defined(provider._heightmapStructure)) {
-                return createHeightmapTerrainData(provider, buffer, level, x, y, tmsY);
+                return createHeightmapTerrainData(provider, buffer, level, x, y);
             }
-            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layerToUse);
+            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, layerToUse);
         });
     }
 
-    defineProperties(CesiumTerrainProvider.prototype, {
+    Object.defineProperties(CesiumTerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
@@ -917,7 +896,10 @@ define([
          * Gets an object that can be used to determine availability of terrain from this provider, such as
          * at points and in rectangles.  This function should not be called before
          * {@link CesiumTerrainProvider#ready} returns true.  This property may be undefined if availability
-         * information is not available.
+         * information is not available. Note that this reflects tiles that are known to be available currently.
+         * Additional tiles may be discovered to be available in the future, e.g. if availability information
+         * exists deeper in the tree rather than it all being discoverable at the root. However, a tile that
+         * is available now will not become unavailable in the future.
          * @memberof CesiumTerrainProvider.prototype
          * @type {TileAvailability}
          */
@@ -949,7 +931,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @returns {Boolean} Undefined if not supported, otherwise true or false.
+     * @returns {Boolean} Undefined if not supported or availability is unknown, otherwise true or false.
      */
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
         if (!defined(this._availability)) {
@@ -1012,11 +994,8 @@ define([
         }
 
         var availabilityLevels = layer.availabilityLevels;
-        if (level % availabilityLevels === 0) {
-            level -= availabilityLevels;
-        }
-
-        var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
+        var parentLevel = (level % availabilityLevels === 0) ?
+            (level - availabilityLevels) : ((level / availabilityLevels) | 0) * availabilityLevels;
         var divisor = 1 << (level - parentLevel);
         var parentX = (x / divisor) | 0;
         var parentY = (y / divisor) | 0;
@@ -1084,5 +1063,6 @@ define([
         };
     }
 
-    return CesiumTerrainProvider;
-});
+    // Used for testing
+    CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
+export default CesiumTerrainProvider;

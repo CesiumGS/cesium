@@ -1,32 +1,18 @@
-defineSuite([
-        'Scene/PrimitiveCollection',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/GeometryInstance',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelCollection',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/VerticalOrigin',
-        'Specs/createScene'
-    ], function(
-        PrimitiveCollection,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        GeometryInstance,
-        Rectangle,
-        RectangleGeometry,
-        HorizontalOrigin,
-        LabelCollection,
-        PerInstanceColorAppearance,
-        Primitive,
-        VerticalOrigin,
-        createScene) {
-    'use strict';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelCollection } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PrimitiveCollection', function() {
 
     var scene;
     var context;
@@ -130,6 +116,33 @@ defineSuite([
         expect(primitives.length).toEqual(1);
     });
 
+    it('add works with an index', function() {
+        var p0 = createLabels();
+        var p1 = createLabels();
+
+        expect(function() {
+            primitives.add(p0, 1);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            primitives.add(p0, -1);
+        }).toThrowDeveloperError();
+
+        primitives.add(p0, 0);
+        expect(primitives.get(0)).toBe(p0);
+
+        expect(function() {
+            primitives.add(p1, -1);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            primitives.add(p1, 2);
+        }).toThrowDeveloperError();
+
+        primitives.add(p1, 0);
+        expect(primitives.get(0)).toBe(p1);
+    });
+
     it('removes the first primitive', function() {
         var p0 = createLabels();
         var p1 = createLabels();
@@ -200,6 +213,22 @@ defineSuite([
         primitives.add(labels0);
 
         expect(primitives.contains(labels1)).toEqual(false);
+    });
+
+    it('does not contain removed primitive', function() {
+        var labels0 = createLabels();
+        primitives.add(labels0);
+        primitives.remove(labels0);
+
+        expect(primitives.contains(labels0)).toEqual(false);
+    });
+
+    it('does not contain all removed primitives', function() {
+        var labels0 = createLabels();
+        primitives.add(labels0);
+        primitives.removeAll();
+
+        expect(primitives.contains(labels0)).toEqual(false);
     });
 
     it('does not contain undefined', function() {

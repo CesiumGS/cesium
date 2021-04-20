@@ -1,22 +1,10 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/buildModuleUrl',
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject'
-    ], function(
-        AssociativeArray,
-        buildModuleUrl,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Check from '../Core/Check.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
 
     var mobileWidth = 576;
     var lightboxHeight = 100;
@@ -510,7 +498,7 @@ define([
         return defaultCredit;
     }
 
-    defineProperties(CreditDisplay, {
+    Object.defineProperties(CreditDisplay, {
         /**
          * Gets or sets the Cesium logo credit.
          * @memberof CreditDisplay
@@ -527,6 +515,4 @@ define([
             }
         }
     });
-
-    return CreditDisplay;
-});
+export default CreditDisplay;

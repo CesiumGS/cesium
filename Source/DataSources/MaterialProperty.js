@@ -1,16 +1,7 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Scene/Material'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Material) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Material from '../Scene/Material.js';
 
     /**
      * The interface for all {@link Property} objects that represent {@link Material} uniforms.
@@ -18,6 +9,7 @@ define([
      *
      * @alias MaterialProperty
      * @constructor
+     * @abstract
      *
      * @see ColorMaterialProperty
      * @see CompositeMaterialProperty
@@ -31,7 +23,7 @@ define([
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(MaterialProperty.prototype, {
+    Object.defineProperties(MaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -110,6 +102,4 @@ define([
 
         return material;
     };
-
-    return MaterialProperty;
-});
+export default MaterialProperty;

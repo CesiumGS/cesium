@@ -1,66 +1,38 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/GeometryInstanceAttribute',
-        '../Core/GroundPolylineGeometry',
-        '../Core/isArray',
-        '../Shaders/PolylineShadowVolumeVS',
-        '../Shaders/PolylineShadowVolumeFS',
-        '../Shaders/PolylineShadowVolumeMorphVS',
-        '../Shaders/PolylineShadowVolumeMorphFS',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../ThirdParty/when',
-        './BlendingState',
-        './CullFace',
-        './PolylineColorAppearance',
-        './PolylineMaterialAppearance',
-        './Primitive',
-        './SceneMode'
-    ], function(
-        ApproximateTerrainHeights,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        GeometryInstance,
-        GeometryInstanceAttribute,
-        GroundPolylineGeometry,
-        isArray,
-        PolylineShadowVolumeVS,
-        PolylineShadowVolumeFS,
-        PolylineShadowVolumeMorphVS,
-        PolylineShadowVolumeMorphFS,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        when,
-        BlendingState,
-        CullFace,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        Primitive,
-        SceneMode) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
+import GroundPolylineGeometry from '../Core/GroundPolylineGeometry.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import PolylineShadowVolumeFS from '../Shaders/PolylineShadowVolumeFS.js';
+import PolylineShadowVolumeMorphFS from '../Shaders/PolylineShadowVolumeMorphFS.js';
+import PolylineShadowVolumeMorphVS from '../Shaders/PolylineShadowVolumeMorphVS.js';
+import PolylineShadowVolumeVS from '../Shaders/PolylineShadowVolumeVS.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import ClassificationType from './ClassificationType.js';
+import CullFace from './CullFace.js';
+import PolylineColorAppearance from './PolylineColorAppearance.js';
+import PolylineMaterialAppearance from './PolylineMaterialAppearance.js';
+import Primitive from './Primitive.js';
+import SceneMode from './SceneMode.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     /**
-     * A GroundPolylinePrimitive represents a polyline draped over the terrain in the {@link Scene}.
+     * A GroundPolylinePrimitive represents a polyline draped over the terrain or 3D Tiles in the {@link Scene}.
      * <p>
-     *
      * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}.
+     * </p>
      *
      * @alias GroundPolylinePrimitive
      * @constructor
@@ -73,6 +45,7 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on creation to have effect.
      *
@@ -92,9 +65,7 @@ define([
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : new Cesium.PolylineMaterialAppearance({
-     *     material : Cesium.Material.fromType('Color')
-     *   })
+     *   appearance : new Cesium.PolylineMaterialAppearance()
      * }));
      *
      * // 2. Draw a looped polyline on terrain with per-instance color and a distance display condition.
@@ -113,14 +84,14 @@ define([
      *   }),
      *   attributes : {
      *      color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7)),
-            distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
+     *      distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
      *   },
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : Cesium.PolylineColorAppearance()
+     *   appearance : new Cesium.PolylineColorAppearance()
      * }));
      */
     function GroundPolylinePrimitive(options) {
@@ -169,6 +140,15 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
+         * Determines whether terrain, 3D Tiles or both will be classified.
+         *
+         * @type {ClassificationType}
+         *
+         * @default ClassificationType.BOTH
+         */
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
+
+        /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
          * Draws the bounding sphere for each draw command in the primitive.
@@ -209,13 +189,8 @@ define([
         this._sp2D = undefined;
         this._spMorph = undefined;
 
-        this._renderState = RenderState.fromCache({
-            cull : {
-                enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
-            },
-            blending : BlendingState.ALPHA_BLEND,
-            depthMask : false
-        });
+        this._renderState = getRenderState(false);
+        this._renderState3DTiles = getRenderState(true);
 
         this._renderStateMorph = RenderState.fromCache({
             cull : {
@@ -230,7 +205,7 @@ define([
         });
     }
 
-    defineProperties(GroundPolylinePrimitive.prototype, {
+    Object.defineProperties(GroundPolylinePrimitive.prototype, {
         /**
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *
@@ -372,11 +347,7 @@ define([
         // Helps with varying budget.
         var fs = primitive._batchTable.getVertexShaderCallback()(PolylineShadowVolumeFS);
 
-        // Tesselation on these volumes tends to be low,
-        // which causes problems when interpolating log depth from vertices.
-        // So force computing and writing log depth in the fragment shader.
-        // Re-enable at far distances to avoid z-fighting.
-        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT', 'GLOBE_MINIMUM_ALTITUDE ' + frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1)];
+        var vsDefines =  ['GLOBE_MINIMUM_ALTITUDE ' + frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1)];
         var colorDefine = '';
         var materialShaderSource = '';
         if (defined(appearance.material)) {
@@ -454,6 +425,33 @@ define([
         groundPolylinePrimitive._spMorph = colorProgramMorph;
     }
 
+    function getRenderState(mask3DTiles) {
+        return RenderState.fromCache({
+            cull : {
+                enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
+            },
+            blending : BlendingState.ALPHA_BLEND,
+            depthMask : false,
+            stencilTest : {
+                enabled : mask3DTiles,
+                frontFunction : StencilFunction.EQUAL,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.KEEP
+                },
+                backFunction : StencilFunction.EQUAL,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.KEEP
+                },
+                reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
+            }
+        });
+    }
+
     function createCommands(groundPolylinePrimitive, appearance, material, translucent, colorCommands, pickCommands) {
         var primitive = groundPolylinePrimitive._primitive;
         var length = primitive._va.length;
@@ -462,16 +460,13 @@ define([
 
         var isPolylineColorAppearance = appearance instanceof PolylineColorAppearance;
 
-        var i;
-        var command;
         var materialUniforms = isPolylineColorAppearance ? {} : material._uniforms;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(materialUniforms);
-        var pass = Pass.TERRAIN_CLASSIFICATION;
 
-        for (i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             var vertexArray = primitive._va[i];
 
-            command = colorCommands[i];
+            var command = colorCommands[i];
             if (!defined(command)) {
                 command = colorCommands[i] = new DrawCommand({
                     owner : groundPolylinePrimitive,
@@ -483,35 +478,45 @@ define([
             command.renderState = groundPolylinePrimitive._renderState;
             command.shaderProgram = groundPolylinePrimitive._sp;
             command.uniformMap = uniformMap;
-            command.pass = pass;
+            command.pass = Pass.TERRAIN_CLASSIFICATION;
             command.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEcAndBatchId.w)';
 
+            var derivedTilesetCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedTilesetCommand.renderState = groundPolylinePrimitive._renderState3DTiles;
+            derivedTilesetCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedTilesetCommand;
+
             // derive for 2D
-            var derivedColorCommand = command.derivedCommands.color2D;
-            if (!defined(derivedColorCommand)) {
-                derivedColorCommand = DrawCommand.shallowClone(command);
-                command.derivedCommands.color2D = derivedColorCommand;
-            }
-            derivedColorCommand.vertexArray = vertexArray;
-            derivedColorCommand.renderState = groundPolylinePrimitive._renderState;
-            derivedColorCommand.shaderProgram = groundPolylinePrimitive._sp2D;
-            derivedColorCommand.uniformMap = uniformMap;
-            derivedColorCommand.pass = pass;
-            derivedColorCommand.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEcAndBatchId.w)';
+            var derived2DCommand = DrawCommand.shallowClone(command, command.derivedCommands.color2D);
+            derived2DCommand.shaderProgram = groundPolylinePrimitive._sp2D;
+            command.derivedCommands.color2D = derived2DCommand;
+
+            var derived2DTilesetCommand = DrawCommand.shallowClone(derivedTilesetCommand, derivedTilesetCommand.derivedCommands.color2D);
+            derived2DTilesetCommand.shaderProgram = groundPolylinePrimitive._sp2D;
+            derivedTilesetCommand.derivedCommands.color2D = derived2DTilesetCommand;
 
             // derive for Morph
-            derivedColorCommand = command.derivedCommands.colorMorph;
-            if (!defined(derivedColorCommand)) {
-                derivedColorCommand = DrawCommand.shallowClone(command);
-                command.derivedCommands.colorMorph = derivedColorCommand;
-            }
-            derivedColorCommand.vertexArray = vertexArray;
-            derivedColorCommand.renderState = groundPolylinePrimitive._renderStateMorph;
-            derivedColorCommand.shaderProgram = groundPolylinePrimitive._spMorph;
-            derivedColorCommand.uniformMap = uniformMap;
-            derivedColorCommand.pass = pass;
-            derivedColorCommand.pickId = 'czm_batchTable_pickColor(v_batchId)';
+            var derivedMorphCommand = DrawCommand.shallowClone(command, command.derivedCommands.colorMorph);
+            derivedMorphCommand.renderState = groundPolylinePrimitive._renderStateMorph;
+            derivedMorphCommand.shaderProgram = groundPolylinePrimitive._spMorph;
+            derivedMorphCommand.pickId = 'czm_batchTable_pickColor(v_batchId)';
+            command.derivedCommands.colorMorph = derivedMorphCommand;
         }
+    }
+
+    function updateAndQueueCommand(groundPolylinePrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume) {
+        // Use derived appearance command for morph and 2D
+        if (frameState.mode === SceneMode.MORPHING) {
+            command = command.derivedCommands.colorMorph;
+        } else if (frameState.mode !== SceneMode.SCENE3D) {
+            command = command.derivedCommands.color2D;
+        }
+        command.modelMatrix = modelMatrix;
+        command.boundingVolume = boundingVolume;
+        command.cull = cull;
+        command.debugShowBoundingVolume = debugShowBoundingVolume;
+
+        frameState.commandList.push(command);
     }
 
     function updateAndQueueCommands(groundPolylinePrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume) {
@@ -530,25 +535,25 @@ define([
             boundingSpheres = primitive._boundingSphereMorph;
         }
 
-        var commandList = frameState.commandList;
+        var morphing = frameState.mode === SceneMode.MORPHING;
+        var classificationType = groundPolylinePrimitive.classificationType;
+        var queueTerrainCommands = (classificationType !== ClassificationType.CESIUM_3D_TILE);
+        var queue3DTilesCommands = (classificationType !== ClassificationType.TERRAIN) && !morphing;
+
+        var command;
         var passes = frameState.passes;
         if (passes.render || (passes.pick && primitive.allowPicking)) {
             var colorLength = colorCommands.length;
-
             for (var j = 0; j < colorLength; ++j) {
-                var colorCommand = colorCommands[j];
-                // Use derived appearance command for morph and 2D
-                if (frameState.mode === SceneMode.MORPHING && colorCommand.shaderProgram !== groundPolylinePrimitive._spMorph) {
-                    colorCommand = colorCommand.derivedCommands.colorMorph;
-                } else if (frameState.mode !== SceneMode.SCENE3D && colorCommand.shaderProgram !== groundPolylinePrimitive._sp2D) {
-                    colorCommand = colorCommand.derivedCommands.color2D;
+                var boundingVolume = boundingSpheres[j];
+                if (queueTerrainCommands) {
+                    command = colorCommands[j];
+                    updateAndQueueCommand(groundPolylinePrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
                 }
-                colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = boundingSpheres[j];
-                colorCommand.cull = cull;
-                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-
-                commandList.push(colorCommand);
+                if (queue3DTilesCommands) {
+                    command = colorCommands[j].derivedCommands.tileset;
+                    updateAndQueueCommand(groundPolylinePrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
+                }
             }
         }
     }
@@ -585,7 +590,7 @@ define([
         var that = this;
         var primitiveOptions = this._primitiveOptions;
         if (!defined(this._primitive)) {
-            var geometryInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var geometryInstances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var geometryInstancesLength = geometryInstances.length;
             var groundInstances = new Array(geometryInstancesLength);
 
@@ -745,6 +750,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return GroundPolylinePrimitive;
-});
+export default GroundPolylinePrimitive;

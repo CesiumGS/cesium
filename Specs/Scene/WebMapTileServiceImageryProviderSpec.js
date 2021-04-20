@@ -1,48 +1,25 @@
-defineSuite([
-        'Scene/WebMapTileServiceImageryProvider',
-        'Core/Clock',
-        'Core/ClockStep',
-        'Core/Credit',
-        'Core/DefaultProxy',
-        'Core/GeographicTilingScheme',
-        'Core/JulianDate',
-        'Core/objectToQuery',
-        'Core/queryToObject',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/RequestState',
-        'Core/Resource',
-        'Core/TimeIntervalCollection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri'
-    ], function(
-        WebMapTileServiceImageryProvider,
-        Clock,
-        ClockStep,
-        Credit,
-        DefaultProxy,
-        GeographicTilingScheme,
-        JulianDate,
-        objectToQuery,
-        queryToObject,
-        Request,
-        RequestScheduler,
-        RequestState,
-        Resource,
-        TimeIntervalCollection,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri) {
-    'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { objectToQuery } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { RequestState } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { WebMapTileServiceImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { Uri } from '../../Source/Cesium.js';
+
+describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -330,9 +307,9 @@ defineSuite([
         return pollToPromise(function() {
             return provider1.ready && provider2.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider1.requestImage(0, 0, 0).then(function(image) {
@@ -340,7 +317,7 @@ defineSuite([
                     expect(Resource._Implementations.createImage.calls.count()).toEqual(2);
                     //expect the two image URLs to be the same between the two providers
                     var allCalls = Resource._Implementations.createImage.calls.all();
-                    expect(allCalls[1].args[0]).toEqual(allCalls[0].args[0]);
+                    expect(allCalls[1].args[0].url).toEqual(allCalls[0].args[0].url);
                 });
             });
         });
@@ -357,14 +334,14 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -391,10 +368,10 @@ defineSuite([
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -414,7 +391,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -444,8 +421,8 @@ defineSuite([
             times : times
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var entry;
@@ -496,8 +473,8 @@ defineSuite([
             times : times
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var entry;
@@ -545,8 +522,8 @@ defineSuite([
             shouldAnimate : true
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -586,9 +563,9 @@ defineSuite([
 
     it('dimensions work with RESTful requests', function() {
         var lastUrl;
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            lastUrl = url;
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            lastUrl = request.url;
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -625,9 +602,9 @@ defineSuite([
 
     it('dimensions work with KVP requests', function() {
         var lastUrl;
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            lastUrl = url;
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            lastUrl = request.url;
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var uri = new Uri('http://wmts.invalid/kvp');

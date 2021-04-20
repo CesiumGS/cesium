@@ -1,30 +1,16 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Rectangle',
-        '../../Core/ScreenSpaceEventHandler',
-        '../../Core/ScreenSpaceEventType',
-        '../../Scene/DebugModelMatrixPrimitive',
-        '../../Scene/PerformanceDisplay',
-        '../../Scene/TileCoordinatesImageryProvider',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Rectangle,
-        ScreenSpaceEventHandler,
-        ScreenSpaceEventType,
-        DebugModelMatrixPrimitive,
-        PerformanceDisplay,
-        TileCoordinatesImageryProvider,
-        knockout,
-        createCommand) {
-    'use strict';
+import Cartesian3 from '../../Core/Cartesian3.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Ray from '../../Core/Ray.js';
+import Rectangle from '../../Core/Rectangle.js';
+import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
+import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
+import DebugModelMatrixPrimitive from '../../Scene/DebugModelMatrixPrimitive.js';
+import PerformanceDisplay from '../../Scene/PerformanceDisplay.js';
+import TileCoordinatesImageryProvider from '../../Scene/TileCoordinatesImageryProvider.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     function frustumStatisticsToString(statistics) {
         var str;
@@ -62,6 +48,9 @@ define([
         bounded = Math.max(bounded, lower);
         return bounded;
     }
+
+    var scratchPickRay = new Ray();
+    var scratchPickCartesian = new Cartesian3();
 
     /**
      * The view model for {@link CesiumInspector}.
@@ -517,10 +506,9 @@ define([
         function selectTile(e) {
             var selectedTile;
             var ellipsoid = globe.ellipsoid;
-            var cartesian = that._scene.camera.pickEllipsoid({
-                x : e.position.x,
-                y : e.position.y
-            }, ellipsoid);
+
+            var ray = that._scene.camera.getPickRay(e.position, scratchPickRay);
+            var cartesian = globe.pick(ray, that._scene, scratchPickCartesian);
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
@@ -562,7 +550,7 @@ define([
         });
     }
 
-    defineProperties(CesiumInspectorViewModel.prototype, {
+    Object.defineProperties(CesiumInspectorViewModel.prototype, {
         /**
          * Gets the scene to control.
          * @memberof CesiumInspectorViewModel.prototype
@@ -883,8 +871,8 @@ define([
                         this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
                         var data = newTile.data;
-                        if (defined(data)) {
-                            this.tileText += '<br>Min: ' + data.minimumHeight + ' Max: ' + data.maximumHeight;
+                        if (defined(data) && defined(data.tileBoundingRegion)) {
+                            this.tileText += '<br>Min: ' + data.tileBoundingRegion.minimumHeight + ' Max: ' + data.tileBoundingRegion.maximumHeight;
                         } else {
                             this.tileText += '<br>(Tile is not loaded)';
                         }
@@ -959,6 +947,4 @@ define([
         this._pickTileActiveSubscription.dispose();
         return destroyObject(this);
     };
-
-    return CesiumInspectorViewModel;
-});
+export default CesiumInspectorViewModel;

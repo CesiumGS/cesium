@@ -1,58 +1,29 @@
-defineSuite([
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/destroyObject',
-        'Core/GeometryPipeline',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Resource',
-        'Renderer/BufferUsage',
-        'Renderer/DrawCommand',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Renderer/Sampler',
-        'Renderer/ShaderProgram',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
-        'Renderer/VertexArray',
-        'Scene/BillboardCollection',
-        'Scene/BlendingState',
-        'Scene/TextureAtlas',
-        'Specs/createScene',
-        'ThirdParty/when'
-    ], 'Scene/Multifrustum', function(
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        destroyObject,
-        GeometryPipeline,
-        CesiumMath,
-        Matrix4,
-        Resource,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        Sampler,
-        ShaderProgram,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        VertexArray,
-        BillboardCollection,
-        BlendingState,
-        TextureAtlas,
-        createScene,
-        when) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { GeometryPipeline } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { Sampler } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import { BillboardCollection } from '../../Source/Cesium.js';
+import { BlendingState } from '../../Source/Cesium.js';
+import { TextureAtlas } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/Multifrustum', function() {
 
     var scene;
     var context;
@@ -118,10 +89,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = new Sampler({
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
+        atlas.texture.sampler = Sampler.NEAREST;
 
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;
@@ -218,7 +186,7 @@ defineSuite([
         var found = false;
         var sources = billboardCall.object.shaderProgram.fragmentShaderSource.sources;
         for (var j = 0; j < sources.length; ++j) {
-            if (sources[i].indexOf('czm_Debug_main') !== -1) {
+            if (sources[j].indexOf('czm_Debug_main') !== -1) {
                 found = true;
                 break;
             }

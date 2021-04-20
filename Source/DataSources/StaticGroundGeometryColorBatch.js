@@ -1,35 +1,24 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/GroundPrimitive',
-        './BoundingSphereState',
-        './Property'
-    ], function(
-        AssociativeArray,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        GroundPrimitive,
-        BoundingSphereState,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defined from '../Core/defined.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import Property from './Property.js';
+import RectangleCollisionChecker from '../Core/RectangleCollisionChecker.js';
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
-    function Batch(primitives, classificationType, color, key, zIndex) {
+    function Batch(primitives, classificationType, color, zIndex) {
         this.primitives = primitives;
         this.zIndex = zIndex;
         this.classificationType = classificationType;
         this.color = color;
-        this.key = key;
         this.createPrimitive = false;
         this.waitingOnCreate = false;
         this.primitive = undefined;
@@ -42,13 +31,19 @@ define([
         this.showsUpdated = new AssociativeArray();
         this.itemsToRemove = [];
         this.isDirty = false;
+        this.rectangleCollisionCheck = new RectangleCollisionChecker();
     }
+
+    Batch.prototype.overlapping = function(rectangle) {
+        return this.rectangleCollisionCheck.collides(rectangle);
+    };
 
     Batch.prototype.add = function(updater, instance) {
         var id = updater.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
+        this.rectangleCollisionCheck.insert(id, instance.geometry.rectangle);
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
@@ -63,8 +58,10 @@ define([
 
     Batch.prototype.remove = function(updater) {
         var id = updater.id;
+        var geometryInstance = this.geometry.get(id);
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
+            this.rectangleCollisionCheck.remove(id, geometryInstance.geometry.rectangle);
             this.updatersWithAttributes.remove(id);
             var unsubscribe = this.subscriptions.get(id);
             if (defined(unsubscribe)) {
@@ -76,8 +73,6 @@ define([
         }
         return false;
     };
-
-    var scratchArray = new Array(4);
 
     Batch.prototype.update = function(time) {
         var isUpdated = true;
@@ -101,7 +96,7 @@ define([
                 primitive = new GroundPrimitive({
                     show : false,
                     asynchronous : true,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     classificationType : this.classificationType
                 });
                 primitives.add(primitive, this.zIndex);
@@ -147,12 +142,7 @@ define([
 
                     if (!Color.equals(attributes._lastColor, fillColor)) {
                         attributes._lastColor = Color.clone(fillColor, attributes._lastColor);
-                        var color = this.color;
-                        var newColor = fillColor.toBytes(scratchArray);
-                        if (color[0] !== newColor[0] || color[1] !== newColor[1] ||
-                            color[2] !== newColor[2] || color[3] !== newColor[3]) {
-                           this.itemsToRemove[removedCount++] = updater;
-                        }
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(fillColor, attributes.color);
                     }
                 }
 
@@ -245,7 +235,7 @@ define([
      * @private
      */
     function StaticGroundGeometryColorBatch(primitives, classificationType) {
-        this._batches = new AssociativeArray();
+        this._batches = [];
         this._primitives = primitives;
         this._classificationType = classificationType;
     }
@@ -253,25 +243,31 @@ define([
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
-        // color and zIndex are batch breakers, so we'll use that for the key
         var zIndex = Property.getValueOrDefault(updater.zIndex, 0);
-        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0] + ':' + zIndex;
         var batch;
-        if (batches.contains(batchKey)) {
-            batch = batches.get(batchKey);
-        } else {
-            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey, zIndex);
-            batches.set(batchKey, batch);
+        var length = batches.length;
+        for (var i = 0; i < length; ++i) {
+            var item = batches[i];
+            if (item.zIndex === zIndex &&
+                !item.overlapping(instance.geometry.rectangle)) {
+                batch = item;
+                break;
+            }
+        }
+
+        if (!defined(batch)) {
+            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, zIndex);
+            batches.push(batch);
         }
         batch.add(updater, instance);
         return batch;
     };
 
     StaticGroundGeometryColorBatch.prototype.remove = function(updater) {
-        var batchesArray = this._batches.values;
-        var count = batchesArray.length;
+        var batches = this._batches;
+        var count = batches.length;
         for (var i = 0; i < count; ++i) {
-            if (batchesArray[i].remove(updater)) {
+            if (batches[i].remove(updater)) {
                 return;
             }
         }
@@ -284,15 +280,14 @@ define([
         //Perform initial update
         var isUpdated = true;
         var batches = this._batches;
-        var batchesArray = batches.values;
-        var batchCount = batchesArray.length;
+        var batchCount = batches.length;
         for (i = 0; i < batchCount; ++i) {
-            isUpdated = batchesArray[i].update(time) && isUpdated;
+            isUpdated = batches[i].update(time) && isUpdated;
         }
 
         //If any items swapped between batches we need to move them
         for (i = 0; i < batchCount; ++i) {
-            var oldBatch = batchesArray[i];
+            var oldBatch = batches[i];
             var itemsToRemove = oldBatch.itemsToRemove;
             var itemsToMoveLength = itemsToRemove.length;
             for (var j = 0; j < itemsToMoveLength; j++) {
@@ -305,16 +300,14 @@ define([
         }
 
         //If we moved anything around, we need to re-build the primitive and remove empty batches
-        var batchesArrayCopy = batchesArray.slice();
-        var batchesCopyCount = batchesArrayCopy.length;
-        for (i = 0; i < batchesCopyCount; ++i) {
-            var batch = batchesArrayCopy[i];
+        for (i = batchCount - 1; i >= 0; --i) {
+            var batch = batches[i];
             if (batch.isDirty) {
-                isUpdated = batchesArrayCopy[i].update(time) && isUpdated;
+                isUpdated = batches[i].update(time) && isUpdated;
                 batch.isDirty = false;
             }
             if (batch.geometry.length === 0) {
-                batches.remove(batch.key);
+                batches.splice(i, 1);
             }
         }
 
@@ -322,10 +315,10 @@ define([
     };
 
     StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function(updater, result) {
-        var batchesArray = this._batches.values;
-        var batchCount = batchesArray.length;
+        var batches = this._batches;
+        var batchCount = batches.length;
         for (var i = 0; i < batchCount; ++i) {
-            var batch = batchesArray[i];
+            var batch = batches[i];
             if (batch.contains(updater)) {
                 return batch.getBoundingSphere(updater, result);
             }
@@ -335,12 +328,10 @@ define([
     };
 
     StaticGroundGeometryColorBatch.prototype.removeAllPrimitives = function() {
-        var batchesArray = this._batches.values;
-        var batchCount = batchesArray.length;
+        var batches = this._batches;
+        var batchCount = batches.length;
         for (var i = 0; i < batchCount; ++i) {
-            batchesArray[i].removeAllPrimitives();
+            batches[i].removeAllPrimitives();
         }
     };
-
-    return StaticGroundGeometryColorBatch;
-});
+export default StaticGroundGeometryColorBatch;

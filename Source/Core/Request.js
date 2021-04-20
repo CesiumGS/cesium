@@ -1,23 +1,17 @@
-define([
-        './defaultValue',
-        './defined',
-        './RequestState',
-        './RequestType'
-    ], function(
-        defaultValue,
-        defined,
-        RequestState,
-        RequestType) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import RequestState from './RequestState.js';
+import RequestType from './RequestType.js';
 
     /**
      * Stores information for making a request. In general this does not need to be constructed directly.
      *
      * @alias Request
      * @constructor
-     *
+     * @namespace
+     * @exports Request
      * @param {Object} [options] An object with the following properties:
-     * @param {Boolean} [options.url] The url to request.
+     * @param {String} [options.url] The url to request.
      * @param {Request~RequestCallback} [options.requestFunction] The function that makes the actual data request.
      * @param {Request~CancelCallback} [options.cancelFunction] The function that is called when the request is cancelled.
      * @param {Request~PriorityCallback} [options.priorityFunction] The function that is called to update the request's priority, which occurs once per frame.
@@ -30,7 +24,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var throttleByServer = defaultValue(options.throttleByServer, false);
-        var throttle = throttleByServer || defaultValue(options.throttle, false);
+        var throttle = defaultValue(options.throttle, false);
 
         /**
          * The URL to request.
@@ -196,6 +190,4 @@ define([
      * @callback Request~PriorityCallback
      * @returns {Number} The updated priority value.
      */
-
-    return Request;
-});
+export default Request;

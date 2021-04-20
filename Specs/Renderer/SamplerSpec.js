@@ -1,14 +1,9 @@
-defineSuite([
-        'Renderer/Sampler',
-        'Renderer/TextureMinificationFilter',
-        'Renderer/TextureWrap',
-        'Specs/createContext'
-    ], function(
-        Sampler,
-        TextureMinificationFilter,
-        TextureWrap,
-        createContext) {
-    'use strict';
+import { Sampler } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
+import { TextureWrap } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Sampler', function() {
 
     var context;
 

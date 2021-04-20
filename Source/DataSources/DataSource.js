@@ -1,10 +1,4 @@
-define([
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * Defines the interface for data sources, which turn arbitrary data into a
@@ -20,7 +14,7 @@ define([
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(DataSource.prototype, {
+    Object.defineProperties(DataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
          * @memberof DataSource.prototype
@@ -123,6 +117,4 @@ define([
             dataSource._loading.raiseEvent(dataSource, isLoading);
         }
     };
-
-    return DataSource;
-});
+export default DataSource;

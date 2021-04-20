@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './DeveloperError'
-    ], function(
-        defined,
-        DeveloperError) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Contains functions for checking that supplied arguments are of a specified type
@@ -180,6 +175,4 @@ define([
             throw new DeveloperError(name1 + ' must be equal to ' + name2 + ', the actual values are ' + test1 + ' and ' + test2);
         }
     };
-
-    return Check;
-});
+export default Check;

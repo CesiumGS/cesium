@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Provides the type of time standards which JulianDate can take as input.
@@ -33,6 +28,4 @@ define([
          */
         TAI : 1
     };
-
-    return freezeObject(TimeStandard);
-});
+export default Object.freeze(TimeStandard);

@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/HermiteSpline',
-        'Core/Cartesian3',
-        'Core/Math'
-    ], function(
-        HermiteSpline,
-        Cartesian3,
-        CesiumMath) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HermiteSpline } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/HermiteSpline', function() {
 
     var points;
     var times;

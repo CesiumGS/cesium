@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/PeliasGeocoderService',
-        'Core/GeocodeType',
-        'Core/Cartesian3',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        PeliasGeocoderService,
-        GeocodeType,
-        Cartesian3,
-        Resource,
-        when) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { GeocodeType } from '../../Source/Cesium.js';
+import { PeliasGeocoderService } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/PeliasGeocoderService', function() {
 
     it('constructor throws without url', function() {
         expect(function() {

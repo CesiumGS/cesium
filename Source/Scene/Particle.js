@@ -1,20 +1,8 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
 
     var defaultSize = new Cartesian2(1.0, 1.0);
 
@@ -107,7 +95,7 @@ define([
         this._billboard = undefined;
     }
 
-    defineProperties(Particle.prototype, {
+    Object.defineProperties(Particle.prototype, {
         /**
          * Gets the age of the particle in seconds.
          * @memberof Particle.prototype
@@ -158,6 +146,4 @@ define([
         // If this particle is older than it's lifespan then die.
         return this._age <= this.life;
     };
-
-    return Particle;
-});
+export default Particle;

@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Returns the first parameter if not undefined, otherwise the second parameter.
@@ -29,7 +24,5 @@ define([
      * an object literal.
      * @type {Object}
      */
-    defaultValue.EMPTY_OBJECT = freezeObject({});
-
-    return defaultValue;
-});
+    defaultValue.EMPTY_OBJECT = Object.freeze({});
+export default defaultValue;

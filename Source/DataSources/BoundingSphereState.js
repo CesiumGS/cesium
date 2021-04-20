@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
@@ -29,6 +24,4 @@ define([
          */
         FAILED : 2
     };
-
-    return freezeObject(BoundingSphereState);
-});
+export default Object.freeze(BoundingSphereState);

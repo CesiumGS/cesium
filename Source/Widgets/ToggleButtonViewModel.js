@@ -1,16 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../ThirdParty/knockout'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        knockout) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import knockout from '../ThirdParty/knockout.js';
 
     /**
      * A view model which exposes the properties of a toggle button.
@@ -50,7 +41,7 @@ define([
         knockout.track(this, ['toggled', 'tooltip']);
     }
 
-    defineProperties(ToggleButtonViewModel.prototype, {
+    Object.defineProperties(ToggleButtonViewModel.prototype, {
         /**
          * Gets the command which will be executed when the button is toggled.
          * @memberof ToggleButtonViewModel.prototype
@@ -62,6 +53,4 @@ define([
             }
         }
     });
-
-    return ToggleButtonViewModel;
-});
+export default ToggleButtonViewModel;

@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './isBitSet'
-    ], function(
-        defined,
-        isBitSet) {
-    'use strict';
+import defined from './defined.js';
+import isBitSet from './isBitSet.js';
 
     // Bitmask for checking tile properties
     var childrenBitmasks = [0x01, 0x02, 0x04, 0x08];
@@ -125,6 +120,4 @@ define([
     GoogleEarthEnterpriseTileInformation.prototype.getChildBitmask = function() {
         return this._bits & anyChildBitmask;
     };
-
-    return GoogleEarthEnterpriseTileInformation;
-});
+export default GoogleEarthEnterpriseTileInformation;

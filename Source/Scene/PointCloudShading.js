@@ -1,10 +1,5 @@
-define([
-        '../Core/defaultValue',
-        './PointCloudEyeDomeLighting'
-    ], function(
-        defaultValue,
-        PointCloudEyeDomeLighting) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
 
     /**
      * Options for performing point attenuation based on geometric error when rendering
@@ -18,6 +13,8 @@ define([
      * @param {Boolean} [options.eyeDomeLighting=true] When true, use eye dome lighting when drawing with point attenuation.
      * @param {Number} [options.eyeDomeLightingStrength=1.0] Increasing this value increases contrast on slopes and edges.
      * @param {Number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
+     * @param {Boolean} [options.backFaceCulling=false] Determines whether back-facing points are hidden. This option works only if data has normals included.
+     * @param {Boolean} [options.normalShading=true] Determines whether a point cloud that contains normals is shaded by the scene's light source.
      *
      * @alias PointCloudShading
      * @constructor
@@ -76,6 +73,23 @@ define([
          * @default 1.0
          */
         this.eyeDomeLightingRadius = defaultValue(pointCloudShading.eyeDomeLightingRadius, 1.0);
+
+        /**
+         * Determines whether back-facing points are hidden.
+         * This option works only if data has normals included.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.backFaceCulling = defaultValue(pointCloudShading.backFaceCulling, false);
+
+        /**
+         * Determines whether a point cloud that contains normals is shaded by the scene's light source.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.normalShading = defaultValue(pointCloudShading.normalShading, true);
     }
 
     /**
@@ -87,6 +101,4 @@ define([
     PointCloudShading.isSupported = function(scene) {
         return PointCloudEyeDomeLighting.isSupported(scene.context);
     };
-
-    return PointCloudShading;
-});
+export default PointCloudShading;

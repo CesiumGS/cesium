@@ -1,22 +1,10 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './FeatureDetection',
-        './freezeObject',
-        './Math',
-        './Matrix3'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        FeatureDetection,
-        freezeObject,
-        CesiumMath,
-        Matrix3) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import FeatureDetection from './FeatureDetection.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
 
     /**
      * A set of 4-dimensional coordinates used to represent rotation in 3-dimensional space.
@@ -978,7 +966,7 @@ define([
      * @type {Quaternion}
      * @constant
      */
-    Quaternion.ZERO = freezeObject(new Quaternion(0.0, 0.0, 0.0, 0.0));
+    Quaternion.ZERO = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
@@ -986,7 +974,7 @@ define([
      * @type {Quaternion}
      * @constant
      */
-    Quaternion.IDENTITY = freezeObject(new Quaternion(0.0, 0.0, 0.0, 1.0));
+    Quaternion.IDENTITY = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Quaternion instance.
@@ -1030,6 +1018,4 @@ define([
     Quaternion.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
-
-    return Quaternion;
-});
+export default Quaternion;

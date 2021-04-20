@@ -1,82 +1,41 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/Transforms',
-        '../Scene/HeightReference',
-        '../Scene/GroundPrimitive',
-        '../Scene/GroundPolylinePrimitive',
-        './BillboardGraphics',
-        './BoxGraphics',
-        './ConstantPositionProperty',
-        './CorridorGraphics',
-        './createPropertyDescriptor',
-        './createRawPropertyDescriptor',
-        './CylinderGraphics',
-        './EllipseGraphics',
-        './EllipsoidGraphics',
-        './LabelGraphics',
-        './ModelGraphics',
-        './PathGraphics',
-        './PlaneGraphics',
-        './PointGraphics',
-        './PolygonGraphics',
-        './PolylineGraphics',
-        './PolylineVolumeGraphics',
-        './Property',
-        './PropertyBag',
-        './RectangleGraphics',
-        './WallGraphics'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        Transforms,
-        HeightReference,
-        GroundPrimitive,
-        GroundPolylinePrimitive,
-        BillboardGraphics,
-        BoxGraphics,
-        ConstantPositionProperty,
-        CorridorGraphics,
-        createPropertyDescriptor,
-        createRawPropertyDescriptor,
-        CylinderGraphics,
-        EllipseGraphics,
-        EllipsoidGraphics,
-        LabelGraphics,
-        ModelGraphics,
-        PathGraphics,
-        PlaneGraphics,
-        PointGraphics,
-        PolygonGraphics,
-        PolylineGraphics,
-        PolylineVolumeGraphics,
-        Property,
-        PropertyBag,
-        RectangleGraphics,
-        WallGraphics) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Quaternion from '../Core/Quaternion.js';
+import Transforms from '../Core/Transforms.js';
+import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import HeightReference from '../Scene/HeightReference.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import BoxGraphics from './BoxGraphics.js';
+import ConstantPositionProperty from './ConstantPositionProperty.js';
+import CorridorGraphics from './CorridorGraphics.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import createRawPropertyDescriptor from './createRawPropertyDescriptor.js';
+import CylinderGraphics from './CylinderGraphics.js';
+import EllipseGraphics from './EllipseGraphics.js';
+import EllipsoidGraphics from './EllipsoidGraphics.js';
+import LabelGraphics from './LabelGraphics.js';
+import ModelGraphics from './ModelGraphics.js';
+import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
+import PathGraphics from './PathGraphics.js';
+import PlaneGraphics from './PlaneGraphics.js';
+import PointGraphics from './PointGraphics.js';
+import PolygonGraphics from './PolygonGraphics.js';
+import PolylineGraphics from './PolylineGraphics.js';
+import PolylineVolumeGraphics from './PolylineVolumeGraphics.js';
+import Property from './Property.js';
+import PropertyBag from './PropertyBag.js';
+import RectangleGraphics from './RectangleGraphics.js';
+import WallGraphics from './WallGraphics.js';
 
     var cartoScratch = new Cartographic();
 
@@ -122,6 +81,7 @@ define([
      * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
      * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
      * @param {ModelGraphics} [options.model] A model to associate with this entity.
+     * @param {Cesium3DTilesetGraphics} [options.tileset] A 3D Tiles tileset to associate with this entity.
      * @param {PathGraphics} [options.path] A path to associate with this entity.
      * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
      * @param {PointGraphics} [options.point] A point to associate with this entity.
@@ -132,7 +92,7 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -149,7 +109,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon', //
+                               'ellipsoid', 'label', 'model', 'tileset', 'orientation', 'path', 'plane', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
@@ -170,6 +130,8 @@ define([
         this._labelSubscription = undefined;
         this._model = undefined;
         this._modelSubscription = undefined;
+        this._tileset = undefined;
+        this._tilesetSubscription = undefined;
         this._orientation = undefined;
         this._orientationSubscription = undefined;
         this._path = undefined;
@@ -220,7 +182,7 @@ define([
         entity._definitionChanged.raiseEvent(entity, 'isShowing', isShowing, !isShowing);
     }
 
-    defineProperties(Entity.prototype, {
+    Object.defineProperties(Entity.prototype, {
         /**
          * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
@@ -404,6 +366,12 @@ define([
          */
         model : createPropertyTypeDescriptor('model', ModelGraphics),
         /**
+         * Gets or sets the tileset.
+         * @memberof Entity.prototype
+         * @type {Cesium3DTilesetGraphics}
+         */
+        tileset : createPropertyTypeDescriptor('tileset', Cesium3DTilesetGraphics),
+        /**
          * Gets or sets the orientation.
          * @memberof Entity.prototype
          * @type {Property}
@@ -566,7 +534,7 @@ define([
         //Name, show, and availability are not Property objects and are currently handled differently.
         //source.show is intentionally ignored because this.show always has a value.
         this.name = defaultValue(this.name, source.name);
-        this.availability = defaultValue(source.availability, this.availability);
+        this.availability = defaultValue(this.availability, source.availability);
 
         var propertyNames = this._propertyNames;
         var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
@@ -664,7 +632,7 @@ define([
     };
 
     /**
-     * Checks if the given Scene supports materials besides Color on Entities draped on terrain.
+     * Checks if the given Scene supports materials besides Color on Entities draped on terrain or 3D Tiles.
      * If this feature is not supported, Entities with non-color materials but no `height` will
      * instead be rendered as if height is 0.
      *
@@ -676,16 +644,14 @@ define([
     };
 
     /**
-     * Checks if the given Scene supports polylines clamped to the ground..
+     * Checks if the given Scene supports polylines clamped to terrain or 3D Tiles.
      * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
-     * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
+     * the provided heights and using the `arcType` parameter instead of clamped to the ground.
      *
      * @param {Scene} scene The current scene.
-     * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
+     * @returns {Boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
      */
     Entity.supportsPolylinesOnTerrain = function(scene) {
         return GroundPolylinePrimitive.isSupported(scene);
     };
-
-    return Entity;
-});
+export default Entity;

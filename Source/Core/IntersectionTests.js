@@ -1,33 +1,20 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Interval',
-        './Math',
-        './Matrix3',
-        './QuadraticRealPolynomial',
-        './QuarticRealPolynomial',
-        './Ray'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Interval,
-        CesiumMath,
-        Matrix3,
-        QuadraticRealPolynomial,
-        QuarticRealPolynomial,
-        Ray) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Interval from './Interval.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import QuadraticRealPolynomial from './QuadraticRealPolynomial.js';
+import QuarticRealPolynomial from './QuarticRealPolynomial.js';
+import Ray from './Ray.js';
 
     /**
      * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.
      *
      * @exports IntersectionTests
+     * @namespace
      */
     var IntersectionTests = {};
 
@@ -80,7 +67,7 @@ define([
     var scratchQVec = new Cartesian3();
 
     /**
-     * Computes the intersection of a ray and a triangle as a parametric distance along the input ray.
+     * Computes the intersection of a ray and a triangle as a parametric distance along the input ray. The result is negative when the triangle is behind the ray.
      *
      * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
      * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
@@ -902,6 +889,4 @@ define([
         // otherwise, it is completely in front (numBehind is 0).
         return undefined;
     };
-
-    return IntersectionTests;
-});
+export default IntersectionTests;

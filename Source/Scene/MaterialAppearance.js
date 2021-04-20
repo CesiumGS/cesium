@@ -1,32 +1,14 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/freezeObject',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/AllMaterialAppearanceFS',
-        '../Shaders/Appearances/AllMaterialAppearanceVS',
-        '../Shaders/Appearances/BasicMaterialAppearanceFS',
-        '../Shaders/Appearances/BasicMaterialAppearanceVS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceFS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceVS',
-        './Appearance',
-        './Material'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        freezeObject,
-        VertexFormat,
-        AllMaterialAppearanceFS,
-        AllMaterialAppearanceVS,
-        BasicMaterialAppearanceFS,
-        BasicMaterialAppearanceVS,
-        TexturedMaterialAppearanceFS,
-        TexturedMaterialAppearanceVS,
-        Appearance,
-        Material) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import AllMaterialAppearanceFS from '../Shaders/Appearances/AllMaterialAppearanceFS.js';
+import AllMaterialAppearanceVS from '../Shaders/Appearances/AllMaterialAppearanceVS.js';
+import BasicMaterialAppearanceFS from '../Shaders/Appearances/BasicMaterialAppearanceFS.js';
+import BasicMaterialAppearanceVS from '../Shaders/Appearances/BasicMaterialAppearanceVS.js';
+import TexturedMaterialAppearanceFS from '../Shaders/Appearances/TexturedMaterialAppearanceFS.js';
+import TexturedMaterialAppearanceVS from '../Shaders/Appearances/TexturedMaterialAppearanceVS.js';
+import Appearance from './Appearance.js';
+import Material from './Material.js';
 
     /**
      * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
@@ -46,8 +28,8 @@ define([
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -79,7 +61,7 @@ define([
          *
          * @default {@link Material.ColorType}
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
 
@@ -105,7 +87,7 @@ define([
         this._faceForward = defaultValue(options.faceForward, !closed);
     }
 
-    defineProperties(MaterialAppearance.prototype, {
+    Object.defineProperties(MaterialAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *
@@ -291,7 +273,7 @@ define([
          *
          * @constant
          */
-        BASIC : freezeObject({
+        BASIC : Object.freeze({
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             vertexShaderSource : BasicMaterialAppearanceVS,
             fragmentShaderSource : BasicMaterialAppearanceFS
@@ -303,7 +285,7 @@ define([
          *
          * @constant
          */
-        TEXTURED : freezeObject({
+        TEXTURED : Object.freeze({
             vertexFormat : VertexFormat.POSITION_NORMAL_AND_ST,
             vertexShaderSource : TexturedMaterialAppearanceVS,
             fragmentShaderSource : TexturedMaterialAppearanceFS
@@ -315,12 +297,10 @@ define([
          *
          * @constant
          */
-        ALL : freezeObject({
+        ALL : Object.freeze({
             vertexFormat : VertexFormat.ALL,
             vertexShaderSource : AllMaterialAppearanceVS,
             fragmentShaderSource : AllMaterialAppearanceFS
         })
     };
-
-    return MaterialAppearance;
-});
+export default MaterialAppearance;

@@ -1,24 +1,10 @@
-define([
-    './Cartesian3',
-    './Check',
-    './combine',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './GeocodeType',
-    './Rectangle',
-    './Resource'
-], function (
-    Cartesian3,
-    Check,
-    combine,
-    defaultValue,
-    defined,
-    defineProperties,
-    GeocodeType,
-    Rectangle,
-    Resource) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import combine from './combine.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Rectangle from './Rectangle.js';
+import Resource from './Resource.js';
 
     /**
      * Provides geocoding via a {@link https://opencagedata.com/|OpenCage} server.
@@ -64,7 +50,7 @@ define([
         this._params = defaultValue(params, {});
     }
 
-    defineProperties(OpenCageGeocoderService.prototype, {
+    Object.defineProperties(OpenCageGeocoderService.prototype, {
         /**
          * The Resource used to access the OpenCage endpoint.
          * @type {Resource}
@@ -125,6 +111,4 @@ define([
                 });
             });
     };
-
-    return OpenCageGeocoderService;
-});
+export default OpenCageGeocoderService;

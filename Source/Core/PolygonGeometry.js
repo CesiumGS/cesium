@@ -1,64 +1,32 @@
-define([
-        './arrayFill',
-        './BoundingRectangle',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './EllipsoidTangentPlane',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryInstance',
-        './GeometryOffsetAttribute',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix2',
-        './Matrix3',
-        './PolygonGeometryLibrary',
-        './PolygonPipeline',
-        './Quaternion',
-        './Rectangle',
-        './VertexFormat',
-        './WindingOrder'
-    ], function(
-        arrayFill,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidTangentPlane,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix2,
-        Matrix3,
-        PolygonGeometryLibrary,
-        PolygonPipeline,
-        Quaternion,
-        Rectangle,
-        VertexFormat,
-        WindingOrder) {
-    'use strict';
+import ArcType from './ArcType.js';
+import arrayFill from './arrayFill.js';
+import BoundingRectangle from './BoundingRectangle.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidGeodesic from './EllipsoidGeodesic.js';
+import EllipsoidTangentPlane from './EllipsoidTangentPlane.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryInstance from './GeometryInstance.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import PolygonGeometryLibrary from './PolygonGeometryLibrary.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import VertexFormat from './VertexFormat.js';
+import WindingOrder from './WindingOrder.js';
 
     var scratchCarto1 = new Cartographic();
     var scratchCarto2 = new Cartographic();
@@ -370,30 +338,109 @@ define([
         return geometry;
     }
 
-    function computeRectangle(positions, ellipsoid, result) {
+    var startCartographicScratch = new Cartographic();
+    var endCartographicScratch = new Cartographic();
+    var idlCross = {
+        westOverIDL : 0.0,
+        eastOverIDL : 0.0
+    };
+    var ellipsoidGeodesic = new EllipsoidGeodesic();
+    function computeRectangle(positions, ellipsoid, arcType, granularity, result) {
+        result = defaultValue(result, new Rectangle());
         if (!defined(positions) || positions.length < 3) {
-            if (!defined(result)) {
-                return new Rectangle();
-            }
             result.west = 0.0;
             result.north = 0.0;
             result.south = 0.0;
             result.east = 0.0;
             return result;
         }
-        return Rectangle.fromCartesianArray(positions, ellipsoid, result);
+
+        if (arcType === ArcType.RHUMB) {
+            return Rectangle.fromCartesianArray(positions, ellipsoid, result);
+        }
+
+        if (!ellipsoidGeodesic.ellipsoid.equals(ellipsoid)) {
+            ellipsoidGeodesic = new EllipsoidGeodesic(undefined, undefined, ellipsoid);
+        }
+
+        result.west = Number.POSITIVE_INFINITY;
+        result.east = Number.NEGATIVE_INFINITY;
+        result.south = Number.POSITIVE_INFINITY;
+        result.north = Number.NEGATIVE_INFINITY;
+
+        idlCross.westOverIDL = Number.POSITIVE_INFINITY;
+        idlCross.eastOverIDL = Number.NEGATIVE_INFINITY;
+
+        var inverseChordLength = 1.0 / CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+        var positionsLength = positions.length;
+        var endCartographic = ellipsoid.cartesianToCartographic(positions[0], endCartographicScratch);
+        var startCartographic = startCartographicScratch;
+        var swap;
+
+        for (var i = 1; i < positionsLength; i++) {
+            swap = startCartographic;
+            startCartographic = endCartographic;
+            endCartographic = ellipsoid.cartesianToCartographic(positions[i], swap);
+            ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
+            interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
+        }
+
+        swap = startCartographic;
+        startCartographic = endCartographic;
+        endCartographic = ellipsoid.cartesianToCartographic(positions[0], swap);
+        ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
+        interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
+
+        if (result.east - result.west > idlCross.eastOverIDL - idlCross.westOverIDL) {
+            result.west = idlCross.westOverIDL;
+            result.east = idlCross.eastOverIDL;
+
+            if (result.east > CesiumMath.PI) {
+                result.east = result.east - CesiumMath.TWO_PI;
+            }
+            if (result.west > CesiumMath.PI) {
+                result.west = result.west - CesiumMath.TWO_PI;
+            }
+        }
+
+        return result;
+    }
+
+    var interpolatedCartographicScratch = new Cartographic();
+    function interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross) {
+        var segmentLength = ellipsoidGeodesic.surfaceDistance;
+
+        var numPoints = Math.ceil(segmentLength * inverseChordLength);
+        var subsegmentDistance = numPoints > 0 ? segmentLength / (numPoints - 1) : Number.POSITIVE_INFINITY;
+        var interpolationDistance = 0.0;
+
+        for (var i = 0; i < numPoints; i++) {
+            var interpolatedCartographic = ellipsoidGeodesic.interpolateUsingSurfaceDistance(interpolationDistance, interpolatedCartographicScratch);
+            interpolationDistance += subsegmentDistance;
+            var longitude = interpolatedCartographic.longitude;
+            var latitude = interpolatedCartographic.latitude;
+
+            result.west = Math.min(result.west, longitude);
+            result.east = Math.max(result.east, longitude);
+            result.south = Math.min(result.south, latitude);
+            result.north = Math.max(result.north, latitude);
+
+            var lonAdjusted = longitude >= 0 ?  longitude : longitude +  CesiumMath.TWO_PI;
+            idlCross.westOverIDL = Math.min(idlCross.westOverIDL, lonAdjusted);
+            idlCross.eastOverIDL = Math.max(idlCross.eastOverIDL, lonAdjusted);
+        }
     }
 
     var createGeometryFromPositionsExtrudedPositions = [];
 
-    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
+    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat, arcType) {
         var geos = {
             walls : []
         };
         var i;
 
         if (closeTop || closeBottom) {
-            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat);
+            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, arcType);
 
             var edgePoints = topGeo.attributes.position.values;
             var indices = topGeo.indices;
@@ -455,7 +502,7 @@ define([
             outerRing = outerRing.slice().reverse();
         }
 
-        var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight);
+        var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight, arcType);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
         }));
@@ -472,7 +519,7 @@ define([
                 hole = hole.slice().reverse();
             }
 
-            wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity);
+            wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity, perPositionHeight, arcType);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
             }));
@@ -498,11 +545,12 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      *
      * @example
      * // 1. create a polygon from points
@@ -578,6 +626,9 @@ define([
         if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
+        if (defined(options.arcType) && options.arcType !== ArcType.GEODESIC && options.arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.');
+        }
         //>>includeEnd('debug');
 
         var polygonHierarchy = options.polygonHierarchy;
@@ -610,6 +661,7 @@ define([
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createPolygonGeometry';
         this._offsetAttribute = options.offsetAttribute;
+        this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
 
         this._rectangle = undefined;
         this._textureCoordinateRotationPoints = undefined;
@@ -618,7 +670,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 11;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 12;
     }
 
     /**
@@ -635,6 +687,7 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      * @returns {PolygonGeometry}
      *
      *
@@ -673,7 +726,8 @@ define([
             perPositionHeight : options.perPositionHeight,
             closeTop : options.closeTop,
             closeBottom : options.closeBottom,
-            offsetAttribute : options.offsetAttribute
+            offsetAttribute : options.offsetAttribute,
+            arcType : options.arcType
         };
         return new PolygonGeometry(newOptions);
     };
@@ -713,6 +767,7 @@ define([
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
         array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex++] = value._arcType;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -760,6 +815,7 @@ define([
         var closeBottom = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex++] === 1.0;
         var offsetAttribute = array[startingIndex++];
+        var arcType = array[startingIndex++];
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -779,6 +835,7 @@ define([
         result._closeBottom = closeBottom;
         result._shadowVolume = shadowVolume;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._arcType = arcType;
         result.packedLength = packedLength;
         return result;
     };
@@ -788,6 +845,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions sampled.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Rectangle} [result] An object in which to store the result.
      *
@@ -799,10 +858,18 @@ define([
         Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
         //>>includeEnd('debug');
 
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+        //>>includeStart('debug', pragmas.debug);
+        if (arcType !== ArcType.GEODESIC && arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.');
+        }
+        //>>includeEnd('debug');
+
         var polygonHierarchy = options.polygonHierarchy;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        return computeRectangle(polygonHierarchy.positions, ellipsoid, result);
+        return computeRectangle(polygonHierarchy.positions, ellipsoid, arcType, granularity, result);
     };
 
     /**
@@ -820,6 +887,7 @@ define([
         var perPositionHeight = polygonGeometry._perPositionHeight;
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
+        var arcType = polygonGeometry._arcType;
 
         var outerPositions = polygonHierarchy.positions;
         if (outerPositions.length < 3) {
@@ -829,6 +897,7 @@ define([
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
 
         var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
+
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
 
@@ -856,7 +925,8 @@ define([
             bottom: false,
             top: true,
             wall: false,
-            extrude: false
+            extrude: false,
+            arcType: arcType
         };
 
         var i;
@@ -868,7 +938,7 @@ define([
             options.shadowVolume = polygonGeometry._shadowVolume;
             options.offsetAttribute = polygonGeometry._offsetAttribute;
             for (i = 0; i < polygons.length; i++) {
-                var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+                var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat, arcType);
 
                 var topAndBottom;
                 if (closeTop && closeBottom) {
@@ -901,7 +971,7 @@ define([
         } else {
             for (i = 0; i < polygons.length; i++) {
                 var geometryInstance = new GeometryInstance({
-                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat)
+                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat, arcType)
                 });
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 options.geometry = geometryInstance.geometry;
@@ -962,7 +1032,8 @@ define([
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
+            shadowVolume: true,
+            arcType : polygonGeometry._arcType
         });
     };
 
@@ -977,7 +1048,7 @@ define([
         return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
     }
 
-    defineProperties(PolygonGeometry.prototype, {
+    Object.defineProperties(PolygonGeometry.prototype, {
         /**
          * @private
          */
@@ -985,7 +1056,7 @@ define([
             get : function() {
                 if (!defined(this._rectangle)) {
                     var positions = this._polygonHierarchy.positions;
-                    this._rectangle = computeRectangle(positions, this._ellipsoid);
+                    this._rectangle = computeRectangle(positions, this._ellipsoid, this._arcType, this._granularity);
                 }
 
                 return this._rectangle;
@@ -1004,6 +1075,4 @@ define([
             }
         }
     });
-
-    return PolygonGeometry;
-});
+export default PolygonGeometry;

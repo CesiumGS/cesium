@@ -1,12 +1,8 @@
-define([
-        './defaultValue',
-        './defined',
-        './Fullscreen'
-    ], function(
-        defaultValue,
-        defined,
-        Fullscreen) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Fullscreen from './Fullscreen.js';
     /*global CanvasPixelArray*/
 
     var theNavigator;
@@ -171,7 +167,7 @@ define([
             //that rely on it, such as the Windows WebBrowser control which defines
             //PointerEvent but sets navigator.pointerEnabled to false.
 
-            //Firefox disabled because of https://github.com/AnalyticalGraphicsInc/cesium/issues/6372
+            //Firefox disabled because of https://github.com/CesiumGS/cesium/issues/6372
             hasPointerEvents = !isFirefox() && typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
         }
         return hasPointerEvents;
@@ -198,6 +194,55 @@ define([
     function imageRenderingValue() {
         return supportsImageRenderingPixelated() ? imageRenderingValueResult : undefined;
     }
+
+    function supportsWebP() {
+        //>>includeStart('debug', pragmas.debug);
+        if (!supportsWebP.initialized) {
+            throw new DeveloperError('You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP');
+        }
+        //>>includeEnd('debug');
+        return supportsWebP._result;
+    }
+    supportsWebP._promise = undefined;
+    supportsWebP._result = undefined;
+    supportsWebP.initialize = function() {
+        // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
+        if (defined(supportsWebP._promise)) {
+            return supportsWebP._promise;
+        }
+
+        var supportsWebPDeferred = when.defer();
+        supportsWebP._promise = supportsWebPDeferred.promise;
+        if (isEdge()) {
+            // Edge's WebP support with WebGL is incomplete.
+            // See bug report: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/19221241/
+            supportsWebP._result = false;
+            supportsWebPDeferred.resolve(supportsWebP._result);
+            return supportsWebPDeferred.promise;
+        }
+
+        var image = new Image();
+        image.onload = function () {
+            supportsWebP._result = (image.width > 0) && (image.height > 0);
+            supportsWebPDeferred.resolve(supportsWebP._result);
+        };
+
+        image.onerror = function () {
+            supportsWebP._result = false;
+            supportsWebPDeferred.resolve(supportsWebP._result);
+        };
+
+        image.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
+
+        return supportsWebPDeferred.promise;
+    };
+    Object.defineProperties(supportsWebP, {
+        initialized: {
+            get: function() {
+                return defined(supportsWebP._result);
+            }
+        }
+    });
 
     var typedArrayTypes = [];
     if (typeof ArrayBuffer !== 'undefined') {
@@ -235,6 +280,7 @@ define([
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
+        supportsWebP: supportsWebP,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };
@@ -283,6 +329,4 @@ define([
     FeatureDetection.supportsWebAssembly = function() {
         return typeof WebAssembly !== 'undefined' && !FeatureDetection.isEdge();
     };
-
-    return FeatureDetection;
-});
+export default FeatureDetection;

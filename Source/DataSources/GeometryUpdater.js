@@ -1,40 +1,19 @@
-define([
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Event',
-        '../Core/Iso8601',
-        '../Core/oneTimeWarning',
-        '../Scene/ClassificationType',
-        '../Scene/ShadowMode',
-        './ColorMaterialProperty',
-        './ConstantProperty',
-        './Entity',
-        './Property'
-    ], function(
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Event,
-        Iso8601,
-        oneTimeWarning,
-        ClassificationType,
-        ShadowMode,
-        ColorMaterialProperty,
-        ConstantProperty,
-        Entity,
-        Property) {
-    'use strict';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Event from '../Core/Event.js';
+import Iso8601 from '../Core/Iso8601.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import Entity from './Entity.js';
+import Property from './Property.js';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
@@ -43,10 +22,10 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var defaultClassificationType = new ConstantProperty(ClassificationType.TERRAIN);
+    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
-     * An abstract class for updating geometry entites.
+     * An abstract class for updating geometry entities.
      * @alias GeometryUpdater
      * @constructor
      *
@@ -92,7 +71,7 @@ define([
         this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
     }
 
-    defineProperties(GeometryUpdater.prototype, {
+    Object.defineProperties(GeometryUpdater.prototype, {
         /**
          * Gets the unique ID associated with this updater
          * @memberof GeometryUpdater.prototype
@@ -209,7 +188,7 @@ define([
         },
         /**
          * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof GeometryUpdater.prototype
          *
          * @type {Property}
@@ -246,7 +225,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
+         * If true, all visualization is delegated to a DynamicGeometryUpdater
          * returned by GeometryUpdater#createDynamicUpdater.
          * @memberof GeometryUpdater.prototype
          *
@@ -306,7 +285,8 @@ define([
      */
     GeometryUpdater.prototype.isOutlineVisible = function(time) {
         var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        var visible = this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
@@ -317,7 +297,8 @@ define([
      */
     GeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        var visible = this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
@@ -510,6 +491,4 @@ define([
 
         return new this.constructor.DynamicGeometryUpdater(this, primitives, groundPrimitives);
     };
-
-    return GeometryUpdater;
-});
+export default GeometryUpdater;

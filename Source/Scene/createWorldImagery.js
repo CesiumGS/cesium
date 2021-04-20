@@ -1,12 +1,6 @@
-define([
-    './IonImageryProvider',
-    './IonWorldImageryStyle',
-    '../Core/defaultValue'
-], function(
-    IonImageryProvider,
-    IonWorldImageryStyle,
-    defaultValue) {
-'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import IonImageryProvider from './IonImageryProvider.js';
+import IonWorldImageryStyle from './IonWorldImageryStyle.js';
 
     /**
      * Creates an {@link IonImageryProvider} instance for ion's default global base imagery layer, currently Bing Maps.
@@ -41,6 +35,4 @@ define([
             assetId: style
         });
     }
-
-    return createWorldImagery;
-});
+export default createWorldImagery;

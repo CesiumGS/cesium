@@ -1,34 +1,13 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Shaders/BrdfLutGeneratorFS'
-    ], function(
-        BoundingRectangle,
-        defined,
-        defineProperties,
-        destroyObject,
-        PixelFormat,
-        Framebuffer,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        BrdfLutGeneratorFS) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
 
     /**
      * @private
@@ -39,7 +18,7 @@ define([
         this._drawCommand = undefined;
     }
 
-    defineProperties(BrdfLutGenerator.prototype, {
+    Object.defineProperties(BrdfLutGenerator.prototype, {
         colorTexture : {
             get : function() {
                 return this._colorTexture;
@@ -67,12 +46,7 @@ define([
             height: 256,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         generator._colorTexture = colorTexture;
@@ -106,6 +80,4 @@ define([
         this._colorTexture = this._colorTexture && this._colorTexture.destroy();
         return destroyObject(this);
     };
-
-    return BrdfLutGenerator;
-});
+export default BrdfLutGenerator;

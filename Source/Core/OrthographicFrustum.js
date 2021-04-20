@@ -1,20 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Math',
-        './OrthographicOffCenterFrustum'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath,
-        OrthographicOffCenterFrustum) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
+import OrthographicOffCenterFrustum from './OrthographicOffCenterFrustum.js';
 
     /**
      * The viewing frustum is defined by 6 planes.
@@ -170,7 +159,7 @@ define([
         }
     }
 
-    defineProperties(OrthographicFrustum.prototype, {
+    Object.defineProperties(OrthographicFrustum.prototype, {
         /**
          * Gets the orthographic projection matrix computed from the view frustum.
          * @memberof OrthographicFrustum.prototype
@@ -210,20 +199,22 @@ define([
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
      * @param {Number} distance The distance to the near plane in meters.
+     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
      * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
+     * @exception {DeveloperError} pixelRatio must be greater than zero.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, new Cesium.Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
      */
-    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
+    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
         update(this);
-        return this._offCenterFrustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, result);
+        return this._offCenterFrustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result);
     };
 
     /**
@@ -295,6 +286,4 @@ define([
                 CesiumMath.equalsEpsilon(this.aspectRatio, other.aspectRatio, relativeEpsilon, absoluteEpsilon) &&
                 this._offCenterFrustum.equalsEpsilon(other._offCenterFrustum, relativeEpsilon, absoluteEpsilon));
     };
-
-    return OrthographicFrustum;
-});
+export default OrthographicFrustum;

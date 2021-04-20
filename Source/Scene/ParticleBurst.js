@@ -1,10 +1,4 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties'
-    ], function(
-        defaultValue,
-        defineProperties) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
 
     /**
      * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
@@ -21,7 +15,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * The time in seconds after the eginning of the particle system's lifetime that the burst will occur.
+         * The time in seconds after the beginning of the particle system's lifetime that the burst will occur.
          * @type {Number}
          * @default 0.0
          */
@@ -42,7 +36,7 @@ define([
         this._complete = false;
     }
 
-    defineProperties(ParticleBurst.prototype, {
+    Object.defineProperties(ParticleBurst.prototype, {
         /**
          * <code>true</code> if the burst has been completed; <code>false</code> otherwise.
          * @memberof ParticleBurst.prototype
@@ -54,6 +48,4 @@ define([
             }
         }
     });
-
-    return ParticleBurst;
-});
+export default ParticleBurst;

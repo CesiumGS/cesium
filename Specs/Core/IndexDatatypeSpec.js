@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/IndexDatatype',
-        'Core/Math'
-    ], function(
-        IndexDatatype,
-        CesiumMath) {
-    'use strict';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/IndexDatatype', function() {
 
     it('IndexDatatype.validate validates input', function() {
         expect(IndexDatatype.validate(IndexDatatype.UNSIGNED_SHORT)).toEqual(true);

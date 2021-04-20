@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Whether a classification affects terrain, 3D Tiles or both.
@@ -36,6 +31,4 @@ define([
          */
         NUMBER_OF_CLASSIFICATION_TYPES : 3
     };
-
-    return freezeObject(ClassificationType);
-});
+export default Object.freeze(ClassificationType);

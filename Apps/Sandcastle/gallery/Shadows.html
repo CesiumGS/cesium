@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -38,7 +33,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var shadowMap = viewer.shadowMap;
-shadowMap.maxmimumDistance = 10000.0;
+shadowMap.maximumDistance = 10000.0;
 
 var cesiumAir = viewer.entities.add({
     name : 'Cesium Air',
@@ -52,7 +47,8 @@ var groundVehicle = viewer.entities.add({
     name : 'Ground Vehicle',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb'
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
+        heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
     }
 });
 
@@ -60,7 +56,8 @@ var cesiumMan = viewer.entities.add({
     name : 'Cesium Man',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb'
+        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+        heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
     }
 });
 
@@ -68,7 +65,7 @@ var woodTower = viewer.entities.add({
     name : 'Wood Tower',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/WoodTower/Wood_Tower.gltf'
+        uri : '../../SampleData/models/WoodTower/Wood_Tower.glb'
     }
 });
 
@@ -76,7 +73,7 @@ var simpleCity = viewer.entities.add({
     name : 'Simple City',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf'
+        uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.glb'
     }
 });
 
@@ -271,9 +268,8 @@ setEntity(cesiumAir);
 Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -1,22 +1,10 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/JulianDate',
-        '../Core/Request',
-        '../Core/RequestType'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        JulianDate,
-        Request,
-        RequestType) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import JulianDate from '../Core/JulianDate.js';
+import Request from '../Core/Request.js';
+import RequestType from '../Core/RequestType.js';
 
     /**
      * Provides functionality for ImageryProviders that have time dynamic imagery
@@ -53,7 +41,7 @@ define([
         this._clockOnTick(clock);
     }
 
-    defineProperties(TimeDynamicImagery.prototype, {
+    Object.defineProperties(TimeDynamicImagery.prototype, {
         /**
          * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
          * @memberof TimeDynamicImagery.prototype
@@ -299,6 +287,4 @@ define([
 
         return true;
     }
-
-    return TimeDynamicImagery;
-});
+export default TimeDynamicImagery;

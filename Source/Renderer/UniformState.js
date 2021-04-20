@@ -1,42 +1,21 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/EncodedCartesian3',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/Simon1994PlanetaryPositions',
-        '../Core/Transforms',
-        '../Scene/SceneMode',
-        './Sampler'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        EncodedCartesian3,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        Simon1994PlanetaryPositions,
-        Transforms,
-        SceneMode,
-        Sampler) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import Simon1994PlanetaryPositions from '../Core/Simon1994PlanetaryPositions.js';
+import Transforms from '../Core/Transforms.js';
+import SceneMode from '../Scene/SceneMode.js';
+import SunLight from '../Scene/SunLight.js';
 
     /**
      * @private
@@ -65,9 +44,9 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
-        this._log2FarDistance = undefined;
-        this._log2FarPlusOne = undefined;
-        this._log2NearDistance = undefined;
+        this._farDepthFromNearPlusOne = undefined;
+        this._log2FarDepthFromNearPlusOne = undefined;
+        this._oneOverLog2FarDepthFromNearPlusOne = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -147,23 +126,33 @@ define([
         this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
-        this._sunColor = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
+
+        this._lightDirectionWC = new Cartesian3();
+        this._lightDirectionEC = new Cartesian3();
+        this._lightColor = new Cartesian3();
+        this._lightColorHdr = new Cartesian3();
 
         this._pass = undefined;
         this._mode = undefined;
         this._mapProjection = undefined;
+        this._ellipsoid = undefined;
         this._cameraDirection = new Cartesian3();
         this._cameraRight = new Cartesian3();
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
-        this._resolutionScale = 1.0;
+        this._pixelRatio = 1.0;
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
-        this._brdfLut = new Sampler();
-        this._environmentMap = new Sampler();
+        this._brdfLut = undefined;
+        this._environmentMap = undefined;
+
+        this._sphericalHarmonicCoefficients = undefined;
+        this._specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapsDimensions = new Cartesian2();
+        this._specularEnvironmentMapsMaximumLOD = undefined;
 
         this._fogDensity = undefined;
 
@@ -176,7 +165,7 @@ define([
         this._minimumDisableDepthTestDistance = undefined;
     }
 
-    defineProperties(UniformState.prototype, {
+    Object.defineProperties(UniformState.prototype, {
         /**
          * @memberof UniformState.prototype
          * @type {FrameState}
@@ -292,7 +281,7 @@ define([
                 if (this._inverseTransposeModelDirty) {
                     this._inverseTransposeModelDirty = false;
 
-                    Matrix4.getRotation(this.inverseModel, m);
+                    Matrix4.getMatrix3(this.inverseModel, m);
                     Matrix3.transpose(m, m);
                 }
 
@@ -650,35 +639,38 @@ define([
         },
 
         /**
-         * The log2 of the current frustum's far distance. Used to compute the log depth.
+         * The far plane's distance from the near plane, plus 1.0.
+         *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        log2FarDistance : {
+        farDepthFromNearPlusOne : {
             get : function() {
-                return this._log2FarDistance;
+                return this._farDepthFromNearPlusOne;
             }
         },
 
         /**
-         * The log2 of 1 + the current frustum's far distance. Used to reverse log depth.
+         * The log2 of {@link UniformState#farDepthFromNearPlusOne}.
+         *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        log2FarPlusOne : {
+        log2FarDepthFromNearPlusOne : {
             get : function() {
-                return this._log2FarPlusOne;
+                return this._log2FarDepthFromNearPlusOne;
             }
         },
 
         /**
-         * The log2 current frustum's near distance. Used when writing log depth in the fragment shader.
+         * 1.0 divided by {@link UniformState#log2FarDepthFromNearPlusOne}.
+         *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        log2NearDistance : {
+        oneOverLog2FarDepthFromNearPlusOne : {
             get : function() {
-                return this._log2NearDistance;
+                return this._oneOverLog2FarDepthFromNearPlusOne;
             }
         },
 
@@ -719,7 +711,7 @@ define([
 
         /**
          * A normalized vector to the sun in 3D world coordinates at the current scene time.  Even in 2D or
-         * Columbus View mode, this returns the position of the sun in the 3D scene.
+         * Columbus View mode, this returns the direction to the sun in the 3D scene.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
          */
@@ -743,17 +735,6 @@ define([
         },
 
         /**
-         * The color of the light emitted by the sun.
-         * @memberof UniformState.prototype
-         * @type {Color}
-         */
-        sunColor: {
-            get: function() {
-                return this._sunColor;
-            }
-        },
-
-        /**
          * A normalized vector to the moon in eye coordinates at the current scene time.  In 3D mode, this
          * returns the actual vector from the camera position to the moon position.  In 2D and Columbus View, it returns
          * the vector from the equivalent 3D camera position to the position of the moon in the 3D scene.
@@ -763,6 +744,56 @@ define([
         moonDirectionEC : {
             get : function() {
                 return this._moonDirectionEC;
+            }
+        },
+
+        /**
+         * A normalized vector to the scene's light source in 3D world coordinates.  Even in 2D or
+         * Columbus View mode, this returns the direction to the light in the 3D scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        lightDirectionWC : {
+            get : function() {
+                return this._lightDirectionWC;
+            }
+        },
+
+        /**
+         * A normalized vector to the scene's light source in eye coordinates.  In 3D mode, this
+         * returns the actual vector from the camera position to the light.  In 2D and Columbus View, it returns
+         * the vector from the equivalent 3D camera position in the 3D scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        lightDirectionEC : {
+            get : function() {
+                return this._lightDirectionEC;
+            }
+        },
+
+        /**
+         * The color of light emitted by the scene's light source. This is equivalent to the light
+         * color multiplied by the light intensity limited to a maximum luminance of 1.0 suitable
+         * for non-HDR lighting.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        lightColor : {
+            get : function() {
+                return this._lightColor;
+            }
+        },
+
+        /**
+         * The high dynamic range color of light emitted by the scene's light source. This is equivalent to
+         * the light color multiplied by the light intensity suitable for HDR lighting.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        lightColorHdr : {
+            get : function() {
+                return this._lightColorHdr;
             }
         },
 
@@ -808,9 +839,9 @@ define([
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        resolutionScale : {
+        pixelRatio : {
             get : function() {
-                return this._resolutionScale;
+                return this._pixelRatio;
             }
         },
 
@@ -831,7 +862,7 @@ define([
          * @type {Number}
          */
         geometricToleranceOverMeter: {
-            get: function() {
+            get : function() {
                 return this._geometricToleranceOverMeter;
             }
         },
@@ -860,7 +891,7 @@ define([
         /**
          * The look up texture used to find the BRDF for a material
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {Texture}
          */
         brdfLut : {
             get : function() {
@@ -871,11 +902,55 @@ define([
         /**
          * The environment map of the scene
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {CubeMap}
          */
         environmentMap : {
             get : function() {
                 return this._environmentMap;
+            }
+        },
+
+        /**
+         * The spherical harmonic coefficients of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3[]}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            }
+        },
+
+        /**
+         * The specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Texture}
+         */
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            }
+        },
+
+        /**
+         * The dimensions of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        specularEnvironmentMapsDimensions : {
+            get : function() {
+                return this._specularEnvironmentMapsDimensions;
+            }
+        },
+
+        /**
+         * The maximum level-of-detail of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        specularEnvironmentMapsMaximumLOD : {
+            get : function() {
+                return this._specularEnvironmentMapsMaximumLOD;
             }
         },
 
@@ -925,12 +1000,24 @@ define([
             get : function() {
                 return this._orthographicIn3D;
             }
+        },
+
+        /**
+         * The current ellipsoid.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
+            }
         }
     });
 
     function setView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._view);
-        Matrix4.getRotation(matrix, uniformState._viewRotation);
+        Matrix4.getMatrix3(matrix, uniformState._viewRotation);
 
         uniformState._view3DDirty = true;
         uniformState._inverseView3DDirty = true;
@@ -952,7 +1039,7 @@ define([
 
     function setInverseView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._inverseView);
-        Matrix4.getRotation(matrix, uniformState._inverseViewRotation);
+        Matrix4.getMatrix3(matrix, uniformState._inverseViewRotation);
     }
 
     function setProjection(uniformState, matrix) {
@@ -1039,9 +1126,9 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
-        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
-        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
-        this._log2NearDistance = CesiumMath.log2(frustum.near);
+        this._farDepthFromNearPlusOne = (frustum.far - frustum.near) + 1.0;
+        this._log2FarDepthFromNearPlusOne = CesiumMath.log2(this._farDepthFromNearPlusOne);
+        this._oneOverLog2FarDepthFromNearPlusOne = 1.0 / this._log2FarDepthFromNearPlusOne;
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
@@ -1057,6 +1144,9 @@ define([
         this._pass = pass;
     };
 
+    var EMPTY_ARRAY = [];
+    var defaultLight = new SunLight();
+
     /**
      * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -1067,9 +1157,8 @@ define([
     UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
-
-        var canvas = frameState.context._canvas;
-        this._resolutionScale = canvas.width / canvas.clientWidth;
+        this._ellipsoid = frameState.mapProjection.ellipsoid;
+        this._pixelRatio = frameState.pixelRatio;
 
         var camera = frameState.camera;
         this.updateCamera(camera);
@@ -1085,13 +1174,41 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
-        this._sunColor = Cartesian3.clone(frameState.sunColor, this._sunColor);
+
+        var light = defaultValue(frameState.light, defaultLight);
+        if (light instanceof SunLight) {
+            this._lightDirectionWC = Cartesian3.clone(this._sunDirectionWC, this._lightDirectionWC);
+            this._lightDirectionEC = Cartesian3.clone(this._sunDirectionEC, this._lightDirectionEC);
+        } else {
+            this._lightDirectionWC = Cartesian3.normalize(Cartesian3.negate(light.direction, this._lightDirectionWC), this._lightDirectionWC);
+            this._lightDirectionEC = Matrix3.multiplyByVector(this.viewRotation3D, this._lightDirectionWC, this._lightDirectionEC);
+        }
+
+        var lightColor = light.color;
+        var lightColorHdr = Cartesian3.fromElements(lightColor.red, lightColor.green, lightColor.blue, this._lightColorHdr);
+        lightColorHdr = Cartesian3.multiplyByScalar(lightColorHdr, light.intensity, lightColorHdr);
+        var maximumComponent = Cartesian3.maximumComponent(lightColorHdr);
+        if (maximumComponent > 1.0) {
+            Cartesian3.divideByScalar(lightColorHdr, maximumComponent, this._lightColor);
+        } else {
+            Cartesian3.clone(lightColorHdr, this._lightColor);
+        }
 
         var brdfLutGenerator = frameState.brdfLutGenerator;
         var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
         this._brdfLut = brdfLut;
 
         this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
+        // IE 11 doesn't optimize out uniforms that are #ifdef'd out. So undefined values for the spherical harmonic
+        // coefficients and specular environment map atlas dimensions cause a crash.
+        this._sphericalHarmonicCoefficients = defaultValue(frameState.sphericalHarmonicCoefficients, EMPTY_ARRAY);
+        this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
+        this._specularEnvironmentMapsMaximumLOD = frameState.specularEnvironmentMapsMaximumLOD;
+
+        if (defined(this._specularEnvironmentMaps)) {
+            Cartesian2.clone(this._specularEnvironmentMaps.dimensions, this._specularEnvironmentMapsDimensions);
+        }
 
         this._fogDensity = frameState.fog.density;
 
@@ -1253,7 +1370,8 @@ define([
             uniformState._normalDirty = false;
 
             var m = uniformState._normal;
-            Matrix4.getRotation(uniformState.inverseModelView, m);
+            Matrix4.getMatrix3(uniformState.inverseModelView, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1263,7 +1381,8 @@ define([
             uniformState._normal3DDirty = false;
 
             var m = uniformState._normal3D;
-            Matrix4.getRotation(uniformState.inverseModelView3D, m);
+            Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1271,16 +1390,16 @@ define([
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
-
-            Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix4.getMatrix3(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix3.getRotation(uniformState._inverseNormal, uniformState._inverseNormal);
         }
     }
 
     function cleanInverseNormal3D(uniformState) {
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
-
-            Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix4.getMatrix3(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix3.getRotation(uniformState._inverseNormal3D, uniformState._inverseNormal3D);
         }
     }
 
@@ -1383,7 +1502,7 @@ define([
             } else {
                 view2Dto3D(that._cameraPosition, that._cameraDirection, that._cameraRight, that._cameraUp, that._frustum2DWidth, that._mode, that._mapProjection, that._view3D);
             }
-            Matrix4.getRotation(that._view3D, that._viewRotation3D);
+            Matrix4.getMatrix3(that._view3D, that._viewRotation3D);
             that._view3DDirty = false;
         }
     }
@@ -1391,10 +1510,8 @@ define([
     function updateInverseView3D(that){
         if (that._inverseView3DDirty) {
             Matrix4.inverseTransformation(that.view3D, that._inverseView3D);
-            Matrix4.getRotation(that._inverseView3D, that._inverseViewRotation3D);
+            Matrix4.getMatrix3(that._inverseView3D, that._inverseViewRotation3D);
             that._inverseView3DDirty = false;
         }
     }
-
-    return UniformState;
-});
+export default UniformState;
