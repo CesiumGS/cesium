@@ -49,7 +49,7 @@ describe(
         batchTexture.setShow(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTexture.setShow(2);
+        batchTexture.setShow(1);
       }).toThrowDeveloperError();
     });
 
@@ -107,7 +107,7 @@ describe(
         batchTexture.getShow(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTexture.getShow(2);
+        batchTexture.getShow(1);
       }).toThrowDeveloperError();
     });
 
@@ -134,7 +134,7 @@ describe(
         batchTexture.setColor(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTexture.setColor(2);
+        batchTexture.setColor(1);
       }).toThrowDeveloperError();
     });
 
@@ -213,7 +213,7 @@ describe(
     it("setAllShow", function () {
       var batchTexture = new BatchTexture({
         content: mockContent,
-        featuresLength: 1,
+        featuresLength: 2,
       });
       batchTexture.setAllShow(false);
       expect(batchTexture.getShow(0)).toBe(false);
@@ -232,7 +232,7 @@ describe(
         batchTexture.getColor(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTexture.getColor(2);
+        batchTexture.getColor(1);
       }).toThrowDeveloperError();
     });
 

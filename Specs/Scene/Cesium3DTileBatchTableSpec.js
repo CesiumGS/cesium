@@ -79,7 +79,7 @@ describe(
         batchTable.setShow(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.setShow(2);
+        batchTable.setShow(1);
       }).toThrowDeveloperError();
     });
 
@@ -111,7 +111,7 @@ describe(
         batchTable.getShow(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getShow(2);
+        batchTable.getShow(1);
       }).toThrowDeveloperError();
     });
 
@@ -132,7 +132,7 @@ describe(
         batchTable.setColor(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.setColor(2);
+        batchTable.setColor(1);
       }).toThrowDeveloperError();
     });
 
@@ -188,7 +188,7 @@ describe(
         batchTable.getColor(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getColor(2);
+        batchTable.getColor(1);
       }).toThrowDeveloperError();
     });
 
@@ -216,7 +216,7 @@ describe(
         batchTable.hasProperty(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.hasProperty(2);
+        batchTable.hasProperty(1);
       }).toThrowDeveloperError();
     });
 
@@ -249,7 +249,7 @@ describe(
         batchTable.getPropertyNames(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getPropertyNames(2);
+        batchTable.getPropertyNames(1);
       }).toThrowDeveloperError();
     });
 
@@ -290,7 +290,7 @@ describe(
         batchTable.getProperty(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getProperty(2);
+        batchTable.getProperty(1);
       }).toThrowDeveloperError();
     });
 
@@ -322,7 +322,7 @@ describe(
         batchTable.setProperty(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.setProperty(2);
+        batchTable.setProperty(1);
       }).toThrowDeveloperError();
     });
 
@@ -831,7 +831,7 @@ describe(
         batchTable.isExactClass();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.isExactClass(2, "door");
+        batchTable.isExactClass(1, "door");
       }).toThrowDeveloperError();
       expect(function () {
         batchTable.isExactClass(-1, "door");
@@ -851,7 +851,7 @@ describe(
         batchTable.isClass();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.isClass(2, "door");
+        batchTable.isClass(1, "door");
       }).toThrowDeveloperError();
       expect(function () {
         batchTable.isClass(-1, "door");
@@ -871,7 +871,7 @@ describe(
         batchTable.getExactClassName();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getExactClassName(1000);
+        batchTable.getExactClassName(1);
       }).toThrowDeveloperError();
       expect(function () {
         batchTable.getExactClassName(-1);
