@@ -400,6 +400,52 @@ function nodeIntersectTriangles(
   }
 }
 
+function isAABBIntersectsAABB(
+  aMinX,
+  aMaxX,
+  aMinY,
+  aMaxY,
+  aMinZ,
+  aMaxZ,
+  bMinX,
+  bMaxX,
+  bMinY,
+  bMaxY,
+  bMinZ,
+  bMaxZ
+) {
+  return (
+    aMinX <= bMaxX &&
+    aMaxX >= bMinX &&
+    aMinY <= bMaxY &&
+    aMaxY >= bMinY &&
+    aMinZ <= bMaxZ &&
+    aMaxZ >= bMinZ
+  );
+}
+
+function isAABBContainsAABB(
+  aMinX,
+  aMaxX,
+  aMinY,
+  aMaxY,
+  aMinZ,
+  aMaxZ,
+  bMinX,
+  bMaxX,
+  bMinY,
+  bMaxY,
+  bMinZ,
+  bMaxZ
+) {
+  // TODO make this actually work
+  //  the optimize the adding of triangles by first checking if the last used aabb
+  //  contains the next triangle... if it does then we know that's the only octree node we need to check
+  //  since it's a fully contained check... very good optimization for heightmap terrain where most triangles
+  //  should hopefully be in the same node next to eachother.
+  return false;
+}
+
 /**
  * @param {Number} nodeAabbCenterX
  * @param {Number} nodeAabbCenterY
@@ -591,6 +637,37 @@ var smallOverlapCount = 3;
 // var yMask = 2; // 0b010
 // var zMask = 4; // 0b100
 
+function createOctree(triangles) {
+  var rootNode = new Node(0, 0, 0, 0);
+  var nodes = [rootNode];
+  //>>includeStart('debug', pragmas.debug);
+  console.time("creating actual octree");
+  var triangleCount = triangles.length / 6;
+
+  // we can build a more spread out octree
+  //  for smaller tiles because it'll be quicker
+  var maxLevels = 2;
+  //  and just eat the CPU time on the main thread
+  var maxTrianglesPerNode = 50;
+
+  for (var x = 0; x < triangleCount; x++) {
+    nodeAddTriangle(
+      maxTrianglesPerNode,
+      maxLevels,
+      rootNode,
+      0,
+      0,
+      0,
+      0,
+      x,
+      triangles,
+      nodes
+    );
+  }
+  console.timeEnd("creating actual octree");
+  return nodes;
+}
+
 function nodeAddTriangle(
   maxTrianglesPerNode,
   maxLevels,
@@ -603,33 +680,35 @@ function nodeAddTriangle(
   triangles,
   nodes
 ) {
-  var sizeAtLevel = 1.0 / Math.pow(2, level);
-  var aabbCenterX = (x + 0.5) * sizeAtLevel - 0.5;
-  var aabbCenterY = (y + 0.5) * sizeAtLevel - 0.5;
-  var aabbCenterZ = (z + 0.5) * sizeAtLevel - 0.5;
-  var overlap = getOverlap(
-    aabbCenterX,
-    aabbCenterY,
-    aabbCenterZ,
-    triangleIdx,
-    triangles,
-    scratchOverlap0
+  var aabb = onTheFlyNodeAABB(level, x, y, z);
+  var isIntersection = isAABBIntersectsAABB(
+    triangles[triangleIdx * 6], // triangle aabb min x
+    triangles[triangleIdx * 6 + 1], // triangle aabb max x
+    triangles[triangleIdx * 6 + 2], // triangle aabb min y
+    triangles[triangleIdx * 6 + 3], // triangle aabb max y
+    triangles[triangleIdx * 6 + 4], // triangle aabb min z
+    triangles[triangleIdx * 6 + 5], // triangle aabb max z
+    aabb.aabbMinX,
+    aabb.aabbMaxX,
+    aabb.aabbMinY,
+    aabb.aabbMaxY,
+    aabb.aabbMinZ,
+    aabb.aabbMaxZ
   );
-  var triangleIdxs = node.triangles;
-  var exceedsTriCount = triangleIdxs.length >= maxTrianglesPerNode;
-  // the current triangle is a good fit for the current node.
-  //  it's either fully contained within the bounding box or 2 out of the 3 planes are contained within the AABB
-  var isSmall = overlap.bitCount <= smallOverlapCount;
-  var atMaxLevel = level === maxLevels - 1;
-  var shouldFilterDown = isSmall && !atMaxLevel;
-  var hasChildren = node.firstChildNodeIdx !== -1;
-  // cut our current node up into 8 children, redistribute all triangles in the current node into new children
-  var subdivide = shouldFilterDown && !hasChildren && exceedsTriCount;
-  // put the current triangle further down in the tree
-  var filterDown = shouldFilterDown && (hasChildren || subdivide);
-  if (subdivide) {
-    node.firstChildNodeIdx = nodes.length;
-    nodes.push(
+
+  if (isIntersection) {
+    node.intersectingTriangles = node.intersectingTriangles || [];
+    node.intersectingTriangles.push(triangleIdx);
+  } else {
+    return;
+  }
+
+  if (level === maxLevels) {
+    return;
+  }
+
+  if (!node.children) {
+    node.children = [
       // 000
       new Node(x * 2, y * 2, z * 2, level + 1),
       // 001
@@ -645,53 +724,84 @@ function nodeAddTriangle(
       // 011
       new Node(x * 2, y * 2 + 1, z * 2 + 1, level + 1),
       // 111
-      new Node(x * 2 + 1, y * 2 + 1, z * 2 + 1, level + 1)
-    );
-    for (var i = 0; i < triangleIdxs.length; i++) {
-      var triidx = triangleIdxs[i];
-      // var overflowTri2 = triangles[triidx];
-      // todo don't need overlap count here
-      var overflowOverlap2 = getOverlap(
-        aabbCenterX,
-        aabbCenterY,
-        aabbCenterZ,
-        triidx,
-        triangles,
-        scratchOverlap1
-      );
-
-      nodeAddTriangleToChildren(
-        maxTrianglesPerNode,
-        maxLevels,
-        node,
-        level,
-        x,
-        y,
-        z,
-        triidx,
-        overflowOverlap2.bitMask,
-        triangles,
-        nodes
-      );
-    }
-    triangleIdxs.length = 0;
+      new Node(x * 2 + 1, y * 2 + 1, z * 2 + 1, level + 1),
+    ];
   }
-  if (filterDown) {
-    nodeAddTriangleToChildren(
+
+  for (var childIdx = 0; childIdx < node.children.length; childIdx++) {
+    var childNode = node.children[childIdx];
+    var _x;
+    var _y;
+    var _z;
+    if (childIdx === 0) {
+      {
+        // 000
+        _x = x * 2;
+        _y = y * 2;
+        _z = z * 2;
+      }
+    } else if (childIdx === 1) {
+      {
+        // 001
+        _x = x * 2 + 1;
+        _y = y * 2;
+        _z = z * 2;
+      }
+    } else if (childIdx === 2) {
+      {
+        // 010
+        _x = x * 2;
+        _y = y * 2 + 1;
+        _z = z * 2;
+      }
+    } else if (childIdx === 3) {
+      {
+        // 011
+        _x = x * 2 + 1;
+        _y = y * 2 + 1;
+        _z = z * 2;
+      }
+    } else if (childIdx === 4) {
+      {
+        // 100
+        _x = x * 2;
+        _y = y * 2;
+        _z = z * 2 + 1;
+      }
+    } else if (childIdx === 5) {
+      {
+        // 101
+        _x = x * 2 + 1;
+        _y = y * 2;
+        _z = z * 2 + 1;
+      }
+    } else if (childIdx === 6) {
+      {
+        // 011
+        _x = x * 2;
+        _y = y * 2 + 1;
+        _z = z * 2 + 1;
+      }
+    } else if (childIdx === 7) {
+      {
+        // 111
+        _x = x * 2 + 1;
+        _y = y * 2 + 1;
+        _z = z * 2 + 1;
+      }
+    }
+    nodeAddTriangle(
       maxTrianglesPerNode,
       maxLevels,
-      node,
-      level,
-      x,
-      y,
-      z,
+      childNode,
+      level + 1,
+      _x,
+      _y,
+      _z,
       triangleIdx,
-      overlap.bitMask,
       triangles,
       nodes
     );
-  } else {
-    triangleIdxs.push(triangleIdx);
   }
 }
 
@@ -804,63 +914,30 @@ TrianglePicking.createPackedOctree = function (
   transform,
   obb
 ) {
-  var rootNode = new Node(0, 0, 0, 0);
-  var nodes = [rootNode];
-
-  var i;
-
-  //>>includeStart('debug', pragmas.debug);
-  console.time("creating actual octree");
-  var triangleCount = triangles.length / 6;
-
-  // we can build a more spread out octree
-  //  for smaller tiles because it'll be quicker
-  var maxLevels = 10;
-  var maxTrianglesPerNode = 50;
-  if (triangleCount > 5000) {
-    // for very large tiles, build a small octree because it's faster and won't bottleneck this worker thread;
-    //  and just eat the CPU time on the main thread
-    maxLevels = 5;
-    maxTrianglesPerNode = 100;
-  }
-
-  for (var x = 0; x < triangleCount; x++) {
-    nodeAddTriangle(
-      maxTrianglesPerNode,
-      maxLevels,
-      rootNode,
-      0,
-      0,
-      0,
-      0,
-      x,
-      triangles,
-      nodes
-    );
-  }
-  console.timeEnd("creating actual octree");
-
+  var nodes = createOctree(triangles);
   console.time("creating packed");
-  var packedNodeSpace = 3;
-  var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
-  var triangleSets = [];
-  var n;
-  for (var w = 0; w < nodes.length; w++) {
-    n = nodes[w];
-    // a reference to the packed node index (*3)
-    packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
-    // the number of triangles this node contains
-    packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
-    // the index of the first triangle in thee packed triangles
-    packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
-    // TODO keep a counter of the total triangle count during octree creation - so we can go straight
-    //  to the packedTriangles typed array here - instead of triangleSets
-    for (i = 0; i < n.triangles.length; i++) {
-      // this for loop was actually 10% faster than .push(...items) and 120% faster than .concat(items)
-      triangleSets.push(n.triangles[i]);
-    }
-  }
-  var packedTriangles = new Int32Array(triangleSets);
+  // var packedNodeSpace = 3;
+  // var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
+  var packedNodes = new Int32Array();
+  // var triangleSets = [];
+  // var n;
+  // for (var w = 0; w < nodes.length; w++) {
+  //   n = nodes[w];
+  //   // a reference to the packed node index (*3)
+  //   packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
+  //   // the number of triangles this node contains
+  //   packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
+  //   // the index of the first triangle in thee packed triangles
+  //   packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
+  //   // TODO keep a counter of the total triangle count during octree creation - so we can go straight
+  //   //  to the packedTriangles typed array here - instead of triangleSets
+  //   for (var i = 0; i < n.triangles.length; i++) {
+  //     // this for loop was actually 10% faster than .push(...items) and 120% faster than .concat(items)
+  //     triangleSets.push(n.triangles[i]);
+  //   }
+  // }
+  // var packedTriangles = new Int32Array(triangleSets);
+  var packedTriangles = new Int32Array();
   console.timeEnd("creating packed");
 
   return {

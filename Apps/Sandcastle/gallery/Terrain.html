@@ -326,7 +326,14 @@
             "#f032e6",
           ];
 
-          function drawOctreeNode(node, color, prims, transform, triangles) {
+          function drawOctreeNode(
+            node,
+            color,
+            prims,
+            transform,
+            triangles,
+            triangleVerticesCallback
+          ) {
             var aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
             var min = new Cesium.Cartesian3(
               aabb.aabbMinX,
@@ -346,23 +353,23 @@
               maximum: max,
               minimum: min,
             });
-            prims.add(
-              new Cesium.Primitive({
-                asynchronous: false,
-                appearance: new Cesium.PerInstanceColorAppearance(),
-                geometryInstances: [
-                  new Cesium.GeometryInstance({
-                    geometry: box,
-                    modelMatrix: transform,
-                    attributes: {
-                      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                        color.withAlpha(0.2)
-                      ),
-                    },
-                  }),
-                ],
-              })
-            );
+            // prims.add(
+            //   new Cesium.Primitive({
+            //     asynchronous: false,
+            //     appearance: new Cesium.PerInstanceColorAppearance(),
+            //     geometryInstances: [
+            //       new Cesium.GeometryInstance({
+            //         geometry: box,
+            //         modelMatrix: transform,
+            //         attributes: {
+            //           color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+            //             color.withAlpha(0.2)
+            //           ),
+            //         },
+            //       }),
+            //     ],
+            //   })
+            // );
             prims.add(
               new Cesium.Primitive({
                 asynchronous: false,
@@ -386,11 +393,12 @@
 
             var trianglePolygons = [];
             var trianglePolygonOutlines = [];
+            triangles = triangles || [];
             for (var triangleIdx of triangles) {
               var v0 = new Cesium.Cartesian3();
               var v1 = new Cesium.Cartesian3();
               var v2 = new Cesium.Cartesian3();
-              root._triangleVerticesCallback(triangleIdx, v0, v1, v2);
+              triangleVerticesCallback(triangleIdx, v0, v1, v2);
 
               var outlineGeometry = new Cesium.PolygonOutlineGeometry({
                 polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
@@ -470,7 +478,14 @@
               var i = 0;
               for (var n of children) {
                 var color = Cesium.Color.fromCssColorString(colors[i % 8]);
-                drawOctreeNode(n, color, prims, transform, []);
+                drawOctreeNode(
+                  n,
+                  color,
+                  prims,
+                  transform,
+                  [],
+                  root._triangleVerticesCallback
+                );
                 i++;
               }
             } else {
@@ -494,28 +509,27 @@
             }
             var unpackedOctreeNodes = root._unpackedOctree;
             var transform = root._transform;
-            var nodesToDraw = unpackedOctreeNodes.filter(
-              (n) => n.level === level
-            );
+            // var nodesToDraw = unpackedOctreeNodes.filter(
+            //   (n) => n.level === level
+            // );
 
-            // var colors = rainbow(nodesToDraw.length, 1);
-
-            var root = {
-              x: 0,
-              y: 0,
-              z: 0,
-              level: 0,
-            };
+            const allNodes = flattenOctree(unpackedOctreeNodes[0]);
+            var nodesToDraw = allNodes.filter((n) => n.level === level);
 
             var i = 0;
-            // for (var node of nodesToDraw) {
-            //   i++;
-            //   var color = Cesium.Color.fromCssColorString(colors[i % 8]);
-            //   drawOctreeNode(node, color, prims, transform, node.triangles);
-            // }
-
-            var node = root;
-            drawTreeAtLevel(root, level, prims, transform);
+            for (var n of nodesToDraw) {
+              var color = Cesium.Color.fromCssColorString(colors[i % 8]);
+              drawOctreeNode(
+                n,
+                color,
+                prims,
+                transform,
+                n.intersectingTriangles,
+                root._triangleVerticesCallback
+              );
+              i++;
+            }
+            // drawTreeAtLevel(root, level, prims, transform);
           }
 
           function addDot(transform, local, color, radius, dataSource) {
@@ -630,6 +644,10 @@
               .concat(flatten(node.bottomLeftTree))
               .concat(flatten(node.topRightTree))
               .concat(flatten(node.bottomRightTree));
+          }
+
+          function flattenOctree(node) {
+            return [node].concat((node.children || []).flatMap(flattenOctree));
           }
 
           function showIntersectedTriangles() {
