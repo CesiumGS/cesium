@@ -1,24 +1,36 @@
+/* eslint-disable new-cap */
 /* eslint-disable no-undef */
 import { Cartesian3 } from "../../Source/Cesium.js";
 import S2Cell from "../../Source/Core/S2Cell.js";
 
 fdescribe("Core/S2Cell", function () {
   it("constructor", function () {
-    var cell = new S2Cell("1");
-    expect(cell._token).toEqual("1");
+    var cell = new S2Cell(BigInt("3458764513820540928"));
+    expect(cell._cellId).toEqual(BigInt("3458764513820540928"));
   });
 
-  it("throws for invalid token in constructor", function () {
+  it("throws for invalid cell ID in constructor", function () {
     // eslint-disable-next-line new-cap
     expect(function () {
-      S2Cell("-1");
+      S2Cell(BigInt(-1));
     }).toThrowDeveloperError();
   });
 
-  it("throws for missing token in constructor", function () {
+  it("throws for missing cell ID in constructor", function () {
     // eslint-disable-next-line new-cap
     expect(function () {
       S2Cell();
+    }).toThrowDeveloperError();
+  });
+
+  it("creates cell from valid token", function () {
+    var cell = S2Cell.fromToken("3");
+    expect(cell._cellId).toEqual(BigInt("3458764513820540928"));
+  });
+
+  it("throws for creating cell from invalid token", function () {
+    expect(function () {
+      S2Cell.fromToken("XX");
     }).toThrowDeveloperError();
   });
 
@@ -120,32 +132,95 @@ fdescribe("Core/S2Cell", function () {
   });
 
   it("throws on missing/invalid cell ID in getting level of cell", function () {
-    expect(S2Cell.getLevel(BigInt("-1"))).toEqual(1);
-    expect(S2Cell.getLevel()).toEqual(1);
-    expect(S2Cell.getLevel(BigInt("3170534137668829184444"))).toEqual(1);
-    expect(S2Cell.getLevel(BigInt(0))).toEqual(1);
+    expect(function () {
+      S2Cell.getLevel(BigInt("-1"));
+    }).toThrowDeveloperError();
+    expect(function () {
+      S2Cell.getLevel();
+    }).toThrowDeveloperError();
+    expect(function () {
+      S2Cell.getLevel(BigInt("3170534137668829184444"));
+    }).toThrowDeveloperError();
+    expect(function () {
+      S2Cell.getLevel(BigInt(0));
+    }).toThrowDeveloperError();
   });
 
   it("gets correct parent of cell", function () {
-    expect(S2Cell.getLevel(BigInt("-1"))).toEqual(1);
-    expect(S2Cell.getLevel()).toEqual(1);
-    expect(S2Cell.getLevel(BigInt("3170534137668829184444"))).toEqual(1);
-    expect(S2Cell.getLevel(BigInt(0))).toEqual(1);
+    var cell = new S2Cell(BigInt("3383782026967515136"));
+    var parent = cell.getParent();
+    expect(parent._cellId).toEqual(BigInt("3383782026971709440"));
   });
 
-  it("throws on getting parent of level 0 cells", function () {});
+  it("throws on getting parent of level 0 cells", function () {
+    var cell = S2Cell.fromToken("3");
+    expect(function () {
+      cell.getParent();
+    }).toThrowDeveloperError();
+  });
 
-  it("gets correct children of cell", function () {});
+  it("gets correct children of cell", function () {
+    var cell = new S2Cell(BigInt("3383782026971709440"));
+    var expectedChildCellIds = [
+      BigInt(3383782026959126528),
+      BigInt(3383782026967515136),
+      BigInt(3383782026975903744),
+      BigInt(3383782026984292352),
+    ];
+    for (var i = 0; i < 4; i++) {
+      expect(cell.getChild(i)._cellId).toEqual(expectedChildCellIds[i]);
+    }
+  });
 
-  it("throws on getting children of level 30 cells", function () {});
+  it("throws on invalid child index in getting children of cell", function () {
+    var cell = new S2Cell(BigInt("3383782026971709440"));
+    expect(function () {
+      cell.getChild(4);
+    }).toThrowDeveloperError();
+    expect(function () {
+      cell.getChild(-1);
+    }).toThrowDeveloperError();
+  });
+
+  it("throws on getting children of level 30 cell", function () {
+    var cell = new S2Cell(BigInt("3383782026967071427"));
+    expect(cell._level).toEqual(30);
+    expect(function () {
+      cell.getChild(0);
+    }).toThrowDeveloperError();
+  });
 
   it("gets correct center of cell", function () {
-    var cell = new S2Cell("1234567");
-    expect(S2Cell.getCenter(cell)).toEqual(
+    expect(S2Cell.fromToken("1").getCenter()).toEqual(
       new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
     );
+    expect(S2Cell.fromToken("3").getCenter()).toEqual(
+      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    );
+    expect(S2Cell.fromToken("5").getCenter()).toEqual(
+      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    );
+    expect(S2Cell.fromToken("7").getCenter()).toEqual(
+      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    );
+    expect(S2Cell.fromToken("9").getCenter()).toEqual(
+      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    );
+    expect(S2Cell.fromToken("b").getCenter()).toEqual(
+      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    );
+    expect(S2Cell.fromToken("2ef59bd352b93ac3").getCenter()).toEqual(
+      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    );
+    expect(S2Cell.fromToken("2ef59bd354").getCenter()).toEqual(
+      new Cartesian3(
+        -0.265109967221778,
+        0.9468728995381549,
+        -0.18206706841127296
+      )
+    );
   });
-
+  /*
   it("gets correct vertices of cell", function () {
     var cell = new S2Cell("1234567");
     expect(cell.getVertex(0)).toEqual(
@@ -173,4 +248,5 @@ fdescribe("Core/S2Cell", function () {
       new Cartesian3(0.8740687826903232, 0.1518757750628954, 0.4614515273301211)
     );
   });
+  */
 });
