@@ -29,6 +29,7 @@ import {
 import createScene from "../createScene.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
 import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfLoader",
@@ -111,15 +112,7 @@ describe(
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
-      return pollToPromise(function () {
-        gltfLoader.process(scene.frameState);
-        return (
-          gltfLoader._state === ResourceLoaderState.READY ||
-          gltfLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return gltfLoader.promise;
-      });
+      return waitForLoaderProcess(gltfLoader, scene);
     }
 
     function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
@@ -136,15 +129,7 @@ describe(
         gltfLoaders.push(gltfLoader);
         gltfLoader.load();
 
-        return pollToPromise(function () {
-          gltfLoader.process(scene.frameState);
-          return (
-            gltfLoader._state === ResourceLoaderState.READY ||
-            gltfLoader._state === ResourceLoaderState.FAILED
-          );
-        }).then(function () {
-          return gltfLoader.promise;
-        });
+        return waitForLoaderProcess(gltfLoader, scene);
       });
     }
 
