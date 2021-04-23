@@ -134,7 +134,6 @@ function loadFromDraco(indexBufferLoader) {
     draco: indexBufferLoader._draco,
     gltfResource: indexBufferLoader._gltfResource,
     baseResource: indexBufferLoader._baseResource,
-    keepResident: false,
   });
 
   indexBufferLoader._dracoLoader = dracoLoader;
@@ -170,7 +169,6 @@ function loadFromBufferView(indexBufferLoader) {
     bufferViewId: bufferViewId,
     gltfResource: indexBufferLoader._gltfResource,
     baseResource: indexBufferLoader._baseResource,
-    keepResident: false,
   });
   indexBufferLoader._state = ResourceLoaderState.LOADING;
   indexBufferLoader._bufferViewLoader = bufferViewLoader;

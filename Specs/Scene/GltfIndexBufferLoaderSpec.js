@@ -416,7 +416,10 @@ describe(
 
       return pollToPromise(function () {
         indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          indexBufferLoader._state === ResourceLoaderState.READY ||
+          indexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return indexBufferLoader.promise.then(function (indexBufferLoader) {
           indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -445,7 +448,10 @@ describe(
 
       return pollToPromise(function () {
         indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          indexBufferLoader._state === ResourceLoaderState.READY ||
+          indexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return indexBufferLoader.promise.then(function (indexBufferLoader) {
           expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
@@ -472,7 +478,10 @@ describe(
 
       return pollToPromise(function () {
         indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          indexBufferLoader._state === ResourceLoaderState.READY ||
+          indexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return indexBufferLoader.promise.then(function (indexBufferLoader) {
           expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
@@ -526,7 +535,10 @@ describe(
 
       return pollToPromise(function () {
         indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          indexBufferLoader._state === ResourceLoaderState.READY ||
+          indexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return indexBufferLoader.promise.then(function (indexBufferLoader) {
           indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -564,7 +576,10 @@ describe(
 
       return pollToPromise(function () {
         indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          indexBufferLoader._state === ResourceLoaderState.READY ||
+          indexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return indexBufferLoader.promise.then(function (indexBufferLoader) {
           expect(indexBufferLoader.indexBuffer).toBeDefined();
@@ -612,7 +627,10 @@ describe(
 
       return pollToPromise(function () {
         indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          indexBufferLoader._state === ResourceLoaderState.READY ||
+          indexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return indexBufferLoader.promise.then(function (indexBufferLoader) {
           expect(indexBufferLoader.indexBuffer).toBeDefined();

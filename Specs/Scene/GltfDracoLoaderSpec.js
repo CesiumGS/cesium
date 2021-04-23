@@ -292,7 +292,10 @@ describe("Scene/GltfDracoLoader", function () {
       if (processCallsCount++ === processCallsTotal) {
         deferredPromise.resolve(decodeDracoResults);
       }
-      return dracoLoader._state === ResourceLoaderState.READY;
+      return (
+        dracoLoader._state === ResourceLoaderState.READY ||
+        dracoLoader._state === ResourceLoaderState.FAILED
+      );
     }).then(function () {
       return dracoLoader.promise.then(function (dracoLoader) {
         dracoLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -332,7 +335,10 @@ describe("Scene/GltfDracoLoader", function () {
 
     return pollToPromise(function () {
       dracoLoader.process(scene.frameState);
-      return dracoLoader._state === ResourceLoaderState.READY;
+      return (
+        dracoLoader._state === ResourceLoaderState.READY ||
+        dracoLoader._state === ResourceLoaderState.FAILED
+      );
     }).then(function () {
       return dracoLoader.promise.then(function (dracoLoader) {
         expect(dracoLoader.decodedData).toBeDefined();

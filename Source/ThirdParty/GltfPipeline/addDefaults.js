@@ -117,7 +117,7 @@ import WebGLConstants from '../../Core/WebGLConstants.js'
                 addTextureDefaults(pbrMetallicRoughness.metallicRoughnessTexture);
             }
 
-            var pbrSpecularGlossiness = extensions.pbrSpecularGlossiness;
+            var pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
             if (defined(pbrSpecularGlossiness)) {
                 pbrSpecularGlossiness.diffuseFactor = defaultValue(pbrSpecularGlossiness.diffuseFactor, [1.0, 1.0, 1.0, 1.0]);
                 pbrSpecularGlossiness.specularFactor = defaultValue(pbrSpecularGlossiness.specularFactor, [1.0, 1.0, 1.0]);

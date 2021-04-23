@@ -273,6 +273,7 @@ describe(
           bufferViewId: 0,
           draco: dracoExtension,
           dracoAttributeSemantic: "POSITION",
+          dracoAccessorId: 0,
         });
       }).toThrowDeveloperError();
     });
@@ -296,6 +297,22 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
+          dracoAttributeSemantic: undefined,
+          dracoAccessorId: 0,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if draco is defined and dracoAccessorId is not defined", function () {
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          draco: dracoExtension,
+          dracoAttributeSemantic: "POSITION",
+          dracoAccessorId: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -344,6 +361,7 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         dracoAttributeSemantic: "POSITION",
+        dracoAccessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -396,7 +414,10 @@ describe(
 
       return pollToPromise(function () {
         vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          vertexBufferLoader._state === ResourceLoaderState.READY ||
+          vertexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
           vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -425,7 +446,10 @@ describe(
 
       return pollToPromise(function () {
         vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          vertexBufferLoader._state === ResourceLoaderState.READY ||
+          vertexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
           expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
@@ -457,13 +481,17 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         dracoAttributeSemantic: "POSITION",
+        dracoAccessorId: 0,
       });
 
       vertexBufferLoader.load();
 
       return pollToPromise(function () {
         vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          vertexBufferLoader._state === ResourceLoaderState.READY ||
+          vertexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
           vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -477,7 +505,7 @@ describe(
             new Cartesian3(-1.0, -1.0, -1.0)
           );
           expect(quantization.quantizedVolumeDimensions).toEqual(
-            new Cartesian3(2.0, 0.0, 0.0)
+            new Cartesian3(2.0, 2.0, 2.0)
           );
           expect(quantization.normalizationRange).toBe(16383);
           expect(quantization.componentDatatype).toBe(
@@ -503,13 +531,17 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         dracoAttributeSemantic: "NORMAL",
+        dracoAccessorId: 1,
       });
 
       vertexBufferLoader.load();
 
       return pollToPromise(function () {
         vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          vertexBufferLoader._state === ResourceLoaderState.READY ||
+          vertexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
           expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
@@ -555,7 +587,10 @@ describe(
 
       return pollToPromise(function () {
         vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          vertexBufferLoader._state === ResourceLoaderState.READY ||
+          vertexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
           expect(vertexBufferLoader.vertexBuffer).toBeDefined();
@@ -597,13 +632,17 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         dracoAttributeSemantic: "POSITION",
+        dracoAccessorId: 0,
       });
 
       vertexBufferLoader.load();
 
       return pollToPromise(function () {
         vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
+        return (
+          vertexBufferLoader._state === ResourceLoaderState.READY ||
+          vertexBufferLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
           expect(vertexBufferLoader.vertexBuffer).toBeDefined();
@@ -696,6 +735,7 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         dracoAttributeSemantic: "POSITION",
+        dracoAccessorId: 0,
       });
 
       expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();

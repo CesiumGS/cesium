@@ -277,7 +277,7 @@ describe(
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load texture\nFailed to load image:map.png\n404 Not Found"
+            "Failed to load feature metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
           );
         });
     });
@@ -338,7 +338,10 @@ describe(
 
       return pollToPromise(function () {
         featureMetadataLoader.process(scene.frameState);
-        return featureMetadataLoader._state === ResourceLoaderState.READY;
+        return (
+          featureMetadataLoader._state === ResourceLoaderState.READY ||
+          featureMetadataLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return featureMetadataLoader.promise.then(function (
           featureMetadataLoader
@@ -405,7 +408,10 @@ describe(
 
       return pollToPromise(function () {
         featureMetadataLoader.process(scene.frameState);
-        return featureMetadataLoader._state === ResourceLoaderState.READY;
+        return (
+          featureMetadataLoader._state === ResourceLoaderState.READY ||
+          featureMetadataLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return featureMetadataLoader.promise.then(function (
           featureMetadataLoader
@@ -461,7 +467,10 @@ describe(
 
       return pollToPromise(function () {
         featureMetadataLoader.process(scene.frameState);
-        return featureMetadataLoader._state === ResourceLoaderState.READY;
+        return (
+          featureMetadataLoader._state === ResourceLoaderState.READY ||
+          featureMetadataLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return featureMetadataLoader.promise.then(function (
           featureMetadataLoader
@@ -527,11 +536,17 @@ describe(
 
       return pollToPromise(function () {
         featureMetadataLoaderCopy.process(scene.frameState);
-        return featureMetadataLoaderCopy._state === ResourceLoaderState.READY;
+        return (
+          featureMetadataLoaderCopy._state === ResourceLoaderState.READY ||
+          featureMetadataLoaderCopy._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return featureMetadataLoaderCopy.promise.then(function (
           featureMetadataLoaderCopy
         ) {
+          // Ignore featureMetadataLoaderCopy destroying its buffer views
+          destroyBufferView.calls.reset();
+
           var featureMetadataLoader = new GltfFeatureMetadataLoader({
             gltf: gltfSchemaUri,
             extension: extensionSchemaUri,

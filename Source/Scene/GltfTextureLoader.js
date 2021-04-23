@@ -137,7 +137,6 @@ GltfTextureLoader.prototype.load = function () {
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     supportedImageFormats: this._supportedImageFormats,
-    keepResident: false,
   });
 
   this._imageLoader = imageLoader;
@@ -245,7 +244,7 @@ function createTexture(gltf, textureInfo, image, context) {
 
   var texture;
   if (defined(internalFormat)) {
-    texture = new Texture({
+    texture = Texture.create({
       context: context,
       source: {
         arrayBufferView: image.bufferView, // Only defined for CompressedTextureBuffer
@@ -259,7 +258,7 @@ function createTexture(gltf, textureInfo, image, context) {
     if (requiresResize) {
       image = resizeImageToNextPowerOfTwo(image);
     }
-    texture = new Texture({
+    texture = Texture.create({
       context: context,
       source: image,
       sampler: sampler,

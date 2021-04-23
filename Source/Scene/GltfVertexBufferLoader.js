@@ -1,4 +1,3 @@
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -6,6 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
+import AttributeType from "./AttributeType.js";
 import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -29,11 +29,13 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
+ * @param {String} [options.dracoAccessorId] The Draco accessor id.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
+ * @exception {DeveloperError} When options.draco is defined options.dracoAccessorId must also be defined.
  *
  * @private
  */
@@ -46,6 +48,7 @@ export default function GltfVertexBufferLoader(options) {
   var bufferViewId = options.bufferViewId;
   var draco = options.draco;
   var dracoAttributeSemantic = options.dracoAttributeSemantic;
+  var dracoAccessorId = options.dracoAccessorId;
   var cacheKey = options.cacheKey;
   var asynchronous = defaultValue(options.asynchronous, true);
 
@@ -58,6 +61,7 @@ export default function GltfVertexBufferLoader(options) {
   var hasBufferViewId = defined(bufferViewId);
   var hasDraco = defined(draco);
   var hasDracoAttributeSemantic = defined(dracoAttributeSemantic);
+  var hasDracoAccessorId = defined(dracoAccessorId);
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
@@ -71,12 +75,19 @@ export default function GltfVertexBufferLoader(options) {
     );
   }
 
+  if (hasDraco && !hasDracoAccessorId) {
+    throw new DeveloperError(
+      "When options.draco is defined options.dracoAccessorId must also be defined."
+    );
+  }
+
   if (hasDraco) {
     Check.typeOf.object("options.draco", draco);
     Check.typeOf.string(
       "options.dracoAttributeSemantic",
       dracoAttributeSemantic
     );
+    Check.typeOf.number("options.dracoAccessorId", dracoAccessorId);
   }
   //>>includeEnd('debug');
 
@@ -87,6 +98,7 @@ export default function GltfVertexBufferLoader(options) {
   this._bufferViewId = bufferViewId;
   this._draco = draco;
   this._dracoAttributeSemantic = dracoAttributeSemantic;
+  this._dracoAccessorId = dracoAccessorId;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._bufferViewLoader = undefined;
@@ -169,7 +181,12 @@ GltfVertexBufferLoader.prototype.load = function () {
   }
 };
 
-function getQuantizationInformation(dracoQuantization, componentDatatype) {
+function getQuantizationInformation(
+  dracoQuantization,
+  componentDatatype,
+  componentCount,
+  type
+) {
   var quantizationBits = dracoQuantization.quantizationBits;
   var range = (1 << quantizationBits) - 1;
 
@@ -178,13 +195,22 @@ function getQuantizationInformation(dracoQuantization, componentDatatype) {
   quantization.octEncoded = dracoQuantization.octEncoded;
   quantization.normalizationRange = range;
 
-  if (!quantization.octEncoded) {
-    quantization.quantizedVolumeOffset = Cartesian3.unpack(
-      dracoQuantization.minValues
-    );
-    quantization.quantizedVolumeDimensions = new Cartesian3(
-      dracoQuantization.range
-    );
+  if (quantization.octEncoded) {
+    quantization.type = AttributeType.VEC2;
+  } else {
+    var MathType = AttributeType.getMathType(type);
+    if (MathType === Number) {
+      quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
+      quantization.quantizedVolumeDimensions = dracoQuantization.range;
+    } else {
+      quantization.quantizedVolumeOffset = MathType.unpack(
+        dracoQuantization.minValues
+      );
+      quantization.quantizedVolumeDimensions = MathType.unpack(
+        new Array(componentCount).fill(dracoQuantization.range)
+      );
+    }
+    quantization.type = type;
   }
 
   return quantization;
@@ -197,7 +223,6 @@ function loadFromDraco(vertexBufferLoader) {
     draco: vertexBufferLoader._draco,
     gltfResource: vertexBufferLoader._gltfResource,
     baseResource: vertexBufferLoader._baseResource,
-    keepResident: false,
   });
 
   vertexBufferLoader._dracoLoader = dracoLoader;
@@ -212,12 +237,17 @@ function loadFromDraco(vertexBufferLoader) {
       var decodedVertexAttributes = dracoLoader.decodedData.vertexAttributes;
       var dracoSemantic = vertexBufferLoader._dracoAttributeSemantic;
       var dracoAttribute = decodedVertexAttributes[dracoSemantic];
+      var dracoAccessorId = vertexBufferLoader._dracoAccessorId;
+      var dracoAccessor = vertexBufferLoader._gltf.accessors[dracoAccessorId];
+      var type = dracoAccessor.type;
       var typedArray = dracoAttribute.array;
       var dracoQuantization = dracoAttribute.data.quantization;
       if (defined(dracoQuantization)) {
         vertexBufferLoader._quantization = getQuantizationInformation(
           dracoQuantization,
-          dracoAttribute.data.componentDatatype
+          dracoAttribute.data.componentDatatype,
+          dracoAttribute.data.componentsPerAttribute,
+          type
         );
       }
 
@@ -240,7 +270,6 @@ function loadFromBufferView(vertexBufferLoader) {
     bufferViewId: vertexBufferLoader._bufferViewId,
     gltfResource: vertexBufferLoader._gltfResource,
     baseResource: vertexBufferLoader._baseResource,
-    keepResident: false,
   });
   vertexBufferLoader._state = ResourceLoaderState.LOADING;
   vertexBufferLoader._bufferViewLoader = bufferViewLoader;

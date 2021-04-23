@@ -114,7 +114,6 @@ GltfDracoLoader.prototype.load = function () {
     bufferViewId: this._draco.bufferView,
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
-    keepResident: false,
   });
 
   this._bufferViewLoader = bufferViewLoader;

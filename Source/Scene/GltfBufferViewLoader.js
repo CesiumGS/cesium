@@ -128,8 +128,10 @@ GltfBufferViewLoader.prototype.load = function () {
         bufferTypedArray.byteOffset + that._byteOffset,
         that._byteLength
       );
-      // Keep bufferLoader loaded since we're still holding onto a view of the
-      // buffer and not ready to release it.
+
+      // Unload the buffer
+      that.unload();
+
       that._typedArray = bufferViewTypedArray;
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
@@ -155,13 +157,11 @@ function getBufferLoader(bufferViewLoader) {
     });
     return resourceCache.loadExternalBuffer({
       resource: resource,
-      keepResident: false,
     });
   }
   return resourceCache.loadEmbeddedBuffer({
     parentResource: bufferViewLoader._gltfResource,
     bufferId: bufferViewLoader._bufferId,
-    keepResident: false,
   });
 }
 

@@ -191,7 +191,7 @@ describe(
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load texture\nFailed to load image:image.png\n404 Not Found"
+            "Failed to load texture\nFailed to load image: image.png\n404 Not Found"
           );
         });
     });
@@ -231,7 +231,10 @@ describe(
 
       return pollToPromise(function () {
         textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
+        return (
+          textureLoader._state === ResourceLoaderState.READY ||
+          textureLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return textureLoader.promise.then(function (textureLoader) {
           textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -260,7 +263,10 @@ describe(
 
       return pollToPromise(function () {
         textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
+        return (
+          textureLoader._state === ResourceLoaderState.READY ||
+          textureLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return textureLoader.promise.then(function (textureLoader) {
           textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -293,7 +299,10 @@ describe(
 
       return pollToPromise(function () {
         textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
+        return (
+          textureLoader._state === ResourceLoaderState.READY ||
+          textureLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return textureLoader.promise.then(function (textureLoader) {
           expect(textureLoader.texture.width).toBe(1);
@@ -321,7 +330,10 @@ describe(
 
       return pollToPromise(function () {
         textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
+        return (
+          textureLoader._state === ResourceLoaderState.READY ||
+          textureLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return textureLoader.promise.then(function (textureLoader) {
           expect(textureLoader.texture.width).toBe(4);
@@ -348,7 +360,10 @@ describe(
 
       return pollToPromise(function () {
         textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
+        return (
+          textureLoader._state === ResourceLoaderState.READY ||
+          textureLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return textureLoader.promise.then(function (textureLoader) {
           expect(textureLoader.texture.width).toBe(3);
@@ -387,7 +402,10 @@ describe(
 
       return pollToPromise(function () {
         textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
+        return (
+          textureLoader._state === ResourceLoaderState.READY ||
+          textureLoader._state === ResourceLoaderState.FAILED
+        );
       }).then(function () {
         return textureLoader.promise.then(function (textureLoader) {
           expect(textureLoader.texture).toBeDefined();

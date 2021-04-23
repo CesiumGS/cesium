@@ -226,7 +226,7 @@ describe("Scene/GltfImageLoader", function () {
       })
       .otherwise(function (runtimeError) {
         expect(runtimeError.message).toBe(
-          "Failed to load image:image.png\n404 Not Found"
+          "Failed to load image: image.png\n404 Not Found"
         );
       });
   });
