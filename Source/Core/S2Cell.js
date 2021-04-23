@@ -16,7 +16,7 @@ var S2MaxLevel = 30;
 var S2FaceBits = 3;
 
 // The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..kMaxSiTi].
-var S2MaxSiTi = 1 << (S2MaxLevel + 1);
+var S2MaxSiTi = (1 << (S2MaxLevel + 1)) >>> 0;
 
 // The number of bits in a S2 cell ID used for specifying the position along the Hilbert curve
 var S2PositionBits = 2 * S2MaxLevel + 1;
@@ -302,7 +302,7 @@ function generateLookupCell(
     i <<= 1;
     j <<= 1;
     position <<= 2;
-    var r = S2PosToOrientationMask[orientation];
+    var r = S2PosToIJ[orientation];
     generateLookupCell(
       level,
       i + (r[0] >> 1),
@@ -358,22 +358,26 @@ function generateLookupTable() {
  * @private
  */
 function getFaceSiTi(cellId) {
-  var faceIJOrientation = getFaceIJOrientation(cellId);
-  var i = faceIJOrientation[0];
-  var j = faceIJOrientation[1];
-  var face = faceIJOrientation[2];
-  var delta =
-    S2Cell.getLevel(cellId) === 30
-      ? 1
-      : i ^ (Number(cellId >> BigInt(2)) & 1)
-      ? 2
-      : 0;
-  return [face, 2 * i + delta, 2 * j + delta];
+  var faceIJOrientation = getFaceIJ(cellId);
+  var face = faceIJOrientation[0];
+  var i = faceIJOrientation[1];
+  var j = faceIJOrientation[2];
+
+  var isLeaf = S2Cell.getLevel(cellId) === 30;
+  var shouldCorrect =
+    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1);
+  var correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
+  var si = (i << 1) + correction;
+  var ti = (j << 1) + correction;
+  return [face, si, ti];
 }
 
 function FaceSiTitoXYZ(face, si, ti) {
-  var u = STtoUV(SiTitoST(si));
-  var v = STtoUV(SiTitoST(ti));
+  var s = SiTitoST(si);
+  var t = SiTitoST(ti);
+
+  var u = STtoUV(s);
+  var v = STtoUV(t);
   return FaceUVtoXYZ(face, u, v);
 }
 
@@ -408,36 +412,36 @@ function getS2Center(cellId) {
   return FaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
 
-function getFaceIJOrientation(cellId, orientation) {
+function getFaceIJ(cellId) {
   if (S2LookupPositions.length === 0) {
     generateLookupTable();
   }
 
-  var i = 0;
-  var j = 0;
   var face = Number(cellId >> BigInt(S2PositionBits));
   var bits = face & S2SwapMask;
+  var lookupMask = (1 << S2LookupBits) - 1;
+
+  var i = 0;
+  var j = 0;
 
   for (var k = 7; k >= 0; k--) {
-    var nBits = k === 7 ? S2MaxLevel - 7 * S2LookupBits : S2LookupBits;
-    bits += Number(
-      (cellId >> BigInt(k * 2 * S2LookupBits + 1)) &
-        BigInt((1 << (2 * nBits - 1)) << 2)
-    );
-    bits += S2LookupIJ[bits];
-    i += (bits >> (S2LookupBits + 2)) << (k * S2LookupBits);
-    j += ((bits >> 2) & ((1 << S2LookupBits) - 1)) << (k * S2LookupBits);
+    var numberOfBits = k === 7 ? S2MaxLevel - 7 * S2LookupBits : S2LookupBits;
+    var extractMask = (1 << (2 * numberOfBits)) - 1;
+    bits +=
+      Number(
+        (cellId >> BigInt(k * 2 * S2LookupBits + 1)) & BigInt(extractMask)
+      ) << 2;
+
+    bits = S2LookupIJ[bits];
+
+    var offset = k * S2LookupBits;
+    i += (bits >> (S2LookupBits + 2)) << offset;
+    j += ((bits >> 2) & lookupMask) << offset;
+
     bits &= S2SwapMask | S2InvertMask;
   }
 
-  if (orientation) {
-    if (lsb(cellId) & BigInt("0x1111111111111110")) {
-      bits ^= S2SwapMask;
-    }
-    orientation = bits;
-  }
-
-  return [i, j, face, orientation];
+  return [face, i, j];
 }
 
 // Helper functions

@@ -1,6 +1,7 @@
 /* eslint-disable new-cap */
 /* eslint-disable no-undef */
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../Source/Cesium.js";
 import S2Cell from "../../Source/Core/S2Cell.js";
 
 fdescribe("Core/S2Cell", function () {
@@ -192,32 +193,30 @@ fdescribe("Core/S2Cell", function () {
 
   it("gets correct center of cell", function () {
     expect(S2Cell.fromToken("1").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+      Cartesian3.fromDegrees(0, 0)
     );
     expect(S2Cell.fromToken("3").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+      Cartesian3.fromDegrees(90, 0)
     );
     expect(S2Cell.fromToken("5").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+      Cartesian3.fromDegrees(-180, 90)
     );
     expect(S2Cell.fromToken("7").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+      Cartesian3.fromDegrees(-180, 0)
     );
     expect(S2Cell.fromToken("9").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+      Cartesian3.fromDegrees(-90, 0)
     );
     expect(S2Cell.fromToken("b").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+      Cartesian3.fromDegrees(0, -90)
     );
-    expect(S2Cell.fromToken("2ef59bd352b93ac3").getCenter()).toEqual(
-      new Cartesian3.fromDegrees(9.86830731850408, 27.468392925827604)
+    expect(S2Cell.fromToken("2ef59bd352b93ac3").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(105.64131803774308, -10.490091033598308),
+      CesiumMath.EPSILON15
     );
-    expect(S2Cell.fromToken("2ef59bd354").getCenter()).toEqual(
-      new Cartesian3(
-        -0.265109967221778,
-        0.9468728995381549,
-        -0.18206706841127296
-      )
+    expect(S2Cell.fromToken("1234567").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(9.868307318504081, 27.468392925827605),
+      CesiumMath.EPSILON15
     );
   });
   /*
