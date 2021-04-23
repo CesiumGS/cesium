@@ -265,7 +265,7 @@ ResourceCache.loadExternalBuffer = function (options) {
  *
  * @returns {GltfJsonLoader} The glTF JSON.
  */
-ResourceCache.loadGltf = function (options) {
+ResourceCache.loadGltfJson = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;

@@ -621,41 +621,41 @@ describe(
       var expectedCacheKey = ResourceCacheKey.getGltfCacheKey({
         gltfResource: gltfResource,
       });
-      var gltfLoader = ResourceCache.loadGltf({
+      var gltfJsonLoader = ResourceCache.loadGltfJson({
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
-      expect(gltfLoader.cacheKey).toBe(expectedCacheKey);
+      expect(gltfJsonLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
-        ResourceCache.loadGltf({
+        ResourceCache.loadGltfJson({
           gltfResource: gltfResource,
           baseResource: gltfResource,
         })
-      ).toBe(gltfLoader);
+      ).toBe(gltfJsonLoader);
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return gltfLoader.promise.then(function (gltfLoader) {
-        expect(gltfLoader.gltf).toBeDefined();
+      return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
+        expect(gltfJsonLoader.gltf).toBeDefined();
       });
     });
 
-    it("loadGltf throws if gltfResource is undefined", function () {
+    it("loadGltfJson throws if gltfResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadGltf({
+        ResourceCache.loadGltfJson({
           gltfResource: undefined,
           baseResource: gltfResource,
         });
       }).toThrowDeveloperError();
     });
 
-    it("loadGltf throws if gltfResource is undefined", function () {
+    it("loadGltfJson throws if gltfResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadGltf({
+        ResourceCache.loadGltfJson({
           gltfResource: gltfResource,
           baseResource: undefined,
         });

@@ -275,7 +275,7 @@ GltfJsonLoader.prototype.unload = function () {
   for (var i = 0; i < bufferLoadersLength; ++i) {
     this._resourceCache.unload(bufferLoaders[i]);
   }
-  this._bufferLoaders = [];
+  this._bufferLoaders.length = 0;
 
   this._gltf = undefined;
 };

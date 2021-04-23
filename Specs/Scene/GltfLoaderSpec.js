@@ -1602,7 +1602,7 @@ describe(
         url: gltfUri,
       });
 
-      var gltfJsonLoaderCopy = ResourceCache.loadGltf({
+      var gltfJsonLoaderCopy = ResourceCache.loadGltfJson({
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });

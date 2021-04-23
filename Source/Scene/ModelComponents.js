@@ -69,6 +69,8 @@ function Quantization() {
  *
  * @alias ModelComponents.Attribute
  * @constructor
+ *
+ * @private
  */
 function Attribute() {
   /**
@@ -186,6 +188,8 @@ function Attribute() {
  *
  * @alias ModelComponents.Indices
  * @constructor
+ *
+ * @private
  */
 function Indices() {
   /**
@@ -216,6 +220,8 @@ function Indices() {
  *
  * @alias ModelComponents.FeatureIdAttribute
  * @constructor
+ *
+ * @private
  */
 function FeatureIdAttribute() {
   /**
@@ -254,6 +260,8 @@ function FeatureIdAttribute() {
  *
  * @alias ModelComponents.FeatureIdTexture
  * @constructor
+ *
+ * @private
  */
 function FeatureIdTexture() {
   /**
@@ -283,6 +291,8 @@ function FeatureIdTexture() {
  *
  * @alias ModelComponents.MorphTarget
  * @constructor
+ *
+ * @private
  */
 function MorphTarget() {
   /**
@@ -298,6 +308,8 @@ function MorphTarget() {
  *
  * @alias ModelComponents.Primitive
  * @constructor
+ *
+ * @private
  */
 function Primitive() {
   /**
@@ -369,6 +381,8 @@ function Primitive() {
  *
  * @alias ModelComponents.Primitive
  * @constructor
+ *
+ * @private
  */
 function Instances() {
   /**
@@ -391,6 +405,8 @@ function Instances() {
  *
  * @alias ModelComponents.Skin
  * @constructor
+ *
+ * @private
  */
 function Skin() {
   /**
@@ -413,6 +429,8 @@ function Skin() {
  *
  * @alias ModelComponents.Node
  * @constructor
+ *
+ * @private
  */
 function Node() {
   /**
@@ -479,6 +497,8 @@ function Node() {
  *
  * @alias ModelComponents.Scene
  * @constructor
+ *
+ * @private
  */
 function Scene() {
   /**
@@ -494,6 +514,8 @@ function Scene() {
  *
  * @alias ModelComponents.Components
  * @constructor
+ *
+ * @private
  */
 function Components() {
   /**
@@ -523,6 +545,8 @@ function Components() {
  *
  * @alias ModelComponents.Texture
  * @constructor
+ *
+ * @private
  */
 function Texture() {
   /**
@@ -553,6 +577,8 @@ function Texture() {
  *
  * @alias ModelComponents.MetallicRoughness
  * @constructor
+ *
+ * @private
  */
 function MetallicRoughness() {
   /**
@@ -599,6 +625,8 @@ function MetallicRoughness() {
  *
  * @alias ModelComponents.function SpecularGlossiness
  * @constructor
+ *
+ * @private
  */
 function SpecularGlossiness() {
   /**
@@ -645,6 +673,8 @@ function SpecularGlossiness() {
  *
  * @alias ModelComponent.Material
  * @constructor
+ *
+ * @private
  */
 function Material() {
   /**

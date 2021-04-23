@@ -164,7 +164,7 @@ Object.defineProperties(GltfLoader.prototype, {
  * Loads the resource.
  */
 GltfLoader.prototype.load = function () {
-  var gltfJsonLoader = ResourceCache.loadGltf({
+  var gltfJsonLoader = ResourceCache.loadGltfJson({
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     typedArray: this._typedArray,
@@ -220,20 +220,29 @@ GltfLoader.prototype.process = function (frameState) {
   }
 
   if (!this._parsed) {
-    // Parse the glTF
-    this._parsed = true;
+    this._parsed = true; // Make sure parse is only called once
+
     var supportedImageFormats = new SupportedImageFormats({
       webp: FeatureDetection.supportsWebP(),
       s3tc: frameState.context.s3tc,
       pvrtc: frameState.context.pvrtc,
       etc1: frameState.context.etc1,
     });
+
     var gltf = this._gltfJsonLoader.gltf;
+
+    // Parse the glTF which populates the loaders arrays. The ready promise
+    // resolves once all the loaders are ready (i.e. all external resources
+    // have been fetched and all GPU resources have been created). Loaders that
+    // create GPU resources need to be processed every frame until they become
+    // ready since the JobScheduler is not able to execute all jobs in a single
+    // frame. Also note that it's fine to call process before a loader is ready
+    // to process; nothing will happen.
     parse(this, gltf, supportedImageFormats, frameState);
 
-    // Check that the glTF JSON loader is still defined before trying to unload it.
-    // It may be undefined if the promise rejects immediately inside parse.
     if (defined(this._gltfJsonLoader) && this._releaseGltfJson) {
+      // Check that the glTF JSON loader is still defined before trying to unload it.
+      // It may be undefined if the ready promise rejects immediately (which can happen in unit tests)
       ResourceCache.unload(this._gltfJsonLoader);
       this._gltfJsonLoader = undefined;
     }
@@ -1080,7 +1089,7 @@ function unloadTextures(loader) {
   for (var i = 0; i < textureLoadersLength; ++i) {
     ResourceCache.unload(textureLoaders[i]);
   }
-  loader._textureLoaders = [];
+  loader._textureLoaders.length = 0;
 }
 
 function unloadBufferViews(loader) {
@@ -1089,7 +1098,7 @@ function unloadBufferViews(loader) {
   for (var i = 0; i < bufferViewLoadersLength; ++i) {
     ResourceCache.unload(bufferViewLoaders[i]);
   }
-  loader._bufferViewLoaders = [];
+  loader._bufferViewLoaders.length = 0;
 }
 
 function unloadGeometry(loader) {
@@ -1098,7 +1107,7 @@ function unloadGeometry(loader) {
   for (var i = 0; i < geometryLoadersLength; ++i) {
     ResourceCache.unload(geometryLoaders[i]);
   }
-  loader._geometryLoaders = [];
+  loader._geometryLoaders.length = 0;
 }
 
 /**
