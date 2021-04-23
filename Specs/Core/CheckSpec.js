@@ -28,6 +28,35 @@ describe("Core/Check", function () {
       }).toThrowDeveloperError();
     });
 
+    it("Check.typeOf.bigint does not throw when passed a boolean", function () {
+      expect(function () {
+        Check.typeOf.bigint("bigint", BigInt());
+      }).not.toThrowDeveloperError();
+    });
+
+    it("Check.typeOf.bigint throws when passed a non-boolean", function () {
+      expect(function () {
+        Check.typeOf.bigint("mockName", {});
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", []);
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", 1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", true);
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", "snth");
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", function () {
+          return true;
+        });
+      }).toThrowDeveloperError();
+    });
+
     it("Check.typeOf.func does not throw when passed a function", function () {
       expect(function () {
         Check.typeOf.func("mockName", function () {
