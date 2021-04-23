@@ -2,6 +2,10 @@
 
 ### 1.81 - 2021-05-01
 
+##### Fixes :wrench:
+
+- `Camera.flyTo` flies to the correct location in 3D when no default ellipsoid is used [#9498](https://github.com/CesiumGS/cesium/pull/9498)
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - `loadCRN` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
