@@ -202,6 +202,152 @@ TraversalResult.prototype.print = function () {
   console.log("z: " + this.z);
 };
 
+function isRayIntersectAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
+  var tmp;
+  /* X */
+  var txMin = (minX - ray.origin.x) / ray.direction.x;
+  var txMax = (maxX - ray.origin.x) / ray.direction.x;
+  if (txMax < txMin) {
+    tmp = txMax;
+    txMax = txMin;
+    txMin = tmp;
+  }
+
+  /* Y */
+  var tyMin = (minY - ray.origin.y) / ray.direction.y;
+  var tyMax = (maxY - ray.origin.y) / ray.direction.y;
+  if (tyMax < tyMin) {
+    tmp = tyMax;
+    tyMax = tyMin;
+    tyMin = tmp;
+  }
+
+  /* Z */
+  var tzMin = (minZ - ray.origin.z) / ray.direction.z;
+  var tzMax = (maxZ - ray.origin.z) / ray.direction.z;
+  if (tzMax < tzMin) {
+    tmp = tzMax;
+    tzMax = tzMin;
+    tzMin = tmp;
+  }
+
+  var tMin = txMin > tyMin ? txMin : tyMin; //Get Greatest Min
+  var tMax = txMax < tyMax ? txMax : tyMax; //Get Smallest Max
+
+  if (txMin > tyMax || tyMin > txMax) {
+    return { intersection: false, tMin: tMin, tMax: tMax };
+  }
+  if (tMin > tzMax || tzMin > tMax) {
+    return { intersection: false, tMin: tMin, tMax: tMax };
+  }
+  if (tzMin > tMin) {
+    tMin = tzMin;
+  }
+  if (tzMax < tMax) {
+    tMax = tzMax;
+  }
+
+  return { intersection: true, tMin: tMin, tMax: tMax };
+}
+
+function isNodeIntersection(
+  ray,
+  node,
+  cullBackFaces,
+  triangleVerticesCallback
+) {
+  var result = {
+    t: Number.MAX_VALUE,
+    triangleIndex: -1,
+  };
+  for (var i = 0; i < (node.intersectingTriangles || []).length; i++) {
+    var triIndex = node.intersectingTriangles[i];
+
+    var v0 = new Cartesian3();
+    var v1 = new Cartesian3();
+    var v2 = new Cartesian3();
+    triangleVerticesCallback(triIndex, v0, v1, v2);
+    var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
+    if (triT !== invalidIntersection && triT < result.t) {
+      result.t = triT;
+      // don't need this?
+      result.triangleIndex = triIndex;
+    }
+  }
+  return result;
+}
+
+function rayIntersectOctree(
+  node,
+  ray,
+  transformedRay,
+  triangleVerticesCallback,
+  cullBackFaces,
+  trace
+) {
+  // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
+  // find all the nodes which intersect the ray
+
+  var queue = [node];
+  var intersections = [];
+  while (queue.length) {
+    var n = queue.pop();
+    var aabb = onTheFlyNodeAABB(n.level, n.x, n.y, n.z);
+    var intersection = isRayIntersectAABB(
+      transformedRay,
+      aabb.aabbMinX,
+      aabb.aabbMinY,
+      aabb.aabbMinZ,
+      aabb.aabbMaxX,
+      aabb.aabbMaxY,
+      aabb.aabbMaxZ
+    );
+    if (intersection.intersection) {
+      if (trace) {
+        n.isHit = true;
+      }
+      var isLeaf = !n.children;
+      if (isLeaf) {
+        intersections.push({
+          node: n,
+          tMin: intersection.tMin,
+          tMax: intersection.tMax,
+        });
+      } else {
+        queue.push(...n.children);
+      }
+    }
+  }
+
+  // sort each intersection node by tMin ascending
+  var sortedTests = intersections.sort(function (a, b) {
+    return a.tMin - b.tMin;
+  });
+
+  var minT = Number.MAX_VALUE;
+  // for each intersected node - test every triangle which falls in that node
+  for (var ii = 0; ii < sortedTests.length; ii++) {
+    var test = sortedTests[ii];
+    var intersectionResult = isNodeIntersection(
+      ray,
+      test.node,
+      cullBackFaces,
+      triangleVerticesCallback
+    );
+    minT = Math.min(intersectionResult.t, minT);
+    if (minT !== invalidIntersection) {
+      // found our first intersection - we can bail early!
+      break;
+    }
+  }
+
+  if (minT !== invalidIntersection) {
+    return Ray.getPoint(ray, minT);
+  }
+
+  return Number.MAX_VALUE;
+}
+
 var scratchV0 = new Cartesian3();
 var scratchV1 = new Cartesian3();
 /**
@@ -877,29 +1023,38 @@ TrianglePicking.prototype.rayIntersect = function (
     return undefined;
   }
 
-  traversalResult = nodeRayIntersect(
-    0,
-    packedNodes,
-    packedTriangleSets,
-    0,
-    0,
-    0,
-    0,
+  return rayIntersectOctree(
+    this._unpackedOctree[0],
     ray,
     transformedRay,
-    t,
-    cullBackFaces,
     this._triangleVerticesCallback,
-    traversalResult,
-    traceDetails
+    cullBackFaces,
+    true
   );
 
-  if (traversalResult.t === invalidIntersection) {
-    return undefined;
-  }
-
-  result = Ray.getPoint(ray, traversalResult.t, result);
-  return result;
+  // traversalResult = nodeRayIntersect(
+  //   0,
+  //   packedNodes,
+  //   packedTriangleSets,
+  //   0,
+  //   0,
+  //   0,
+  //   0,
+  //   ray,
+  //   transformedRay,
+  //   t,
+  //   cullBackFaces,
+  //   this._triangleVerticesCallback,
+  //   traversalResult,
+  //   traceDetails
+  // );
+  //
+  // if (traversalResult.t === invalidIntersection) {
+  //   return undefined;
+  // }
+  //
+  // result = Ray.getPoint(ray, traversalResult.t, result);
+  // return result;
 };
 
 /**

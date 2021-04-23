@@ -230,6 +230,15 @@ TerrainMesh.prototype.pickRay = function (
     // console.timeEnd("new pick");
   }
 
+  if (this._octree) {
+    newPickValue = this._octree.rayIntersect(
+      ray,
+      cullBackFaces,
+      null,
+      traceDetails
+    );
+  }
+
   var oldPickValue = this._defaultPickStrategy.rayIntersect(
     ray,
     cullBackFaces,
