@@ -114,9 +114,6 @@ ResourceCache.unload = function (resourceLoader) {
   if (!defined(cacheEntry)) {
     throw new DeveloperError("Resource is not in the cache: " + cacheKey);
   }
-  if (cacheEntry.referenceCount === 0) {
-    throw new DeveloperError("Cannot unload resource that has no references.");
-  }
   //>>includeEnd('debug');
 
   --cacheEntry.referenceCount;

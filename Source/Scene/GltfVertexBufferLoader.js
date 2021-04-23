@@ -1,3 +1,4 @@
+import arrayFill from "../Core/arrayFill.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -207,7 +208,7 @@ function getQuantizationInformation(
         dracoQuantization.minValues
       );
       quantization.quantizedVolumeDimensions = MathType.unpack(
-        new Array(componentCount).fill(dracoQuantization.range)
+        arrayFill(new Array(componentCount), dracoQuantization.range)
       );
     }
     quantization.type = type;

@@ -4,13 +4,12 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
-  ResourceLoaderState,
   SupportedImageFormats,
   Texture,
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfTextureLoader",
@@ -229,18 +228,12 @@ describe(
 
       textureLoader.load();
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
-          expect(textureLoader.texture.width).toBe(1);
-          expect(textureLoader.texture.height).toBe(1);
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        expect(textureLoader.texture.width).toBe(1);
+        expect(textureLoader.texture.height).toBe(1);
       });
     });
 
@@ -261,18 +254,12 @@ describe(
 
       textureLoader.load();
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
-          expect(textureLoader.texture.width).toBe(1);
-          expect(textureLoader.texture.height).toBe(1);
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        expect(textureLoader.texture.width).toBe(1);
+        expect(textureLoader.texture.height).toBe(1);
       });
     });
 
@@ -297,18 +284,12 @@ describe(
 
       textureLoader.load();
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          expect(textureLoader.texture.width).toBe(1);
-          expect(textureLoader.texture.height).toBe(1);
-          expect(generateMipmap).toHaveBeenCalled();
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture.width).toBe(1);
+        expect(textureLoader.texture.height).toBe(1);
+        expect(generateMipmap).toHaveBeenCalled();
       });
     });
 
@@ -328,17 +309,11 @@ describe(
 
       textureLoader.load();
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          expect(textureLoader.texture.width).toBe(4);
-          expect(textureLoader.texture.height).toBe(2);
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture.width).toBe(4);
+        expect(textureLoader.texture.height).toBe(2);
       });
     });
 
@@ -358,17 +333,11 @@ describe(
 
       textureLoader.load();
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          expect(textureLoader.texture.width).toBe(3);
-          expect(textureLoader.texture.height).toBe(2);
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture.width).toBe(3);
+        expect(textureLoader.texture.height).toBe(2);
       });
     });
 
@@ -400,24 +369,18 @@ describe(
 
       textureLoader.load();
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          expect(textureLoader.texture).toBeDefined();
-          expect(textureLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture).toBeDefined();
+        expect(textureLoader.isDestroyed()).toBe(false);
 
-          textureLoader.destroy();
+        textureLoader.destroy();
 
-          expect(textureLoader.texture).not.toBeDefined();
-          expect(textureLoader.isDestroyed()).toBe(true);
-          expect(unloadImage).toHaveBeenCalled();
-          expect(destroyTexture).toHaveBeenCalled();
-        });
+        expect(textureLoader.texture).not.toBeDefined();
+        expect(textureLoader.isDestroyed()).toBe(true);
+        expect(unloadImage).toHaveBeenCalled();
+        expect(destroyTexture).toHaveBeenCalled();
       });
     });
 

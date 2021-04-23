@@ -6,14 +6,13 @@ import {
   Resource,
   ResourceCache,
   ResourceCacheKey,
-  ResourceLoaderState,
   SupportedImageFormats,
   when,
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
-import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
   "ResourceCache",
@@ -381,7 +380,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("unload throws if resource has no references", function () {
+    it("unload throws if resourceLoader has already been unloaded from the cache", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
         when.resolve(schemaJson)
       );
@@ -783,16 +782,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        dracoLoader.process(scene.frameState);
-        return (
-          dracoLoader._state === ResourceLoaderState.READY ||
-          dracoLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return dracoLoader.promise.then(function (dracoLoader) {
-          expect(dracoLoader.decodedData).toBeDefined();
-        });
+      return waitForLoaderProcess(dracoLoader, scene).then(function (
+        dracoLoader
+      ) {
+        expect(dracoLoader.decodedData).toBeDefined();
       });
     });
 
@@ -874,16 +867,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        vertexBufferLoader.process(scene.frameState);
-        return (
-          vertexBufferLoader._state === ResourceLoaderState.READY ||
-          vertexBufferLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
-          expect(vertexBufferLoader.vertexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
       });
     });
 
@@ -930,16 +917,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        vertexBufferLoader.process(scene.frameState);
-        return (
-          vertexBufferLoader._state === ResourceLoaderState.READY ||
-          vertexBufferLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
-          expect(vertexBufferLoader.vertexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
       });
     });
 
@@ -1060,16 +1041,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return (
-          indexBufferLoader._state === ResourceLoaderState.READY ||
-          indexBufferLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer).toBeDefined();
       });
     });
 
@@ -1114,16 +1089,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return (
-          indexBufferLoader._state === ResourceLoaderState.READY ||
-          indexBufferLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer).toBeDefined();
       });
     });
 
@@ -1308,16 +1277,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return (
-          textureLoader._state === ResourceLoaderState.READY ||
-          textureLoader._state === ResourceLoaderState.FAILED
-        );
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          expect(textureLoader.texture).toBeDefined();
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture).toBeDefined();
       });
     });
 
