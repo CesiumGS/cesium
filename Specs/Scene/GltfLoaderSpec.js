@@ -1,4 +1,5 @@
 import {
+  AttributeSemantic,
   AttributeType,
   Cartesian2,
   Cartesian3,
@@ -12,6 +13,7 @@ import {
   GltfTextureLoader,
   GltfVertexBufferLoader,
   IndexDatatype,
+  InstanceAttributeSemantic,
   JobScheduler,
   PrimitiveType,
   Matrix4,
@@ -152,8 +154,14 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(12);
@@ -177,9 +185,18 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.TEXCOORD_0
+        );
 
         var indices = primitive.indices;
         var material = primitive.material;
@@ -212,7 +229,7 @@ describe(
         expect(primitive.attributes.length).toBe(3);
         expect(primitive.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
-        expect(positionAttribute.semantic).toBe("POSITION");
+        expect(positionAttribute.semantic).toBe(AttributeSemantic.POSITION);
         expect(positionAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -228,7 +245,7 @@ describe(
         expect(positionAttribute.byteOffset).toBe(288);
         expect(positionAttribute.byteStride).toBe(12);
 
-        expect(normalAttribute.semantic).toBe("NORMAL");
+        expect(normalAttribute.semantic).toBe(AttributeSemantic.NORMAL);
         expect(normalAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(normalAttribute.type).toBe(AttributeType.VEC3);
         expect(normalAttribute.normalized).toBe(false);
@@ -242,7 +259,7 @@ describe(
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBe(12);
 
-        expect(texcoordAttribute.semantic).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.semantic).toBe(AttributeSemantic.NORMAL);
         expect(texcoordAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -334,10 +351,19 @@ describe(
         var childNode = rootNode.children[1];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
-        var colorAttribute = getAttribute(attributes, "COLOR_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.TEXCOORD_0
+        );
+        var colorAttribute = getAttribute(attributes, AttributeSemantic.COLOR);
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(0);
@@ -351,7 +377,7 @@ describe(
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBe(8);
 
-        expect(colorAttribute.semantic).toBe("COLOR_0");
+        expect(colorAttribute.semantic).toBe(AttributeSemantic.COLOR);
         expect(colorAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(colorAttribute.type).toBe(AttributeType.VEC4);
         expect(colorAttribute.normalized).toBe(false);
@@ -387,10 +413,19 @@ describe(
         var childNode = rootNode.children[1];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
-        var colorAttribute = getAttribute(attributes, "COLOR_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.TEXCOORD_0
+        );
+        var colorAttribute = getAttribute(attributes, AttributeSemantic.COLOR);
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(normalAttribute.buffer).toBeDefined();
@@ -409,14 +444,23 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
         var morphTargets = primitive.morphTargets;
         var morphTarget0 = morphTargets[0];
         var morphTarget1 = morphTargets[1];
-        var morphPositions0 = getAttribute(morphTarget0.attributes, "POSITION");
-        var morphPositions1 = getAttribute(morphTarget1.attributes, "POSITION");
+        var morphPositions0 = getAttribute(
+          morphTarget0.attributes,
+          AttributeSemantic.POSITION
+        );
+        var morphPositions1 = getAttribute(
+          morphTarget1.attributes,
+          AttributeSemantic.POSITION
+        );
 
-        expect(morphPositions0.semantic).toBe("POSITION");
+        expect(morphPositions0.semantic).toBe(AttributeSemantic.POSITION);
         expect(morphPositions0.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(morphPositions0.type).toBe(AttributeType.VEC3);
         expect(morphPositions0.normalized).toBe(false);
@@ -430,7 +474,7 @@ describe(
         expect(morphPositions0.byteOffset).toBe(36);
         expect(morphPositions0.byteStride).toBe(12);
 
-        expect(morphPositions1.semantic).toBe("POSITION");
+        expect(morphPositions1.semantic).toBe(AttributeSemantic.POSITION);
         expect(morphPositions1.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(morphPositions1.type).toBe(AttributeType.VEC3);
         expect(morphPositions1.normalized).toBe(false);
@@ -479,15 +523,24 @@ describe(
         var skin = rootNode.skin;
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var jointsAttribute = getAttribute(attributes, "JOINTS_0");
-        var weightsAttribute = getAttribute(attributes, "WEIGHTS_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var jointsAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.JOINTS
+        );
+        var weightsAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.WEIGHTS
+        );
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(0);
         expect(positionAttribute.byteStride).toBe(12);
 
-        expect(jointsAttribute.semantic).toBe("JOINTS_0");
+        expect(jointsAttribute.semantic).toBe(AttributeSemantic.JOINTS);
         expect(jointsAttribute.componentDatatype).toBe(
           ComponentDatatype.UNSIGNED_SHORT
         );
@@ -503,7 +556,7 @@ describe(
         expect(jointsAttribute.byteOffset).toBe(0);
         expect(jointsAttribute.byteStride).toBe(16);
 
-        expect(weightsAttribute.semantic).toBe("WEIGHTS_0");
+        expect(weightsAttribute.semantic).toBe(AttributeSemantic.WEIGHTS);
         expect(weightsAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -569,7 +622,10 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
 
         expect(positionAttribute).toBeDefined();
         expect(primitive.indices).toBeDefined();
@@ -595,7 +651,10 @@ describe(
           var rootNode = scene.nodes[0];
           var primitive = rootNode.primitives[0];
           var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(attributes, "POSITION");
+          var positionAttribute = getAttribute(
+            attributes,
+            AttributeSemantic.POSITION
+          );
 
           expect(positionAttribute).toBeDefined();
           expect(primitive.indices).toBeUndefined();
@@ -610,7 +669,10 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
 
         expect(positionAttribute).toBeDefined();
         expect(primitive.indices).toBeUndefined();
@@ -626,10 +688,22 @@ describe(
         var material = primitive.material;
         var metallicRoughness = material.metallicRoughness;
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var tangentAttribute = getAttribute(attributes, "TANGENT");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
+        var tangentAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.TANGENT
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.TEXCOORD_0
+        );
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
@@ -706,10 +780,13 @@ describe(
         var featureTexture = featureMetadata.getFeatureTexture(
           "vegetationTexture"
         );
-        var vegetationProperty = featureTexture._properties.vegetationDensity;
+        var vegetationProperty = featureTexture.getProperty(
+          "vegetationDensity"
+        );
 
-        expect(vegetationProperty._texture.width).toBe(256);
-        expect(vegetationProperty._texture.height).toBe(256);
+        // TODO
+        expect(vegetationProperty.texture.width).toBe(256);
+        expect(vegetationProperty.texture.height).toBe(256);
       });
     });
 
@@ -721,15 +798,24 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var featureIdAttribute = getAttribute(attributes, "_FEATURE_ID_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
+        var featureIdAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.FEATURE_ID_0
+        );
         var featureMetadata = components.featureMetadata;
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(featureIdAttribute.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -751,7 +837,7 @@ describe(
 
         var featureIdAttributeMapping = primitive.featureIdAttributes[0];
         expect(featureIdAttributeMapping.featureTableId).toBe("buildings");
-        expect(featureIdAttributeMapping.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttributeMapping.setIndex).toBe(0);
         expect(featureIdAttributeMapping.constant).toBe(0);
         expect(featureIdAttributeMapping.divisor).toBe(0);
 
@@ -777,8 +863,14 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var featureIdAttribute = getAttribute(attributes, "_FEATURE_ID_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var featureIdAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.FEATURE_ID_0
+        );
         var featureMetadata = components.featureMetadata;
 
         expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
@@ -792,13 +884,13 @@ describe(
 
         var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
         expect(featureIdAttributeMapping0.featureTableId).toBe("weatherTable");
-        expect(featureIdAttributeMapping0.semantic).toBeUndefined();
+        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.constant).toBe(0);
         expect(featureIdAttributeMapping0.divisor).toBe(1);
 
         var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
         expect(featureIdAttributeMapping1.featureTableId).toBe("townTable");
-        expect(featureIdAttributeMapping1.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.constant).toBe(0);
         expect(featureIdAttributeMapping1.divisor).toBe(0);
 
@@ -860,26 +952,40 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
         var featureMetadata = components.featureMetadata;
         var instances = rootNode.instances;
         var instancedAttributes = instances.attributes;
         var translationAttribute = getAttribute(
           instancedAttributes,
-          "TRANSLATION"
+          InstanceAttributeSemantic.TRANSLATION
         );
-        var rotationAttribute = getAttribute(instancedAttributes, "ROTATION");
-        var scaleAttribute = getAttribute(instancedAttributes, "SCALE");
+        var rotationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.ROTATION
+        );
+        var scaleAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.SCALE
+        );
         var featureIdAttribute = getAttribute(
           instancedAttributes,
-          "_FEATURE_ID_0"
+          InstanceAttributeSemantic.FEATURE_ID_0
         );
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(translationAttribute.semantic).toBe("TRANSLATION");
+        expect(translationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.TRANSLATION
+        );
         expect(translationAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -895,7 +1001,9 @@ describe(
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBe(12);
 
-        expect(rotationAttribute.semantic).toBe("ROTATION");
+        expect(rotationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.ROTATION
+        );
         expect(rotationAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -911,7 +1019,7 @@ describe(
         expect(rotationAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBe(16);
 
-        expect(scaleAttribute.semantic).toBe("SCALE");
+        expect(scaleAttribute.semantic).toBe(InstanceAttributeSemantic.SCALE);
         expect(scaleAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(scaleAttribute.type).toBe(AttributeType.VEC3);
         expect(scaleAttribute.normalized).toBe(false);
@@ -925,7 +1033,7 @@ describe(
         expect(scaleAttribute.byteOffset).toBe(0);
         expect(scaleAttribute.byteStride).toBe(12);
 
-        expect(featureIdAttribute.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -945,13 +1053,13 @@ describe(
 
         var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
         expect(featureIdAttributeMapping0.featureTableId).toBe("boxTable");
-        expect(featureIdAttributeMapping0.semantic).toBeUndefined();
+        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.constant).toBe(0);
         expect(featureIdAttributeMapping0.divisor).toBe(1);
 
         var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
         expect(featureIdAttributeMapping1.featureTableId).toBe("sectionTable");
-        expect(featureIdAttributeMapping1.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.constant).toBe(0);
         expect(featureIdAttributeMapping1.divisor).toBe(0);
 
@@ -999,19 +1107,31 @@ describe(
           var rootNode = scene.nodes[0];
           var primitive = rootNode.primitives[0];
           var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(attributes, "POSITION");
-          var normalAttribute = getAttribute(attributes, "NORMAL");
+          var positionAttribute = getAttribute(
+            attributes,
+            AttributeSemantic.POSITION
+          );
+          var normalAttribute = getAttribute(
+            attributes,
+            AttributeSemantic.NORMAL
+          );
           var instances = rootNode.instances;
           var instancedAttributes = instances.attributes;
           var translationAttribute = getAttribute(
             instancedAttributes,
-            "TRANSLATION"
+            InstanceAttributeSemantic.TRANSLATION
           );
-          var rotationAttribute = getAttribute(instancedAttributes, "ROTATION");
-          var scaleAttribute = getAttribute(instancedAttributes, "SCALE");
+          var rotationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.ROTATION
+          );
+          var scaleAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.SCALE
+          );
           var featureIdAttribute = getAttribute(
             instancedAttributes,
-            "_FEATURE_ID_0"
+            InstanceAttributeSemantic.FEATURE_ID_0
           );
 
           expect(positionAttribute).toBeDefined();
@@ -1083,7 +1203,7 @@ describe(
           var instancedAttributes = instances.attributes;
           var featureIdAttribute = getAttribute(
             instancedAttributes,
-            "_FEATURE_ID_0"
+            InstanceAttributeSemantic.FEATURE_ID_0
           );
 
           expect(featureIdAttribute.buffer).toBeUndefined();
@@ -1105,19 +1225,31 @@ describe(
           var rootNode = scene.nodes[0];
           var primitive = rootNode.primitives[0];
           var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(attributes, "POSITION");
-          var normalAttribute = getAttribute(attributes, "NORMAL");
+          var positionAttribute = getAttribute(
+            attributes,
+            AttributeSemantic.POSITION
+          );
+          var normalAttribute = getAttribute(
+            attributes,
+            AttributeSemantic.NORMAL
+          );
           var instances = rootNode.instances;
           var instancedAttributes = instances.attributes;
           var translationAttribute = getAttribute(
             instancedAttributes,
-            "TRANSLATION"
+            InstanceAttributeSemantic.TRANSLATION
           );
-          var rotationAttribute = getAttribute(instancedAttributes, "ROTATION");
-          var scaleAttribute = getAttribute(instancedAttributes, "SCALE");
+          var rotationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.ROTATION
+          );
+          var scaleAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.SCALE
+          );
           var featureIdAttribute = getAttribute(
             instancedAttributes,
-            "_FEATURE_ID_0"
+            InstanceAttributeSemantic.FEATURE_ID_0
           );
 
           expect(positionAttribute).toBeDefined();
@@ -1177,16 +1309,25 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          AttributeSemantic.TEXCOORD_0
+        );
         var positionQuantization = positionAttribute.quantization;
         var normalQuantization = normalAttribute.quantization;
         var texcoordQuantization = texcoordAttribute.quantization;
 
         var indices = primitive.indices;
 
-        expect(positionAttribute.semantic).toBe("POSITION");
+        expect(positionAttribute.semantic).toBe(AttributeSemantic.POSITION);
         expect(positionAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -1233,7 +1374,7 @@ describe(
         );
         expect(positionQuantization.type).toBe(AttributeType.VEC3);
 
-        expect(normalAttribute.semantic).toBe("NORMAL");
+        expect(normalAttribute.semantic).toBe(AttributeSemantic.NORMAL);
         expect(normalAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(normalAttribute.type).toBe(AttributeType.VEC3);
         expect(normalAttribute.normalized).toBe(false);
@@ -1266,7 +1407,7 @@ describe(
         );
         expect(normalQuantization.type).toBe(AttributeType.VEC2);
 
-        expect(texcoordAttribute.semantic).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.semantic).toBe(AttributeSemantic.TEXCOORD_0);
         expect(texcoordAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );

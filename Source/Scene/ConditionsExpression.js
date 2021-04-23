@@ -135,8 +135,8 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionName Name to give to the generated function.
- * @param {String} propertyNameMap Maps property variable names to shader attribute names.
+ * @param {String} functionHeader Header of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -145,8 +145,8 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * @private
  */
 ConditionsExpression.prototype.getShaderFunction = function (
-  functionName,
-  propertyNameMap,
+  functionHeader,
+  variableSubstitutionMap,
   shaderState,
   returnType
 ) {
@@ -161,11 +161,11 @@ ConditionsExpression.prototype.getShaderFunction = function (
     var statement = conditions[i];
 
     var condition = statement.condition.getShaderExpression(
-      propertyNameMap,
+      variableSubstitutionMap,
       shaderState
     );
     var expression = statement.expression.getShaderExpression(
-      propertyNameMap,
+      variableSubstitutionMap,
       shaderState
     );
 
@@ -186,8 +186,7 @@ ConditionsExpression.prototype.getShaderFunction = function (
   shaderFunction =
     returnType +
     " " +
-    functionName +
-    "() \n" +
+    functionHeader +
     "{ \n" +
     shaderFunction +
     "    return " +
@@ -197,4 +196,30 @@ ConditionsExpression.prototype.getShaderFunction = function (
 
   return shaderFunction;
 };
+
+/**
+ * Gets the variables used by the expression.
+ *
+ * @returns {String[]} The variables used by the expression.
+ *
+ * @private
+ */
+ConditionsExpression.prototype.getVariables = function () {
+  var variables = [];
+
+  var conditions = this._runtimeConditions;
+  if (!defined(conditions) || conditions.length === 0) {
+    return variables;
+  }
+
+  var length = conditions.length;
+  for (var i = 0; i < length; ++i) {
+    var statement = conditions[i];
+    variables.push.apply(variables, statement.condition.getVariables());
+    variables.push.apply(variables, statement.expression.getVariables());
+  }
+
+  return variables;
+};
+
 export default ConditionsExpression;

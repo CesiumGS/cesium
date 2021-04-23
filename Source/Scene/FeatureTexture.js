@@ -98,4 +98,19 @@ Object.defineProperties(FeatureTexture.prototype, {
   },
 });
 
+/**
+ * Gets the property with the given property ID.
+ *
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @returns {FeatureTextureProperty|undefined} The property, or undefined if there is no match.
+ * @private
+ */
+FeatureTexture.prototype.getProperty = function (propertyId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
+  return this._properties[propertyId];
+};
+
 export default FeatureTexture;

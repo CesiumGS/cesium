@@ -89,6 +89,21 @@ TileMetadata.prototype.hasProperty = function (propertyId) {
 };
 
 /**
+ * Returns whether a property with the given semantic exists.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether a property with the given semantic exists.
+ * @private
+ */
+TileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
+};
+
+/**
  * Returns an array of property IDs.
  *
  * @param {String[]} [results] An array into which to store the results.

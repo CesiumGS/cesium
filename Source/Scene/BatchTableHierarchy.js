@@ -358,6 +358,25 @@ BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
 };
 
 /**
+ * Returns whether any feature has this property.
+ *
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @returns {Boolean} Whether any feature has this property.
+ * @private
+ */
+BatchTableHierarchy.prototype.propertyExists = function (propertyId) {
+  var classes = this._classes;
+  var classesLength = classes.length;
+  for (var i = 0; i < classesLength; ++i) {
+    var instances = classes[i].instances;
+    if (defined(instances[propertyId])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Returns an array of property IDs.
  *
  * @param {Number} batchId the batch ID of the feature
