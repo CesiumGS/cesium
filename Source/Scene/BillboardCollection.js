@@ -315,6 +315,17 @@ function BillboardCollection(options) {
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
   var that = this;
+
+  // on atlas tree reset clear saved cache on each billboard, also fix still referencing old atlas texture image
+  this._onAtlasReset = function () {
+    for (var bImgIndex = 0; bImgIndex < that.length; bImgIndex++) {
+      var billboard = that.get(bImgIndex);
+      if (billboard) {
+        billboard.image = null;
+      }
+    }
+  };
+
   this._uniforms = {
     u_atlas: function () {
       return that._textureAtlas.texture;
@@ -1839,6 +1850,7 @@ BillboardCollection.prototype.update = function (frameState) {
   if (!defined(textureAtlas)) {
     textureAtlas = this._textureAtlas = new TextureAtlas({
       context: context,
+      onAtlasReset: this._onAtlasReset,
     });
 
     for (var ii = 0; ii < billboardsLength; ++ii) {

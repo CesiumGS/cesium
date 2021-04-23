@@ -183,6 +183,7 @@ function Billboard(options, billboardCollection) {
       } else if (defined(image.src)) {
         imageId = image.src;
       } else {
+        this._shouldFreeImage = true;
         imageId = createGuid();
       }
     }
@@ -927,6 +928,7 @@ Object.defineProperties(Billboard.prototype, {
       } else if (defined(value.src)) {
         this.setImage(value.src, value);
       } else {
+        this._shouldFreeImage = true;
         this.setImage(createGuid(), value);
       }
     },
@@ -1513,9 +1515,10 @@ Billboard.prototype.equals = function (other) {
 
 // will free the textureAtlas node if no other resources are using this image id anymore
 Billboard.prototype._freeFromTextureAtlas = function () {
-  if (defined(this._imageId)) {
+  if (defined(this._imageId) && this._shouldFreeImage) {
+    this._shouldFreeImage = false;
     var atlas = this._billboardCollection._textureAtlas;
-    atlas.freeImageNode(this._imageId);
+    atlas.freeImageNode(this._imageId, this._imageIndex);
   }
 };
 
