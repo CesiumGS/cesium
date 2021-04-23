@@ -219,33 +219,28 @@ fdescribe("Core/S2Cell", function () {
       CesiumMath.EPSILON15
     );
   });
-  /*
+
   it("gets correct vertices of cell", function () {
-    var cell = new S2Cell("1234567");
-    expect(cell.getVertex(0)).toEqual(
-      new Cartesian3(
-        0.8742531917210528,
-        0.15190781746622256,
-        0.46109150041851876
-      )
+    var cell = S2Cell.fromToken("2ef59bd352b93ac3");
+    Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977);
+    Cartesian3.fromDegrees(105.64131808248949, -10.490091072946313);
+    Cartesian3.fromDegrees(105.64131808248948, -10.490090989764633);
+    Cartesian3.fromDegrees(105.64131799299665, -10.4900909942503);
+    expect(cell.getVertex(0)).toEqualEpsilon(
+      Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977),
+      CesiumMath.EPSILON15
     );
-    expect(cell.getVertex(1)).toEqual(
-      new Cartesian3(
-        0.8742065161648566,
-        0.15225076792133416,
-        0.46106688317669087
-      )
+    expect(cell.getVertex(1)).toEqualEpsilon(
+      Cartesian3.fromDegrees(105.64131808248949, -10.490091072946313),
+      CesiumMath.EPSILON15
     );
-    expect(cell.getVertex(2)).toEqual(
-      new Cartesian3(
-        0.8740221366625959,
-        0.15221865660634273,
-        0.46142690125816327
-      )
+    expect(cell.getVertex(2)).toEqualEpsilon(
+      Cartesian3.fromDegrees(105.64131808248948, -10.490090989764633),
+      CesiumMath.EPSILON15
     );
-    expect(cell.getVertex(3)).toEqual(
-      new Cartesian3(0.8740687826903232, 0.1518757750628954, 0.4614515273301211)
+    expect(cell.getVertex(3)).toEqualEpsilon(
+      Cartesian3.fromDegrees(105.64131799299665, -10.4900909942503),
+      CesiumMath.EPSILON15
     );
   });
-  */
 });

@@ -15,7 +15,10 @@ var S2MaxLevel = 30;
 // The number of bits in a S2 cell ID used for specifying the base face
 var S2FaceBits = 3;
 
-// The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..kMaxSiTi].
+// The maximum index of a valid leaf cell plus one.  The range of valid leaf cell indices is [0..S2LimitIJ-1].
+var S2LimitIJ = 1 << S2MaxLevel;
+
+// The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..S2MaxSiTi].
 var S2MaxSiTi = (1 << (S2MaxLevel + 1)) >>> 0;
 
 // The number of bits in a S2 cell ID used for specifying the position along the Hilbert curve
@@ -252,7 +255,7 @@ S2Cell.prototype.getCenter = function () {
     center,
     Ellipsoid.UNIT_SPHERE
   );
-  // Interpreting cartographic coordinates on UNIT_SPHERE as coords on WGS84.
+  // Interpret spherical coordinates on UNIT_SPHERE as cartographics on WGS84.
   return Cartographic.toCartesian(
     cartographic,
     Ellipsoid.WGS84,
@@ -260,27 +263,27 @@ S2Cell.prototype.getCenter = function () {
   );
 };
 
-// /**
-//  * Get vertex of the S2 cell.
-//  *
-//  * @param {Number} index An integer index of the vertex.
-//  * @returns {Cartesian} The position of the vertex of the S2 cell.
-//  */
-//  S2Cell.prototype.getVertex = function (index) {
-//   var center = getS2Vertex(this._cellId, index);
-//   // Normalize XYZ.
-//   Cartesian3.normalize(center, center);
-//   var cartographic = new Cartographic.fromCartesian(
-//     center,
-//     Ellipsoid.UNIT_SPHERE
-//   );
-//   //  Interpreting cartographic coordinates on UNIT_SPHERE as coords on WGS84.
-//   return Cartographic.toCartesian(
-//     cartographic,
-//     Ellipsoid.WGS84,
-//     new Cartesian3()
-//   );
-// };
+/**
+ * Get vertex of the S2 cell.
+ *
+ * @param {Number} index An integer index of the vertex.
+ * @returns {Cartesian} The position of the vertex of the S2 cell.
+ */
+S2Cell.prototype.getVertex = function (index) {
+  var center = getS2Vertex(this._cellId, index);
+  // Normalize XYZ.
+  Cartesian3.normalize(center, center);
+  var cartographic = new Cartographic.fromCartesian(
+    center,
+    Ellipsoid.UNIT_SPHERE
+  );
+  // Interpret spherical coordinates on UNIT_SPHERE as cartographics on WGS84.
+  return Cartographic.toCartesian(
+    cartographic,
+    Ellipsoid.WGS84,
+    new Cartesian3()
+  );
+};
 
 // S2 Coordinate Conversions
 
@@ -410,6 +413,33 @@ function SiTitoST(si) {
 function getS2Center(cellId) {
   var faceSiTi = getFaceSiTi(cellId);
   return FaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
+}
+
+function getS2Vertex(cellId, index) {
+  var faceIJ = getFaceIJ(cellId);
+  var uv = IJLeveltoBoundUV([faceIJ[1], faceIJ[2]], S2Cell.getLevel(cellId));
+  var y = (index >> 1) & 1;
+  return FaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
+}
+
+function IJLeveltoBoundUV(ij, level) {
+  var result = [[], []];
+  var cellSize = GetSizeIJ(level);
+  for (var d = 0; d < 2; ++d) {
+    var ijLo = ij[d] & -cellSize;
+    var ijHi = ijLo + cellSize;
+    result[d][0] = STtoUV(IJtoSTMin(ijLo));
+    result[d][1] = STtoUV(IJtoSTMin(ijHi));
+  }
+  return result;
+}
+
+function GetSizeIJ(level) {
+  return (1 << (S2MaxLevel - level)) >>> 0;
+}
+
+function IJtoSTMin(i) {
+  return (1.0 / S2LimitIJ) * i;
 }
 
 function getFaceIJ(cellId) {
