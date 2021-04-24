@@ -1136,6 +1136,7 @@ Billboard.prototype._loadImage = function () {
   var imageId = this._imageId;
   var image = this._image;
   var imageSubRegion = this._imageSubRegion;
+  var shouldFreeImage = this._shouldFreeImage;
   var imageIndexPromise;
 
   if (defined(image)) {
@@ -1160,6 +1161,9 @@ Billboard.prototype._loadImage = function () {
         !BoundingRectangle.equals(that._imageSubRegion, imageSubRegion)
       ) {
         // another load occurred before this one finished, ignore the index
+        if (shouldFreeImage) {
+          atlas.freeImageNode(imageId, index);
+        }
         return;
       }
 
