@@ -217,18 +217,18 @@ TerrainMesh.prototype.pickRay = function (
     traceDetails = {};
   }
 
-  var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
+  // var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
   var newPickValue;
-  if (canNewPick) {
-    // console.time("new pick");
-    newPickValue = this._trianglePicking.rayIntersect(
-      ray,
-      cullBackFaces,
-      null,
-      traceDetails
-    );
-    // console.timeEnd("new pick");
-  }
+  // if (canNewPick) {
+  //   // console.time("new pick");
+  //   newPickValue = this._trianglePicking.rayIntersect(
+  //     ray,
+  //     cullBackFaces,
+  //     null,
+  //     traceDetails
+  //   );
+  //   // console.timeEnd("new pick");
+  // }
 
   if (this._octree) {
     newPickValue = this._octree.rayIntersect(
@@ -248,7 +248,7 @@ TerrainMesh.prototype.pickRay = function (
   );
 
   // whoops
-  if (canNewPick && !isCartesianAlmostEqual(newPickValue, oldPickValue)) {
+  if (!isCartesianAlmostEqual(newPickValue, oldPickValue)) {
     console.error("pick values are different", newPickValue, oldPickValue);
   }
 

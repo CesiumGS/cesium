@@ -259,10 +259,11 @@ function isNodeIntersection(
   var result = {
     t: Number.MAX_VALUE,
     triangleIndex: -1,
+    triangleTestCount: 0,
   };
   for (var i = 0; i < (node.intersectingTriangles || []).length; i++) {
     var triIndex = node.intersectingTriangles[i];
-
+    result.triangleTestCount++;
     var v0 = new Cartesian3();
     var v1 = new Cartesian3();
     var v2 = new Cartesian3();
@@ -287,6 +288,7 @@ function rayIntersectOctree(
 ) {
   // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
   // find all the nodes which intersect the ray
+  var hits = [];
 
   var queue = [node];
   var intersections = [];
@@ -305,6 +307,7 @@ function rayIntersectOctree(
     if (intersection.intersection) {
       if (trace) {
         n.isHit = true;
+        hits.push({ level: n.level, x: n.x, y: n.y, z: n.z });
       }
       var isLeaf = !n.children;
       if (isLeaf) {
@@ -324,6 +327,8 @@ function rayIntersectOctree(
     return a.tMin - b.tMin;
   });
 
+  var triangleTestCount = 0;
+
   var minT = Number.MAX_VALUE;
   // for each intersected node - test every triangle which falls in that node
   for (var ii = 0; ii < sortedTests.length; ii++) {
@@ -334,18 +339,27 @@ function rayIntersectOctree(
       cullBackFaces,
       triangleVerticesCallback
     );
+    triangleTestCount += intersectionResult.triangleTestCount;
     minT = Math.min(intersectionResult.t, minT);
     if (minT !== invalidIntersection) {
       // found our first intersection - we can bail early!
+      if (trace) {
+        trace.triangleIndex = intersectionResult.triangleIndex;
+      }
       break;
     }
+  }
+
+  if (trace) {
+    trace.triangleTestCount = triangleTestCount;
+    trace.hits = hits;
   }
 
   if (minT !== invalidIntersection) {
     return Ray.getPoint(ray, minT);
   }
 
-  return Number.MAX_VALUE;
+  return undefined;
 }
 
 var scratchV0 = new Cartesian3();
@@ -994,7 +1008,7 @@ TrianglePicking.prototype.rayIntersect = function (
   ray,
   cullBackFaces,
   result,
-  traceDetails
+  trace
 ) {
   if (!defined(result)) {
     result = new Cartesian3();
@@ -1015,13 +1029,10 @@ TrianglePicking.prototype.rayIntersect = function (
     transformedRay.direction
   );
 
-  var traversalResult = scratchTraversalResult;
-  traversalResult.reset();
-
-  var t = rayCubeIntersect(transformedRay);
-  if (t === invalidIntersection) {
-    return undefined;
-  }
+  // var t = rayCubeIntersect(transformedRay);
+  // if (t === invalidIntersection) {
+  //   return undefined;
+  // }
 
   return rayIntersectOctree(
     this._unpackedOctree[0],
@@ -1029,32 +1040,8 @@ TrianglePicking.prototype.rayIntersect = function (
     transformedRay,
     this._triangleVerticesCallback,
     cullBackFaces,
-    true
+    trace
   );
-
-  // traversalResult = nodeRayIntersect(
-  //   0,
-  //   packedNodes,
-  //   packedTriangleSets,
-  //   0,
-  //   0,
-  //   0,
-  //   0,
-  //   ray,
-  //   transformedRay,
-  //   t,
-  //   cullBackFaces,
-  //   this._triangleVerticesCallback,
-  //   traversalResult,
-  //   traceDetails
-  // );
-  //
-  // if (traversalResult.t === invalidIntersection) {
-  //   return undefined;
-  // }
-  //
-  // result = Ray.getPoint(ray, traversalResult.t, result);
-  // return result;
 };
 
 /**

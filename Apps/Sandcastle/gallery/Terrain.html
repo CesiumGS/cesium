@@ -332,7 +332,8 @@
             prims,
             transform,
             triangles,
-            triangleVerticesCallback
+            triangleVerticesCallback,
+            isSpecial
           ) {
             var aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
             var min = new Cesium.Cartesian3(
@@ -353,23 +354,26 @@
               maximum: max,
               minimum: min,
             });
-            // prims.add(
-            //   new Cesium.Primitive({
-            //     asynchronous: false,
-            //     appearance: new Cesium.PerInstanceColorAppearance(),
-            //     geometryInstances: [
-            //       new Cesium.GeometryInstance({
-            //         geometry: box,
-            //         modelMatrix: transform,
-            //         attributes: {
-            //           color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-            //             color.withAlpha(0.2)
-            //           ),
-            //         },
-            //       }),
-            //     ],
-            //   })
-            // );
+
+            if (isSpecial) {
+              prims.add(
+                new Cesium.Primitive({
+                  asynchronous: false,
+                  appearance: new Cesium.PerInstanceColorAppearance(),
+                  geometryInstances: [
+                    new Cesium.GeometryInstance({
+                      geometry: box,
+                      modelMatrix: transform,
+                      attributes: {
+                        color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                          color.withAlpha(0.2)
+                        ),
+                      },
+                    }),
+                  ],
+                })
+              );
+            }
             prims.add(
               new Cesium.Primitive({
                 asynchronous: false,
@@ -507,6 +511,12 @@
             if (!root) {
               return;
             }
+
+            var nodeHits =
+              (window.lastPickDetails.traceDetails &&
+                window.lastPickDetails.traceDetails.hits) ||
+              [];
+
             var unpackedOctreeNodes = root._unpackedOctree;
             var transform = root._transform;
             // var nodesToDraw = unpackedOctreeNodes.filter(
@@ -519,13 +529,23 @@
             var i = 0;
             for (var n of nodesToDraw) {
               var color = Cesium.Color.fromCssColorString(colors[i % 8]);
+
+              const isSpecial = nodeHits.some(
+                (h) =>
+                  h.level === n.level &&
+                  h.x === n.x &&
+                  h.y === n.y &&
+                  h.z === n.z
+              );
+
               drawOctreeNode(
                 n,
                 color,
                 prims,
                 transform,
                 n.intersectingTriangles,
-                root._triangleVerticesCallback
+                root._triangleVerticesCallback,
+                isSpecial
               );
               i++;
             }
