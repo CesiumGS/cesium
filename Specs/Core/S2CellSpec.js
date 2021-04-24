@@ -4,7 +4,7 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import S2Cell from "../../Source/Core/S2Cell.js";
 
-fdescribe("Core/S2Cell", function () {
+describe("Core/S2Cell", function () {
   it("constructor", function () {
     var cell = new S2Cell(BigInt("3458764513820540928"));
     expect(cell._cellId).toEqual(BigInt("3458764513820540928"));
