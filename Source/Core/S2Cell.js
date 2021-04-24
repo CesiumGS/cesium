@@ -285,8 +285,154 @@ S2Cell.prototype.getVertex = function (index) {
   );
 };
 
+function getS2Center(cellId) {
+  var faceSiTi = CellIdToFaceSiTi(cellId);
+  return FaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
+}
+
+function getS2Vertex(cellId, index) {
+  var faceIJ = CellIdToFaceIJ(cellId);
+  var uv = IJLeveltoBoundUV([faceIJ[1], faceIJ[2]], S2Cell.getLevel(cellId));
+  var y = (index >> 1) & 1;
+  return FaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
+}
+
 // S2 Coordinate Conversions
 
+/**
+ * @private
+ */
+function CellIdToFaceSiTi(cellId) {
+  var faceIJ = CellIdToFaceIJ(cellId);
+  var face = faceIJ[0];
+  var i = faceIJ[1];
+  var j = faceIJ[2];
+
+  var isLeaf = S2Cell.getLevel(cellId) === 30;
+  var shouldCorrect =
+    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1);
+  var correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
+  var si = (i << 1) + correction;
+  var ti = (j << 1) + correction;
+  return [face, si, ti];
+}
+
+/**
+ * @private
+ */
+function CellIdToFaceIJ(cellId) {
+  if (S2LookupPositions.length === 0) {
+    generateLookupTable();
+  }
+
+  var face = Number(cellId >> BigInt(S2PositionBits));
+  var bits = face & S2SwapMask;
+  var lookupMask = (1 << S2LookupBits) - 1;
+
+  var i = 0;
+  var j = 0;
+
+  for (var k = 7; k >= 0; k--) {
+    var numberOfBits = k === 7 ? S2MaxLevel - 7 * S2LookupBits : S2LookupBits;
+    var extractMask = (1 << (2 * numberOfBits)) - 1;
+    bits +=
+      Number(
+        (cellId >> BigInt(k * 2 * S2LookupBits + 1)) & BigInt(extractMask)
+      ) << 2;
+
+    bits = S2LookupIJ[bits];
+
+    var offset = k * S2LookupBits;
+    i += (bits >> (S2LookupBits + 2)) << offset;
+    j += ((bits >> 2) & lookupMask) << offset;
+
+    bits &= S2SwapMask | S2InvertMask;
+  }
+
+  return [face, i, j];
+}
+
+/**
+ * @private
+ */
+function FaceSiTitoXYZ(face, si, ti) {
+  var s = SiTitoST(si);
+  var t = SiTitoST(ti);
+
+  var u = STtoUV(s);
+  var v = STtoUV(t);
+  return FaceUVtoXYZ(face, u, v);
+}
+
+/**
+ * @private
+ */
+function FaceUVtoXYZ(face, u, v) {
+  switch (face) {
+    case 0:
+      return new Cartesian3(1, u, v);
+    case 1:
+      return new Cartesian3(-u, 1, v);
+    case 2:
+      return new Cartesian3(-u, -v, 1);
+    case 3:
+      return new Cartesian3(-1, -v, -u);
+    case 4:
+      return new Cartesian3(v, -1, -u);
+    default:
+      return new Cartesian3(v, u, -1);
+  }
+}
+
+/**
+ * @private
+ */
+function STtoUV(s) {
+  if (s >= 0.5) return (1 / 3) * (4 * s * s - 1);
+  return (1 / 3) * (1 - 4 * (1 - s) * (1 - s));
+}
+
+/**
+ * @private
+ */
+function SiTitoST(si) {
+  return (1.0 / S2MaxSiTi) * si;
+}
+
+/**
+ * @private
+ */
+function IJLeveltoBoundUV(ij, level) {
+  var result = [[], []];
+  var cellSize = GetSizeIJ(level);
+  for (var d = 0; d < 2; ++d) {
+    var ijLo = ij[d] & -cellSize;
+    var ijHi = ijLo + cellSize;
+    result[d][0] = STtoUV(IJtoSTMin(ijLo));
+    result[d][1] = STtoUV(IJtoSTMin(ijHi));
+  }
+  return result;
+}
+
+/**
+ * @private
+ */
+function GetSizeIJ(level) {
+  return (1 << (S2MaxLevel - level)) >>> 0;
+}
+
+/**
+ * @private
+ */
+function IJtoSTMin(i) {
+  return (1.0 / S2LimitIJ) * i;
+}
+
+// Utility Functions
+
+/**
+ * @private
+ */
 function generateLookupCell(
   level,
   i,
@@ -341,6 +487,9 @@ function generateLookupCell(
   }
 }
 
+/**
+ * @private
+ */
 function generateLookupTable() {
   generateLookupCell(0, 0, 0, 0, 0, 0);
   generateLookupCell(0, 0, 0, S2SwapMask, 0, S2SwapMask);
@@ -354,127 +503,6 @@ function generateLookupTable() {
     S2SwapMask | S2InvertMask
   );
 }
-
-/**
- * Return the {face, si, ti} coordinates of the center of the cell.
- *
- * @private
- */
-function getFaceSiTi(cellId) {
-  var faceIJOrientation = getFaceIJ(cellId);
-  var face = faceIJOrientation[0];
-  var i = faceIJOrientation[1];
-  var j = faceIJOrientation[2];
-
-  var isLeaf = S2Cell.getLevel(cellId) === 30;
-  var shouldCorrect =
-    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1);
-  var correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
-  var si = (i << 1) + correction;
-  var ti = (j << 1) + correction;
-  return [face, si, ti];
-}
-
-function FaceSiTitoXYZ(face, si, ti) {
-  var s = SiTitoST(si);
-  var t = SiTitoST(ti);
-
-  var u = STtoUV(s);
-  var v = STtoUV(t);
-  return FaceUVtoXYZ(face, u, v);
-}
-
-function FaceUVtoXYZ(face, u, v) {
-  switch (face) {
-    case 0:
-      return new Cartesian3(1, u, v);
-    case 1:
-      return new Cartesian3(-u, 1, v);
-    case 2:
-      return new Cartesian3(-u, -v, 1);
-    case 3:
-      return new Cartesian3(-1, -v, -u);
-    case 4:
-      return new Cartesian3(v, -1, -u);
-    default:
-      return new Cartesian3(v, u, -1);
-  }
-}
-
-function STtoUV(s) {
-  if (s >= 0.5) return (1 / 3) * (4 * s * s - 1);
-  return (1 / 3) * (1 - 4 * (1 - s) * (1 - s));
-}
-
-function SiTitoST(si) {
-  return (1.0 / S2MaxSiTi) * si;
-}
-
-function getS2Center(cellId) {
-  var faceSiTi = getFaceSiTi(cellId);
-  return FaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
-}
-
-function getS2Vertex(cellId, index) {
-  var faceIJ = getFaceIJ(cellId);
-  var uv = IJLeveltoBoundUV([faceIJ[1], faceIJ[2]], S2Cell.getLevel(cellId));
-  var y = (index >> 1) & 1;
-  return FaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
-}
-
-function IJLeveltoBoundUV(ij, level) {
-  var result = [[], []];
-  var cellSize = GetSizeIJ(level);
-  for (var d = 0; d < 2; ++d) {
-    var ijLo = ij[d] & -cellSize;
-    var ijHi = ijLo + cellSize;
-    result[d][0] = STtoUV(IJtoSTMin(ijLo));
-    result[d][1] = STtoUV(IJtoSTMin(ijHi));
-  }
-  return result;
-}
-
-function GetSizeIJ(level) {
-  return (1 << (S2MaxLevel - level)) >>> 0;
-}
-
-function IJtoSTMin(i) {
-  return (1.0 / S2LimitIJ) * i;
-}
-
-function getFaceIJ(cellId) {
-  if (S2LookupPositions.length === 0) {
-    generateLookupTable();
-  }
-
-  var face = Number(cellId >> BigInt(S2PositionBits));
-  var bits = face & S2SwapMask;
-  var lookupMask = (1 << S2LookupBits) - 1;
-
-  var i = 0;
-  var j = 0;
-
-  for (var k = 7; k >= 0; k--) {
-    var numberOfBits = k === 7 ? S2MaxLevel - 7 * S2LookupBits : S2LookupBits;
-    var extractMask = (1 << (2 * numberOfBits)) - 1;
-    bits +=
-      Number(
-        (cellId >> BigInt(k * 2 * S2LookupBits + 1)) & BigInt(extractMask)
-      ) << 2;
-
-    bits = S2LookupIJ[bits];
-
-    var offset = k * S2LookupBits;
-    i += (bits >> (S2LookupBits + 2)) << offset;
-    j += ((bits >> 2) & lookupMask) << offset;
-
-    bits &= S2SwapMask | S2InvertMask;
-  }
-
-  return [face, i, j];
-}
-
-// Helper functions
 
 /**
  * @private
