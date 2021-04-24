@@ -153,7 +153,8 @@ function getFragmentShaderLoaded(content) {
     if (defined(content._batchTable)) {
       return content._batchTable.getFragmentShaderCallback(
         false,
-        undefined
+        undefined,
+        false
       )(fs);
     }
     return "uniform vec4 czm_pickColor;\n" + fs;

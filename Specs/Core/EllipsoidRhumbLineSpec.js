@@ -1,3 +1,4 @@
+import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidGeodesic } from "../../Source/Cesium.js";
@@ -1022,5 +1023,28 @@ describe("Core/EllipsoidRhumbLine", function () {
         CesiumMath.EPSILON12
       )
     ).toBe(true);
+  });
+
+  it("returns the start point when interpolating at surface distance 0.0", function () {
+    var p0 = new Cartesian3(
+      899411.2767873341,
+      -5079219.747324299,
+      3738850.924729517
+    );
+    var p1 = new Cartesian3(
+      899411.0994891181,
+      -5079219.778719673,
+      3738850.9247295167
+    );
+
+    var ellipsoid = Ellipsoid.WGS84;
+    var c0 = ellipsoid.cartesianToCartographic(p0, new Cartographic());
+    var c1 = ellipsoid.cartesianToCartographic(p1, new Cartographic());
+    var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
+
+    var c = rhumb.interpolateUsingSurfaceDistance(0.0, new Cartographic());
+    var p = ellipsoid.cartographicToCartesian(c, new Cartesian3());
+
+    expect(p).toEqualEpsilon(p0, CesiumMath.EPSILON7);
   });
 });

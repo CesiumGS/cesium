@@ -1,16 +1,24 @@
 # Change Log
 
+### 1.81 - 2021-05-01
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `loadCRN` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
+- `loadKTX` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
+
 ### 1.80 - 2021-04-01
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileset.pickPrimitive` for rendering primitives instead of the tileset during the pick pass.
+- Added support for drawing ground primitives on translucent 3D Tiles. [#9399](https://github.com/CesiumGS/cesium/pull/9399)
 
 ### 1.79.1 - 2021-03-01
 
 ##### Fixes :wrench:
 
 - Fixed a regression in 1.79 that broke terrain exaggeration. [#9397](https://github.com/CesiumGS/cesium/pull/9397)
+- Fixed an issue where interpolating certain small rhumblines with surface distance 0.0 would not return the expected result. [#9430](https://github.com/CesiumGS/cesium/pull/9430)
 
 ### 1.79 - 2021-03-01
 

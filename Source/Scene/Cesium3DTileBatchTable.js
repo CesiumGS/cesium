@@ -1195,7 +1195,8 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
 
 Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
   handleTranslucent,
-  diffuseAttributeOrUniformName
+  diffuseAttributeOrUniformName,
+  hasPremultipliedAlpha
 ) {
   if (this.featuresLength === 0) {
     return;
@@ -1210,8 +1211,13 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
         "varying vec4 tile_featureColor; \n" +
         "void main() \n" +
         "{ \n" +
-        "    tile_color(tile_featureColor); \n" +
-        "}";
+        "    tile_color(tile_featureColor); \n";
+
+      if (hasPremultipliedAlpha) {
+        source += "    gl_FragColor.rgb *= gl_FragColor.a; \n";
+      }
+
+      source += "}";
     } else {
       if (handleTranslucent) {
         source += "uniform bool tile_translucentCommand; \n";
@@ -1246,7 +1252,13 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
           "    } \n";
       }
 
-      source += "    tile_color(featureProperties); \n" + "} \n";
+      source += "    tile_color(featureProperties); \n";
+
+      if (hasPremultipliedAlpha) {
+        source += "    gl_FragColor.rgb *= gl_FragColor.a; \n";
+      }
+
+      source += "} \n";
     }
     return source;
   };
@@ -1268,6 +1280,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "{ \n" +
         "    tile_main(); \n" +
         "    gl_FragColor = tile_featureColor; \n" +
+        "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
         "}";
     } else {
       source +=
@@ -1282,6 +1295,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "        discard; \n" +
         "    } \n" +
         "    gl_FragColor = featureProperties; \n" +
+        "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
         "} \n";
     }
     return source;
@@ -1607,6 +1621,8 @@ function getTranslucentRenderState(renderState) {
   rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
+  rs.stencilTest = StencilConstants.setCesium3DTileBit();
+  rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
 
   return RenderState.fromCache(rs);
 }
