@@ -1,3 +1,4 @@
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -5,6 +6,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import Sampler from "../Renderer/Sampler.js";
@@ -527,6 +529,8 @@ function loadIndices(loader, gltf, accessorId, draco) {
   return indices;
 }
 
+var defaultScale = new Cartesian2(1.0, 1.0);
+
 function loadTexture(loader, gltf, textureInfo, supportedImageFormats) {
   var imageId = GltfLoaderUtil.getImageIdFromTexture({
     gltf: gltf,
@@ -550,11 +554,38 @@ function loadTexture(loader, gltf, textureInfo, supportedImageFormats) {
   loader._textureLoaders.push(textureLoader);
 
   var texture = new Texture();
-  texture.texCoord = textureInfo.texCoord;
+  texture.texCoord = defaultValue(textureInfo.texCoord, 0);
   texture.sampler = GltfLoaderUtil.createSampler({
     gltf: gltf,
     textureInfo: textureInfo,
   });
+
+  var extensions = defaultValue(
+    textureInfo.extensions,
+    defaultValue.EMPTY_OBJECT
+  );
+  var textureTransform = extensions.KHR_texture_transform;
+  if (defined(textureTransform)) {
+    texture.texCoord = defaultValue(
+      textureTransform.texCoord,
+      texture.texCoord
+    );
+
+    var offset = defined(textureTransform.offset)
+      ? Cartesian2.unpack(textureTransform.offset)
+      : Cartesian2.ZERO;
+    var rotation = defaultValue(textureTransform.rotation, 0.0);
+    var scale = defined(textureTransform.scale)
+      ? Cartesian2.unpack(textureTransform.scale)
+      : defaultScale;
+
+    // prettier-ignore
+    texture.transform = new Matrix3(
+      Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
+      Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
+      0.0, 0.0, 1.0
+    );
+  }
 
   textureLoader.promise.then(function (textureLoader) {
     if (loader.isDestroyed()) {

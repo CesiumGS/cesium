@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Matrix3 from "../Core/Matrix3.js";
 import AlphaMode from "./AlphaMode.js";
 
 /**
@@ -31,7 +32,7 @@ function Quantization() {
    * The range used to convert buffer values to normalized values [0.0, 1.0]
    * This is typically computed as (1 << quantizationBits) - 1
    *
-   * @type {Number}
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    */
   this.normalizationRange = undefined;
 
@@ -96,14 +97,22 @@ function Attribute() {
   this.semantic = undefined;
 
   /**
-   * The component data type of the attribute, e.g. ComponentDatatype.FLOAT.
+   * The component data type of the attribute.
+   * <p>
+   * When the data is quantized the componentDatatype should match the
+   * dequantized data, which is typically ComponentDatatype.FLOAT.
+   * </p>
    *
    * @type {ComponentDatatype}
    */
   this.componentDatatype = undefined;
 
   /**
-   * The type of the attribute, e.g. AttributeType.VEC3.
+   * The type of the attribute.
+   * <p>
+   * When the data is oct-encoded the type should match the decoded data, which
+   * is typically AttributeType.VEC3.
+   * </p>
    *
    * @type {AttributeType}
    */
@@ -126,6 +135,13 @@ function Attribute() {
 
   /**
    * Minimum value of each component in the attribute.
+   * <p>
+   * When the data is quantized the min should match the dequantized data.
+   * The normalized property has no effect on these values.
+   * </p>
+   * <p>
+   * Must be defined for POSITION attributes.
+   * </p>
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    */
@@ -133,6 +149,13 @@ function Attribute() {
 
   /**
    * Maximum value of each component in the attribute.
+   * <p>
+   * When the data is quantized the max should match the dequantized data.
+   * The normalized property has no effect on these values.
+   * </p>
+   * <p>
+   * Must be defined for POSITION attributes.
+   * </p>
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    */
@@ -563,6 +586,22 @@ function Texture() {
    * @default 0
    */
   this.texCoord = 0;
+
+  /**
+   * Transformation matrix to apply to texture coordinates.
+   *
+   * @type {Matrix3}
+   * @default Matrix3.IDENTITY
+   */
+  this.transform = Matrix3.IDENTITY;
+
+  /**
+   * Rotate the UVs by this many radians counter-clockwise around the origin.
+   *
+   * @type {Number}
+   * @default 0.0
+   */
+  this.rotation = 0.0;
 
   /**
    * The sampler.
