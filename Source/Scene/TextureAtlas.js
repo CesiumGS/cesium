@@ -335,10 +335,7 @@ function removeDeadNodes(node) {
     return true;
   }
 
-  if (
-    !shouldRemoveChild(node.childNode1) ||
-    !shouldRemoveChild(node.childNode2)
-  ) {
+  if (!shouldRemoveChild(node)) {
     return false;
   }
 
