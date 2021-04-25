@@ -62,7 +62,7 @@ var defaultInitialSize = new Cartesian2(16.0, 16.0);
  */
 function TextureAtlas(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
+  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 2.0);
   var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
   //>>includeStart('debug', pragmas.debug);
@@ -460,6 +460,49 @@ function findNode(textureAtlas, node, image) {
   );
 }
 
+// fill border with zeros to prevent showing leftovers from old freed billboards
+function fillBorderWithZeros(textureAtlas, node) {
+  var spacing = textureAtlas._borderWidthInPixels;
+  var imgWidth = Math.abs(node.topRight.x - node.bottomLeft.x);
+  var imgHeight = Math.abs(node.topRight.y - node.bottomLeft.y);
+  textureAtlas._texture.copyFrom(
+    {
+      width: imgWidth,
+      height: spacing,
+      arrayBufferView: new Uint8Array(imgWidth * spacing * 4),
+    },
+    node.bottomLeft.x,
+    Math.max(node.bottomLeft.y - spacing, 0)
+  );
+  textureAtlas._texture.copyFrom(
+    {
+      width: imgWidth,
+      height: spacing,
+      arrayBufferView: new Uint8Array(imgWidth * spacing * 4),
+    },
+    node.bottomLeft.x,
+    node.topRight.y
+  );
+  textureAtlas._texture.copyFrom(
+    {
+      width: spacing,
+      height: imgHeight,
+      arrayBufferView: new Uint8Array(imgHeight * spacing * 4),
+    },
+    Math.max(node.bottomLeft.x - spacing, 0),
+    node.bottomLeft.y
+  );
+  textureAtlas._texture.copyFrom(
+    {
+      width: spacing,
+      height: imgHeight,
+      arrayBufferView: new Uint8Array(imgHeight * spacing * 4),
+    },
+    node.topRight.x,
+    node.bottomLeft.y
+  );
+}
+
 // Adds image of given index to the texture atlas. Called from addImage and addImages.
 function addImage(textureAtlas, image, index) {
   var node = findNode(textureAtlas, textureAtlas._root, image);
@@ -477,6 +520,7 @@ function addImage(textureAtlas, image, index) {
     var w = nodeWidth / atlasWidth;
     var h = nodeHeight / atlasHeight;
     textureAtlas._textureCoordinates[index] = new BoundingRectangle(x, y, w, h);
+    fillBorderWithZeros(textureAtlas, node);
     textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
   } else {
     // No node found, must resize the texture atlas.
@@ -553,31 +597,12 @@ TextureAtlas.prototype.addImage = function (id, image) {
   return indexPromise;
 };
 
-// fill freed area on texture with default so it doesn't show on border of other billboards
-TextureAtlas.prototype.fillTextureAreaZeros = function (node) {
-  if (defined(node) && defined(node.imageIndex)) {
-    var imgWidth = Math.abs(node.topRight.x - node.bottomLeft.x);
-    var imgHeight = Math.abs(node.topRight.y - node.bottomLeft.y);
-
-    this._texture.copyFrom(
-      {
-        width: imgWidth,
-        height: imgHeight,
-        arrayBufferView: new Uint8Array(imgWidth * imgHeight * 4),
-      },
-      node.bottomLeft.x,
-      node.bottomLeft.y
-    );
-  }
-};
-
 TextureAtlas.prototype.freeNodeResources = function (
   node,
   imageId,
   imageIndex
 ) {
   if (defined(node)) {
-    this.fillTextureAreaZeros(node);
     node.imageIndex = undefined; //console.log("found node to free:", node);
     cleanLeafNode(node);
     delete this._textureCoordinates[imageIndex];
