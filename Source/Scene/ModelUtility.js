@@ -564,6 +564,7 @@ ModelUtility.supportedExtensions = {
   EXT_texture_webp: true,
   KHR_blend: true,
   KHR_binary_glTF: true,
+  KHR_texture_basisu: true,
   KHR_draco_mesh_compression: true,
   KHR_materials_common: true,
   KHR_techniques_webgl: true,

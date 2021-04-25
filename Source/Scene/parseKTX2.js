@@ -98,7 +98,7 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   };
   byteOffset += sizeOfUint32;
 
-  // Index
+  // 1 -- Index
   var dfdByteOffset = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
   // var dfdByteLength = view.getUint32(byteOffset, true);
@@ -260,128 +260,84 @@ function transcodeEtc1s(
   transcoderModule,
   result
 ) {
-  var ktx2Offset = defined(data.buffer) ? data.byteOffset : 0;
-  var byteOffset = ktx2Offset + sgdIndex.byteOffset;
-  var isVideo = header.layerCount !== 0; // Should be false until video support is added
+  var dataBuffer = defined(data.buffer) ? data.buffer : data;
+  var ktx2File = new transcoderModule.KTX2File(new Uint8Array(dataBuffer));
+  var width = ktx2File.getWidth();
+  var height = ktx2File.getHeight();
+  var layers = ktx2File.getLayers();
+  var levels = ktx2File.getLevels();
+  var faces = ktx2File.getFaces();
+  var hasAlpha = ktx2File.getHasAlpha();
 
-  // Read rest of SGD data
-  var endpointCount = view.getUint16(byteOffset, true);
-  byteOffset += sizeOfUint16;
-  var selectorCount = view.getUint16(byteOffset, true);
-  byteOffset += sizeOfUint16;
-  var endpointsByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  var selectorsByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  var tablesByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  var extendedByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var imageDescs = [];
-  for (var imDescs = 0; imDescs < header.levelCount; ++imDescs) {
-    imageDescs.push({
-      imageFlags: view.getUint32(byteOffset, true),
-      rgbSliceByteOffset: view.getUint32((byteOffset += sizeOfUint32), true),
-      rgbSliceByteLength: view.getUint32((byteOffset += sizeOfUint32), true),
-      alphaSliceByteOffset: view.getUint32((byteOffset += sizeOfUint32), true),
-      alphaSliceByteLength: view.getUint32((byteOffset += sizeOfUint32), true),
-    });
-    byteOffset += sizeOfUint32;
+  if (!width || !height || !levels) {
+    ktx2File.close();
+    ktx2File.delete();
+    throw new RuntimeError("Invalid .ktx2 file");
   }
-
-  var hasAlphaSlices = imageDescs[0].alphaSliceByteLength > 0;
 
   // Determine target format based on platform support
   var internalFormat, transcoderFormat;
-  var TranscodeTarget = transcoderModule.TranscodeTarget;
-  if (supportedTargetFormats.etc1 && !hasAlphaSlices) {
+  var BasisFormat = transcoderModule.transcoder_texture_format;
+  if (supportedTargetFormats.etc1 && !hasAlpha) {
     internalFormat = PixelFormat.RGB_ETC1;
-    transcoderFormat = TranscodeTarget.ETC1_RGB;
+    transcoderFormat = BasisFormat.cTFETC1_RGB;
   } else if (supportedTargetFormats.s3tc) {
-    internalFormat = hasAlphaSlices
-      ? PixelFormat.RGBA_DXT5
-      : PixelFormat.RGB_DXT1;
-    transcoderFormat = hasAlphaSlices
-      ? TranscodeTarget.BC3_RGBA
-      : TranscodeTarget.BC1_RGB;
+    internalFormat = hasAlpha ? PixelFormat.RGBA_DXT5 : PixelFormat.RGB_DXT1;
+    transcoderFormat = hasAlpha
+      ? BasisFormat.cTFBC3_RGBA
+      : BasisFormat.cTFBC1_RGB;
   } else if (supportedTargetFormats.pvrtc) {
-    internalFormat = hasAlphaSlices
+    internalFormat = hasAlpha
       ? PixelFormat.RGBA_PVRTC_4BPPV1
       : PixelFormat.RGB_PVRTC_4BPPV1;
-    transcoderFormat = hasAlphaSlices
-      ? TranscodeTarget.PVRTC1_4_RGBA
-      : TranscodeTarget.PVRTC1_4_RGB;
+    transcoderFormat = hasAlpha
+      ? BasisFormat.cTFPVRTC1_4_RGBA
+      : BasisFormat.cTFPVRTC1_4_RGB;
   } else {
     throw new RuntimeError("No transcoding format target available");
   }
 
-  var dataBuffer = defined(data.buffer) ? data.buffer : data;
-  var endpoints = new Uint8Array(dataBuffer, byteOffset, endpointsByteLength);
-  byteOffset += endpointsByteLength;
-  var selectors = new Uint8Array(dataBuffer, byteOffset, selectorsByteLength);
-  byteOffset += selectorsByteLength;
+  if (!ktx2File.startTranscoding()) {
+    ktx2File.close();
+    ktx2File.delete();
+    throw new RuntimeError("startTranscoding failed");
+  }
 
-  var transcoder = new transcoderModule.BasisLzEtc1sImageTranscoder();
-
-  transcoder.decodePalettes(endpointCount, endpoints, selectorCount, selectors);
-
-  var tables = new Uint8Array(dataBuffer, byteOffset, tablesByteLength);
-  byteOffset += tablesByteLength;
-  // var extendedByte = new Uint8Array(data, byteOffset, extendedByteLength);
-  byteOffset += extendedByteLength;
-  transcoder.decodeTables(tables);
+  var dstSize = ktx2File.getImageTranscodedSizeInBytes(
+    0,
+    0,
+    0,
+    transcoderFormat.value
+  );
+  var dst = new Uint8Array(dstSize);
 
   for (var i = 0; i < levelIndex.length; ++i) {
     var level = (result[i] = {});
-    var levelInfo = levelIndex[i];
-    var imageDesc = imageDescs[i];
 
     for (var j = 0; j < header.faceCount; ++j) {
-      var width = header.pixelWidth >> i;
-      var height = header.pixelHeight >> i;
-      var levelOffset = ktx2Offset + levelInfo.byteOffset;
-
-      var levelData = new Uint8Array(
-        dataBuffer,
-        levelOffset + imageDesc.rgbSliceByteOffset,
-        imageDesc.rgbSliceByteLength + imageDesc.alphaSliceByteLength
+      var transcoded = ktx2File.transcodeImage(
+        dst,
+        i, // level index
+        0, // layer index
+        j, // face index
+        transcoderFormat.value,
+        0, // get_alpha_for_opaque_formats
+        -1, // channel0
+        -1 // channel1
       );
 
-      var imageInfo = new transcoderModule.ImageInfo(
-        transcoderModule.TextureFormat.ETC1S,
-        width,
-        height,
-        i
-      );
-      imageInfo.flags = imageDesc.imageFlags;
-      imageInfo.rgbByteOffset = 0;
-      imageInfo.rgbByteLength = imageDesc.rgbSliceByteLength;
-      imageInfo.alphaByteOffset =
-        imageDesc.alphaSliceByteOffset > 0 ? imageDesc.rgbSliceByteLength : 0;
-      imageInfo.alphaByteLength = imageDesc.alphaSliceByteLength;
-
-      var transcoded = transcoder.transcodeImage(
-        transcoderFormat,
-        levelData,
-        imageInfo,
-        0,
-        isVideo
-      );
-
-      // Check Error Here
-      if (transcoded.transcodedImage === undefined) {
-        throw new RuntimeError("Error transcoding Image");
+      if (!transcoded) {
+        throw new RuntimeError("transcodeImage() failed");
       }
 
       // Create a copy and delete transcoder wasm allocated memory
-      //var levelBuffer = transcoded.transcodedImage
+      // var levelBuffer = transcoded.transcodedImage
       //  .get_typed_memory_view()
       //  .slice();
-      var levelBuffer = arraySlice(
-        transcoded.transcodedImage.get_typed_memory_view()
-      );
-      transcoded.transcodedImage.delete();
+      // var levelBuffer = arraySlice(
+      //   transcoded.transcodedImage.get_typed_memory_view()
+      // );
+      // transcoded.transcodedImage.delete();
 
       // console.log(levelBuffer.byteLength);
 
@@ -389,10 +345,13 @@ function transcodeEtc1s(
         internalFormat: internalFormat,
         width: width,
         height: height,
-        levelBuffer: levelBuffer,
+        levelBuffer: dst,
       };
     }
   }
+
+  ktx2File.close();
+  ktx2File.delete();
 }
 
 export default parseKTX2;

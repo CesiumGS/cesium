@@ -19,8 +19,8 @@ KTX2Transcoder._readyPromise = undefined;
 function makeReadyPromise() {
   var readyPromise = KTX2Transcoder._transcodeTaskProcessor
     .initWebAssemblyModule({
-      modulePath: "ThirdParty/Workers/msc_basis_transcoder.js",
-      wasmBinaryFile: "ThirdParty/msc_basis_transcoder.wasm",
+      modulePath: "ThirdParty/Workers/basis_transcoder.js",
+      wasmBinaryFile: "ThirdParty/basis_transcoder.wasm",
     })
     .then(function () {
       return KTX2Transcoder._transcodeTaskProcessor;
@@ -70,7 +70,11 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
           result = result[0];
         }
       }
+      console.log(result);
       return result;
+    })
+    .otherwise(function (error) {
+      console.log(error.message);
     });
 };
 

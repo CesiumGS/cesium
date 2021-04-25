@@ -23,10 +23,10 @@ function getUint64FromDataView(view, byteOffset, littleEndian) {
     ? left + Math.pow(2, 32) * right
     : Math.pow(2, 32) * left + right;
 
-  if (!combined > Number.MAX_SAFE_INTEGER) {
-    //9007199254740991) { // MAX_SAFE_INTEGER not available in IE11
-    console.warn(combined, "exceeds MAX_SAFE_INTEGER. Precision may be lost");
-  }
+  // if (!combined > Number.MAX_SAFE_INTEGER) {
+  //   //9007199254740991) { // MAX_SAFE_INTEGER not available in IE11
+  //   console.warn(combined, "exceeds MAX_SAFE_INTEGER. Precision may be lost");
+  // }
 
   return combined;
 }
