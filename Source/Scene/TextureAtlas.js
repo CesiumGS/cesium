@@ -62,7 +62,7 @@ var defaultInitialSize = new Cartesian2(16.0, 16.0);
  */
 function TextureAtlas(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 4.0);
+  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
   var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
   //>>includeStart('debug', pragmas.debug);
@@ -202,11 +202,11 @@ function resetAtlas(textureAtlas) {
     typeof textureAtlas._onAtlasReset === "function"
   ) {
     textureAtlas._onAtlasReset();
+    textureAtlas._textureCoordinates = [];
+    textureAtlas._idHash = {};
+    textureAtlas._root = undefined;
+    textureAtlas._guid = createGuid();
   }
-
-  textureAtlas._textureCoordinates = [];
-  textureAtlas._idHash = {};
-  textureAtlas._root = undefined;
 }
 
 // Builds a larger texture and copies the old texture into the new one.
@@ -507,6 +507,22 @@ function fillBorderWithZeros(textureAtlas, node) {
   );
 }
 
+// change border width dynamically to prevent floating point inaccuracy
+function changeBorderDynamically(textureAtlas) {
+  var newBorderWidthInPixels = Math.ceil(
+    Math.max(textureAtlas.texture.width, textureAtlas.texture.height) / 2000
+  );
+  newBorderWidthInPixels = Math.min(newBorderWidthInPixels, 4.0);
+
+  if (textureAtlas._borderWidthInPixels < newBorderWidthInPixels) {
+    textureAtlas._borderWidthInPixels = newBorderWidthInPixels;
+    resetAtlas(textureAtlas);
+    return true;
+  }
+
+  return false;
+}
+
 // Adds image of given index to the texture atlas. Called from addImage and addImages.
 function addImage(textureAtlas, image, index) {
   var node = findNode(textureAtlas, textureAtlas._root, image);
@@ -527,11 +543,15 @@ function addImage(textureAtlas, image, index) {
     fillBorderWithZeros(textureAtlas, node);
     textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
   } else {
-    // No node found, must resize the texture atlas.
-    if (canResizeTextureAtlas(textureAtlas, image)) {
-      resizeAtlas(textureAtlas, image);
-    } else {
-      resetAtlas(textureAtlas);
+    // No node found, must resize or reset the texture atlas.
+    if (!canResizeTextureAtlas(textureAtlas, image)) {
+      return resetAtlas(textureAtlas);
+    }
+
+    resizeAtlas(textureAtlas, image);
+
+    if (changeBorderDynamically(textureAtlas)) {
+      return;
     }
 
     addImage(textureAtlas, image, index);
