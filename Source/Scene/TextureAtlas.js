@@ -553,12 +553,31 @@ TextureAtlas.prototype.addImage = function (id, image) {
   return indexPromise;
 };
 
+// fill freed area on texture with default so it doesn't show on border of other billboards
+TextureAtlas.prototype.fillTextureAreaZeros = function (node) {
+  if (defined(node) && defined(node.imageIndex)) {
+    var imgWidth = Math.abs(node.topRight.x - node.bottomLeft.x);
+    var imgHeight = Math.abs(node.topRight.y - node.bottomLeft.y);
+
+    this._texture.copyFrom(
+      {
+        width: imgWidth,
+        height: imgHeight,
+        arrayBufferView: new Uint8Array(imgWidth * imgHeight * 4),
+      },
+      node.bottomLeft.x,
+      node.bottomLeft.y
+    );
+  }
+};
+
 TextureAtlas.prototype.freeNodeResources = function (
   node,
   imageId,
   imageIndex
 ) {
   if (defined(node)) {
+    this.fillTextureAreaZeros(node);
     node.imageIndex = undefined; //console.log("found node to free:", node);
     cleanLeafNode(node);
     delete this._textureCoordinates[imageIndex];
