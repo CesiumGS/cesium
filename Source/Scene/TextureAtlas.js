@@ -62,7 +62,7 @@ var defaultInitialSize = new Cartesian2(16.0, 16.0);
  */
 function TextureAtlas(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 2.0);
+  var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 4.0);
   var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
   //>>includeStart('debug', pragmas.debug);
@@ -465,6 +465,17 @@ function fillBorderWithZeros(textureAtlas, node) {
   var spacing = textureAtlas._borderWidthInPixels;
   var imgWidth = Math.abs(node.topRight.x - node.bottomLeft.x);
   var imgHeight = Math.abs(node.topRight.y - node.bottomLeft.y);
+
+  // fix bottom border
+  textureAtlas._texture.copyFrom(
+    {
+      width: imgWidth,
+      height: spacing,
+      arrayBufferView: new Uint8Array(imgWidth * spacing * 4),
+    },
+    node.bottomLeft.x,
+    node.bottomLeft.y
+  );
   textureAtlas._texture.copyFrom(
     {
       width: imgWidth,
@@ -474,22 +485,15 @@ function fillBorderWithZeros(textureAtlas, node) {
     node.bottomLeft.x,
     Math.max(node.bottomLeft.y - spacing, 0)
   );
-  textureAtlas._texture.copyFrom(
-    {
-      width: imgWidth,
-      height: spacing,
-      arrayBufferView: new Uint8Array(imgWidth * spacing * 4),
-    },
-    node.bottomLeft.x,
-    node.topRight.y
-  );
+
+  // fix left border
   textureAtlas._texture.copyFrom(
     {
       width: spacing,
       height: imgHeight,
       arrayBufferView: new Uint8Array(imgHeight * spacing * 4),
     },
-    Math.max(node.bottomLeft.x - spacing, 0),
+    node.bottomLeft.x,
     node.bottomLeft.y
   );
   textureAtlas._texture.copyFrom(
@@ -498,7 +502,7 @@ function fillBorderWithZeros(textureAtlas, node) {
       height: imgHeight,
       arrayBufferView: new Uint8Array(imgHeight * spacing * 4),
     },
-    node.topRight.x,
+    Math.max(node.bottomLeft.x - spacing, 0),
     node.bottomLeft.y
   );
 }
