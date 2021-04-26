@@ -120,6 +120,8 @@ describe(
       scene.globe = new Globe(ellipsoid);
 
       var camera = scene.camera;
+
+      var startPosition = Cartesian3.clone(camera.position);
       var endPosition = Cartesian3.fromDegrees(0.0, 0.0, 100.0, ellipsoid);
 
       var duration = 1.0;
@@ -127,6 +129,12 @@ describe(
         destination: endPosition,
         duration: duration,
       });
+
+      flight.update({ time: 0.0 });
+      expect(camera.position).toEqualEpsilon(
+        startPosition,
+        CesiumMath.EPSILON12
+      );
 
       flight.update({ time: duration });
       expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON7);
