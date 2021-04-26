@@ -10,6 +10,7 @@ import {
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe("Scene/GltfDracoLoader", function () {
   var bufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
@@ -242,20 +243,15 @@ describe("Scene/GltfDracoLoader", function () {
 
     dracoLoader.load();
 
-    return pollToPromise(function () {
-      dracoLoader.process(scene.frameState);
-      return dracoLoader._state === ResourceLoaderState.FAILED;
-    }).then(function () {
-      return dracoLoader.promise
-        .then(function (dracoLoader) {
-          fail();
-        })
-        .otherwise(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load Draco\nDraco decode failed"
-          );
-        });
-    });
+    return waitForLoaderProcess(dracoLoader, scene)
+      .then(function (dracoLoader) {
+        fail();
+      })
+      .otherwise(function (runtimeError) {
+        expect(runtimeError.message).toBe(
+          "Failed to load Draco\nDraco decode failed"
+        );
+      });
   });
 
   it("loads draco", function () {
@@ -292,7 +288,10 @@ describe("Scene/GltfDracoLoader", function () {
       if (processCallsCount++ === processCallsTotal) {
         deferredPromise.resolve(decodeDracoResults);
       }
-      return dracoLoader._state === ResourceLoaderState.READY;
+      return (
+        dracoLoader._state === ResourceLoaderState.READY ||
+        dracoLoader._state === ResourceLoaderState.FAILED
+      );
     }).then(function () {
       return dracoLoader.promise.then(function (dracoLoader) {
         dracoLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
@@ -330,20 +329,17 @@ describe("Scene/GltfDracoLoader", function () {
 
     dracoLoader.load();
 
-    return pollToPromise(function () {
-      dracoLoader.process(scene.frameState);
-      return dracoLoader._state === ResourceLoaderState.READY;
-    }).then(function () {
-      return dracoLoader.promise.then(function (dracoLoader) {
-        expect(dracoLoader.decodedData).toBeDefined();
-        expect(dracoLoader.isDestroyed()).toBe(false);
+    return waitForLoaderProcess(dracoLoader, scene).then(function (
+      dracoLoader
+    ) {
+      expect(dracoLoader.decodedData).toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(false);
 
-        dracoLoader.destroy();
+      dracoLoader.destroy();
 
-        expect(dracoLoader.decodedData).not.toBeDefined();
-        expect(dracoLoader.isDestroyed()).toBe(true);
-        expect(unloadBufferView).toHaveBeenCalled();
-      });
+      expect(dracoLoader.decodedData).not.toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(true);
+      expect(unloadBufferView).toHaveBeenCalled();
     });
   });
 

@@ -7,7 +7,7 @@ import FeatureMetadata from "./FeatureMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
 /**
- * parse the <code>EXT_feature_metadata</code> glTF extension to create a
+ * Parse the <code>EXT_feature_metadata</code> glTF extension to create a
  * feature metadata object.
  *
  * @param {Object} options Object with the following properties:

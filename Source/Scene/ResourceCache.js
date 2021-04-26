@@ -28,17 +28,15 @@ ResourceCache.cacheEntries = {};
  * A reference-counted cache entry.
  *
  * @param {ResourceLoader} resourceLoader The resource.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @alias CacheEntry
  * @constructor
  *
  * @private
  */
-function CacheEntry(options) {
+function CacheEntry(resourceLoader) {
   this.referenceCount = 1;
-  this.resourceLoader = options.resourceLoader;
-  this.keepResident = defaultValue(options.keepResident, false);
+  this.resourceLoader = resourceLoader;
 }
 
 /**
@@ -67,14 +65,12 @@ ResourceCache.get = function (cacheKey) {
  *
  * @param {Object} options Object with the following properties:
  * @param {ResourceLoader} options.resourceLoader The resource.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @exception {DeveloperError} Resource with this cacheKey is already in the cache.
  */
 ResourceCache.load = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var resourceLoader = options.resourceLoader;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resourceLoader", resourceLoader);
@@ -92,10 +88,7 @@ ResourceCache.load = function (options) {
   }
   //>>includeEnd('debug');
 
-  ResourceCache.cacheEntries[cacheKey] = new CacheEntry({
-    resourceLoader: resourceLoader,
-    keepResident: keepResident,
-  });
+  ResourceCache.cacheEntries[cacheKey] = new CacheEntry(resourceLoader);
 
   resourceLoader.load();
 };
@@ -121,14 +114,11 @@ ResourceCache.unload = function (resourceLoader) {
   if (!defined(cacheEntry)) {
     throw new DeveloperError("Resource is not in the cache: " + cacheKey);
   }
-  if (cacheEntry.referenceCount === 0) {
-    throw new DeveloperError("Cannot unload resource that has no references.");
-  }
   //>>includeEnd('debug');
 
   --cacheEntry.referenceCount;
 
-  if (cacheEntry.referenceCount === 0 && !cacheEntry.keepResident) {
+  if (cacheEntry.referenceCount === 0) {
     resourceLoader.destroy();
     delete ResourceCache.cacheEntries[cacheKey];
   }
@@ -140,7 +130,6 @@ ResourceCache.unload = function (resourceLoader) {
  * @param {Object} options Object with the following properties:
  * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {MetadataSchemaLoader} The schema resource.
  *
@@ -150,7 +139,6 @@ ResourceCache.loadSchema = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var schema = options.schema;
   var resource = options.resource;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -178,7 +166,6 @@ ResourceCache.loadSchema = function (options) {
 
   ResourceCache.load({
     resourceLoader: schemaLoader,
-    keepResident: keepResident,
   });
 
   return schemaLoader;
@@ -191,7 +178,6 @@ ResourceCache.loadSchema = function (options) {
  * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
  * @param {Number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {BufferLoader} The buffer loader.
  */
@@ -200,7 +186,6 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
   var parentResource = options.parentResource;
   var bufferId = options.bufferId;
   var typedArray = options.typedArray;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.parentResource", parentResource);
@@ -228,7 +213,6 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
 
   ResourceCache.load({
     resourceLoader: bufferLoader,
-    keepResident: keepResident,
   });
 
   return bufferLoader;
@@ -239,14 +223,12 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {BufferLoader} The buffer loader.
  */
 ResourceCache.loadExternalBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var resource = options.resource;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resource", resource);
@@ -268,7 +250,6 @@ ResourceCache.loadExternalBuffer = function (options) {
 
   ResourceCache.load({
     resourceLoader: bufferLoader,
-    keepResident: keepResident,
   });
 
   return bufferLoader;
@@ -281,7 +262,6 @@ ResourceCache.loadExternalBuffer = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {GltfJsonLoader} The glTF JSON.
  */
@@ -290,7 +270,6 @@ ResourceCache.loadGltf = function (options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var typedArray = options.typedArray;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -312,12 +291,10 @@ ResourceCache.loadGltf = function (options) {
     baseResource: baseResource,
     typedArray: typedArray,
     cacheKey: cacheKey,
-    keepResident: keepResident,
   });
 
   ResourceCache.load({
     resourceLoader: gltfJsonLoader,
-    keepResident: keepResident,
   });
 
   return gltfJsonLoader;
@@ -331,7 +308,6 @@ ResourceCache.loadGltf = function (options) {
  * @param {Number} options.bufferViewId The bufferView ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {GltfBufferViewLoader} The buffer view loader.
  */
@@ -341,7 +317,6 @@ ResourceCache.loadBufferView = function (options) {
   var bufferViewId = options.bufferViewId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -373,7 +348,6 @@ ResourceCache.loadBufferView = function (options) {
 
   ResourceCache.load({
     resourceLoader: bufferViewLoader,
-    keepResident: keepResident,
   });
 
   return bufferViewLoader;
@@ -387,7 +361,6 @@ ResourceCache.loadBufferView = function (options) {
  * @param {Object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {GltfDracoLoader} The Draco loader.
  */
@@ -397,7 +370,6 @@ ResourceCache.loadDraco = function (options) {
   var draco = options.draco;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -429,7 +401,6 @@ ResourceCache.loadDraco = function (options) {
 
   ResourceCache.load({
     resourceLoader: dracoLoader,
-    keepResident: keepResident,
   });
 
   return dracoLoader;
@@ -445,11 +416,12 @@ ResourceCache.loadDraco = function (options) {
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
+ * @param {Number} [options.dracoAccessorId] The Draco accessor ID.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
+ * @exception {DeveloperError} When options.draco is defined options.dracoAccessorId must also be defined.
  *
  * @returns {GltfVertexBufferLoader} The vertex buffer loader.
  */
@@ -461,7 +433,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   var bufferViewId = options.bufferViewId;
   var draco = options.draco;
   var dracoAttributeSemantic = options.dracoAttributeSemantic;
-  var keepResident = defaultValue(options.keepResident, false);
+  var dracoAccessorId = options.dracoAccessorId;
   var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
@@ -472,6 +444,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   var hasBufferViewId = defined(bufferViewId);
   var hasDraco = defined(draco);
   var hasDracoAttributeSemantic = defined(dracoAttributeSemantic);
+  var hasDracoAccessorId = defined(dracoAccessorId);
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
@@ -485,12 +458,19 @@ ResourceCache.loadVertexBuffer = function (options) {
     );
   }
 
+  if (hasDraco && !hasDracoAccessorId) {
+    throw new DeveloperError(
+      "When options.draco is defined options.hasDracoAccessorId must also be defined."
+    );
+  }
+
   if (hasDraco) {
     Check.typeOf.object("options.draco", draco);
     Check.typeOf.string(
       "options.dracoAttributeSemantic",
       dracoAttributeSemantic
     );
+    Check.typeOf.number("options.dracoAccessorId", dracoAccessorId);
   }
   //>>includeEnd('debug');
 
@@ -516,13 +496,13 @@ ResourceCache.loadVertexBuffer = function (options) {
     bufferViewId: bufferViewId,
     draco: draco,
     dracoAttributeSemantic: dracoAttributeSemantic,
+    dracoAccessorId: dracoAccessorId,
     cacheKey: cacheKey,
     asynchronous: asynchronous,
   });
 
   ResourceCache.load({
     resourceLoader: vertexBufferLoader,
-    keepResident: keepResident,
   });
 
   return vertexBufferLoader;
@@ -537,7 +517,6 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @returns {GltfIndexBufferLoader} The index buffer loader.
@@ -549,7 +528,6 @@ ResourceCache.loadIndexBuffer = function (options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var draco = options.draco;
-  var keepResident = defaultValue(options.keepResident, false);
   var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
@@ -585,7 +563,6 @@ ResourceCache.loadIndexBuffer = function (options) {
 
   ResourceCache.load({
     resourceLoader: indexBufferLoader,
-    keepResident: keepResident,
   });
 
   return indexBufferLoader;
@@ -600,7 +577,6 @@ ResourceCache.loadIndexBuffer = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  *
  * @returns {GltfImageLoader} The image loader.
  */
@@ -611,7 +587,6 @@ ResourceCache.loadImage = function (options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var supportedImageFormats = options.supportedImageFormats;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -646,7 +621,6 @@ ResourceCache.loadImage = function (options) {
 
   ResourceCache.load({
     resourceLoader: imageLoader,
-    keepResident: keepResident,
   });
 
   return imageLoader;
@@ -661,7 +635,6 @@ ResourceCache.loadImage = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @returns {GltfTextureLoader} The texture loader.
@@ -673,7 +646,6 @@ ResourceCache.loadTexture = function (options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var supportedImageFormats = options.supportedImageFormats;
-  var keepResident = defaultValue(options.keepResident, false);
   var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
@@ -709,7 +681,6 @@ ResourceCache.loadTexture = function (options) {
 
   ResourceCache.load({
     resourceLoader: textureLoader,
-    keepResident: keepResident,
   });
 
   return textureLoader;

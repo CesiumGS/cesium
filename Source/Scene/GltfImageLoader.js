@@ -137,7 +137,6 @@ function loadFromBufferView(imageLoader) {
     bufferViewId: imageLoader._bufferViewId,
     gltfResource: imageLoader._gltfResource,
     baseResource: imageLoader._baseResource,
-    keepResident: false,
   });
 
   imageLoader._bufferViewLoader = bufferViewLoader;
@@ -195,7 +194,7 @@ function loadFromUri(imageLoader) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, "Failed to load image:" + uri);
+      handleError(imageLoader, error, "Failed to load image: " + uri);
     });
 }
 
