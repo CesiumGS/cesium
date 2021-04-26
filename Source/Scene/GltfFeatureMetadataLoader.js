@@ -336,7 +336,7 @@ function unloadBufferViews(featureMetadataLoader) {
   for (var i = 0; i < bufferViewLoadersLength; ++i) {
     ResourceCache.unload(bufferViewLoaders[i]);
   }
-  featureMetadataLoader._bufferViewLoaders = [];
+  featureMetadataLoader._bufferViewLoaders.length = 0;
 }
 
 function unloadTextures(featureMetadataLoader) {
@@ -345,7 +345,7 @@ function unloadTextures(featureMetadataLoader) {
   for (var i = 0; i < textureLoadersLength; ++i) {
     ResourceCache.unload(textureLoaders[i]);
   }
-  featureMetadataLoader._textureLoaders = [];
+  featureMetadataLoader._textureLoaders.length = 0;
 }
 
 /**
