@@ -13,6 +13,7 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @alias GroupMetadata
  * @constructor
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GroupMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -120,6 +121,7 @@ Object.defineProperties(GroupMetadata.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GroupMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
@@ -130,6 +132,7 @@ GroupMetadata.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GroupMetadata.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, this._class, results);
@@ -157,6 +160,7 @@ GroupMetadata.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GroupMetadata.prototype.setProperty = function (propertyId, value) {
   return MetadataEntity.setProperty(
@@ -172,6 +176,7 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
@@ -187,6 +192,7 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   return MetadataEntity.setPropertyBySemantic(

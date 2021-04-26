@@ -20,6 +20,7 @@ import TilesetMetadata from "./TilesetMetadata.js";
  *
  * @alias Cesium3DTilesetMetadata
  * @constructor
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

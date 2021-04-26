@@ -16,6 +16,7 @@ import MetadataType from "./MetadataType.js";
  *
  * @alias MetadataClassProperty
  * @constructor
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -375,6 +376,7 @@ MetadataClassProperty.prototype.packVectorTypes = function (value) {
  *
  * @param {*} value The value.
  * @returns {String|undefined} An error message if the value does not conform to the property, otherwise undefined.
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.prototype.validate = function (value) {
   var message;
