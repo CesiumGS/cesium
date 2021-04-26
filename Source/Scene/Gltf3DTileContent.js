@@ -3,7 +3,6 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
-import parseGlb from "../ThirdParty/GltfPipeline/parseGlb.js";
 import Axis from "./Axis.js";
 import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
@@ -27,9 +26,6 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this._tile = tile;
   this._resource = resource;
   this._model = undefined;
-
-  // Populate from gltf when available
-  this._diffuseAttributeOrUniformName = {};
 
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
@@ -125,17 +121,11 @@ function initialize(content, gltf) {
   var tile = content._tile;
   var resource = content._resource;
 
-  if (gltf instanceof Uint8Array) {
-    gltf = parseGlb(gltf);
-  }
-
   var pickObject = {
     content: content,
     primitive: tileset,
   };
 
-  // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-  // The pick shader still needs to be patched.
   content._model = new Model({
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
