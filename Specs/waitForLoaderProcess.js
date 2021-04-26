@@ -1,4 +1,4 @@
-import { ResourceLoaderState } from "../../Source/Cesium.js";
+import { ResourceLoaderState } from "../Source/Cesium.js";
 
 import pollToPromise from "./pollToPromise.js";
 
