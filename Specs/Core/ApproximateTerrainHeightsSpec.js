@@ -19,6 +19,22 @@ describe("Core/ApproximateTerrainHeights", function () {
     });
   });
 
+  it("initializes with custom value", function () {
+    ApproximateTerrainHeights._initPromise = undefined;
+    var heights = ApproximateTerrainHeights._terrainHeights;
+    ApproximateTerrainHeights._terrainHeights = undefined;
+    return ApproximateTerrainHeights.initialize(
+      "Data/customApproximateHeights.json"
+    ).then(function () {
+      expect(ApproximateTerrainHeights._terrainHeights).toBeDefined();
+      expect(ApproximateTerrainHeights._terrainHeights["0-0-0"]).toEqual([
+        123,
+        456,
+      ]);
+      ApproximateTerrainHeights._terrainHeights = heights;
+    });
+  });
+
   it("getMinimumMaximumHeights computes minimum and maximum terrain heights", function () {
     var result = ApproximateTerrainHeights.getMinimumMaximumHeights(
       Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0)
