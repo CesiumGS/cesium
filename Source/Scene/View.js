@@ -169,6 +169,9 @@ function updateFrustums(view, scene, near, far) {
     } else {
       curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
       curFar = Math.min(far, farToNearRatio * curNear);
+      if (scene.logarithmicDepthBuffer) {
+        curFar = Math.pow(10, Math.ceil(Math.log(curFar) / Math.log(10)));
+      }
     }
     var frustumCommands = frustumCommandsList[m];
     if (!defined(frustumCommands)) {
