@@ -4,7 +4,7 @@
 
 ##### Fixes :wrench:
 
-- `Camera.flyTo` flies to the correct location in 3D when no default ellipsoid is used [#9498](https://github.com/CesiumGS/cesium/pull/9498)
+- Fixed an issue where `Camera.flyTo` would not work properly with a non-WGS84 Ellipsoid. [#9498](https://github.com/CesiumGS/cesium/pull/9498)
 
 ##### Deprecated :hourglass_flowing_sand:
 
