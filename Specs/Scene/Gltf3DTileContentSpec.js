@@ -55,6 +55,18 @@ describe(
       );
     });
 
+    it("Does not use a batch table", function () {
+      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        function (tileset) {
+          var content = tileset.root.content;
+          expect(content.batchTableByteLength).toBe(0);
+          expect(content.batchTable).not.toBeDefined();
+          expect(content.hasProperty(0, "height")).toBe(false);
+          expect(content.getFeature(0)).not.toBeDefined();
+        }
+      );
+    });
+
     it("renders glb content", function () {
       return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
