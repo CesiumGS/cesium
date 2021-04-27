@@ -119,7 +119,8 @@
           ];
 
           var viewer = new Cesium.Viewer("cesiumContainer", {
-            terrainProvider: worldTerrain,
+            // terrainProvider: worldTerrain,
+            terrainProvider: arcGisTerrainProvider,
           });
           viewer.scene.globe.enableLighting = false;
           // viewer.scene.globe.depthTestAgainstTerrain = false;

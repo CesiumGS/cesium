@@ -14,6 +14,7 @@ import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import Transforms from "./Transforms.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
+import TrianglePicking from "./TrianglePicking.js";
 
 /**
  * Contains functions to create a mesh from a heightmap image.
@@ -37,6 +38,52 @@ HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
   elementMultiplier: 256.0,
   isBigEndian: false,
 });
+
+function createPackedTriangles(
+  positions,
+  invTransform,
+  width,
+  triangleIndexEnd
+) {
+  var v0 = new Cartesian3();
+  var v1 = new Cartesian3();
+  var v2 = new Cartesian3();
+  var idx0;
+  var idx1;
+  var idx2;
+  var trianglesPerRow;
+  var base;
+  var isEven;
+  var triIdx;
+
+  var triangles = new Float32Array(triangleIndexEnd * 6);
+
+  for (triIdx = 0; triIdx < triangleIndexEnd; triIdx++) {
+    trianglesPerRow = (width - 1) * 2;
+    base =
+      width * Math.floor(triIdx / trianglesPerRow) +
+      Math.floor((triIdx % trianglesPerRow) / 2);
+    isEven = triIdx % 2 === 0;
+    // isEven: TL, BL, TR
+    // isOdd: TR, BL, BR
+    idx0 = base + (isEven ? 0 : 1);
+    idx1 = base + width;
+    idx2 = base + 1 + (isEven ? 0 : width);
+
+    Matrix4.multiplyByPoint(invTransform, positions[idx0], v0);
+    Matrix4.multiplyByPoint(invTransform, positions[idx1], v1);
+    Matrix4.multiplyByPoint(invTransform, positions[idx2], v2);
+
+    // Get local space AABBs for triangle
+    triangles[triIdx * 6 + 0] = Math.min(v0.x, v1.x, v2.x);
+    triangles[triIdx * 6 + 1] = Math.max(v0.x, v1.x, v2.x);
+    triangles[triIdx * 6 + 2] = Math.min(v0.y, v1.y, v2.y);
+    triangles[triIdx * 6 + 3] = Math.max(v0.y, v1.y, v2.y);
+    triangles[triIdx * 6 + 4] = Math.min(v0.z, v1.z, v2.z);
+    triangles[triIdx * 6 + 5] = Math.max(v0.z, v1.z, v2.z);
+  }
+  return triangles;
+}
 
 var cartesian3Scratch = new Cartesian3();
 var matrix4Scratch = new Matrix4();
@@ -564,6 +611,7 @@ HeightmapTessellator.computeVertices = function (options) {
   var quadtree;
   var transform;
   var inverseTransform;
+  var octree;
 
   if (defined(rectangle)) {
     console.time("creating oriented bounding box");
@@ -576,35 +624,24 @@ HeightmapTessellator.computeVertices = function (options) {
     );
 
     transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
-    var a = CesiumMath.toRadians(180);
-    // prettier-ignore
-    var xRotation = new Matrix4(
-      1,        0,       0,    0,
-      0,   cos(a),  -sin(a),    0,
-      0,  sin(a),  cos(a),    0,
-      0,        0,       0,    1
-    );
-    // prettier-ignore
-    var yRotation = new Matrix4(
-      cos(a),   0,  sin(a),  0,
-      0,        1,        0,  0,
-      -sin(a),  0,  cos(a),   0,
-      0,        0,        0,  1
-    );
-    // prettier-ignore
-    var zRotation = new Matrix4(
-      cos(a),  -sin(a),   0,  0,
-      sin(a),   cos(a),   0,  0,
-      0,             0,   1,  0,
-      0,             0,   0,  1
-    );
-    Matrix4.multiply(transform, xRotation, transform);
-    // Matrix4.multiply(transform, yRotation, transform);
-    // Matrix4.multiply(transform, zRotation, transform);
-
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
-
     console.timeEnd("creating oriented bounding box");
+
+    console.time("making packed triangles");
+    var packedTriangles = createPackedTriangles(
+      positions,
+      inverseTransform,
+      width,
+      gridTriangleCount
+    );
+    console.timeEnd("making packed triangles");
+
+    octree = TrianglePicking.createPackedOctree(
+      packedTriangles,
+      inverseTransform,
+      transform,
+      orientedBoundingBox
+    );
 
     console.time("making packed quadtree");
     quadtree = createPackedQuadtree(
@@ -674,6 +711,7 @@ HeightmapTessellator.computeVertices = function (options) {
       height: height,
       skirtHeight: skirtHeight,
     },
+    octree: octree,
   };
 };
 export default HeightmapTessellator;

@@ -49,6 +49,7 @@ function createVerticesFromHeightmap(parameters, transferableObjects) {
     eastIndicesNorthToSouth: statistics.eastIndicesNorthToSouth,
     northIndicesWestToEast: statistics.northIndicesWestToEast,
     packedQuadtree: statistics.packedQuadtree,
+    octree: statistics.octree,
   };
 }
 export default createTaskProcessorWorker(createVerticesFromHeightmap);

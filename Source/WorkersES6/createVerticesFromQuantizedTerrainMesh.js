@@ -36,21 +36,20 @@ function createPackedTrianglesFromIndices(indices, positions, invTrans) {
   var v2 = new Cartesian3();
   var triangleCount = indices.length / 3;
   var i;
-  var triangles = new Float32Array(triangleCount * 6);
+  var triangles = []; // new Float32Array(triangleCount * 6);
 
   for (i = 0; i < triangleCount; i++) {
     Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3]], v0);
     Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 1]], v1);
     Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 2]], v2);
     // Get local space AABBs for triangle
-    triangles[i * 6] = Math.min(v0.x, v1.x, v2.x);
-    triangles[i * 6 + 1] = Math.max(v0.x, v1.x, v2.x);
-    triangles[i * 6 + 2] = Math.min(v0.y, v1.y, v2.y);
-    triangles[i * 6 + 3] = Math.max(v0.y, v1.y, v2.y);
-    triangles[i * 6 + 4] = Math.min(v0.z, v1.z, v2.z);
-    triangles[i * 6 + 5] = Math.max(v0.z, v1.z, v2.z);
+    triangles.push(Math.min(v0.x, v1.x, v2.x));
+    triangles.push(Math.max(v0.x, v1.x, v2.x));
+    triangles.push(Math.min(v0.y, v1.y, v2.y));
+    triangles.push(Math.max(v0.y, v1.y, v2.y));
+    triangles.push(Math.min(v0.z, v1.z, v2.z));
+    triangles.push(Math.max(v0.z, v1.z, v2.z));
   }
-  return triangles;
   return triangles;
 }
 

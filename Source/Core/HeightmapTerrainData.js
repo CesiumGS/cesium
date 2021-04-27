@@ -297,7 +297,7 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
     );
 
     var octreeTrianglePicker = new TrianglePicking(
-      result.packedOctree,
+      result.octree,
       createTriangleVerticesCallback(
         vertices,
         indicesAndEdges.indices,

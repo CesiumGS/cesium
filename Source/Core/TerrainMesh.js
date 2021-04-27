@@ -248,8 +248,21 @@ TerrainMesh.prototype.pickRay = function (
   );
 
   // whoops
-  if (!isCartesianAlmostEqual(newPickValue, oldPickValue)) {
+  if (this._octree && !isCartesianAlmostEqual(newPickValue, oldPickValue)) {
     console.error("pick values are different", newPickValue, oldPickValue);
+    var newPickAgain = this._octree.rayIntersect(
+      ray,
+      cullBackFaces,
+      null,
+      traceDetails
+    );
+    var oldPickAgain = this._defaultPickStrategy.rayIntersect(
+      ray,
+      cullBackFaces,
+      mode,
+      projection,
+      traceDetails
+    );
   }
 
   // record details on the window
