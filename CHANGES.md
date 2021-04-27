@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - Fixed an issue where `Camera.flyTo` would not work properly with a non-WGS84 Ellipsoid. [#9498](https://github.com/CesiumGS/cesium/pull/9498)
+- Fixed an issue that the viewport is not applied to `ViewportQuad` after setting the width and height of the rectangle.[#9511](https://github.com/CesiumGS/cesium/pull/9511)
 
 ##### Deprecated :hourglass_flowing_sand:
 
