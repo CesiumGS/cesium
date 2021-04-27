@@ -91,6 +91,7 @@ function TextureAtlas(options) {
   var gl = this._context._gl;
   this._maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   this._onAtlasReset = options.onAtlasReset;
+  this._experimentalDynamicNodes = false;
 }
 
 Object.defineProperties(TextureAtlas.prototype, {
@@ -540,6 +541,33 @@ function addImage(textureAtlas, image, index) {
     var w = nodeWidth / atlasWidth;
     var h = nodeHeight / atlasHeight;
     textureAtlas._textureCoordinates[index] = new BoundingRectangle(x, y, w, h);
+    textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
+  } else {
+    // No node found, must resize the texture atlas.
+    resizeAtlas(textureAtlas, image);
+    addImage(textureAtlas, image, index);
+  }
+
+  textureAtlas._guid = createGuid();
+}
+
+// Dynamic version: Adds image of given index to the texture atlas. Called from addImage and addImages.
+function addImageDynamicNode(textureAtlas, image, index) {
+  var node = findNode(textureAtlas, textureAtlas._root, image);
+  if (defined(node)) {
+    // Found a node that can hold the image.
+    node.imageIndex = index;
+
+    // Add texture coordinate and write to texture
+    var atlasWidth = textureAtlas._texture.width;
+    var atlasHeight = textureAtlas._texture.height;
+    var nodeWidth = node.topRight.x - node.bottomLeft.x;
+    var nodeHeight = node.topRight.y - node.bottomLeft.y;
+    var x = node.bottomLeft.x / atlasWidth;
+    var y = node.bottomLeft.y / atlasHeight;
+    var w = nodeWidth / atlasWidth;
+    var h = nodeHeight / atlasHeight;
+    textureAtlas._textureCoordinates[index] = new BoundingRectangle(x, y, w, h);
     fillBorderWithZeros(textureAtlas, node);
     textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
   } else {
@@ -554,7 +582,7 @@ function addImage(textureAtlas, image, index) {
       return;
     }
 
-    addImage(textureAtlas, image, index);
+    addImageDynamicNode(textureAtlas, image, index);
   }
 
   textureAtlas._guid = createGuid();
@@ -610,7 +638,11 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
     var index = that.numberOfImages;
 
-    addImage(that, image, index);
+    if (that._experimentalDynamicNodes) {
+      addImageDynamicNode(that, image, index);
+    } else {
+      addImage(that, image, index);
+    }
 
     return index;
   });
@@ -641,6 +673,10 @@ TextureAtlas.prototype.freeNodeResources = function (
  * @returns {void}
  */
 TextureAtlas.prototype.freeImageNode = function (id, imageIndex) {
+  if (!this._experimentalDynamicNodes) {
+    return;
+  }
+
   //>>includeStart('debug', pragmas.debug);
   if (!defined(id)) {
     throw new DeveloperError("id is required.");
@@ -654,6 +690,12 @@ TextureAtlas.prototype.freeImageNode = function (id, imageIndex) {
 
   var node = findNodeByImageIndex(this, this._root, imageIndex);
   this.freeNodeResources(node, id, imageIndex);
+};
+
+// activate dynamic node free
+TextureAtlas.prototype.enableExperimentalDynamicNodes = function () {
+  this._experimentalDynamicNodes = true;
+  resetAtlas(this);
 };
 
 /**
