@@ -12,6 +12,7 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @alias TilesetMetadata
  * @constructor
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function TilesetMetadata(options) {

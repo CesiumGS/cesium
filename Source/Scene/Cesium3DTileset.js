@@ -927,6 +927,8 @@ function Cesium3DTileset(options) {
    * a {@link Cesium3DTilesetMetadata} object to access metadata.
    *
    * @type {Cesium3DTilesetMetadata}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metadata = undefined;
 

@@ -275,6 +275,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @readonly
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.hasImplicitContent = false;
 
@@ -310,6 +311,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    *
    * @type {TileMetadata}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metadata = metadata;
 
@@ -395,6 +398,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @type {ImplicitTileset}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.implicitTileset = undefined;
 
@@ -405,6 +409,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @type {ImplicitTileCoordinates}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.implicitCoordinates = undefined;
 
@@ -415,6 +420,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @type {ImplicitSubtree}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.implicitSubtree = undefined;
 
