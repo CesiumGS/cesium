@@ -2,6 +2,10 @@
 
 ### 1.81 - 2021-05-01
 
+##### Fixes :wrench:
+
+- Fixed an issue where `Camera.flyTo` would not work properly with a non-WGS84 Ellipsoid. [#9498](https://github.com/CesiumGS/cesium/pull/9498)
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - `loadCRN` has been deprecated and will be removed in CesiumJS 1.82. It will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
