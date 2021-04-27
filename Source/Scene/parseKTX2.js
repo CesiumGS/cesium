@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import defined from "../Core/defined.js";
 import getUint64FromDataView from "../Core/getUint64FromDataView.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -45,7 +44,7 @@ var colorModelUASTC = 166;
  *
  * @param {Uint8Array} data Data representing one KTX2 texture.
  * @param {Object} supportedTargetFormats Target formats available on the current system.
- * @param {Object} transcoderModule msc_basis_transcoder object.
+ * @param {Object} transcoderModule basis_transcoder object.
  *
  * @private
  */
@@ -96,6 +95,7 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
     levelCount: view.getUint32((byteOffset += sizeOfUint32), true),
     supercompressionScheme: view.getUint32((byteOffset += sizeOfUint32), true),
   };
+  console.table(header);
   byteOffset += sizeOfUint32;
 
   // 1 -- Index
@@ -197,18 +197,6 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
     throw new RuntimeError("KTX2 3D textures are unsupported.");
   }
 
-  //// Cleaning up parsed result if it's a single image
-  //if (header.faceCount === 1) {
-  //  debugger;
-  //  for (i = 0; i < header.levelCount; ++i) {
-  //    result[i] = result[i][faceOrder[0]];
-  //  }
-
-  //  if (header.levelCount === 1) {
-  //    result = result[0];
-  //  }
-  //}
-
   return result;
 }
 
@@ -231,7 +219,7 @@ function parseUncompressed(data, header, levelIndex, result) {
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
       var height = header.pixelHeight >> i;
-      // var levelLength = levelInfo.byteLength;
+
       var faceLength =
         header.typeSize *
         width *
@@ -264,9 +252,9 @@ function transcodeEtc1s(
   var ktx2File = new transcoderModule.KTX2File(new Uint8Array(dataBuffer));
   var width = ktx2File.getWidth();
   var height = ktx2File.getHeight();
-  var layers = ktx2File.getLayers();
+  // var layers = ktx2File.getLayers();
   var levels = ktx2File.getLevels();
-  var faces = ktx2File.getFaces();
+  // var faces = ktx2File.getFaces();
   var hasAlpha = ktx2File.getHasAlpha();
 
   if (!width || !height || !levels) {
@@ -330,17 +318,6 @@ function transcodeEtc1s(
         throw new RuntimeError("transcodeImage() failed");
       }
 
-      // Create a copy and delete transcoder wasm allocated memory
-      // var levelBuffer = transcoded.transcodedImage
-      //  .get_typed_memory_view()
-      //  .slice();
-      // var levelBuffer = arraySlice(
-      //   transcoded.transcodedImage.get_typed_memory_view()
-      // );
-      // transcoded.transcodedImage.delete();
-
-      // console.log(levelBuffer.byteLength);
-
       level[faceOrder[j]] = {
         internalFormat: internalFormat,
         width: width,
@@ -352,6 +329,7 @@ function transcodeEtc1s(
 
   ktx2File.close();
   ktx2File.delete();
+  return result;
 }
 
 export default parseKTX2;

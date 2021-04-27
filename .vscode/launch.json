@@ -5,13 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
+            "type": "chrome",
+            "name": "Tests",
             "request": "launch",
-            "name": "Launch Program",
-            "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "start"],
-            "noDebug": true
+            "url": "http://localhost:8080/Specs/SpecRunner.html?spec=Core",
+            "webRoot": "${workspaceFolder}",
         }
+        // {
+        //     "type": "node",
+        //     "request": "launch",
+        //     "name": "Launch Program",
+        //     "cwd": "${workspaceFolder}",
+            // "runtimeExecutable": "npm",
+            // "runtimeArgs": ["run-script", "start"],
+        //     "noDebug": true
+        // }
     ]
 }

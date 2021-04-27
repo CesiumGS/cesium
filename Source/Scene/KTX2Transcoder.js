@@ -70,7 +70,7 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
           result = result[0];
         }
       }
-      console.log(result);
+      console.log("asdasd: ", result);
       return result;
     })
     .otherwise(function (error) {
