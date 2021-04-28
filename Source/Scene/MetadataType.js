@@ -10,19 +10,124 @@ import FeatureDetection from "../Core/FeatureDetection.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var MetadataType = {
+  /**
+   * An 8-bit signed integer
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   INT8: "INT8",
+  /**
+   * An 8-bit unsigned integer
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   UINT8: "UINT8",
+  /**
+   * A 16-bit signed integer
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   INT16: "INT16",
+  /**
+   * A 16-bit unsigned integer
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   UINT16: "UINT16",
+  /**
+   * A 32-bit signed integer
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   INT32: "INT32",
+  /**
+   * A 32-bit unsigned integer
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   UINT32: "UINT32",
+  /**
+   * A 64-bit signed integer. This type requires BigInt support.
+   *
+   * @see FeatureDetection.supportsBigInt
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   INT64: "INT64",
+  /**
+   * A 64-bit signed integer. This type requires BigInt support
+   *
+   * @see FeatureDetection.supportsBigInt
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   UINT64: "UINT64",
+  /**
+   * A 32-bit (single precision) floating point number
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   FLOAT32: "FLOAT32",
+  /**
+   * A 64-bit (double precision) floating point number
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   FLOAT64: "FLOAT64",
+  /**
+   * A boolean (true/false) value
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   BOOLEAN: "BOOLEAN",
+  /**
+   * A UTF-8 encoded string value
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   STRING: "STRING",
+  /**
+   * An enumerated value. This type is used in conjunction with a {@link MetadataEnum} to describe the valid values.
+   *
+   * @see MetadataEnum
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   ENUM: "ENUM",
+  /**
+   * An array of values. A <code>componentType</code> property is needed to
+   * define what type of values are stored in the array.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
   ARRAY: "ARRAY",
 };
 
