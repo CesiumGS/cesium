@@ -49,7 +49,6 @@ export default function ImplicitTileCoordinates(options) {
    * @type {ImplicitSubdivisionScheme}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.subdivisionScheme = options.subdivisionScheme;
 
@@ -60,7 +59,6 @@ export default function ImplicitTileCoordinates(options) {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.level = options.level;
 
@@ -70,7 +68,6 @@ export default function ImplicitTileCoordinates(options) {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.x = options.x;
 
@@ -80,7 +77,6 @@ export default function ImplicitTileCoordinates(options) {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.y = options.y;
 
@@ -90,7 +86,6 @@ export default function ImplicitTileCoordinates(options) {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.z = undefined;
   if (options.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
@@ -111,7 +106,6 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   childIndex: {
     get: function () {
@@ -133,7 +127,6 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   mortonIndex: {
     get: function () {
@@ -152,7 +145,6 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
  * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @returns {ImplicitTileCoordinates} The tile coordinates of the child
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
   childIndex
@@ -197,7 +189,6 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
  *
  * @returns {Object} An object suitable for use with {@link Resource#getDerivedResource}
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitTileCoordinates.prototype.getTemplateValues = function () {
   var values = {
@@ -222,7 +213,6 @@ var scratchCoordinatesArray = [0, 0, 0];
  * @param {Number} mortonIndex The morton index of the tile.
  * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given Morton index
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitTileCoordinates.fromMortonIndex = function (
   subdivisionScheme,

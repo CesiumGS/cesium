@@ -30,7 +30,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfIndexBufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -84,7 +83,6 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    * @type {Promise.<GltfIndexBufferLoader>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -99,7 +97,6 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -114,7 +111,6 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    * @type {Buffer}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   indexBuffer: {
     get: function () {
@@ -126,7 +122,6 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
 /**
  * Loads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfIndexBufferLoader.prototype.load = function () {
   if (defined(this._draco)) {
@@ -276,7 +271,6 @@ var scratchIndexBufferJob = new CreateIndexBufferJob();
  *
  * @param {FrameState} frameState The frame state.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfIndexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -331,7 +325,6 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
 /**
  * Unloads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfIndexBufferLoader.prototype.unload = function () {
   if (defined(this._indexBuffer)) {

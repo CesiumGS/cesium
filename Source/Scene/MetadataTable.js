@@ -55,7 +55,6 @@ Object.defineProperties(MetadataTable.prototype, {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   count: {
     get: function () {
@@ -70,7 +69,6 @@ Object.defineProperties(MetadataTable.prototype, {
    * @type {MetadataClass}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   class: {
     get: function () {
@@ -85,7 +83,6 @@ Object.defineProperties(MetadataTable.prototype, {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTable.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
@@ -97,7 +94,6 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTable.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, this._class, results);
@@ -127,7 +123,6 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTable.prototype.getProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
@@ -175,7 +170,6 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
@@ -200,7 +194,6 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
   //>>includeStart('debug', pragmas.debug);
@@ -229,7 +222,6 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,

@@ -30,7 +30,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @type {Number}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   value: {
     get: function () {
@@ -45,7 +44,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   name: {
     get: function () {
@@ -60,7 +58,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   description: {
     get: function () {
@@ -75,7 +72,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @type {*}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -90,7 +86,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @type {Object}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {

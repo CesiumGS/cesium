@@ -183,7 +183,6 @@ RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
  * @return {Boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
   var hasOpenSlotsHeap =

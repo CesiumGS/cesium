@@ -60,7 +60,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {Object.<String, MetadataClass>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   classes: {
     get: function () {
@@ -75,7 +74,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {Object.<String, MetadataEnum>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   enums: {
     get: function () {
@@ -90,7 +88,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   name: {
     get: function () {
@@ -105,7 +102,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   description: {
     get: function () {
@@ -120,7 +116,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   version: {
     get: function () {
@@ -135,7 +130,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {*}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -150,7 +144,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @type {Object}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {
