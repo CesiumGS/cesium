@@ -29,6 +29,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @param {Object} extensionJson The <code>3DTILES_multiple_contents</code> extension JSON
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function Multiple3DTileContent(
   tileset,
@@ -83,6 +84,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * @type {Boolean}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   featurePropertiesDirty: {
     get: function () {
@@ -109,6 +111,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   featuresLength: {
     get: function () {
@@ -120,6 +124,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead, call <code>pointsLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   pointsLength: {
     get: function () {
@@ -131,6 +137,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   trianglesLength: {
     get: function () {
@@ -142,6 +150,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   geometryByteLength: {
     get: function () {
@@ -153,6 +163,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.   <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   texturesByteLength: {
     get: function () {
@@ -164,6 +176,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   batchTableByteLength: {
     get: function () {
@@ -203,6 +217,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   url: {
     get: function () {
@@ -215,6 +231,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   batchTable: {
     get: function () {
@@ -227,6 +244,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * always returns <code>undefined</code>.  Instead call <code>groupMetadata</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   groupMetadata: {
     get: function () {
@@ -248,6 +266,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * @type {String[]}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   innerContentUrls: {
     get: function () {
@@ -265,6 +284,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @type {Promise}
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   contentsFetchedPromise: {
     get: function () {
@@ -308,6 +328,7 @@ function cancelPendingRequests(multipleContents, originalContentState) {
  *
  * @return {Number} The number of attempted requests that were unable to be scheduled.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Multiple3DTileContent.prototype.requestInnerContents = function () {
   // It's possible for these promises to leak content array buffers if the
@@ -552,6 +573,7 @@ function handleInnerContentFailed(multipleContents, index, error) {
  * when a tile goes out of view.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Multiple3DTileContent.prototype.cancelRequests = function () {
   for (var i = 0; i < this._requests.length; i++) {
@@ -566,6 +588,7 @@ Multiple3DTileContent.prototype.cancelRequests = function () {
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Multiple3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -575,6 +598,7 @@ Multiple3DTileContent.prototype.hasProperty = function (batchId, name) {
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a specific inner content
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Multiple3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;

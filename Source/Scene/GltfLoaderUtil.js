@@ -12,6 +12,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  * @namespace GltfLoaderUtil
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var GltfLoaderUtil = {};
 
@@ -24,6 +25,8 @@ var GltfLoaderUtil = {};
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {Object} An object containing a <code>uri</code> and <code>bufferView</code> property.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfLoaderUtil.getImageUriOrBufferView = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -96,6 +99,8 @@ GltfLoaderUtil.getImageUriOrBufferView = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {Number} The image ID.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -127,6 +132,8 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  * @param {Object} options.textureInfo The texture info object.
  *
  * @returns {Sampler} The sampler.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfLoaderUtil.createSampler = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

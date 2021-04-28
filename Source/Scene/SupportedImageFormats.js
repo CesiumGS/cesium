@@ -10,6 +10,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @param {Boolean} [options.etc1=false] Whether the browser supports etc1 compressed images.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function SupportedImageFormats(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

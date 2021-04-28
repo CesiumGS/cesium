@@ -16,6 +16,8 @@ import MetadataTable from "./MetadataTable.js";
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
  * @return {FeatureMetadata} A feature metadata object
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function parseFeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -56,6 +56,7 @@ var Material = ModelComponents.Material;
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -110,6 +111,8 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {Promise.<GltfLoader>}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -123,6 +126,8 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -136,6 +141,8 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {ModelComponents.Components}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   components: {
     get: function () {
@@ -152,6 +159,8 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {Promise}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   texturesLoadedPromise: {
     get: function () {
@@ -162,6 +171,8 @@ Object.defineProperties(GltfLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfLoader.prototype.load = function () {
   var gltfJsonLoader = ResourceCache.loadGltfJson({
@@ -201,6 +212,8 @@ function handleError(gltfLoader, error) {
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -1112,6 +1125,8 @@ function unloadGeometry(loader) {
 
 /**
  * Unloads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfLoader.prototype.unload = function () {
   if (defined(this._gltfJsonLoader)) {

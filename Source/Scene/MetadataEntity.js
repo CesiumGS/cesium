@@ -12,6 +12,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEntity() {}
 
@@ -23,6 +24,7 @@ Object.defineProperties(MetadataEntity.prototype, {
    * @type {MetadataClass}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   class: {
     // eslint-disable-next-line getter-return
@@ -37,6 +39,8 @@ Object.defineProperties(MetadataEntity.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.prototype.hasProperty = function (propertyId) {
   DeveloperError.throwInstantiationError();
@@ -47,6 +51,8 @@ MetadataEntity.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.prototype.getPropertyIds = function (results) {
   DeveloperError.throwInstantiationError();
@@ -60,6 +66,8 @@ MetadataEntity.prototype.getPropertyIds = function (results) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.prototype.getProperty = function (propertyId) {
   DeveloperError.throwInstantiationError();
@@ -74,6 +82,8 @@ MetadataEntity.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.prototype.setProperty = function (propertyId, value) {
   DeveloperError.throwInstantiationError();
@@ -84,6 +94,8 @@ MetadataEntity.prototype.setProperty = function (propertyId, value) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
   DeveloperError.throwInstantiationError();
@@ -95,6 +107,8 @@ MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
   DeveloperError.throwInstantiationError();
@@ -109,6 +123,7 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
  * @returns {Boolean} Whether this property exists.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.hasProperty = function (
   propertyId,
@@ -143,6 +158,7 @@ MetadataEntity.hasProperty = function (
  * @returns {String[]} The property IDs.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.getPropertyIds = function (
   properties,
@@ -195,6 +211,7 @@ MetadataEntity.getPropertyIds = function (
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.getProperty = function (
   propertyId,
@@ -246,6 +263,7 @@ MetadataEntity.getProperty = function (
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.setProperty = function (
   propertyId,
@@ -288,6 +306,7 @@ MetadataEntity.setProperty = function (
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.getPropertyBySemantic = function (
   semantic,
@@ -318,6 +337,7 @@ MetadataEntity.getPropertyBySemantic = function (
  * @param {MetadataClass} classDefinition The class.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEntity.setPropertyBySemantic = function (
   semantic,

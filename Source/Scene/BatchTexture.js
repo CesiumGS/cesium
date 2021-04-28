@@ -25,6 +25,7 @@ import Texture from "../Renderer/Texture.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function BatchTexture(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -80,6 +81,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   translucentFeaturesLength: {
     get: function () {
@@ -94,6 +96,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   memorySizeInBytes: {
     get: function () {
@@ -115,6 +118,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Cartesian2}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   textureDimensions: {
     get: function () {
@@ -130,6 +134,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Cartesian4}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   textureStep: {
     get: function () {
@@ -146,6 +151,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Texture}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   batchTexture: {
     get: function () {
@@ -160,6 +166,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Texture}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   defaultTexture: {
     get: function () {
@@ -175,6 +182,7 @@ Object.defineProperties(BatchTexture.prototype, {
    * @type {Texture}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   pickTexture: {
     get: function () {
@@ -230,6 +238,7 @@ function checkBatchId(batchId, featuresLength) {
  * @param {Number} batchId the ID of the feature
  * @param {Boolean} show <code>true</code> if the feature should be shown, <code>false</code> otherwise
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.setShow = function (batchId, show) {
   //>>includeStart('debug', pragmas.debug);
@@ -264,6 +273,7 @@ BatchTexture.prototype.setShow = function (batchId, show) {
  *
  * @param {Boolean} show <code>true</code> if the feature should be shown, <code>false</code> otherwise
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.setAllShow = function (show) {
   //>>includeStart('debug', pragmas.debug);
@@ -282,6 +292,7 @@ BatchTexture.prototype.setAllShow = function (show) {
  * @param {Number} batchId the ID of the feature
  * @return {Boolean} <code>true</code> if the feature is shown, or <code>false</code> otherwise
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.getShow = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
@@ -306,6 +317,7 @@ var scratchColorBytes = new Array(4);
  * @param {Color} color the color to assign to this feature.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.setColor = function (batchId, color) {
   //>>includeStart('debug', pragmas.debug);
@@ -370,6 +382,7 @@ BatchTexture.prototype.setColor = function (batchId, color) {
  * @param {Color} color the color to assign to all features.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.setAllColor = function (color) {
   //>>includeStart('debug', pragmas.debug);
@@ -390,6 +403,7 @@ BatchTexture.prototype.setAllColor = function (color) {
  * @return {Color} The color assigned to the selected feature
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.getColor = function (batchId, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -424,6 +438,7 @@ BatchTexture.prototype.getColor = function (batchId, result) {
  * @return {PickId} The picking color assigned to this feature
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.getPickColor = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
@@ -523,6 +538,7 @@ BatchTexture.prototype.update = function (tileset, frameState) {
  *
  * @see BatchTexture#destroy
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.isDestroyed = function () {
   return false;
@@ -543,6 +559,8 @@ BatchTexture.prototype.isDestroyed = function () {
  * e = e && e.destroy();
  *
  * @see BatchTexture#isDestroyed
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTexture.prototype.destroy = function () {
   this._batchTexture = this._batchTexture && this._batchTexture.destroy();

@@ -30,6 +30,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {String} [options.cacheKey] The cache key of the resource.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfImageLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -85,6 +86,8 @@ Object.defineProperties(GltfImageLoader.prototype, {
    *
    * @type {Promise.<GltfImageLoader>}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -98,6 +101,8 @@ Object.defineProperties(GltfImageLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -111,6 +116,8 @@ Object.defineProperties(GltfImageLoader.prototype, {
    *
    * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   image: {
     get: function () {
@@ -121,6 +128,8 @@ Object.defineProperties(GltfImageLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfImageLoader.prototype.load = function () {
   if (defined(this._bufferViewId)) {
@@ -276,6 +285,8 @@ function loadImageFromUri(resource) {
 
 /**
  * Unloads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfImageLoader.prototype.unload = function () {
   if (defined(this._bufferViewLoader)) {
@@ -288,9 +299,5 @@ GltfImageLoader.prototype.unload = function () {
   this._gltf = undefined;
 };
 
-/**
- * Exposed for testing
- *
- * @private
- */
+//Exposed for testing
 GltfImageLoader._loadImageFromTypedArray = loadImageFromTypedArray;

@@ -68,6 +68,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   id: {
     get: function () {
@@ -81,6 +83,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   name: {
     get: function () {
@@ -94,6 +98,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   description: {
     get: function () {
@@ -107,6 +113,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   type: {
     get: function () {
@@ -120,6 +128,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   enumType: {
     get: function () {
@@ -133,6 +143,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   componentType: {
     get: function () {
@@ -148,6 +160,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @readonly
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   valueType: {
     get: function () {
@@ -161,6 +174,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   componentCount: {
     get: function () {
@@ -174,6 +189,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   normalized: {
     get: function () {
@@ -187,6 +204,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   max: {
     get: function () {
@@ -200,6 +219,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   min: {
     get: function () {
@@ -213,6 +234,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean|Number|String|Array}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   default: {
     get: function () {
@@ -226,6 +249,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   optional: {
     get: function () {
@@ -239,6 +264,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   semantic: {
     get: function () {
@@ -252,6 +279,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {*}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -265,6 +294,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Object}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {
@@ -281,6 +312,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
  * @returns {*} The normalized value or array of normalized values.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.prototype.normalize = function (value) {
   return normalize(this, value, MetadataType.normalize);
@@ -294,6 +326,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
  * @returns {*} The integer value or array of integer values.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalize(this, value, MetadataType.unnormalize);
@@ -308,6 +341,7 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
  * @param {*} value the original, normalized values.
  * @returns {*} The appropriate vector type if the value is a vector type. Otherwise, the value is returned unaltered.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
   var type = this._type;
@@ -344,6 +378,7 @@ MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
  * @param {*} value The value of this property
  * @returns {*} An array of the appropriate length if the property is a vector type. Otherwise, the value is returned unaltered.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.prototype.packVectorTypes = function (value) {
   var type = this._type;
@@ -377,6 +412,7 @@ MetadataClassProperty.prototype.packVectorTypes = function (value) {
  *
  * @param {*} value The value.
  * @returns {String|undefined} An error message if the value does not conform to the property, otherwise undefined.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.prototype.validate = function (value) {

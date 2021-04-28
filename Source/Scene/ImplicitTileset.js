@@ -20,6 +20,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ImplicitTileset(tileset, baseResource, tileJson) {
   var extension = tileJson.extensions["3DTILES_implicit_tiling"];
@@ -36,6 +37,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Cesium3DTileset}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.tileset = tileset;
 
@@ -47,6 +49,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Resource}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.baseResource = baseResource;
 
@@ -56,6 +59,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.geometricError = tileJson.geometricError;
 
@@ -75,6 +79,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Object}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.boundingVolume = tileJson.boundingVolume;
 
@@ -84,6 +89,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {String}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.refine = tileJson.refine;
 
@@ -94,6 +100,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Resource}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.subtreeUriTemplate = new Resource({ url: extension.subtrees.uri });
 
@@ -107,6 +114,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Resource[]}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.contentUriTemplates = [];
 
@@ -121,6 +129,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Object[]}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.contentHeaders = [];
 
@@ -139,6 +148,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.contentCount = this.contentHeaders.length;
 
@@ -157,6 +167,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Object}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.tileHeader = makeTileHeaderTemplate(tileJson);
 
@@ -166,6 +177,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {ImplicitSubdivisionScheme}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.subdivisionScheme =
     ImplicitSubdivisionScheme[extension.subdivisionScheme];
@@ -177,6 +189,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
     this.subdivisionScheme
@@ -189,6 +202,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.subtreeLevels = extension.subtreeLevels;
 
@@ -198,6 +212,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.maximumLevel = extension.maximumLevel;
 }

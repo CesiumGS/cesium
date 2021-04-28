@@ -31,6 +31,7 @@ import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
  * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
  * @param {Number} [byteOffset=0] The offset into the array buffer
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function Implicit3DTileContent(
   tileset,
@@ -686,6 +687,7 @@ function makeTile(content, baseResource, tileJson, parentTile) {
  * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -695,6 +697,7 @@ Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
  * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>undefined</code> since a tile of this type does not have any features.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Implicit3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;

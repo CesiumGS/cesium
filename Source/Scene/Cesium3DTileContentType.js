@@ -71,6 +71,7 @@ var Cesium3DTileContentType = {
    * @type {String}
    * @constant
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   GLTF: "gltf",
   /**
@@ -81,6 +82,7 @@ var Cesium3DTileContentType = {
    * @type {String}
    * @constant
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   GLTF_BINARY: "glb",
   /**
@@ -91,6 +93,7 @@ var Cesium3DTileContentType = {
    * @type {String}
    * @constant
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   IMPLICIT_SUBTREE: "subt",
   /**
@@ -110,6 +113,7 @@ var Cesium3DTileContentType = {
    * @type {String}
    * @constant
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   MULTIPLE_CONTENT: "multipleContent",
 };

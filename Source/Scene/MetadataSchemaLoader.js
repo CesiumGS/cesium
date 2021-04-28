@@ -60,6 +60,8 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @type {Promise.<MetadataSchemaLoader>}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -73,6 +75,8 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -86,6 +90,8 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @type {MetadataSchema}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   schema: {
     get: function () {
@@ -96,6 +102,8 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataSchemaLoader.prototype.load = function () {
   if (defined(this._schema)) {
@@ -131,6 +139,8 @@ function loadExternalSchema(schemaLoader) {
 
 /**
  * Unloads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataSchemaLoader.prototype.unload = function () {
   this._schema = undefined;

@@ -27,6 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfFeatureMetadataLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -74,6 +75,8 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
    *
    * @type {Promise.<GltfFeatureMetadataLoader>}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -87,6 +90,8 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -100,6 +105,8 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
    *
    * @type {FeatureMetadata}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   featureMetadata: {
     get: function () {
@@ -110,6 +117,8 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfFeatureMetadataLoader.prototype.load = function () {
   var bufferViewsPromise = loadBufferViews(this);
@@ -311,6 +320,8 @@ function loadSchema(featureMetadataLoader) {
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfFeatureMetadataLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -350,6 +361,8 @@ function unloadTextures(featureMetadataLoader) {
 
 /**
  * Unloads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfFeatureMetadataLoader.prototype.unload = function () {
   unloadBufferViews(this);

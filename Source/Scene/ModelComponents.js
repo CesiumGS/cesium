@@ -8,6 +8,7 @@ import AlphaMode from "./AlphaMode.js";
  * @namespace ModelComponents
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var ModelComponents = {};
 
@@ -18,12 +19,15 @@ var ModelComponents = {};
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Quantization() {
   /**
    * Whether the quantized attribute is oct-encoded.
    *
    * @type {Boolean}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.octEncoded = false;
 
@@ -32,6 +36,8 @@ function Quantization() {
    * This is typically computed as (1 << quantizationBits) - 1
    *
    * @type {Number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.normalizationRange = undefined;
 
@@ -39,6 +45,8 @@ function Quantization() {
    * The bottom-left corner of the quantization volume. Not applicable for oct encoded attributes.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.quantizedVolumeOffset = undefined;
 
@@ -46,6 +54,8 @@ function Quantization() {
    * The dimensions of the quantization volume. Not applicable for oct encoded attributes.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.quantizedVolumeDimensions = undefined;
 
@@ -53,6 +63,8 @@ function Quantization() {
    * The component data type of the quantized attribute, e.g. ComponentDatatype.UNSIGNED_SHORT.
    *
    * @type {ComponentDatatype}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.componentDatatype = undefined;
 
@@ -60,6 +72,8 @@ function Quantization() {
    * The type of the quantized attribute, e.g. AttributeType.VEC2 for oct-encoded normals.
    *
    * @type {AttributeType}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.type = undefined;
 }
@@ -71,6 +85,7 @@ function Quantization() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Attribute() {
   /**
@@ -92,6 +107,8 @@ function Attribute() {
    * </ul>
    *
    * @type {String}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.semantic = undefined;
 
@@ -99,6 +116,8 @@ function Attribute() {
    * The component data type of the attribute, e.g. ComponentDatatype.FLOAT.
    *
    * @type {ComponentDatatype}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.componentDatatype = undefined;
 
@@ -106,6 +125,8 @@ function Attribute() {
    * The type of the attribute, e.g. AttributeType.VEC3.
    *
    * @type {AttributeType}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.type = undefined;
 
@@ -114,6 +135,8 @@ function Attribute() {
    *
    * @type {Boolean}
    * @default false
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.normalized = false;
 
@@ -121,6 +144,8 @@ function Attribute() {
    * The number of elements.
    *
    * @type {Number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.count = undefined;
 
@@ -128,6 +153,8 @@ function Attribute() {
    * Minimum value of each component in the attribute.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.min = undefined;
 
@@ -135,6 +162,8 @@ function Attribute() {
    * Maximum value of each component in the attribute.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.max = undefined;
 
@@ -142,14 +171,17 @@ function Attribute() {
    * A constant value used for all elements when typed array and buffer are undefined.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.constant = undefined;
 
   /**
    * Information about the quantized attribute.
    *
-   * @alias ModelComponents.Quantization
-   * @constructor
+   * @type {ModelComponents.Quantization}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.quantization = undefined;
 
@@ -157,6 +189,8 @@ function Attribute() {
    * A typed array containing tightly-packed attribute values.
    *
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.typedArray = undefined;
 
@@ -164,6 +198,8 @@ function Attribute() {
    * A vertex buffer containing attribute values. Attribute values are accessed using byteOffset and byteStride.
    *
    * @type {Buffer}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.buffer = undefined;
 
@@ -172,6 +208,8 @@ function Attribute() {
    *
    * @type {Number}
    * @default 0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.byteOffset = 0;
 
@@ -179,6 +217,8 @@ function Attribute() {
    * The byte stride of elements in the buffer. When undefined the elements are tightly packed.
    *
    * @type {Number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.byteStride = undefined;
 }
@@ -190,12 +230,15 @@ function Attribute() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Indices() {
   /**
    * The index data type of the attribute, e.g. IndexDatatype.UNSIGNED_SHORT.
    *
    * @type {IndexDatatype}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.indexDatatype = undefined;
 
@@ -203,6 +246,8 @@ function Indices() {
    * The number of indices.
    *
    * @type {Number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.count = undefined;
 
@@ -210,6 +255,8 @@ function Indices() {
    * An index buffer containing indices.
    *
    * @type {Buffer}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.buffer = undefined;
 }
@@ -222,12 +269,15 @@ function Indices() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function FeatureIdAttribute() {
   /**
    * The ID of the feature table that feature IDs index into.
    *
    * @type {String}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureTableId = undefined;
 
@@ -235,6 +285,8 @@ function FeatureIdAttribute() {
    * The semantic of the attribute containing feature IDs, e.g. "_FEATURE_ID_0".
    *
    * @type {String}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.semantic = undefined;
 
@@ -243,6 +295,8 @@ function FeatureIdAttribute() {
    *
    * @type {Number}
    * @default 0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.constant = 0;
 
@@ -251,6 +305,8 @@ function FeatureIdAttribute() {
    *
    * @type {Number}
    * @default 0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.divisor = 0;
 }
@@ -262,12 +318,15 @@ function FeatureIdAttribute() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function FeatureIdTexture() {
   /**
    * The ID of the feature table that feature IDs index into.
    *
    * @type {String}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureTableId = undefined;
 
@@ -275,6 +334,8 @@ function FeatureIdTexture() {
    * The texture channel containing feature IDs, may be "r", "g", "b", or "a".
    *
    * @type {String}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.channel = undefined;
 
@@ -282,6 +343,8 @@ function FeatureIdTexture() {
    * The texture containing feature IDs.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.texture = undefined;
 }
@@ -293,12 +356,15 @@ function FeatureIdTexture() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MorphTarget() {
   /**
    * Attributes that are part of the morph target, e.g. positions, normals, and tangents.
    *
    * @type {ModelComponents.Attribute[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.attributes = [];
 }
@@ -310,12 +376,15 @@ function MorphTarget() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Primitive() {
   /**
    * The vertex attributes, e.g. positions, normals, etc.
    *
    * @type {ModelComponents.Attribute[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.attributes = [];
 
@@ -323,6 +392,8 @@ function Primitive() {
    * The morph targets.
    *
    * @type {ModelComponents.MorphTarget[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.morphTargets = [];
 
@@ -330,6 +401,8 @@ function Primitive() {
    * An array of weights to be applied to morph targets.
    *
    * @type {Number[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.morphWeights = [];
 
@@ -337,6 +410,8 @@ function Primitive() {
    * The indices.
    *
    * @type {ModelComponents.Indices}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.indices = undefined;
 
@@ -344,6 +419,8 @@ function Primitive() {
    * The material.
    *
    * @type {ModelComponents.Material}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.material = undefined;
 
@@ -351,6 +428,8 @@ function Primitive() {
    * The primitive type, e.g. PrimitiveType.TRIANGLES.
    *
    * @type {PrimitiveType}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.primitiveType = undefined;
 
@@ -358,6 +437,8 @@ function Primitive() {
    * The feature ID attributes.
    *
    * @type {ModelComponents.FeatureIdAttribute[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureIdAttributes = [];
 
@@ -365,6 +446,8 @@ function Primitive() {
    * The feature ID textures.
    *
    * @type {ModelComponents.FeatureIdTexture[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureIdTextures = [];
 
@@ -372,6 +455,8 @@ function Primitive() {
    * The feature texture IDs.
    *
    * @type {String[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureTextureIds = [];
 }
@@ -383,12 +468,15 @@ function Primitive() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Instances() {
   /**
    * The instance attributes, e.g. translation, rotation, scale, feature id, etc.
    *
    * @type {ModelComponents.Attribute[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.attributes = [];
 
@@ -396,6 +484,8 @@ function Instances() {
    * The feature ID attributes.
    *
    * @type {ModelComponents.FeatureIdAttribute[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureIdAttributes = [];
 }
@@ -407,12 +497,15 @@ function Instances() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Skin() {
   /**
    * The joints.
    *
    * @type {ModelComponents.Node[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.joints = undefined;
 
@@ -420,6 +513,8 @@ function Skin() {
    * The inverse bind matrices of the joints.
    *
    * @type {Matrix4[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.inverseBindMatrices = undefined;
 }
@@ -431,12 +526,15 @@ function Skin() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Node() {
   /**
    * The children nodes.
    *
    * @type {ModelComponents.Node[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.children = [];
 
@@ -444,6 +542,8 @@ function Node() {
    * The mesh primitives.
    *
    * @type {ModelComponents.Primitive[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.primitives = [];
 
@@ -451,6 +551,8 @@ function Node() {
    * Instances of this node.
    *
    * @type {ModelComponents.Instances}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.instances = undefined;
 
@@ -458,6 +560,8 @@ function Node() {
    * The skin.
    *
    * @type {ModelComponents.Skin}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.skin = undefined;
 
@@ -467,6 +571,8 @@ function Node() {
    * translation, rotation, and scale must all be defined.
    *
    * @type {Matrix4}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.matrix = undefined;
 
@@ -474,6 +580,8 @@ function Node() {
    * The local translation.
    *
    * @type {Cartesian3}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.translation = undefined;
 
@@ -481,6 +589,8 @@ function Node() {
    * The local rotation.
    *
    * @type {Quaternion}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.rotation = undefined;
 
@@ -488,6 +598,8 @@ function Node() {
    * The local scale.
    *
    * @type {Cartesian3}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.scale = undefined;
 }
@@ -499,12 +611,15 @@ function Node() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Scene() {
   /**
    * The nodes belonging to the scene.
    *
    * @type {ModelComponents.Node[]}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.nodes = [];
 }
@@ -516,12 +631,15 @@ function Scene() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Components() {
   /**
    * The default scene.
    *
    * @type {ModelComponents.Scene}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.scene = undefined;
 
@@ -536,6 +654,8 @@ function Components() {
    * Feature metadata containing the schema, feature tables, and feature textures.
    *
    * @type {FeatureMetadata}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureMetadata = undefined;
 }
@@ -547,12 +667,15 @@ function Components() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Texture() {
   /**
    * The underlying GPU texture.
    *
    * @type {Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.texture = undefined;
 
@@ -561,6 +684,8 @@ function Texture() {
    *
    * @type {Number}
    * @default 0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.texCoord = 0;
 
@@ -568,6 +693,8 @@ function Texture() {
    * The sampler.
    *
    * @type {Sampler}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.sampler = undefined;
 }
@@ -579,12 +706,15 @@ function Texture() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetallicRoughness() {
   /**
    * The base color texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.baseColorTexture = undefined;
 
@@ -592,6 +722,8 @@ function MetallicRoughness() {
    * The metallic roughness texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metallicRoughnessTexture = undefined;
 
@@ -600,6 +732,8 @@ function MetallicRoughness() {
    *
    * @type {Cartesian4}
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.baseColorFactor = new Cartesian4(1.0, 1.0, 1.0, 1.0);
 
@@ -608,6 +742,8 @@ function MetallicRoughness() {
    *
    * @type {Number}
    * @default 1.0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metallicFactor = 1.0;
 
@@ -616,6 +752,8 @@ function MetallicRoughness() {
    *
    * @type {Number}
    * @default 1.0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.roughnessFactor = 1.0;
 }
@@ -627,12 +765,15 @@ function MetallicRoughness() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function SpecularGlossiness() {
   /**
    * The diffuse texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.diffuseTexture = undefined;
 
@@ -640,6 +781,8 @@ function SpecularGlossiness() {
    * The specular glossiness texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.specularGlossinessTexture = undefined;
 
@@ -648,6 +791,8 @@ function SpecularGlossiness() {
    *
    * @type {Cartesian4}
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.diffuseFactor = new Cartesian4(1.0, 1.0, 1.0, 1.0);
 
@@ -656,6 +801,8 @@ function SpecularGlossiness() {
    *
    * @type {Cartesian3}
    * @default new Cartesian3(1.0, 1.0, 1.0, 1.0)
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.specularFactor = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -664,6 +811,8 @@ function SpecularGlossiness() {
    *
    * @type {Number}
    * @default 1.0
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.glossinessFactor = 1.0;
 }
@@ -675,12 +824,15 @@ function SpecularGlossiness() {
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Material() {
   /**
    * Material properties for the PBR metallic roughness shading model.
    *
    * @type {ModelComponents.MetallicRoughness}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metallicRoughness = undefined;
 
@@ -688,6 +840,8 @@ function Material() {
    * Material properties for the PBR specular glossiness shading model.
    *
    * @type {ModelComponents.SpecularGlossiness}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.specularGlossiness = undefined;
 
@@ -695,6 +849,8 @@ function Material() {
    * The emissive texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.emissiveTexture = undefined;
 
@@ -702,6 +858,8 @@ function Material() {
    * The normal texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.normalTexture = undefined;
 
@@ -709,6 +867,8 @@ function Material() {
    * The occlusion texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.occlusionTexture = undefined;
 
@@ -717,6 +877,8 @@ function Material() {
    *
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.emissiveFactor = new Cartesian3(0.0, 0.0, 0.0);
 
@@ -725,6 +887,8 @@ function Material() {
    *
    * @type {AlphaMode}
    * @default AlphaMode.OPAQUE
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.alphaMode = AlphaMode.OPAQUE;
 
@@ -733,6 +897,8 @@ function Material() {
    *
    * @type {Number}
    * @default 0.5
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.alphaCutoff = 0.5;
 
@@ -741,6 +907,8 @@ function Material() {
    *
    * @type {Boolean}
    * @default false
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.doubleSided = false;
 
@@ -749,6 +917,8 @@ function Material() {
    *
    * @type {Boolean}
    * @default false
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.unlit = false;
 }

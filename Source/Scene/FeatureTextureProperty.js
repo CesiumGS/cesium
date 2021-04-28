@@ -13,6 +13,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function FeatureTextureProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -44,6 +45,7 @@ Object.defineProperties(FeatureTextureProperty.prototype, {
    * @type {*}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -58,6 +60,7 @@ Object.defineProperties(FeatureTextureProperty.prototype, {
    * @type {*}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {

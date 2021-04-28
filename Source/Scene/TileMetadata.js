@@ -37,6 +37,8 @@ Object.defineProperties(TileMetadata.prototype, {
    * @memberof TileMetadata.prototype
    * @type {MetadataClass}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   class: {
     get: function () {
@@ -50,6 +52,8 @@ Object.defineProperties(TileMetadata.prototype, {
    * @memberof TileMetadata.prototype
    * @type {*}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -63,6 +67,8 @@ Object.defineProperties(TileMetadata.prototype, {
    * @memberof TileMetadata.prototype
    * @type {Object}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {
@@ -76,6 +82,7 @@ Object.defineProperties(TileMetadata.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 TileMetadata.prototype.hasProperty = function (propertyId) {
@@ -87,6 +94,7 @@ TileMetadata.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 TileMetadata.prototype.getPropertyIds = function (results) {
@@ -101,6 +109,7 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 TileMetadata.prototype.getProperty = function (propertyId) {
@@ -116,6 +125,7 @@ TileMetadata.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 TileMetadata.prototype.setProperty = function (propertyId, value) {
@@ -132,6 +142,7 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
@@ -148,6 +159,7 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {

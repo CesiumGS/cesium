@@ -18,6 +18,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @param {Number} [options.availableCount] A number indicating how many 1 bits are found in the bitstream
  * @param {Boolean} [options.computeAvailableCountEnabled=false] If true, and options.availableCount is undefined, the availableCount will be computed from the bitstream.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ImplicitAvailabilityBitstream(options) {
   var lengthBits = options.lengthBits;
@@ -91,6 +92,7 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   lengthBits: {
     get: function () {
@@ -105,6 +107,7 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
    * @type {Number}
    * @readonly
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   availableCount: {
     get: function () {
@@ -120,6 +123,7 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
  * @param {Number} index The integer index of the bit.
  * @returns {Boolean} The value of the bit
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
   //>>includeStart('debug', pragmas.debug);

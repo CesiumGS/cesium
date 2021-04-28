@@ -12,6 +12,7 @@ import Matrix4 from "../Core/Matrix4.js";
  * @enum {String}
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var AttributeType = {
   /**
@@ -78,6 +79,7 @@ var AttributeType = {
  * @returns {*} The math type.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 AttributeType.getMathType = function (attributeType) {
   switch (attributeType) {

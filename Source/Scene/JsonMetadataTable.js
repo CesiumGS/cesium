@@ -14,6 +14,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @alias JsonMetadataTable
  * @constructor
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function JsonMetadataTable(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -31,6 +32,7 @@ export default function JsonMetadataTable(options) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties);
@@ -42,6 +44,7 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, undefined, results);
@@ -56,6 +59,7 @@ JsonMetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @exception {DeveloperError} index is out of bounds
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
@@ -85,6 +89,7 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
  *
  * @exception {DeveloperError} index is out of bounds
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);

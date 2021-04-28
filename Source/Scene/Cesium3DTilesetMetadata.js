@@ -73,6 +73,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {MetadataSchema}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   schema: {
     get: function () {
@@ -86,6 +88,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object.<String, GroupMetadata>}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   groups: {
     get: function () {
@@ -99,6 +103,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {TilesetMetadata}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   tileset: {
     get: function () {
@@ -116,6 +122,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   statistics: {
     get: function () {
@@ -129,6 +137,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {*}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -142,6 +152,8 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {

@@ -23,6 +23,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -58,6 +59,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @type {Promise.<BufferLoader>}
    * @readonly
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -71,6 +73,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -84,6 +87,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @type {Uint8Array}
    * @readonly
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   typedArray: {
     get: function () {
@@ -94,6 +98,8 @@ Object.defineProperties(BufferLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BufferLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
@@ -129,6 +135,8 @@ function loadExternalBuffer(bufferLoader) {
 
 /**
  * Unloads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BufferLoader.prototype.unload = function () {
   this._typedArray = undefined;

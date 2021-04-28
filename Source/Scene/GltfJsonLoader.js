@@ -33,6 +33,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {String} [options.cacheKey] The cache key of the resource.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -72,6 +73,8 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {Promise.<GltfJsonLoader>}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -85,6 +88,8 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -98,6 +103,8 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {Object}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   gltf: {
     get: function () {
@@ -108,6 +115,8 @@ Object.defineProperties(GltfJsonLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfJsonLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
@@ -268,6 +277,8 @@ function processGltf(gltfJsonLoader, typedArray) {
 
 /**
  * Unloads the resource.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfJsonLoader.prototype.unload = function () {
   var bufferLoaders = this._bufferLoaders;

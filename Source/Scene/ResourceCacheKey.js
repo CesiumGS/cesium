@@ -11,6 +11,7 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
  * @namespace ResourceCacheKey
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var ResourceCacheKey = {};
 
@@ -136,6 +137,8 @@ function getSamplerCacheKey(gltf, textureInfo) {
  * @returns {String} The schema cache key.
  *
  * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getSchemaCacheKey = function (options) {
   var schema = options.schema;
@@ -163,6 +166,8 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
  *
  * @returns {String} The external buffer cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getExternalBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -183,6 +188,8 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
  * @param {Number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  *
  * @returns {String} The embedded buffer cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -206,6 +213,8 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  *
  * @returns {String} The glTF cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getGltfCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -228,6 +237,8 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {String} The buffer view cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getBufferViewCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -269,6 +280,8 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {String} The Draco cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getDracoCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -302,6 +315,8 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
  *
  * @returns {String} The vertex buffer cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -381,6 +396,8 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Object} [options.draco] The Draco extension object.
  *
  * @returns {String} The index buffer cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -436,6 +453,8 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {String} The image cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getImageCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -475,6 +494,8 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {String} The texture cache key.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceCacheKey.getTextureCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
