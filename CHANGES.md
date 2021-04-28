@@ -1,6 +1,6 @@
 # Change Log
 
-### 3d-tiles-next
+### 1.82 - 2021-06-01
 
 ##### Additions :tada:
 
