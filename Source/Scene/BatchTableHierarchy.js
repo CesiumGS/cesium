@@ -21,7 +21,6 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @constructor
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function BatchTableHierarchy(options) {
   this._classes = undefined;
@@ -343,7 +342,6 @@ function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
   var result = traverseHierarchy(this, batchId, function (

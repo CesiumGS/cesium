@@ -152,7 +152,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * @type {*}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -167,7 +166,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * @type {*}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {
@@ -183,7 +181,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
  * @returns {*} The value of the property.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTableProperty.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -202,7 +199,6 @@ MetadataTableProperty.prototype.get = function (index) {
  * @param {*} value The value of the property.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataTableProperty.prototype.set = function (index, value) {
   var classProperty = this._classProperty;

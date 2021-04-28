@@ -8,7 +8,6 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @namespace MortonOrder
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var MortonOrder = {};
 
@@ -115,7 +114,6 @@ function removeTwoSpacing(v) {
  * @param {Number} y The Y coordinate in the range [0, (2^16)-1].
  * @returns {Number} The Morton index.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MortonOrder.encode2D = function (x, y) {
   //>>includeStart('debug', pragmas.debug);
@@ -141,7 +139,6 @@ MortonOrder.encode2D = function (x, y) {
  * @param {Number[]} [result] The array onto which to store the result.
  * @returns {Number[]} An array containing the 2D coordinates correspoding to the Morton index.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MortonOrder.decode2D = function (mortonIndex, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -169,7 +166,6 @@ MortonOrder.decode2D = function (mortonIndex, result) {
  * @param {Number} z The Z coordinate in the range [0, (2^10)-1].
  * @returns {Number} The Morton index.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MortonOrder.encode3D = function (x, y, z) {
   //>>includeStart('debug', pragmas.debug);
@@ -194,9 +190,8 @@ MortonOrder.encode3D = function (x, y, z) {
  *
  * @param {Number} mortonIndex The Morton index in the range [0, (2^30)-1].
  * @param {Number[]} [result] The array onto which to store the result.
- * @returns {Number[]} An array containing the 3D coordinates correspoding to the Morton index.
+ * @returns {Number[]} An array containing the 3D coordinates corresponding to the Morton index.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MortonOrder.decode3D = function (mortonIndex, result) {
   //>>includeStart('debug', pragmas.debug);

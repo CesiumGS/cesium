@@ -687,7 +687,6 @@ function makeTile(content, baseResource, tileJson, parentTile) {
  * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -697,7 +696,6 @@ Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
  * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>undefined</code> since a tile of this type does not have any features.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Implicit3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;

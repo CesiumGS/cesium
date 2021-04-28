@@ -144,7 +144,6 @@ var MetadataType = {
  * @exception {DeveloperError} type must be a numeric type
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.getMinimum = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -197,7 +196,6 @@ MetadataType.getMinimum = function (type) {
  * @exception {DeveloperError} type must be a numeric type
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.getMaximum = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -246,7 +244,6 @@ MetadataType.getMaximum = function (type) {
  * @returns {Boolean} Whether the type is a numeric type.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.isNumericType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -277,7 +274,6 @@ MetadataType.isNumericType = function (type) {
  * @returns {Boolean} Whether the type is an integer type.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.isIntegerType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -306,7 +302,6 @@ MetadataType.isIntegerType = function (type) {
  * @returns {Boolean} Whether the type is an unsigned integer type.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.isUnsignedIntegerType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -331,7 +326,6 @@ MetadataType.isUnsignedIntegerType = function (type) {
  * @param {MetadataType} type The type to check
  * @return {Boolean} <code>true</code> if the type can be encoded as a vector type, or <code>false</code> otherwise
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.isVectorCompatible = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -370,7 +364,6 @@ MetadataType.isVectorCompatible = function (type) {
  * @exception {DeveloperError} type must be an integer type
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.normalize = function (value, type) {
   //>>includeStart('debug', pragmas.debug);
@@ -404,7 +397,6 @@ MetadataType.normalize = function (value, type) {
  * @exception {DeveloperError} type must be an integer type
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataType.unnormalize = function (value, type) {
   //>>includeStart('debug', pragmas.debug);

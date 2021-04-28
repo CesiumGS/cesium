@@ -39,7 +39,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @exception {DeveloperError} When options.draco is defined options.dracoAccessorId must also be defined.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfVertexBufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -126,7 +125,6 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    * @type {Promise.<GltfVertexBufferLoader>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -141,7 +139,6 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -156,7 +153,6 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    * @type {Buffer}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   vertexBuffer: {
     get: function () {
@@ -171,7 +167,6 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    * @type {ModelComponents.Quantization}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   quantization: {
     get: function () {
@@ -183,7 +178,6 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
 /**
  * Loads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfVertexBufferLoader.prototype.load = function () {
   if (defined(this._draco)) {
@@ -343,7 +337,6 @@ var scratchVertexBufferJob = new CreateVertexBufferJob();
  *
  * @param {FrameState} frameState The frame state.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfVertexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -390,7 +383,6 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
 /**
  * Unloads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfVertexBufferLoader.prototype.unload = function () {
   if (defined(this._vertexBuffer)) {

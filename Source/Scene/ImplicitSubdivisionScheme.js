@@ -31,7 +31,6 @@ var ImplicitSubdivisionScheme = {
  * @param {ImplicitSubdivisionScheme} subdivisionScheme The subdivision scheme
  * @returns {Number} The branching factor, either 4 for QUADTREE or 8 for OCTREE
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubdivisionScheme.getBranchingFactor = function (subdivisionScheme) {
   switch (subdivisionScheme) {

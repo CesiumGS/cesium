@@ -25,7 +25,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {String} [options.cacheKey] The cache key of the resource.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfDracoLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -72,7 +71,6 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    * @type {Promise.<GltfDracoLoader>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -87,7 +85,6 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -102,7 +99,6 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    * @type {Object}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   decodedData: {
     get: function () {
@@ -114,7 +110,6 @@ Object.defineProperties(GltfDracoLoader.prototype, {
 /**
  * Loads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfDracoLoader.prototype.load = function () {
   var resourceCache = this._resourceCache;
@@ -159,7 +154,6 @@ function handleError(dracoLoader, error) {
  *
  * @param {FrameState} frameState The frame state.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfDracoLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -224,7 +218,6 @@ GltfDracoLoader.prototype.process = function (frameState) {
 /**
  * Unloads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfDracoLoader.prototype.unload = function () {
   if (defined(this._bufferViewLoader)) {

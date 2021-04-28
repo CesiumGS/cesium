@@ -44,7 +44,6 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * @type {MetadataSchema}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   schema: {
     get: function () {
@@ -62,7 +61,6 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * @type {Object}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   statistics: {
     get: function () {
@@ -77,7 +75,6 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * @type {*}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extras: {
     get: function () {
@@ -92,7 +89,6 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * @type {Object}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   extensions: {
     get: function () {
@@ -107,7 +103,6 @@ Object.defineProperties(FeatureMetadata.prototype, {
  * @param {String} featureTableId The feature table ID.
  * @returns {FeatureTable} The feature table.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
   //>>includeStart('debug', pragmas.debug);
@@ -123,7 +118,6 @@ FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
  * @param {String} featureTextureId The feature texture ID.
  * @returns {FeatureTexture} The feature texture.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 FeatureMetadata.prototype.getFeatureTexture = function (featureTextureId) {
   //>>includeStart('debug', pragmas.debug);

@@ -73,7 +73,6 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * @type {Promise}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   readyPromise: {
     get: function () {
@@ -88,7 +87,6 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * @type {MetadataTable}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   metadataTable: {
     get: function () {
@@ -104,7 +102,6 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * @type {MetadataTable}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   metadataExtension: {
     get: function () {
@@ -119,7 +116,6 @@ Object.defineProperties(ImplicitSubtree.prototype, {
  * @param {Number} index the index of the desired tile
  * @returns {Boolean} the value of the i-th bit
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.tileIsAvailable = function (index) {
   return this._tileAvailability.getBit(index);
@@ -132,7 +128,6 @@ ImplicitSubtree.prototype.tileIsAvailable = function (index) {
  * @param {Number} [contentIndex=0] the index of the desired content when the <code>3DTILES_multiple_contents</code> extension is used.
  * @returns {Boolean} the value of the i-th bit
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.contentIsAvailable = function (index, contentIndex) {
   contentIndex = defaultValue(contentIndex, 0);
@@ -154,7 +149,6 @@ ImplicitSubtree.prototype.contentIsAvailable = function (index, contentIndex) {
  * @param {Number} index the index of the desired child subtree
  * @returns {Boolean} the value of the i-th bit
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.childSubtreeIsAvailable = function (index) {
   return this._childSubtreeAvailability.getBit(index);
@@ -172,7 +166,6 @@ ImplicitSubtree.prototype.childSubtreeIsAvailable = function (index) {
  * @param {Number} level The 0-indexed level number relative to the root of the subtree
  * @returns {Number} The first index at the desired level
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.getLevelOffset = function (level) {
   var branchingFactor = this._branchingFactor;
@@ -187,7 +180,6 @@ ImplicitSubtree.prototype.getLevelOffset = function (level) {
  * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @returns {Number} The index of the child's parent node
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
   var bitsPerLevel = 2;
@@ -701,7 +693,6 @@ function makeJumpBuffer(subtree) {
  * @property {ImplicitTileCoordinates} implicitCoordinates The coordinates of a tile
  * @return {Number} The tile's index within the subtree.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
   var localLevel = implicitCoordinates.level - this._implicitCoordinates.level;
@@ -721,7 +712,6 @@ ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
  * @return {Number} The entity ID for this tile for accessing tile metadata, or <code>undefined</code> if not applicable.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.getEntityId = function (implicitCoordinates) {
   if (!defined(this._metadataTable)) {
@@ -738,7 +728,6 @@ ImplicitSubtree.prototype.getEntityId = function (implicitCoordinates) {
 
 /**
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.isDestroyed = function () {
   return false;
@@ -746,7 +735,6 @@ ImplicitSubtree.prototype.isDestroyed = function () {
 
 /**
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ImplicitSubtree.prototype.destroy = function () {
   if (defined(this._bufferLoader)) {

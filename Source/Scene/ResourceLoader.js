@@ -16,7 +16,6 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @see ResourceCache
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ResourceLoader() {}
 
@@ -29,7 +28,6 @@ Object.defineProperties(ResourceLoader.prototype, {
    * @type {Promise.<ResourceLoader>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     // eslint-disable-next-line getter-return
@@ -45,7 +43,6 @@ Object.defineProperties(ResourceLoader.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     // eslint-disable-next-line getter-return
@@ -58,7 +55,6 @@ Object.defineProperties(ResourceLoader.prototype, {
 /**
  * Loads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceLoader.prototype.load = function () {
   DeveloperError.throwInstantiationError();
@@ -67,7 +63,6 @@ ResourceLoader.prototype.load = function () {
 /**
  * Unloads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceLoader.prototype.unload = function () {};
 
@@ -76,7 +71,6 @@ ResourceLoader.prototype.unload = function () {};
  *
  * @param {FrameState} frameState The frame state.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceLoader.prototype.process = function (frameState) {};
 
@@ -88,7 +82,6 @@ ResourceLoader.prototype.process = function (frameState) {};
  *
  * @returns {RuntimeError} The runtime error.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceLoader.prototype.getError = function (errorMessage, error) {
   //>>includeStart('debug', pragmas.debug);
@@ -111,7 +104,6 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
  *
  * @see ResourceLoader#destroy
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceLoader.prototype.isDestroyed = function () {
   return false;
@@ -131,7 +123,6 @@ ResourceLoader.prototype.isDestroyed = function () {
  *
  * @see ResourceLoader#isDestroyed
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ResourceLoader.prototype.destroy = function () {
   this.unload();

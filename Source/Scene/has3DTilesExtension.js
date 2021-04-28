@@ -8,7 +8,6 @@ import defined from "../Core/defined.js";
  * @param {String} extensionName The name of the extension, e.g. '3DTILES_implicit_tiling'
  * @returns {Boolean} True if the extension is present
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function has3DTilesExtension(json, extensionName) {
   return (

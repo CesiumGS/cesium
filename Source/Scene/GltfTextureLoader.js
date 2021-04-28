@@ -32,7 +32,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function GltfTextureLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -94,7 +93,6 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    * @type {Promise.<GltfTextureLoader>}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   promise: {
     get: function () {
@@ -109,7 +107,6 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    * @type {String}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   cacheKey: {
     get: function () {
@@ -124,7 +121,6 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    * @type {Texture}
    * @readonly
    * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   texture: {
     get: function () {
@@ -136,7 +132,6 @@ Object.defineProperties(GltfTextureLoader.prototype, {
 /**
  * Loads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfTextureLoader.prototype.load = function () {
   var resourceCache = this._resourceCache;
@@ -289,7 +284,6 @@ var scratchTextureJob = new CreateTextureJob();
  *
  * @param {FrameState} frameState The frame state.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfTextureLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -342,7 +336,6 @@ GltfTextureLoader.prototype.process = function (frameState) {
 /**
  * Unloads the resource.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 GltfTextureLoader.prototype.unload = function () {
   if (defined(this._texture)) {
