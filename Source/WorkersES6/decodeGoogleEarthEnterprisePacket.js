@@ -201,15 +201,27 @@ function processMetadata(buffer, totalSize, quadKey) {
 function processTerrain(buffer, totalSize, transferableObjects) {
   var dv = new DataView(buffer);
 
+  // Each tile is split into 4 parts.
+  var advanceTile = function (pos) {
+    for (var quad = 0; quad < 4; ++quad) {
+      // Guard against reading past the end of buffer.
+      if (pos > totalSize) {
+        return -1;
+      }
+      var size = dv.getUint32(pos, true);
+      pos += sizeOfUint32;
+      pos += size;
+    }
+    return pos;
+  };
+
   var offset = 0;
   var terrainTiles = [];
   while (offset < totalSize) {
-    // Each tile is split into 4 parts
     var tileStart = offset;
-    for (var quad = 0; quad < 4; ++quad) {
-      var size = dv.getUint32(offset, true);
-      offset += sizeOfUint32;
-      offset += size;
+    offset = advanceTile(offset);
+    if (offset === -1) {
+      break;
     }
     var tile = buffer.slice(tileStart, offset);
     transferableObjects.push(tile);
