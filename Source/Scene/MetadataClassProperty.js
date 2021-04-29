@@ -16,6 +16,8 @@ import MetadataType from "./MetadataType.js";
  *
  * @alias MetadataClassProperty
  * @constructor
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -66,6 +68,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   id: {
     get: function () {
@@ -79,6 +82,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   name: {
     get: function () {
@@ -92,6 +96,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   description: {
     get: function () {
@@ -105,6 +110,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
+   * @private
    */
   type: {
     get: function () {
@@ -118,6 +124,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
    * @readonly
+   * @private
    */
   enumType: {
     get: function () {
@@ -131,6 +138,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
+   * @private
    */
   componentType: {
     get: function () {
@@ -159,6 +167,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
+   * @private
    */
   componentCount: {
     get: function () {
@@ -172,6 +181,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
+   * @private
    */
   normalized: {
     get: function () {
@@ -185,6 +195,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]}
    * @readonly
+   * @private
    */
   max: {
     get: function () {
@@ -198,6 +209,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]}
    * @readonly
+   * @private
    */
   min: {
     get: function () {
@@ -211,6 +223,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean|Number|String|Array}
    * @readonly
+   * @private
    */
   default: {
     get: function () {
@@ -224,6 +237,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
+   * @private
    */
   optional: {
     get: function () {
@@ -237,6 +251,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   semantic: {
     get: function () {
@@ -250,6 +265,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {*}
    * @readonly
+   * @private
    */
   extras: {
     get: function () {
@@ -263,6 +279,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   extensions: {
     get: function () {
@@ -375,6 +392,7 @@ MetadataClassProperty.prototype.packVectorTypes = function (value) {
  *
  * @param {*} value The value.
  * @returns {String|undefined} An error message if the value does not conform to the property, otherwise undefined.
+ * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
   var message;

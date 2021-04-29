@@ -10,6 +10,8 @@ import MetadataEnum from "./MetadataEnum.js";
  *
  * @alias MetadataSchema
  * @constructor
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataSchema(schema) {
   //>>includeStart('debug', pragmas.debug);
@@ -57,6 +59,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object.<String, MetadataClass>}
    * @readonly
+   * @private
    */
   classes: {
     get: function () {
@@ -70,6 +73,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object.<String, MetadataEnum>}
    * @readonly
+   * @private
    */
   enums: {
     get: function () {
@@ -83,6 +87,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   name: {
     get: function () {
@@ -96,6 +101,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   description: {
     get: function () {
@@ -109,6 +115,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   version: {
     get: function () {
@@ -122,6 +129,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {*}
    * @readonly
+   * @private
    */
   extras: {
     get: function () {
@@ -135,6 +143,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   extensions: {
     get: function () {

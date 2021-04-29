@@ -18,6 +18,7 @@ import MetadataType from "./MetadataType.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -81,6 +82,7 @@ Object.defineProperties(MetadataTable.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  */
 MetadataTable.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
@@ -91,6 +93,7 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  */
 MetadataTable.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, this._class, results);
@@ -119,6 +122,7 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
+ * @private
  */
 MetadataTable.prototype.getProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
@@ -165,6 +169,7 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
+ * @private
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
@@ -188,6 +193,7 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
+ * @private
  */
 MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
   //>>includeStart('debug', pragmas.debug);
@@ -215,6 +221,7 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @exception {DeveloperError} value does not match type
  * @exception {DeveloperError} value is out of range for type
  * @exception {DeveloperError} Array length does not match componentCount
+ * @private
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,

@@ -110,6 +110,7 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {Promise.<GltfLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -123,6 +124,7 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -136,6 +138,7 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {ModelComponents.Components}
    * @readonly
+   * @private
    */
   components: {
     get: function () {
@@ -152,6 +155,7 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @type {Promise}
    * @readonly
+   * @private
    */
   texturesLoadedPromise: {
     get: function () {
@@ -162,6 +166,7 @@ Object.defineProperties(GltfLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfLoader.prototype.load = function () {
   var gltfJsonLoader = ResourceCache.loadGltfJson({
@@ -201,6 +206,7 @@ function handleError(gltfLoader, error) {
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
  */
 GltfLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -1112,6 +1118,7 @@ function unloadGeometry(loader) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfLoader.prototype.unload = function () {
   if (defined(this._gltfJsonLoader)) {

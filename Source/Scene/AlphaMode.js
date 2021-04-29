@@ -2,6 +2,7 @@
  * The alpha rendering mode of the material.
  *
  * @enum {String}
+ * @private
  */
 var AlphaMode = {
   /**

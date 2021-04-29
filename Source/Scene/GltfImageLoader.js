@@ -85,6 +85,7 @@ Object.defineProperties(GltfImageLoader.prototype, {
    *
    * @type {Promise.<GltfImageLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -98,6 +99,7 @@ Object.defineProperties(GltfImageLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -111,6 +113,7 @@ Object.defineProperties(GltfImageLoader.prototype, {
    *
    * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
+   * @private
    */
   image: {
     get: function () {
@@ -121,6 +124,7 @@ Object.defineProperties(GltfImageLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfImageLoader.prototype.load = function () {
   if (defined(this._bufferViewId)) {
@@ -276,6 +280,7 @@ function loadImageFromUri(resource) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfImageLoader.prototype.unload = function () {
   if (defined(this._bufferViewLoader)) {
@@ -288,9 +293,5 @@ GltfImageLoader.prototype.unload = function () {
   this._gltf = undefined;
 };
 
-/**
- * Exposed for testing
- *
- * @private
- */
+//Exposed for testing
 GltfImageLoader._loadImageFromTypedArray = loadImageFromTypedArray;

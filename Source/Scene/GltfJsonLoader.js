@@ -72,6 +72,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {Promise.<GltfJsonLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -85,6 +86,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -98,6 +100,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {Object}
    * @readonly
+   * @private
    */
   gltf: {
     get: function () {
@@ -108,6 +111,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfJsonLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
@@ -268,6 +272,7 @@ function processGltf(gltfJsonLoader, typedArray) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfJsonLoader.prototype.unload = function () {
   var bufferLoaders = this._bufferLoaders;

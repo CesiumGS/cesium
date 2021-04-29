@@ -24,6 +24,7 @@ var GltfLoaderUtil = {};
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {Object} An object containing a <code>uri</code> and <code>bufferView</code> property.
+ * @private
  */
 GltfLoaderUtil.getImageUriOrBufferView = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -96,6 +97,7 @@ GltfLoaderUtil.getImageUriOrBufferView = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {Number} The image ID.
+ * @private
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -127,6 +129,7 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  * @param {Object} options.textureInfo The texture info object.
  *
  * @returns {Sampler} The sampler.
+ * @private
  */
 GltfLoaderUtil.createSampler = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

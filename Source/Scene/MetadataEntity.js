@@ -12,6 +12,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEntity() {}
 
@@ -37,6 +38,7 @@ Object.defineProperties(MetadataEntity.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  */
 MetadataEntity.prototype.hasProperty = function (propertyId) {
   DeveloperError.throwInstantiationError();
@@ -47,6 +49,7 @@ MetadataEntity.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  */
 MetadataEntity.prototype.getPropertyIds = function (results) {
   DeveloperError.throwInstantiationError();
@@ -60,6 +63,7 @@ MetadataEntity.prototype.getPropertyIds = function (results) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 MetadataEntity.prototype.getProperty = function (propertyId) {
   DeveloperError.throwInstantiationError();
@@ -74,6 +78,7 @@ MetadataEntity.prototype.getProperty = function (propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 MetadataEntity.prototype.setProperty = function (propertyId, value) {
   DeveloperError.throwInstantiationError();
@@ -84,6 +89,7 @@ MetadataEntity.prototype.setProperty = function (propertyId, value) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
   DeveloperError.throwInstantiationError();
@@ -95,6 +101,7 @@ MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
   DeveloperError.throwInstantiationError();

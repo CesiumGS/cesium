@@ -24,6 +24,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @exception {DeveloperError} One of options.schema and options.resource must be defined.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -59,6 +60,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @type {Promise.<MetadataSchemaLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -72,6 +74,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -85,6 +88,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @type {MetadataSchema}
    * @readonly
+   * @private
    */
   schema: {
     get: function () {
@@ -95,6 +99,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 MetadataSchemaLoader.prototype.load = function () {
   if (defined(this._schema)) {
@@ -130,6 +135,7 @@ function loadExternalSchema(schemaLoader) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 MetadataSchemaLoader.prototype.unload = function () {
   this._schema = undefined;

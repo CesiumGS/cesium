@@ -20,6 +20,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ImplicitTileset(tileset, baseResource, tileJson) {
   var extension = tileJson.extensions["3DTILES_implicit_tiling"];

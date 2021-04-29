@@ -124,6 +124,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    *
    * @type {Promise.<GltfVertexBufferLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -137,6 +138,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -150,6 +152,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    *
    * @type {Buffer}
    * @readonly
+   * @private
    */
   vertexBuffer: {
     get: function () {
@@ -163,6 +166,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    *
    * @type {ModelComponents.Quantization}
    * @readonly
+   * @private
    */
   quantization: {
     get: function () {
@@ -173,6 +177,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfVertexBufferLoader.prototype.load = function () {
   if (defined(this._draco)) {
@@ -331,6 +336,7 @@ var scratchVertexBufferJob = new CreateVertexBufferJob();
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
  */
 GltfVertexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -373,8 +379,10 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
   this._state = ResourceLoaderState.READY;
   this._promise.resolve(this);
 };
+
 /**
  * Unloads the resource.
+ * @private
  */
 GltfVertexBufferLoader.prototype.unload = function () {
   if (defined(this._vertexBuffer)) {

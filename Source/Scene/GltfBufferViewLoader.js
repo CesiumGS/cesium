@@ -73,6 +73,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @type {Promise.<GltfBufferViewLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -86,6 +87,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -99,6 +101,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @type {Uint8Array}
    * @readonly
+   * @private
    */
   typedArray: {
     get: function () {
@@ -109,6 +112,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfBufferViewLoader.prototype.load = function () {
   var bufferLoader = getBufferLoader(this);
@@ -167,6 +171,7 @@ function getBufferLoader(bufferViewLoader) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfBufferViewLoader.prototype.unload = function () {
   if (defined(this._bufferLoader)) {

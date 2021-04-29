@@ -30,6 +30,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @param {Number} options.y The y coordinate of the tile
  * @param {Number} [options.z] The z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);

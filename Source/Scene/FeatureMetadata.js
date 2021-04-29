@@ -19,6 +19,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function FeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -101,6 +102,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
  *
  * @param {String} featureTableId The feature table ID.
  * @returns {FeatureTable} The feature table.
+ * @private
  */
 FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
   //>>includeStart('debug', pragmas.debug);
@@ -115,6 +117,7 @@ FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
  *
  * @param {String} featureTextureId The feature texture ID.
  * @returns {FeatureTexture} The feature texture.
+ * @private
  */
 FeatureMetadata.prototype.getFeatureTexture = function (featureTextureId) {
   //>>includeStart('debug', pragmas.debug);

@@ -70,6 +70,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    *
    * @type {Promise.<GltfDracoLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -83,6 +84,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -96,6 +98,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    *
    * @type {Object}
    * @readonly
+   * @private
    */
   decodedData: {
     get: function () {
@@ -106,6 +109,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfDracoLoader.prototype.load = function () {
   var resourceCache = this._resourceCache;
@@ -149,6 +153,7 @@ function handleError(dracoLoader, error) {
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
  */
 GltfDracoLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -212,6 +217,7 @@ GltfDracoLoader.prototype.process = function (frameState) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfDracoLoader.prototype.unload = function () {
   if (defined(this._bufferViewLoader)) {

@@ -543,6 +543,7 @@ BatchTexture.prototype.isDestroyed = function () {
  * e = e && e.destroy();
  *
  * @see BatchTexture#isDestroyed
+ * @private
  */
 BatchTexture.prototype.destroy = function () {
   this._batchTexture = this._batchTexture && this._batchTexture.destroy();

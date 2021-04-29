@@ -31,6 +31,7 @@ import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
  * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
  * @param {Number} [byteOffset=0] The offset into the array buffer
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function Implicit3DTileContent(
   tileset,

@@ -46,6 +46,7 @@ function CacheEntry(resourceLoader) {
  * @param {String} cacheKey The cache key of the resource.
  *
  * @returns {ResourceLoader|undefined} The resource.
+ * @private
  */
 ResourceCache.get = function (cacheKey) {
   //>>includeStart('debug', pragmas.debug);
@@ -66,7 +67,8 @@ ResourceCache.get = function (cacheKey) {
  * @param {Object} options Object with the following properties:
  * @param {ResourceLoader} options.resourceLoader The resource.
  *
- * @exception {DeveloperError} Resource with this cacheKey is already in the cache.
+ * @exception {DeveloperError} Resource with this cacheKey is already in the cach
+ * @private
  */
 ResourceCache.load = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -101,6 +103,7 @@ ResourceCache.load = function (options) {
  *
  * @exception {DeveloperError} Resource is not in the cache.
  * @exception {DeveloperError} Cannot unload resource that has no references.
+ * @private
  */
 ResourceCache.unload = function (resourceLoader) {
   //>>includeStart('debug', pragmas.debug);
@@ -134,6 +137,7 @@ ResourceCache.unload = function (resourceLoader) {
  * @returns {MetadataSchemaLoader} The schema resource.
  *
  * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ * @private
  */
 ResourceCache.loadSchema = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -180,6 +184,7 @@ ResourceCache.loadSchema = function (options) {
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
  *
  * @returns {BufferLoader} The buffer loader.
+ * @private
  */
 ResourceCache.loadEmbeddedBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -225,6 +230,7 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
  *
  * @returns {BufferLoader} The buffer loader.
+ * @private
  */
 ResourceCache.loadExternalBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -264,6 +270,7 @@ ResourceCache.loadExternalBuffer = function (options) {
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
  *
  * @returns {GltfJsonLoader} The glTF JSON.
+ * @private
  */
 ResourceCache.loadGltfJson = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -310,6 +317,7 @@ ResourceCache.loadGltfJson = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {GltfBufferViewLoader} The buffer view loader.
+ * @private
  */
 ResourceCache.loadBufferView = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -363,6 +371,7 @@ ResourceCache.loadBufferView = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {GltfDracoLoader} The Draco loader.
+ * @private
  */
 ResourceCache.loadDraco = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -424,6 +433,7 @@ ResourceCache.loadDraco = function (options) {
  * @exception {DeveloperError} When options.draco is defined options.dracoAccessorId must also be defined.
  *
  * @returns {GltfVertexBufferLoader} The vertex buffer loader.
+ * @private
  */
 ResourceCache.loadVertexBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -520,6 +530,7 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @returns {GltfIndexBufferLoader} The index buffer loader.
+ * @private
  */
 ResourceCache.loadIndexBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -579,6 +590,7 @@ ResourceCache.loadIndexBuffer = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {GltfImageLoader} The image loader.
+ * @private
  */
 ResourceCache.loadImage = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -638,6 +650,7 @@ ResourceCache.loadImage = function (options) {
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @returns {GltfTextureLoader} The texture loader.
+ * @private
  */
 ResourceCache.loadTexture = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

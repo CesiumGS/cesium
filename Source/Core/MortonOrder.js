@@ -7,6 +7,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see {@link https://en.wikipedia.org/wiki/Z-order_curve}
  *
  * @namespace MortonOrder
+ * @private
  */
 var MortonOrder = {};
 
@@ -24,6 +25,7 @@ var MortonOrder = {};
  * @param {Number} v A 16-bit unsigned integer.
  * @returns {Number} A 32-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
+ * @private
  */
 function insertOneSpacing(v) {
   v = (v ^ (v << 8)) & 0x00ff00ff;
@@ -111,6 +113,7 @@ function removeTwoSpacing(v) {
  * @param {Number} x The X coordinate in the range [0, (2^16)-1].
  * @param {Number} y The Y coordinate in the range [0, (2^16)-1].
  * @returns {Number} The Morton index.
+ * @private
  */
 MortonOrder.encode2D = function (x, y) {
   //>>includeStart('debug', pragmas.debug);
@@ -135,6 +138,7 @@ MortonOrder.encode2D = function (x, y) {
  * @param {Number} mortonIndex The Morton index in the range [0, (2^32)-1].
  * @param {Number[]} [result] The array onto which to store the result.
  * @returns {Number[]} An array containing the 2D coordinates correspoding to the Morton index.
+ * @private
  */
 MortonOrder.decode2D = function (mortonIndex, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -161,6 +165,7 @@ MortonOrder.decode2D = function (mortonIndex, result) {
  * @param {Number} y The Y coordinate in the range [0, (2^10)-1].
  * @param {Number} z The Z coordinate in the range [0, (2^10)-1].
  * @returns {Number} The Morton index.
+ * @private
  */
 MortonOrder.encode3D = function (x, y, z) {
   //>>includeStart('debug', pragmas.debug);
@@ -185,7 +190,8 @@ MortonOrder.encode3D = function (x, y, z) {
  *
  * @param {Number} mortonIndex The Morton index in the range [0, (2^30)-1].
  * @param {Number[]} [result] The array onto which to store the result.
- * @returns {Number[]} An array containing the 3D coordinates correspoding to the Morton index.
+ * @returns {Number[]} An array containing the 3D coordinates corresponding to the Morton index.
+ * @private
  */
 MortonOrder.decode3D = function (mortonIndex, result) {
   //>>includeStart('debug', pragmas.debug);

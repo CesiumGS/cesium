@@ -12,6 +12,8 @@ import MetadataType from "./MetadataType.js";
  *
  * @alias MetadataEnum
  * @constructor
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEnum(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -54,6 +56,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {MetadataEnumValue[]}
    * @readonly
+   * @private
    */
   values: {
     get: function () {
@@ -112,6 +115,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   id: {
     get: function () {
@@ -125,6 +129,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   name: {
     get: function () {
@@ -138,6 +143,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   description: {
     get: function () {
@@ -151,6 +157,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {*}
    * @readonly
+   * @private
    */
   extras: {
     get: function () {
@@ -164,6 +171,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   extensions: {
     get: function () {

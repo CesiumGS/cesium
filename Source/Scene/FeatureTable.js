@@ -27,6 +27,7 @@ import defined from "../Core/defined.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function FeatureTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -110,6 +111,7 @@ Object.defineProperties(FeatureTable.prototype, {
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  */
 FeatureTable.prototype.hasProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
@@ -149,6 +151,7 @@ var scratchResults = [];
  * @param {Number} index The index of the feature.
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  */
 FeatureTable.prototype.getPropertyIds = function (index, results) {
   results = defined(results) ? results : [];
@@ -188,6 +191,7 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 FeatureTable.prototype.getProperty = function (index, propertyId) {
   var result;
@@ -225,6 +229,7 @@ FeatureTable.prototype.getProperty = function (index, propertyId) {
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 FeatureTable.prototype.setProperty = function (index, propertyId, value) {
   if (
@@ -253,6 +258,7 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
   if (defined(this._metadataTable)) {
@@ -269,6 +275,7 @@ FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 FeatureTable.prototype.setPropertyBySemantic = function (
   index,

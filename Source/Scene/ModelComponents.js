@@ -24,6 +24,7 @@ function Quantization() {
    * Whether the quantized attribute is oct-encoded.
    *
    * @type {Boolean}
+   * @private
    */
   this.octEncoded = false;
 
@@ -32,6 +33,7 @@ function Quantization() {
    * This is typically computed as (1 << quantizationBits) - 1
    *
    * @type {Number}
+   * @private
    */
   this.normalizationRange = undefined;
 
@@ -39,6 +41,7 @@ function Quantization() {
    * The bottom-left corner of the quantization volume. Not applicable for oct encoded attributes.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
    */
   this.quantizedVolumeOffset = undefined;
 
@@ -46,6 +49,7 @@ function Quantization() {
    * The dimensions of the quantization volume. Not applicable for oct encoded attributes.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
    */
   this.quantizedVolumeDimensions = undefined;
 
@@ -53,6 +57,7 @@ function Quantization() {
    * The component data type of the quantized attribute, e.g. ComponentDatatype.UNSIGNED_SHORT.
    *
    * @type {ComponentDatatype}
+   * @private
    */
   this.componentDatatype = undefined;
 
@@ -60,6 +65,7 @@ function Quantization() {
    * The type of the quantized attribute, e.g. AttributeType.VEC2 for oct-encoded normals.
    *
    * @type {AttributeType}
+   * @private
    */
   this.type = undefined;
 }
@@ -92,6 +98,7 @@ function Attribute() {
    * </ul>
    *
    * @type {String}
+   * @private
    */
   this.semantic = undefined;
 
@@ -99,6 +106,7 @@ function Attribute() {
    * The component data type of the attribute, e.g. ComponentDatatype.FLOAT.
    *
    * @type {ComponentDatatype}
+   * @private
    */
   this.componentDatatype = undefined;
 
@@ -106,6 +114,7 @@ function Attribute() {
    * The type of the attribute, e.g. AttributeType.VEC3.
    *
    * @type {AttributeType}
+   * @private
    */
   this.type = undefined;
 
@@ -114,6 +123,7 @@ function Attribute() {
    *
    * @type {Boolean}
    * @default false
+   * @private
    */
   this.normalized = false;
 
@@ -121,6 +131,7 @@ function Attribute() {
    * The number of elements.
    *
    * @type {Number}
+   * @private
    */
   this.count = undefined;
 
@@ -128,6 +139,7 @@ function Attribute() {
    * Minimum value of each component in the attribute.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
    */
   this.min = undefined;
 
@@ -135,6 +147,7 @@ function Attribute() {
    * Maximum value of each component in the attribute.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
    */
   this.max = undefined;
 
@@ -142,14 +155,15 @@ function Attribute() {
    * A constant value used for all elements when typed array and buffer are undefined.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
    */
   this.constant = undefined;
 
   /**
    * Information about the quantized attribute.
    *
-   * @alias ModelComponents.Quantization
-   * @constructor
+   * @type {ModelComponents.Quantization}
+   * @private
    */
   this.quantization = undefined;
 
@@ -157,6 +171,7 @@ function Attribute() {
    * A typed array containing tightly-packed attribute values.
    *
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
+   * @private
    */
   this.typedArray = undefined;
 
@@ -164,6 +179,7 @@ function Attribute() {
    * A vertex buffer containing attribute values. Attribute values are accessed using byteOffset and byteStride.
    *
    * @type {Buffer}
+   * @private
    */
   this.buffer = undefined;
 
@@ -172,6 +188,7 @@ function Attribute() {
    *
    * @type {Number}
    * @default 0
+   * @private
    */
   this.byteOffset = 0;
 
@@ -179,6 +196,7 @@ function Attribute() {
    * The byte stride of elements in the buffer. When undefined the elements are tightly packed.
    *
    * @type {Number}
+   * @private
    */
   this.byteStride = undefined;
 }
@@ -196,6 +214,7 @@ function Indices() {
    * The index data type of the attribute, e.g. IndexDatatype.UNSIGNED_SHORT.
    *
    * @type {IndexDatatype}
+   * @private
    */
   this.indexDatatype = undefined;
 
@@ -203,6 +222,7 @@ function Indices() {
    * The number of indices.
    *
    * @type {Number}
+   * @private
    */
   this.count = undefined;
 
@@ -210,6 +230,7 @@ function Indices() {
    * An index buffer containing indices.
    *
    * @type {Buffer}
+   * @private
    */
   this.buffer = undefined;
 }
@@ -228,6 +249,7 @@ function FeatureIdAttribute() {
    * The ID of the feature table that feature IDs index into.
    *
    * @type {String}
+   * @private
    */
   this.featureTableId = undefined;
 
@@ -235,6 +257,7 @@ function FeatureIdAttribute() {
    * The semantic of the attribute containing feature IDs, e.g. "_FEATURE_ID_0".
    *
    * @type {String}
+   * @private
    */
   this.semantic = undefined;
 
@@ -243,6 +266,7 @@ function FeatureIdAttribute() {
    *
    * @type {Number}
    * @default 0
+   * @private
    */
   this.constant = 0;
 
@@ -251,6 +275,7 @@ function FeatureIdAttribute() {
    *
    * @type {Number}
    * @default 0
+   * @private
    */
   this.divisor = 0;
 }
@@ -268,6 +293,7 @@ function FeatureIdTexture() {
    * The ID of the feature table that feature IDs index into.
    *
    * @type {String}
+   * @private
    */
   this.featureTableId = undefined;
 
@@ -275,6 +301,7 @@ function FeatureIdTexture() {
    * The texture channel containing feature IDs, may be "r", "g", "b", or "a".
    *
    * @type {String}
+   * @private
    */
   this.channel = undefined;
 
@@ -282,6 +309,7 @@ function FeatureIdTexture() {
    * The texture containing feature IDs.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.texture = undefined;
 }
@@ -299,6 +327,7 @@ function MorphTarget() {
    * Attributes that are part of the morph target, e.g. positions, normals, and tangents.
    *
    * @type {ModelComponents.Attribute[]}
+   * @private
    */
   this.attributes = [];
 }
@@ -316,6 +345,7 @@ function Primitive() {
    * The vertex attributes, e.g. positions, normals, etc.
    *
    * @type {ModelComponents.Attribute[]}
+   * @private
    */
   this.attributes = [];
 
@@ -323,6 +353,7 @@ function Primitive() {
    * The morph targets.
    *
    * @type {ModelComponents.MorphTarget[]}
+   * @private
    */
   this.morphTargets = [];
 
@@ -330,6 +361,7 @@ function Primitive() {
    * An array of weights to be applied to morph targets.
    *
    * @type {Number[]}
+   * @private
    */
   this.morphWeights = [];
 
@@ -337,6 +369,7 @@ function Primitive() {
    * The indices.
    *
    * @type {ModelComponents.Indices}
+   * @private
    */
   this.indices = undefined;
 
@@ -344,6 +377,7 @@ function Primitive() {
    * The material.
    *
    * @type {ModelComponents.Material}
+   * @private
    */
   this.material = undefined;
 
@@ -351,6 +385,7 @@ function Primitive() {
    * The primitive type, e.g. PrimitiveType.TRIANGLES.
    *
    * @type {PrimitiveType}
+   * @private
    */
   this.primitiveType = undefined;
 
@@ -358,6 +393,7 @@ function Primitive() {
    * The feature ID attributes.
    *
    * @type {ModelComponents.FeatureIdAttribute[]}
+   * @private
    */
   this.featureIdAttributes = [];
 
@@ -365,6 +401,7 @@ function Primitive() {
    * The feature ID textures.
    *
    * @type {ModelComponents.FeatureIdTexture[]}
+   * @private
    */
   this.featureIdTextures = [];
 
@@ -372,6 +409,7 @@ function Primitive() {
    * The feature texture IDs.
    *
    * @type {String[]}
+   * @private
    */
   this.featureTextureIds = [];
 }
@@ -389,6 +427,7 @@ function Instances() {
    * The instance attributes, e.g. translation, rotation, scale, feature id, etc.
    *
    * @type {ModelComponents.Attribute[]}
+   * @private
    */
   this.attributes = [];
 
@@ -396,6 +435,7 @@ function Instances() {
    * The feature ID attributes.
    *
    * @type {ModelComponents.FeatureIdAttribute[]}
+   * @private
    */
   this.featureIdAttributes = [];
 }
@@ -413,6 +453,7 @@ function Skin() {
    * The joints.
    *
    * @type {ModelComponents.Node[]}
+   * @private
    */
   this.joints = undefined;
 
@@ -420,6 +461,7 @@ function Skin() {
    * The inverse bind matrices of the joints.
    *
    * @type {Matrix4[]}
+   * @private
    */
   this.inverseBindMatrices = undefined;
 }
@@ -437,6 +479,7 @@ function Node() {
    * The children nodes.
    *
    * @type {ModelComponents.Node[]}
+   * @private
    */
   this.children = [];
 
@@ -444,6 +487,7 @@ function Node() {
    * The mesh primitives.
    *
    * @type {ModelComponents.Primitive[]}
+   * @private
    */
   this.primitives = [];
 
@@ -451,6 +495,7 @@ function Node() {
    * Instances of this node.
    *
    * @type {ModelComponents.Instances}
+   * @private
    */
   this.instances = undefined;
 
@@ -458,6 +503,7 @@ function Node() {
    * The skin.
    *
    * @type {ModelComponents.Skin}
+   * @private
    */
   this.skin = undefined;
 
@@ -467,6 +513,7 @@ function Node() {
    * translation, rotation, and scale must all be defined.
    *
    * @type {Matrix4}
+   * @private
    */
   this.matrix = undefined;
 
@@ -474,6 +521,7 @@ function Node() {
    * The local translation.
    *
    * @type {Cartesian3}
+   * @private
    */
   this.translation = undefined;
 
@@ -481,6 +529,7 @@ function Node() {
    * The local rotation.
    *
    * @type {Quaternion}
+   * @private
    */
   this.rotation = undefined;
 
@@ -488,6 +537,7 @@ function Node() {
    * The local scale.
    *
    * @type {Cartesian3}
+   * @private
    */
   this.scale = undefined;
 }
@@ -505,6 +555,7 @@ function Scene() {
    * The nodes belonging to the scene.
    *
    * @type {ModelComponents.Node[]}
+   * @private
    */
   this.nodes = [];
 }
@@ -522,6 +573,7 @@ function Components() {
    * The default scene.
    *
    * @type {ModelComponents.Scene}
+   * @private
    */
   this.scene = undefined;
 
@@ -536,6 +588,7 @@ function Components() {
    * Feature metadata containing the schema, feature tables, and feature textures.
    *
    * @type {FeatureMetadata}
+   * @private
    */
   this.featureMetadata = undefined;
 }
@@ -553,6 +606,7 @@ function Texture() {
    * The underlying GPU texture.
    *
    * @type {Texture}
+   * @private
    */
   this.texture = undefined;
 
@@ -561,6 +615,7 @@ function Texture() {
    *
    * @type {Number}
    * @default 0
+   * @private
    */
   this.texCoord = 0;
 
@@ -568,6 +623,7 @@ function Texture() {
    * The sampler.
    *
    * @type {Sampler}
+   * @private
    */
   this.sampler = undefined;
 }
@@ -585,6 +641,7 @@ function MetallicRoughness() {
    * The base color texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.baseColorTexture = undefined;
 
@@ -592,6 +649,7 @@ function MetallicRoughness() {
    * The metallic roughness texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.metallicRoughnessTexture = undefined;
 
@@ -600,6 +658,7 @@ function MetallicRoughness() {
    *
    * @type {Cartesian4}
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
+   * @private
    */
   this.baseColorFactor = new Cartesian4(1.0, 1.0, 1.0, 1.0);
 
@@ -608,6 +667,7 @@ function MetallicRoughness() {
    *
    * @type {Number}
    * @default 1.0
+   * @private
    */
   this.metallicFactor = 1.0;
 
@@ -616,6 +676,7 @@ function MetallicRoughness() {
    *
    * @type {Number}
    * @default 1.0
+   * @private
    */
   this.roughnessFactor = 1.0;
 }
@@ -633,6 +694,7 @@ function SpecularGlossiness() {
    * The diffuse texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.diffuseTexture = undefined;
 
@@ -640,6 +702,7 @@ function SpecularGlossiness() {
    * The specular glossiness texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.specularGlossinessTexture = undefined;
 
@@ -648,6 +711,7 @@ function SpecularGlossiness() {
    *
    * @type {Cartesian4}
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
+   * @private
    */
   this.diffuseFactor = new Cartesian4(1.0, 1.0, 1.0, 1.0);
 
@@ -656,6 +720,7 @@ function SpecularGlossiness() {
    *
    * @type {Cartesian3}
    * @default new Cartesian3(1.0, 1.0, 1.0, 1.0)
+   * @private
    */
   this.specularFactor = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -664,6 +729,7 @@ function SpecularGlossiness() {
    *
    * @type {Number}
    * @default 1.0
+   * @private
    */
   this.glossinessFactor = 1.0;
 }
@@ -681,6 +747,7 @@ function Material() {
    * Material properties for the PBR metallic roughness shading model.
    *
    * @type {ModelComponents.MetallicRoughness}
+   * @private
    */
   this.metallicRoughness = undefined;
 
@@ -688,6 +755,7 @@ function Material() {
    * Material properties for the PBR specular glossiness shading model.
    *
    * @type {ModelComponents.SpecularGlossiness}
+   * @private
    */
   this.specularGlossiness = undefined;
 
@@ -695,6 +763,7 @@ function Material() {
    * The emissive texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.emissiveTexture = undefined;
 
@@ -702,6 +771,7 @@ function Material() {
    * The normal texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.normalTexture = undefined;
 
@@ -709,6 +779,7 @@ function Material() {
    * The occlusion texture.
    *
    * @type {ModelComponents.Texture}
+   * @private
    */
   this.occlusionTexture = undefined;
 
@@ -717,6 +788,7 @@ function Material() {
    *
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
+   * @private
    */
   this.emissiveFactor = new Cartesian3(0.0, 0.0, 0.0);
 
@@ -725,6 +797,7 @@ function Material() {
    *
    * @type {AlphaMode}
    * @default AlphaMode.OPAQUE
+   * @private
    */
   this.alphaMode = AlphaMode.OPAQUE;
 
@@ -733,6 +806,7 @@ function Material() {
    *
    * @type {Number}
    * @default 0.5
+   * @private
    */
   this.alphaCutoff = 0.5;
 
@@ -741,6 +815,7 @@ function Material() {
    *
    * @type {Boolean}
    * @default false
+   * @private
    */
   this.doubleSided = false;
 
@@ -749,6 +824,7 @@ function Material() {
    *
    * @type {Boolean}
    * @default false
+   * @private
    */
   this.unlit = false;
 }
