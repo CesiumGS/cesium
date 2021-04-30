@@ -1,9 +1,10 @@
+import arraySlice from "../Core/arraySlice.js";
 import defined from "../Core/defined.js";
-import getUint64FromDataView from "../Core/getUint64FromDataView.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core/VulkanConstants.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
+import { read } from "../ThirdParty/Workers/ktx-parse.modern.js";
 
 var fileIdentifier = [
   0xab, // '«'
@@ -29,13 +30,7 @@ var faceOrder = [
   "negativeZ",
 ];
 
-// For iteration
-var sizeOfUint8 = 1;
-var sizeOfUint16 = 2;
-var sizeOfUint32 = 4;
-var sizeOfUint64 = 8;
-
-// // Flags
+// Flags
 var colorModelETC1S = 163;
 var colorModelUASTC = 166;
 
@@ -70,115 +65,23 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
     throw new RuntimeError("Invalid KTX2 file.");
   }
 
-  var view;
-  var byteOffset;
-
-  if (defined(data.buffer)) {
-    view = new DataView(data.buffer);
-    byteOffset = data.byteOffset;
-  } else {
-    view = new DataView(data);
-    byteOffset = 0;
-  }
-
-  byteOffset += 12; // skip identifier
-
-  // Header
-  var header = {
-    vkFormat: view.getUint32(byteOffset, true),
-    typeSize: view.getUint32((byteOffset += sizeOfUint32), true),
-    pixelWidth: view.getUint32((byteOffset += sizeOfUint32), true),
-    pixelHeight: view.getUint32((byteOffset += sizeOfUint32), true),
-    pixelDepth: view.getUint32((byteOffset += sizeOfUint32), true),
-    layerCount: view.getUint32((byteOffset += sizeOfUint32), true),
-    faceCount: view.getUint32((byteOffset += sizeOfUint32), true),
-    levelCount: view.getUint32((byteOffset += sizeOfUint32), true),
-    supercompressionScheme: view.getUint32((byteOffset += sizeOfUint32), true),
-  };
-
-  byteOffset += sizeOfUint32;
-
-  // 1 -- Index
-  var dfdByteOffset = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  // var dfdByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  // var kvdByteOffset = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  // var kvdByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  var sgdByteOffset = getUint64FromDataView(view, byteOffset, true);
-  byteOffset += sizeOfUint64;
-  var sgdByteLength = getUint64FromDataView(view, byteOffset, true);
-  byteOffset += sizeOfUint64;
-  var sgdIndex = {
-    byteOffset: sgdByteOffset,
-    byteLength: sgdByteLength,
-  };
-
-  // 2 -- Level Index
-  var levelIndex = [];
-  for (var l = 0; l < header.levelCount; l++) {
-    var levelByteOffset = getUint64FromDataView(view, byteOffset, true);
-    byteOffset += sizeOfUint64;
-    var levelByteLength = getUint64FromDataView(view, byteOffset, true);
-    byteOffset += sizeOfUint64;
-    var levelUncompressedByteLength = getUint64FromDataView(
-      view,
-      byteOffset,
-      true
-    );
-    byteOffset += sizeOfUint64;
-
-    levelIndex.push({
-      byteOffset: levelByteOffset,
-      byteLength: levelByteLength,
-      uncompressedByteLength: levelUncompressedByteLength,
-    });
-  }
-
-  // 3 -- Data Format Descriptors (DFD)
-  // http://github.khronos.org/KTX-Specification/#_dfd_for_supercompressed_data
-  byteOffset = defined(data.buffer)
-    ? data.byteOffset + dfdByteOffset
-    : dfdByteOffset;
-  var dfd = {
-    totalSize: view.getUint32(byteOffset, true),
-    vendorId: view.getUint16((byteOffset += sizeOfUint32), true), // Should be reading 'UInt17', but it's zero anyway for KTX2
-    descriptorType: view.getUint16((byteOffset += sizeOfUint16 + 1), true),
-    versionNumber: view.getUint16((byteOffset += sizeOfUint16 - 1), true),
-    descriptorBlockSize: view.getUint16((byteOffset += sizeOfUint16), true),
-    colorModel: view.getUint8((byteOffset += sizeOfUint16), true),
-    colorPrimaries: view.getUint8((byteOffset += sizeOfUint8), true),
-    transferFunction: view.getUint8((byteOffset += sizeOfUint8), true),
-    flags: view.getUint8((byteOffset += sizeOfUint8), true),
-    texelBlockDimension: {
-      x: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
-      y: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
-      z: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
-      w: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
-    },
-    bytesPlane0: view.getUint8((byteOffset += sizeOfUint8), true),
-    numSamples: 0,
-    samples: [],
-  };
-
   // Get Texture Based on Format
+  var header = read(data);
+  var dfd = header.dataFormatDescriptor[0];
+
   var result = new Array(header.levelCount);
+
   if (
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8_SRGB ||
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB ||
     header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
   ) {
-    parseUncompressed(data, header, levelIndex, result);
+    parseUncompressed(header, result);
   } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) {
     // Compressed, initialize transcoder module
     transcodeEtc1s(
       data,
-      view,
       header,
-      levelIndex,
-      sgdIndex,
       supportedTargetFormats,
       transcoderModule,
       result
@@ -201,7 +104,7 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
 }
 
 // Parser for uncompressed
-function parseUncompressed(data, header, levelIndex, result) {
+function parseUncompressed(header, result) {
   var internalFormat =
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB
       ? PixelFormat.RGBA
@@ -210,11 +113,10 @@ function parseUncompressed(data, header, levelIndex, result) {
     header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
       ? WebGLConstants.R11F_G11F_B10F
       : internalFormat;
-  var dataBuffer = defined(data.buffer) ? data.buffer : data;
 
-  for (var i = 0; i < levelIndex.length; ++i) {
+  for (var i = 0; i < header.levels.length; ++i) {
     var level = (result[i] = {});
-    var levelInfo = levelIndex[i];
+    var levelBuffer = arraySlice(header.levels[i].levelData);
 
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
@@ -225,14 +127,14 @@ function parseUncompressed(data, header, levelIndex, result) {
         width *
         height *
         PixelFormat.componentsLength(internalFormat);
-      var levelOffset = levelInfo.byteOffset + faceLength * j;
-      var levelBuffer = new Uint8Array(dataBuffer, levelOffset, faceLength);
+
+      var faceView = new Uint8Array(levelBuffer.buffer, faceLength * j);
 
       level[faceOrder[j]] = {
         internalFormat: internalFormat,
         width: width,
         height: height,
-        levelBuffer: levelBuffer,
+        levelBuffer: faceView,
       };
     }
   }
@@ -240,10 +142,7 @@ function parseUncompressed(data, header, levelIndex, result) {
 
 function transcodeEtc1s(
   data,
-  view,
   header,
-  levelIndex,
-  sgdIndex,
   supportedTargetFormats,
   transcoderModule,
   result
@@ -299,7 +198,7 @@ function transcodeEtc1s(
   );
   var dst = new Uint8Array(dstSize);
 
-  for (var i = 0; i < levelIndex.length; ++i) {
+  for (var i = 0; i < header.levels.length; ++i) {
     var level = (result[i] = {});
 
     for (var j = 0; j < header.faceCount; ++j) {
