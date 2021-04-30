@@ -95,7 +95,7 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
     levelCount: view.getUint32((byteOffset += sizeOfUint32), true),
     supercompressionScheme: view.getUint32((byteOffset += sizeOfUint32), true),
   };
-  console.table(header);
+
   byteOffset += sizeOfUint32;
 
   // 1 -- Index
