@@ -14,7 +14,7 @@ describe(
     var octahedralMap;
 
     var environmentMapUrl =
-      "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx";
+      "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
     var fsOctahedralMap =
       "uniform sampler2D projectedMap;" +
       "uniform vec2 textureSize;" +
