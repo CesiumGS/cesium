@@ -35,20 +35,20 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
 
   return KTX2Transcoder._readyPromise
     .then(function (taskProcessor) {
+      var parameters;
       if (ktx2Buffer instanceof ArrayBuffer) {
         var view = new Uint8Array(ktx2Buffer);
-        var parameters = {
+        parameters = {
           supportedTargetFormats: supportedTargetFormats,
           ktx2Buffer: view,
         };
         return taskProcessor.scheduleTask(parameters, [ktx2Buffer]);
-      } else {
-        var parameters = {
-          supportedTargetFormats: supportedTargetFormats,
-          ktx2Buffer: ktx2Buffer,
-        };
-        return taskProcessor.scheduleTask(parameters, [ktx2Buffer.buffer]);
       }
+      parameters = {
+        supportedTargetFormats: supportedTargetFormats,
+        ktx2Buffer: ktx2Buffer,
+      };
+      return taskProcessor.scheduleTask(parameters, [ktx2Buffer.buffer]);
     })
     .then(function (result) {
       var levelsLength = result.length;
