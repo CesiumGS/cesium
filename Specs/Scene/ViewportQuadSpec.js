@@ -103,6 +103,19 @@ describe(
       });
     });
 
+    it("updates rectangle", function () {
+      var otherRectangle = new BoundingRectangle(0, 0, 4, 4);
+
+      scene.primitives.add(viewportQuad);
+      scene.renderForSpecs();
+
+      viewportQuad.rectangle = otherRectangle;
+      scene.renderForSpecs();
+      expect(scene.frameState.commandList[0].renderState.viewport).toEqual(
+        otherRectangle
+      );
+    });
+
     it("isDestroyed", function () {
       var boundRectangle = new BoundingRectangle(0, 0, 10, 10);
       var vq = new ViewportQuad(boundRectangle);
