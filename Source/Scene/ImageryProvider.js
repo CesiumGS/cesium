@@ -8,7 +8,7 @@ import Resource from "../Core/Resource.js";
  * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
  * interface and is not intended to be instantiated directly.
  *
- * @alias ImageryProviderMOZ_WEBGL_compressed_texture_s3tc
+ * @alias ImageryProvider
  * @constructor
  * @abstract
  *
