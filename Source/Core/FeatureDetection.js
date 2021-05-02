@@ -181,10 +181,6 @@ function supportsPointerEvents() {
   return hasPointerEvents;
 }
 
-function supportsBasis(context) {
-  return context.etc1 || context.s3tc || context.pvrtc;
-}
-
 var imageRenderingValueResult;
 var supportsImageRenderingPixelatedResult;
 function supportsImageRenderingPixelated() {
@@ -308,10 +304,15 @@ var FeatureDetection = {
   supportsPointerEvents: supportsPointerEvents,
   supportsImageRenderingPixelated: supportsImageRenderingPixelated,
   supportsWebP: supportsWebP,
-  supportsBasis: supportsBasis,
   imageRenderingValue: imageRenderingValue,
   typedArrayTypes: typedArrayTypes,
 };
+
+function supportsBasis(scene) {
+  return FeatureDetection.supportsWebAssembly() && scene.context.supportsBasis;
+}
+
+FeatureDetection.supportsBasis = supportsBasis;
 
 /**
  * Detects whether the current browser supports the full screen standard.

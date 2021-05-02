@@ -370,7 +370,7 @@ describe(
 
     it("creates a material with an ktx compressed image uniform", function () {
       var compressedUrl;
-      if (FeatureDetection.supportsBasis) {
+      if (FeatureDetection.supportsBasis(scene)) {
         compressedUrl = "./Data/Images/Green4x4.ktx2";
       } else {
         return;

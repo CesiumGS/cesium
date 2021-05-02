@@ -12,7 +12,6 @@ import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
 import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe(
@@ -431,7 +430,7 @@ describe(
     });
 
     it("draws the expected Basis compressed texture color", function () {
-      if (!context.pvrtc) {
+      if (!context.supportsBasis) {
         return;
       }
 
@@ -1176,7 +1175,7 @@ describe(
     });
 
     it("throws when copying to a texture from the framebuffer with a compressed pixel format", function () {
-      if (FeatureDetection.supportsBasis) {
+      if (context.supportsBasis) {
         texture = new Texture({
           context: context,
           width: greenBasisKTX2Image.width,
@@ -1371,7 +1370,7 @@ describe(
     });
 
     it("throws when copyFrom is given a source with a compressed pixel format", function () {
-      if (FeatureDetection.supportsBasis) {
+      if (context.supportsBasis) {
         texture = new Texture({
           context: context,
           width: greenBasisKTX2Image.width,
@@ -1406,7 +1405,7 @@ describe(
     });
 
     it("throws when generating mipmaps with a compressed pixel format", function () {
-      if (FeatureDetection.supportsBasis) {
+      if (context.supportsBasis) {
         texture = new Texture({
           context: context,
           width: greenBasisKTX2Image.width,

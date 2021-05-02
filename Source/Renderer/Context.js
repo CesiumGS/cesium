@@ -316,6 +316,8 @@ function Context(canvas, options) {
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+  // It is necessary to pass supported formats to loadKTX2
+  // because imagery layers don't have access to the context.
   loadKTX2.setKTX2SupportedFormats(this._etc1, this._s3tc, this._pvrtc);
 
   var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
@@ -753,6 +755,17 @@ Object.defineProperties(Context.prototype, {
   etc1: {
     get: function () {
       return this._etc1;
+    },
+  },
+
+  /**
+   * <code>true</code> if S3TC, PVRTC, or ETC1 compression is supported.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   */
+  supportsBasis: {
+    get: function () {
+      return this._etc1 || this._s3tc || this._pvrtc;
     },
   },
 

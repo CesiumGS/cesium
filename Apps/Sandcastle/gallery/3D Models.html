@@ -39,6 +39,12 @@
           shouldAnimate: true,
         });
 
+        if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
+          window.alert(
+            "This browser does not support the Basis Universal format"
+          );
+        }
+
         function createModel(url, height) {
           viewer.entities.removeAll();
 

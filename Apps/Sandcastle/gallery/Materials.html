@@ -582,6 +582,12 @@
         var viewer = new Cesium.Viewer("cesiumContainer");
         var scene = viewer.scene;
 
+        if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+          window.alert(
+            "This browser does not support the Basis Universal format"
+          );
+        }
+
         createPrimitives(scene);
         createButtons(scene);
         //Sandcastle_End

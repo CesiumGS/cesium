@@ -1950,7 +1950,7 @@ function imageLoad(model, textureId) {
 
 var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
-function parseTextures(model, context, supportsWebP, supportsBasis) {
+function parseTextures(model, context, supportsWebP) {
   var gltf = model.gltf;
   var images = gltf.images;
   var uri;
@@ -1966,7 +1966,7 @@ function parseTextures(model, context, supportsWebP, supportsBasis) {
     } else if (
       defined(texture.extensions) &&
       defined(texture.extensions.KHR_texture_basisu) &&
-      FeatureDetection.supportsBasis
+      context.supportsBasis
     ) {
       imageId = texture.extensions.KHR_texture_basisu.source;
     }
@@ -5110,7 +5110,6 @@ Model.prototype.update = function (frameState) {
   this._defaultTexture = context.defaultTexture;
 
   var supportsWebP = FeatureDetection.supportsWebP();
-  var supportsBasis = FeatureDetection.supportsBasis(context);
 
   if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
     // Use renderer resources from cache instead of loading/creating them?
@@ -5242,7 +5241,7 @@ Model.prototype.update = function (frameState) {
           parseBufferViews(this);
           parseShaders(this);
           parsePrograms(this);
-          parseTextures(this, context, supportsWebP, supportsBasis);
+          parseTextures(this, context, supportsWebP);
         }
         parseMaterials(this);
         parseMeshes(this);

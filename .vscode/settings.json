@@ -17,10 +17,7 @@
         "Source/Shaders/**/*.js": true
     },
     "files.associations": {
-        "*.czml": "json",
-        "array": "cpp",
-        "string": "cpp",
-        "string_view": "cpp"
+        "*.czml": "json"
     },
     "eslint.enable": true,
     "javascript.format.insertSpaceAfterCommaDelimiter": true,
