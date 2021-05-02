@@ -1588,6 +1588,8 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
+      var metadataSchema = mockTilesetWithArrayMetadata.metadata.schema;
+
       var arrayQuadtree = new ImplicitTileset(
         tilesetResource,
         implicitQuadtreeJson,

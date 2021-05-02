@@ -736,6 +736,11 @@ function makeJumpBuffer(subtree) {
  * @private
  */
 ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
+  var localLevel = implicitCoordinates.level - this._implicitCoordinates.level;
+  if (localLevel < 0 || this._subtreeLevels <= localLevel) {
+    throw new RuntimeError("level is out of bounds for this subtree");
+  }
+
   var localCoordinates = implicitCoordinates.deriveLocalTileCoordinates();
   var levelOffset = this.getLevelOffset(localCoordinates.level);
   var mortonIndex = localCoordinates.mortonIndex;
@@ -752,6 +757,11 @@ ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
 ImplicitSubtree.prototype.getChildSubtreeIndex = function (
   implicitCoordinates
 ) {
+  var localLevel = implicitCoordinates.level - this._implicitCoordinates.level;
+  if (localLevel !== this._implicitCoordinates.subtreeLevels) {
+    throw new RuntimeError("level is out of bounds for this subtree");
+  }
+
   var localCoordinates = implicitCoordinates.deriveLocalChildSubtreeCoordinates();
   var mortonIndex = localCoordinates.mortonIndex;
   return mortonIndex;
