@@ -38,7 +38,6 @@ describe("Scene/ImplicitTileset", function () {
   var baseResource = new Resource("https://example.com/tileset.json");
   var contentUriTemplate = new Resource(contentUriPattern);
   var subtreeUriTemplate = new Resource(subtreeUriPattern);
-  var mockTileset = {};
   var metadataSchema; // intentionally left undefined
 
   it("gathers information from both tile JSON and extension", function () {

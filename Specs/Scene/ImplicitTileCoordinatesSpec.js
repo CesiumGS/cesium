@@ -44,7 +44,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   it("constructor throws with invalid inputs", function () {
     // negative level
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
         subtreeLevels: 2,
         level: -1,
@@ -55,7 +55,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // negative x
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
         subtreeLevels: 2,
         level: 0,
@@ -66,7 +66,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // negative y
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
         subtreeLevels: 2,
         level: 0,
@@ -77,7 +77,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // negative z
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
         subtreeLevels: 2,
         level: 0,
@@ -89,7 +89,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // out of range x
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
         subtreeLevels: 2,
         level: 0,
@@ -100,7 +100,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // out of range y
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
         subtreeLevels: 2,
         level: 0,
@@ -111,7 +111,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // out of range z
     expect(function () {
-      new ImplicitTileCoordinates({
+      return new ImplicitTileCoordinates({
         subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
         subtreeLevels: 2,
         level: 0,

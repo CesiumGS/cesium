@@ -74,7 +74,6 @@ describe("Scene/ImplicitSubtree", function () {
   var subtreeResource = new Resource({
     url: "https://example.com/test.subtree",
   });
-  var mockTileset = {};
   var metadataSchema; // intentionally left undefined
 
   var implicitQuadtreeJson = {
@@ -1075,13 +1074,7 @@ describe("Scene/ImplicitSubtree", function () {
       },
     };
 
-    var mockTilesetWithMetadata = {
-      metadata: {
-        schema: new MetadataSchema(schema),
-      },
-    };
-
-    var metadataSchema = mockTilesetWithMetadata.metadata.schema;
+    var metadataSchema = new MetadataSchema(schema);
 
     var metadataQuadtree = new ImplicitTileset(
       tilesetResource,
@@ -1582,13 +1575,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
-      var mockTilesetWithArrayMetadata = {
-        metadata: {
-          schema: new MetadataSchema(arraySchema),
-        },
-      };
-
-      var metadataSchema = mockTilesetWithArrayMetadata.metadata.schema;
+      var metadataSchema = new MetadataSchema(arraySchema);
 
       var arrayQuadtree = new ImplicitTileset(
         tilesetResource,

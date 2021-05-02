@@ -1,6 +1,5 @@
 import {
   Cartesian3,
-  ImplicitSubdivisionScheme,
   ImplicitSubtree,
   ImplicitTileCoordinates,
   ImplicitTileset,
