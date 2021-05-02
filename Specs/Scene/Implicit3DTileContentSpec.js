@@ -29,6 +29,7 @@ describe(
     var mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
     };
+    var metadataSchema; // intentionally left undefined
 
     var tileJson = {
       geometricError: 800,
@@ -58,9 +59,9 @@ describe(
     };
 
     var implicitTileset = new ImplicitTileset(
-      mockTileset,
       tilesetResource,
-      tileJson
+      tileJson,
+      metadataSchema
     );
 
     var quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
@@ -85,6 +86,7 @@ describe(
 
     var rootCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
+      subtreeLevels: implicitTileset.subtreeLevels,
       level: 0,
       x: 0,
       y: 0,
@@ -193,6 +195,7 @@ describe(
           var expected = expectedCoordinates[i];
           var coordinates = new ImplicitTileCoordinates({
             subdivisionScheme: implicitTileset.subdivisionScheme,
+            subtreeLevels: implicitTileset.subtreeLevels,
             level: expected[0],
             x: expected[1],
             y: expected[2],
@@ -205,6 +208,7 @@ describe(
     it("handles deeper subtrees correctly", function () {
       mockPlaceholderTile.implicitCoordinates = new ImplicitTileCoordinates({
         subdivisionScheme: implicitTileset.subdivisionScheme,
+        subtreeLevels: implicitTileset.subtreeLevels,
         level: 2,
         x: 2,
         y: 1,
@@ -404,6 +408,7 @@ describe(
           var expected = expectedCoordinates[i];
           var coordinates = new ImplicitTileCoordinates({
             subdivisionScheme: implicitTileset.subdivisionScheme,
+            subtreeLevels: implicitTileset.subtreeLevels,
             level: expected[0],
             x: expected[1],
             y: expected[2],
@@ -449,6 +454,7 @@ describe(
           var expected = expectedCoordinates[i];
           var coordinates = new ImplicitTileCoordinates({
             subdivisionScheme: implicitTileset.subdivisionScheme,
+            subtreeLevels: implicitTileset.subtreeLevels,
             level: expected[0],
             x: expected[1],
             y: expected[2],

@@ -101,6 +101,8 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
   };
 
+  var metadataSchema = mockTilesetWithMetadata.metadata.schema;
+
   var implicitQuadtreeJson = {
     geometricError: 500,
     refine: "ADD",
@@ -123,20 +125,22 @@ describe("Scene/ImplicitTileMetadata", function () {
   };
 
   var metadataQuadtree = new ImplicitTileset(
-    mockTilesetWithMetadata,
     tilesetResource,
-    implicitQuadtreeJson
+    implicitQuadtreeJson,
+    metadataSchema
   );
 
   var rootCoordinates = new ImplicitTileCoordinates({
-    subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+    subdivisionScheme: metadataQuadtree.subdivisionScheme,
+    subtreeLevels: metadataQuadtree.subtreeLevels,
     x: 0,
     y: 0,
     level: 0,
   });
 
   var implicitCoordinates = new ImplicitTileCoordinates({
-    subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+    subdivisionScheme: metadataQuadtree.subdivisionScheme,
+    subtreeLevels: metadataQuadtree.subtreeLevels,
     x: 0,
     y: 1,
     level: 1,

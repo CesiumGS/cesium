@@ -926,7 +926,7 @@ function Cesium3DTileset(options) {
    * If the 3DTILES_metadata extension is used, this stores
    * a {@link Cesium3DTilesetMetadata} object to access metadata.
    *
-   * @type {Cesium3DTilesetMetadata}
+   * @type {Cesium3DTilesetMetadata|undefined}
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -1815,13 +1815,18 @@ Cesium3DTileset.prototype.loadTileset = function (
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
   if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+    var metadataSchema = defined(tileset.metadata)
+      ? tileset.metadata.schema
+      : undefined;
+
     var implicitTileset = new ImplicitTileset(
-      tileset,
       baseResource,
-      tileHeader
+      tileHeader,
+      metadataSchema
     );
     var rootCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
+      subtreeLevels: implicitTileset.subtreeLevels,
       level: 0,
       x: 0,
       y: 0,

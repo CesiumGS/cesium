@@ -250,7 +250,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
 
     for (var j = 0; j < branchingFactor; j++) {
       var index = i * branchingFactor + j;
-      if (subtree.childSubtreeIsAvailable(index)) {
+      if (subtree.childSubtreeIsAvailableAtIndex(index)) {
         results.push({
           tile: leafTile,
           childIndex: j,
@@ -312,7 +312,7 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
     ) {
       var childBitIndex = levelOffset + childMortonIndex;
 
-      if (!subtree.tileIsAvailable(childBitIndex)) {
+      if (!subtree.tileIsAvailableAtIndex(childBitIndex)) {
         currentRow.push(undefined);
         continue;
       }

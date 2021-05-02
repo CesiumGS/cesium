@@ -81,7 +81,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When the 3DTILES_metadata extension is used, this property stores
+   * When the <code>3DTILES_metadata</code> extension is used, this property stores
    * a {@link MetadataTable} instance
    *
    * @type {MetadataTable}
@@ -108,17 +108,44 @@ Object.defineProperties(ImplicitSubtree.prototype, {
       return this._metadataExtension;
     },
   },
+
+  /**
+   * Gets the implicit tile coordinates for the root of the subtree.
+   *
+   * @type {ImplicitTileCoordinates}
+   * @readonly
+   * @private
+   */
+  implicitCoordinates: {
+    get: function () {
+      return this._implicitCoordinates;
+    },
+  },
 });
 
 /**
- * Check if a specific tile is available
+ * Check if a specific tile is available at an index
  *
  * @param {Number} index the index of the desired tile
  * @returns {Boolean} the value of the i-th bit
  * @private
  */
-ImplicitSubtree.prototype.tileIsAvailable = function (index) {
+ImplicitSubtree.prototype.tileIsAvailableAtIndex = function (index) {
   return this._tileAvailability.getBit(index);
+};
+
+/**
+ * Check if a specific tile is available at an implicit tile coordinate
+ *
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of a tile
+ * @returns {Boolean} the value of the i-th bit
+ * @private
+ */
+ImplicitSubtree.prototype.tileIsAvailableAtCoordinates = function (
+  implicitCoordinates
+) {
+  var index = this.getTileIndex(implicitCoordinates);
+  return this.tileIsAvailableAtIndex(index);
 };
 
 /**
@@ -144,14 +171,28 @@ ImplicitSubtree.prototype.contentIsAvailable = function (index, contentIndex) {
 };
 
 /**
- * Check if a child subtree is available
+ * Check if a child subtree is available at an index
  *
  * @param {Number} index the index of the desired child subtree
  * @returns {Boolean} the value of the i-th bit
  * @private
  */
-ImplicitSubtree.prototype.childSubtreeIsAvailable = function (index) {
+ImplicitSubtree.prototype.childSubtreeIsAvailableAtIndex = function (index) {
   return this._childSubtreeAvailability.getBit(index);
+};
+
+/**
+ * Check if a specific child subtree is available at an implicit tile coordinate
+ *
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of a child subtree
+ * @returns {Boolean} the value of the i-th bit
+ * @private
+ */
+ImplicitSubtree.prototype.childSubtreeIsAvailableAtCoordinates = function (
+  implicitCoordinates
+) {
+  var index = this.getChildSubtreeIndex(implicitCoordinates);
+  return this.childSubtreeIsAvailableAtIndex(index);
 };
 
 /**
@@ -641,7 +682,7 @@ function parseMetadataTable(subtree, implicitTileset, bufferViewsU8) {
   var metadataExtension = subtree._metadataExtension;
   var tileCount = subtree._tileAvailability.availableCount;
   var metadataClassName = metadataExtension.class;
-  var metadataSchema = implicitTileset.tileset.metadata.schema;
+  var metadataSchema = implicitTileset.metadataSchema;
   var metadataClass = metadataSchema.classes[metadataClassName];
 
   subtree._metadataTable = new MetadataTable({
@@ -695,20 +736,30 @@ function makeJumpBuffer(subtree) {
  * @private
  */
 ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
-  var localLevel = implicitCoordinates.level - this._implicitCoordinates.level;
-
-  if (localLevel < 0 || this._subtreeLevels <= localLevel) {
-    throw new RuntimeError("level is out of bounds for this subtree");
-  }
-
-  var levelOffset = this.getLevelOffset(localLevel);
-  var mortonIndex = implicitCoordinates.mortonIndex;
+  var localCoordinates = implicitCoordinates.deriveLocalTileCoordinates();
+  var levelOffset = this.getLevelOffset(localCoordinates.level);
+  var mortonIndex = localCoordinates.mortonIndex;
   return levelOffset + mortonIndex;
 };
 
 /**
+ * Given the implicit tiling coordinates for a child subtree, get the index within the
+ * subtree's child subtree availability bitstream.
+ * @property {ImplicitTileCoordinates} implicitCoordinates The coordinates of a child subtree
+ * @return {Number} The child subtree's index within the subtree's child subtree availability bitstream.
+ * @private
+ */
+ImplicitSubtree.prototype.getChildSubtreeIndex = function (
+  implicitCoordinates
+) {
+  var localCoordinates = implicitCoordinates.deriveLocalChildSubtreeCoordinates();
+  var mortonIndex = localCoordinates.mortonIndex;
+  return mortonIndex;
+};
+
+/**
  * Get the entity ID for a tile within this subtree.
- * @property {Cesium3DTile} tile A transcoded tile from this subtree. tile.implicitTileCoordinates must be defined.
+ * @property {ImplicitTileCoordinates} implicitCoordinates The coordinates of a tile
  * @return {Number} The entity ID for this tile for accessing tile metadata, or <code>undefined</code> if not applicable.
  *
  * @private
