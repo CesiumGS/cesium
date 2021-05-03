@@ -198,39 +198,40 @@ function processMetadata(buffer, totalSize, quadKey) {
   return tileInfo;
 }
 
+var numMeshesPerPacket = 5;
+var numSubMeshesPerMesh = 4;
+
+// Each terrain packet will have 5 meshes - each containg 4 sub-meshes:
+//    1 even level mesh and its 4 odd level children.
+// Any remaining bytes after the 20 sub-meshes contains water surface meshes,
+// which are ignored.
 function processTerrain(buffer, totalSize, transferableObjects) {
   var dv = new DataView(buffer);
 
-  // Each tile is split into 4 parts.
-  var advanceTile = function (pos, len) {
-    for (var quad = 0; quad < 4; ++quad) {
-      // Guard against reading past the end of buffer. Partial tiles are not
-      // allowed.
+  // Find the sub-meshes.
+  var advanceMesh = function (pos) {
+    for (var sub = 0; sub < numSubMeshesPerMesh; ++sub) {
       var size = dv.getUint32(pos, true);
-      if (size > totalSize) {
-        return -1;
-      }
       pos += sizeOfUint32;
       pos += size;
+      if (pos > totalSize) {
+        throw new RuntimeError("Malformed terrain packet found.");
+      }
     }
     return pos;
   };
 
   var offset = 0;
-  var terrainTiles = [];
-  while (offset < totalSize) {
-    var tileStart = offset;
-    offset = advanceTile(offset, terrainTiles.length);
-    // Abort when the remaining bytes no longer contain any valid tiles.
-    if (offset === -1) {
-      break;
-    }
-    var tile = buffer.slice(tileStart, offset);
-    transferableObjects.push(tile);
-    terrainTiles.push(tile);
+  var terrainMeshes = [];
+  while (terrainMeshes.length < numMeshesPerPacket) {
+    var start = offset;
+    offset = advanceMesh(offset);
+    var mesh = buffer.slice(start, offset);
+    transferableObjects.push(mesh);
+    terrainMeshes.push(mesh);
   }
 
-  return terrainTiles;
+  return terrainMeshes;
 }
 
 var compressedMagic = 0x7468dead;
