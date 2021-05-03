@@ -285,3 +285,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Will Jadkowski](https://github.com/willjad)
 - [Mac Clayton](https://github.com/mclayton7)
 - [Ben Murphy](https://github.com/littlemurph)
+- [Ethan Wong](https://github.com/GetToSet)
+- [Calogero Mauceri](https://github.com/kalosma)

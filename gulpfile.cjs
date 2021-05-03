@@ -1482,6 +1482,7 @@ function createTypeScriptDefinitions() {
     firstNode,
     node
   );
+  newSource += "\n\n";
   node.forEachChild((child) => {
     if (
       typescript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
