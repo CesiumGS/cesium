@@ -1,7 +1,15 @@
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
+import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
 import Check from "../Core/Check.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import S2Cell from "../Core/S2Cell.js";
+import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import defaultValue from "../Core/defaultValue.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import GeometryInstance from "../Core/GeometryInstance.js";
+import Matrix4 from "../Core/Matrix4.js";
+import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
+import Primitive from "./Primitive.js";
+import S2Cell from "../Core/S2Cell.js";
 
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
@@ -72,6 +80,24 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
   return this._orientedBoundingBox.intersectPlane(plane);
 };
 
+function getPolygonPositions() {
+  var positions = [];
+  var vertexScratch;
+  var vertexCartographicScratch;
+  for (var i = 0; i < 4; i++) {
+    vertexScratch = this.s2Cell.getVertex(i);
+    vertexCartographicScratch = Cartographic.fromCarteisan(vertexScratch);
+    vertexCartographicScratch.height = this.minimumHeight;
+    positions[2 * i] = Cartographic.toCartesian(vertexCartographicScratch);
+    vertexCartographicScratch.height = this.maximumHeight;
+    positions[2 * i + 4 + 1] = Cartographic.toCartesian(
+      vertexCartographicScratch
+    );
+  }
+
+  return positions;
+}
+
 /**
  * Creates a debug primitive that shows the outline of the tile bounding
  * volume.
@@ -80,6 +106,30 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
  * @return {Primitive}
  */
 TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
-  DeveloperError.throwInstantiationError();
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("color", color);
+  //>>includeEnd('debug');
+
+  var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
+  var geometry = CoplanarPolygonOutlineGeometry.fromPositions({
+    positions: getPolygonPositions(),
+  });
+  var instance = new GeometryInstance({
+    geometry: geometry,
+    id: "outline",
+    modelMatrix: modelMatrix,
+    attributes: {
+      color: ColorGeometryInstanceAttribute.fromColor(color),
+    },
+  });
+
+  return new Primitive({
+    geometryInstances: instance,
+    appearance: new PerInstanceColorAppearance({
+      translucent: false,
+      flat: true,
+    }),
+    asynchronous: false,
+  });
 };
 export default TileBoundingS2Cell;

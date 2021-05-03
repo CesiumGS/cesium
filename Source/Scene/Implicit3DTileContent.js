@@ -5,8 +5,11 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
+import HilbertOrder from "../Core/HilbertOrder.js";
 import Matrix3 from "../Core/Matrix3.js";
+import MortonOrder from "../Core/MortonOrder.js";
 import Rectangle from "../Core/Rectangle.js";
+import S2Cell from "../Core/S2Cell.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
@@ -393,10 +396,31 @@ function deriveChildTile(
     contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
-  var boundingVolume = deriveBoundingVolume(
-    implicitTileset,
-    implicitCoordinates
-  );
+  var boundingVolume;
+  if (
+    defined(
+      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"]
+    )
+  ) {
+    var parentS2BoundingVolume =
+      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
+    var parentS2Cell = S2Cell.fromToken(parentS2BoundingVolume.token);
+    var childCoords = MortonOrder.decode2D(childIndex);
+    var hilbertIndex = HilbertOrder.encode2D(2, childCoords[0], childCoords[1]);
+    var childS2Cell = parentS2Cell.getChild(hilbertIndex);
+    boundingVolume = {
+      extensions: {
+        "3DTILES_bounding_volume_S2": {
+          token: S2Cell.getIdFromToken(childS2Cell._cellId),
+          maximumHeight: parentS2BoundingVolume.maximumHeight,
+          minimumHeight: parentS2BoundingVolume.minimumHeight,
+        },
+      },
+    };
+  } else {
+    boundingVolume = deriveBoundingVolume(implicitTileset, implicitCoordinates);
+  }
+
   var childGeometricError =
     implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
 
