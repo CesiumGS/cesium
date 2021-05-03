@@ -202,7 +202,7 @@ function processTerrain(buffer, totalSize, transferableObjects) {
   var dv = new DataView(buffer);
 
   // Each tile is split into 4 parts.
-  var advanceTile = function (pos, len) {
+  var advanceTile = function (pos) {
     for (var quad = 0; quad < 4; ++quad) {
       // Guard against reading past the end of buffer. Partial tiles are not
       // allowed.
@@ -220,7 +220,7 @@ function processTerrain(buffer, totalSize, transferableObjects) {
   var terrainTiles = [];
   while (offset < totalSize) {
     var tileStart = offset;
-    offset = advanceTile(offset, terrainTiles.length);
+    offset = advanceTile(offset);
     // Abort when the remaining bytes no longer contain any valid tiles.
     if (offset === -1) {
       break;
