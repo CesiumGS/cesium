@@ -1,6 +1,5 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
@@ -35,9 +34,9 @@ import findGroupMetadata from "./findGroupMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
-import S2Cell from "../Core/S2Cell.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
+import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
@@ -1644,27 +1643,7 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   if (defined(boundingVolumeHeader.extensions)) {
     var boundingVolumeS2 =
       boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"];
-    var cell = S2Cell.fromToken(boundingVolumeS2.token);
-
-    // Add center of cell at maximumHeight, because it will be the highest point of the cell.
-    var points = [];
-    var i;
-    var vertex, vertexCartographic;
-    var center = cell.getCenter();
-    var centerCartographic = Cartographic.fromCartesian(center);
-    centerCartographic.height = boundingVolumeS2.maximumHeight;
-    points.push(Cartographic.toCartesian(centerCartographic));
-    for (i = 0; i <= 3; i++) {
-      vertex = cell.getVertex(i);
-      vertexCartographic = Cartographic.fromCartesian(vertex);
-      vertexCartographic.height = boundingVolumeS2.minimumHeight;
-      points.push(Cartographic.toCartesian(vertexCartographic));
-      vertexCartographic.height = boundingVolumeS2.maximumHeight;
-      points.push(Cartographic.toCartesian(vertexCartographic));
-    }
-
-    var obb = OrientedBoundingBox.fromPoints(points);
-    return new TileOrientedBoundingBox(obb.center, obb.halfAxes);
+    return new TileBoundingS2Cell(boundingVolumeS2);
   }
 
   if (defined(boundingVolumeHeader.box)) {

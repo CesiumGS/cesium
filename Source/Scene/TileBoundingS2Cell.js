@@ -1,15 +1,17 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
-import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
+import PolygonOutlineGeometry from "../Core/PolygonOutlineGeometry.js";
 import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import defaultValue from "../Core/defaultValue.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Matrix4 from "../Core/Matrix4.js";
+import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import S2Cell from "../Core/S2Cell.js";
+
+var scratchCartographic;
 
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
@@ -27,31 +29,62 @@ import S2Cell from "../Core/S2Cell.js";
  * @private
  */
 function TileBoundingS2Cell(options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options", options);
-  Check.typeOf.String("options.token", options.token);
-  //>>includeEnd('debug');
-
-  this.s2Cell = new S2Cell(options.token);
+  this.s2Cell = S2Cell.fromToken(options.token);
   this.minimumHeight = defaultValue(options.minimumHeight, 0.0);
   this.maximumHeight = defaultValue(options.maximumHeight, 0.0);
+
+  // WIP: For now, compute a simple bounding box from all the points of the box.
+  var points = [];
+
+  // Add center of cell.
+  points[0] = this.s2Cell.getCenter();
+  scratchCartographic = Cartographic.fromCartesian(points[0]);
+  scratchCartographic.height = this.maximumHeight;
+  points[0] = Cartographic.toCartesian(scratchCartographic);
+  scratchCartographic.height = this.minimumHeight;
+  points[1] = Cartographic.toCartesian(scratchCartographic);
+  for (var i = 0; i <= 3; i++) {
+    scratchCartographic = Cartographic.fromCartesian(this.s2Cell.getVertex(i));
+    scratchCartographic.height = this.maximumHeight;
+    points[2 + i] = Cartographic.toCartesian(scratchCartographic);
+    scratchCartographic.height = this.minimumHeight;
+    points[2 + i + 1] = Cartographic.toCartesian(scratchCartographic);
+  }
+
+  this._orientedBoundingBox = OrientedBoundingBox.fromPoints(points);
+  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+    this._orientedBoundingBox
+  );
 }
 
-/**
- * The underlying bounding volume.
- *
- * @type {Object}
- * @readonly
- */
-TileBoundingS2Cell.prototype.boundingVolume = undefined;
-
-/**
- * The underlying bounding sphere.
- *
- * @type {BoundingSphere}
- * @readonly
- */
-TileBoundingS2Cell.prototype.boundingSphere = undefined;
+Object.defineProperties(TileBoundingS2Cell.prototype, {
+  /**
+   * The underlying bounding volume.
+   *
+   * @memberof TileOrientedBoundingBox.prototype
+   *
+   * @type {Object}
+   * @readonly
+   */
+  boundingVolume: {
+    get: function () {
+      return this._orientedBoundingBox;
+    },
+  },
+  /**
+   * The underlying bounding sphere.
+   *
+   * @memberof TileOrientedBoundingBox.prototype
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+});
 
 /**
  * Calculates the distance between the tile and the camera.
@@ -61,7 +94,12 @@ TileBoundingS2Cell.prototype.boundingSphere = undefined;
  *                  Returns 0.0 if the camera is inside the tile.
  */
 TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
-  DeveloperError.throwInstantiationError();
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("frameState", frameState);
+  //>>includeEnd('debug');
+  return Math.sqrt(
+    this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC)
+  );
 };
 
 /**
@@ -80,19 +118,17 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
   return this._orientedBoundingBox.intersectPlane(plane);
 };
 
-function getPolygonPositions() {
+function getPolygonPositions(s2Cell, minimumHeight, maximumHeight) {
   var positions = [];
   var vertexScratch;
   var vertexCartographicScratch;
   for (var i = 0; i < 4; i++) {
-    vertexScratch = this.s2Cell.getVertex(i);
-    vertexCartographicScratch = Cartographic.fromCarteisan(vertexScratch);
-    vertexCartographicScratch.height = this.minimumHeight;
-    positions[2 * i] = Cartographic.toCartesian(vertexCartographicScratch);
-    vertexCartographicScratch.height = this.maximumHeight;
-    positions[2 * i + 4 + 1] = Cartographic.toCartesian(
-      vertexCartographicScratch
-    );
+    vertexScratch = s2Cell.getVertex(i);
+    vertexCartographicScratch = Cartographic.fromCartesian(vertexScratch);
+    vertexCartographicScratch.height = minimumHeight;
+    positions[i] = Cartographic.toCartesian(vertexCartographicScratch);
+    vertexCartographicScratch.height = maximumHeight;
+    positions[4 + i] = Cartographic.toCartesian(vertexCartographicScratch);
   }
 
   return positions;
@@ -111,8 +147,12 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   //>>includeEnd('debug');
 
   var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
-  var geometry = CoplanarPolygonOutlineGeometry.fromPositions({
-    positions: getPolygonPositions(),
+  var geometry = PolygonOutlineGeometry.fromPositions({
+    positions: getPolygonPositions(
+      this.s2Cell,
+      this.minimumHeight,
+      this.maximumHeight
+    ),
   });
   var instance = new GeometryInstance({
     geometry: geometry,
