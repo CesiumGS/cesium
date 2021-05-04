@@ -397,11 +397,7 @@ function deriveChildTile(
   }
 
   var boundingVolume;
-  if (
-    defined(
-      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"]
-    )
-  ) {
+  if (defined(implicitTileset.boundingVolume.extensions)) {
     var parentS2BoundingVolume =
       implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
     var parentS2Cell = S2Cell.fromToken(parentS2BoundingVolume.token);
@@ -411,7 +407,7 @@ function deriveChildTile(
     boundingVolume = {
       extensions: {
         "3DTILES_bounding_volume_S2": {
-          token: S2Cell.getIdFromToken(childS2Cell._cellId),
+          token: S2Cell.getTokenFromId(childS2Cell._cellId),
           maximumHeight: parentS2BoundingVolume.maximumHeight,
           minimumHeight: parentS2BoundingVolume.minimumHeight,
         },
