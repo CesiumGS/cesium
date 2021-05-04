@@ -23,11 +23,11 @@ HilbertOrder.encode2D = function (level, x, y) {
   Check.typeOf.number("y", y);
   //>>includeEnd('debug');
 
-  var n = 2 ** level;
+  var n = Math.pow(2, level);
   var rx;
   var ry;
   var s;
-  var d;
+  var d = 0;
 
   for (s = n / 2; s > 0; s /= 2) {
     rx = (x & s) > 0;
