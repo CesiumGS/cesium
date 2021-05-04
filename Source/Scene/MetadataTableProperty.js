@@ -217,6 +217,22 @@ MetadataTableProperty.prototype.set = function (index, value) {
   set(this, index, value);
 };
 
+/**
+ * Returns the typed array containing the property values.
+ *
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
+ * @private
+ */
+MetadataTableProperty.prototype.getTypedArray = function () {
+  // Note: depending on the class definition some properties are unpacked to
+  // JS arrays when first accessed and values will be undefined. Generally not
+  // a concern for fixed-length arrays of numbers.
+  if (defined(this._values)) {
+    return this._values.typedArray;
+  }
+};
+
 function checkIndex(table, index) {
   var count = table._count;
   if (!defined(index) || index < 0 || index >= count) {
