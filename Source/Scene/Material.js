@@ -434,6 +434,15 @@ Material.prototype.update = function (context) {
     uniformId = loadedImage.id;
     var image = loadedImage.image;
 
+    // Images transcoded from KTX2 can contain multiple mip levels:
+    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+    var mipLevels;
+    if (Array.isArray(image)) {
+      // highest detail mip should be level 0
+      mipLevels = image.slice(1, image.length);
+      image = image[0];
+    }
+
     var sampler = new Sampler({
       minificationFilter: this._minificationFilter,
       magnificationFilter: this._magnificationFilter,
@@ -448,6 +457,7 @@ Material.prototype.update = function (context) {
         height: image.height,
         source: {
           arrayBufferView: image.bufferView,
+          mipLevels: mipLevels,
         },
         sampler: sampler,
       });

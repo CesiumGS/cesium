@@ -71,6 +71,14 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
 
   var result = new Array(header.levelCount);
 
+  if (header.layerCount !== 0) {
+    throw new RuntimeError("KTX2 Videos are not supported");
+  }
+
+  if (header.pixelDepth !== 0) {
+    throw new RuntimeError("KTX2 3D textures are unsupported.");
+  }
+
   if (
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8_SRGB ||
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB ||
@@ -92,14 +100,6 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
     throw new RuntimeError("KTX2 pixel format is not yet supported.");
   }
 
-  if (header.layerCount !== 0) {
-    throw new RuntimeError("KTX2 Videos are not supported");
-  }
-
-  if (header.pixelDepth !== 0) {
-    throw new RuntimeError("KTX2 3D textures are unsupported.");
-  }
-
   return result;
 }
 
@@ -118,10 +118,10 @@ function parseUncompressed(header, result) {
     var level = (result[i] = {});
     var levelBuffer = arraySlice(header.levels[i].levelData);
 
-    for (var j = 0; j < header.faceCount; ++j) {
-      var width = header.pixelWidth >> i;
-      var height = header.pixelHeight >> i;
+    var width = header.pixelWidth >> i;
+    var height = header.pixelHeight >> i;
 
+    for (var j = 0; j < header.faceCount; ++j) {
       var faceLength =
         header.typeSize *
         width *
@@ -190,18 +190,18 @@ function transcodeEtc1s(
     throw new RuntimeError("startTranscoding failed");
   }
 
-  var dstSize = ktx2File.getImageTranscodedSizeInBytes(
-    0,
-    0,
-    0,
-    transcoderFormat.value
-  );
-  var dst = new Uint8Array(dstSize);
-
   for (var i = 0; i < header.levels.length; ++i) {
     var level = (result[i] = {});
 
     for (var j = 0; j < header.faceCount; ++j) {
+      var dstSize = ktx2File.getImageTranscodedSizeInBytes(
+        i,
+        0, // layer index
+        j,
+        transcoderFormat.value
+      );
+      var dst = new Uint8Array(dstSize);
+
       var transcoded = ktx2File.transcodeImage(
         dst,
         i, // level index
