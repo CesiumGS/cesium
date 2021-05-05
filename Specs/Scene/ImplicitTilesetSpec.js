@@ -47,7 +47,7 @@ describe("Scene/ImplicitTileset", function () {
       implicitTileJson,
       metadataSchema
     );
-    expect(implicitTileset.metadata).toBeUndefined();
+    expect(implicitTileset.metadataSchema).toBeUndefined();
     expect(implicitTileset.subtreeLevels).toEqual(3);
     expect(implicitTileset.maximumLevel).toEqual(4);
     expect(implicitTileset.subdivisionScheme).toEqual(
