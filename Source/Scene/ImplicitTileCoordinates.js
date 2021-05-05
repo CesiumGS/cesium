@@ -1,3 +1,4 @@
+import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import MortonOrder from "../Core/MortonOrder.js";
@@ -176,20 +177,194 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
       return MortonOrder.encode2D(this.x, this.y);
     },
   },
+
+  /**
+   * Get the tile index by adding the Morton index to the level offset
+   *
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  tileIndex: {
+    get: function () {
+      var levelOffset =
+        this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE
+          ? // (8^N - 1) / (8-1)
+            ((1 << (3 * this.level)) - 1) / 7
+          : // (4^N - 1) / (4-1)
+            ((1 << (2 * this.level)) - 1) / 3;
+
+      var mortonIndex = this.mortonIndex;
+      return levelOffset + mortonIndex;
+    },
+  },
 });
 
 /**
- * Given the (level, x, y, [z]) coordinates of the parent, compute the
- * coordinates of the child.
+ * Check that the two coordinates are compatible
+ * @param {ImplicitTileCoordinates} a
+ * @param {ImplicitTileCoordinates} b
+ * @private
+ */
+function checkMatchingProperties(a, b) {
+  if (a.subdivisionScheme !== b.subdivisionScheme) {
+    throw new DeveloperError("coordinates must have same subdivisionScheme");
+  }
+  if (a.subtreeLevels !== b.subtreeLevels) {
+    throw new DeveloperError("coordinates must have same subtreeLevels");
+  }
+}
+
+/**
+ * Compute the coordinates of a tile deeper in the tree with a (level, x, y, [z]) relative offset.
+ *
+ * @param {ImplicitTileCoordinates} offsetCoordinates The offset from the ancestor
+ * @returns {ImplicitTileCoordinates} The coordinates of the descendant
+ * @private
+ */
+ImplicitTileCoordinates.prototype.getDescendantCoordinates = function (
+  offsetCoordinates
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("offsetCoordinates", offsetCoordinates);
+  checkMatchingProperties(this, offsetCoordinates);
+  //>>includeEnd('debug');
+
+  var descendantLevel = this.level + offsetCoordinates.level;
+  var descendantX = (this.x << offsetCoordinates.level) + offsetCoordinates.x;
+  var descendantY = (this.y << offsetCoordinates.level) + offsetCoordinates.y;
+
+  if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    var descendantZ = (this.z << offsetCoordinates.level) + offsetCoordinates.z;
+
+    return new ImplicitTileCoordinates({
+      subdivisionScheme: this.subdivisionScheme,
+      subtreeLevels: this.subtreeLevels,
+      level: descendantLevel,
+      x: descendantX,
+      y: descendantY,
+      z: descendantZ,
+    });
+  }
+
+  // Quadtree
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: this.subdivisionScheme,
+    subtreeLevels: this.subtreeLevels,
+    level: descendantLevel,
+    x: descendantX,
+    y: descendantY,
+  });
+};
+
+/**
+ * Compute the coordinates of a tile higher up in the tree by going up a number of levels.
+ *
+ * @param {Number} offsetLevels The number of levels to go up in the tree
+ * @returns {ImplicitTileCoordinates} The coordinates of the ancestor
+ * @private
+ */
+ImplicitTileCoordinates.prototype.getAncestorCoordinates = function (
+  offsetLevels
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("offsetLevels", offsetLevels);
+  if (offsetLevels < 0) {
+    throw new DeveloperError("offsetLevels must be non-negative");
+  }
+  if (offsetLevels > this.level) {
+    throw new DeveloperError("ancestor cannot be above the tileset root");
+  }
+  //>>includeEnd('debug');
+
+  var divisor = 1 << offsetLevels;
+  var ancestorLevel = this.level - offsetLevels;
+  var ancestorX = Math.floor(this.x / divisor);
+  var ancestorY = Math.floor(this.y / divisor);
+
+  if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    var ancestorZ = Math.floor(this.z / divisor);
+
+    return new ImplicitTileCoordinates({
+      subdivisionScheme: this.subdivisionScheme,
+      subtreeLevels: this.subtreeLevels,
+      level: ancestorLevel,
+      x: ancestorX,
+      y: ancestorY,
+      z: ancestorZ,
+    });
+  }
+
+  // Quadtree
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: this.subdivisionScheme,
+    subtreeLevels: this.subtreeLevels,
+    level: ancestorLevel,
+    x: ancestorX,
+    y: ancestorY,
+  });
+};
+
+/**
+ * Compute the (level, x, y, [z]) offset to a descendant
+ *
+ * @param {ImplicitTileCoordinates} descendantCoordinates The descendant coordinates
+ * @returns {ImplicitTileCoordinates} The offset between the ancestor and the descendant
+ */
+ImplicitTileCoordinates.prototype.getOffsetCoordinates = function (
+  descendantCoordinates
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("descendantCoordinates", descendantCoordinates);
+  if (
+    !this.isEqual(descendantCoordinates) &&
+    !this.isAncestor(descendantCoordinates)
+  ) {
+    throw new DeveloperError("this is not an ancestor of descendant");
+  }
+  checkMatchingProperties(this, descendantCoordinates);
+  //>>includeEnd('debug');
+
+  var offsetLevel = descendantCoordinates.level - this.level;
+  var dimensionAtOffsetLevel = 1 << offsetLevel;
+
+  var offsetX = descendantCoordinates.x % dimensionAtOffsetLevel;
+  var offsetY = descendantCoordinates.y % dimensionAtOffsetLevel;
+
+  if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    var offsetZ = descendantCoordinates.z % dimensionAtOffsetLevel;
+
+    return new ImplicitTileCoordinates({
+      subdivisionScheme: this.subdivisionScheme,
+      subtreeLevels: this.subtreeLevels,
+      level: offsetLevel,
+      x: offsetX,
+      y: offsetY,
+      z: offsetZ,
+    });
+  }
+
+  // Quadtree
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: this.subdivisionScheme,
+    subtreeLevels: this.subtreeLevels,
+    level: offsetLevel,
+    x: offsetX,
+    y: offsetY,
+  });
+};
+
+/**
+ * Given the morton index of the child, compute the coordinates of the child.
+ * This is a special case of {@link ImplicitTileCoordinates#getDescendantCoordinates}.
  *
  * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @returns {ImplicitTileCoordinates} The tile coordinates of the child
  * @private
  */
-ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
-  childIndex
-) {
+ImplicitTileCoordinates.prototype.getChildCoordinates = function (childIndex) {
   //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("childIndex", childIndex);
   var branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
     this.subdivisionScheme
   );
@@ -227,101 +402,14 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
 };
 
 /**
- * Given the (level, x, y, [z]) coordinates of the parent and
- * a (level, x, y, [z]) relative offset, compute the coordinates of the descendant.
- *
- * @param {ImplicitTileCoordinates} localCoordinates The local coordinates of the descendant
- * @returns {ImplicitTileCoordinates} The tile coordinates of the descendant
- * @private
- */
-ImplicitTileCoordinates.prototype.deriveDescendantCoordinates = function (
-  localCoordinates
-) {
-  var subdivisionScheme = this.subdivisionScheme;
-  var subtreeLevels = this.subtreeLevels;
-  var tileLevel = this.level;
-  var tileX = this.x;
-  var tileY = this.y;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("localCoordinates", localCoordinates);
-  if (subdivisionScheme !== localCoordinates.subdivisionScheme) {
-    throw new DeveloperError("coordinates must have same subdivisionScheme");
-  }
-
-  if (subtreeLevels !== localCoordinates.subtreeLevels) {
-    throw new DeveloperError("coordinates must have same subtreeLevels");
-  }
-  //>>includeEnd('debug');
-
-  var globalLevel = tileLevel + localCoordinates.level;
-  var globalX = (tileX << localCoordinates.level) + localCoordinates.x;
-  var globalY = (tileY << localCoordinates.level) + localCoordinates.y;
-
-  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    var tileZ = this.z;
-    var globalZ = (tileZ << localCoordinates.level) + localCoordinates.z;
-
-    return new ImplicitTileCoordinates({
-      subdivisionScheme: subdivisionScheme,
-      subtreeLevels: subtreeLevels,
-      level: globalLevel,
-      x: globalX,
-      y: globalY,
-      z: globalZ,
-    });
-  }
-
-  // Quadtree
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: globalLevel,
-    x: globalX,
-    y: globalY,
-  });
-};
-
-/**
- * Get the coordinates of the subtree that contains this tile
+ * Get the coordinates of the subtree that contains this tile. If the tile is
+ * the root of the subtree, the root of the subtree is returned.
  *
  * @returns {ImplicitTileCoordinates} The subtree that contains this tile
  * @private
  */
-ImplicitTileCoordinates.prototype.deriveSubtreeCoordinates = function () {
-  var subdivisionScheme = this.subdivisionScheme;
-  var subtreeLevels = this.subtreeLevels;
-  var tileLevel = this.level;
-  var tileX = this.x;
-  var tileY = this.y;
-
-  var subtreeLevel = ((tileLevel / subtreeLevels) | 0) * subtreeLevels;
-  var divisor = 1 << (tileLevel - subtreeLevel);
-  var subtreeX = (tileX / divisor) | 0;
-  var subtreeY = (tileY / divisor) | 0;
-
-  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    var tileZ = this.z;
-    var subtreeZ = (tileZ / divisor) | 0;
-
-    return new ImplicitTileCoordinates({
-      subdivisionScheme: subdivisionScheme,
-      subtreeLevels: subtreeLevels,
-      level: subtreeLevel,
-      x: subtreeX,
-      y: subtreeY,
-      z: subtreeZ,
-    });
-  }
-
-  // Quadtree
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: subtreeLevel,
-    x: subtreeX,
-    y: subtreeY,
-  });
+ImplicitTileCoordinates.prototype.getSubtreeCoordinates = function () {
+  return this.getAncestorCoordinates(this.level % this.subtreeLevels);
 };
 
 /**
@@ -330,174 +418,43 @@ ImplicitTileCoordinates.prototype.deriveSubtreeCoordinates = function () {
  * @returns {ImplicitTileCoordinates} The parent subtree that contains this tile
  * @private
  */
-ImplicitTileCoordinates.prototype.deriveParentSubtreeCoordinates = function () {
-  var subtreeCoordinates = this.deriveSubtreeCoordinates();
-  if (subtreeCoordinates.isRoot()) {
-    // This subtree is the root of the entire tileset, so it can't go up any higher.
-    return subtreeCoordinates;
-  }
-
-  var subdivisionScheme = subtreeCoordinates.subdivisionScheme;
-  var subtreeLevels = subtreeCoordinates.subtreeLevels;
-  var subtreeLevel = subtreeCoordinates.level;
-  var subtreeX = subtreeCoordinates.x;
-  var subtreeY = subtreeCoordinates.y;
-
-  var parentSubtreeLevel = subtreeLevel - subtreeLevels;
-  var parentSubtreeX = subtreeX >> subtreeLevels;
-  var parentSubtreeY = subtreeY >> subtreeLevels;
-
-  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    var subtreeZ = subtreeCoordinates.z;
-    var parentSubtreeZ = subtreeZ >> subtreeLevels;
-
-    return new ImplicitTileCoordinates({
-      subdivisionScheme: subdivisionScheme,
-      subtreeLevels: subtreeLevels,
-      level: parentSubtreeLevel,
-      x: parentSubtreeX,
-      y: parentSubtreeY,
-      z: parentSubtreeZ,
-    });
-  }
-
-  // Quadtree
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: parentSubtreeLevel,
-    x: parentSubtreeX,
-    y: parentSubtreeY,
-  });
-};
-
-/**
- * Get the local coordinates of the tile relative to its subtree
- *
- * @returns {ImplicitTileCoordinates} The local coordinates of the tile
- * @private
- */
-ImplicitTileCoordinates.prototype.deriveLocalTileCoordinates = function () {
-  var subdivisionScheme = this.subdivisionScheme;
-  var subtreeLevels = this.subtreeLevels;
-  var tileX = this.x;
-  var tileY = this.y;
-  var tileLevel = this.level;
-
-  var subtreeCoordinates = this.deriveSubtreeCoordinates();
-  var localLevel = tileLevel - subtreeCoordinates.level;
-
-  var localX = tileX % (1 << localLevel);
-  var localY = tileY % (1 << localLevel);
-
-  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    var tileZ = this.z;
-    var localZ = tileZ % (1 << localLevel);
-
-    return new ImplicitTileCoordinates({
-      subdivisionScheme: subdivisionScheme,
-      subtreeLevels: subtreeLevels,
-      level: localLevel,
-      x: localX,
-      y: localY,
-      z: localZ,
-    });
-  }
-
-  // Quadtree
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: localLevel,
-    x: localX,
-    y: localY,
-  });
-};
-
-/**
- * Get the local coordinates of the child subtree relative to its subtree
- *
- * @returns {ImplicitTileCoordinates} The local coordinates of the child subtree
- * @private
- */
-ImplicitTileCoordinates.prototype.deriveLocalChildSubtreeCoordinates = function () {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.isRootOfSubtree() || this.isRoot()) {
-    throw new DeveloperError(
-      "child subtree must be the root of a non-root subtree"
-    );
-  }
-  //>>includeEnd('debug');
-
-  var subdivisionScheme = this.subdivisionScheme;
-  var subtreeLevels = this.subtreeLevels;
-  var tileX = this.x;
-  var tileY = this.y;
-
-  var localX = tileX % (1 << subtreeLevels);
-  var localY = tileY % (1 << subtreeLevels);
-
-  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    var tileZ = this.z;
-    var localZ = tileZ % (1 << subtreeLevels);
-
-    return new ImplicitTileCoordinates({
-      subdivisionScheme: subdivisionScheme,
-      subtreeLevels: subtreeLevels,
-      level: subtreeLevels,
-      x: localX,
-      y: localY,
-      z: localZ,
-    });
-  }
-
-  // Quadtree
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: subtreeLevels,
-    x: localX,
-    y: localY,
-  });
+ImplicitTileCoordinates.prototype.getParentSubtreeCoordinates = function () {
+  return this.getAncestorCoordinates(
+    (this.level % this.subtreeLevels) + this.subtreeLevels
+  );
 };
 
 /**
  * Returns whether this tile is an ancestor of another tile
  *
- * @param {ImplicitTileCoordinates} otherCoordinates the other tile coordinates
+ * @param {ImplicitTileCoordinates} descendantCoordinates the descendant coordinates
  * @returns {Boolean} <code>true</code> if this tile is an ancestor of the other tile
  * @private
  */
-ImplicitTileCoordinates.prototype.isAncestorOf = function (otherCoordinates) {
+ImplicitTileCoordinates.prototype.isAncestor = function (
+  descendantCoordinates
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("descendantCoordinates", descendantCoordinates);
+  checkMatchingProperties(this, descendantCoordinates);
+  //>>includeEnd('debug');
+
   var subdivisionScheme = this.subdivisionScheme;
-  var subtreeLevels = this.subtreeLevels;
   var tileLevel = this.level;
   var tileX = this.x;
   var tileY = this.y;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("otherCoordinates", otherCoordinates);
-  if (subdivisionScheme !== otherCoordinates.subdivisionScheme) {
-    throw new DeveloperError("coordinates must have same subdivisionScheme");
-  }
-
-  if (subtreeLevels !== otherCoordinates.subtreeLevels) {
-    throw new DeveloperError("coordinates must have same subtreeLevels");
-  }
-  //>>includeEnd('debug');
-
-  var levelDifference = otherCoordinates.level - tileLevel;
+  var levelDifference = descendantCoordinates.level - tileLevel;
   if (levelDifference <= 0) {
     return false;
   }
 
-  var isAncestorX = tileX === otherCoordinates.x >> levelDifference;
-  var isAncestorY = tileY === otherCoordinates.y >> levelDifference;
+  var isAncestorX = tileX === descendantCoordinates.x >> levelDifference;
+  var isAncestorY = tileY === descendantCoordinates.y >> levelDifference;
 
   if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
     var tileZ = this.z;
-    var isAncestorZ = tileZ === otherCoordinates.z >> levelDifference;
-
+    var isAncestorZ = tileZ === descendantCoordinates.z >> levelDifference;
     return isAncestorX && isAncestorY && isAncestorZ;
   }
 
@@ -506,12 +463,36 @@ ImplicitTileCoordinates.prototype.isAncestorOf = function (otherCoordinates) {
 };
 
 /**
- * Returns whether this tile is the root
+ * Returns whether the provided coordinates are equal to this coordinate
+ *
+ * @param {ImplicitTileCoordinates} otherCoordinates the other coordinates
+ * @returns {Boolean} <code>true</code> if the coordinates are equal
+ * @private
+ */
+ImplicitTileCoordinates.prototype.isEqual = function (otherCoordinates) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("otherCoordinates", otherCoordinates);
+  //>>includeEnd('debug');
+
+  return (
+    this.subdivisionScheme === otherCoordinates.subdivisionScheme &&
+    this.subtreeLevels === otherCoordinates.subtreeLevels &&
+    this.level === otherCoordinates.level &&
+    this.x === otherCoordinates.x &&
+    this.y === otherCoordinates.y &&
+    (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE
+      ? this.z === otherCoordinates.z
+      : true)
+  );
+};
+
+/**
+ * Returns whether this tile is the root of the implicit tileset
  *
  * @returns {Boolean} <code>true</code> if this tile is the root
  * @private
  */
-ImplicitTileCoordinates.prototype.isRoot = function () {
+ImplicitTileCoordinates.prototype.isImplicitTilesetRoot = function () {
   return this.level === 0;
 };
 
@@ -521,14 +502,14 @@ ImplicitTileCoordinates.prototype.isRoot = function () {
  * @returns {Boolean} <code>true</code> if this tile is the root of the subtree
  * @private
  */
-ImplicitTileCoordinates.prototype.isRootOfSubtree = function () {
+ImplicitTileCoordinates.prototype.isSubtreeRoot = function () {
   return this.level % this.subtreeLevels === 0;
 };
 
 /**
- * Returns whether this tile is at the bottom of the subtree
+ * Returns whether this tile is on the last row of tiles in the subtree
  *
- * @returns {Boolean} <code>true</code> if this tile is at the bottom of the subtree
+ * @returns {Boolean} <code>true</code> if this tile is on the last row of tiles in the subtree
  * @private
  */
 ImplicitTileCoordinates.prototype.isBottomOfSubtree = function () {
@@ -555,6 +536,7 @@ ImplicitTileCoordinates.prototype.getTemplateValues = function () {
 };
 
 var scratchCoordinatesArray = [0, 0, 0];
+
 /**
  * Given a level number, morton index, and whether the tileset is an
  * octree/quadtree, compute the (level, x, y, [z]) coordinates
@@ -596,4 +578,55 @@ ImplicitTileCoordinates.fromMortonIndex = function (
     x: coordinatesArray[0],
     y: coordinatesArray[1],
   });
+};
+
+/**
+ * Given a tile index and whether the tileset is an octree/quadtree, compute
+ * the (level, x, y, [z]) coordinates
+ *
+ * @param {ImplicitSubdivisionScheme} subdivisionScheme
+ * @param {Number} subtreeLevels
+ * @param {Number} tileIndex The tile's index
+ * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given tile index
+ * @private
+ */
+ImplicitTileCoordinates.fromTileIndex = function (
+  subdivisionScheme,
+  subtreeLevels,
+  tileIndex
+) {
+  var level;
+  var levelOffset;
+  var mortonIndex;
+
+  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    // Node count up to octree level: (8^L - 1) / (8-1)
+    // (8^L - 1) / (8-1) <= X < (8^(L+1) - 1) / (8-1)
+    // 8^L <= (7x + 1) < 8^(L+1)
+    // L <= log8(7x + 1) < L + 1
+    // L = floor(log8(7x + 1))
+    // L = floor(log2(7x + 1) / log2(8))
+    // L = floor(log2(7x + 1) / 3)
+    level = Math.floor(CesiumMath.log2(7 * tileIndex + 1) / 3);
+    levelOffset = ((1 << (3 * level)) - 1) / 7;
+    mortonIndex = tileIndex - levelOffset;
+  } else {
+    // Node count up to quadtree level: (4^L - 1) / (4-1)
+    // (4^L - 1) / (4-1) <= X < (4^(L+1) - 1) / (4-1)
+    // 4^L <= (3x + 1) < 4^(L+1)
+    // L <= log4(3x + 1) < L + 1
+    // L = floor(log4(3x + 1))
+    // L = floor(log2(3x + 1) / log2(4))
+    // L = floor(log2(3x + 1) / 2)
+    level = Math.floor(CesiumMath.log2(3 * tileIndex + 1) / 2);
+    levelOffset = ((1 << (2 * level)) - 1) / 3;
+    mortonIndex = tileIndex - levelOffset;
+  }
+
+  return ImplicitTileCoordinates.fromMortonIndex(
+    subdivisionScheme,
+    subtreeLevels,
+    level,
+    mortonIndex
+  );
 };

@@ -372,14 +372,14 @@ function deriveChildTile(
   if (defaultValue(parentIsPlaceholderTile, false)) {
     implicitCoordinates = parentTile.implicitCoordinates;
   } else {
-    implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
+    implicitCoordinates = parentTile.implicitCoordinates.getChildCoordinates(
       childIndex
     );
   }
 
   var contentJsons = [];
   for (var i = 0; i < implicitTileset.contentCount; i++) {
-    if (!subtree.contentIsAvailable(childBitIndex, i)) {
+    if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
       continue;
     }
     var childContentTemplate = implicitTileset.contentUriTemplates[i];
@@ -634,7 +634,7 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
  */
 function makePlaceholderChildSubtree(content, parentTile, childIndex) {
   var implicitTileset = content._implicitTileset;
-  var implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
+  var implicitCoordinates = parentTile.implicitCoordinates.getChildCoordinates(
     childIndex
   );
 

@@ -226,7 +226,7 @@ describe(
           : Cesium3DTileRefine.REPLACE;
 
       var parentCoordinates = mockPlaceholderTile.implicitCoordinates;
-      var childCoordinates = parentCoordinates.deriveChildCoordinates(0);
+      var childCoordinates = parentCoordinates.getChildCoordinates(0);
 
       var parentGeometricError = implicitTileset.geometricError / 4;
       var childGeometricError = implicitTileset.geometricError / 8;

@@ -3,6 +3,7 @@ import {
   combine,
   ImplicitSubdivisionScheme,
   ImplicitTileset,
+  MetadataSchema,
   Resource,
 } from "../../Source/Cesium.js";
 
@@ -38,14 +39,15 @@ describe("Scene/ImplicitTileset", function () {
   var baseResource = new Resource("https://example.com/tileset.json");
   var contentUriTemplate = new Resource(contentUriPattern);
   var subtreeUriTemplate = new Resource(subtreeUriPattern);
-  var metadataSchema; // intentionally left undefined
 
   it("gathers information from both tile JSON and extension", function () {
+    var metadataSchema; // intentionally left undefined
     var implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
       metadataSchema
     );
+    expect(implicitTileset.metadata).toBeUndefined();
     expect(implicitTileset.subtreeLevels).toEqual(3);
     expect(implicitTileset.maximumLevel).toEqual(4);
     expect(implicitTileset.subdivisionScheme).toEqual(
@@ -61,6 +63,7 @@ describe("Scene/ImplicitTileset", function () {
   });
 
   it("stores a template of the tile JSON structure", function () {
+    var metadataSchema; // intentionally left undefined
     var implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
@@ -78,6 +81,7 @@ describe("Scene/ImplicitTileset", function () {
     var withExtensions = clone(implicitTileJson, deep);
     withExtensions.extensions["3DTILES_extension"] = {};
 
+    var metadataSchema; // intentionally left undefined
     var implicitTileset = new ImplicitTileset(
       baseResource,
       withExtensions,
@@ -90,6 +94,7 @@ describe("Scene/ImplicitTileset", function () {
   });
 
   it("stores a template of the tile content structure", function () {
+    var metadataSchema; // intentionally left undefined
     var implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
@@ -101,6 +106,7 @@ describe("Scene/ImplicitTileset", function () {
   it("allows undefined content URI", function () {
     var noContentJson = clone(implicitTileJson);
     delete noContentJson.content;
+    var metadataSchema; // intentionally left undefined
     var implicitTileset = new ImplicitTileset(
       baseResource,
       noContentJson,
@@ -116,6 +122,7 @@ describe("Scene/ImplicitTileset", function () {
       },
     };
     var tileJson = combine(sphereJson, implicitTileJson);
+    var metadataSchema; // intentionally left undefined
     expect(function () {
       return new ImplicitTileset(baseResource, tileJson, metadataSchema);
     }).toThrowRuntimeError();
@@ -157,6 +164,7 @@ describe("Scene/ImplicitTileset", function () {
     };
 
     it("gathers content URIs from multiple contents extension", function () {
+      var metadataSchema; // intentionally left undefined
       var implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentTile,
@@ -182,6 +190,7 @@ describe("Scene/ImplicitTileset", function () {
         contents[i].extensions = extension;
       }
 
+      var metadataSchema; // intentionally left undefined
       var implicitTileset = new ImplicitTileset(
         baseResource,
         withProperties,
@@ -193,12 +202,39 @@ describe("Scene/ImplicitTileset", function () {
     });
 
     it("template tileHeader does not store multiple contents extension", function () {
+      var metadataSchema; // intentionally left undefined
       var implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentTile,
         metadataSchema
       );
       expect(implicitTileset.tileHeader.extensions).not.toBeDefined();
+    });
+  });
+
+  describe("3DTILES_metadata", function () {
+    it("stores metadataSchema", function () {
+      var schema = {
+        classes: {
+          tile: {
+            properties: {
+              buildingCount: {
+                type: "UINT16",
+              },
+            },
+          },
+        },
+      };
+
+      var metadataSchema = new MetadataSchema(schema);
+
+      var implicitTileset = new ImplicitTileset(
+        baseResource,
+        implicitTileJson,
+        metadataSchema
+      );
+
+      expect(implicitTileset.metadataSchema).toBeDefined();
     });
   });
 });
