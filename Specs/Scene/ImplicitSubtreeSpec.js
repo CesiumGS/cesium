@@ -1,6 +1,5 @@
 import {
   Cartesian3,
-  ImplicitSubdivisionScheme,
   ImplicitSubtree,
   ImplicitTileCoordinates,
   ImplicitTileset,
@@ -30,7 +29,19 @@ describe("Scene/ImplicitSubtree", function () {
   function expectTileAvailability(subtree, availability) {
     var expectedAvailability = availabilityToBooleanArray(availability);
     for (var i = 0; i < availability.lengthBits; i++) {
-      expect(subtree.tileIsAvailable(i)).toEqual(expectedAvailability[i]);
+      expect(subtree.tileIsAvailableAtIndex(i)).toEqual(
+        expectedAvailability[i]
+      );
+      // same as above, but using coordinates
+      expect(
+        subtree.tileIsAvailableAtCoordinates(
+          ImplicitTileCoordinates.fromTileIndex(
+            subtree.implicitCoordinates.subdivisionScheme,
+            subtree.implicitCoordinates.subtreeLevels,
+            i
+          )
+        )
+      ).toEqual(expectedAvailability[i]);
     }
   }
 
@@ -39,19 +50,40 @@ describe("Scene/ImplicitSubtree", function () {
       var availability = availabilityArray[i];
       var expectedAvailability = availabilityToBooleanArray(availability);
       for (var j = 0; j < availability.lengthBits; j++) {
-        expect(subtree.contentIsAvailable(j, i)).toEqual(
+        expect(subtree.contentIsAvailableAtIndex(j, i)).toEqual(
           expectedAvailability[j]
         );
+        // same as above, but using coordinates
+        expect(
+          subtree.contentIsAvailableAtCoordinates(
+            ImplicitTileCoordinates.fromTileIndex(
+              subtree.implicitCoordinates.subdivisionScheme,
+              subtree.implicitCoordinates.subtreeLevels,
+              j
+            ),
+            i
+          )
+        ).toEqual(expectedAvailability[j]);
       }
     }
   }
-
   function expectChildSubtreeAvailability(subtree, availability) {
     var expectedAvailability = availabilityToBooleanArray(availability);
     for (var i = 0; i < availability.lengthBits; i++) {
-      expect(subtree.childSubtreeIsAvailable(i)).toEqual(
+      expect(subtree.childSubtreeIsAvailableAtIndex(i)).toEqual(
         expectedAvailability[i]
       );
+      // same as above, but using coordinates
+      expect(
+        subtree.childSubtreeIsAvailableAtCoordinates(
+          ImplicitTileCoordinates.fromMortonIndex(
+            subtree.implicitCoordinates.subdivisionScheme,
+            subtree.implicitCoordinates.subtreeLevels,
+            subtree.implicitCoordinates.subtreeLevels,
+            i
+          )
+        )
+      ).toEqual(expectedAvailability[i]);
     }
   }
 
@@ -73,14 +105,8 @@ describe("Scene/ImplicitSubtree", function () {
   var subtreeResource = new Resource({
     url: "https://example.com/test.subtree",
   });
-  var mockTileset = {};
+  var metadataSchema; // intentionally left undefined
 
-  var quadtreeCoordinates = new ImplicitTileCoordinates({
-    subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
-    level: 0,
-    x: 0,
-    y: 0,
-  });
   var implicitQuadtreeJson = {
     geometricError: 500,
     refine: "ADD",
@@ -101,20 +127,22 @@ describe("Scene/ImplicitSubtree", function () {
       },
     },
   };
+
   var implicitQuadtree = new ImplicitTileset(
-    mockTileset,
     tilesetResource,
-    implicitQuadtreeJson
+    implicitQuadtreeJson,
+    metadataSchema
   );
 
-  var octreeCoordinates = new ImplicitTileCoordinates({
-    subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+  var quadtreeCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: implicitQuadtree.subdivisionScheme,
+    subtreeLevels: implicitQuadtree.subtreeLevels,
     level: 0,
-    z: 0,
     x: 0,
     y: 0,
   });
-  var implicitOctree = new ImplicitTileset(mockTileset, tilesetResource, {
+
+  var implicitOctreeJson = {
     geometricError: 500,
     refine: "REPLACE",
     boundingVolume: {
@@ -133,6 +161,21 @@ describe("Scene/ImplicitSubtree", function () {
         },
       },
     },
+  };
+
+  var implicitOctree = new ImplicitTileset(
+    tilesetResource,
+    implicitOctreeJson,
+    metadataSchema
+  );
+
+  var octreeCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: implicitOctree.subdivisionScheme,
+    subtreeLevels: implicitOctree.subtreeLevels,
+    level: 0,
+    z: 0,
+    x: 0,
+    y: 0,
   });
 
   var internalQuadtreeDescription = {
@@ -206,6 +249,22 @@ describe("Scene/ImplicitSubtree", function () {
         undefined
       );
     }).toThrowDeveloperError();
+  });
+
+  it("sets the implicit coordinates of the subtree's root", function () {
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      internalQuadtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree,
+      quadtreeCoordinates
+    );
+
+    expect(subtree.implicitCoordinates.isEqual(quadtreeCoordinates)).toEqual(
+      true
+    );
   });
 
   it("gets availability from internal buffer", function () {
@@ -581,20 +640,20 @@ describe("Scene/ImplicitSubtree", function () {
   it("getTileIndex throws for a tile not in the subtree", function () {
     var subtreeDescription = {
       tileAvailability: {
-        descriptor: "110101111",
-        lengthBits: 9,
+        descriptor: "11000",
+        lengthBits: 5,
         isInternal: true,
       },
       contentAvailability: [
         {
-          descriptor: "110101011",
-          lengthBits: 9,
+          descriptor: "11000",
+          lengthBits: 5,
           isInternal: true,
         },
       ],
       childSubtreeAvailability: {
-        descriptor: 1,
-        lengthBits: 64,
+        descriptor: "100000000000000",
+        lengthBits: 16,
         isInternal: true,
       },
     };
@@ -602,89 +661,246 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    var deeperOctreeCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+    var deeperQuadtreeCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
       level: 2,
       x: 0,
       y: 0,
-      z: 0,
     });
 
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitOctree,
-      deeperOctreeCoordinates
+      implicitQuadtree,
+      deeperQuadtreeCoordinates
     );
 
     expect(function () {
       var implicitCoordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
         level: 0,
         x: 0,
         y: 0,
-        z: 0,
       });
       return subtree.getTileIndex(implicitCoordinates);
     }).toThrowRuntimeError();
     expect(function () {
       var implicitCoordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
         level: 5,
         x: 0,
         y: 0,
-        z: 0,
       });
       return subtree.getTileIndex(implicitCoordinates);
     }).toThrowRuntimeError();
   });
 
-  it("getTileIndex comptues bit index for a tile in the subtree", function () {
+  it("getTileIndex computes bit index for a tile in the subtree", function () {
     var subtreeDescription = {
       tileAvailability: {
-        descriptor: "110101111",
-        lengthBits: 9,
+        descriptor: "11000",
+        lengthBits: 5,
         isInternal: true,
       },
       contentAvailability: [
         {
-          descriptor: "110101011",
-          lengthBits: 9,
+          descriptor: "11000",
+          lengthBits: 5,
           isInternal: true,
         },
       ],
       childSubtreeAvailability: {
-        descriptor: 1,
-        lengthBits: 64,
+        descriptor: "100000000000000",
+        lengthBits: 16,
         isInternal: true,
       },
     };
     var results = ImplicitTilingTester.generateSubtreeBuffers(
       subtreeDescription
     );
-    var deeperOctreeCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
-      level: 2,
+    var subtreeCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 0,
       x: 0,
       y: 0,
-      z: 0,
     });
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
-      implicitOctree,
-      deeperOctreeCoordinates
+      implicitQuadtree,
+      subtreeCoordinates
     );
 
-    var implicitCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
-      level: 3,
+    // level offset: 1, morton index: 0, so tile index is 1 + 0 = 1
+    var implicitCoordinatesFull = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 1,
+      x: 0,
+      y: 0,
+    });
+    var indexFull = subtree.getTileIndex(implicitCoordinatesFull);
+    expect(indexFull).toBe(1);
+    expect(subtree.tileIsAvailableAtIndex(indexFull)).toEqual(true);
+    expect(
+      subtree.tileIsAvailableAtCoordinates(implicitCoordinatesFull)
+    ).toEqual(true);
+    expect(subtree.contentIsAvailableAtIndex(indexFull)).toEqual(true);
+    expect(
+      subtree.contentIsAvailableAtCoordinates(implicitCoordinatesFull)
+    ).toEqual(true);
+
+    // level offset: 1, morton index: 3, so tile index is 1 + 3 = 4
+    var implicitCoordinatesEmpty = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 1,
       x: 1,
       y: 1,
-      z: 0,
     });
-    // level offset: 1, morton index 3, so tile index is 1 + 3 = 4
-    expect(subtree.getTileIndex(implicitCoordinates)).toBe(4);
+    var indexEmpty = subtree.getTileIndex(implicitCoordinatesEmpty);
+    expect(indexEmpty).toBe(4);
+    expect(subtree.tileIsAvailableAtIndex(indexEmpty)).toEqual(false);
+    expect(
+      subtree.tileIsAvailableAtCoordinates(implicitCoordinatesEmpty)
+    ).toEqual(false);
+    expect(subtree.contentIsAvailableAtIndex(indexEmpty)).toEqual(false);
+    expect(
+      subtree.contentIsAvailableAtCoordinates(implicitCoordinatesEmpty)
+    ).toEqual(false);
+  });
+
+  it("getChildSubtreeIndex throws for a tile not in the child subtrees", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11000",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: "100000000000000",
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var deeperQuadtreeCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 2,
+      x: 0,
+      y: 0,
+    });
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree,
+      deeperQuadtreeCoordinates
+    );
+
+    expect(function () {
+      var implicitCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
+        level: 0,
+        x: 0,
+        y: 0,
+      });
+      return subtree.getChildSubtreeIndex(implicitCoordinates);
+    }).toThrowRuntimeError();
+    expect(function () {
+      var implicitCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
+        level: 5,
+        x: 0,
+        y: 0,
+      });
+      return subtree.getChildSubtreeIndex(implicitCoordinates);
+    }).toThrowRuntimeError();
+  });
+
+  it("getChildSubtreeIndex computes bit index for a tile in the subtree", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11000",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: "100000000000000",
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtreeCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 0,
+      x: 0,
+      y: 0,
+    });
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree,
+      subtreeCoordinates
+    );
+
+    var implicitCoordinatesFull = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 2,
+      x: 0,
+      y: 0,
+    });
+
+    // morton index is 0, so child subtree index is 0
+    var indexFull = subtree.getChildSubtreeIndex(implicitCoordinatesFull);
+    expect(indexFull).toBe(0);
+    expect(subtree.childSubtreeIsAvailableAtIndex(indexFull)).toEqual(true);
+    expect(
+      subtree.childSubtreeIsAvailableAtCoordinates(implicitCoordinatesFull)
+    ).toEqual(true);
+
+    var implicitCoordinatesEmpty = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitQuadtree.subdivisionScheme,
+      subtreeLevels: implicitQuadtree.subtreeLevels,
+      level: 2,
+      x: 1,
+      y: 1,
+    });
+
+    // morton index is 3, so child subtree index is 3
+    var indexEmpty = subtree.getChildSubtreeIndex(implicitCoordinatesEmpty);
+    expect(indexEmpty).toBe(3);
+    expect(subtree.childSubtreeIsAvailableAtIndex(indexEmpty)).toEqual(false);
+    expect(
+      subtree.childSubtreeIsAvailableAtCoordinates(implicitCoordinatesEmpty)
+    ).toEqual(false);
   });
 
   it("computes parent Morton index", function () {
@@ -894,39 +1110,41 @@ describe("Scene/ImplicitSubtree", function () {
   });
 
   describe("3DTILES_multiple_contents", function () {
-    var multipleContentsQuadtree = new ImplicitTileset(
-      mockTileset,
-      tilesetResource,
-      {
-        geometricError: 500,
-        refine: "ADD",
-        boundingVolume: {
-          region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+    var tileJson = {
+      geometricError: 500,
+      refine: "ADD",
+      boundingVolume: {
+        region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+      },
+      extensions: {
+        "3DTILES_implicit_tiling": {
+          subdivisionScheme: "QUADTREE",
+          subtreeLevels: 2,
+          maximumLevel: 1,
+          subtrees: {
+            uri: "https://example.com/{level}/{x}/{y}.subtree",
+          },
         },
-        extensions: {
-          "3DTILES_implicit_tiling": {
-            subdivisionScheme: "QUADTREE",
-            subtreeLevels: 2,
-            maximumLevel: 1,
-            subtrees: {
-              uri: "https://example.com/{level}/{x}/{y}.subtree",
+        "3DTILES_multiple_contents": {
+          content: [
+            {
+              uri: "https://example.com/{level}/{x}/{y}.b3dm",
             },
-          },
-          "3DTILES_multiple_contents": {
-            content: [
-              {
-                uri: "https://example.com/{level}/{x}/{y}.b3dm",
-              },
-              {
-                uri: "https://example.com/{level}/{x}/{y}.pnts",
-              },
-            ],
-          },
+            {
+              uri: "https://example.com/{level}/{x}/{y}.pnts",
+            },
+          ],
         },
-      }
+      },
+    };
+
+    var multipleContentsQuadtree = new ImplicitTileset(
+      tilesetResource,
+      tileJson,
+      metadataSchema
     );
 
-    it("contentIsAvailable throws for out-of-bounds contentIndex", function () {
+    it("contentIsAvailableAtIndex throws for out-of-bounds contentIndex", function () {
       var subtreeDescription = {
         tileAvailability: {
           descriptor: 1,
@@ -964,12 +1182,12 @@ describe("Scene/ImplicitSubtree", function () {
       var outOfBounds = 100;
       return subtree.readyPromise.then(function () {
         expect(function () {
-          subtree.contentIsAvailable(0, outOfBounds);
+          subtree.contentIsAvailableAtIndex(0, outOfBounds);
         }).toThrowDeveloperError();
       });
     });
 
-    it("contentIsAvailable works for multiple contents", function () {
+    it("contentIsAvailableAtIndex works for multiple contents", function () {
       var subtreeDescription = {
         tileAvailability: {
           descriptor: 1,
@@ -1055,16 +1273,12 @@ describe("Scene/ImplicitSubtree", function () {
       },
     };
 
-    var mockTilesetWithMetadata = {
-      metadata: {
-        schema: new MetadataSchema(schema),
-      },
-    };
+    var metadataSchema = new MetadataSchema(schema);
 
     var metadataQuadtree = new ImplicitTileset(
-      mockTilesetWithMetadata,
       tilesetResource,
-      implicitQuadtreeJson
+      implicitQuadtreeJson,
+      metadataSchema
     );
 
     it("creates a metadata table from internal metadata", function () {
@@ -1269,7 +1483,8 @@ describe("Scene/ImplicitSubtree", function () {
         quadtreeCoordinates
       );
       var coordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
         level: 1,
         x: 1,
         y: 1,
@@ -1315,7 +1530,8 @@ describe("Scene/ImplicitSubtree", function () {
 
       expect(function () {
         var coordinates = new ImplicitTileCoordinates({
-          subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+          subdivisionScheme: metadataQuadtree.subdivisionScheme,
+          subtreeLevels: metadataQuadtree.subtreeLevels,
           level: 4,
           x: 1,
           y: 1,
@@ -1361,7 +1577,8 @@ describe("Scene/ImplicitSubtree", function () {
       );
 
       var coordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+        subdivisionScheme: metadataQuadtree.subdivisionScheme,
+        subtreeLevels: metadataQuadtree.subtreeLevels,
         level: 1,
         x: 1,
         y: 1,
@@ -1406,7 +1623,8 @@ describe("Scene/ImplicitSubtree", function () {
       );
 
       var coordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+        subdivisionScheme: metadataQuadtree.subdivisionScheme,
+        subtreeLevels: metadataQuadtree.subtreeLevels,
         level: 1,
         x: 1,
         y: 0,
@@ -1556,16 +1774,12 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
-      var mockTilesetWithArrayMetadata = {
-        metadata: {
-          schema: new MetadataSchema(arraySchema),
-        },
-      };
+      var metadataSchema = new MetadataSchema(arraySchema);
 
       var arrayQuadtree = new ImplicitTileset(
-        mockTilesetWithArrayMetadata,
         tilesetResource,
-        implicitQuadtreeJson
+        implicitQuadtreeJson,
+        metadataSchema
       );
 
       var results = ImplicitTilingTester.generateSubtreeBuffers(
