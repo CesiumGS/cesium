@@ -235,6 +235,7 @@ describe("Scene/ImplicitTileset", function () {
       );
 
       expect(implicitTileset.metadataSchema).toBeDefined();
+      expect(implicitTileset.metadataSchema.classes.tile).toBeDefined();
     });
   });
 });

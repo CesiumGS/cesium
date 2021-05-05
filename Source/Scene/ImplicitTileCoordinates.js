@@ -6,19 +6,32 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 /**
  * The coordinates for a tile in an implicit tileset. The coordinates
- * are (level, x, y) for quadtrees or (level, x, y, z) for quadtrees.
+ * are (level, x, y) for quadtrees or (level, x, y, z) for octrees.
  * <p>
- * Level numbers are 0-indexed and start at the root of the implicit tileset
- * (the tile with the <code>3DTILES_implicit_tiling</code> extension).
+ * Level numbers are 0-indexed and typically start at the root of the implicit
+ * tileset (the tile with the <code>3DTILES_implicit_tiling</code> extension).
+ * This object can also represent the relative offset from one set of coordinates
+ * to another. See {@link ImplicitTileCoordinates#getOffsetCoordinates}. The term
+ * local coordinates refers to coordinates that are relative to the root of a
+ * subtree and the term global coordinates refers to coordinates relative to the
+ * root of an implicit tileset.
  * </p>
  * <p>
  * For box bounding volumes, x, y, z increase along the +x, +y, and +z
- * directions defined by the half axes
+ * directions defined by the half axes.
  * </p>
  * <p>
  * For region bounding volumes, x increases in the +longitude direction, y
  * increases in the +latitude direction, and z increases in the +height
- * direction
+ * direction.
+ * </p>
+ * <p>
+ * Care must be taken when converting between implicit coordinates and Morton
+ * indices because there is a 16-bit limit on {@link MortonOrder#encode2D} and
+ * a 10-bit limit on {@link MortonOrder#encode3D}. Typically these conversions
+ * should be done on local coordinates, not global coordinates, and the maximum
+ * number of levels in the subtree should be 15 for quadtree and 9 for octree (to
+ * account for the extra level needed by child subtree coordinates).
  * </p>
  *
  * @alias ImplicitTileCoordinates
@@ -206,7 +219,7 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
  * @param {ImplicitTileCoordinates} b
  * @private
  */
-function checkMatchingProperties(a, b) {
+function checkMatchingSubtreeShape(a, b) {
   if (a.subdivisionScheme !== b.subdivisionScheme) {
     throw new DeveloperError("coordinates must have same subdivisionScheme");
   }
@@ -227,7 +240,7 @@ ImplicitTileCoordinates.prototype.getDescendantCoordinates = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("offsetCoordinates", offsetCoordinates);
-  checkMatchingProperties(this, offsetCoordinates);
+  checkMatchingSubtreeShape(this, offsetCoordinates);
   //>>includeEnd('debug');
 
   var descendantLevel = this.level + offsetCoordinates.level;
@@ -322,7 +335,7 @@ ImplicitTileCoordinates.prototype.getOffsetCoordinates = function (
   ) {
     throw new DeveloperError("this is not an ancestor of descendant");
   }
-  checkMatchingProperties(this, descendantCoordinates);
+  checkMatchingSubtreeShape(this, descendantCoordinates);
   //>>includeEnd('debug');
 
   var offsetLevel = descendantCoordinates.level - this.level;
@@ -436,25 +449,22 @@ ImplicitTileCoordinates.prototype.isAncestor = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("descendantCoordinates", descendantCoordinates);
-  checkMatchingProperties(this, descendantCoordinates);
+  checkMatchingSubtreeShape(this, descendantCoordinates);
   //>>includeEnd('debug');
 
-  var subdivisionScheme = this.subdivisionScheme;
-  var tileLevel = this.level;
-  var tileX = this.x;
-  var tileY = this.y;
-
-  var levelDifference = descendantCoordinates.level - tileLevel;
+  var levelDifference = descendantCoordinates.level - this.level;
   if (levelDifference <= 0) {
     return false;
   }
 
-  var isAncestorX = tileX === descendantCoordinates.x >> levelDifference;
-  var isAncestorY = tileY === descendantCoordinates.y >> levelDifference;
+  var ancestorX = descendantCoordinates.x >> levelDifference;
+  var ancestorY = descendantCoordinates.y >> levelDifference;
+  var isAncestorX = this.x === ancestorX;
+  var isAncestorY = this.y === ancestorY;
 
-  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    var tileZ = this.z;
-    var isAncestorZ = tileZ === descendantCoordinates.z >> levelDifference;
+  if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    var ancestorZ = descendantCoordinates.z >> levelDifference;
+    var isAncestorZ = this.z === ancestorZ;
     return isAncestorX && isAncestorY && isAncestorZ;
   }
 
@@ -541,8 +551,8 @@ var scratchCoordinatesArray = [0, 0, 0];
  * Given a level number, morton index, and whether the tileset is an
  * octree/quadtree, compute the (level, x, y, [z]) coordinates
  *
- * @param {ImplicitSubdivisionScheme} subdivisionScheme
- * @param {Number} subtreeLevels
+ * @param {ImplicitSubdivisionScheme} subdivisionScheme Whether the coordinates are for a quadtree or octree
+ * @param {Number} subtreeLevels The number of distinct levels within the coordinate's subtree
  * @param {Number} level The level of the tree
  * @param {Number} mortonIndex The morton index of the tile.
  * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given Morton index
@@ -584,8 +594,8 @@ ImplicitTileCoordinates.fromMortonIndex = function (
  * Given a tile index and whether the tileset is an octree/quadtree, compute
  * the (level, x, y, [z]) coordinates
  *
- * @param {ImplicitSubdivisionScheme} subdivisionScheme
- * @param {Number} subtreeLevels
+ * @param {ImplicitSubdivisionScheme} subdivisionScheme Whether the coordinates are for a quadtree or octree
+ * @param {Number} subtreeLevels The number of distinct levels within the coordinate's subtree
  * @param {Number} tileIndex The tile's index
  * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given tile index
  * @private
