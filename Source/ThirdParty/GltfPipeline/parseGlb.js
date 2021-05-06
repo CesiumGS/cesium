@@ -71,6 +71,7 @@ import RuntimeError from '../../Core/RuntimeError.js'
             var binaryGltfBuffer = defaultValue(buffers.binary_glTF, buffers.KHR_binary_glTF);
             if (defined(binaryGltfBuffer)) {
                 binaryGltfBuffer.extras._pipeline.source = binaryBuffer;
+                delete binaryGltfBuffer.uri;
             }
         }
         // Remove the KHR_binary_glTF extension

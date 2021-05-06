@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.82 - 2021-06-01
+
+##### Additions :tada:
+
+- Added `FeatureDetection.supportsBigInt64Array`, `FeatureDetection.supportsBigUint64Array` and `FeatureDetection.supportsBigInt`.
+
 ### 1.81 - 2021-05-01
 
 ##### Fixes :wrench:

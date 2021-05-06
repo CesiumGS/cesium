@@ -1,4 +1,5 @@
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Represents empty content for tiles in a
@@ -90,6 +91,15 @@ Object.defineProperties(Empty3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function (value) {
+      throw new DeveloperError("Empty3DTileContent cannot have group metadata");
     },
   },
 });

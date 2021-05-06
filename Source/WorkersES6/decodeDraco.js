@@ -332,7 +332,7 @@ function decodePrimitive(parameters) {
 }
 
 function decode(parameters) {
-  if (defined(parameters.primitive)) {
+  if (defined(parameters.bufferView)) {
     return decodePrimitive(parameters);
   }
   return decodePointCloud(parameters);
