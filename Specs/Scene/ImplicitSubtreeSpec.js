@@ -121,7 +121,9 @@ describe("Scene/ImplicitSubtree", function () {
       "3DTILES_implicit_tiling": {
         subdivisionScheme: "QUADTREE",
         subtreeLevels: 2,
-        maximumLevel: 1,
+        // This is artificially high for ease of testing. This field is
+        // not validated at runtime.
+        maximumLevel: 3,
         subtrees: {
           uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
