@@ -6,7 +6,12 @@ import MetadataTableProperty from "./MetadataTableProperty.js";
 import MetadataType from "./MetadataType.js";
 
 /**
- * A table containing binary metadata for a collection of entities.
+ * A table containing binary metadata for a collection of entities. This is
+ * used for representing binary properties of a batch table, as well as binary
+ * metadata in 3D Tiles next extensions.
+ * <p>
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of entities in the table.

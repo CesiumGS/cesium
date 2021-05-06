@@ -7,6 +7,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  * <p>
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * </p>
  *
  * @alias MetadataEntity
  * @constructor

@@ -6,6 +6,10 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
 /**
  * A metadata class.
  *
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * </p>
+ *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the class.
  * @param {Object} options.class The class JSON object.

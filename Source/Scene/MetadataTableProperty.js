@@ -9,7 +9,10 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataType from "./MetadataType.js";
 
 /**
- * A binary property in a metadata table.
+ * A binary property in a {@MetadataTable}
+ * <p>
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of elements in each property array.

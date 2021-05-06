@@ -63,7 +63,9 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
 
   if (index < 0 || index >= this._count) {
-    throw new DeveloperError("index must be in [0, " + this._count + ")");
+    throw new DeveloperError(
+      "index must be in the range [0, " + this._count + ")"
+    );
   }
   //>>includeEnd('debug');
 
@@ -92,7 +94,9 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   Check.typeOf.string("propertyId", propertyId);
 
   if (index < 0 || index >= this._count) {
-    throw new DeveloperError("index must be in [0, " + this._count + ")");
+    throw new DeveloperError(
+      "index must be in the range [0, " + this._count + ")"
+    );
   }
   //>>includeEnd('debug');
 

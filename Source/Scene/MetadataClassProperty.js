@@ -7,7 +7,7 @@ import defined from "../Core/defined.js";
 import MetadataType from "./MetadataType.js";
 
 /**
- * A metadata property.
+ * A metadata property, as part of a {@link MetadataClass}
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the property.

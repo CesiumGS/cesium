@@ -5,6 +5,9 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
 
 /**
  * A feature texture.
+ * <p>
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.featureTexture The feature texture JSON.
