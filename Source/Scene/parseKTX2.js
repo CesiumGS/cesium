@@ -86,8 +86,8 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   ) {
     parseUncompressed(header, result);
   } else if (
-    (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) ||
-    dfd.colorModel === colorModelUASTC
+    header.vkFormat === 0x0 &&
+    (dfd.colorModel === colorModelETC1S || dfd.colorModel === colorModelUASTC)
   ) {
     // Compressed, initialize transcoder module
     transcodeCompressed(
