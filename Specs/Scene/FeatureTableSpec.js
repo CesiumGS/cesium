@@ -165,6 +165,29 @@ describe("Scene/FeatureTable", function () {
     expect(featureTable.setPropertyBySemantic(0, "NAME")).toBe(false);
   });
 
+  it("getPropertyTypedArray returns typed array", function () {
+    var featureTable = createFeatureTable();
+    var expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
+
+    expect(featureTable.getPropertyTypedArray("height")).toEqual(
+      expectedTypedArray
+    );
+  });
+
+  it("getPropertyTypedArray returns undefined if property does not exist", function () {
+    var featureTable = createFeatureTable();
+
+    expect(featureTable.getPropertyTypedArray("volume")).toBeUndefined();
+  });
+
+  it("getPropertyTypedArray throws if propertyId is undefined", function () {
+    var featureTable = createFeatureTable();
+
+    expect(function () {
+      featureTable.getPropertyTypedArray(undefined);
+    }).toThrowDeveloperError();
+  });
+
   describe("batch table compatibility", function () {
     var schemaJson = {
       classes: {
@@ -375,6 +398,14 @@ describe("Scene/FeatureTable", function () {
 
     it("setProperty returns false for unknown propertyId", function () {
       expect(batchTable.setProperty(0, "widgets", 5)).toBe(false);
+    });
+
+    it("getPropertyTypedArray returns undefined for JSON and hierarchy properties", function () {
+      expect(batchTable.getPropertyTypedArray("itemId")).toBeDefined();
+      expect(batchTable.getPropertyTypedArray("priority")).not.toBeDefined();
+      expect(
+        batchTable.getPropertyTypedArray("tireLocation")
+      ).not.toBeDefined();
     });
   });
 });

@@ -1341,4 +1341,52 @@ describe("Scene/MetadataTableProperty", function () {
       property.set(0, 8.0);
     }).toThrowDeveloperError();
   });
+
+  it("getTypedArray returns typed array", function () {
+    var propertyInt32 = {
+      type: "ARRAY",
+      componentType: "INT32",
+      componentCount: 3,
+    };
+
+    var propertyValues = [
+      [-2, -1, 0],
+      [1, 2, 3],
+    ];
+
+    var expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
+
+    var property = MetadataTester.createProperty({
+      property: propertyInt32,
+      values: propertyValues,
+    });
+
+    expect(property.getTypedArray()).toEqual(expectedTypedArray);
+  });
+
+  it("getTypedArray returns undefined if values are unpacked", function () {
+    var propertyInt32 = {
+      type: "ARRAY",
+      componentType: "INT32",
+    };
+
+    var propertyValues = [
+      [-2, -1, 0],
+      [1, 2, 3],
+    ];
+
+    var expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
+
+    var property = MetadataTester.createProperty({
+      property: propertyInt32,
+      values: propertyValues,
+    });
+
+    expect(property.getTypedArray()).toEqual(expectedTypedArray);
+
+    // Variable-size arrays are unpacked on set
+    property.set(0, [-2, -1]);
+
+    expect(property.getTypedArray()).toBeUndefined();
+  });
 });

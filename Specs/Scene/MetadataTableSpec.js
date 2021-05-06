@@ -749,4 +749,54 @@ describe("Scene/MetadataTable", function () {
       metadataTable.setPropertyBySemantic(2, "_HEIGHT", 0.0);
     }).toThrowDeveloperError();
   });
+
+  it("getPropertyTypedArray returns typed array", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+      },
+    };
+    var propertyValues = {
+      height: [1.0, 2.0],
+    };
+
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    var expectedTypedArray = new Float32Array([1.0, 2.0]);
+
+    expect(metadataTable.getPropertyTypedArray("height")).toEqual(
+      expectedTypedArray
+    );
+  });
+
+  it("getPropertyTypedArray returns undefined if property does not exist", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+      },
+    };
+    var propertyValues = {
+      height: [1.0, 2.0],
+    };
+
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    expect(metadataTable.getPropertyTypedArray("volume")).toBeUndefined();
+  });
+
+  it("getPropertyTypedArray throws if propertyId is undefined", function () {
+    var metadataTable = new MetadataTable({
+      count: 10,
+    });
+
+    expect(function () {
+      metadataTable.getPropertyTypedArray(undefined);
+    }).toThrowDeveloperError();
+  });
 });
