@@ -243,6 +243,42 @@ S2Cell.prototype.getParent = function () {
 };
 
 /**
+ * Gets the parent cell at the given level.
+ *
+ * @returns {S2Cell} Returns the parent of the S2Cell.
+ */
+S2Cell.prototype.getParentAtLevel = function (level) {
+  //>>includeStart('debug', pragmas.debug);
+  if (this._level === 0) {
+    throw new DeveloperError("cannot get parent of root cell.");
+  }
+  if (this._level <= level) {
+    throw new DeveloperError("cannot get parent of root cell.");
+  }
+  //>>includeEnd('debug');
+  var newLsb = lsbForLevel(level);
+  return new S2Cell((this._cellId & -newLsb) | newLsb);
+};
+
+S2Cell.fromFacePosLevel = function (face, pos, level) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("pos", pos);
+  if (face < 0 || face > 5) {
+    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+  }
+
+  if (level < 0 || level > S2MaxLevel) {
+    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+  }
+  if (pos < 0 || pos > Math.pow(4, level)) {
+    throw new DeveloperError("Invalid Hilbert position for level");
+  }
+  //>>includeEnd('debug');
+  var cell = new S2Cell((face << BigInt(S2PositionBits)) + (pos | BigInt(1)));
+  return cell.getParentAtLevel(level);
+};
+
+/**
  * Get center of the S2 cell.
  *
  * @returns {Cartesian} The position of center of the S2 cell.
@@ -505,10 +541,19 @@ function generateLookupTable() {
 }
 
 /**
+ * Return the lowest-numbered bit that is on for this cell id
  * @private
  */
 function lsb(cellId) {
   return cellId & (~cellId + BigInt(1));
+}
+
+/**
+ * Return the lowest-numbered bit that is on for cells at the given level.
+ * @private
+ */
+function lsbForLevel(level) {
+  return BigInt(1) << BigInt(2 * (S2MaxLevel - level));
 }
 
 export default S2Cell;
