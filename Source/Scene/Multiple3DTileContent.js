@@ -60,7 +60,6 @@ export default function Multiple3DTileContent(
   for (var i = 0; i < contentCount; i++) {
     var contentResource = tilesetResource.getDerivedResource({
       url: contentHeaders[i].uri,
-      preserveQueryParameters: true,
     });
 
     var serverKey = RequestScheduler.getServerKey(

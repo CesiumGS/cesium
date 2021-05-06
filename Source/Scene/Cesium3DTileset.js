@@ -1883,7 +1883,6 @@ function processMetadataExtension(tileset, tilesetJson) {
   if (defined(extension.schemaUri)) {
     var resource = tileset._resource.getDerivedResource({
       url: extension.schemaUri,
-      preserveQueryParameters: true,
     });
     schemaLoader = ResourceCache.loadSchema({
       resource: resource,
