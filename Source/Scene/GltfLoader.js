@@ -1,3 +1,4 @@
+import arrayFill from "../Core/arrayFill.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -778,7 +779,7 @@ function loadPrimitive(
     }
     primitive.morphWeights = defined(morphWeights)
       ? morphWeights.slice()
-      : new Array(targetsLength).fill(0.0);
+      : arrayFill(new Array(targetsLength), 0.0);
   }
 
   var indices = gltfPrimitive.indices;
@@ -893,7 +894,10 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
       });
     }
   } else {
-    skin.inverseBindMatrices = new Array(jointsLength).fill(Matrix4.IDENTITY);
+    skin.inverseBindMatrices = arrayFill(
+      new Array(jointsLength),
+      Matrix4.IDENTITY
+    );
   }
 
   return skin;

@@ -133,6 +133,10 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("normalize single values", function () {
+    if (!FeatureDetection.supportsBigInt()) {
+      return;
+    }
+
     var properties = {
       propertyInt8: {
         type: "INT8",

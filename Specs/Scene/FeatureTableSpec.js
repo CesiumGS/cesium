@@ -8,6 +8,10 @@ import {
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/FeatureTable", function () {
+  if (!MetadataTester.isSupported()) {
+    return;
+  }
+
   var properties = {
     name: {
       type: "STRING",

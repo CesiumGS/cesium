@@ -1709,6 +1709,10 @@ describe("Scene/ImplicitSubtree", function () {
     });
 
     it("handles metadata with string and array offsets", function () {
+      if (!MetadataTester.isSupported()) {
+        return;
+      }
+
       var arraySchema = {
         classes: {
           tile: {

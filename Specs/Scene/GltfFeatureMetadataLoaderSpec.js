@@ -16,6 +16,10 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "Scene/GltfFeatureMetadataLoader",
   function () {
+    if (!MetadataTester.isSupported()) {
+      return;
+    }
+
     var image = new Image();
     image.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";

@@ -89,6 +89,10 @@ describe(
     });
 
     it("parses extension with feature tables", function () {
+      if (!MetadataTester.isSupported()) {
+        return;
+      }
+
       var featureTableResults = MetadataTester.createFeatureTables({
         schema: featureTablesSchema,
         featureTables: {
