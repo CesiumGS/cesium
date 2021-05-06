@@ -243,7 +243,7 @@ MetadataTable.prototype.setPropertyBySemantic = function (
 };
 
 /**
- * Returns the typed array containing the property values.
+ * Returns a typed array containing the property values for a given propertyId.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
@@ -260,6 +260,8 @@ MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
   if (defined(property)) {
     return property.getTypedArray();
   }
+
+  return undefined;
 };
 
 function getDefault(classDefinition, propertyId) {

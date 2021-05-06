@@ -290,7 +290,7 @@ FeatureTable.prototype.setPropertyBySemantic = function (
 };
 
 /**
- * Returns the typed array containing the property values.
+ * Returns a typed array containing the property values for a given propertyId.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
@@ -305,6 +305,8 @@ FeatureTable.prototype.getPropertyTypedArray = function (propertyId) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyTypedArray(propertyId);
   }
+
+  return undefined;
 };
 
 export default FeatureTable;

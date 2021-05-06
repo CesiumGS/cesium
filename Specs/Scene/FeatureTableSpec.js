@@ -170,6 +170,12 @@ describe("Scene/FeatureTable", function () {
     );
   });
 
+  it("getPropertyTypedArray returns undefined if property does not exist", function () {
+    var featureTable = createFeatureTable();
+
+    expect(featureTable.getPropertyTypedArray("volume")).toBeUndefined();
+  });
+
   it("getPropertyTypedArray throws if propertyId is undefined", function () {
     var featureTable = createFeatureTable();
 
