@@ -9,6 +9,7 @@ import {
   when,
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
+import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/ImplicitSubtree", function () {
   function availabilityToBooleanArray(availability) {
