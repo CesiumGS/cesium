@@ -218,10 +218,25 @@
           });
         }
 
-        function applyCompressedTextureMaterial(primitive, scene) {
-          Sandcastle.declare(applyCompressedTextureMaterial); // For highlighting in Sandcastle.
+        function applyETC1SCompressedTextureMaterial(primitive, scene) {
+          Sandcastle.declare(applyETC1SCompressedTextureMaterial); // For highlighting in Sandcastle.
 
-          var compressedImageUrl = "../images/CesiumLogoFlat.ktx2";
+          var compressedImageUrl = "../images/Cesium_Logo_ETC1S.ktx2";
+
+          primitive.appearance.material = new Cesium.Material({
+            fabric: {
+              type: "Image",
+              uniforms: {
+                image: compressedImageUrl,
+              },
+            },
+          });
+        }
+
+        function applyUASTCCompressedTextureMaterial(primitive, scene) {
+          Sandcastle.declare(applyUASTCCompressedTextureMaterial); // For highlighting in Sandcastle.
+
+          var compressedImageUrl = "../images/Cesium_Logo_UASTC.ktx2";
 
           primitive.appearance.material = new Cesium.Material({
             fabric: {
@@ -350,11 +365,19 @@
               },
             },
             {
-              text: "Compressed Image",
+              text: "ETC1S Compressed Image",
               onselect: function () {
                 toggleRectangleVisibility();
-                applyCompressedTextureMaterial(rectangle, scene);
-                Sandcastle.highlight(applyCompressedTextureMaterial);
+                applyETC1SCompressedTextureMaterial(rectangle, scene);
+                Sandcastle.highlight(applyETC1SCompressedTextureMaterial);
+              },
+            },
+            {
+              text: "UASTC Compressed Image",
+              onselect: function () {
+                toggleRectangleVisibility();
+                applyUASTCCompressedTextureMaterial(rectangle, scene);
+                Sandcastle.highlight(applyUASTCCompressedTextureMaterial);
               },
             },
           ]);

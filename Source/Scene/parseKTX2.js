@@ -85,17 +85,18 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
     header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
   ) {
     parseUncompressed(header, result);
-  } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) {
+  } else if (
+    (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) ||
+    dfd.colorModel === colorModelUASTC
+  ) {
     // Compressed, initialize transcoder module
-    transcodeEtc1s(
+    transcodeCompressed(
       data,
       header,
       supportedTargetFormats,
       transcoderModule,
       result
     );
-  } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelUASTC) {
-    throw new RuntimeError("UASTC Basis Encoding not yet supported");
   } else {
     throw new RuntimeError("KTX2 pixel format is not yet supported.");
   }
@@ -140,7 +141,7 @@ function parseUncompressed(header, result) {
   }
 }
 
-function transcodeEtc1s(
+function transcodeCompressed(
   data,
   header,
   supportedTargetFormats,
@@ -165,7 +166,10 @@ function transcodeEtc1s(
   // Determine target format based on platform support
   var internalFormat, transcoderFormat;
   var BasisFormat = transcoderModule.transcoder_texture_format;
-  if (supportedTargetFormats.etc1 && !hasAlpha) {
+  if (supportedTargetFormats.astc && !hasAlpha) {
+    internalFormat = PixelFormat.RGB_ETC1;
+    transcoderFormat = BasisFormat.cTFETC1_RGB;
+  } else if (supportedTargetFormats.etc1 && !hasAlpha) {
     internalFormat = PixelFormat.RGB_ETC1;
     transcoderFormat = BasisFormat.cTFETC1_RGB;
   } else if (supportedTargetFormats.s3tc) {

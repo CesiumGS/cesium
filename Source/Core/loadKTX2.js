@@ -16,8 +16,9 @@ import when from "../ThirdParty/when.js";
  */
 var supportedTranscoderFormats;
 
-loadKTX2.setKTX2SupportedFormats = function (etc1, s3tc, pvrtc) {
+loadKTX2.setKTX2SupportedFormats = function (astc, etc1, s3tc, pvrtc) {
   supportedTranscoderFormats = {
+    astc: astc,
     etc1: etc1,
     s3tc: s3tc,
     pvrtc: pvrtc,
