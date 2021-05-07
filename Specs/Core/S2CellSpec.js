@@ -168,8 +168,17 @@ describe("Core/S2Cell", function () {
       BigInt(3383782026975903744),
       BigInt(3383782026984292352),
     ];
-    for (var i = 0; i < 4; i++) {
+    var i;
+    for (i = 0; i < 4; i++) {
       expect(cell.getChild(i)._cellId).toEqual(expectedChildCellIds[i]);
+    }
+
+    cell = S2Cell.fromToken("1");
+    expectedChildCellTokens = ["04", "0c", "14", "1c"];
+    for (i = 0; i < 4; i++) {
+      expect(S2Cell.getTokenFromId(cell.getChild(i)._cellId)).toEqual(
+        expectedChildCellTokens[i]
+      );
     }
   });
 
