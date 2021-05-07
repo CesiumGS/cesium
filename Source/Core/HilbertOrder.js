@@ -92,8 +92,8 @@ function rotate(n, x, y, rx, ry) {
     var temp = x;
     x = y;
     y = temp;
-    return [x, y];
   }
+  return [x, y];
 }
 
 export default HilbertOrder;
