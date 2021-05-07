@@ -1,107 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Load GeoJSON or TopoJSON data and apply custom styling.">
-    <meta name="cesium-sandcastle-labels" content="Showcases, Tutorials, DataSources">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Load GeoJSON or TopoJSON data and apply custom styling."
+    />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Tutorials, DataSources"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+
+        //Example 1: Load with default styling.
+        Sandcastle.addDefaultToolbarButton("Default styling", function () {
+          viewer.dataSources.add(
+            Cesium.GeoJsonDataSource.load(
+              "../../SampleData/ne_10m_us_states.topojson"
+            )
+          );
+        });
+
+        //Example 2: Load with basic styling options.
+        Sandcastle.addToolbarButton("Basic styling", function () {
+          viewer.dataSources.add(
+            Cesium.GeoJsonDataSource.load(
+              "../../SampleData/ne_10m_us_states.topojson",
+              {
+                stroke: Cesium.Color.HOTPINK,
+                fill: Cesium.Color.PINK.withAlpha(0.5),
+                strokeWidth: 3,
+              }
+            )
+          );
+        });
+
+        //Example 3: Apply custom graphics after load.
+        Sandcastle.addToolbarButton("Custom styling", function () {
+          //Seed the random number generator for repeatable results.
+          Cesium.Math.setRandomNumberSeed(0);
+
+          var promise = Cesium.GeoJsonDataSource.load(
+            "../../SampleData/ne_10m_us_states.topojson"
+          );
+          promise
+            .then(function (dataSource) {
+              viewer.dataSources.add(dataSource);
+
+              //Get the array of entities
+              var entities = dataSource.entities.values;
+
+              var colorHash = {};
+              for (var i = 0; i < entities.length; i++) {
+                //For each entity, create a random color based on the state name.
+                //Some states have multiple entities, so we store the color in a
+                //hash so that we use the same color for the entire state.
+                var entity = entities[i];
+                var name = entity.name;
+                var color = colorHash[name];
+                if (!color) {
+                  color = Cesium.Color.fromRandom({
+                    alpha: 1.0,
+                  });
+                  colorHash[name] = color;
+                }
+
+                //Set the polygon material to our random color.
+                entity.polygon.material = color;
+                //Remove the outlines.
+                entity.polygon.outline = false;
+
+                //Extrude the polygon based on the state's population.  Each entity
+                //stores the properties for the GeoJSON feature it was created from
+                //Since the population is a huge number, we divide by 50.
+                entity.polygon.extrudedHeight =
+                  entity.properties.Population / 50.0;
+              }
+            })
+            .otherwise(function (error) {
+              //Display any errrors encountered while loading.
+              window.alert(error);
+            });
+        });
+
+        //Reset the scene when switching demos.
+        Sandcastle.reset = function () {
+          viewer.dataSources.removeAll();
+
+          //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
+          viewer.camera.lookAt(
+            Cesium.Cartesian3.fromDegrees(-98.0, 40.0),
+            new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0)
+          );
+          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        };
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-
-//Example 1: Load with default styling.
-Sandcastle.addDefaultToolbarButton('Default styling', function() {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson'));
-});
-
-//Example 2: Load with basic styling options.
-Sandcastle.addToolbarButton('Basic styling', function() {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
-        stroke: Cesium.Color.HOTPINK,
-        fill: Cesium.Color.PINK.withAlpha(0.5),
-        strokeWidth: 3
-    }));
-});
-
-//Example 3: Apply custom graphics after load.
-Sandcastle.addToolbarButton('Custom styling', function() {
-    //Seed the random number generator for repeatable results.
-    Cesium.Math.setRandomNumberSeed(0);
-
-    var promise = Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson');
-    promise.then(function(dataSource) {
-        viewer.dataSources.add(dataSource);
-
-        //Get the array of entities
-        var entities = dataSource.entities.values;
-
-        var colorHash = {};
-        for (var i = 0; i < entities.length; i++) {
-            //For each entity, create a random color based on the state name.
-            //Some states have multiple entities, so we store the color in a
-            //hash so that we use the same color for the entire state.
-            var entity = entities[i];
-            var name = entity.name;
-            var color = colorHash[name];
-            if (!color) {
-                color = Cesium.Color.fromRandom({
-                    alpha : 1.0
-                });
-                colorHash[name] = color;
-            }
-
-            //Set the polygon material to our random color.
-            entity.polygon.material = color;
-            //Remove the outlines.
-            entity.polygon.outline = false;
-
-            //Extrude the polygon based on the state's population.  Each entity
-            //stores the properties for the GeoJSON feature it was created from
-            //Since the population is a huge number, we divide by 50.
-            entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
-        }
-    }).otherwise(function(error){
-        //Display any errrors encountered while loading.
-        window.alert(error);
-    });
-});
-
-//Reset the scene when switching demos.
-Sandcastle.reset = function() {
-    viewer.dataSources.removeAll();
-
-    //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
-    viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-};
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

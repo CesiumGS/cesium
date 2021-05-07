@@ -1,12 +1,19 @@
 {
-    "extends": "../.eslintrc.json",
+    "extends": "../Source/.eslintrc.json",
     "env": {
         "jasmine": true
     },
-    "globals": {
-        "defineSuite": true
-    },
     "rules": {
         "no-self-assign": "off"
-    }
+    },
+    "overrides": [
+        {
+            "files": [
+                "karma.conf.cjs"
+            ],
+            "parserOptions": {
+                "sourceType": "script"
+            }
+        }
+    ]
 }

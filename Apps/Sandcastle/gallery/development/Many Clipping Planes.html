@@ -1,277 +1,347 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Demonstration of large numbers of clipping planes.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Demonstration of large numbers of clipping planes."
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <table><tbody>
-        <tr>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
             <td>Distance</td>
             <td>
-                <input type="range" min="-100.0" max="100.0" step="1.0" data-bind="value: cylinderRadius, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: cylinderRadius">
+              <input
+                type="range"
+                min="-100.0"
+                max="100.0"
+                step="1.0"
+                data-bind="value: cylinderRadius, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: cylinderRadius" />
             </td>
             <td>Plane Count</td>
             <td>
-                <input type="range" min="1" max="128" step="1" data-bind="value: planeCount, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: planeCount">
+              <input
+                type="range"
+                min="1"
+                max="128"
+                step="1"
+                data-bind="value: planeCount, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: planeCount" />
             </td>
-        </tr>
-    </tbody></table>
-    <select data-bind="options: exampleTypes, value: currentExampleType"></select>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    infoBox: false,
-    selectionIndicator: false,
-    shouldAnimate : true,
-    projectionPicker : true,
-    terrainProvider: Cesium.createWorldTerrain()
-});
-
-viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-
-var globe = viewer.scene.globe;
-globe.depthTestAgainstTerrain = true;
-
-var cylinderRadius = -20.0;
-var radiusMultiplier = 1.0;
-
-var steps = 32;
-var clippingPlanes = [];
-var modelEntityClippingPlanes;
-var clippingModeUnion = false;
-var enabled = true;
-
-var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm', 'terrain'];
-var viewModel = {
-    cylinderRadius : cylinderRadius,
-    exampleTypes : clipObjects,
-    currentExampleType : clipObjects[0],
-    planeCount : steps
-};
-
-Cesium.knockout.track(viewModel);
-
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'cylinderRadius').subscribe(
-    function(newValue) {
-        cylinderRadius = parseFloat(viewModel.cylinderRadius);
-        updatePlanes();
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'planeCount').subscribe(
-    function(newValue) {
-        var newSteps = parseFloat(viewModel.planeCount);
-        if (newSteps !== steps) {
-            steps = newSteps;
-            modelEntityClippingPlanes.removeAll();
-            computePlanes();
-        }
-    }
-);
-
-var scene = viewer.scene;
-var planeEntities = [];
-var selectedPlane;
-
-function updatePlanes() {
-    for (var i = 0; i < clippingPlanes.length; i++) {
-        var plane = clippingPlanes[i];
-        plane.distance = cylinderRadius * radiusMultiplier;
-    }
-}
-
-function computePlanes() {
-    var stepDegrees = Cesium.Math.TWO_PI / steps;
-    clippingPlanes = [];
-
-    for (var i = 0; i < steps; i++) {
-        var angle = i * stepDegrees;
-        var dir = new Cesium.Cartesian3();
-        dir.x = 1.0;
-        dir.y = Math.tan(angle);
-        if (angle > Cesium.Math.PI_OVER_TWO) {
-            dir.x = -1.0;
-            dir.y *= -1.0;
-        }
-        if (angle > Cesium.Math.PI) {
-            dir.x = -1.0;
-        }
-        if (angle > (Cesium.Math.PI_OVER_TWO * 3)) {
-            dir.x = 1.0;
-            dir.y = -dir.y;
-        }
-        Cesium.Cartesian3.normalize(dir, dir);
-        var newPlane = new Cesium.ClippingPlane(dir, cylinderRadius * radiusMultiplier);
-        modelEntityClippingPlanes.add(newPlane);
-        clippingPlanes.push(newPlane);
-    }
-}
-
-function createClippingPlanes(modelMatrix) {
-    modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
-        modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,
-        edgeWidth: 2.0,
-        edgeColor: Cesium.Color.WHITE,
-        unionClippingRegions : clippingModeUnion,
-        enabled : enabled
-    });
-    computePlanes();
-}
-
-function updateClippingPlanes() {
-    return modelEntityClippingPlanes;
-}
-
-var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
-var agiHqUrl = Cesium.IonResource.fromAssetId(6074);
-var instancedUrl = '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
-var pointCloudUrl = Cesium.IonResource.fromAssetId(5713);
-
-function loadModel(url) {
-    createClippingPlanes();
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 300.0);
-    var heading = 0.0;
-    var pitch = 0.0;
-    var roll = 0.0;
-    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
-    var entity = viewer.entities.add({
-        name : url,
-        position : position,
-        orientation : orientation,
-        model : {
-            uri : url,
-            scale : 20,
-            minimumPixelSize : 100.0,
-            clippingPlanes : new Cesium.CallbackProperty(updateClippingPlanes, false)
-        }
-    });
-    viewer.trackedEntity = entity;
-}
-
-var tileset;
-function loadTileset(url, height) {
-    createClippingPlanes();
-    tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url,
-        clippingPlanes : modelEntityClippingPlanes
-    }));
-
-    return tileset.readyPromise.then(function() {
-        var boundingSphere = tileset.boundingSphere;
-
-        var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
-        var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-        var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
-        var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
-        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
-
-        var radius = boundingSphere.radius;
-        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    }).otherwise(function(error) {
-        throw(error);
-    });
-}
-
-loadModel(modelUrl);
-
-Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
-    reset();
-
-    if (newValue === clipObjects[0]) {
-        // Model
-        loadModel(modelUrl);
-    } else if (newValue === clipObjects[1]) {
-        // B3dm photogrammetry
-        agiHqUrl.then(function(resource) {
-            return loadTileset(resource, 0.0);
+          </tr>
+        </tbody>
+      </table>
+      <select
+        data-bind="options: exampleTypes, value: currentExampleType"
+      ></select>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          infoBox: false,
+          selectionIndicator: false,
+          shouldAnimate: true,
+          projectionPicker: true,
+          terrainProvider: Cesium.createWorldTerrain(),
         });
-    } else if (newValue === clipObjects[2]) {
-        // Point clouds
-        radiusMultiplier = 20.0;
-        pointCloudUrl.then(function(resource) {
-            return loadTileset(resource, 0.0);
-        }).then(function() {
-            tileset.pointCloudShading.attenuation = true;
-        });
-    } else if (newValue === clipObjects[3]) {
-        // i3dm
-        loadTileset(instancedUrl, 100.0);
-    } else if (newValue === clipObjects[4]) {
-        // Terrain
-        var position = Cesium.Cartesian3.fromRadians(-2.0872979473351286, 0.6596620013036164, 2380.0);
-        var entity = viewer.entities.add({
-            position : position,
-            model : {
-                uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
-                minimumPixelSize : 128,
-                scale : 40
+
+        viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+
+        var globe = viewer.scene.globe;
+        globe.depthTestAgainstTerrain = true;
+
+        var cylinderRadius = -20.0;
+        var radiusMultiplier = 1.0;
+
+        var steps = 32;
+        var clippingPlanes = [];
+        var modelEntityClippingPlanes;
+        var clippingModeUnion = false;
+        var enabled = true;
+
+        var clipObjects = ["model", "b3dm", "pnts", "i3dm", "terrain"];
+        var viewModel = {
+          cylinderRadius: cylinderRadius,
+          exampleTypes: clipObjects,
+          currentExampleType: clipObjects[0],
+          planeCount: steps,
+        };
+
+        Cesium.knockout.track(viewModel);
+
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "cylinderRadius")
+          .subscribe(function (newValue) {
+            cylinderRadius = parseFloat(viewModel.cylinderRadius);
+            updatePlanes();
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "planeCount")
+          .subscribe(function (newValue) {
+            var newSteps = parseFloat(viewModel.planeCount);
+            if (newSteps !== steps) {
+              steps = newSteps;
+              modelEntityClippingPlanes.removeAll();
+              computePlanes();
             }
+          });
+
+        var scene = viewer.scene;
+        var planeEntities = [];
+        var selectedPlane;
+
+        function updatePlanes() {
+          for (var i = 0; i < clippingPlanes.length; i++) {
+            var plane = clippingPlanes[i];
+            plane.distance = cylinderRadius * radiusMultiplier;
+          }
+        }
+
+        function computePlanes() {
+          var stepDegrees = Cesium.Math.TWO_PI / steps;
+          clippingPlanes = [];
+
+          for (var i = 0; i < steps; i++) {
+            var angle = i * stepDegrees;
+            var dir = new Cesium.Cartesian3();
+            dir.x = 1.0;
+            dir.y = Math.tan(angle);
+            if (angle > Cesium.Math.PI_OVER_TWO) {
+              dir.x = -1.0;
+              dir.y *= -1.0;
+            }
+            if (angle > Cesium.Math.PI) {
+              dir.x = -1.0;
+            }
+            if (angle > Cesium.Math.PI_OVER_TWO * 3) {
+              dir.x = 1.0;
+              dir.y = -dir.y;
+            }
+            Cesium.Cartesian3.normalize(dir, dir);
+            var newPlane = new Cesium.ClippingPlane(
+              dir,
+              cylinderRadius * radiusMultiplier
+            );
+            modelEntityClippingPlanes.add(newPlane);
+            clippingPlanes.push(newPlane);
+          }
+        }
+
+        function createClippingPlanes(modelMatrix) {
+          modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
+            modelMatrix: Cesium.defined(modelMatrix)
+              ? modelMatrix
+              : Cesium.Matrix4.IDENTITY,
+            edgeWidth: 2.0,
+            edgeColor: Cesium.Color.WHITE,
+            unionClippingRegions: clippingModeUnion,
+            enabled: enabled,
+          });
+          computePlanes();
+        }
+
+        function updateClippingPlanes() {
+          return modelEntityClippingPlanes;
+        }
+
+        var modelUrl = "../../SampleData/models/CesiumAir/Cesium_Air.glb";
+        var agiHqUrl = Cesium.IonResource.fromAssetId(40866);
+        var instancedUrl =
+          "../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json";
+        var pointCloudUrl = Cesium.IonResource.fromAssetId(5713);
+
+        function loadModel(url) {
+          createClippingPlanes();
+          var position = Cesium.Cartesian3.fromDegrees(
+            -123.0744619,
+            44.0503706,
+            300.0
+          );
+          var heading = 0.0;
+          var pitch = 0.0;
+          var roll = 0.0;
+          var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+          var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+            position,
+            hpr
+          );
+          var entity = viewer.entities.add({
+            name: url,
+            position: position,
+            orientation: orientation,
+            model: {
+              uri: url,
+              scale: 20,
+              minimumPixelSize: 100.0,
+              clippingPlanes: new Cesium.CallbackProperty(
+                updateClippingPlanes,
+                false
+              ),
+            },
+          });
+          viewer.trackedEntity = entity;
+        }
+
+        var tileset;
+        function loadTileset(url, height) {
+          createClippingPlanes();
+          tileset = viewer.scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+              url: url,
+              clippingPlanes: modelEntityClippingPlanes,
+            })
+          );
+
+          return tileset.readyPromise
+            .then(function () {
+              var boundingSphere = tileset.boundingSphere;
+
+              var cartographic = Cesium.Cartographic.fromCartesian(
+                boundingSphere.center
+              );
+              var surface = Cesium.Cartesian3.fromRadians(
+                cartographic.longitude,
+                cartographic.latitude,
+                0.0
+              );
+              var offset = Cesium.Cartesian3.fromRadians(
+                cartographic.longitude,
+                cartographic.latitude,
+                height
+              );
+              var translation = Cesium.Cartesian3.subtract(
+                offset,
+                surface,
+                new Cesium.Cartesian3()
+              );
+              tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+              var radius = boundingSphere.radius;
+              viewer.camera.viewBoundingSphere(
+                boundingSphere,
+                new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
+              );
+              viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+            })
+            .otherwise(function (error) {
+              throw error;
+            });
+        }
+
+        loadModel(modelUrl);
+
+        Cesium.knockout
+          .getObservable(viewModel, "currentExampleType")
+          .subscribe(function (newValue) {
+            reset();
+
+            if (newValue === clipObjects[0]) {
+              // Model
+              loadModel(modelUrl);
+            } else if (newValue === clipObjects[1]) {
+              // B3dm photogrammetry
+              agiHqUrl.then(function (resource) {
+                return loadTileset(resource, 0.0);
+              });
+            } else if (newValue === clipObjects[2]) {
+              // Point clouds
+              radiusMultiplier = 20.0;
+              pointCloudUrl
+                .then(function (resource) {
+                  return loadTileset(resource, 0.0);
+                })
+                .then(function () {
+                  tileset.pointCloudShading.attenuation = true;
+                });
+            } else if (newValue === clipObjects[3]) {
+              // i3dm
+              loadTileset(instancedUrl, 100.0);
+            } else if (newValue === clipObjects[4]) {
+              // Terrain
+              var position = Cesium.Cartesian3.fromRadians(
+                -2.0872979473351286,
+                0.6596620013036164,
+                2380.0
+              );
+              var entity = viewer.entities.add({
+                position: position,
+                model: {
+                  uri: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+                  minimumPixelSize: 128,
+                  scale: 40,
+                },
+              });
+              viewer.trackedEntity = entity;
+              createClippingPlanes(
+                entity.computeModelMatrix(Cesium.JulianDate.now())
+              );
+              globe.clippingPlanes = modelEntityClippingPlanes;
+            }
+            updatePlanes();
+          });
+
+        function reset() {
+          radiusMultiplier = 1.0;
+          viewModel.cylinderRadius = cylinderRadius;
+          viewer.entities.removeAll();
+          viewer.scene.primitives.removeAll();
+          globe.clippingPlanes = undefined; // destroy Globe clipping planes, if any
+          modelEntityClippingPlanes = undefined;
+        }
+
+        Sandcastle.addToggleButton("union", clippingModeUnion, function (
+          checked
+        ) {
+          clippingModeUnion = checked;
+          modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
         });
-        viewer.trackedEntity = entity;
-        createClippingPlanes(entity.computeModelMatrix(Cesium.JulianDate.now()));
-        globe.clippingPlanes = modelEntityClippingPlanes;
-    }
-    updatePlanes();
-});
 
-function reset() {
-    radiusMultiplier = 1.0;
-    viewModel.cylinderRadius = cylinderRadius;
-    viewer.entities.removeAll();
-    viewer.scene.primitives.removeAll();
-    globe.clippingPlanes = undefined; // destroy Globe clipping planes, if any
-    modelEntityClippingPlanes = undefined;
-}
+        Sandcastle.addToggleButton("enabled", enabled, function (checked) {
+          enabled = checked;
+          modelEntityClippingPlanes.enabled = enabled;
+        });
 
-Sandcastle.addToggleButton('union', clippingModeUnion, function(checked) {
-    clippingModeUnion = checked;
-    modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
-});
-
-Sandcastle.addToggleButton('enabled', enabled, function(checked) {
-    enabled = checked;
-    modelEntityClippingPlanes.enabled = enabled;
-});
-
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

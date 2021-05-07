@@ -1,81 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw a rectangle on the globe surface">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Draw a rectangle on the globe surface" />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create the viewer.
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+
+        // Example 1: Draw a red rectangle on the globe surface.
+        var redRectangleInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleGeometry({
+            rectangle: Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+            ),
+          },
+        });
+
+        // Example 2: Draw a green extruded rectangle.
+
+        // The extrudedHeight option is used to set the height of the
+        // extruded side.  The height option is used to specify the distnace
+        // from the globe surface to the rectangle.  The rotation
+        // option can also be used to rotate the rectangle.
+        var greenRectangleInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleGeometry({
+            rectangle: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+            rotation: Cesium.Math.toRadians(45),
+            extrudedHeight: 300000.0,
+            height: 100000.0,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              new Cesium.Color(0.0, 1.0, 0.0, 0.5)
+            ),
+          },
+        });
+
+        // Add both rectangle instances to primitives
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [redRectangleInstance, greenRectangleInstance],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              closed: true,
+            }),
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// Create the viewer.
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-
-// Example 1: Draw a red rectangle on the globe surface.
-var redRectangleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-    }
-});
-
-// Example 2: Draw a green extruded rectangle.
-
-// The extrudedHeight option is used to set the height of the
-// extruded side.  The height option is used to specify the distnace
-// from the globe surface to the rectangle.  The rotation
-// option can also be used to rotate the rectangle.
-var greenRectangleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
-        rotation : Cesium.Math.toRadians(45),
-        extrudedHeight : 300000.0,
-        height : 100000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
-    }
-});
-
-// Add both rectangle instances to primitives
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [redRectangleInstance, greenRectangleInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        closed : true
-    })
-}));
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

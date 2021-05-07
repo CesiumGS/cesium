@@ -1,6 +1,3 @@
-define([], function() {
-'use strict';
-
 function kdbush(points, getX, getY, nodeSize, ArrayType) {
     return new KDBush(points, getX, getY, nodeSize, ArrayType);
 }
@@ -191,5 +188,4 @@ function sqDist(ax, ay, bx, by) {
     return dx * dx + dy * dy;
 }
 
-return kdbush;
-});
+export default kdbush;

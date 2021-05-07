@@ -1,5 +1,8 @@
 {
-    "extends": "../../.eslintrc.json",
+    "extends": "../.eslintrc.json",
+    "env": {
+        "amd": true
+    },
     "globals": {
         "JSON": true,
         "require": true,
@@ -7,10 +10,25 @@
         "Sandcastle": true,
         "Cesium": true
     },
+    "parserOptions": {
+        "ecmaVersion": 5,
+        "sourceType": "script"
+    },
     "rules": {
         "no-alert": ["off"],
         "no-implicit-globals": "off",
         "no-unused-vars": ["off"],
         "quotes": "off"
-    }
+    },
+    "overrides": [
+        {
+            "files": [
+                "load-cesium-es6.js"
+            ],
+            "parserOptions": {
+                "ecmaVersion": 2015,
+                "sourceType": "module"
+            }
+        }
+    ]
 }

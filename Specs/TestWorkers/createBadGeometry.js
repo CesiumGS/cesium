@@ -1,10 +1,7 @@
-define([
-        'Core/RuntimeError'
-    ], function(
-        RuntimeError) {
-    'use strict';
+define(function () {
+  "use strict";
 
-    return function() {
-        throw new RuntimeError('BadGeometry.createGeometry');
-    };
+  return function () {
+    throw new Error("BadGeometry.createGeometry");
+  };
 });

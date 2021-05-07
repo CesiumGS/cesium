@@ -1,12 +1,6 @@
-define([
-        './addExtensionsUsed',
-        './addToArray',
-        '../../Core/defined'
-    ], function(
-        addExtensionsUsed,
-        addToArray,
-        defined) {
-    'use strict';
+import addExtensionsUsed from './addExtensionsUsed.js'
+import addToArray from './addToArray.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Adds an extension to gltf.extensionsRequired if it does not already exist.
@@ -27,5 +21,4 @@ define([
         addExtensionsUsed(gltf, extension);
     }
 
-    return addExtensionsRequired;
-});
+    export default addExtensionsRequired;

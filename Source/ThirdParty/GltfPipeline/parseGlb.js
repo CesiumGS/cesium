@@ -1,20 +1,10 @@
-define([
-        './addPipelineExtras',
-        './removeExtensionsUsed',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/getMagic',
-        '../../Core/getStringFromTypedArray',
-        '../../Core/RuntimeError'
-    ], function(
-        addPipelineExtras,
-        removeExtensionsUsed,
-        defaultValue,
-        defined,
-        getMagic,
-        getStringFromTypedArray,
-        RuntimeError) {
-    'use strict';
+import addPipelineExtras from './addPipelineExtras.js'
+import removeExtensionsUsed from './removeExtensionsUsed.js'
+import defaultValue from '../../Core/defaultValue.js'
+import defined from '../../Core/defined.js'
+import getJsonFromTypedArray from '../../Core/getJsonFromTypedArray.js'
+import getMagic from '../../Core/getMagic.js'
+import RuntimeError from '../../Core/RuntimeError.js'
 
     var sizeOfUint32 = 4;
 
@@ -70,8 +60,7 @@ define([
         var jsonStart = 20;
         var binaryStart = jsonStart + contentLength;
 
-        var contentString = getStringFromTypedArray(glb, jsonStart, contentLength);
-        var gltf = JSON.parse(contentString);
+        var gltf = getJsonFromTypedArray(glb, jsonStart, contentLength);
         addPipelineExtras(gltf);
 
         var binaryBuffer = glb.subarray(binaryStart, length);
@@ -82,6 +71,7 @@ define([
             var binaryGltfBuffer = defaultValue(buffers.binary_glTF, buffers.KHR_binary_glTF);
             if (defined(binaryGltfBuffer)) {
                 binaryGltfBuffer.extras._pipeline.source = binaryBuffer;
+                delete binaryGltfBuffer.uri;
             }
         }
         // Remove the KHR_binary_glTF extension
@@ -103,8 +93,7 @@ define([
             byteOffset += chunkLength;
             // Load JSON chunk
             if (chunkType === 0x4E4F534A) {
-                var jsonString = getStringFromTypedArray(chunkBuffer);
-                gltf = JSON.parse(jsonString);
+                gltf = getJsonFromTypedArray(chunkBuffer);
                 addPipelineExtras(gltf);
             }
             // Load Binary chunk
@@ -122,5 +111,4 @@ define([
         return gltf;
     }
 
-    return parseGlb;
-});
+    export default parseGlb;

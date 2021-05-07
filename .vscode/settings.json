@@ -13,18 +13,12 @@
     },
     "search.exclude": {
         "Build": true,
-        "Instrumented": true,
         "node_modules": true,
         "Source/Shaders/**/*.js": true
     },
     "files.associations": {
         "*.czml": "json"
     },
-    "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true,
-    "editor.insertSpaces": true,
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false,
     "eslint.enable": true,
     "javascript.format.insertSpaceAfterCommaDelimiter": true,
     "javascript.format.insertSpaceAfterSemicolonInForStatements": true,
@@ -34,5 +28,6 @@
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
     "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
-    "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false
+    "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false,
+    "glTF.defaultV2Engine": "Cesium"
 }

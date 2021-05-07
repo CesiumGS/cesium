@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Toggle High Dynamic Range (HDR)." />
+    <meta name="cesium-sandcastle-labels" content="Post Processing" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+          shadows: true,
+        });
+
+        if (!viewer.scene.highDynamicRangeSupported) {
+          window.alert("This browser does not support high dynamic range.");
+        }
+
+        viewer.scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            -1915097.7863741855,
+            -4783356.851539908,
+            3748887.43462683
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.166004548388564,
+            -0.043242401760068994,
+            0.002179961955988574
+          ),
+          endTransform: Cesium.Matrix4.IDENTITY,
+        });
+
+        viewer.scene.highDynamicRange = true;
+
+        Sandcastle.addToggleButton("HDR", true, function (checked) {
+          viewer.scene.highDynamicRange = checked;
+        });
+
+        var url =
+          "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf";
+        var position = Cesium.Cartesian3.fromRadians(
+          -1.9516424279517286,
+          0.6322397098422969,
+          1239.0006814631095
+        );
+        var heading = Cesium.Math.toRadians(-15.0);
+        var pitch = 0;
+        var roll = 0;
+        var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          position,
+          hpr
+        );
+        var scale = 10.0;
+
+        var entity = viewer.entities.add({
+          name: url,
+          position: position,
+          orientation: orientation,
+          model: {
+            uri: url,
+            scale: scale,
+          },
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

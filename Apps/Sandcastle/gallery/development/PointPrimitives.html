@@ -1,241 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Add points to the scene.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Add points to the scene." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+
+        function addPointPrimitive() {
+          Sandcastle.declare(addPointPrimitive);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          pointPrimitives.add({
+            color: Cesium.Color.YELLOW,
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+          });
+        }
+
+        function setPointPrimitiveProperties() {
+          Sandcastle.declare(setPointPrimitiveProperties);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          pointPrimitives.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            show: true, // default
+            color: Cesium.Color.SKYBLUE, // default: WHITE
+            pixelSize: 10, // default: 1
+            outlineColor: Cesium.Color.YELLOW, // default: TRANSPARENT
+            outlineWidth: 3, // default: 0
+          });
+        }
+
+        function changePointPrimitiveProperties() {
+          Sandcastle.declare(changePointPrimitiveProperties);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+
+          // add() returns a PointPrimitive object containing functions to change
+          // the pointPrimitive's position and appearance.
+          var p = pointPrimitives.add({
+            pixelSize: 2,
+          });
+
+          p.position = Cesium.Cartesian3.fromDegrees(
+            -75.59777,
+            40.03883,
+            300000.0
+          );
+          p.pixelSize = 20.0;
+          p.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
+        }
+
+        function addMultiplePointPrimitives() {
+          Sandcastle.declare(addMultiplePointPrimitives);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          pointPrimitives.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            color: Cesium.Color.RED,
+            pixelSize: 5,
+          });
+          pointPrimitives.add({
+            position: Cesium.Cartesian3.fromDegrees(-80.5, 35.14),
+            color: Cesium.Color.BLUE,
+            pixelSize: 10,
+          });
+          pointPrimitives.add({
+            position: Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
+            color: Cesium.Color.LIME,
+            pixelSize: 20,
+          });
+        }
+
+        function scaleByDistance() {
+          Sandcastle.declare(scaleByDistance);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          pointPrimitives.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            // pixelSize will multiply by the scale factor, so in this
+            // example the size will range from 20px (near) to 5px (far).
+            pixelSize: 10,
+            scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
+          });
+        }
+
+        function fadeByDistance() {
+          Sandcastle.declare(fadeByDistance);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          pointPrimitives.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            pixelSize: 20,
+            translucencyByDistance: new Cesium.NearFarScalar(
+              1.5e2,
+              1.0,
+              1.5e7,
+              0.2
+            ),
+          });
+        }
+
+        function inReferenceFrame() {
+          Sandcastle.declare(inReferenceFrame);
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+            center
+          );
+
+          // center
+          pointPrimitives.add({
+            pixelSize: 20,
+            color: Cesium.Color.WHITE,
+            position: new Cesium.Cartesian3(0.0, 0.0, 0.0),
+          });
+          // east
+          pointPrimitives.add({
+            pixelSize: 10,
+            color: Cesium.Color.RED,
+            position: new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+          });
+          // north
+          pointPrimitives.add({
+            pixelSize: 10,
+            color: Cesium.Color.LIME,
+            position: new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+          });
+          // up
+          pointPrimitives.add({
+            pixelSize: 10,
+            color: Cesium.Color.BLUE,
+            position: new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+          });
+        }
+
+        function add100kPoints() {
+          Sandcastle.declare(add100kPoints);
+
+          var numPoints = 100000;
+
+          var pointPrimitives = scene.primitives.add(
+            new Cesium.PointPrimitiveCollection()
+          );
+          var base = scene.globe.ellipsoid.radii.x;
+          var color = Cesium.Color.LIGHTSKYBLUE;
+          var outlineColor = Cesium.Color.BLACK;
+
+          for (var j = 0; j < numPoints; ++j) {
+            var position = new Cesium.Cartesian3(
+              16000000 * Math.random() - 8000000,
+              -((4000000 * j) / numPoints + base),
+              2000000 * Math.random() - 1000000
+            );
+
+            pointPrimitives.add({
+              pixelSize: 5,
+              color: color,
+              outlineColor: outlineColor,
+              outlineWidth: 0,
+              position: position,
+            });
+          }
+        }
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Add point",
+            onselect: function () {
+              addPointPrimitive();
+              Sandcastle.highlight(addPointPrimitive);
+            },
+          },
+          {
+            text: "Set point properties at creation",
+            onselect: function () {
+              setPointPrimitiveProperties();
+              Sandcastle.highlight(setPointPrimitiveProperties);
+            },
+          },
+          {
+            text: "Change point properties",
+            onselect: function () {
+              changePointPrimitiveProperties();
+              Sandcastle.highlight(changePointPrimitiveProperties);
+            },
+          },
+          {
+            text: "Add multiple points",
+            onselect: function () {
+              addMultiplePointPrimitives();
+              Sandcastle.highlight(addMultiplePointPrimitives);
+            },
+          },
+          {
+            text: "Scale by viewer distance",
+            onselect: function () {
+              scaleByDistance();
+              Sandcastle.highlight(scaleByDistance);
+            },
+          },
+          {
+            text: "Fade by viewer distance",
+            onselect: function () {
+              fadeByDistance();
+              Sandcastle.highlight(fadeByDistance);
+            },
+          },
+          {
+            text: "Add points in reference frame",
+            onselect: function () {
+              inReferenceFrame();
+              Sandcastle.highlight(inReferenceFrame);
+            },
+          },
+          {
+            text: "Add 100k points",
+            onselect: function () {
+              add100kPoints();
+              Sandcastle.highlight(add100kPoints);
+            },
+          },
+        ]);
+
+        Sandcastle.reset = function () {
+          scene.primitives.removeAll();
+        };
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-
-function addPointPrimitive() {
-    Sandcastle.declare(addPointPrimitive);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    pointPrimitives.add({
-        color : Cesium.Color.YELLOW,
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
-    });
-}
-
-function setPointPrimitiveProperties() {
-    Sandcastle.declare(setPointPrimitiveProperties);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    pointPrimitives.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-        show : true, // default
-        color : Cesium.Color.SKYBLUE, // default: WHITE
-        pixelSize : 10, // default: 1
-        outlineColor : Cesium.Color.YELLOW, // default: TRANSPARENT
-        outlineWidth : 3 // default: 0
-    });
-}
-
-function changePointPrimitiveProperties() {
-    Sandcastle.declare(changePointPrimitiveProperties);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-
-    // add() returns a PointPrimitive object containing functions to change
-    // the pointPrimitive's position and appearance.
-    var p = pointPrimitives.add({
-        pixelSize : 2
-    });
-
-    p.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
-    p.pixelSize = 20.0;
-    p.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
-}
-
-function addMultiplePointPrimitives() {
-    Sandcastle.declare(addMultiplePointPrimitives);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    pointPrimitives.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-        color : Cesium.Color.RED,
-        pixelSize : 5
-    });
-    pointPrimitives.add({
-        position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14),
-        color : Cesium.Color.BLUE,
-        pixelSize : 10
-    });
-    pointPrimitives.add({
-        position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
-        color : Cesium.Color.LIME,
-        pixelSize : 20
-    });
-}
-
-function scaleByDistance() {
-    Sandcastle.declare(scaleByDistance);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    pointPrimitives.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-        // pixelSize will multiply by the scale factor, so in this
-        // example the size will range from 20px (near) to 5px (far).
-        pixelSize : 10,
-        scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
-    });
-}
-
-function fadeByDistance() {
-    Sandcastle.declare(fadeByDistance);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    pointPrimitives.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-        pixelSize : 20,
-        translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2)
-    });
-}
-
-function inReferenceFrame() {
-    Sandcastle.declare(inReferenceFrame);
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-    pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-
-    // center
-    pointPrimitives.add({
-        pixelSize : 20,
-        color : Cesium.Color.WHITE,
-        position : new Cesium.Cartesian3(0.0, 0.0, 0.0)
-    });
-    // east
-    pointPrimitives.add({
-        pixelSize : 10,
-        color : Cesium.Color.RED,
-        position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
-    });
-    // north
-    pointPrimitives.add({
-        pixelSize : 10,
-        color : Cesium.Color.LIME,
-        position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0)
-    });
-    // up
-    pointPrimitives.add({
-        pixelSize : 10,
-        color : Cesium.Color.BLUE,
-        position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0)
-    });
-}
-
-function add100kPoints() {
-    Sandcastle.declare(add100kPoints);
-
-    var numPoints = 100000;
-
-    var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
-    var base = scene.globe.ellipsoid.radii.x;
-    var color = Cesium.Color.LIGHTSKYBLUE;
-    var outlineColor = Cesium.Color.BLACK;
-
-    for (var j = 0; j < numPoints; ++j) {
-        var position = new Cesium.Cartesian3(
-            16000000 * Math.random() - 8000000,
-            -(4000000 * j / numPoints + base),
-            2000000 * Math.random() - 1000000);
-
-        pointPrimitives.add({
-            pixelSize : 5,
-            color : color,
-            outlineColor : outlineColor,
-            outlineWidth : 0,
-            position : position
-        });
-    }
-}
-
-Sandcastle.addToolbarMenu([{
-    text : 'Add point',
-    onselect : function() {
-        addPointPrimitive();
-        Sandcastle.highlight(addPointPrimitive);
-    }
-}, {
-    text : 'Set point properties at creation',
-    onselect : function() {
-        setPointPrimitiveProperties();
-        Sandcastle.highlight(setPointPrimitiveProperties);
-    }
-}, {
-    text : 'Change point properties',
-    onselect : function() {
-        changePointPrimitiveProperties();
-        Sandcastle.highlight(changePointPrimitiveProperties);
-    }
-}, {
-    text : 'Add multiple points',
-    onselect : function() {
-        addMultiplePointPrimitives();
-        Sandcastle.highlight(addMultiplePointPrimitives);
-    }
-}, {
-    text : 'Scale by viewer distance',
-    onselect : function() {
-        scaleByDistance();
-        Sandcastle.highlight(scaleByDistance);
-    }
-}, {
-    text : 'Fade by viewer distance',
-    onselect : function() {
-        fadeByDistance();
-        Sandcastle.highlight(fadeByDistance);
-    }
-}, {
-    text : 'Add points in reference frame',
-    onselect : function() {
-        inReferenceFrame();
-        Sandcastle.highlight(inReferenceFrame);
-    }
-}, {
-    text : 'Add 100k points',
-    onselect : function() {
-        add100kPoints();
-        Sandcastle.highlight(add100kPoints);
-    }
-}]);
-
-Sandcastle.reset = function () {
-    scene.primitives.removeAll();
-};
-
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>
