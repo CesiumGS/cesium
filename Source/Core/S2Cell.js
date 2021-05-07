@@ -176,7 +176,7 @@ S2Cell.getTokenFromId = function (cellId) {
     return "X";
   }
 
-  return cellId.toString(16).replace(/0*$/, "");
+  return cellId.toString(16).padStart(2, "0").replace(/0*$/, "");
 };
 
 /**
