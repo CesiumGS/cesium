@@ -161,6 +161,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Joey Rafidi](https://github.com/jrafidi)
 - [Geoplex GIS GmbH](https://www.geoplex.de)
   - [Leonard Holst](https://github.com/LHolst)
+- [Google LLC](https://www.google.com)
+  - [Mark Aubin](https://github.com/markaubin)
+  - [Michael Shantzis](https://github.com/shantzis1962)
+  - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
