@@ -410,6 +410,15 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.implicitCoordinates = undefined;
 
   /**
+   * For implicit tiling with S2, the S2Cell of the tile.
+   *
+   * @type {S2Cell}
+   *
+   * @private
+   */
+  this.s2Cell = undefined;
+
+  /**
    * For implicit tiling, each transcoded tile will hold a weak reference to
    * the {@link ImplicitSubtree}.
    *

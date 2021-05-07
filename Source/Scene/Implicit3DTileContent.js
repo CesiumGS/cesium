@@ -396,10 +396,37 @@ function deriveChildTile(
     contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
-  var boundingVolume = deriveBoundingVolume(
-    implicitTileset,
-    implicitCoordinates
-  );
+  var boundingVolume;
+  var childCell;
+  if (defined(implicitTileset.boundingVolume.extensions)) {
+    var boundingVolumeS2 =
+      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
+    if (defined(boundingVolumeS2)) {
+      // Get child coordinates from Morton index.
+      var childCoords = MortonOrder.decode2D(childIndex);
+      var hilbertIndex = HilbertOrder.encode2D(
+        2,
+        childCoords[0],
+        childCoords[1]
+      );
+      childCell = parentTile.s2Cell.getChild(hilbertIndex);
+      // Get Hilbert index.
+      boundingVolume = {
+        extensions: {
+          "3DTILES_bounding_volume_S2": {
+            token: S2Cell.getTokenFromId(childCell._cellId),
+            minimumHeight: boundingVolumeS2.minimumHeight,
+            maximumHeight: boundingVolumeS2.maximumHeight,
+          },
+        },
+      };
+    } else {
+      boundingVolume = deriveBoundingVolume(
+        implicitTileset,
+        implicitCoordinates
+      );
+    }
+  }
 
   var childGeometricError =
     implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
@@ -432,6 +459,10 @@ function deriveChildTile(
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
 
+  if (defined(childCell)) {
+    childTile.s2Cell = childCell;
+  }
+
   if (defined(subtree.metadataExtension)) {
     var metadataTable = subtree.metadataTable;
     childTile.metadata = new ImplicitTileMetadata({
@@ -444,25 +475,6 @@ function deriveChildTile(
   return childTile;
 }
 
-function deriveBoundingVolumeS2(rootBoundingVolume, level, x, y) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("rootBoundingVolume", rootBoundingVolume);
-  Check.typeOf.number("level", level);
-  Check.typeOf.number("x", x);
-  Check.typeOf.number("y", y);
-  //>>includeEnd('debug');
-  var rootCell = S2Cell.fromToken(rootBoundingVolume.token);
-  var face = rootCell._cellId >> BigInt(2 * 30 + 1);
-  var hilbertIndex = HilbertOrder.encode2D(level, x, y);
-  var resultCell = S2Cell.fromFacePosLevel(face, BigInt(hilbertIndex), level);
-  console.log("Child: " + S2Cell.getTokenFromId(resultCell._cellId));
-  return {
-    cell: S2Cell.getTokenFromId(resultCell._cellId),
-    minimumHeight: rootBoundingVolume.minimumHeight,
-    maximumHeight: rootBoundingVolume.maximumHeight,
-  };
-}
-
 /**
  * Given the coordinates of a tile, derive its bounding volume from the root.
  *
@@ -473,17 +485,6 @@ function deriveBoundingVolumeS2(rootBoundingVolume, level, x, y) {
  */
 function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
   var rootBoundingVolume = implicitTileset.boundingVolume;
-  if (defined(rootBoundingVolume.extensions)) {
-    if (defined(rootBoundingVolume.extensions["3DTILES_bounding_volume_S2"])) {
-      var childBoundingVolumeS2 = deriveBoundingVolumeS2(
-        rootBoundingVolume.extensions["3DTILES_bounding_volume_S2"],
-        implicitCoordinates.level,
-        implicitCoordinates.x,
-        implicitCoordinates.y
-      );
-      return childBoundingVolumeS2;
-    }
-  }
   if (defined(rootBoundingVolume.region)) {
     var childRegion = deriveBoundingRegion(
       rootBoundingVolume.region,
