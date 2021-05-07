@@ -175,8 +175,11 @@ S2Cell.getTokenFromId = function (cellId) {
   if (cellId === BigInt(0)) {
     return "X";
   }
-
-  return cellId.toString(16).padStart(2, "0").replace(/0*$/, "");
+  var trailingZeroBits = Math.floor(countTrailingZero(cellId) / 4);
+  return cellId
+    .toString(16)
+    .replace(/0*$/, "")
+    .padStart(16 - trailingZeroBits, "0");
 };
 
 /**
@@ -554,6 +557,19 @@ function lsb(cellId) {
  */
 function lsbForLevel(level) {
   return BigInt(1) << BigInt(2 * (S2MaxLevel - level));
+}
+
+/**
+ * Return the number of trailing zeros in number.
+ * @private
+ */
+function countTrailingZero(x) {
+  var count = 0;
+  while ((x & BigInt(1)) === BigInt(0)) {
+    x = x >> BigInt(1);
+    count++;
+  }
+  return count;
 }
 
 export default S2Cell;
