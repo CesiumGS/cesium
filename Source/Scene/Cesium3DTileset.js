@@ -1879,6 +1879,10 @@ function processMetadataExtension(tileset, tilesetJson) {
 
   var extension = tilesetJson.extensions["3DTILES_metadata"];
 
+  if (defined(extension.extras) && extension.extras.draftVersion === "0.0.0") {
+    return when.resolve(tilesetJson);
+  }
+
   var schemaLoader;
   if (defined(extension.schemaUri)) {
     var resource = tileset._resource.getDerivedResource({

@@ -51,7 +51,7 @@ describe(
     });
 
     it("Does not use a batch table", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           var content = tileset.root.content;
           expect(content.batchTableByteLength).toBe(0);
@@ -217,7 +217,7 @@ describe(
       });
 
       it("assigns groupMetadata", function () {
-        return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
           function (tileset) {
             var content = tileset.root.content;
             content.groupMetadata = groupMetadata;

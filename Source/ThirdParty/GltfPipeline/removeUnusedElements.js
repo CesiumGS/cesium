@@ -162,23 +162,22 @@ Remove.bufferView = function(gltf, bufferViewId) {
     if (hasExtension(gltf, 'EXT_feature_metadata')) {
         var extension = gltf.extensions.EXT_feature_metadata;
         var featureTables = extension.featureTables;
-        for (var featureTableName in featureTables) {
-            if (featureTables.hasOwnProperty(featureTableName)) {
-                var featureTable = featureTables[featureTableName];
+        for (var featureTableId in featureTables) {
+            if (featureTables.hasOwnProperty(featureTableId)) {
+                var featureTable = featureTables[featureTableId];
                 var properties = featureTable.properties;
-                for (var propertyName in properties) {
-                    if (properties.hasOwnProperty(propertyName)) {
-                        var property = properties[propertyName];
-                        if (property.bufferView > bufferViewId) {
-                            property.bufferView--;
-                        }
-                        var offsetBufferViews = property.offsetBufferViews;
-                        if (defined(offsetBufferViews)) {
-                            var offsetBufferViewsLength = offsetBufferViews.length;
-                            for (var i = 0; i < offsetBufferViewsLength; i++) {
-                                if (offsetBufferViews[i] > bufferViewId) {
-                                    offsetBufferViews[i]--;
-                                }
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            if (defined(property.bufferView) && property.bufferView > bufferViewId) {
+                                property.bufferView--;
+                            }
+                            if (defined(property.arrayOffsetBufferView) && property.arrayOffsetBufferView > bufferViewId) {
+                                property.arrayOffsetBufferView--;
+                            }
+                            if (defined(property.stringOffsetBufferView) && property.stringOffsetBufferView > bufferViewId) {
+                                property.stringOffsetBufferView--;
                             }
                         }
                     }
@@ -317,16 +316,18 @@ Remove.texture = function(gltf, textureId) {
     if (hasExtension(gltf, 'EXT_feature_metadata')) {
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                if (defined(primitive.extensions) &&
-                    defined(primitive.extensions.EXT_feature_metadata)) {
-                    var featureIdTextures = primitive.extension.EXT_feature_metadata;
-                    var featureIdTexturesLength = featureIdTextures.length;
-                    for (var i = 0; i < featureIdTexturesLength; ++i) {
-                        var featureIdTexture = featureIdTextures[i];
-                        var textureAccessor = featureIdTexture.featureIds;
-                        var textureInfo = textureAccessor.texture;
-                        if (textureInfo.index > textureId) {
-                            --textureInfo.index;
+                var extensions = primitive.extensions;
+                if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
+                    var extension = extensions.EXT_feature_metadata;
+                    var featureIdTextures = extension.featureIdTextures;
+                    if (defined(featureIdTextures)) {
+                        var featureIdTexturesLength = featureIdTextures.length;
+                        for (var i = 0; i < featureIdTexturesLength; ++i) {
+                            var featureIdTexture = featureIdTextures[i];
+                            var textureInfo = featureIdTexture.featureIds.texture;
+                            if (textureInfo.index > textureId) {
+                                --textureInfo.index;
+                            }
                         }
                     }
                 }
@@ -335,16 +336,18 @@ Remove.texture = function(gltf, textureId) {
 
         var extension = gltf.extensions.EXT_feature_metadata;
         var featureTextures = extension.featureTextures;
-        for (var featureTextureName in featureTextures) {
-            if (featureTextures.hasOwnProperty(featureTextureName)) {
-                var featureTexture = featureTextures[featureTextureName];
+        for (var featureTextureId in featureTextures) {
+            if (featureTextures.hasOwnProperty(featureTextureId)) {
+                var featureTexture = featureTextures[featureTextureId];
                 var properties = featureTexture.properties;
-                for (var propertyName in properties) {
-                    if (properties.hasOwnProperty(propertyName)) {
-                        var property = properties[propertyName];
-                        var textureInfo = property.texture;
-                        if (textureInfo.index > textureId) {
-                            --textureInfo.index;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            var textureInfo = property.texture;
+                            if (textureInfo.index > textureId) {
+                                --textureInfo.index;
+                            }
                         }
                     }
                 }
@@ -462,21 +465,22 @@ getListOfElementsIdsInUse.bufferView = function(gltf) {
     if (hasExtension(gltf, 'EXT_feature_metadata')) {
         var extension = gltf.extensions.EXT_feature_metadata;
         var featureTables = extension.featureTables;
-        for (var featureTableName in featureTables) {
-            if (featureTables.hasOwnProperty(featureTableName)) {
-                var featureTable = featureTables[featureTableName];
+        for (var featureTableId in featureTables) {
+            if (featureTables.hasOwnProperty(featureTableId)) {
+                var featureTable = featureTables[featureTableId];
                 var properties = featureTable.properties;
-                for (var propertyName in properties) {
-                    if (properties.hasOwnProperty(propertyName)) {
-                        var property = properties[propertyName];
-                        var bufferView = property.bufferView;
-                        usedBufferViewIds[bufferView] = true;
-
-                        var offsetBufferViews = property.offsetBufferViews;
-                        if (defined(offsetBufferViews)) {
-                            var offsetBufferViewsLength = offsetBufferViews.length;
-                            for (var i = 0; i < offsetBufferViewsLength; i++) {
-                                usedBufferViewIds[offsetBufferViews[i]] = true;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            if (defined(property.bufferView)) {
+                                usedBufferViewIds[property.bufferView] = true;
+                            }
+                            if (defined(property.arrayOffsetBufferView)) {
+                                usedBufferViewIds[property.arrayOffsetBufferView] = true;
+                            }
+                            if (defined(property.stringOffsetBufferView)) {
+                                usedBufferViewIds[property.stringOffsetBufferView] = true;
                             }
                         }
                     }
@@ -598,16 +602,17 @@ getListOfElementsIdsInUse.texture = function(gltf) {
     if (hasExtension(gltf, 'EXT_feature_metadata')) {
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                if (defined(primitive.extensions) &&
-                    defined(primitive.extensions.EXT_feature_metadata)) {
-                    var featureIdTextures = primitive.extension.EXT_feature_metadata;
-                    var featureIdTexturesLength = featureIdTextures.length;
-                    for (var i = 0; i < featureIdTexturesLength; ++i) {
-                        var featureIdTexture = featureIdTextures[i];
-                        var textureAccessor = featureIdTexture.featureIds;
-                        var textureInfo = textureAccessor.texture;
-                        var textureId = textureInfo.index;
-                        usedTextureIds[textureId] = true;
+                var extensions = primitive.extensions;
+                if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
+                    var extension = extensions.EXT_feature_metadata;
+                    var featureIdTextures = extension.featureIdTextures;
+                    if (defined(featureIdTextures)) {
+                        var featureIdTexturesLength = featureIdTextures.length;
+                        for (var i = 0; i < featureIdTexturesLength; ++i) {
+                            var featureIdTexture = featureIdTextures[i];
+                            var textureInfo = featureIdTexture.featureIds.texture;
+                            usedTextureIds[textureInfo.index] = true;
+                        }
                     }
                 }
             });
@@ -615,16 +620,17 @@ getListOfElementsIdsInUse.texture = function(gltf) {
 
         var extension = gltf.extensions.EXT_feature_metadata;
         var featureTextures = extension.featureTextures;
-        for (var featureTextureName in featureTextures) {
-            if (featureTextures.hasOwnProperty(featureTextureName)) {
-                var featureTexture = featureTextures[featureTextureName];
+        for (var featureTextureId in featureTextures) {
+            if (featureTextures.hasOwnProperty(featureTextureId)) {
+                var featureTexture = featureTextures[featureTextureId];
                 var properties = featureTexture.properties;
-                for (var propertyName in properties) {
-                    if (properties.hasOwnProperty(propertyName)) {
-                        var property = properties[propertyName];
-                        var textureInfo = property.texture;
-                        var textureId = textureInfo.index;
-                        usedTextureIds[textureId] = true;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            var textureInfo = property.texture;
+                            usedTextureIds[textureInfo.index] = true;
+                        }
                     }
                 }
             }

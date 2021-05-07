@@ -12,11 +12,12 @@ import Axis from "./Axis.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import ClassificationModel from "./ClassificationModel.js";
-import MetadataGltfExtension from "./MetadataGltfExtension.js";
+import MetadataSchema from "./MetadataSchema.js";
 import MetadataType from "./MetadataType.js";
 import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 import ModelUtility from "./ModelUtility.js";
+import parseFeatureMetadata from "./parseFeatureMetadata.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
@@ -321,12 +322,13 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     }
 
     var extension = gltf.extensions.EXT_feature_metadata;
-    var metadata = new MetadataGltfExtension({
+    var metadata = parseFeatureMetadata({
       extension: extension,
+      schema: new MetadataSchema(extension.schema),
       bufferViews: bufferViews,
     });
 
-    var featureTables = metadata.featureTables;
+    var featureTables = metadata._featureTables;
     var featureTable = featureTables[featureTableId];
 
     if (!defined(featureTable.class)) {
@@ -340,7 +342,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     var classProperties = featureTable.class.properties;
     for (var propertyId in classProperties) {
       if (classProperties.hasOwnProperty(propertyId)) {
-        var property = featureTable.properties[propertyId];
+        var property = featureTable._metadataTable._properties[propertyId];
         var classProperty = classProperties[propertyId];
         var type = classProperty.type;
         var valueType = classProperty.valueType;
