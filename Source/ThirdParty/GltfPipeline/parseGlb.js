@@ -75,7 +75,6 @@ function parseGlbVersion1(glb, header) {
             delete binaryGltfBuffer.uri;
         }
     }
-
     // Remove the KHR_binary_glTF extension
     removeExtensionsUsed(gltf, 'KHR_binary_glTF');
     return gltf;

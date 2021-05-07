@@ -93,14 +93,6 @@ function addDefaults(gltf) {
         if (material.alphaMode === 'MASK') {
             material.alphaCutoff = defaultValue(material.alphaCutoff, 0.5);
         }
-            
-        var pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
-        if (defined(pbrSpecularGlossiness)) {
-            pbrSpecularGlossiness.diffuseFactor = defaultValue(pbrSpecularGlossiness.diffuseFactor, [1.0, 1.0, 1.0, 1.0]);
-            pbrSpecularGlossiness.specularFactor = defaultValue(pbrSpecularGlossiness.specularFactor, [1.0, 1.0, 1.0]);
-            pbrSpecularGlossiness.glossinessFactor = defaultValue(pbrSpecularGlossiness.glossinessFactor, 1.0);
-            addTextureDefaults(pbrSpecularGlossiness.specularGlossinessTexture);
-        }
 
         var techniquesExtension = extensions.KHR_techniques_webgl;
         if (defined(techniquesExtension)) {
@@ -125,7 +117,7 @@ function addDefaults(gltf) {
             addTextureDefaults(pbrMetallicRoughness.metallicRoughnessTexture);
         }
 
-        var pbrSpecularGlossiness = extensions.pbrSpecularGlossiness;
+        var pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
         if (defined(pbrSpecularGlossiness)) {
             pbrSpecularGlossiness.diffuseFactor = defaultValue(pbrSpecularGlossiness.diffuseFactor, [1.0, 1.0, 1.0, 1.0]);
             pbrSpecularGlossiness.specularFactor = defaultValue(pbrSpecularGlossiness.specularFactor, [1.0, 1.0, 1.0]);
