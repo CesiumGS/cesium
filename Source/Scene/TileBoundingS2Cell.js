@@ -1,6 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
 import PolygonOutlineGeometry from "../Core/PolygonOutlineGeometry.js";
+import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -118,19 +119,14 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
   return this._orientedBoundingBox.intersectPlane(plane);
 };
 
-function getPolygonPositions(s2Cell, minimumHeight, maximumHeight) {
+/**
+ * @private
+ */
+function getPolygonHierarchy(s2Cell) {
   var positions = [];
-  var vertexScratch;
-  var vertexCartographicScratch;
   for (var i = 0; i < 4; i++) {
-    vertexScratch = s2Cell.getVertex(i);
-    vertexCartographicScratch = Cartographic.fromCartesian(vertexScratch);
-    vertexCartographicScratch.height = minimumHeight;
-    positions[i] = Cartographic.toCartesian(vertexCartographicScratch);
-    vertexCartographicScratch.height = maximumHeight;
-    positions[4 + i] = Cartographic.toCartesian(vertexCartographicScratch);
+    positions[i] = s2Cell.getVertex(i);
   }
-
   return positions;
 }
 
@@ -147,13 +143,12 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   //>>includeEnd('debug');
 
   var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
-  var geometry = PolygonOutlineGeometry.fromPositions({
-    positions: getPolygonPositions(
-      this.s2Cell,
-      this.minimumHeight,
-      this.maximumHeight
-    ),
+  var polygonGeometry = new PolygonOutlineGeometry({
+    polygonHierarchy: new PolygonHierarchy(getPolygonHierarchy(this.s2Cell)),
+    height: this.minimumHeight,
+    extrudedHeight: this.maximumHeight,
   });
+  var geometry = PolygonOutlineGeometry.createGeometry(polygonGeometry);
   var instance = new GeometryInstance({
     geometry: geometry,
     id: "outline",
