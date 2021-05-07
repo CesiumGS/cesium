@@ -41,6 +41,7 @@ function PointCloud3DTileContent(
   this._styleDirty = false;
   this._features = undefined;
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
@@ -131,6 +132,15 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });

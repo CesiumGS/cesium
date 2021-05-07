@@ -27,6 +27,7 @@ import Axis from "./Axis.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
+import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
@@ -41,6 +42,7 @@ import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
+import ResourceCache from "./ResourceCache.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 import StencilConstants from "./StencilConstants.js";
@@ -572,6 +574,9 @@ function Cesium3DTileset(options) {
    * <li><code>url</code>: the url of the failed tile.</li>
    * <li><code>message</code>: the error message.</li>
    * </ul>
+   * <p>
+   * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+   * </p>
    *
    * @type {Event}
    * @default new Event()
@@ -917,6 +922,18 @@ function Cesium3DTileset(options) {
    */
   this.examineVectorLinesFunction = undefined;
 
+  /**
+   * If the 3DTILES_metadata extension is used, this stores
+   * a {@link Cesium3DTilesetMetadata} object to access metadata.
+   *
+   * @type {Cesium3DTilesetMetadata|undefined}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.metadata = undefined;
+
+  this._schemaLoader = undefined;
+
   var that = this;
   var resource;
   when(options.url)
@@ -938,6 +955,11 @@ function Cesium3DTileset(options) {
       that._basePath = basePath;
 
       return Cesium3DTileset.loadJson(resource);
+    })
+    .then(function (tilesetJson) {
+      // This needs to be called before loadTileset() so tile metadata
+      // can be initialized synchronously in the Cesium3DTile constructor
+      return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
       that._root = that.loadTileset(resource, tilesetJson);
@@ -997,6 +1019,7 @@ function Cesium3DTileset(options) {
       that._clippingPlanesOriginMatrix = Matrix4.clone(
         that._initialClippingPlanesOriginMatrix
       );
+
       that._readyPromise.resolve(that);
     })
     .otherwise(function (error) {
@@ -1792,9 +1815,18 @@ Cesium3DTileset.prototype.loadTileset = function (
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
   if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
-    var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
+    var metadataSchema = defined(tileset.metadata)
+      ? tileset.metadata.schema
+      : undefined;
+
+    var implicitTileset = new ImplicitTileset(
+      baseResource,
+      tileHeader,
+      metadataSchema
+    );
     var rootCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
+      subtreeLevels: implicitTileset.subtreeLevels,
       level: 0,
       x: 0,
       y: 0,
@@ -1812,7 +1844,15 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
         uri: contentUri,
       },
     };
-    var tileJson = combine(contentJson, tileHeader);
+
+    var deepCopy = true;
+    var tileJson = combine(contentJson, tileHeader, deepCopy);
+
+    // The placeholder tile does not have any extensions. If there are any
+    // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
+    // copy them to the transcoded tiles.
+    delete tileJson.extensions;
+
     var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
     tile.implicitTileset = implicitTileset;
     tile.implicitCoordinates = rootCoordinates;
@@ -1820,6 +1860,48 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   }
 
   return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+}
+
+/**
+ * If the <code>3DTILES_metadata</code> extension is present, initialize the
+ * {@link Cesium3DTilesetMetadata} instance. This is asynchronous since
+ * metadata schemas may be external.
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Object} tilesetJson The tileset JSON
+ * @return {Promise<Object>} A promise that resolves to tilesetJson for chaining.
+ * @private
+ */
+function processMetadataExtension(tileset, tilesetJson) {
+  if (!has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
+    return when.resolve(tilesetJson);
+  }
+
+  var extension = tilesetJson.extensions["3DTILES_metadata"];
+
+  var schemaLoader;
+  if (defined(extension.schemaUri)) {
+    var resource = tileset._resource.getDerivedResource({
+      url: extension.schemaUri,
+    });
+    schemaLoader = ResourceCache.loadSchema({
+      resource: resource,
+    });
+  } else {
+    schemaLoader = ResourceCache.loadSchema({
+      schema: extension.schema,
+    });
+  }
+  tileset._schemaLoader = schemaLoader;
+
+  return schemaLoader.promise.then(function (schemaLoader) {
+    tileset.metadata = new Cesium3DTilesetMetadata({
+      schema: schemaLoader.schema,
+      extension: extension,
+    });
+
+    return tilesetJson;
+  });
 }
 
 var scratchPositionNormal = new Cartesian3();
@@ -1934,10 +2016,10 @@ function requestContent(tileset, tile) {
 
   var statistics = tileset._statistics;
   var expired = tile.contentExpired;
-  var requested = tile.requestContent();
+  var attemptedRequests = tile.requestContent();
 
-  if (!requested) {
-    ++statistics.numberOfAttemptedRequests;
+  if (attemptedRequests > 0) {
+    statistics.numberOfAttemptedRequests += attemptedRequests;
     return;
   }
 
@@ -1950,7 +2032,6 @@ function requestContent(tileset, tile) {
     }
   }
 
-  ++statistics.numberOfPendingRequests;
   tileset._requestedTilesInFlight.push(tile);
 
   tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
@@ -2034,7 +2115,7 @@ function cancelOutOfViewRequests(tileset, frameState) {
       continue;
     } else if (outOfView) {
       // RequestScheduler will take care of cancelling it
-      tile._request.cancel();
+      tile.cancelRequests();
       ++removeCount;
       continue;
     }
@@ -2062,7 +2143,6 @@ function addToProcessingQueue(tileset, tile) {
   return function () {
     tileset._processingQueue.push(tile);
 
-    --tileset._statistics.numberOfPendingRequests;
     ++tileset._statistics.numberOfTilesProcessing;
   };
 }
@@ -2209,8 +2289,17 @@ function addTileDebugLabel(tile, tileset, position) {
   }
 
   if (tileset.debugShowUrl) {
-    labelString += "\nUrl: " + tile._header.content.uri;
-    attributes++;
+    if (tile.hasMultipleContents) {
+      labelString += "\nUrls:";
+      var urls = tile.content.innerContentUrls;
+      for (var i = 0; i < urls.length; i++) {
+        labelString += "\n- " + urls[i];
+      }
+      attributes += urls.length;
+    } else {
+      labelString += "\nUrl: " + tile._header.content.uri;
+      attributes++;
+    }
   }
 
   var newLabel = {
@@ -2689,6 +2778,10 @@ Cesium3DTileset.prototype.destroy = function () {
   this._tileDebugLabels =
     this._tileDebugLabels && this._tileDebugLabels.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
+  if (defined(this._schemaLoader)) {
+    ResourceCache.unload(this._schemaLoader);
+  }
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {

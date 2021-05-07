@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -8,6 +9,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
+import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -29,6 +31,7 @@ import ImplicitSubtree from "./ImplicitSubtree.js";
  * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
  * @param {Number} [byteOffset=0] The offset into the array buffer
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function Implicit3DTileContent(
   tileset,
@@ -42,14 +45,25 @@ export default function Implicit3DTileContent(
   Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
   //>>includeEnd('debug');
 
-  this._implicitTileset = tile.implicitTileset;
-  this._implicitCoordinates = tile.implicitCoordinates;
+  var implicitTileset = tile.implicitTileset;
+  var implicitCoordinates = tile.implicitCoordinates;
+
+  this._implicitTileset = implicitTileset;
+  this._implicitCoordinates = implicitCoordinates;
+  this._implicitSubtree = undefined;
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
+
+  var templateValues = implicitCoordinates.getTemplateValues();
+  var subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource({
+    templateValues: templateValues,
+  });
+  this._url = subtreeResource.getUrlComponent(true);
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -117,13 +131,22 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
 
   url: {
     get: function () {
-      return this._resource.getUrlComponent(true);
+      return this._url;
     },
   },
 
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });
@@ -144,8 +167,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   var subtree = new ImplicitSubtree(
     content._resource,
     uint8Array,
-    content._implicitTileset
+    content._implicitTileset,
+    content._implicitCoordinates
   );
+  content._implicitSubtree = subtree;
+
   subtree.readyPromise
     .then(function () {
       expandSubtree(content, subtree);
@@ -224,7 +250,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
 
     for (var j = 0; j < branchingFactor; j++) {
       var index = i * branchingFactor + j;
-      if (subtree.childSubtreeIsAvailable(index)) {
+      if (subtree.childSubtreeIsAvailableAtIndex(index)) {
         results.push({
           tile: leafTile,
           childIndex: j,
@@ -286,7 +312,7 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
     ) {
       var childBitIndex = levelOffset + childMortonIndex;
 
-      if (!subtree.tileIsAvailable(childBitIndex)) {
+      if (!subtree.tileIsAvailableAtIndex(childBitIndex)) {
         currentRow.push(undefined);
         continue;
       }
@@ -346,21 +372,26 @@ function deriveChildTile(
   if (defaultValue(parentIsPlaceholderTile, false)) {
     implicitCoordinates = parentTile.implicitCoordinates;
   } else {
-    implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
+    implicitCoordinates = parentTile.implicitCoordinates.getChildCoordinates(
       childIndex
     );
   }
 
-  var contentJson;
-  if (subtree.contentIsAvailable(childBitIndex)) {
-    var childContentUri = implicitTileset.contentUriTemplate.getDerivedResource(
-      {
-        templateValues: implicitCoordinates.getTemplateValues(),
-      }
-    ).url;
-    contentJson = {
+  var contentJsons = [];
+  for (var i = 0; i < implicitTileset.contentCount; i++) {
+    if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
+      continue;
+    }
+    var childContentTemplate = implicitTileset.contentUriTemplates[i];
+    var childContentUri = childContentTemplate.getDerivedResource({
+      templateValues: implicitCoordinates.getTemplateValues(),
+    }).url;
+    var contentJson = {
       uri: childContentUri,
     };
+    // combine() is used to pass through any additional properties the
+    // user specified such as extras or extensions
+    contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
   var boundingVolume = deriveBoundingVolume(
@@ -374,16 +405,39 @@ function deriveChildTile(
     boundingVolume: boundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
-    content: contentJson,
   };
 
+  if (contentJsons.length === 1) {
+    tileJson.content = contentJsons[0];
+  } else if (contentJsons.length > 1) {
+    tileJson.extensions = {
+      "3DTILES_multiple_contents": {
+        content: contentJsons,
+      },
+    };
+  }
+
+  var deep = true;
   var childTile = makeTile(
     implicitContent,
     implicitTileset.baseResource,
-    tileJson,
+    // combine() is used to pass through any additional properties the
+    // user specified such as extras or extensions
+    combine(tileJson, implicitTileset.tileHeader, deep),
     parentTile
   );
   childTile.implicitCoordinates = implicitCoordinates;
+  childTile.implicitSubtree = subtree;
+
+  if (defined(subtree.metadataExtension)) {
+    var metadataTable = subtree.metadataTable;
+    childTile.metadata = new ImplicitTileMetadata({
+      class: metadataTable.class,
+      implicitCoordinates: implicitCoordinates,
+      implicitSubtree: subtree,
+    });
+  }
+
   return childTile;
 }
 
@@ -580,7 +634,7 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
  */
 function makePlaceholderChildSubtree(content, parentTile, childIndex) {
   var implicitTileset = content._implicitTileset;
-  var implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
+  var implicitCoordinates = parentTile.implicitCoordinates.getChildCoordinates(
     childIndex
   );
 
@@ -661,6 +715,8 @@ Implicit3DTileContent.prototype.isDestroyed = function () {
 };
 
 Implicit3DTileContent.prototype.destroy = function () {
+  this._implicitSubtree =
+    this._implicitSubtree && this._implicitSubtree.destroy();
   return destroyObject(this);
 };
 

@@ -7,7 +7,7 @@ describe("Scene/ConditionsExpression", function () {
     this._value = value;
   }
 
-  MockFeature.prototype.getProperty = function () {
+  MockFeature.prototype.getPropertyInherited = function () {
     return this._value;
   };
 

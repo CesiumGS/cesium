@@ -1,5 +1,6 @@
 import { defined, defaultValue } from "../Source/Cesium.js";
 import concatTypedArrays from "./concatTypedArrays.js";
+import MetadataTester from "./MetadataTester.js";
 
 /**
  * Class to generate implicit subtrees for implicit tiling unit tests
@@ -14,6 +15,15 @@ export default function ImplicitTilingTester() {}
  * @property {Number} lengthBits How many bits are in the bitstream. This must be specified, even if descriptor is a string of <code>0</code>s and <code>1</code>s
  * @property {Boolean} isInternal <code>true</code> if an internal bufferView should be created. <code>false</code> indicates the bufferview is stored in an external buffer instead.
  * @property {Boolean} [shareBuffer=false] This is only used for content availability. If <code>true</code>, then the content availability will share the same buffer as the tile availaibility, as this is a common optimization
+ * @property {Boolean} [includeAvailableCount=false] If true, set availableCount
+ */
+
+/**
+ * A description of 3DTILES_metadata properties stored in the subtree.
+ * @typedef {Object} MetadataDescription
+ * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
+ * @property {Object} featureTables Options to pass into {@link MetadataTester.createFeatureTables} to create the feature table buffer views.
+ * @private
  */
 
 /**
@@ -22,6 +32,8 @@ export default function ImplicitTilingTester() {}
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
+ * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
+ * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
  * @private
  */
 
@@ -96,74 +108,149 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
 };
 
 function makeBufferViews(subtreeDescription, subtreeJson) {
-  var parsedAvailability = [
-    // NOTE: The code below assumes tile availability is
-    // listed before content availability.
-    parseAvailability("tileAvailability", subtreeDescription.tileAvailability),
-    parseAvailability(
-      "childSubtreeAvailability",
+  // Content availability is optional.
+  var hasContent = defined(subtreeDescription.contentAvailability);
+
+  // pass 1: parse availability -------------------------------------------
+  var parsedAvailability = {
+    tileAvailability: parseAvailability(subtreeDescription.tileAvailability),
+    childSubtreeAvailability: parseAvailability(
       subtreeDescription.childSubtreeAvailability
     ),
-  ];
+  };
 
-  if (defined(subtreeDescription.contentAvailability)) {
-    parsedAvailability.push(
-      parseAvailability(
-        "contentAvailability",
-        subtreeDescription.contentAvailability
-      )
+  if (hasContent) {
+    parsedAvailability.contentAvailability = subtreeDescription.contentAvailability.map(
+      parseAvailability
     );
   }
 
-  // Some additional buffer in the subtree file (e.g. for metadata)
-  // Technically this will add an extraneous key 'other' to the
-  // subtree JSON, but that will be ignored by ImplicitSubtree
+  // to simulate additional buffer views for metadata or other purposes.
   if (defined(subtreeDescription.other)) {
-    parsedAvailability.push(
-      parseAvailability("other", subtreeDescription.other)
-    );
+    parsedAvailability.other = parseAvailability(subtreeDescription.other);
   }
 
+  // pass 2: create buffer view JSON and gather typed arrays ------------------
   var bufferViewsU8 = {
     internal: [],
     external: [],
+    count: 0,
   };
-  var bufferViewCount = 0;
-  for (var i = 0; i < parsedAvailability.length; i++) {
-    var parsed = parsedAvailability[i];
-    if (parsed.name === "contentAvailability" && parsed.shareBuffer) {
-      subtreeJson.contentAvailability = {
-        bufferView: subtreeJson.tileAvailability.bufferView,
-      };
-    } else if (defined(parsed.constant)) {
-      subtreeJson[parsed.name] = {
-        constant: parsed.constant,
+
+  var bufferViewJsonArray = [];
+  gatherBufferViews(
+    bufferViewsU8,
+    bufferViewJsonArray,
+    parsedAvailability.tileAvailability
+  );
+  if (hasContent) {
+    parsedAvailability.contentAvailability.forEach(function (
+      contentAvailability
+    ) {
+      gatherBufferViews(
+        bufferViewsU8,
+        bufferViewJsonArray,
+        contentAvailability
+      );
+    });
+  }
+  gatherBufferViews(
+    bufferViewsU8,
+    bufferViewJsonArray,
+    parsedAvailability.childSubtreeAvailability
+  );
+
+  // to simulate additional buffer views for metadata or other purposes.
+  if (defined(parsedAvailability.other)) {
+    gatherBufferViews(
+      bufferViewsU8,
+      bufferViewJsonArray,
+      parsedAvailability.other
+    );
+  }
+  if (bufferViewJsonArray.length > 0) {
+    subtreeJson.bufferViews = bufferViewJsonArray;
+  }
+
+  // pass 3: update the subtree availability JSON -----------------------------
+  subtreeJson.tileAvailability =
+    parsedAvailability.tileAvailability.availabilityJson;
+  subtreeJson.childSubtreeAvailability =
+    parsedAvailability.childSubtreeAvailability.availabilityJson;
+
+  if (hasContent) {
+    var contentAvailabilityArray = parsedAvailability.contentAvailability;
+    if (contentAvailabilityArray.length > 1) {
+      subtreeJson.extensions = {
+        "3DTILES_multiple_contents": {
+          contentAvailability: contentAvailabilityArray.map(function (x) {
+            return x.availabilityJson;
+          }),
+        },
       };
     } else {
-      var bufferViewId = bufferViewCount;
-      bufferViewCount++;
-
-      var bufferViewJson = {
-        buffer: undefined,
-        byteOffset: undefined,
-        byteLength: parsed.byteLength,
-      };
-      subtreeJson.bufferViews.push(bufferViewJson);
-      subtreeJson[parsed.name] = {
-        bufferView: bufferViewId,
-      };
-
-      var location = parsed.isInternal ? "internal" : "external";
-      bufferViewsU8[location].push({
-        bufferView: parsed.bitstream,
-        // save a reference to the object so we can update the offsets and
-        // lengths later.
-        json: bufferViewJson,
-      });
+      subtreeJson.contentAvailability =
+        contentAvailabilityArray[0].availabilityJson;
     }
   }
 
+  // pass 4: add metadata buffer views --------------------------------------
+  if (defined(subtreeDescription.metadata)) {
+    addMetadata(bufferViewsU8, subtreeJson, subtreeDescription.metadata);
+  }
+
+  // wrap up ----------------------------------------------------------------
+
   return bufferViewsU8;
+}
+
+function gatherBufferViews(
+  bufferViewsU8,
+  bufferViewJsonArray,
+  parsedBitstream
+) {
+  if (defined(parsedBitstream.constant)) {
+    parsedBitstream.availabilityJson = {
+      constant: parsedBitstream.constant,
+      availableCount: parsedBitstream.availableCount,
+    };
+  } else if (defined(parsedBitstream.shareBuffer)) {
+    // simplifying assumptions:
+    // 1. shareBuffer is only used for content availability
+    // 2. tileAvailability is stored in the first bufferView so it has index 0
+    parsedBitstream.availabilityJson = {
+      bufferView: 0,
+      availableCount: parsedBitstream.availableCount,
+    };
+  } else {
+    var bufferViewId = bufferViewsU8.count;
+    bufferViewsU8.count++;
+
+    var bufferViewJson = {
+      buffer: undefined,
+      byteOffset: undefined,
+      byteLength: parsedBitstream.byteLength,
+    };
+    bufferViewJsonArray.push(bufferViewJson);
+
+    parsedBitstream.availabilityJson = {
+      bufferView: bufferViewId,
+      availableCount: parsedBitstream.availableCount,
+    };
+
+    var bufferView = {
+      bufferView: parsedBitstream.bitstream,
+      // save a reference to the object so we can update the offsets and
+      // lengths later.
+      json: bufferViewJson,
+    };
+
+    if (parsedBitstream.isInternal) {
+      bufferViewsU8.internal.push(bufferView);
+    } else {
+      bufferViewsU8.external.push(bufferView);
+    }
+  }
 }
 
 function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
@@ -206,16 +293,23 @@ function makeJsonChunk(json) {
   return buffer;
 }
 
-function parseAvailability(name, availability) {
+function parseAvailability(availability) {
   var parsed = parseAvailabilityDescriptor(availability.descriptor);
-  parsed.name = name;
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
+
+  if (defined(parsed.constant) && availability.includeAvailableCount) {
+    // Only set available count to the number of bits if the constant is 1
+    parsed.availableCount = parsed.constant * availability.lengthBits;
+  }
+
+  // this will be populated by gatherBufferViews()
+  parsed.availabilityJson = undefined;
 
   return parsed;
 }
 
-function parseAvailabilityDescriptor(descriptor) {
+function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
   if (typeof descriptor === "number") {
     return {
       constant: descriptor,
@@ -233,19 +327,115 @@ function parseAvailabilityDescriptor(descriptor) {
     byteLengthWithPadding += 8 - (byteLengthWithPadding % 8);
   }
 
+  var availableCount = 0;
   var bitstream = new Uint8Array(byteLength);
   for (var i = 0; i < bits.length; i++) {
     var bit = bits[i];
+    availableCount += bit;
     var byte = i >> 3;
     var bitIndex = i % 8;
     bitstream[byte] |= bit << bitIndex;
+  }
+
+  if (!includeAvailableCount) {
+    availableCount = undefined;
   }
 
   return {
     byteLength: byteLength,
     byteLengthWithPadding: byteLengthWithPadding,
     bitstream: bitstream,
+    availableCount: availableCount,
   };
+}
+
+function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
+  var featureTableResults = MetadataTester.createFeatureTables(
+    metadataOptions.featureTables
+  );
+
+  // Add bufferViews to the list -----------------------------------
+  if (!defined(subtreeJson.bufferViews)) {
+    subtreeJson.bufferViews = [];
+  }
+  var bufferViewJsonArray = subtreeJson.bufferViews;
+
+  var bufferViewArray = metadataOptions.isInternal
+    ? bufferViewsU8.internal
+    : bufferViewsU8.external;
+
+  var metadataBufferViewsU8 = featureTableResults.bufferViews;
+  var metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
+  for (var i = 0; i < metadataBufferViewCount; i++) {
+    var bufferViewU8 = metadataBufferViewsU8[i];
+
+    var bufferViewJson = {
+      buffer: undefined,
+      byteOffset: undefined,
+      byteLength: bufferViewU8.byteLength,
+    };
+    bufferViewJsonArray.push(bufferViewJson);
+
+    var paddedBufferView = padUint8Array(bufferViewU8);
+    var bufferView = {
+      bufferView: paddedBufferView,
+      // save a reference to the object so we can update the offsets and
+      // lengths later.
+      json: bufferViewJson,
+    };
+    bufferViewArray.push(bufferView);
+  }
+
+  // Renumber buffer views ----------------------------------------------
+  // This tester assumes a feature table called "tiles"
+  var tileTable = featureTableResults.featureTables.tiles;
+  var tileTableProperties = tileTable.properties;
+
+  var firstMetadataIndex = bufferViewsU8.count;
+
+  var properties = {};
+  for (var key in tileTableProperties) {
+    if (tileTableProperties.hasOwnProperty(key)) {
+      var property = tileTableProperties[key];
+
+      var propertyJson = {
+        bufferView: property.bufferView + firstMetadataIndex,
+      };
+
+      if (defined(property.stringOffsetBufferView)) {
+        propertyJson.stringOffsetBufferView =
+          property.stringOffsetBufferView + firstMetadataIndex;
+      }
+
+      if (defined(property.arrayOffsetBufferView)) {
+        propertyJson.arrayOffsetBufferView =
+          property.arrayOffsetBufferView + firstMetadataIndex;
+      }
+
+      properties[key] = propertyJson;
+    }
+  }
+
+  // Store results in subtree JSON -----------------------------------------
+  if (!defined(subtreeJson.extensions)) {
+    subtreeJson.extensions = {};
+  }
+
+  subtreeJson.extensions["3DTILES_metadata"] = {
+    class: tileTable.class,
+    properties: properties,
+  };
+}
+
+function padUint8Array(array) {
+  // if already aligned to 8 bytes, we're done.
+  if (array.length % 8 === 0) {
+    return array;
+  }
+
+  var paddingLength = 8 - (array.length % 8);
+  var padding = new Uint8Array(paddingLength);
+  return concatTypedArrays([array, padding]);
 }
 
 function makeBuffers(bufferViewsU8, subtreeJson) {

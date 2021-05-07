@@ -72,8 +72,10 @@ function parseGlbVersion1(glb, header) {
         var binaryGltfBuffer = defaultValue(buffers.binary_glTF, buffers.KHR_binary_glTF);
         if (defined(binaryGltfBuffer)) {
             binaryGltfBuffer.extras._pipeline.source = binaryBuffer;
+            delete binaryGltfBuffer.uri;
         }
     }
+
     // Remove the KHR_binary_glTF extension
     removeExtensionsUsed(gltf, 'KHR_binary_glTF');
     return gltf;

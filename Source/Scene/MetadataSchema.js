@@ -1,16 +1,20 @@
 import Check from "../Core/Check.js";
+import defined from "../Core/defined.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataEnum from "./MetadataEnum.js";
 
 /**
  * A schema containing classes and enums.
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * </p>
  *
  * @param {Object} schema The schema JSON object.
  *
  * @alias MetadataSchema
  * @constructor
- *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataSchema(schema) {
   //>>includeStart('debug', pragmas.debug);
@@ -18,23 +22,27 @@ function MetadataSchema(schema) {
   //>>includeEnd('debug');
 
   var enums = {};
-  for (var enumId in schema.enums) {
-    if (schema.enums.hasOwnProperty(enumId)) {
-      enums[enumId] = new MetadataEnum({
-        id: enumId,
-        enum: schema.enums[enumId],
-      });
+  if (defined(schema.enums)) {
+    for (var enumId in schema.enums) {
+      if (schema.enums.hasOwnProperty(enumId)) {
+        enums[enumId] = new MetadataEnum({
+          id: enumId,
+          enum: schema.enums[enumId],
+        });
+      }
     }
   }
 
   var classes = {};
-  for (var classId in schema.classes) {
-    if (schema.classes.hasOwnProperty(classId)) {
-      classes[classId] = new MetadataClass({
-        id: classId,
-        class: schema.classes[classId],
-        enums: enums,
-      });
+  if (defined(schema.classes)) {
+    for (var classId in schema.classes) {
+      if (schema.classes.hasOwnProperty(classId)) {
+        classes[classId] = new MetadataClass({
+          id: classId,
+          class: schema.classes[classId],
+          enums: enums,
+        });
+      }
     }
   }
 

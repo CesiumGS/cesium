@@ -1,10 +1,13 @@
+import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataType from "./MetadataType.js";
 
 /**
- * A metadata property.
+ * A metadata property, as part of a {@link MetadataClass}
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the property.
@@ -13,8 +16,8 @@ import MetadataType from "./MetadataType.js";
  *
  * @alias MetadataClassProperty
  * @constructor
- *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -149,6 +152,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
+   *
    * @private
    */
   valueType: {
@@ -311,20 +315,106 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
 };
 
 /**
+ * Unpack array values into {@link Cartesian2}, {@link Cartesian3}, or
+ * {@link Cartesian4} if this property is an <code>ARRAY</code> of length 2, 3,
+ * or 4, respectively. All other values (including arrays of other sizes) are
+ * passed through unaltered.
+ *
+ * @param {*} value the original, normalized values.
+ * @returns {*} The appropriate vector type if the value is a vector type. Otherwise, the value is returned unaltered.
+ * @private
+ */
+MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
+  var type = this._type;
+  var componentCount = this._componentCount;
+
+  if (
+    type !== MetadataType.ARRAY ||
+    !defined(componentCount) ||
+    !MetadataType.isVectorCompatible(this._componentType)
+  ) {
+    return value;
+  }
+
+  if (componentCount === 2) {
+    return Cartesian2.unpack(value);
+  }
+
+  if (componentCount === 3) {
+    return Cartesian3.unpack(value);
+  }
+
+  if (componentCount === 4) {
+    return Cartesian4.unpack(value);
+  }
+
+  return value;
+};
+
+/**
+ * Pack a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} into an
+ * array if this property is an <code>ARRAY</code> of length 2, 3, or 4, respectively.
+ * All other values (including arrays of other sizes) are passed through unaltered.
+ *
+ * @param {*} value The value of this property
+ * @returns {*} An array of the appropriate length if the property is a vector type. Otherwise, the value is returned unaltered.
+ * @private
+ */
+MetadataClassProperty.prototype.packVectorTypes = function (value) {
+  var type = this._type;
+  var componentCount = this._componentCount;
+
+  if (
+    type !== MetadataType.ARRAY ||
+    !defined(componentCount) ||
+    !MetadataType.isVectorCompatible(this._componentType)
+  ) {
+    return value;
+  }
+
+  if (componentCount === 2) {
+    return Cartesian2.pack(value, []);
+  }
+
+  if (componentCount === 3) {
+    return Cartesian3.pack(value, []);
+  }
+
+  if (componentCount === 4) {
+    return Cartesian4.pack(value, []);
+  }
+
+  return value;
+};
+
+/**
  * Validates whether the given value conforms to the property.
  *
  * @param {*} value The value.
  * @returns {String|undefined} An error message if the value does not conform to the property, otherwise undefined.
+ * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
   var message;
   var type = this._type;
   if (type === MetadataType.ARRAY) {
+    var componentCount = this._componentCount;
+
+    // arrays of length 2, 3, and 4 are implicitly converted to CartesianN
+    if (
+      defined(componentCount) &&
+      componentCount >= 2 &&
+      componentCount <= 4 &&
+      MetadataType.isVectorCompatible(this._componentType)
+    ) {
+      return validateVector(value, componentCount);
+    }
+
     if (!Array.isArray(value)) {
       return getTypeErrorMessage(value, type);
     }
     var length = value.length;
-    if (defined(this._componentCount) && this._componentCount !== length) {
+    if (defined(componentCount) && componentCount !== length) {
       return "Array length does not match componentCount";
     }
     for (var i = 0; i < length; ++i) {
@@ -340,6 +430,20 @@ MetadataClassProperty.prototype.validate = function (value) {
     }
   }
 };
+
+function validateVector(value, componentCount) {
+  if (componentCount === 2 && !(value instanceof Cartesian2)) {
+    return "vector value " + value + " must be a Cartesian2";
+  }
+
+  if (componentCount === 3 && !(value instanceof Cartesian3)) {
+    return "vector value " + value + " must be a Cartesian3";
+  }
+
+  if (componentCount === 4 && !(value instanceof Cartesian4)) {
+    return "vector value " + value + " must be a Cartesian4";
+  }
+}
 
 function getTypeErrorMessage(value, type) {
   return "value " + value + " does not match type " + type;

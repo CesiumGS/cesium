@@ -335,7 +335,7 @@ FeatureDetection.supportsFullscreen = function () {
  *
  * @returns {Boolean} true if the browser supports typed arrays, false if not.
  *
- * @see {@link https://262.ecma-international.org/6.0/#sec-typedarray-objects|Typed Array Specification}
+ * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
 FeatureDetection.supportsTypedArrays = function () {
   return typeof ArrayBuffer !== "undefined";

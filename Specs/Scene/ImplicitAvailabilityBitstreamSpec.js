@@ -7,6 +7,15 @@ describe("Scene/ImplicitAvailabilityBitstream", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws on mismatched bitLength and bitstream.length", function () {
+    expect(function () {
+      return new ImplicitAvailabilityBitstream({
+        lengthBits: 17,
+        bitstream: new Uint8Array([0xff, 0x02]),
+      });
+    }).toThrowRuntimeError();
+  });
+
   it("reads bits from constant", function () {
     var length = 21;
     var bitstream = new ImplicitAvailabilityBitstream({
@@ -56,5 +65,22 @@ describe("Scene/ImplicitAvailabilityBitstream", function () {
       bitstream: new Uint8Array([0x07, 0x00]),
     });
     expect(bitstream.availableCount).toEqual(3);
+  });
+
+  it("computes availableCount if enabled and availableCount is undefined", function () {
+    var bitstream = new ImplicitAvailabilityBitstream({
+      lengthBits: 10,
+      bitstream: new Uint8Array([0xff, 0x02]),
+      computeAvailableCountEnabled: true,
+    });
+    expect(bitstream.availableCount).toBe(9);
+  });
+
+  it("does not compute availableCount if disabled and availableCount is undefined", function () {
+    var bitstream = new ImplicitAvailabilityBitstream({
+      lengthBits: 10,
+      bitstream: new Uint8Array([0xff, 0x02]),
+    });
+    expect(bitstream.availableCount).not.toBeDefined();
   });
 });

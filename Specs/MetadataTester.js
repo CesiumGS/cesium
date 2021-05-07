@@ -1,10 +1,13 @@
-import { defined } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { FeatureDetection } from "../Source/Cesium.js";
-import { MetadataClass } from "../Source/Cesium.js";
-import { MetadataEnum } from "../Source/Cesium.js";
-import { MetadataTable } from "../Source/Cesium.js";
-import { MetadataType } from "../Source/Cesium.js";
+import {
+  defined,
+  defaultValue,
+  FeatureDetection,
+  FeatureTable,
+  MetadataClass,
+  MetadataEnum,
+  MetadataTable,
+  MetadataType,
+} from "../Source/Cesium.js";
 
 function MetadataTester() {}
 
@@ -25,7 +28,7 @@ MetadataTester.createProperty = function (options) {
     propertyId: options.values,
   };
 
-  var table = MetadataTester.createTable({
+  var table = MetadataTester.createMetadataTable({
     properties: properties,
     propertyValues: propertyValues,
     offsetType: options.offsetType,
@@ -35,7 +38,7 @@ MetadataTester.createProperty = function (options) {
     disableBigUint64ArraySupport: options.disableBigUint64ArraySupport,
   });
 
-  return table.properties.propertyId;
+  return table._properties.propertyId;
 };
 
 function createProperties(options) {
@@ -120,7 +123,7 @@ function createProperties(options) {
   };
 }
 
-MetadataTester.createTable = function (options) {
+MetadataTester.createMetadataTable = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var disableBigIntSupport = options.disableBigIntSupport;
   var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
@@ -167,6 +170,60 @@ MetadataTester.createTable = function (options) {
   });
 };
 
+MetadataTester.createFeatureTable = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var disableBigIntSupport = options.disableBigIntSupport;
+  var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
+  var disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
+
+  var schema = {
+    enums: options.enums,
+    classes: {
+      classId: {
+        properties: options.properties,
+      },
+    },
+  };
+
+  var propertyResults = createProperties({
+    schema: schema,
+    classId: "classId",
+    propertyValues: options.propertyValues,
+    offsetType: options.offsetType,
+  });
+
+  var count = propertyResults.count;
+  var properties = propertyResults.properties;
+  var classDefinition = propertyResults.class;
+  var bufferViews = propertyResults.bufferViews;
+
+  if (disableBigIntSupport) {
+    spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
+  }
+
+  if (disableBigInt64ArraySupport) {
+    spyOn(FeatureDetection, "supportsBigInt64Array").and.returnValue(false);
+  }
+
+  if (disableBigUint64ArraySupport) {
+    spyOn(FeatureDetection, "supportsBigUint64Array").and.returnValue(false);
+  }
+
+  var metadataTable = new MetadataTable({
+    count: count,
+    class: classDefinition,
+    bufferViews: bufferViews,
+    properties: properties,
+  });
+
+  return new FeatureTable({
+    metadataTable: metadataTable,
+    count: count,
+    extras: options.extras,
+    extensions: options.extensions,
+  });
+};
+
 MetadataTester.createFeatureTables = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -196,6 +253,77 @@ MetadataTester.createFeatureTables = function (options) {
   return {
     featureTables: featureTables,
     bufferViews: bufferViews,
+  };
+};
+
+MetadataTester.createGltf = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  var featureTableResults = MetadataTester.createFeatureTables(options);
+
+  var bufferByteLength = 0;
+  var bufferViewsMap = featureTableResults.bufferViews;
+  var bufferViewsLength = Object.keys(bufferViewsMap).length;
+
+  var byteLengths = new Array(bufferViewsLength);
+
+  var bufferViewId;
+  var uint8Array;
+
+  for (bufferViewId in bufferViewsMap) {
+    if (bufferViewsMap.hasOwnProperty(bufferViewId)) {
+      uint8Array = bufferViewsMap[bufferViewId];
+
+      var remainder = uint8Array.byteLength % 8;
+      var padding = remainder === 0 ? 0 : 8 - remainder;
+      var byteLength = uint8Array.byteLength + padding;
+      bufferByteLength += byteLength;
+      byteLengths[bufferViewId] = byteLength;
+    }
+  }
+
+  var buffer = new Uint8Array(bufferByteLength);
+  var bufferViews = new Array(bufferViewsLength);
+  var byteOffset = 0;
+
+  for (bufferViewId in bufferViewsMap) {
+    if (bufferViewsMap.hasOwnProperty(bufferViewId)) {
+      uint8Array = bufferViewsMap[bufferViewId];
+
+      bufferViews[bufferViewId] = {
+        buffer: 0,
+        byteOffset: byteOffset,
+        byteLength: uint8Array.byteLength,
+      };
+
+      buffer.set(uint8Array, byteOffset);
+      byteOffset += byteLengths[bufferViewId];
+    }
+  }
+
+  var gltf = {
+    buffers: [
+      {
+        uri: "external.bin",
+        byteLength: buffer.byteLength,
+      },
+    ],
+    images: options.images,
+    textures: options.textures,
+    bufferViews: bufferViews,
+    extensionsUsed: ["EXT_feature_metadata"],
+    extensions: {
+      EXT_feature_metadata: {
+        schema: options.schema,
+        featureTables: featureTableResults.featureTables,
+        featureTextures: options.featureTextures,
+      },
+    },
+  };
+
+  return {
+    gltf: gltf,
+    buffer: buffer,
   };
 };
 
