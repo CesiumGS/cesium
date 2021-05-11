@@ -28,6 +28,59 @@ float GGX(float roughness, float NdotH) {
     return roughnessSquared / (M_PI * f * f);
 }
 
+#line 1000
+
+struct PbrParameters {
+  // diffuse color of the material
+  vec3 diffuseColor;
+  // roughness of the material.
+  float roughness;
+  // reflection at normal incidence
+  vec3 f0;
+};
+
+const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
+PbrParameters czm_defaultPbrMaterial() {
+  PbrParameters results;
+  results.diffuseColor = vec3(1.0);
+  results.roughness = 1.0;
+  results.f0 = REFLECTANCE_DIELECTRIC;
+  return results;
+}
+
+PbrParameters czm_pbrMetallicRoughnessMaterial(vec3 baseColor, float metallic, float roughness) {
+  PbrParameters results;
+
+  // roughness is authored as perceptual roughness
+  // square it to get material roughness
+  roughness = clamp(roughness, 0.0, 1.0);
+  results.roughness = roughness * roughness;
+
+  // dielectrics us f0 = 0.04, metals use albedo as f0
+  metallic = clamp(metallic, 0.0, 1.0);
+  vec3 f0 = mix(REFLECTANCE_DIELECTRIC, baseColor, metallic);
+  results.f0 = f0;
+
+  // diffuse only applies to dielectrics.
+  results.diffuseColor = baseColor * (1.0 - f0) * (1.0 - metallic);
+
+  return results;
+}
+
+PbrParameters czm_pbrSpecularGlossinessMaterial(vec3 diffuse, vec3 specular, float glossiness) {
+  PbrParameters results;
+
+  // glossiness is the opposite of roughness, but easier for artists to use.
+  float roughness = 1.0 - glossiness;
+  results.roughness = roughness * roughness;
+
+  results.diffuseColor = diffuse * (1.0 - max(max(specular.r, specular.g), specular.b));
+  results.f0 = specular;
+
+  return results;
+}
+
+
 /**
  * Compute an HDR color according to the physically-based-rendering Metallic Roughness model.
  *
@@ -49,19 +102,14 @@ float GGX(float roughness, float NdotH) {
  * float specularIntensity = czm_getSpecular(lightDirectionEC, toEyeEC, normalEC, 200);
  * vec3 color = (diffuseColor * diffuseIntensity) + (specularColor * specularIntensity);
  */
-vec4 czm_pbrMetallicRoughness(
+vec3 czm_pbrLighting(
+    vec3 positionEC, // p
     vec3 normalEC, // n
     vec3 lightDirectionEC, // l
     vec3 lightColorHdr, // L (radiance)... is this already attenuated?
-    vec4 baseColor,
-    float metallic,
-    float roughness,
-    vec3 emissive,
-    float occlusion
+    PbrParameters pbrParameters
 ) {
-  // TODO: How to get the position?
-  vec3 v_positionEC = vec3(0.0, 0.0, 1.0);
-  vec3 v = -normalize(v_positionEC);
+  vec3 v = -normalize(positionEC);
   vec3 l = normalize(lightDirectionEC);
   vec3 h = normalize(v + l);
   vec3 n = normalEC;
@@ -71,37 +119,20 @@ vec4 czm_pbrMetallicRoughness(
   float LdotH = clamp(dot(l, h), 0.0, 1.0);
   float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
-  // based on glTF Viewer implementation: https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/source/Renderer/shaders/pbr.frag
-  //float indexOfRefraction = 1.5;
-  //float specularWeight = 1.0;
+  vec3 f0 = pbrParameters.f0;
+  float reflectance = max(max(f0.r, f0.g), f0.b);
+  vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
+  vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
-  // dielectrics us f0 = 0.04, metals use albedo as f0
-  metallic = clamp(metallic, 0.0, 1.0);
-  vec3 f0 = vec3(0.04);
-  vec3 specularColor = mix(f0, baseColor.rgb, metallic);
-  float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
-  vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
-  vec3 r0 = specularColor.rgb;
-  vec3 F = fresnelSchlick2(r0, r90, VdotH);
-
-  // roughness is authored as perceptual roughness
-  // square it to get material roughness
-  roughness = clamp(roughness, 0.0, 1.0);
-  float alpha = roughness * roughness;
+  float alpha = pbrParameters.roughness;
   float G = smithVisibilityGGX(alpha, NdotL, NdotV);
   float D = GGX(alpha, NdotH);
   vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);
 
-  // diffuse only applies to dielectrics.
-  vec3 diffuseColor = baseColor.rgb * (1.0 - f0) * (1.0 - metallic);
+  vec3 diffuseColor = pbrParameters.diffuseColor;
   // F here represents the specular contribution
   vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);
 
   // Lo = kD * albedo/pi + specular * Li * NdotL
-  vec3 color = (diffuseContribution + specularContribution) + NdotL * lightColorHdr;
-
-  vec3 ambient = vec3(0.03) * baseColor.rgb * occlusion;
-  color += emissive + ambient;
-
-  return vec4(color, 1.0);
+  return (diffuseContribution + specularContribution) + NdotL * lightColorHdr;
 }
