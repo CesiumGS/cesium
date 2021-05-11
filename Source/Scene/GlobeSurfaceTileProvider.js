@@ -682,7 +682,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
 
   // вблизи полюсов тайлов становится слишком много и браузер виснет, отключаем в таком случае
   if (
-    (tile.y <= 2 || Math.pow(2, tile.level) - tile.y <= 2) &&
+    (tile.y <= 0 || Math.pow(2, tile.level) - tile.y - 1 <= 0) &&
     tile.level >= 8
   ) {
     return Visibility.NONE;
