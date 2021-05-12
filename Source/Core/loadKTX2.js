@@ -9,19 +9,22 @@ import when from "../ThirdParty/when.js";
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
  *
- * @param {Boolean} etc1 Whether or not ETC1 is supported
  * @param {Boolean} s3tc Whether or not S3TC is supported
  * @param {Boolean} pvrtc Whether or not PVRTC is supported
+ * @param {Boolean} astc Whether or not ETC1 is supported
+ * @param {Boolean} etc1 Whether or not ASTC is supported
+ * @param {Boolean} bc7 Whether or not BC7 is supported
  * @private
  */
 var supportedTranscoderFormats;
 
-loadKTX2.setKTX2SupportedFormats = function (astc, etc1, s3tc, pvrtc) {
+loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
   supportedTranscoderFormats = {
-    astc: astc,
-    etc1: etc1,
     s3tc: s3tc,
     pvrtc: pvrtc,
+    astc: astc,
+    etc1: etc1,
+    bc7: bc7,
   };
 };
 

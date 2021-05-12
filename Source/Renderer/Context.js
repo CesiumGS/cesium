@@ -317,14 +317,16 @@ function Context(canvas, options) {
   ]);
   this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+  this._bc7 = !!getExtension(gl, ["WEBGL_compressed_texture_bptc"]);
 
   // It is necessary to pass supported formats to loadKTX2
   // because imagery layers don't have access to the context.
   loadKTX2.setKTX2SupportedFormats(
+    this._s3tc,
+    this._pvrtc,
     this._astc,
     this._etc1,
-    this._s3tc,
-    this._pvrtc
+    this._bc7
   );
 
   var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
@@ -779,13 +781,26 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if S3TC, PVRTC, ASTC, or ETC1 compression is supported.
+   * <code>true</code> if EXT_texture_compression_bptc is supported.  This extension provides
+   * access to BC7 compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/}
+   */
+  bc7: {
+    get: function () {
+      return this._bc7;
+    },
+  },
+
+  /**
+   * <code>true</code> if S3TC, PVRTC, ASTC, ETC1, or BC7 compression is supported.
    * @memberof Context.prototype
    * @type {Boolean}
    */
   supportsBasis: {
     get: function () {
-      return this._astc || this._etc1 || this._s3tc || this._pvrtc;
+      return this._s3tc || this._pvrtc || this._astc || this._etc1 || this._bc7;
     },
   },
 

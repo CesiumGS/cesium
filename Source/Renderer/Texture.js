@@ -149,9 +149,17 @@ function Texture(options) {
       throw new DeveloperError(
         "When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_texture_compression_pvrtc extension. Check context.pvrtc."
       );
+    } else if (PixelFormat.isASTCFormat(internalFormat) && !context.astc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ASTC compressed, this WebGL implementation must support the WEBGL_texture_compression_astc extension. Check context.astc."
+      );
     } else if (PixelFormat.isETC1Format(internalFormat) && !context.etc1) {
       throw new DeveloperError(
         "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1."
+      );
+    } else if (PixelFormat.isBC7Format(internalFormat) && !context.bc7) {
+      throw new DeveloperError(
+        "When options.pixelFormat is BC7 compressed, this WebGL implementation must support the EXT_texture_compression_bptc extension. Check context.bc7."
       );
     }
 

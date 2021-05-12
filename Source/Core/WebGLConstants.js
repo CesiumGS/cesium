@@ -320,8 +320,14 @@ var WebGLConstants = {
   COMPRESSED_RGBA_PVRTC_4BPPV1_IMG: 0x8c02,
   COMPRESSED_RGBA_PVRTC_2BPPV1_IMG: 0x8c03,
 
+  // WEBGL_compressed_texture_astc
+  COMPRESSED_RGBA_ASTC_4x4_WEBGL: 0x93b0,
+
   // WEBGL_compressed_texture_etc1
   COMPRESSED_RGB_ETC1_WEBGL: 0x8d64,
+
+  // EXT_texture_compression_bptc
+  COMPRESSED_RGBA_BPTC_UNORM: 0x8e8c,
 
   // EXT_color_buffer_half_float
   HALF_FLOAT_OES: 0x8d61,

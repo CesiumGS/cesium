@@ -128,12 +128,28 @@ var PixelFormat = {
   RGBA_PVRTC_2BPPV1: WebGLConstants.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG,
 
   /**
+   * A pixel format containing red, green, blue, and alpha channels that is ASTC compressed.
+   *
+   * @type {Number}
+   * @constant
+   */
+  RGBA_ASTC: WebGLConstants.COMPRESSED_RGBA_ASTC_4x4_WEBGL,
+
+  /**
    * A pixel format containing red, green, and blue channels that is ETC1 compressed.
    *
    * @type {Number}
    * @constant
    */
   RGB_ETC1: WebGLConstants.COMPRESSED_RGB_ETC1_WEBGL,
+
+  /**
+   * A pixel format containing red, green, blue, and alpha channels that is BC7 compressed.
+   *
+   * @type {Number}
+   * @constant
+   */
+  RGBA_BC7: WebGLConstants.COMPRESSED_RGBA_BPTC_UNORM,
 };
 
 /**
@@ -175,7 +191,9 @@ PixelFormat.validate = function (pixelFormat) {
     pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
     pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
     pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
-    pixelFormat === PixelFormat.RGB_ETC1
+    pixelFormat === PixelFormat.RGBA_ASTC ||
+    pixelFormat === PixelFormat.RGB_ETC1 ||
+    pixelFormat === PixelFormat.RGBA_BC7
   );
 };
 
@@ -215,7 +233,9 @@ PixelFormat.isCompressedFormat = function (pixelFormat) {
     pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
     pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
     pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
-    pixelFormat === PixelFormat.RGB_ETC1
+    pixelFormat === PixelFormat.RGBA_ASTC ||
+    pixelFormat === PixelFormat.RGB_ETC1 ||
+    pixelFormat === PixelFormat.RGBA_BC7
   );
 };
 
@@ -246,8 +266,22 @@ PixelFormat.isPVRTCFormat = function (pixelFormat) {
 /**
  * @private
  */
+PixelFormat.isASTCFormat = function (pixelFormat) {
+  return pixelFormat === PixelFormat.RGBA_ASTC;
+};
+
+/**
+ * @private
+ */
 PixelFormat.isETC1Format = function (pixelFormat) {
   return pixelFormat === PixelFormat.RGB_ETC1;
+};
+
+/**
+ * @private
+ */
+PixelFormat.isBC7Format = function (pixelFormat) {
+  return pixelFormat === PixelFormat.RGBA_BC7;
 };
 
 /**
@@ -266,6 +300,7 @@ PixelFormat.compressedTextureSizeInBytes = function (
 
     case PixelFormat.RGBA_DXT3:
     case PixelFormat.RGBA_DXT5:
+    case PixelFormat.RGBA_ASTC:
       return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 16;
 
     case PixelFormat.RGB_PVRTC_4BPPV1:
@@ -277,6 +312,9 @@ PixelFormat.compressedTextureSizeInBytes = function (
       return Math.floor(
         (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8
       );
+
+    case PixelFormat.RGBA_BC7:
+      return Math.ceil(width / 4) * Math.ceil(height / 4) * 16;
 
     default:
       return 0;

@@ -166,9 +166,12 @@ function transcodeCompressed(
   // Determine target format based on platform support
   var internalFormat, transcoderFormat;
   var BasisFormat = transcoderModule.transcoder_texture_format;
-  if (supportedTargetFormats.astc && !hasAlpha) {
-    internalFormat = PixelFormat.RGB_ETC1;
-    transcoderFormat = BasisFormat.cTFETC1_RGB;
+  if (supportedTargetFormats.astc && hasAlpha) {
+    internalFormat = PixelFormat.RGBA_ASTC;
+    transcoderFormat = BasisFormat.cTFASTC_4x4;
+  } else if (supportedTargetFormats.bc7 && hasAlpha) {
+    internalFormat = PixelFormat.RGBA_BC7;
+    transcoderFormat = BasisFormat.cTFBC7;
   } else if (supportedTargetFormats.etc1 && !hasAlpha) {
     internalFormat = PixelFormat.RGB_ETC1;
     transcoderFormat = BasisFormat.cTFETC1_RGB;
