@@ -168,10 +168,10 @@ function transcodeCompressed(
   var BasisFormat = transcoderModule.transcoder_texture_format;
   if (supportedTargetFormats.astc && hasAlpha) {
     internalFormat = PixelFormat.RGBA_ASTC;
-    transcoderFormat = BasisFormat.cTFASTC_4x4;
-  } else if (supportedTargetFormats.bc7 && hasAlpha) {
+    transcoderFormat = BasisFormat.cTFASTC_4x4_RGBA;
+  } else if (supportedTargetFormats.bc7) {
     internalFormat = PixelFormat.RGBA_BC7;
-    transcoderFormat = BasisFormat.cTFBC7;
+    transcoderFormat = BasisFormat.cTFBC7_RGBA;
   } else if (supportedTargetFormats.etc1 && !hasAlpha) {
     internalFormat = PixelFormat.RGB_ETC1;
     transcoderFormat = BasisFormat.cTFETC1_RGB;

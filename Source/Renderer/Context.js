@@ -317,7 +317,7 @@ function Context(canvas, options) {
   ]);
   this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
-  this._bc7 = !!getExtension(gl, ["WEBGL_compressed_texture_bptc"]);
+  this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
 
   // It is necessary to pass supported formats to loadKTX2
   // because imagery layers don't have access to the context.
