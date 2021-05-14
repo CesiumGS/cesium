@@ -162,6 +162,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Geoplex GIS GmbH](https://www.geoplex.de)
   - [Leonard Holst](https://github.com/LHolst)
 - [Google LLC](https://www.google.com)
+  - [Julien Brette](https://github.com/julien443)
   - [Mark Aubin](https://github.com/markaubin)
   - [Michael Shantzis](https://github.com/shantzis1962)
   - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
