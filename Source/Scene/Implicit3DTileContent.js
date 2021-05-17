@@ -402,24 +402,38 @@ function deriveChildTile(
     var boundingVolumeS2 =
       implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
     if (defined(boundingVolumeS2)) {
-      // Get child coordinates from Morton index.
-      var childCoords = MortonOrder.decode2D(childIndex);
-      var hilbertIndex = HilbertOrder.encode2D(
-        2,
-        childCoords[0],
-        childCoords[1]
-      );
-      childCell = parentTile.s2Cell.getChild(hilbertIndex);
-      // Get Hilbert index.
-      boundingVolume = {
-        extensions: {
-          "3DTILES_bounding_volume_S2": {
-            token: S2Cell.getTokenFromId(childCell._cellId),
-            minimumHeight: boundingVolumeS2.minimumHeight,
-            maximumHeight: boundingVolumeS2.maximumHeight,
+      // Handle the placeholder tile case.
+      if (defaultValue(parentIsPlaceholderTile, false)) {
+        boundingVolume = {
+          extensions: {
+            "3DTILES_bounding_volume_S2": {
+              token: boundingVolumeS2.token,
+              minimumHeight: boundingVolumeS2.minimumHeight,
+              maximumHeight: boundingVolumeS2.maximumHeight,
+            },
           },
-        },
-      };
+        };
+        childCell = parentTile.s2Cell;
+      } else {
+        // Decode Morton index.
+        var childCoords = MortonOrder.decode2D(childIndex);
+        // Encode Hilbert index.
+        var hilbertIndex = HilbertOrder.encode2D(
+          2,
+          childCoords[0],
+          childCoords[1]
+        );
+        childCell = parentTile.s2Cell.getChild(hilbertIndex);
+        boundingVolume = {
+          extensions: {
+            "3DTILES_bounding_volume_S2": {
+              token: S2Cell.getTokenFromId(childCell._cellId),
+              minimumHeight: boundingVolumeS2.minimumHeight,
+              maximumHeight: boundingVolumeS2.maximumHeight,
+            },
+          },
+        };
+      }
     } else {
       boundingVolume = deriveBoundingVolume(
         implicitTileset,
