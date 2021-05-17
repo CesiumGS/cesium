@@ -6,12 +6,12 @@ import defined from "../Core/defined.js";
  * <code>TILE_BOUNDING_BOX</code> and <code>CONTENT_BOUNDING_REGION</code> from
  * implicit tile metadata. Results are returned as a JSON object for use when
  * transcoding tiles (see {@link Implicit3DTileContent}).
- *
+ * <p>
  * Bounding volumes are checked in the order box, region, then sphere. Only
  * the first valid bounding volume is returned.
+ * </p>
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/specification/Metadata/Semantics|Semantics Specification} for the various bounding volumes and minimum/maximum heights.
- *
  *
  * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitTileMetadata}
  * @return {Object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.

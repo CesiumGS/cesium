@@ -10,6 +10,7 @@ import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
+import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -377,6 +378,24 @@ function deriveChildTile(
     );
   }
 
+  // Parse metadata and bounding volume semantics at the beginning
+  // as the bounding volumes are needed below.
+  var tileMetadata;
+  var tileBounds;
+  var contentBounds;
+  if (defined(subtree.metadataExtension)) {
+    var metadataTable = subtree.metadataTable;
+    tileMetadata = new ImplicitTileMetadata({
+      class: metadataTable.class,
+      implicitCoordinates: implicitCoordinates,
+      implicitSubtree: subtree,
+    });
+
+    var boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
+    tileBounds = boundingVolumeSemantics.tile;
+    contentBounds = boundingVolumeSemantics.content;
+  }
+
   var contentJsons = [];
   for (var i = 0; i < implicitTileset.contentCount; i++) {
     if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
@@ -389,15 +408,35 @@ function deriveChildTile(
     var contentJson = {
       uri: childContentUri,
     };
+
+    // content bounding volumes can only be specified via
+    // metadata semantics such as CONTENT_BOUNDING_BOX
+    if (defined(contentBounds) && defined(contentBounds.boundingVolume)) {
+      contentJson.boundingVolume = contentBounds.boundingVolume;
+    }
+
     // combine() is used to pass through any additional properties the
     // user specified such as extras or extensions
     contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
-  var boundingVolume = deriveBoundingVolume(
-    implicitTileset,
-    implicitCoordinates
-  );
+  var boundingVolume;
+  if (defined(tileBounds) && defined(tileBounds.boundingVolume)) {
+    boundingVolume = tileBounds.boundingVolume;
+  } else {
+    boundingVolume = deriveBoundingVolume(implicitTileset, implicitCoordinates);
+
+    // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
+    // can be used to tighten the bounding volume
+    if (defined(boundingVolume.region) && defined(tileBounds)) {
+      updateRegionHeight(
+        boundingVolume.region,
+        tileBounds.minimumHeight,
+        tileBounds.maximumHeight
+      );
+    }
+  }
+
   var childGeometricError =
     implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
 
@@ -428,17 +467,31 @@ function deriveChildTile(
   );
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
-
-  if (defined(subtree.metadataExtension)) {
-    var metadataTable = subtree.metadataTable;
-    childTile.metadata = new ImplicitTileMetadata({
-      class: metadataTable.class,
-      implicitCoordinates: implicitCoordinates,
-      implicitSubtree: subtree,
-    });
-  }
+  childTile.metadata = tileMetadata;
 
   return childTile;
+}
+
+/**
+ * For a derived bounding region, update the minimum and maximum height. This
+ * is typically used to tighten a bounding volume using the
+ * <code>TILE_MINIMUM_HEIGHT</code> and <code>TILE_MAXIMUM_HEIGHT</code>
+ * semantics. Heights are only updated if the respective
+ * minimumHeight/maximumHeight parameter is defined.
+ *
+ * @param {Array} region A 6-element array describing the bounding region
+ * @param {Number} [minimumHeight] The new minimum height
+ * @param {Number} [maximumHeight] The new maximum height
+ * @private
+ */
+function updateRegionHeight(region, minimumHeight, maximumHeight) {
+  if (defined(minimumHeight)) {
+    region[3] = minimumHeight;
+  }
+
+  if (defined(maximumHeight)) {
+    region[4] = maximumHeight;
+  }
 }
 
 /**
