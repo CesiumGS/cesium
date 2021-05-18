@@ -486,11 +486,11 @@ function deriveChildTile(
  */
 function updateRegionHeight(region, minimumHeight, maximumHeight) {
   if (defined(minimumHeight)) {
-    region[3] = minimumHeight;
+    region[4] = minimumHeight;
   }
 
   if (defined(maximumHeight)) {
-    region[4] = maximumHeight;
+    region[5] = maximumHeight;
   }
 }
 
@@ -647,7 +647,7 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
   //>>includeEnd('debug');
 
   if (level === 0) {
-    return rootRegion;
+    return rootRegion.slice();
   }
 
   var rectangle = Rectangle.unpack(rootRegion, 0, scratchRectangle);
