@@ -96,7 +96,10 @@ function computeBoundingPlanes(s2Cell, minimumHeight, maximumHeight) {
   );
   topPointCartographic.height = maximumHeight;
   var topPoint = Cartographic.toCartesian(topPointCartographic);
-  var topPlane = Plane.fromPointNormal(topPoint, centerPointSurfaceNormal);
+  var topPlane = Plane.fromPointNormal(
+    topPoint,
+    Cartesian3.negate(centerPointSurfaceNormal, centerPointSurfaceNormal)
+  );
 
   // Compute bottom plane.
   // - Iterate through bottom vertices
@@ -121,7 +124,8 @@ function computeBoundingPlanes(s2Cell, minimumHeight, maximumHeight) {
     }
   }
   var bottomPlane = Plane.clone(topPlane);
-  bottomPlane.distance -= maxDistance;
+  bottomPlane.distance = -topPlane.distance + maxDistance;
+  Cartesian3.negate(bottomPlane.normal, bottomPlane.normal);
 
   // Compute side planes.
   // - Iterate through vertices
@@ -277,26 +281,109 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
   },
 });
 
+TileBoundingS2Cell.prototype.closestToCamera = function (point) {
+  var planesToTestVertices = [];
+  var planesToTest = [];
+
+  var topDistance = Plane.getPointDistance(this._topPlane, point);
+  if (topDistance < 0) {
+    planesToTest.push(this._topPlane);
+    planesToTestVertices.push(this._vertices.slice(0, 4));
+  }
+
+  var bottomDistance = Plane.getPointDistance(this._bottomPlane, point);
+  if (bottomDistance < 0) {
+    planesToTest.push(this._bottomPlane);
+    planesToTestVertices.push(this._vertices.slice(4));
+  }
+
+  var i;
+  for (i = 0; i < 4; i++) {
+    if (Plane.getPointDistance(this._sidePlanes[i], point) < 0) {
+      planesToTestVertices.push([
+        this._vertices[i % 4],
+        this._vertices[4 + i],
+        this._vertices[4 + ((i + 1) % 4)],
+        this._vertices[(i + 1) % 4],
+      ]);
+      planesToTest.push(this._sidePlanes[i]);
+    }
+  }
+
+  // Check if inside all planes.
+  if (planesToTest.length === 0) {
+    return 0.0;
+  }
+
+  var minDistance = Number.MAX_VALUE;
+  var minPoint;
+  for (i = 0; i < planesToTest.length; i++) {
+    var distance = distanceSquaredToConvexPolygon3D(
+      point,
+      planesToTestVertices[i],
+      planesToTest[i]
+    );
+    if (distance[0] < minDistance) {
+      minDistance = distance[0];
+      minPoint = distance[1];
+    }
+  }
+
+  return minPoint;
+};
+
 TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("frameState", frameState);
   //>>includeEnd('debug');
 
   var point = frameState.camera.positionWC;
+  var planesToTestVertices = [];
+  var planesToTest = [];
+
+  var topDistance = Plane.getPointDistance(this._topPlane, point);
+  if (topDistance < 0) {
+    planesToTest.push(this._topPlane);
+    planesToTestVertices.push(this._vertices.slice(0, 4));
+  }
+
+  var bottomDistance = Plane.getPointDistance(this._bottomPlane, point);
+  if (bottomDistance < 0) {
+    planesToTest.push(this._bottomPlane);
+    planesToTestVertices.push(this._vertices.slice(4));
+  }
+
+  var i;
+  for (i = 0; i < 4; i++) {
+    if (Plane.getPointDistance(this._sidePlanes[i], point) < 0) {
+      planesToTestVertices.push([
+        this._vertices[i % 4],
+        this._vertices[4 + i],
+        this._vertices[4 + ((i + 1) % 4)],
+        this._vertices[(i + 1) % 4],
+      ]);
+      planesToTest.push(this._sidePlanes[i]);
+    }
+  }
 
   // Check if inside all planes.
-  if (
-    Plane.getPointDistance(this._topPlane, point) < 0 &&
-    Plane.getPointDistance(this._bottomPlane, point) > 0 &&
-    Plane.getPointDistance(this._sidePlanes[0], point) > 0 &&
-    Plane.getPointDistance(this._sidePlanes[1], point) > 0 &&
-    Plane.getPointDistance(this._sidePlanes[2], point) > 0 &&
-    Plane.getPointDistance(this._sidePlanes[3], point) > 0
-  ) {
+  if (planesToTest.length === 0) {
     return 0.0;
   }
 
-  return Cartesian3.distance(this.center, point);
+  var minDistance = Number.MAX_VALUE;
+  for (i = 0; i < planesToTest.length; i++) {
+    var distance = distanceSquaredToConvexPolygon3D(
+      point,
+      planesToTestVertices[i],
+      planesToTest[i]
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+    }
+  }
+
+  return Math.sqrt(minDistance);
 };
 
 /*
@@ -407,10 +494,24 @@ function isInsideFace(vertices, point) {
     m2 = Cartesian3.magnitude(p2);
 
     if (m1 * m2 <= CesiumMath.EPSILON8) {
-      return true;
+      // Compute plane of polygon.
+      var ba = Cartesian3.subtract(vertices[1], vertices[0], new Cartesian3());
+      var ca = Cartesian3.subtract(vertices[3], vertices[0], new Cartesian3());
+      var normal = Cartesian3.cross(ba, ca, new Cartesian3());
+      Cartesian3.normalize(normal, normal);
+      var distance =
+        -normal.x * vertices[0].x -
+        normal.y * vertices[0].y -
+        normal.z * vertices[0].z;
+      var plane = new Plane(normal, distance);
+      var projectedPoint = Plane.projectPointOntoPlane(plane, point);
+      return [
+        Cartesian3.distanceSquared(point, projectedPoint),
+        projectedPoint,
+      ];
     }
   }
-  return false;
+  return [-1];
 }
 
 function closestPointOnLine(point, lineSegment0, lineSegment1) {
@@ -434,6 +535,116 @@ function closestPointOnLine(point, lineSegment0, lineSegment1) {
     Cartesian3.multiplyByScalar(line, t, new Cartesian3()),
     new Cartesian3()
   );
+}
+
+var projectedPointScratch = new Cartesian3();
+var projectedPointPrimeScratch = new Cartesian3();
+var projectedPolygonVertex = new Cartesian3();
+var distanceScratch = new Cartesian3();
+function distanceSquaredToConvexPolygon3D(p, vertices, polygonPlane) {
+  // Project point on plane of polygon.
+  var projectedPoint = Plane.projectPointOntoPlane(
+    polygonPlane,
+    p,
+    projectedPointScratch
+  );
+  var projectedPointPrime = projectedPoint.clone(projectedPointPrimeScratch);
+  var n = polygonPlane.normal;
+  var d = polygonPlane.distance;
+
+  // Determine plane to project polygon onto.
+  var projectionPlane;
+  var maxDim = Math.max(n.x, Math.max(n.y, n.z));
+  if (maxDim === n.x) {
+    projectionPlane = Plane.ORIGIN_YZ_PLANE;
+    projectedPointPrime.x = 0;
+  } else if (maxDim === n.y) {
+    projectionPlane = Plane.ORIGIN_ZX_PLANE;
+    projectedPointPrime.y = 0;
+  } else {
+    projectionPlane = Plane.ORIGIN_XY_PLANE;
+    projectedPointPrime.z = 0;
+  }
+
+  // Project all vertices of polygon onto selected plane.
+  var projectedPolygonVertices = [];
+  for (var i = 0; i < vertices.length; i++) {
+    projectedPolygonVertices[i] = vertices[i].clone(projectedPolygonVertex);
+    if (projectionPlane === Plane.ORIGIN_YZ_PLANE) {
+      projectedPolygonVertices[i].x = 0;
+    } else if (projectionPlane === Plane.ORIGIN_ZX_PLANE) {
+      projectedPolygonVertices[i].y = 0;
+    } else {
+      projectedPolygonVertices[i].z = 0;
+    }
+  }
+
+  // Find closest point on polygon in 2D.
+  var qPrime = distanceSquaredToConvexPolygon2D(
+    projectedPointPrime,
+    projectedPolygonVertices
+  )[1];
+
+  if (projectionPlane === Plane.ORIGIN_YZ_PLANE) {
+    qPrime.x = (-n.y * qPrime.y - n.z * qPrime.z - d) / n.x;
+  } else if (projectionPlane === Plane.ORIGIN_ZX_PLANE) {
+    qPrime.x = (-n.x * qPrime.x - n.z * qPrime.z - d) / n.y;
+  } else {
+    qPrime.x = (-n.x * qPrime.x - n.y * qPrime.y - d) / n.z;
+  }
+
+  var distanceVector = Cartesian3.subtract(p, qPrime, distanceScratch);
+  return [Cartesian3.dot(distanceVector, distanceVector), qPrime];
+}
+
+function distanceSquaredToConvexPolygon2D(p, vertices) {
+  var minDistance = Number.MAX_VALUE;
+  var minPoint;
+  var result;
+
+  result = isInsideFace(vertices, p);
+  if (result.length > 1) {
+    return result;
+  }
+
+  for (var i = 0; i < vertices.length; i++) {
+    result = distanceSquaredToLineSegment(
+      p,
+      vertices[i],
+      vertices[(i + 1) % vertices.length]
+    );
+    if (result[0] < minDistance) {
+      minDistance = result[0];
+      minPoint = result[1];
+    }
+  }
+
+  return [minDistance, minPoint];
+}
+
+var dScratch = new Cartesian3();
+var pPrimeScratch = new Cartesian3();
+var p1Scratch = new Cartesian3();
+var rScratch = new Cartesian3();
+function distanceSquaredToLineSegment(p, l0, l1) {
+  var d = Cartesian3.subtract(l1, l0, dScratch);
+  var pPrime = Cartesian3.subtract(p, l0, pPrimeScratch);
+  var t = Cartesian3.dot(d, pPrime);
+
+  if (t <= 0) {
+    return [Cartesian3.dot(pPrime, pPrime), l0];
+  }
+
+  var dPrime = Cartesian3.dot(d, d);
+  if (t >= dPrime) {
+    var p1 = Cartesian3.subtract(p, l1, p1Scratch);
+    return [Cartesian3.dot(p1, p1), l1];
+  }
+
+  return [
+    Cartesian3.dot(pPrime, pPrime) - (t * t) / dPrime,
+    Cartesian3.add(l0, Cartesian3.multiplyByScalar(d, t, rScratch), rScratch),
+  ];
 }
 
 /**
