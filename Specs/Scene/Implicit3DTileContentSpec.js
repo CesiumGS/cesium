@@ -4,6 +4,7 @@ import {
   Cesium3DTile,
   Cesium3DTileRefine,
   Cesium3DTileset,
+  Ellipsoid,
   HeadingPitchRange,
   Implicit3DTileContent,
   ImplicitTileCoordinates,
@@ -14,6 +15,7 @@ import {
   GroupMetadata,
   Multiple3DTileContent,
   Resource,
+  TileBoundingSphere,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -121,9 +123,6 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
-      // One item in each data set is always located in the center, so point the camera there
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
     });
 
     afterAll(function () {
@@ -140,6 +139,10 @@ describe(
       });
       mockPlaceholderTile.implicitCoordinates = rootCoordinates;
       mockPlaceholderTile.implicitTileset = implicitTileset;
+
+      // One item in each data set is always located in the center, so point the camera there
+      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
     });
 
     afterEach(function () {
@@ -803,6 +806,12 @@ describe(
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
       var implicitGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
+      var implicitHeightSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
+      var implicitTileBoundingVolumeSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
+      var implicitContentBoundingVolumeSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset.json";
 
       var metadataClass = new MetadataClass({
         id: "test",
@@ -871,6 +880,147 @@ describe(
               // parent tile is a single B3DM tile
               expect(tile.content.groupMetadata).toBe(ground);
             }
+          });
+        });
+      });
+
+      // view (lon, lat) = (0, 0)
+      function viewZeroZero(height) {
+        var center = Cartesian3.fromDegrees(0.0, 0.0);
+        var offset = new Cartesian3(0, 0, height);
+        scene.camera.lookAt(center, offset);
+      }
+
+      it("uses height semantics to adjust region bounding volumes", function () {
+        viewZeroZero(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+          var minimumHeight = implicitRegion[4];
+          var maximumHeight = implicitRegion[5];
+
+          // This tileset use TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // to set tigher bounding volumes
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var tileRegion = tiles[i].boundingVolume;
+            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      // get half the bounding cube width from the bounding box's
+      // halfAxes matrix
+      function getHalfWidth(boundingBox) {
+        return boundingBox.boundingVolume.halfAxes[0];
+      }
+
+      it("ignores height semantics if the implicit volume is a box", function () {
+        var cameraHeight = 100;
+        var rootHalfWidth = 10;
+        var originalLoadJson = Cesium3DTileset.loadJson;
+        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+            tilesetJson.root.boundingVolume = {
+              box: [
+                Ellipsoid.WGS84.radii.x + cameraHeight,
+                0,
+                0,
+                rootHalfWidth,
+                0,
+                0,
+                0,
+                rootHalfWidth,
+                0,
+                0,
+                0,
+                rootHalfWidth,
+              ],
+            };
+            return tilesetJson;
+          });
+        });
+
+        viewZeroZero(cameraHeight);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+
+          // TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT only apply to
+          // regions, so this will check that they are not used.
+          tiles.forEach(function (tile) {
+            var level = tile.implicitCoordinates.level;
+            var halfWidth = getHalfWidth(tile.boundingVolume);
+            // Even for floats, divide by 2 operations are exact as long
+            // as there is no overflow.
+            expect(halfWidth).toEqual(rootHalfWidth / Math.pow(2, level));
+          });
+        });
+      });
+
+      it("uses tile bounding volume from metadata semantics if present", function () {
+        viewZeroZero(124000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTileBoundingVolumeSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root.children[0];
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var rootHalfWidth = 2048;
+          expect(getHalfWidth(subtreeRootTile.boundingVolume)).toBe(
+            rootHalfWidth
+          );
+
+          for (var level = 1; level < 4; level++) {
+            var halfWidthAtLevel = rootHalfWidth / (1 << level);
+            var tiles = [];
+            gatherTilesPreorder(subtreeRootTile, level, level, tiles);
+            for (var i = 0; i < tiles.length; i++) {
+              // In this tileset, each tile's TILE_BOUNDING_BOX is
+              // smaller than the implicit tile bounds. Make sure
+              // this is true.
+              var tile = tiles[i];
+              var halfWidth = getHalfWidth(tile.boundingVolume);
+              expect(halfWidth).toBeLessThan(halfWidthAtLevel);
+            }
+          }
+        });
+      });
+
+      it("uses content bounding volume from metadata semantics if present", function () {
+        viewZeroZero(124000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentBoundingVolumeSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root.children[0];
+          var subtreeRootTile = placeholderTile.children[0];
+
+          // This tileset defines the content bounding spheres in a
+          // property with metadata semantic CONTENT_BOUNDING_SPHERE.
+          // Check that each tile has a content bounding volume.
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          tiles.forEach(function (tile) {
+            expect(
+              tile.contentBoundingVolume instanceof TileBoundingSphere
+            ).toBe(true);
+            expect(tile.contentBoundingVolume).not.toBe(tile.boundingVolume);
           });
         });
       });
