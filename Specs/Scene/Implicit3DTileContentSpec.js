@@ -884,15 +884,15 @@ describe(
         });
       });
 
-      // view (lon, lat) = (0, 0)
-      function viewZeroZero(height) {
+      // view (lon, lat, height) = (0, 0, 0) from height meters above
+      function viewCartographicOrigin(height) {
         var center = Cartesian3.fromDegrees(0.0, 0.0);
         var offset = new Cartesian3(0, 0, height);
         scene.camera.lookAt(center, offset);
       }
 
       it("uses height semantics to adjust region bounding volumes", function () {
-        viewZeroZero(10000);
+        viewCartographicOrigin(10000);
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitHeightSemanticsUrl
@@ -906,7 +906,7 @@ describe(
           var maximumHeight = implicitRegion[5];
 
           // This tileset use TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
-          // to set tigher bounding volumes
+          // to set tighter bounding volumes
           var tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
           for (var i = 0; i < tiles.length; i++) {
@@ -949,7 +949,7 @@ describe(
           });
         });
 
-        viewZeroZero(cameraHeight);
+        viewCartographicOrigin(cameraHeight);
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitHeightSemanticsUrl
@@ -973,7 +973,7 @@ describe(
       });
 
       it("uses tile bounding volume from metadata semantics if present", function () {
-        viewZeroZero(124000);
+        viewCartographicOrigin(124000);
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitTileBoundingVolumeSemanticsUrl
@@ -1003,7 +1003,7 @@ describe(
       });
 
       it("uses content bounding volume from metadata semantics if present", function () {
-        viewZeroZero(124000);
+        viewCartographicOrigin(124000);
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitContentBoundingVolumeSemanticsUrl

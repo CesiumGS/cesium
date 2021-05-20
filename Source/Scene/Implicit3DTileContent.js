@@ -429,7 +429,7 @@ function deriveChildTile(
     // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
     // can be used to tighten the bounding volume
     if (defined(boundingVolume.region) && defined(tileBounds)) {
-      updateRegionHeight(
+      updateRegionHeights(
         boundingVolume.region,
         tileBounds.minimumHeight,
         tileBounds.maximumHeight
@@ -484,7 +484,7 @@ function deriveChildTile(
  * @param {Number} [maximumHeight] The new maximum height
  * @private
  */
-function updateRegionHeight(region, minimumHeight, maximumHeight) {
+function updateRegionHeights(region, minimumHeight, maximumHeight) {
   if (defined(minimumHeight)) {
     region[4] = minimumHeight;
   }

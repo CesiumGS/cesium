@@ -7,13 +7,9 @@ import {
 
 describe("Scene/parseBoundingVolumeSemantics", function () {
   var boundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
-
   var boundingRegion = [0, 0, Math.PI_OVER_SIX, Math.PI_OVER_TWO, 0, 50];
-
   var boundingSphere = [0, 0, 0, 1];
-
   var minimumHeight = -10;
-
   var maximumHeight = 10;
 
   it("throws without tileMetadata", function () {
@@ -144,7 +140,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
     });
   });
 
-  it("only the first valid bounding volume is returned", function () {
+  it("bounding volumes are parsed with the precedence box, region, then sphere", function () {
     var tileClass = new MetadataClass({
       id: "tile",
       class: {
