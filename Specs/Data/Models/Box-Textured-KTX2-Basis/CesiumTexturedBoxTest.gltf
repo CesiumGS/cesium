@@ -154,8 +154,11 @@
   ],
   "textures": [
     {
-      "sampler": 0,
-      "source": 0
+      "extensions": {
+        "KHR_texture_basisu": {
+          "source": 0
+        }
+      }
     }
   ],
   "images": [
