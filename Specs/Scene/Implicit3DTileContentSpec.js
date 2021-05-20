@@ -6,6 +6,7 @@ import {
   Cesium3DTileset,
   HeadingPitchRange,
   Implicit3DTileContent,
+  ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
   ImplicitTileset,
   Matrix3,
@@ -14,6 +15,7 @@ import {
   GroupMetadata,
   Multiple3DTileContent,
   Resource,
+  S2Cell,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -555,6 +557,135 @@ describe(
           );
           expect(childBox).toEqual(expectedBounds);
         }
+      });
+    });
+
+    describe("_deriveBoundingVolumeS2", function () {
+      var deriveBoundingVolumeS2 =
+        Implicit3DTileContent._deriveBoundingVolumeS2;
+      var simpleBoundingVolumeS2 = {
+        token: "1",
+        minimumHeight: 0,
+        maximumHeight: 10,
+      };
+      var implicitTilesetS2 = {
+        boundingVolume: {
+          extensions: {
+            "3DTILES_bounding_volume_S2": simpleBoundingVolumeS2,
+          },
+        },
+      };
+
+      it("throws if implicitTileset is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(undefined, {}, false, 0, "");
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if parentTile is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2({}, undefined, false, 0, "");
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if parentIsPlaceholderTile is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2({}, {}, undefined, 0, "");
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if childIndex is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2({}, {}, false, undefined, "");
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if implicitSubdivisionScheme is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2({}, {}, false, 0, undefined);
+        }).toThrowDeveloperError();
+      });
+
+      it("returns implicit tileset boundingVolume if parentIsPlaceholderTile is true", function () {
+        var result = deriveBoundingVolumeS2(
+          implicitTilesetS2,
+          {},
+          true,
+          0,
+          ImplicitSubdivisionScheme.QUADTREE
+        );
+        expect(result).toEqual(implicitTilesetS2.boundingVolume);
+      });
+
+      it("subdivides correctly using QUADTREE", function () {
+        var parentTile = {
+          s2Cell: S2Cell.fromToken(simpleBoundingVolumeS2.token),
+          _boundingVolume:
+            implicitTilesetS2.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ],
+        };
+        var expected = {
+          token: "04",
+          minimumHeight: 0,
+          maximumHeight: 10,
+        };
+        var result = deriveBoundingVolumeS2(
+          implicitTilesetS2,
+          parentTile,
+          false,
+          0,
+          ImplicitSubdivisionScheme.QUADTREE
+        );
+        expect(result).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected,
+          },
+        });
+      });
+
+      it("subdivides correctly using OCTREE", function () {
+        var parentTile = {
+          s2Cell: S2Cell.fromToken(simpleBoundingVolumeS2.token),
+          _boundingVolume:
+            implicitTilesetS2.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ],
+        };
+        var expected0 = {
+          token: "04",
+          minimumHeight: 0,
+          maximumHeight: 5,
+        };
+        var expected1 = {
+          token: "04",
+          minimumHeight: 5,
+          maximumHeight: 10,
+        };
+        var result0 = deriveBoundingVolumeS2(
+          implicitTilesetS2,
+          parentTile,
+          false,
+          0,
+          ImplicitSubdivisionScheme.OCTREE
+        );
+        expect(result0).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected0,
+          },
+        });
+        var result1 = deriveBoundingVolumeS2(
+          implicitTilesetS2,
+          parentTile,
+          false,
+          4,
+          ImplicitSubdivisionScheme.OCTREE
+        );
+        expect(result1).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected1,
+          },
+        });
       });
     });
 

@@ -11,8 +11,10 @@ import MortonOrder from "../Core/MortonOrder.js";
 import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
 import when from "../ThirdParty/when.js";
+import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
+import has3DTilesExtension from "./has3DTilesExtension.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -397,50 +399,13 @@ function deriveChildTile(
   }
 
   var boundingVolume;
-  var childCell;
-  if (defined(implicitTileset.boundingVolume.extensions)) {
-    var boundingVolumeS2 =
-      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
-    if (defined(boundingVolumeS2)) {
-      // Handle the placeholder tile case.
-      if (defaultValue(parentIsPlaceholderTile, false)) {
-        boundingVolume = {
-          extensions: {
-            "3DTILES_bounding_volume_S2": {
-              token: boundingVolumeS2.token,
-              minimumHeight: boundingVolumeS2.minimumHeight,
-              maximumHeight: boundingVolumeS2.maximumHeight,
-            },
-          },
-        };
-        childCell = parentTile.s2Cell;
-      } else {
-        // Decode Morton index.
-        var childCoords = MortonOrder.decode2D(childIndex);
-        // Encode Hilbert index.
-        var hilbertIndex = HilbertOrder.encode2D(
-          2,
-          childCoords[0],
-          childCoords[1]
-        );
-        childCell = parentTile.s2Cell.getChild(hilbertIndex);
-        boundingVolume = {
-          extensions: {
-            "3DTILES_bounding_volume_S2": {
-              token: S2Cell.getTokenFromId(childCell._cellId),
-              minimumHeight: boundingVolumeS2.minimumHeight,
-              maximumHeight: boundingVolumeS2.maximumHeight,
-            },
-          },
-        };
-      }
-    } else {
-      boundingVolume = deriveBoundingVolume(
-        implicitTileset,
-        implicitCoordinates
-      );
-    }
-  }
+  boundingVolume = deriveBoundingVolume(
+    implicitTileset,
+    implicitCoordinates,
+    childIndex,
+    defaultValue(parentIsPlaceholderTile, false),
+    parentTile
+  );
 
   var childGeometricError =
     implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
@@ -473,8 +438,19 @@ function deriveChildTile(
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
 
-  if (defined(childCell)) {
-    childTile.s2Cell = childCell;
+  if (
+    has3DTilesExtension(
+      implicitTileset.boundingVolume,
+      "3DTILES_bounding_volume_S2"
+    )
+  ) {
+    if (defaultValue(parentIsPlaceholderTile, false)) {
+      childTile.s2Cell = parentTile.s2Cell;
+    } else {
+      childTile.s2Cell = S2Cell.fromToken(
+        boundingVolume.extensions["3DTILES_bounding_volume_S2"].token
+      );
+    }
   }
 
   if (defined(subtree.metadataExtension)) {
@@ -494,11 +470,33 @@ function deriveChildTile(
  *
  * @param {ImplicitTileset} implicitTileset The implicit tileset struct which holds the root bounding volume
  * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the child tile
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
+ * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @returns {Object} An object containing the JSON for a bounding volume
  * @private
  */
-function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
+function deriveBoundingVolume(
+  implicitTileset,
+  implicitCoordinates,
+  childIndex,
+  parentIsPlaceholderTile,
+  parentTile
+) {
   var rootBoundingVolume = implicitTileset.boundingVolume;
+
+  if (has3DTilesExtension(rootBoundingVolume, "3DTILES_bounding_volume_S2")) {
+    return deriveBoundingVolumeS2(
+      implicitTileset,
+      parentTile,
+      parentIsPlaceholderTile,
+      childIndex,
+      defined(implicitCoordinates.z)
+        ? ImplicitSubdivisionScheme.OCTREE
+        : ImplicitSubdivisionScheme.QUADTREE
+    );
+  }
+
   if (defined(rootBoundingVolume.region)) {
     var childRegion = deriveBoundingRegion(
       rootBoundingVolume.region,
@@ -523,6 +521,74 @@ function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
 
   return {
     box: childBox,
+  };
+}
+
+/**
+ * Derive a bounding volume for a child tile from a parent tile,
+ * assuming a quadtree or octree implicit tiling scheme.
+ * <p>
+ * If implicitSubdivisionScheme is OCTREE, octree subdivision is used.
+ * Otherwise, quadtree subdivision is used. Quadtrees are always divided
+ * using the S2 cell hierarchy. Octrees have an additional split at the midpoint
+ * of the the vertical (z) dimension.
+ * </p>
+ *
+ * @param {ImplicitTileset} implicitTileset The implicit tileset struct which holds the root bounding volume
+ * @param {Cesium3DTile} parentTile The parent of the new child tile
+ * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
+ * @param {ImplicitSubdivisionScheme} implicitSubdivisionScheme The subdivision scheme of the tileset
+ * @private
+ */
+function deriveBoundingVolumeS2(
+  implicitTileset,
+  parentTile,
+  parentIsPlaceholderTile,
+  childIndex,
+  implicitSubdivisionScheme
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("parentTile", parentTile);
+  Check.typeOf.bool("parentIsPlaceholderTile", parentIsPlaceholderTile);
+  Check.typeOf.number("childIndex", childIndex);
+  Check.typeOf.string("implicitSubdivisionScheme", implicitSubdivisionScheme);
+  //>>includeEnd('debug');
+
+  // Handle the placeholder tile case.
+  if (defaultValue(parentIsPlaceholderTile, false)) {
+    return implicitTileset.boundingVolume;
+  }
+  var boundingVolumeS2 = parentTile._boundingVolume;
+
+  // Decode Morton index.
+  var childCoords = MortonOrder.decode2D(childIndex % 4);
+  // Encode Hilbert index.
+  var hilbertIndex = HilbertOrder.encode2D(2, childCoords[0], childCoords[1]);
+  var childCell = parentTile.s2Cell.getChild(hilbertIndex);
+
+  var minHeight, maxHeight;
+  if (implicitSubdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    var midpointHeight =
+      (boundingVolumeS2.maximumHeight + boundingVolumeS2.minimumHeight) / 2;
+    minHeight =
+      childIndex < 4 ? boundingVolumeS2.minimumHeight : midpointHeight;
+    maxHeight =
+      childIndex < 4 ? midpointHeight : boundingVolumeS2.maximumHeight;
+  } else {
+    minHeight = boundingVolumeS2.minimumHeight;
+    maxHeight = boundingVolumeS2.maximumHeight;
+  }
+
+  return {
+    extensions: {
+      "3DTILES_bounding_volume_S2": {
+        token: S2Cell.getTokenFromId(childCell._cellId),
+        minimumHeight: minHeight,
+        maximumHeight: maxHeight,
+      },
+    },
   };
 }
 
@@ -771,3 +837,4 @@ Implicit3DTileContent.prototype.destroy = function () {
 // Exposed for testing
 Implicit3DTileContent._deriveBoundingBox = deriveBoundingBox;
 Implicit3DTileContent._deriveBoundingRegion = deriveBoundingRegion;
+Implicit3DTileContent._deriveBoundingVolumeS2 = deriveBoundingVolumeS2;
