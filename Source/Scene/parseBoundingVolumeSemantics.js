@@ -50,6 +50,7 @@ export default function parseBoundingVolumeSemantics(tileMetadata) {
  * @param {String} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
  * @return {Object} An object representing the JSON description of the tile metadata
+ * @private
  */
 function parseBoundingVolume(prefix, tileMetadata) {
   var boundingBoxSemantic = prefix + "_BOUNDING_BOX";
