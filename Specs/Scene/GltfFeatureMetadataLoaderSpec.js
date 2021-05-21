@@ -6,17 +6,20 @@ import {
   MetadataSchemaLoader,
   Resource,
   ResourceCache,
-  ResourceLoaderState,
   SupportedImageFormats,
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import MetadataTester from "../MetadataTester.js";
-import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfFeatureMetadataLoader",
   function () {
+    if (!MetadataTester.isSupported()) {
+      return;
+    }
+
     var image = new Image();
     image.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
@@ -277,7 +280,7 @@ describe(
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load texture\nFailed to load image:map.png\n404 Not Found"
+            "Failed to load feature metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
           );
         });
     });
@@ -336,47 +339,42 @@ describe(
 
       featureMetadataLoader.load();
 
-      return pollToPromise(function () {
-        featureMetadataLoader.process(scene.frameState);
-        return featureMetadataLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return featureMetadataLoader.promise.then(function (
-          featureMetadataLoader
-        ) {
-          featureMetadataLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
-          var featureMetadata = featureMetadataLoader.featureMetadata;
-          var buildingsTable = featureMetadata.getFeatureTable("buildings");
-          var treesTable = featureMetadata.getFeatureTable("trees");
-          var mapTexture = featureMetadata.getFeatureTexture("mapTexture");
-          var orthoTexture = featureMetadata.getFeatureTexture("orthoTexture");
+      return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
+        featureMetadataLoader
+      ) {
+        featureMetadataLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        var featureMetadata = featureMetadataLoader.featureMetadata;
+        var buildingsTable = featureMetadata.getFeatureTable("buildings");
+        var treesTable = featureMetadata.getFeatureTable("trees");
+        var mapTexture = featureMetadata.getFeatureTexture("mapTexture");
+        var orthoTexture = featureMetadata.getFeatureTexture("orthoTexture");
 
-          expect(buildingsTable.getProperty(0, "name")).toBe("House");
-          expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
-          expect(treesTable.getProperty(0, "species")).toEqual([
-            "Sparrow",
-            "Squirrel",
-          ]);
-          expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
+        expect(buildingsTable.getProperty(0, "name")).toBe("House");
+        expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
+        expect(treesTable.getProperty(0, "species")).toEqual([
+          "Sparrow",
+          "Squirrel",
+        ]);
+        expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
 
-          var colorProperty = mapTexture._properties.color;
-          var intensityProperty = mapTexture._properties.intensity;
+        var colorProperty = mapTexture._properties.color;
+        var intensityProperty = mapTexture._properties.intensity;
 
-          expect(colorProperty._texture.width).toBe(1);
-          expect(colorProperty._texture.height).toBe(1);
-          expect(colorProperty._texture).toBe(intensityProperty._texture);
+        expect(colorProperty._texture.width).toBe(1);
+        expect(colorProperty._texture.height).toBe(1);
+        expect(colorProperty._texture).toBe(intensityProperty._texture);
 
-          var vegetationProperty = orthoTexture._properties.vegetation;
-          expect(colorProperty._texture.width).toBe(1);
-          expect(colorProperty._texture.height).toBe(1);
-          expect(vegetationProperty._texture).not.toBe(colorProperty._texture);
+        var vegetationProperty = orthoTexture._properties.vegetation;
+        expect(colorProperty._texture.width).toBe(1);
+        expect(colorProperty._texture.height).toBe(1);
+        expect(vegetationProperty._texture).not.toBe(colorProperty._texture);
 
-          expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
-            "building",
-            "map",
-            "ortho",
-            "tree",
-          ]);
-        });
+        expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
+          "building",
+          "map",
+          "ortho",
+          "tree",
+        ]);
       });
     });
 
@@ -403,21 +401,16 @@ describe(
 
       featureMetadataLoader.load();
 
-      return pollToPromise(function () {
-        featureMetadataLoader.process(scene.frameState);
-        return featureMetadataLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return featureMetadataLoader.promise.then(function (
-          featureMetadataLoader
-        ) {
-          var featureMetadata = featureMetadataLoader.featureMetadata;
-          expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
-            "building",
-            "map",
-            "ortho",
-            "tree",
-          ]);
-        });
+      return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
+        featureMetadataLoader
+      ) {
+        var featureMetadata = featureMetadataLoader.featureMetadata;
+        expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
+          "building",
+          "map",
+          "ortho",
+          "tree",
+        ]);
       });
     });
 
@@ -459,25 +452,20 @@ describe(
 
       featureMetadataLoader.load();
 
-      return pollToPromise(function () {
-        featureMetadataLoader.process(scene.frameState);
-        return featureMetadataLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return featureMetadataLoader.promise.then(function (
-          featureMetadataLoader
-        ) {
-          expect(featureMetadataLoader.featureMetadata).toBeDefined();
-          expect(featureMetadataLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
+        featureMetadataLoader
+      ) {
+        expect(featureMetadataLoader.featureMetadata).toBeDefined();
+        expect(featureMetadataLoader.isDestroyed()).toBe(false);
 
-          featureMetadataLoader.destroy();
+        featureMetadataLoader.destroy();
 
-          expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
-          expect(featureMetadataLoader.isDestroyed()).toBe(true);
+        expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
+        expect(featureMetadataLoader.isDestroyed()).toBe(true);
 
-          expect(destroyBufferView.calls.count()).toBe(6);
-          expect(destroyTexture.calls.count()).toBe(2);
-          expect(destroySchema.calls.count()).toBe(1);
-        });
+        expect(destroyBufferView.calls.count()).toBe(6);
+        expect(destroyTexture.calls.count()).toBe(2);
+        expect(destroySchema.calls.count()).toBe(1);
       });
     });
 
@@ -525,13 +513,11 @@ describe(
 
       featureMetadataLoaderCopy.load();
 
-      return pollToPromise(function () {
-        featureMetadataLoaderCopy.process(scene.frameState);
-        return featureMetadataLoaderCopy._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return featureMetadataLoaderCopy.promise.then(function (
-          featureMetadataLoaderCopy
-        ) {
+      return waitForLoaderProcess(featureMetadataLoaderCopy, scene).then(
+        function (featureMetadataLoaderCopy) {
+          // Ignore featureMetadataLoaderCopy destroying its buffer views
+          destroyBufferView.calls.reset();
+
           var featureMetadataLoader = new GltfFeatureMetadataLoader({
             gltf: gltfSchemaUri,
             extension: extensionSchemaUri,
@@ -559,8 +545,8 @@ describe(
           expect(destroySchema.calls.count()).toBe(1);
 
           ResourceCache.unload(schemaCopy);
-        });
-      });
+        }
+      );
     }
 
     it("handles resolving resources after destroy", function () {

@@ -4,7 +4,10 @@ import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about a group of content.
+ * Metadata about a group of {@link Cesium3DTileContent}
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the group.
@@ -13,6 +16,8 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @alias GroupMetadata
  * @constructor
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GroupMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -42,6 +47,7 @@ Object.defineProperties(GroupMetadata.prototype, {
    * @memberof GroupMetadata.prototype
    * @type {MetadataClass}
    * @readonly
+   * @private
    */
   class: {
     get: function () {
@@ -55,6 +61,7 @@ Object.defineProperties(GroupMetadata.prototype, {
    * @memberof GroupMetadata.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   id: {
     get: function () {
@@ -68,6 +75,7 @@ Object.defineProperties(GroupMetadata.prototype, {
    * @memberof GroupMetadata.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   name: {
     get: function () {
@@ -81,6 +89,7 @@ Object.defineProperties(GroupMetadata.prototype, {
    * @memberof GroupMetadata.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   description: {
     get: function () {
@@ -94,6 +103,7 @@ Object.defineProperties(GroupMetadata.prototype, {
    * @memberof GroupMetadata.prototype
    * @type {*}
    * @readonly
+   * @private
    */
   extras: {
     get: function () {
@@ -107,6 +117,7 @@ Object.defineProperties(GroupMetadata.prototype, {
    * @memberof GroupMetadata.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   extensions: {
     get: function () {
@@ -120,6 +131,7 @@ Object.defineProperties(GroupMetadata.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  */
 GroupMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
@@ -130,6 +142,7 @@ GroupMetadata.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  */
 GroupMetadata.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, this._class, results);
@@ -143,6 +156,7 @@ GroupMetadata.prototype.getPropertyIds = function (results) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 GroupMetadata.prototype.getProperty = function (propertyId) {
   return MetadataEntity.getProperty(propertyId, this._properties, this._class);
@@ -156,10 +170,16 @@ GroupMetadata.prototype.getProperty = function (propertyId) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given ID doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 GroupMetadata.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(propertyId, value, this._properties, this._class);
+  return MetadataEntity.setProperty(
+    propertyId,
+    value,
+    this._properties,
+    this._class
+  );
 };
 
 /**
@@ -167,6 +187,7 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
@@ -181,10 +202,11 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given semantic doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(
+  return MetadataEntity.setPropertyBySemantic(
     semantic,
     value,
     this._properties,

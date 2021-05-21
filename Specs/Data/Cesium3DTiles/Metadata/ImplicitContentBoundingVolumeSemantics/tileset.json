@@ -1,0 +1,74 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_metadata"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling"
+  ],
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "tile": {
+            "properties": {
+              "contentBounds": {
+                "type": "ARRAY",
+                "componentType": "FLOAT64",
+                "componentCount": 4,
+                "semantic": "CONTENT_BOUNDING_SPHERE"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 4096.0,
+  "root": {
+    "transform": [
+      2048, 0, 0, 0,
+      0, 2048, 0, 0,
+      0, 0, 2048, 0,
+      6500000, 0, 0, 1
+    ],
+    "geometricError": 2048.0,
+    "boundingVolume": {
+      "box": [
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+      ]
+    },
+    "children": [
+      {
+        "geometricError": 2048.0,
+        "boundingVolume": {
+          "box": [
+            0, 0, 0,
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+          ]
+        },
+        "content": {
+          "uri": "empty.gltf"
+        },
+        "extensions": {
+          "3DTILES_implicit_tiling": {
+            "subdivisionScheme": "OCTREE",
+            "subtreeLevels": 3,
+            "maximumLevel": 2,
+            "subtrees": {
+              "uri": "subtrees/{level}.{x}.{y}.subtree"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

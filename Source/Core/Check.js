@@ -166,7 +166,7 @@ Check.typeOf.number.greaterThanOrEquals = function (name, test, limit) {
     throw new DeveloperError(
       "Expected " +
         name +
-        " to be greater than or equal to" +
+        " to be greater than or equal to " +
         limit +
         ", actual value was " +
         test

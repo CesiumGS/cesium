@@ -136,6 +136,7 @@ function getSamplerCacheKey(gltf, textureInfo) {
  * @returns {String} The schema cache key.
  *
  * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ * @private
  */
 ResourceCacheKey.getSchemaCacheKey = function (options) {
   var schema = options.schema;
@@ -163,6 +164,7 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
  *
  * @returns {String} The external buffer cache key.
+ * @private
  */
 ResourceCacheKey.getExternalBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -183,6 +185,7 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
  * @param {Number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  *
  * @returns {String} The embedded buffer cache key.
+ * @private
  */
 ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -206,6 +209,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  *
  * @returns {String} The glTF cache key.
+ * @private
  */
 ResourceCacheKey.getGltfCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -228,6 +232,7 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {String} The buffer view cache key.
+ * @private
  */
 ResourceCacheKey.getBufferViewCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -269,6 +274,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
  * @returns {String} The Draco cache key.
+ * @private
  */
 ResourceCacheKey.getDracoCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -302,6 +308,7 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
  *
  * @returns {String} The vertex buffer cache key.
+ * @private
  */
 ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -381,6 +388,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Object} [options.draco] The Draco extension object.
  *
  * @returns {String} The index buffer cache key.
+ * @private
  */
 ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -436,6 +444,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {String} The image cache key.
+ * @private
  */
 ResourceCacheKey.getImageCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -475,6 +484,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {String} The texture cache key.
+ * @private
  */
 ResourceCacheKey.getTextureCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

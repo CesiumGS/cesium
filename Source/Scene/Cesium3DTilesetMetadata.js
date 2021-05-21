@@ -20,6 +20,8 @@ import TilesetMetadata from "./TilesetMetadata.js";
  *
  * @alias Cesium3DTilesetMetadata
  * @constructor
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -71,6 +73,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {MetadataSchema}
    * @readonly
+   * @private
    */
   schema: {
     get: function () {
@@ -84,6 +87,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object.<String, GroupMetadata>}
    * @readonly
+   * @private
    */
   groups: {
     get: function () {
@@ -97,6 +101,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {TilesetMetadata}
    * @readonly
+   * @private
    */
   tileset: {
     get: function () {
@@ -114,6 +119,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   statistics: {
     get: function () {
@@ -127,6 +133,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {*}
    * @readonly
+   * @private
    */
   extras: {
     get: function () {
@@ -140,6 +147,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   extensions: {
     get: function () {

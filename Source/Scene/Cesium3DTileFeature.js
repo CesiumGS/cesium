@@ -204,6 +204,7 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * @param {String} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
   var value;

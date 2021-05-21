@@ -92,6 +92,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    *
    * @type {Promise.<GltfTextureLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -105,6 +106,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -118,6 +120,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    *
    * @type {Texture}
    * @readonly
+   * @private
    */
   texture: {
     get: function () {
@@ -128,6 +131,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfTextureLoader.prototype.load = function () {
   var resourceCache = this._resourceCache;
@@ -137,7 +141,6 @@ GltfTextureLoader.prototype.load = function () {
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     supportedImageFormats: this._supportedImageFormats,
-    keepResident: false,
   });
 
   this._imageLoader = imageLoader;
@@ -245,7 +248,7 @@ function createTexture(gltf, textureInfo, image, context) {
 
   var texture;
   if (defined(internalFormat)) {
-    texture = new Texture({
+    texture = Texture.create({
       context: context,
       source: {
         arrayBufferView: image.bufferView, // Only defined for CompressedTextureBuffer
@@ -259,7 +262,7 @@ function createTexture(gltf, textureInfo, image, context) {
     if (requiresResize) {
       image = resizeImageToNextPowerOfTwo(image);
     }
-    texture = new Texture({
+    texture = Texture.create({
       context: context,
       source: image,
       sampler: sampler,
@@ -280,6 +283,7 @@ var scratchTextureJob = new CreateTextureJob();
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
  */
 GltfTextureLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -331,6 +335,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfTextureLoader.prototype.unload = function () {
   if (defined(this._texture)) {

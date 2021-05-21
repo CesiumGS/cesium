@@ -8,6 +8,9 @@ import defaultValue from "../Core/defaultValue.js";
  * This class is used in place of a {@link TileMetadata} object, as implicit
  * tile metadata is stored in a {@link MetadataTable} rather than a JSON object.
  * </p>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * </p>
  *
  * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
  * @param {ImplicitTileCoordinates} options.implicitCoordinates Implicit tiling coordinates for the tile.
@@ -17,6 +20,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ImplicitTileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -86,6 +90,7 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether this property exists.
+ * @private
  */
 ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
   return this._metadataTable.hasProperty(propertyId);
@@ -96,6 +101,7 @@ ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
+ * @private
  */
 ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
   return this._metadataTable.getPropertyIds(results);
@@ -109,6 +115,7 @@ ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
   return this._metadataTable.getProperty(this._entityId, propertyId);
@@ -122,10 +129,11 @@ ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given ID doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
-  this._metadataTable.setProperty(this._entityId, propertyId, value);
+  return this._metadataTable.setProperty(this._entityId, propertyId, value);
 };
 
 /**
@@ -133,6 +141,7 @@ ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
  */
 ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return this._metadataTable.getPropertyBySemantic(this._entityId, semantic);
@@ -143,11 +152,16 @@ ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @exception {DeveloperError} A property with the given semantic doesn't exist.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @private
  */
 ImplicitTileMetadata.prototype.setPropertyBySemantic = function (
   semantic,
   value
 ) {
-  this._metadataTable.setPropertyBySemantic(this._entityId, semantic, value);
+  return this._metadataTable.setPropertyBySemantic(
+    this._entityId,
+    semantic,
+    value
+  );
 };

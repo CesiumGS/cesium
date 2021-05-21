@@ -16,12 +16,17 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @alias ImplicitTileset
  * @constructor
  *
- * @param {Cesium3DTileset} tileset The tileset this implicit tileset belongs to. Used for accessing metadata properties
  * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
+ * @param {MetadataSchema} [metadataSchema] The metadata schema containing the implicit tile metadata class.
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitTileset(tileset, baseResource, tileJson) {
+export default function ImplicitTileset(
+  baseResource,
+  tileJson,
+  metadataSchema
+) {
   var extension = tileJson.extensions["3DTILES_implicit_tiling"];
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
@@ -29,15 +34,6 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
     extension
   );
   //>>includeEnd('debug');
-
-  /**
-   * A reference to the tileset to which this implicit tileset belongs.
-   *
-   * @type {Cesium3DTileset}
-   * @readonly
-   * @private
-   */
-  this.tileset = tileset;
 
   /**
    * The base resource for the tileset. This is stored here as it is needed
@@ -58,6 +54,15 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @private
    */
   this.geometricError = tileJson.geometricError;
+
+  /**
+   * The metadata schema containing the implicit tile metadata class.
+   *
+   * @type {MetadataSchema|undefined}
+   * @readonly
+   * @private
+   */
+  this.metadataSchema = metadataSchema;
 
   if (
     !defined(tileJson.boundingVolume.box) &&
@@ -95,6 +100,7 @@ export default function ImplicitTileset(tileset, baseResource, tileJson) {
    * @readonly
    * @private
    */
+
   this.subtreeUriTemplate = new Resource({ url: extension.subtrees.uri });
 
   /**

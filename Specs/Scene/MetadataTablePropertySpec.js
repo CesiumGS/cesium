@@ -1,5 +1,6 @@
 import {
   defaultValue,
+  Cartesian3,
   MetadataClassProperty,
   MetadataTableProperty,
 } from "../../Source/Cesium.js";
@@ -287,7 +288,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("get returns fixed size arrays", function () {
+  it("get returns vectors", function () {
     var properties = {
       propertyInt8: {
         type: "ARRAY",
@@ -319,16 +320,6 @@ describe("Scene/MetadataTableProperty", function () {
         componentType: "UINT32",
         componentCount: 3,
       },
-      propertyInt64: {
-        type: "ARRAY",
-        componentType: "INT64",
-        componentCount: 3,
-      },
-      propertyUint64: {
-        type: "ARRAY",
-        componentType: "UINT64",
-        componentCount: 3,
-      },
       propertyFloat32: {
         type: "ARRAY",
         componentType: "FLOAT32",
@@ -337,22 +328,6 @@ describe("Scene/MetadataTableProperty", function () {
       propertyFloat64: {
         type: "ARRAY",
         componentType: "FLOAT64",
-        componentCount: 3,
-      },
-      propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
-        componentCount: 3,
-      },
-      propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
-        componentCount: 3,
-      },
-      propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
-        enumType: "myEnum",
         componentCount: 3,
       },
     };
@@ -382,14 +357,6 @@ describe("Scene/MetadataTableProperty", function () {
         [0, 1, 2],
         [3, 4, 5],
       ],
-      propertyInt64: [
-        [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
-      ],
-      propertyUint64: [
-        [BigInt(0), BigInt(1), BigInt(2)], // eslint-disable-line
-        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
-      ],
       propertyFloat32: [
         [-2.0, -1.0, 0.0],
         [1.0, 2.0, 3.0],
@@ -397,6 +364,65 @@ describe("Scene/MetadataTableProperty", function () {
       propertyFloat64: [
         [-2.0, -1.0, 0.0],
         [1.0, 2.0, 3.0],
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
+          enums: enums,
+        });
+
+        var expectedValues = propertyValues[propertyId];
+        var length = expectedValues.length;
+        for (var i = 0; i < length; ++i) {
+          var value = property.get(i);
+          expect(value).toEqual(Cartesian3.unpack(expectedValues[i]));
+        }
+      }
+    }
+  });
+
+  it("get returns fixed size arrays", function () {
+    var properties = {
+      propertyInt64: {
+        type: "ARRAY",
+        componentType: "INT64",
+        componentCount: 3,
+      },
+      propertyUint64: {
+        type: "ARRAY",
+        componentType: "UINT64",
+        componentCount: 3,
+      },
+      propertyBoolean: {
+        type: "ARRAY",
+        componentType: "BOOLEAN",
+        componentCount: 3,
+      },
+      propertyString: {
+        type: "ARRAY",
+        componentType: "STRING",
+        componentCount: 3,
+      },
+      propertyEnum: {
+        type: "ARRAY",
+        componentType: "ENUM",
+        enumType: "myEnum",
+        componentCount: 3,
+      },
+    };
+
+    var propertyValues = {
+      propertyInt64: [
+        [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
+        [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
+      ],
+      propertyUint64: [
+        [BigInt(0), BigInt(1), BigInt(2)], // eslint-disable-line
+        [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
       ],
       propertyBoolean: [
         [false, true, false],
@@ -698,7 +724,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("set sets fixed size arrays", function () {
+  it("set sets vector values", function () {
     var properties = {
       propertyInt8: {
         type: "ARRAY",
@@ -730,16 +756,6 @@ describe("Scene/MetadataTableProperty", function () {
         componentType: "UINT32",
         componentCount: 3,
       },
-      propertyInt64: {
-        type: "ARRAY",
-        componentType: "INT64",
-        componentCount: 3,
-      },
-      propertyUint64: {
-        type: "ARRAY",
-        componentType: "UINT64",
-        componentCount: 3,
-      },
       propertyFloat32: {
         type: "ARRAY",
         componentType: "FLOAT32",
@@ -748,22 +764,6 @@ describe("Scene/MetadataTableProperty", function () {
       propertyFloat64: {
         type: "ARRAY",
         componentType: "FLOAT64",
-        componentCount: 3,
-      },
-      propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
-        componentCount: 3,
-      },
-      propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
-        componentCount: 3,
-      },
-      propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
-        enumType: "myEnum",
         componentCount: 3,
       },
     };
@@ -793,14 +793,6 @@ describe("Scene/MetadataTableProperty", function () {
         [0, 0, 0],
         [0, 0, 0],
       ],
-      propertyInt64: [
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-      ],
-      propertyUint64: [
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
-      ],
       propertyFloat32: [
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0],
@@ -808,6 +800,86 @@ describe("Scene/MetadataTableProperty", function () {
       propertyFloat64: [
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0],
+      ],
+    };
+
+    var valuesToSet = {
+      propertyInt8: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
+      propertyUint8: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
+      propertyInt16: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
+      propertyUint16: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
+      propertyInt32: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
+      propertyUint32: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
+      propertyFloat32: [
+        new Cartesian3(-2.0, -1.0, 0.0),
+        new Cartesian3(1.0, 2.0, 3.0),
+      ],
+      propertyFloat64: [
+        new Cartesian3(-2.0, -1.0, 0.0),
+        new Cartesian3(1.0, 2.0, 3.0),
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
+          enums: enums,
+        });
+        var expectedValues = valuesToSet[propertyId];
+        var length = expectedValues.length;
+        for (var i = 0; i < length; ++i) {
+          property.set(i, expectedValues[i]);
+          var value = property.get(i);
+          expect(value).toEqual(expectedValues[i]);
+          // Test setting / getting again
+          property.set(i, expectedValues[i]);
+          value = property.get(i);
+          expect(value).toEqual(expectedValues[i]);
+        }
+      }
+    }
+  });
+
+  it("set sets fixed size arrays", function () {
+    var properties = {
+      propertyInt64: {
+        type: "ARRAY",
+        componentType: "INT64",
+        componentCount: 3,
+      },
+      propertyUint64: {
+        type: "ARRAY",
+        componentType: "UINT64",
+        componentCount: 3,
+      },
+      propertyBoolean: {
+        type: "ARRAY",
+        componentType: "BOOLEAN",
+        componentCount: 3,
+      },
+      propertyString: {
+        type: "ARRAY",
+        componentType: "STRING",
+        componentCount: 3,
+      },
+      propertyEnum: {
+        type: "ARRAY",
+        componentType: "ENUM",
+        enumType: "myEnum",
+        componentCount: 3,
+      },
+    };
+
+    var propertyValues = {
+      propertyInt64: [
+        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+      ],
+      propertyUint64: [
+        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
+        [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
       ],
       propertyBoolean: [
         [false, false, false],
@@ -824,30 +896,6 @@ describe("Scene/MetadataTableProperty", function () {
     };
 
     var valuesToSet = {
-      propertyInt8: [
-        [-2, -1, 0],
-        [1, 2, 3],
-      ],
-      propertyUint8: [
-        [0, 1, 2],
-        [3, 4, 5],
-      ],
-      propertyInt16: [
-        [-2, -1, 0],
-        [1, 2, 3],
-      ],
-      propertyUint16: [
-        [0, 1, 2],
-        [3, 4, 5],
-      ],
-      propertyInt32: [
-        [-2, -1, 0],
-        [1, 2, 3],
-      ],
-      propertyUint32: [
-        [0, 1, 2],
-        [3, 4, 5],
-      ],
       propertyInt64: [
         [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
         [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
@@ -855,14 +903,6 @@ describe("Scene/MetadataTableProperty", function () {
       propertyUint64: [
         [BigInt(0), BigInt(1), BigInt(2)], // eslint-disable-line
         [BigInt(3), BigInt(4), BigInt(5)], // eslint-disable-line
-      ],
-      propertyFloat32: [
-        [-2.0, -1.0, 0.0],
-        [1.0, 2.0, 3.0],
-      ],
-      propertyFloat64: [
-        [-2.0, -1.0, 0.0],
-        [1.0, 2.0, 3.0],
       ],
       propertyBoolean: [
         [false, true, false],
@@ -1300,5 +1340,53 @@ describe("Scene/MetadataTableProperty", function () {
     expect(function () {
       property.set(0, 8.0);
     }).toThrowDeveloperError();
+  });
+
+  it("getTypedArray returns typed array", function () {
+    var propertyInt32 = {
+      type: "ARRAY",
+      componentType: "INT32",
+      componentCount: 3,
+    };
+
+    var propertyValues = [
+      [-2, -1, 0],
+      [1, 2, 3],
+    ];
+
+    var expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
+
+    var property = MetadataTester.createProperty({
+      property: propertyInt32,
+      values: propertyValues,
+    });
+
+    expect(property.getTypedArray()).toEqual(expectedTypedArray);
+  });
+
+  it("getTypedArray returns undefined if values are unpacked", function () {
+    var propertyInt32 = {
+      type: "ARRAY",
+      componentType: "INT32",
+    };
+
+    var propertyValues = [
+      [-2, -1, 0],
+      [1, 2, 3],
+    ];
+
+    var expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
+
+    var property = MetadataTester.createProperty({
+      property: propertyInt32,
+      values: propertyValues,
+    });
+
+    expect(property.getTypedArray()).toEqual(expectedTypedArray);
+
+    // Variable-size arrays are unpacked on set
+    property.set(0, [-2, -1]);
+
+    expect(property.getTypedArray()).toBeUndefined();
   });
 });

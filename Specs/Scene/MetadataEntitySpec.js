@@ -1,4 +1,8 @@
-import { MetadataClass, MetadataEntity } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  MetadataClass,
+  MetadataEntity,
+} from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEntity", function () {
   var classDefinition = new MetadataClass({
@@ -148,8 +152,7 @@ describe("Scene/MetadataEntity", function () {
       properties,
       classDefinition
     );
-    expect(value).toEqual(properties.position);
-    expect(value).not.toBe(properties.position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(properties.position));
   });
 
   it("getProperty returns the default value when the property is missing", function () {
@@ -176,20 +179,22 @@ describe("Scene/MetadataEntity", function () {
     expect(value).not.toBe(properties.position); // The value is cloned
   });
 
-  it("setProperty throws if property doesn't exist", function () {
-    expect(function () {
-      MetadataEntity.setProperty("volume", 100.0, classDefinition);
-    }).toThrowDeveloperError();
+  it("setProperty returns false if property doesn't exist", function () {
+    expect(MetadataEntity.setProperty("volume", 100.0, classDefinition)).toBe(
+      false
+    );
   });
 
   it("setProperty sets property value", function () {
     var position = [1.0, 1.0, 1.0];
-    MetadataEntity.setProperty(
-      "position",
-      position,
-      properties,
-      classDefinition
-    );
+    expect(
+      MetadataEntity.setProperty(
+        "position",
+        position,
+        properties,
+        classDefinition
+      )
+    ).toBe(true);
     var retrievedPosition = MetadataEntity.getProperty(
       "position",
       properties,
@@ -285,26 +290,28 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    MetadataEntity.setPropertyBySemantic(
-      "NAME",
-      "Building B",
-      properties,
-      classDefinition
-    );
+    expect(
+      MetadataEntity.setPropertyBySemantic(
+        "NAME",
+        "Building B",
+        properties,
+        classDefinition
+      )
+    ).toBe(true);
     expect(
       MetadataEntity.getProperty("name", properties, classDefinition)
     ).toBe("Building B");
   });
 
-  it("setPropertyBySemantic throws if the semantic does not exist", function () {
-    expect(function () {
+  it("setPropertyBySemantic returns false if the semantic does not exist", function () {
+    expect(
       MetadataEntity.setPropertyBySemantic(
         "HEIGHT",
         20.0,
         properties,
         classDefinition
-      );
-    }).toThrowDeveloperError();
+      )
+    ).toBe(false);
   });
 
   it("setPropertyBySemantic throws without semantic", function () {

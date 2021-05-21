@@ -3,6 +3,9 @@ import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A property in a feature texture.
+ * <p>
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.property The property JSON object.
@@ -13,6 +16,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function FeatureTextureProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -82,6 +82,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    *
    * @type {Promise.<GltfIndexBufferLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -95,6 +96,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -108,6 +110,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    *
    * @type {Buffer}
    * @readonly
+   * @private
    */
   indexBuffer: {
     get: function () {
@@ -118,6 +121,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfIndexBufferLoader.prototype.load = function () {
   if (defined(this._draco)) {
@@ -134,7 +138,6 @@ function loadFromDraco(indexBufferLoader) {
     draco: indexBufferLoader._draco,
     gltfResource: indexBufferLoader._gltfResource,
     baseResource: indexBufferLoader._baseResource,
-    keepResident: false,
   });
 
   indexBufferLoader._dracoLoader = dracoLoader;
@@ -170,7 +173,6 @@ function loadFromBufferView(indexBufferLoader) {
     bufferViewId: bufferViewId,
     gltfResource: indexBufferLoader._gltfResource,
     baseResource: indexBufferLoader._baseResource,
-    keepResident: false,
   });
   indexBufferLoader._state = ResourceLoaderState.LOADING;
   indexBufferLoader._bufferViewLoader = bufferViewLoader;
@@ -268,6 +270,7 @@ var scratchIndexBufferJob = new CreateIndexBufferJob();
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @private
  */
 GltfIndexBufferLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -321,6 +324,7 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfIndexBufferLoader.prototype.unload = function () {
   if (defined(this._indexBuffer)) {

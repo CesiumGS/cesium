@@ -6,6 +6,10 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
 /**
  * A metadata class.
  *
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * </p>
+ *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the class.
  * @param {Object} options.class The class JSON object.
@@ -13,6 +17,8 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  *
  * @alias MetadataClass
  * @constructor
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClass(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -56,6 +62,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object.<String, MetadataClassProperty>}
    * @readonly
+   * @private
    */
   properties: {
     get: function () {
@@ -84,6 +91,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   id: {
     get: function () {
@@ -97,6 +105,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   name: {
     get: function () {
@@ -110,6 +119,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
+   * @private
    */
   description: {
     get: function () {
@@ -123,6 +133,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {*}
    * @readonly
+   * @private
    */
   extras: {
     get: function () {
@@ -136,6 +147,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object}
    * @readonly
+   * @private
    */
   extensions: {
     get: function () {

@@ -223,7 +223,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     contentState = Cesium3DTileContentState.UNLOADED;
     contentResource = baseResource.getDerivedResource({
       url: contentHeaderUri,
-      preserveQueryParameters: true,
     });
     serverKey = RequestScheduler.getServerKey(
       contentResource.getUrlComponent()
@@ -276,6 +275,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @readonly
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.hasImplicitContent = false;
 
@@ -311,6 +311,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    *
    * @type {TileMetadata}
    * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metadata = metadata;
 
@@ -393,9 +395,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * placeholder tile with the <code>3DTILES_implicit_tiling</code> extension.
    * This way the {@link Implicit3DTileContent} can access the tile later once the content is fetched.
    *
-   * @type {ImplicitTileset}
+   * @type {ImplicitTileset|undefined}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.implicitTileset = undefined;
 
@@ -403,9 +406,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * For implicit tiling, the (level, x, y, [z]) coordinates within the
    * implicit tileset are stored in the tile.
    *
-   * @type {ImplicitTileCoordinates}
+   * @type {ImplicitTileCoordinates|undefined}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.implicitCoordinates = undefined;
 
@@ -422,9 +426,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * For implicit tiling, each transcoded tile will hold a weak reference to
    * the {@link ImplicitSubtree}.
    *
-   * @type {ImplicitSubtree}
+   * @type {ImplicitSubtree|undefined}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.implicitSubtree = undefined;
 

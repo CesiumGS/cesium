@@ -1,4 +1,8 @@
-import { MetadataClass, GroupMetadata } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  MetadataClass,
+  GroupMetadata,
+} from "../../Source/Cesium.js";
 
 describe("Scene/GroupMetadata", function () {
   it("creates group metadata with default values", function () {
@@ -59,7 +63,9 @@ describe("Scene/GroupMetadata", function () {
     expect(groupMetadata.description).toBe("Building Metadata");
     expect(groupMetadata.extras).toBe(extras);
     expect(groupMetadata.extensions).toBe(extensions);
-    expect(groupMetadata.getProperty("position")).toEqual(properties.position);
+    expect(groupMetadata.getProperty("position")).toEqual(
+      Cartesian3.unpack(properties.position)
+    );
   });
 
   it("constructor throws without id", function () {
@@ -326,8 +332,7 @@ describe("Scene/GroupMetadata", function () {
     });
 
     var value = groupMetadata.getProperty("position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty returns the default value when the property is missing", function () {
@@ -354,8 +359,7 @@ describe("Scene/GroupMetadata", function () {
     });
 
     var value = groupMetadata.getProperty("position");
-    expect(value).toEqual(position);
-    expect(value).not.toBe(position); // The value is cloned
+    expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty throws without propertyId", function () {
@@ -369,16 +373,14 @@ describe("Scene/GroupMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setProperty throws if property doesn't exist", function () {
+  it("setProperty returns false if property doesn't exist", function () {
     var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
 
     var position = [0.0, 0.0, 0.0];
-    expect(function () {
-      groupMetadata.setProperty("position", position);
-    }).toThrowDeveloperError();
+    expect(groupMetadata.setProperty("position", position)).toBe(false);
   });
 
   it("setProperty sets property value", function () {
@@ -405,10 +407,10 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var position = [1.0, 1.0, 1.0];
-    groupMetadata.setProperty("position", position);
+    var position = new Cartesian3(1.0, 1.0, 1.0);
+    expect(groupMetadata.setProperty("position", position)).toBe(true);
     expect(groupMetadata.getProperty("position")).toEqual(position);
-    expect(groupMetadata.getProperty("position")).not.toBe(position); // The value is cloned
+    expect(groupMetadata.getProperty("position")).not.toBe(position); // copies value
   });
 
   it("setProperty throws without propertyId", function () {
@@ -526,11 +528,11 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
+    expect(groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0)).toBe(true);
     expect(groupMetadata.getProperty("height")).toBe(20.0);
   });
 
-  it("setPropertyBySemantic throws if the semantic does not exist", function () {
+  it("setPropertyBySemantic returns false if the semantic does not exist", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -552,9 +554,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    expect(function () {
-      groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0);
-    }).toThrowDeveloperError();
+    expect(groupMetadata.setPropertyBySemantic("_HEIGHT", 20.0)).toBe(false);
   });
 
   it("setPropertyBySemantic throws without semantic", function () {

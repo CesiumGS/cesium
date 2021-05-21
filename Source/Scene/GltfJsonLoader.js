@@ -31,7 +31,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
  * @param {String} [options.cacheKey] The cache key of the resource.
- * @param {Boolean} [options.keepResident=false] Whether the glTF JSON and embedded buffers should stay in the cache indefinitely.
  *
  * @private
  */
@@ -42,7 +41,6 @@ export default function GltfJsonLoader(options) {
   var baseResource = options.baseResource;
   var typedArray = options.typedArray;
   var cacheKey = options.cacheKey;
-  var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -55,7 +53,6 @@ export default function GltfJsonLoader(options) {
   this._baseResource = baseResource;
   this._typedArray = typedArray;
   this._cacheKey = cacheKey;
-  this._keepResident = keepResident;
   this._gltf = undefined;
   this._bufferLoaders = [];
   this._state = ResourceLoaderState.UNLOADED;
@@ -75,6 +72,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {Promise.<GltfJsonLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -88,6 +86,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -101,6 +100,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @type {Object}
    * @readonly
+   * @private
    */
   gltf: {
     get: function () {
@@ -111,6 +111,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfJsonLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
@@ -192,7 +193,6 @@ function upgradeVersion(gltfJsonLoader, gltf) {
       var resourceCache = gltfJsonLoader._resourceCache;
       var bufferLoader = resourceCache.loadExternalBuffer({
         resource: resource,
-        keepResident: false, // External buffers don't need to stay resident
       });
 
       gltfJsonLoader._bufferLoaders.push(bufferLoader);
@@ -240,7 +240,6 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
         parentResource: gltfJsonLoader._gltfResource,
         bufferId: bufferId,
         typedArray: source,
-        keepResident: gltfJsonLoader._keepResident,
       });
 
       gltfJsonLoader._bufferLoaders.push(bufferLoader);
@@ -273,6 +272,7 @@ function processGltf(gltfJsonLoader, typedArray) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfJsonLoader.prototype.unload = function () {
   var bufferLoaders = this._bufferLoaders;
@@ -280,7 +280,7 @@ GltfJsonLoader.prototype.unload = function () {
   for (var i = 0; i < bufferLoadersLength; ++i) {
     this._resourceCache.unload(bufferLoaders[i]);
   }
-  this._bufferLoaders = [];
+  this._bufferLoaders.length = 0;
 
   this._gltf = undefined;
 };

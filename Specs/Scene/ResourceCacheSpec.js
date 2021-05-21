@@ -6,14 +6,13 @@ import {
   Resource,
   ResourceCache,
   ResourceCacheKey,
-  ResourceLoaderState,
   SupportedImageFormats,
   when,
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
-import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
   "ResourceCache",
@@ -274,7 +273,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[cacheKey];
       expect(cacheEntry.referenceCount).toBe(1);
       expect(cacheEntry.resourceLoader).toBe(resourceLoader);
-      expect(cacheEntry.keepResident).toBe(false);
 
       return resourceLoader.promise.then(function (resourceLoader) {
         expect(fetchJson).toHaveBeenCalled();
@@ -287,7 +285,7 @@ describe(
     it("load throws if resourceLoader is undefined", function () {
       expect(function () {
         ResourceCache.load({
-          keepResident: true,
+          resourceLoader: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -362,39 +360,6 @@ describe(
       expect(ResourceCache.cacheEntries[cacheKey]).toBeUndefined();
     });
 
-    it("unload keeps resource in the cache if keepResident is true", function () {
-      spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
-      );
-
-      var destroy = spyOn(
-        MetadataSchemaLoader.prototype,
-        "destroy"
-      ).and.callThrough();
-
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
-        resource: schemaResource,
-      });
-      var resourceLoader = new MetadataSchemaLoader({
-        resource: schemaResource,
-        cacheKey: cacheKey,
-      });
-
-      ResourceCache.load({
-        resourceLoader: resourceLoader,
-        keepResident: true,
-      });
-
-      var cacheEntry = ResourceCache.cacheEntries[cacheKey];
-      expect(cacheEntry.keepResident).toBe(true);
-      expect(cacheEntry.referenceCount).toBe(1);
-
-      ResourceCache.unload(resourceLoader);
-      expect(cacheEntry.referenceCount).toBe(0);
-      expect(destroy).not.toHaveBeenCalled();
-      expect(ResourceCache.cacheEntries[cacheKey]).toBe(cacheEntry);
-    });
-
     it("unload throws if resourceLoader is undefined", function () {
       expect(function () {
         ResourceCache.unload();
@@ -411,13 +376,11 @@ describe(
       });
 
       expect(function () {
-        ResourceCache.unload({
-          resourceLoader: resourceLoader,
-        });
+        ResourceCache.unload(resourceLoader);
       }).toThrowDeveloperError();
     });
 
-    it("unload throws if resource has no references", function () {
+    it("unload throws if resourceLoader has already been unloaded from the cache", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
         when.resolve(schemaJson)
       );
@@ -432,7 +395,6 @@ describe(
 
       ResourceCache.load({
         resourceLoader: resourceLoader,
-        keepResident: true,
       });
 
       ResourceCache.unload(resourceLoader);
@@ -486,7 +448,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(schemaLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -517,7 +478,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(schemaLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -537,7 +497,8 @@ describe(
     it("loadSchema throws if neither options.schema nor options.resource are defined", function () {
       expect(function () {
         ResourceCache.loadSchema({
-          keepResident: true,
+          schema: undefined,
+          resource: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -564,7 +525,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(bufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -623,7 +583,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(bufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -642,7 +601,7 @@ describe(
     it("loadExternalBuffer throws if resource is undefined", function () {
       expect(function () {
         ResourceCache.loadExternalBuffer({
-          keepResident: true,
+          resource: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -662,42 +621,41 @@ describe(
       var expectedCacheKey = ResourceCacheKey.getGltfCacheKey({
         gltfResource: gltfResource,
       });
-      var gltfLoader = ResourceCache.loadGltf({
+      var gltfJsonLoader = ResourceCache.loadGltfJson({
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
-      expect(gltfLoader.cacheKey).toBe(expectedCacheKey);
+      expect(gltfJsonLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
-        ResourceCache.loadGltf({
+        ResourceCache.loadGltfJson({
           gltfResource: gltfResource,
           baseResource: gltfResource,
         })
-      ).toBe(gltfLoader);
+      ).toBe(gltfJsonLoader);
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return gltfLoader.promise.then(function (gltfLoader) {
-        expect(gltfLoader.gltf).toBeDefined();
+      return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
+        expect(gltfJsonLoader.gltf).toBeDefined();
       });
     });
 
-    it("loadGltf throws if gltfResource is undefined", function () {
+    it("loadGltfJson throws if gltfResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadGltf({
+        ResourceCache.loadGltfJson({
           gltfResource: undefined,
           baseResource: gltfResource,
         });
       }).toThrowDeveloperError();
     });
 
-    it("loadGltf throws if gltfResource is undefined", function () {
+    it("loadGltfJson throws if gltfResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadGltf({
+        ResourceCache.loadGltfJson({
           gltfResource: gltfResource,
           baseResource: undefined,
         });
@@ -724,7 +682,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(bufferViewLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -812,7 +769,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(dracoLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -826,13 +782,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        dracoLoader.process(scene.frameState);
-        return dracoLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return dracoLoader.promise.then(function (dracoLoader) {
-          expect(dracoLoader.decodedData).toBeDefined();
-        });
+      return waitForLoaderProcess(dracoLoader, scene).then(function (
+        dracoLoader
+      ) {
+        expect(dracoLoader.decodedData).toBeDefined();
       });
     });
 
@@ -901,7 +854,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -915,13 +867,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
-          expect(vertexBufferLoader.vertexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
       });
     });
 
@@ -947,12 +896,12 @@ describe(
         baseResource: gltfResource,
         draco: dracoExtension,
         dracoAttributeSemantic: "POSITION",
+        dracoAccessorId: 0,
       });
 
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -962,18 +911,16 @@ describe(
           baseResource: gltfResource,
           draco: dracoExtension,
           dracoAttributeSemantic: "POSITION",
+          dracoAccessorId: 0,
         })
       ).toBe(vertexBufferLoader);
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        vertexBufferLoader.process(scene.frameState);
-        return vertexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return vertexBufferLoader.promise.then(function (vertexBufferLoader) {
-          expect(vertexBufferLoader.vertexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
       });
     });
 
@@ -1019,6 +966,7 @@ describe(
           bufferViewId: 0,
           draco: dracoExtension,
           dracoAttributeSemantic: "POSITION",
+          dracoAccessorId: 0,
         });
       }).toThrowDeveloperError();
     });
@@ -1040,6 +988,21 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
+          dracoAttributeSemantic: undefined,
+          dracoAccessorId: 0,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("loadVertexBuffer throws if draco is defined and dracoAccessorId is not defined", function () {
+      expect(function () {
+        ResourceCache.loadVertexBuffer({
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          draco: dracoExtension,
+          dracoAttributeSemantic: "POSITION",
+          dracoAccessorId: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -1065,7 +1028,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -1079,13 +1041,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer).toBeDefined();
       });
     });
 
@@ -1116,7 +1075,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -1131,13 +1089,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer).toBeDefined();
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer).toBeDefined();
       });
     });
 
@@ -1207,7 +1162,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(imageLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -1309,7 +1263,6 @@ describe(
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(textureLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
-      expect(cacheEntry.keepResident).toBe(false);
 
       // The existing resource is returned if the computed cache key is the same
       expect(
@@ -1324,13 +1277,10 @@ describe(
 
       expect(cacheEntry.referenceCount).toBe(2);
 
-      return pollToPromise(function () {
-        textureLoader.process(scene.frameState);
-        return textureLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return textureLoader.promise.then(function (textureLoader) {
-          expect(textureLoader.texture).toBeDefined();
-        });
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture).toBeDefined();
       });
     });
 

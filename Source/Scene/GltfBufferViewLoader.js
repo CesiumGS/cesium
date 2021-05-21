@@ -73,6 +73,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @type {Promise.<GltfBufferViewLoader>}
    * @readonly
+   * @private
    */
   promise: {
     get: function () {
@@ -86,6 +87,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -99,6 +101,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @type {Uint8Array}
    * @readonly
+   * @private
    */
   typedArray: {
     get: function () {
@@ -109,6 +112,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 GltfBufferViewLoader.prototype.load = function () {
   var bufferLoader = getBufferLoader(this);
@@ -128,8 +132,10 @@ GltfBufferViewLoader.prototype.load = function () {
         bufferTypedArray.byteOffset + that._byteOffset,
         that._byteLength
       );
-      // Keep bufferLoader loaded since we're still holding onto a view of the
-      // buffer and not ready to release it.
+
+      // Unload the buffer
+      that.unload();
+
       that._typedArray = bufferViewTypedArray;
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
@@ -155,18 +161,17 @@ function getBufferLoader(bufferViewLoader) {
     });
     return resourceCache.loadExternalBuffer({
       resource: resource,
-      keepResident: false,
     });
   }
   return resourceCache.loadEmbeddedBuffer({
     parentResource: bufferViewLoader._gltfResource,
     bufferId: bufferViewLoader._bufferId,
-    keepResident: false,
   });
 }
 
 /**
  * Unloads the resource.
+ * @private
  */
 GltfBufferViewLoader.prototype.unload = function () {
   if (defined(this._bufferLoader)) {

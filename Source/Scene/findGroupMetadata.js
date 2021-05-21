@@ -10,6 +10,7 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
  * @param {Object} contentHeader the JSON header for a {@link Cesium3DTileContent}
  * @return {GroupMetadata} the group metadata, or <code>undefined</code> if not found
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function findGroupMetadata(tileset, contentHeader) {
   if (has3DTilesExtension(contentHeader, "3DTILES_metadata")) {

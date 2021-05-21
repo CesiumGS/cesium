@@ -15,6 +15,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
+import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -36,6 +37,7 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
  * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
  * @param {Number} [byteOffset=0] The offset into the array buffer
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function Implicit3DTileContent(
   tileset,
@@ -254,7 +256,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
 
     for (var j = 0; j < branchingFactor; j++) {
       var index = i * branchingFactor + j;
-      if (subtree.childSubtreeIsAvailable(index)) {
+      if (subtree.childSubtreeIsAvailableAtIndex(index)) {
         results.push({
           tile: leafTile,
           childIndex: j,
@@ -316,7 +318,7 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
     ) {
       var childBitIndex = levelOffset + childMortonIndex;
 
-      if (!subtree.tileIsAvailable(childBitIndex)) {
+      if (!subtree.tileIsAvailableAtIndex(childBitIndex)) {
         currentRow.push(undefined);
         continue;
       }
@@ -376,14 +378,32 @@ function deriveChildTile(
   if (defaultValue(parentIsPlaceholderTile, false)) {
     implicitCoordinates = parentTile.implicitCoordinates;
   } else {
-    implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
+    implicitCoordinates = parentTile.implicitCoordinates.getChildCoordinates(
       childIndex
     );
   }
 
+  // Parse metadata and bounding volume semantics at the beginning
+  // as the bounding volumes are needed below.
+  var tileMetadata;
+  var tileBounds;
+  var contentBounds;
+  if (defined(subtree.metadataExtension)) {
+    var metadataTable = subtree.metadataTable;
+    tileMetadata = new ImplicitTileMetadata({
+      class: metadataTable.class,
+      implicitCoordinates: implicitCoordinates,
+      implicitSubtree: subtree,
+    });
+
+    var boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
+    tileBounds = boundingVolumeSemantics.tile;
+    contentBounds = boundingVolumeSemantics.content;
+  }
+
   var contentJsons = [];
   for (var i = 0; i < implicitTileset.contentCount; i++) {
-    if (!subtree.contentIsAvailable(childBitIndex, i)) {
+    if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
       continue;
     }
     var childContentTemplate = implicitTileset.contentUriTemplates[i];
@@ -393,19 +413,41 @@ function deriveChildTile(
     var contentJson = {
       uri: childContentUri,
     };
+
+    // content bounding volumes can only be specified via
+    // metadata semantics such as CONTENT_BOUNDING_BOX
+    if (defined(contentBounds) && defined(contentBounds.boundingVolume)) {
+      contentJson.boundingVolume = contentBounds.boundingVolume;
+    }
+
     // combine() is used to pass through any additional properties the
     // user specified such as extras or extensions
     contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
   var boundingVolume;
-  boundingVolume = deriveBoundingVolume(
-    implicitTileset,
-    implicitCoordinates,
-    childIndex,
-    defaultValue(parentIsPlaceholderTile, false),
-    parentTile
-  );
+
+  if (defined(tileBounds) && defined(tileBounds.boundingVolume)) {
+    boundingVolume = tileBounds.boundingVolume;
+  } else {
+    boundingVolume = deriveBoundingVolume(
+      implicitTileset,
+      implicitCoordinates,
+      childIndex,
+      defaultValue(parentIsPlaceholderTile, false),
+      parentTile
+    );
+
+    // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
+    // can be used to tighten the bounding volume
+    if (defined(boundingVolume.region) && defined(tileBounds)) {
+      updateRegionHeights(
+        boundingVolume.region,
+        tileBounds.minimumHeight,
+        tileBounds.maximumHeight
+      );
+    }
+  }
 
   var childGeometricError =
     implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
@@ -437,6 +479,7 @@ function deriveChildTile(
   );
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
+  childTile.metadata = tileMetadata;
 
   if (
     has3DTilesExtension(
@@ -453,16 +496,29 @@ function deriveChildTile(
     }
   }
 
-  if (defined(subtree.metadataExtension)) {
-    var metadataTable = subtree.metadataTable;
-    childTile.metadata = new ImplicitTileMetadata({
-      class: metadataTable.class,
-      implicitCoordinates: implicitCoordinates,
-      implicitSubtree: subtree,
-    });
+  return childTile;
+}
+
+/**
+ * For a derived bounding region, update the minimum and maximum height. This
+ * is typically used to tighten a bounding volume using the
+ * <code>TILE_MINIMUM_HEIGHT</code> and <code>TILE_MAXIMUM_HEIGHT</code>
+ * semantics. Heights are only updated if the respective
+ * minimumHeight/maximumHeight parameter is defined.
+ *
+ * @param {Array} region A 6-element array describing the bounding region
+ * @param {Number} [minimumHeight] The new minimum height
+ * @param {Number} [maximumHeight] The new maximum height
+ * @private
+ */
+function updateRegionHeights(region, minimumHeight, maximumHeight) {
+  if (defined(minimumHeight)) {
+    region[4] = minimumHeight;
   }
 
-  return childTile;
+  if (defined(maximumHeight)) {
+    region[5] = maximumHeight;
+  }
 }
 
 /**
@@ -708,7 +764,7 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
   //>>includeEnd('debug');
 
   if (level === 0) {
-    return rootRegion;
+    return rootRegion.slice();
   }
 
   var rectangle = Rectangle.unpack(rootRegion, 0, scratchRectangle);
@@ -748,7 +804,7 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
  */
 function makePlaceholderChildSubtree(content, parentTile, childIndex) {
   var implicitTileset = content._implicitTileset;
-  var implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
+  var implicitCoordinates = parentTile.implicitCoordinates.getChildCoordinates(
     childIndex
   );
 

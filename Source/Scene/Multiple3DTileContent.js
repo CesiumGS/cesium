@@ -29,6 +29,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @param {Object} extensionJson The <code>3DTILES_multiple_contents</code> extension JSON
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function Multiple3DTileContent(
   tileset,
@@ -59,7 +60,6 @@ export default function Multiple3DTileContent(
   for (var i = 0; i < contentCount; i++) {
     var contentResource = tilesetResource.getDerivedResource({
       url: contentHeaders[i].uri,
-      preserveQueryParameters: true,
     });
 
     var serverKey = RequestScheduler.getServerKey(
@@ -109,6 +109,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   featuresLength: {
     get: function () {
@@ -120,6 +121,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead, call <code>pointsLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   pointsLength: {
     get: function () {
@@ -131,6 +133,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -142,6 +145,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -153,6 +157,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.   <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   texturesByteLength: {
     get: function () {
@@ -164,6 +169,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   batchTableByteLength: {
     get: function () {
@@ -203,6 +209,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @type {String}
    * @readonly
+   * @private
    */
   url: {
     get: function () {

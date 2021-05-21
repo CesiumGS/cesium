@@ -9,7 +9,10 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataType from "./MetadataType.js";
 
 /**
- * A binary property in a metadata table.
+ * A binary property in a {@MetadataTable}
+ * <p>
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of elements in each property array.
@@ -21,6 +24,7 @@ import MetadataType from "./MetadataType.js";
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataTableProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -187,7 +191,8 @@ MetadataTableProperty.prototype.get = function (index) {
   //>>includeEnd('debug');
 
   var value = get(this, index);
-  return this._classProperty.normalize(value);
+  value = this._classProperty.normalize(value);
+  return this._classProperty.unpackVectorTypes(value);
 };
 
 /**
@@ -209,9 +214,28 @@ MetadataTableProperty.prototype.set = function (index, value) {
   }
   //>>includeEnd('debug');
 
+  value = classProperty.packVectorTypes(value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
+};
+
+/**
+ * Returns a typed array containing the property values.
+ *
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
+ * @private
+ */
+MetadataTableProperty.prototype.getTypedArray = function () {
+  // Note: depending on the class definition some properties are unpacked to
+  // JS arrays when first accessed and values will be undefined. Generally not
+  // a concern for fixed-length arrays of numbers.
+  if (defined(this._values)) {
+    return this._values.typedArray;
+  }
+
+  return undefined;
 };
 
 function checkIndex(table, index) {

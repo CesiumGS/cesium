@@ -175,6 +175,15 @@ RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
   return hasOpenSlotsServer;
 };
 
+/**
+ * Check if the priority heap has open slots, regardless of which server they
+ * are from. This is used in {@link Multiple3DTileContent} for determining when
+ * all requests can be scheduled
+ * @param {Number} desiredRequests The number of requests the caller intends to make
+ * @return {Boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
+ *
+ * @private
+ */
 RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
   var hasOpenSlotsHeap =
     requestHeap.length + desiredRequests <= priorityHeapLength;

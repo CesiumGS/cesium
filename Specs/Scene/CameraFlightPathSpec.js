@@ -1,5 +1,8 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
+import { Ellipsoid } from "../../Source/Cesium.js";
+import { GeographicProjection } from "../../../Source/Cesium.js";
+import { Globe } from "../../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
 import { CameraFlightPath } from "../../Source/Cesium.js";
@@ -106,6 +109,35 @@ describe(
       expect(camera.heading).toEqualEpsilon(endHeading, CesiumMath.EPSILON12);
       expect(camera.pitch).toEqualEpsilon(endPitch, CesiumMath.EPSILON12);
       expect(camera.roll).toEqualEpsilon(endRoll, CesiumMath.EPSILON12);
+    });
+
+    it("creates an animation in 3d using custom ellipsoid", function () {
+      var ellipsoid = new Ellipsoid(1737400, 1737400, 1737400);
+      var mapProjection = new GeographicProjection(ellipsoid);
+      scene = createScene({
+        mapProjection: mapProjection,
+      });
+      scene.globe = new Globe(ellipsoid);
+
+      var camera = scene.camera;
+
+      var startPosition = Cartesian3.clone(camera.position);
+      var endPosition = Cartesian3.fromDegrees(0.0, 0.0, 100.0, ellipsoid);
+
+      var duration = 1.0;
+      var flight = CameraFlightPath.createTween(scene, {
+        destination: endPosition,
+        duration: duration,
+      });
+
+      flight.update({ time: 0.0 });
+      expect(camera.position).toEqualEpsilon(
+        startPosition,
+        CesiumMath.EPSILON12
+      );
+
+      flight.update({ time: duration });
+      expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON7);
     });
 
     it("creates an animation in Columbus view", function () {

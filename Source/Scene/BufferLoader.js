@@ -94,6 +94,7 @@ Object.defineProperties(BufferLoader.prototype, {
 
 /**
  * Loads the resource.
+ * @private
  */
 BufferLoader.prototype.load = function () {
   if (defined(this._typedArray)) {
@@ -129,6 +130,7 @@ function loadExternalBuffer(bufferLoader) {
 
 /**
  * Unloads the resource.
+ * @private
  */
 BufferLoader.prototype.unload = function () {
   this._typedArray = undefined;

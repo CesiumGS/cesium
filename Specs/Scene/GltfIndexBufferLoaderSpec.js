@@ -8,12 +8,11 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
-  ResourceLoaderState,
   when,
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfIndexBufferLoader",
@@ -368,20 +367,15 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.FAILED;
-      }).then(function () {
-        return indexBufferLoader.promise
-          .then(function (indexBufferLoader) {
-            fail();
-          })
-          .otherwise(function (runtimeError) {
-            expect(runtimeError.message).toBe(
-              "Failed to load index buffer\nFailed to load Draco\nDraco decode failed"
-            );
-          });
-      });
+      return waitForLoaderProcess(indexBufferLoader, scene)
+        .then(function (indexBufferLoader) {
+          fail();
+        })
+        .otherwise(function (runtimeError) {
+          expect(runtimeError.message).toBe(
+            "Failed to load index buffer\nFailed to load Draco\nDraco decode failed"
+          );
+        });
     });
 
     it("loads from accessor", function () {
@@ -414,16 +408,13 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
-          expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-            indicesUint16.byteLength
-          );
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+          indicesUint16.byteLength
+        );
       });
     });
 
@@ -443,15 +434,12 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-            indicesUint16.byteLength
-          );
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+          indicesUint16.byteLength
+        );
       });
     });
 
@@ -470,15 +458,12 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-            expectedByteLength
-          );
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+          expectedByteLength
+        );
       });
     }
 
@@ -524,16 +509,13 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
-          expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-            decodedIndices.byteLength
-          );
-        });
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+          decodedIndices.byteLength
+        );
       });
     });
 
@@ -562,21 +544,18 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer).toBeDefined();
-          expect(indexBufferLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.isDestroyed()).toBe(false);
 
-          indexBufferLoader.destroy();
+        indexBufferLoader.destroy();
 
-          expect(indexBufferLoader.indexBuffer).not.toBeDefined();
-          expect(indexBufferLoader.isDestroyed()).toBe(true);
-          expect(unloadBufferView).toHaveBeenCalled();
-          expect(destroyIndexBuffer).toHaveBeenCalled();
-        });
+        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.isDestroyed()).toBe(true);
+        expect(unloadBufferView).toHaveBeenCalled();
+        expect(destroyIndexBuffer).toHaveBeenCalled();
       });
     });
 
@@ -610,21 +589,18 @@ describe(
 
       indexBufferLoader.load();
 
-      return pollToPromise(function () {
-        indexBufferLoader.process(scene.frameState);
-        return indexBufferLoader._state === ResourceLoaderState.READY;
-      }).then(function () {
-        return indexBufferLoader.promise.then(function (indexBufferLoader) {
-          expect(indexBufferLoader.indexBuffer).toBeDefined();
-          expect(indexBufferLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.isDestroyed()).toBe(false);
 
-          indexBufferLoader.destroy();
+        indexBufferLoader.destroy();
 
-          expect(indexBufferLoader.indexBuffer).not.toBeDefined();
-          expect(indexBufferLoader.isDestroyed()).toBe(true);
-          expect(unloadDraco).toHaveBeenCalled();
-          expect(destroyIndexBuffer).toHaveBeenCalled();
-        });
+        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.isDestroyed()).toBe(true);
+        expect(unloadDraco).toHaveBeenCalled();
+        expect(destroyIndexBuffer).toHaveBeenCalled();
       });
     });
 
