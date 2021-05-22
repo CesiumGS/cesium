@@ -1,11 +1,8 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
-import Color from "../Core/Color.js";
 import Cartographic from "../Core/Cartographic.js";
-import CesiumMath from "../Core/Math.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeodesic from "../Core/EllipsoidGeodesic.js";
-import Entity from "../DataSources/Entity.js";
 import Intersect from "../Core/Intersect.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Plane from "../Core/Plane.js";
@@ -21,7 +18,7 @@ import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import S2Cell from "../Core/S2Cell.js";
 
-var scratchCartographic;
+var scratchCartographic = new Cartographic();
 
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
@@ -40,6 +37,11 @@ var scratchCartographic;
  * @private
  */
 function TileBoundingS2Cell(options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.string("options.token", options.token);
+  //>>includeEnd('debug');
+
   this.s2Cell = S2Cell.fromToken(options.token);
   this.minimumHeight = defaultValue(options.minimumHeight, 0.0);
   this.maximumHeight = defaultValue(options.maximumHeight, 0.0);
@@ -49,8 +51,6 @@ function TileBoundingS2Cell(options) {
     this.minimumHeight,
     this.maximumHeight
   );
-
-  this.center = this.s2Cell.getCenter();
 
   this._topPlane = boundingPlanes[0];
   this._bottomPlane = boundingPlanes[1];
@@ -64,8 +64,10 @@ function TileBoundingS2Cell(options) {
 
   var points = [];
 
+  this.center = this.s2Cell.getCenter();
+
   // Add center of cell.
-  points[0] = this.s2Cell.getCenter();
+  points[0] = this.center;
   scratchCartographic = Cartographic.fromCartesian(points[0]);
   scratchCartographic.height = this.maximumHeight;
   points[0] = Cartographic.toCartesian(scratchCartographic);
@@ -84,6 +86,10 @@ function TileBoundingS2Cell(options) {
   );
 }
 
+/**
+ * Computes bounding planes of the kDOP.
+ * @private
+ */
 function computeBoundingPlanes(s2Cell, minimumHeight, maximumHeight) {
   // Get cell center.
   var centerPoint = s2Cell.getCenter();
@@ -194,6 +200,10 @@ var f0 = new Cartesian3();
 var f1 = new Cartesian3();
 var f2 = new Cartesian3();
 var s = new Cartesian3();
+/**
+ * Computes intersection of 3 planes.
+ * @private
+ */
 function computeIntersection(p0, p1, p2) {
   n0 = p0.normal;
   n1 = p1.normal;
@@ -244,7 +254,10 @@ function computeIntersection(p0, p1, p2) {
     s.z / determinant
   );
 }
-
+/**
+ * Wrapper for iterating through coincident planes of the kDOP.
+ * @private
+ */
 function computeVertices(topPlane, bottomPlane, sidePlanes) {
   var vertices = [];
   for (var i = 0; i < 8; i++) {
@@ -295,13 +308,16 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
 
   var planes = [];
   var vertices = [];
+  var dir = [];
 
   if (Plane.getPointDistance(this._topPlane, point) > 0) {
     planes.push(this._topPlane);
     vertices.push(this._vertices.slice(0, 4));
+    dir.push(-1);
   } else if (Plane.getPointDistance(this._bottomPlane, point) > 0) {
     planes.push(this._bottomPlane);
     vertices.push(this._vertices.slice(4, 8));
+    dir.push(1);
   }
 
   var i;
@@ -314,6 +330,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         this._vertices[4 + ((i + 1) % 4)],
         this._vertices[(i + 1) % 4],
       ]);
+      dir.push(1);
     }
   }
 
@@ -325,220 +342,31 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   // Test all planes.
   var minDistance = Number.MAX_VALUE;
   var distance;
+  var facePoint;
   for (i = 0; i < planes.length; i++) {
-    distance = Cartesian3.distanceSquared(
-      closestPointPolygon(
-        Plane.projectPointOntoPlane(planes[i], point),
-        vertices[i],
-        planes[i]
-      ),
-      point
+    facePoint = closestPointPolygon(
+      Plane.projectPointOntoPlane(planes[i], point),
+      vertices[i],
+      planes[i],
+      dir[i]
     );
+    distance = Cartesian3.distanceSquared(facePoint, point);
     if (distance < minDistance) {
       minDistance = distance;
     }
   }
-
   return Math.sqrt(minDistance);
 };
 
-/*
-TileBoundingS2Cell.prototype.debugDistance = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
-  //>>includeEnd('debug');
-
-  var point = frameState.camera.positionWC;
-
-  var planes = [];
-  var vertices = [];
-
-  if (Plane.getPointDistance(this._topPlane, point) > 0) {
-    planes.push(this._topPlane);
-    vertices.push(this._vertices.slice(0, 4));
-  } else if (Plane.getPointDistance(this._bottomPlane, point) > 0) {
-    planes.push(this._bottomPlane);
-    vertices.push(this._vertices.slice(4, 8));
-  }
-
-  var i;
-  for (i = 0; i < 4; i++) {
-    if (Plane.getPointDistance(this._sidePlanes[(i + 1) % 4], point) < 0) {
-      planes.push(this._sidePlanes[(i + 1) % 4]);
-      vertices.push([
-        this._vertices[i % 4],
-        this._vertices[4 + i],
-        this._vertices[4 + ((i + 1) % 4)],
-        this._vertices[(i + 1) % 4],
-      ]);
-    }
-  }
-
-  // Check if inside all planes.
-  if (planes.length === 0) {
-    return 0.0;
-  }
-
-  // Test all planes.
-
-  var closestPoint;
-  var entities = [];
-  for (i = 0; i < planes.length; i++) {
-    closestPoint = closestPointPolygon(Plane.projectPointOntoPlane(planes[i], point), vertices[i], planes[i]);
-    entities.push(new Entity({
-      position: closestPoint,
-      point: {
-        pixelSize: 4,
-        color: Color.ORANGE
-      }
-    }));
-  
-  }
-
-  return entities;
-};
-
-
+var dScratch = new Cartesian3();
+var pL0Scratch = new Cartesian3();
 /**
- * Calculates the distance between the tile and the camera.
- *
- * @param {FrameState} frameState The frame state.
- * @return {Number} The distance between the tile and the camera, in meters.
- *                  Returns 0.0 if the camera is inside the tile.
- 
-TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
-  //>>includeEnd('debug');
-
-  var distances = [];
-  // Check top plane
-  distances.push(
-    Math.abs(
-      Cartesian3.distance(
-        closestPointOnPlane(
-          this._topPlane,
-          this._vertices.slice(0, 4),
-          frameState.camera.positionWC
-        ),
-        frameState.camera.positionWC
-      )
-    )
-  );
-  // Check bottom plane
-  distances.push(
-    Math.abs(
-      Cartesian3.distance(
-        closestPointOnPlane(
-          this._bottomPlane,
-          this._vertices.slice(4, 7),
-          frameState.camera.positionWC
-        ),
-        frameState.camera.positionWC
-      )
-    )
-  );
-  // Check side planes.
-  for (var i = 0; i < 4; i++) {
-    distances.push(
-      Math.abs(
-        Cartesian3.distance(
-          closestPointOnPlane(
-            this._sidePlanes[i],
-            [
-              this._vertices[i % 4],
-              this._vertices[4 + i],
-              this._vertices[4 + ((i + 1) % 4)],
-              this._vertices[(i + 1) % 4],
-            ],
-            frameState.camera.positionWC
-          ),
-          frameState.camera.positionWC
-        )
-      )
-    );
-  }
-
-  var minDistance = Math.min(distances);
-  return minDistance;
-};
-
-*/
-function closestPointOnPlane(plane, vertices, point) {
-  var projectedPoint = Plane.projectPointOntoPlane(plane, point);
-  var vertexDistances = [];
-  for (var i = 0; i < vertices.length; i++) {
-    vertexDistances[i] = {
-      v: vertices[i],
-      d: Cartesian3.distance(projectedPoint, vertices[i]),
-    };
-  }
-  vertexDistances.sort(function (a, b) {
-    return a.d < b.d;
-  });
-
-  // Check if inside face.
-  if (isInsideFace(vertices, projectedPoint)) {
-    return projectedPoint;
-  }
-
-  // Create edge.
-  return closestPointOnLine(
-    projectedPoint,
-    vertexDistances[0].v,
-    vertexDistances[1].v
-  );
-}
-
-function isInsideFace(vertices, point) {
-  var m1, m2;
-  var p1, p2;
-
-  for (var i = 0; i < vertices.length; i++) {
-    p1 = Cartesian3.subtract(point, vertices[i], new Cartesian3());
-    p2 = Cartesian3.subtract(
-      point,
-      vertices[(i + 1) % vertices.length],
-      new Cartesian3()
-    );
-
-    m1 = Cartesian3.magnitude(p1);
-    m2 = Cartesian3.magnitude(p2);
-
-    if (m1 * m2 <= CesiumMath.EPSILON8) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function closestPointOnLine(point, lineSegment0, lineSegment1) {
-  var line = Cartesian3.subtract(lineSegment0, lineSegment1, new Cartesian3());
-  var t = Cartesian3.dot(
-    Cartesian3.subtract(point, lineSegment0, new Cartesian3()),
-    line
-  );
-  if (t <= 0.0) {
-    t = 0.0;
-    return lineSegment0;
-  }
-  var denominator = Cartesian3.dot(line, line);
-  if (t >= denominator) {
-    t = 1.0;
-    return lineSegment1;
-  }
-  t = t / denominator;
-  return Cartesian3.add(
-    lineSegment0,
-    Cartesian3.multiplyByScalar(line, t, new Cartesian3()),
-    new Cartesian3()
-  );
-}
-
-// Find closest point to line segment.
+ * Finds point on a line segment closest to a given point.
+ * @private
+ */
 function closestPointLineSegment(p, l0, l1) {
-  var d = Cartesian3.subtract(l1, l0, new Cartesian3());
-  var pL0 = Cartesian3.subtract(p, l0, new Cartesian3());
+  var d = Cartesian3.subtract(l1, l0, dScratch);
+  var pL0 = Cartesian3.subtract(p, l0, pL0Scratch);
   var t = Cartesian3.dot(d, pL0);
 
   if (t <= 0) {
@@ -558,8 +386,13 @@ function closestPointLineSegment(p, l0, l1) {
   );
 }
 
-// Find closest point to polygon.
-function closestPointPolygon(p, vertices, plane) {
+var edgeNormalScratch = new Cartesian3();
+/**
+ * Finds closes point on the polygon, created by the given vertices, from
+ * a point. The test point and the polygon are all on the same plane.
+ * @private
+ */
+function closestPointPolygon(p, vertices, plane, dir) {
   var minDistance = Number.MAX_VALUE;
   var distance;
   var closestPoint;
@@ -572,12 +405,12 @@ function closestPointPolygon(p, vertices, plane) {
       new Cartesian3()
     );
 
-    var edgeNormal = Cartesian3.cross(plane.normal, edge, new Cartesian3());
+    var edgeNormal = Cartesian3.cross(plane.normal, edge, edgeNormalScratch);
     Cartesian3.normalize(edgeNormal, edgeNormal);
     var edgePlane = Plane.fromPointNormal(vertices[i], edgeNormal);
     var edgePlaneDistance = Plane.getPointDistance(edgePlane, p);
 
-    if (edgePlaneDistance > 0) {
+    if (dir * edgePlaneDistance > 0) {
       continue;
     }
 
