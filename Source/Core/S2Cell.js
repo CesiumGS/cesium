@@ -1,5 +1,4 @@
 /* eslint-disable new-cap */
-/* eslint-disable no-undef */
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -11,9 +10,6 @@ import RuntimeError from "./RuntimeError.js";
 
 // The maximum level supported within an S2 cell ID. Each level is represented by two bits in the final cell ID
 var S2MaxLevel = 30;
-
-// The number of bits in a S2 cell ID used for specifying the base face
-var S2FaceBits = 3;
 
 // The maximum index of a valid leaf cell plus one.  The range of valid leaf cell indices is [0..S2LimitIJ-1].
 var S2LimitIJ = 1 << S2MaxLevel;
