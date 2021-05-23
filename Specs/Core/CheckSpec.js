@@ -30,7 +30,7 @@ describe("Core/Check", function () {
 
     it("Check.typeOf.bigint does not throw when passed a boolean", function () {
       expect(function () {
-        Check.typeOf.bigint("bigint", BigInt());
+        Check.typeOf.bigint("bigint", BigInt()); // eslint-disable-line
       }).not.toThrowDeveloperError();
     });
 

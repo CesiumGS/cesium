@@ -107,11 +107,12 @@ S2Cell.isValidId = function (cellId) {
   if (cellId <= 0) return false;
 
   // Check if face bits indicate a value <= 5.
-  if (cellId >> BigInt(S2PositionBits) > 5) return false;
+  if (cellId >> BigInt(S2PositionBits) > 5) return false; // eslint-disable-line
 
   // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
-  var lowestSetBit = cellId & (~cellId + BigInt(1));
+  var lowestSetBit = cellId & (~cellId + BigInt(1)); // eslint-disable-line
   if (!(lowestSetBit & BigInt("0x1555555555555555"))) {
+    // eslint-disable-line
     return false;
   }
 
@@ -150,10 +151,10 @@ S2Cell.getIdFromToken = function (token) {
 
   // 'X' is a special case of the S2Token, representing the 0 cell.
   if (token === "X") {
-    return BigInt(0);
+    return BigInt(0); // eslint-disable-line
   }
 
-  return BigInt("0x" + token + "0".repeat(16 - token.length));
+  return BigInt("0x" + token + "0".repeat(16 - token.length)); // eslint-disable-line
 };
 
 /**
@@ -169,6 +170,7 @@ S2Cell.getTokenFromId = function (cellId) {
 
   // 'X' is a special case of the S2Token, representing the 0 cell.
   if (cellId === BigInt(0)) {
+    // eslint-disable-line
     return "X";
   }
   var trailingZeroBits = Math.floor(countTrailingZero(cellId) / 4);
@@ -194,11 +196,13 @@ S2Cell.getLevel = function (cellId) {
 
   var lsbPosition = 0;
   while (cellId !== BigInt(0)) {
+    // eslint-disable-line
     if (cellId & BigInt(1)) {
+      // eslint-disable-line
       break;
     }
     lsbPosition++;
-    cellId = cellId >> BigInt(1);
+    cellId = cellId >> BigInt(1); // eslint-disable-line
   }
 
   return S2MaxLevel - (lsbPosition >> 1);
@@ -221,8 +225,8 @@ S2Cell.prototype.getChild = function (index) {
   }
   //>>includeEnd('debug');
 
-  var newLsb = lsb(this._cellId) >> BigInt(2);
-  var childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb;
+  var newLsb = lsb(this._cellId) >> BigInt(2); // eslint-disable-line
+  var childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb; // eslint-disable-line
   return new S2Cell(childCellId);
 };
 
@@ -237,8 +241,8 @@ S2Cell.prototype.getParent = function () {
     throw new DeveloperError("cannot get parent of root cell.");
   }
   //>>includeEnd('debug');
-  var newLsb = lsb(this._cellId) << BigInt(2);
-  return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb);
+  var newLsb = lsb(this._cellId) << BigInt(2); // eslint-disable-line
+  return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb); // eslint-disable-line
 };
 
 /**
@@ -273,7 +277,7 @@ S2Cell.fromFacePosLevel = function (face, pos, level) {
     throw new DeveloperError("Invalid Hilbert position for level");
   }
   //>>includeEnd('debug');
-  var cell = new S2Cell((face << BigInt(S2PositionBits)) + (pos | BigInt(1)));
+  var cell = new S2Cell((face << BigInt(S2PositionBits)) + (pos | BigInt(1))); // eslint-disable-line
   return cell.getParentAtLevel(level);
 };
 
@@ -345,7 +349,7 @@ function CellIdToFaceSiTi(cellId) {
 
   var isLeaf = S2Cell.getLevel(cellId) === 30;
   var shouldCorrect =
-    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1);
+    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1); // eslint-disable-line
   var correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
   var si = (i << 1) + correction;
   var ti = (j << 1) + correction;
@@ -360,7 +364,7 @@ function CellIdToFaceIJ(cellId) {
     generateLookupTable();
   }
 
-  var face = Number(cellId >> BigInt(S2PositionBits));
+  var face = Number(cellId >> BigInt(S2PositionBits)); // eslint-disable-line
   var bits = face & S2SwapMask;
   var lookupMask = (1 << S2LookupBits) - 1;
 
@@ -372,7 +376,7 @@ function CellIdToFaceIJ(cellId) {
     var extractMask = (1 << (2 * numberOfBits)) - 1;
     bits +=
       Number(
-        (cellId >> BigInt(k * 2 * S2LookupBits + 1)) & BigInt(extractMask)
+        (cellId >> BigInt(k * 2 * S2LookupBits + 1)) & BigInt(extractMask) // eslint-disable-line
       ) << 2;
 
     bits = S2LookupIJ[bits];
@@ -544,7 +548,7 @@ function generateLookupTable() {
  * @private
  */
 function lsb(cellId) {
-  return cellId & (~cellId + BigInt(1));
+  return cellId & (~cellId + BigInt(1)); // eslint-disable-line
 }
 
 /**
@@ -552,7 +556,7 @@ function lsb(cellId) {
  * @private
  */
 function lsbForLevel(level) {
-  return BigInt(1) << BigInt(2 * (S2MaxLevel - level));
+  return BigInt(1) << BigInt(2 * (S2MaxLevel - level)); // eslint-disable-line
 }
 
 /**
@@ -562,7 +566,8 @@ function lsbForLevel(level) {
 function countTrailingZero(x) {
   var count = 0;
   while ((x & BigInt(1)) === BigInt(0)) {
-    x = x >> BigInt(1);
+    // eslint-disable-line
+    x = x >> BigInt(1); // eslint-disable-line
     count++;
   }
   return count;
