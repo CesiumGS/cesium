@@ -155,6 +155,23 @@ describe("Core/S2Cell", function () {
     expect(parent._cellId).toEqual(BigInt("3383782026971709440"));
   });
 
+  it("gets correct parent of cell at given level", function () {
+    var cell = new S2Cell(BigInt("3383782218852728832"));
+    var parent = cell.getParentAtLevel(8);
+    expect(parent._cellId).toEqual(BigInt("3383769024713195520"));
+    parent = cell.getParentAtLevel(5);
+    expect(parent._cellId).toEqual(BigInt("3383329220062085120"));
+    parent = cell.getParentAtLevel(0);
+    expect(parent._cellId).toEqual(BigInt("3458764513820540928"));
+  });
+
+  it("throws on getting parent of cell at invalid level", function () {
+    var cell = new S2Cell(BigInt("3383782218852728832"));
+    expect(function () {
+      cell.getParentAtLevel(-1);
+    });
+  });
+
   it("throws on getting parent of level 0 cells", function () {
     var cell = S2Cell.fromToken("3");
     expect(function () {
