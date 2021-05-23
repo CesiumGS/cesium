@@ -53,9 +53,8 @@ var S2PosToOrientationMask = [S2SwapMask, 0, 0, S2SwapMask | S2InvertMask];
  * @alias S2Cell
  * @constructor
  *
- * @private
- *
  * @param {BigInt} [cellId] The 64-bit S2CellId.
+ * @private
  */
 function S2Cell(cellId) {
   if (!FeatureDetection.supportsBigInt()) {
@@ -77,10 +76,9 @@ function S2Cell(cellId) {
 /**
  * Creates a new S2Cell from a token. A token is a hexadecimal representation of the 64-bit S2CellId.
  *
- * @private
- *
  * @param {String} token The token for the S2 Cell.
  * @returns {S2Cell} Returns a new S2Cell.
+ * @private
  */
 S2Cell.fromToken = function (token) {
   //>>includeStart('debug', pragmas.debug);
@@ -98,6 +96,7 @@ S2Cell.fromToken = function (token) {
  *
  * @param {BigInt} [cellId] The S2CellId.
  * @returns {Boolean} Returns true if the cell ID is valid, returns false otherwise.
+ * @private
  */
 S2Cell.isValidId = function (cellId) {
   //>>includeStart('debug', pragmas.debug);
@@ -124,6 +123,7 @@ S2Cell.isValidId = function (cellId) {
  *
  * @param {String} [token] The hexadecimal representation of an S2CellId. 0 must be represented using "X".
  * @returns {Boolean} Returns true if the token is valid, returns false otherwise.
+ * @private
  */
 S2Cell.isValidToken = function (token) {
   //>>includeStart('debug', pragmas.debug);
@@ -143,6 +143,7 @@ S2Cell.isValidToken = function (token) {
  *
  * @param {String} [token] The hexadecimal representation of an S2CellId. 0 must be represented using "X". Expected to be a valid S2 token.
  * @returns {BigInt} Returns the S2 cell ID.
+ * @private
  */
 S2Cell.getIdFromToken = function (token) {
   //>>includeStart('debug', pragmas.debug);
@@ -162,6 +163,7 @@ S2Cell.getIdFromToken = function (token) {
  *
  * @param {BigInt} [cellId] The S2 cell ID.
  * @returns {BigInt} Returns hexadecimal representation of an S2CellId.
+ * @private
  */
 S2Cell.getTokenFromId = function (cellId) {
   //>>includeStart('debug', pragmas.debug);
@@ -185,6 +187,7 @@ S2Cell.getTokenFromId = function (cellId) {
  *
  * @param {BigInt} [cellId] The S2 cell ID.
  * @returns {number} Returns the level of the cell.
+ * @private
  */
 S2Cell.getLevel = function (cellId) {
   //>>includeStart('debug', pragmas.debug);
@@ -213,6 +216,7 @@ S2Cell.getLevel = function (cellId) {
  *
  * @param {Number} index An integer index of the child.
  * @returns {S2Cell} The child of the S2Cell.
+ * @private
  */
 S2Cell.prototype.getChild = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -234,6 +238,7 @@ S2Cell.prototype.getChild = function (index) {
  * Gets the parent cell of an S2Cell.
  *
  * @returns {S2Cell} Returns the parent of the S2Cell.
+ * @private
  */
 S2Cell.prototype.getParent = function () {
   //>>includeStart('debug', pragmas.debug);
@@ -249,6 +254,7 @@ S2Cell.prototype.getParent = function () {
  * Gets the parent cell at the given level.
  *
  * @returns {S2Cell} Returns the parent of the S2Cell.
+ * @private
  */
 S2Cell.prototype.getParentAtLevel = function (level) {
   //>>includeStart('debug', pragmas.debug);
@@ -263,6 +269,9 @@ S2Cell.prototype.getParentAtLevel = function (level) {
   return new S2Cell((this._cellId & -newLsb) | newLsb);
 };
 
+/**
+ * @private
+ */
 S2Cell.fromFacePosLevel = function (face, pos, level) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.bigint("pos", pos);
@@ -285,6 +294,7 @@ S2Cell.fromFacePosLevel = function (face, pos, level) {
  * Get center of the S2 cell.
  *
  * @returns {Cartesian} The position of center of the S2 cell.
+ * @private
  */
 S2Cell.prototype.getCenter = function () {
   var center = getS2Center(this._cellId);
@@ -307,6 +317,7 @@ S2Cell.prototype.getCenter = function () {
  *
  * @param {Number} index An integer index of the vertex.
  * @returns {Cartesian} The position of the vertex of the S2 cell.
+ * @private
  */
 S2Cell.prototype.getVertex = function (index) {
   var center = getS2Vertex(this._cellId, index);
@@ -324,11 +335,16 @@ S2Cell.prototype.getVertex = function (index) {
   );
 };
 
+/**
+ * @private
+ */
 function getS2Center(cellId) {
   var faceSiTi = CellIdToFaceSiTi(cellId);
   return FaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
-
+/**
+ * @private
+ */
 function getS2Vertex(cellId, index) {
   var faceIJ = CellIdToFaceIJ(cellId);
   var uv = IJLeveltoBoundUV([faceIJ[1], faceIJ[2]], S2Cell.getLevel(cellId));
