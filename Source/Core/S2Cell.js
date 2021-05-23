@@ -258,11 +258,8 @@ S2Cell.prototype.getParent = function () {
  */
 S2Cell.prototype.getParentAtLevel = function (level) {
   //>>includeStart('debug', pragmas.debug);
-  if (this._level === 0) {
-    throw new DeveloperError("cannot get parent of root cell.");
-  }
-  if (this._level <= level) {
-    throw new DeveloperError("cannot get parent of root cell.");
+  if (this._level === 0 || level < 0 || this._level < level) {
+    throw new DeveloperError("cannot get parent at invalid level.");
   }
   //>>includeEnd('debug');
   var newLsb = lsbForLevel(level);
