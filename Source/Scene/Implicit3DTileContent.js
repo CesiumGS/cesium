@@ -621,7 +621,7 @@ function deriveBoundingVolumeS2(
   // Decode Morton index.
   var childCoords = MortonOrder.decode2D(childIndex % 4);
   // Encode Hilbert index.
-  var hilbertIndex = HilbertOrder.encode2D(2, childCoords[0], childCoords[1]);
+  var hilbertIndex = HilbertOrder.encode2D(1, childCoords[0], childCoords[1]);
   var childCell = parentTile.s2Cell.getChild(hilbertIndex);
 
   var minHeight, maxHeight;
