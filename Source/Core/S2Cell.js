@@ -111,8 +111,8 @@ S2Cell.isValidId = function (cellId) {
 
   // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
   var lowestSetBit = cellId & (~cellId + BigInt(1)); // eslint-disable-line
+  // eslint-disable-next-line
   if (!(lowestSetBit & BigInt("0x1555555555555555"))) {
-    // eslint-disable-line
     return false;
   }
 
@@ -169,8 +169,8 @@ S2Cell.getTokenFromId = function (cellId) {
   //>>includeEnd('debug');
 
   // 'X' is a special case of the S2Token, representing the 0 cell.
+  // eslint-disable-next-line
   if (cellId === BigInt(0)) {
-    // eslint-disable-line
     return "X";
   }
   var trailingZeroBits = Math.floor(countTrailingZero(cellId) / 4);
@@ -195,10 +195,10 @@ S2Cell.getLevel = function (cellId) {
   //>>includeEnd('debug');
 
   var lsbPosition = 0;
+  // eslint-disable-next-line
   while (cellId !== BigInt(0)) {
-    // eslint-disable-line
+    // eslint-disable-next-line
     if (cellId & BigInt(1)) {
-      // eslint-disable-line
       break;
     }
     lsbPosition++;
@@ -565,8 +565,8 @@ function lsbForLevel(level) {
  */
 function countTrailingZero(x) {
   var count = 0;
+  // eslint-disable-next-line
   while ((x & BigInt(1)) === BigInt(0)) {
-    // eslint-disable-line
     x = x >> BigInt(1); // eslint-disable-line
     count++;
   }
