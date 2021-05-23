@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -440,7 +441,16 @@ function deriveChildTile(
 
     // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
     // can be used to tighten the bounding volume
-    if (defined(boundingVolume.region) && defined(tileBounds)) {
+    if (
+      has3DTilesExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
+      defined(tileBounds)
+    ) {
+      updateS2CellHeights(
+        boundingVolume.extensions["3DTILES_bounding_volume_S2"],
+        tileBounds.minimumHeight,
+        tileBounds.maximumHeight
+      );
+    } else if (defined(boundingVolume.region) && defined(tileBounds)) {
       updateRegionHeights(
         boundingVolume.region,
         tileBounds.minimumHeight,
@@ -518,6 +528,28 @@ function updateRegionHeights(region, minimumHeight, maximumHeight) {
 
   if (defined(maximumHeight)) {
     region[5] = maximumHeight;
+  }
+}
+
+/**
+ * For a derived bounding S2 cell, update the minimum and maximum height. This
+ * is typically used to tighten a bounding volume using the
+ * <code>TILE_MINIMUM_HEIGHT</code> and <code>TILE_MAXIMUM_HEIGHT</code>
+ * semantics. Heights are only updated if the respective
+ * minimumHeight/maximumHeight parameter is defined.
+ *
+ * @param {Array} region A 6-element array describing the bounding region
+ * @param {Number} [minimumHeight] The new minimum height
+ * @param {Number} [maximumHeight] The new maximum height
+ * @private
+ */
+function updateS2CellHeights(s2CellVolume, minimumHeight, maximumHeight) {
+  if (defined(minimumHeight)) {
+    s2CellVolume.minimumHeight = minimumHeight;
+  }
+
+  if (defined(maximumHeight)) {
+    s2CellVolume.maximumHeight = maximumHeight;
   }
 }
 
@@ -614,7 +646,7 @@ function deriveBoundingVolumeS2(
 
   // Handle the placeholder tile case.
   if (defaultValue(parentIsPlaceholderTile, false)) {
-    return implicitTileset.boundingVolume;
+    return clone(implicitTileset.boundingVolume, true);
   }
   var boundingVolumeS2 = parentTile._boundingVolume;
 

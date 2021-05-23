@@ -939,6 +939,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
       var implicitHeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
+      var implicitS2HeightSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset.json";
       var implicitTileBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
       var implicitContentBoundingVolumeSemanticsUrl =
@@ -1036,7 +1038,7 @@ describe(
           var minimumHeight = implicitRegion[4];
           var maximumHeight = implicitRegion[5];
 
-          // This tileset use TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
           // to set tighter bounding volumes
           var tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
@@ -1044,6 +1046,34 @@ describe(
             var tileRegion = tiles[i].boundingVolume;
             expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses height semantics to adjust S2 bounding volumes", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitS2HeightSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitS2Volume =
+            placeholderTile.implicitTileset.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ];
+          var minimumHeight = implicitS2Volume.minimumHeight;
+          var maximumHeight = implicitS2Volume.maximumHeight;
+
+          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // to set tighter bounding volumes
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var tileS2Volume = tiles[i].boundingVolume;
+            expect(tileS2Volume.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileS2Volume.maximumHeight).toBeLessThan(maximumHeight);
           }
         });
       });
