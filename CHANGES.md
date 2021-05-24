@@ -6,6 +6,8 @@
 
 - Added `FeatureDetection.supportsBigInt64Array`, `FeatureDetection.supportsBigUint64Array` and `FeatureDetection.supportsBigInt`.
 
+- Added `ShadowMap.fadingEnabled` for disabling shadows fading when the light source is close to the horizon [#9565](https://github.com/CesiumGS/cesium/pull/9565)
+
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
