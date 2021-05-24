@@ -188,7 +188,7 @@ function WebMapServiceImageryProvider(options) {
    * If the getFeatureInfo url is specified in the parameters (featureurl), 
    * we should use it instead of the url
    */
-  if (defined(options.parameters.featureurl)) {
+  if (defined(options.parameters) && defined(options.parameters.featureurl)) {
         var featureurl = Resource.createIfNeeded(options.parameters.featureurl);
         pickFeatureResource = featureurl.clone();
   }
