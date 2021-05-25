@@ -58,7 +58,7 @@ var MetadataSemantic = {
    */
   TILE_BOUNDING_REGION: "TILE_BOUNDING_REGION",
   /**
-   * A bounding sphere for a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding sphere for a tile, stored as an array of 4 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
@@ -98,7 +98,7 @@ var MetadataSemantic = {
    */
   CONTENT_BOUNDING_REGION: "CONTENT_BOUNDING_REGION",
   /**
-   * A bounding sphere for the content of a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding sphere for the content of a tile, stored as an array of 4 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
