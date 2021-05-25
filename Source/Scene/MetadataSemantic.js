@@ -26,22 +26,6 @@ var MetadataSemantic = {
    */
   BOUNDING_SPHERE: "BOUNDING_SPHERE",
   /**
-   * A minimum height relative to some ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  MINIMUM_HEIGHT: "MINIMUM_HEIGHT",
-  /**
-   * A maximum height relative to some ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  MAXIMUM_HEIGHT: "MAXIMUM_HEIGHT",
-  /**
    * A name, stored as a <code>STRING</code>. This does not have to be unique
    *
    * @type {String}
@@ -58,7 +42,7 @@ var MetadataSemantic = {
    */
   ID: "ID",
   /**
-   * A bounding box for a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code>. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding box for a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
@@ -66,7 +50,7 @@ var MetadataSemantic = {
    */
   TILE_BOUNDING_BOX: "TILE_BOUNDING_BOX",
   /**
-   * A bounding region for a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code>. The components are <code>[west, south, east, north, minimumHeight, maximumHeight]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding region for a tile, stored as an array of 6 <code>FLOAT64</code> components. The components are <code>[west, south, east, north, minimumHeight, maximumHeight]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
@@ -74,7 +58,7 @@ var MetadataSemantic = {
    */
   TILE_BOUNDING_REGION: "TILE_BOUNDING_REGION",
   /**
-   * A bounding sphere for a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code>. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding sphere for a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
@@ -82,7 +66,7 @@ var MetadataSemantic = {
    */
   TILE_BOUNDING_SPHERE: "TILE_BOUNDING_SPHERE",
   /**
-   * The minimum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated <code>3DTILES_implicit_tiling</code>.
+   * The minimum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in <code>3DTILES_implicit_tiling</code>.
    *
    * @type {String}
    * @constant
@@ -90,7 +74,7 @@ var MetadataSemantic = {
    */
   TILE_MINIMUM_HEIGHT: "TILE_MINIMUM_HEIGHT",
   /**
-   * The maximum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated <code>3DTILES_implicit_tiling</code>.
+   * The maximum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in <code>3DTILES_implicit_tiling</code>.
    *
    * @type {String}
    * @constant
@@ -98,7 +82,7 @@ var MetadataSemantic = {
    */
   TILE_MAXIMUM_HEIGHT: "TILE_MINIMUM_HEIGHT",
   /**
-   * A bounding box for the content of a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code>. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding box for the content of a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
@@ -106,7 +90,7 @@ var MetadataSemantic = {
    */
   CONTENT_BOUNDING_BOX: "CONTENT_BOUNDING_BOX",
   /**
-   * A bounding region for the content of a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code>. The components are <code>[west, south, east, north, minimumHeight, maximumHeight]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding region for the content of a tile, stored as an array of 6 <code>FLOAT64</code> components. The components are <code>[west, south, east, north, minimumHeight, maximumHeight]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
@@ -114,7 +98,7 @@ var MetadataSemantic = {
    */
   CONTENT_BOUNDING_REGION: "CONTENT_BOUNDING_REGION",
   /**
-   * A bounding sphere for the content of a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code>. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
+   * A bounding sphere for the content of a tile, stored as an array of 6 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
    * @constant
