@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * An enum of metadata types.
@@ -466,6 +467,30 @@ MetadataType.getSizeInBytes = function (type) {
       return 4;
     case MetadataType.FLOAT64:
       return 8;
+  }
+};
+
+/**
+ * Returns the corresponding {@link PixelDatatype}
+ *
+ * @param {MetadataType} type The type.
+ * @returns {PixelDatatype} The corresponding {@link PixelDatatype}
+ *
+ * @exception {DeveloperError} type has no PixelDatatype equivalent
+ *
+ * @private
+ *
+ */
+MetadataType.convertToPixelDatatype = function (type) {
+  switch (type) {
+    case MetadataType.UINT8:
+      return PixelDatatype.UNSIGNED_BYTE;
+    case MetadataType.UINT16:
+      return PixelDatatype.UNSIGNED_SHORT;
+    case MetadataType.FLOAT32:
+      return PixelDatatype.FLOAT;
+    default:
+      throw new DeveloperError("type has no PixelDatatype equivalent");
   }
 };
 

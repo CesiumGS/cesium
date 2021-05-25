@@ -1,4 +1,8 @@
-import { FeatureDetection, MetadataType } from "../../Source/Cesium.js";
+import {
+  FeatureDetection,
+  MetadataType,
+  PixelDatatype,
+} from "../../Source/Cesium.js";
 
 describe("Scene/MetadataType", function () {
   it("getMinimum", function () {
@@ -374,6 +378,30 @@ describe("Scene/MetadataType", function () {
   it("getSizeInBytes throws if type is not a numeric type", function () {
     expect(function () {
       MetadataType.getSizeInBytes(MetadataType.STRING);
+    }).toThrowDeveloperError();
+  });
+
+  it("convertToPixelDatatype", function () {
+    expect(MetadataType.convertToPixelDatatype(MetadataType.UINT8)).toBe(
+      PixelDatatype.UNSIGNED_BYTE
+    );
+    expect(MetadataType.convertToPixelDatatype(MetadataType.UINT16)).toBe(
+      PixelDatatype.UNSIGNED_SHORT
+    );
+    expect(MetadataType.convertToPixelDatatype(MetadataType.FLOAT32)).toBe(
+      PixelDatatype.FLOAT
+    );
+  });
+
+  it("convertToPixelDatatype throws without type", function () {
+    expect(function () {
+      MetadataType.convertToPixelDatatype();
+    }).toThrowDeveloperError();
+  });
+
+  it("convertToPixelDatatype throws if type has no PixelDatatype equivalent", function () {
+    expect(function () {
+      MetadataType.convertToPixelDatatype(MetadataType.FLOAT64);
     }).toThrowDeveloperError();
   });
 });
