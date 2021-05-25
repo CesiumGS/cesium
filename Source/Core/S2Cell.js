@@ -317,11 +317,11 @@ S2Cell.prototype.getCenter = function () {
  * @private
  */
 S2Cell.prototype.getVertex = function (index) {
-  var center = getS2Vertex(this._cellId, index);
+  var vertex = getS2Vertex(this._cellId, index);
   // Normalize XYZ.
-  Cartesian3.normalize(center, center);
+  Cartesian3.normalize(vertex, vertex);
   var cartographic = new Cartographic.fromCartesian(
-    center,
+    vertex,
     Ellipsoid.UNIT_SPHERE
   );
   // Interpret spherical coordinates on UNIT_SPHERE as cartographics on WGS84.
