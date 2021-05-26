@@ -80,12 +80,6 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   }
 
   if (
-    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8_SRGB ||
-    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB ||
-    header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
-  ) {
-    parseUncompressed(header, result);
-  } else if (
     header.vkFormat === 0x0 &&
     (dfd.colorModel === colorModelETC1S || dfd.colorModel === colorModelUASTC)
   ) {
@@ -98,7 +92,7 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
       result
     );
   } else {
-    throw new RuntimeError("KTX2 pixel format is not yet supported.");
+    parseUncompressed(header, result);
   }
 
   return result;
@@ -114,6 +108,10 @@ function parseUncompressed(header, result) {
     header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
       ? WebGLConstants.R11F_G11F_B10F
       : internalFormat;
+  internalFormat =
+    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_UNORM
+      ? PixelFormat.RGBA
+      : PixelFormat.RGB;
 
   for (var i = 0; i < header.levels.length; ++i) {
     var level = (result[i] = {});
