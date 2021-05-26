@@ -492,20 +492,6 @@ Object.defineProperties(ShadowMap.prototype, {
       this._debugCascadeColors = value;
     },
   },
-
-  /**
-   * The effective shadowmap darkness. It might differ from the shadow map darkness due to ligth close to the horizon
-   *
-   * @memberof ShadowMap.prototype
-   * @type {Number}
-   * @readonly
-   * @private
-   */
-  effectiveDarkness: {
-    get: function () {
-      return this._darkness;
-    },
-  },
 });
 
 function destroyFramebuffer(shadowMap) {
