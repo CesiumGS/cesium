@@ -960,26 +960,20 @@ describe(
         lightCamera: lightCamera,
       });
 
-      renderAndCall(function (rgba) {
-        expect(scene.shadowMap.effectiveDarkness).toBe(
-          scene.shadowMap.darkness
-        );
-      });
+      // Render with light looking straight down
+      var shadowedColor = renderAndReadPixels();
 
-      // light low in the horizon
+      // Move the light close to the horizon
       lightCamera.lookAt(center, new Cartesian3(1.0, 0.0, 0.01));
-      renderAndCall(function (rgba) {
-        expect(scene.shadowMap.effectiveDarkness).not.toBe(
-          scene.shadowMap.darkness
-        );
-      });
 
-      // disable shadows fading
+      // Render with faded shadows
+      var horizonShadowedColor = renderAndReadPixels();
+      expect(horizonShadowedColor).not.toEqual(shadowedColor);
+
+      // Render with unfaded shadows
       scene.shadowMap.fadingEnabled = false;
       renderAndCall(function (rgba) {
-        expect(scene.shadowMap.effectiveDarkness).toBe(
-          scene.shadowMap.darkness
-        );
+        expect(rgba).not.toEqual(horizonShadowedColor);
       });
     });
 
