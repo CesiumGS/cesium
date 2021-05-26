@@ -12,25 +12,25 @@
  * @return {czm_pbrParameters} parameters to pass into {@link czm_pbrLighting}
  */
 czm_pbrParameters czm_pbrMetallicRoughnessMaterial(
-  vec3 baseColor,
-  float metallic,
-  float roughness
+    vec3 baseColor,
+    float metallic,
+    float roughness
 ) {
-  czm_pbrParameters results;
+    czm_pbrParameters results;
 
-  // roughness is authored as perceptual roughness
-  // square it to get material roughness
-  roughness = clamp(roughness, 0.0, 1.0);
-  results.roughness = roughness * roughness;
+    // roughness is authored as perceptual roughness
+    // square it to get material roughness
+    roughness = clamp(roughness, 0.0, 1.0);
+    results.roughness = roughness * roughness;
 
-  // dielectrics us f0 = 0.04, metals use albedo as f0
-  metallic = clamp(metallic, 0.0, 1.0);
-  const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
-  vec3 f0 = mix(REFLECTANCE_DIELECTRIC, baseColor, metallic);
-  results.f0 = f0;
+    // dielectrics us f0 = 0.04, metals use albedo as f0
+    metallic = clamp(metallic, 0.0, 1.0);
+    const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
+    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, baseColor, metallic);
+    results.f0 = f0;
 
-  // diffuse only applies to dielectrics.
-  results.diffuseColor = baseColor * (1.0 - f0) * (1.0 - metallic);
+    // diffuse only applies to dielectrics.
+    results.diffuseColor = baseColor * (1.0 - f0) * (1.0 - metallic);
 
-  return results;
+    return results;
 }
