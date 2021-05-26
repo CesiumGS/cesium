@@ -1,4 +1,4 @@
-import { Check } from "../../Source/Cesium.js";
+import { Check, FeatureDetection } from "../../Source/Cesium.js";
 
 describe("Core/Check", function () {
   describe("type checks", function () {
@@ -28,13 +28,21 @@ describe("Core/Check", function () {
       }).toThrowDeveloperError();
     });
 
-    it("Check.typeOf.bigint does not throw when passed a boolean", function () {
+    it("Check.typeOf.bigint does not throw when passed a bigint", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
       expect(function () {
         Check.typeOf.bigint("bigint", BigInt()); // eslint-disable-line
       }).not.toThrowDeveloperError();
     });
 
-    it("Check.typeOf.bigint throws when passed a non-boolean", function () {
+    it("Check.typeOf.bigint throws when passed a non-bigint", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
       expect(function () {
         Check.typeOf.bigint("mockName", {});
       }).toThrowDeveloperError();

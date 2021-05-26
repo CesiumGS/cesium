@@ -22,7 +22,7 @@ var scratchCartographic = new Cartographic();
 
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
- * The bounding volume is a discrete oriented polytype.
+ * The bounding volume is a discrete oriented polytope.
  * @alias TileBoundingS2Cell
  * @constructor
  *
@@ -62,7 +62,7 @@ function TileBoundingS2Cell(options) {
     boundingPlanes[2]
   );
 
-  var points = [];
+  var points = new Array(8);
 
   this.center = this.s2Cell.getCenter();
 

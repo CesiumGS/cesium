@@ -578,10 +578,7 @@ function deriveBoundingVolume(
       implicitTileset,
       parentTile,
       parentIsPlaceholderTile,
-      childIndex,
-      defined(implicitCoordinates.z)
-        ? ImplicitSubdivisionScheme.OCTREE
-        : ImplicitSubdivisionScheme.QUADTREE
+      childIndex
     );
   }
 
@@ -626,38 +623,35 @@ function deriveBoundingVolume(
  * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @param {ImplicitSubdivisionScheme} implicitSubdivisionScheme The subdivision scheme of the tileset
  * @private
  */
 function deriveBoundingVolumeS2(
   implicitTileset,
   parentTile,
   parentIsPlaceholderTile,
-  childIndex,
-  implicitSubdivisionScheme
+  childIndex
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("implicitTileset", implicitTileset);
   Check.typeOf.object("parentTile", parentTile);
   Check.typeOf.bool("parentIsPlaceholderTile", parentIsPlaceholderTile);
   Check.typeOf.number("childIndex", childIndex);
-  Check.typeOf.string("implicitSubdivisionScheme", implicitSubdivisionScheme);
   //>>includeEnd('debug');
 
   // Handle the placeholder tile case.
-  if (defaultValue(parentIsPlaceholderTile, false)) {
+  if (parentIsPlaceholderTile) {
     return clone(implicitTileset.boundingVolume, true);
   }
   var boundingVolumeS2 = parentTile._boundingVolume;
 
-  // Decode Morton index.
+  // Decode Morton index. The modulus 4 ensures that it works for both quadtrees and octrees.
   var childCoords = MortonOrder.decode2D(childIndex % 4);
   // Encode Hilbert index.
   var hilbertIndex = HilbertOrder.encode2D(1, childCoords[0], childCoords[1]);
   var childCell = parentTile.s2Cell.getChild(hilbertIndex);
 
   var minHeight, maxHeight;
-  if (implicitSubdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+  if (implicitTileset.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
     var midpointHeight =
       (boundingVolumeS2.maximumHeight + boundingVolumeS2.minimumHeight) / 2;
     minHeight =

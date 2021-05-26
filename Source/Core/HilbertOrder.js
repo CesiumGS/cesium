@@ -3,7 +3,6 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Hilbert Order helper functions.
- * @see {@link https://en.wikipedia.org/wiki/Hilbert_curve}
  *
  * @namespace HilbertOrder
  */
@@ -32,24 +31,23 @@ HilbertOrder.encode2D = function (level, x, y) {
   }
   //>>includeEnd('debug');
 
-  var tx = x;
-  var ty = y;
-  var tr = [];
-  var rx;
-  var ry;
-  var s;
-  var d = 0;
+  var p = {
+    x: x,
+    y: y,
+  };
+  var rx,
+    ry,
+    s,
+    index = 0;
 
   for (s = n / 2; s > 0; s /= 2) {
-    rx = (tx & s) > 0;
-    ry = (ty & s) > 0;
-    d += s * s * ((3 * rx) ^ ry);
-    tr = rotate(n, tx, ty, rx, ry);
-    tx = tr[0];
-    ty = tr[1];
+    rx = (p.x & s) > 0 ? 1 : 0;
+    ry = (p.y & s) > 0 ? 1 : 0;
+    index += ((3 * rx) ^ ry) * s * s;
+    rotate(n, p, rx, ry);
   }
 
-  return d;
+  return index;
 };
 
 /**
@@ -74,43 +72,41 @@ HilbertOrder.decode2D = function (level, index) {
   }
   //>>includeEnd('debug');
 
-  var tx = 0;
-  var ty = 0;
-  var tr = [];
   var n = Math.pow(2, level);
-  var rx;
-  var ry;
-  var s;
-  var t = index;
+  var p = {
+    x: 0,
+    y: 0,
+  };
+  var rx, ry, s, t;
 
-  for (s = 1; s < n; s *= 2) {
+  for (s = 1, t = index; s < n; s *= 2) {
     rx = 1 & (t / 2);
     ry = 1 & (t ^ rx);
-    tr = rotate(s, tx, ty, rx, ry);
-    tx = tr[0];
-    ty = tr[1];
-    tx += s * rx;
-    ty += s * ry;
+    rotate(s, p, rx, ry);
+    p.x += s * rx;
+    p.y += s * ry;
     t /= 4;
   }
 
-  return [tx, ty];
+  return [p.x, p.y];
 };
 
 /**
  * @private
  */
-function rotate(n, x, y, rx, ry) {
-  if (ry === 0) {
-    if (rx === 1) {
-      x = n - 1 - x;
-      y = n - 1 - y;
-    }
-    var temp = x;
-    x = y;
-    y = temp;
+function rotate(n, p, rx, ry) {
+  if (ry !== 0) {
+    return;
   }
-  return [x, y];
+
+  if (rx === 1) {
+    p.x = n - 1 - p.x;
+    p.y = n - 1 - p.y;
+  }
+
+  var t = p.x;
+  p.x = p.y;
+  p.y = t;
 }
 
 export default HilbertOrder;

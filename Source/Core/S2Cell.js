@@ -2,6 +2,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
+import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -14,7 +15,7 @@ var S2MaxLevel = 30;
 // The maximum index of a valid leaf cell plus one.  The range of valid leaf cell indices is [0..S2LimitIJ-1].
 var S2LimitIJ = 1 << S2MaxLevel;
 
-// The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..S2MaxSiTi].
+// The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..S2MaxSiTi].  Use `>>>` to convert to unsigned.
 var S2MaxSiTi = (1 << (S2MaxLevel + 1)) >>> 0;
 
 // The number of bits in a S2 cell ID used for specifying the position along the Hilbert curve
@@ -35,6 +36,79 @@ var S2PosToIJ = [
   [0, 2, 3, 1], // 1: Swap bit set, swap I and J bits
   [3, 2, 0, 1], // 2: Invert bit set, invert bits
   [3, 1, 0, 2], // 3: Swap and invert bits set
+];
+
+// Lookup table for getting trailing zero bits.
+// https://graphics.stanford.edu/~seander/bithacks.html
+var Mod67BitPosition = [
+  64,
+  0,
+  1,
+  39,
+  2,
+  15,
+  40,
+  23,
+  3,
+  12,
+  16,
+  59,
+  41,
+  19,
+  24,
+  54,
+  4,
+  64,
+  13,
+  10,
+  17,
+  62,
+  60,
+  28,
+  42,
+  30,
+  20,
+  51,
+  25,
+  44,
+  55,
+  47,
+  5,
+  32,
+  65,
+  38,
+  14,
+  22,
+  11,
+  58,
+  18,
+  53,
+  63,
+  9,
+  61,
+  27,
+  29,
+  50,
+  43,
+  46,
+  31,
+  37,
+  21,
+  57,
+  52,
+  8,
+  26,
+  49,
+  45,
+  36,
+  56,
+  7,
+  48,
+  35,
+  6,
+  34,
+  33,
+  0,
 ];
 
 // Mask that specifies the swap orientation bit for the Hilbert curve
@@ -175,7 +249,7 @@ S2Cell.getTokenFromId = function (cellId) {
   if (cellId === BigInt(0)) {
     return "X";
   }
-  var trailingZeroBits = Math.floor(countTrailingZero(cellId) / 4);
+  var trailingZeroBits = Math.floor(countTrailingZeroBits(cellId) / 4);
   return cellId
     .toString(16)
     .replace(/0*$/, "")
@@ -290,63 +364,71 @@ S2Cell.fromFacePosLevel = function (face, pos, level) {
 /**
  * Get center of the S2 cell.
  *
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @returns {Cartesian} The position of center of the S2 cell.
  * @private
  */
-S2Cell.prototype.getCenter = function () {
+S2Cell.prototype.getCenter = function (ellipsoid) {
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
   var center = getS2Center(this._cellId);
   // Normalize XYZ.
-  Cartesian3.normalize(center, center);
+  center = Cartesian3.normalize(center, center);
   var cartographic = new Cartographic.fromCartesian(
     center,
     Ellipsoid.UNIT_SPHERE
   );
-  // Interpret spherical coordinates on UNIT_SPHERE as cartographics on WGS84.
-  return Cartographic.toCartesian(
-    cartographic,
-    Ellipsoid.WGS84,
-    new Cartesian3()
-  );
+  // Interpret as geodetic coordinates on the ellipsoid.
+  return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
 };
 
 /**
  * Get vertex of the S2 cell.
  *
  * @param {Number} index An integer index of the vertex.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @returns {Cartesian} The position of the vertex of the S2 cell.
  * @private
  */
-S2Cell.prototype.getVertex = function (index) {
+S2Cell.prototype.getVertex = function (index, ellipsoid) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  if (index < 0 || index > 3) {
+    throw new DeveloperError("vertex index must be in the range [0-3].");
+  }
+  //>>includeEnd('debug');
+
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
   var vertex = getS2Vertex(this._cellId, index);
   // Normalize XYZ.
-  Cartesian3.normalize(vertex, vertex);
+  vertex = Cartesian3.normalize(vertex, vertex);
   var cartographic = new Cartographic.fromCartesian(
     vertex,
     Ellipsoid.UNIT_SPHERE
   );
-  // Interpret spherical coordinates on UNIT_SPHERE as cartographics on WGS84.
-  return Cartographic.toCartesian(
-    cartographic,
-    Ellipsoid.WGS84,
-    new Cartesian3()
-  );
+  // Interpret as geodetic coordinates on the ellipsoid.
+  return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
 };
 
 /**
  * @private
  */
 function getS2Center(cellId) {
-  var faceSiTi = CellIdToFaceSiTi(cellId);
-  return FaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
+  var faceSiTi = convertCellIdToFaceSiTi(cellId);
+  return convertFaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
 /**
  * @private
  */
 function getS2Vertex(cellId, index) {
-  var faceIJ = CellIdToFaceIJ(cellId);
-  var uv = IJLeveltoBoundUV([faceIJ[1], faceIJ[2]], S2Cell.getLevel(cellId));
+  var faceIJ = convertCellIdToFaceIJ(cellId);
+  var uv = convertIJLeveltoBoundUV(
+    [faceIJ[1], faceIJ[2]],
+    S2Cell.getLevel(cellId)
+  );
   var y = (index >> 1) & 1;
-  return FaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
+  return convertFaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
 }
 
 // S2 Coordinate Conversions
@@ -354,8 +436,8 @@ function getS2Vertex(cellId, index) {
 /**
  * @private
  */
-function CellIdToFaceSiTi(cellId) {
-  var faceIJ = CellIdToFaceIJ(cellId);
+function convertCellIdToFaceSiTi(cellId) {
+  var faceIJ = convertCellIdToFaceIJ(cellId);
   var face = faceIJ[0];
   var i = faceIJ[1];
   var j = faceIJ[2];
@@ -372,7 +454,7 @@ function CellIdToFaceSiTi(cellId) {
 /**
  * @private
  */
-function CellIdToFaceIJ(cellId) {
+function convertCellIdToFaceIJ(cellId) {
   if (S2LookupPositions.length === 0) {
     generateLookupTable();
   }
@@ -407,19 +489,19 @@ function CellIdToFaceIJ(cellId) {
 /**
  * @private
  */
-function FaceSiTitoXYZ(face, si, ti) {
-  var s = SiTitoST(si);
-  var t = SiTitoST(ti);
+function convertFaceSiTitoXYZ(face, si, ti) {
+  var s = convertSiTitoST(si);
+  var t = convertSiTitoST(ti);
 
-  var u = STtoUV(s);
-  var v = STtoUV(t);
-  return FaceUVtoXYZ(face, u, v);
+  var u = convertSTtoUV(s);
+  var v = convertSTtoUV(t);
+  return convertFaceUVtoXYZ(face, u, v);
 }
 
 /**
  * @private
  */
-function FaceUVtoXYZ(face, u, v) {
+function convertFaceUVtoXYZ(face, u, v) {
   switch (face) {
     case 0:
       return new Cartesian3(1, u, v);
@@ -439,7 +521,7 @@ function FaceUVtoXYZ(face, u, v) {
 /**
  * @private
  */
-function STtoUV(s) {
+function convertSTtoUV(s) {
   if (s >= 0.5) return (1 / 3) * (4 * s * s - 1);
   return (1 / 3) * (1 - 4 * (1 - s) * (1 - s));
 }
@@ -447,21 +529,21 @@ function STtoUV(s) {
 /**
  * @private
  */
-function SiTitoST(si) {
+function convertSiTitoST(si) {
   return (1.0 / S2MaxSiTi) * si;
 }
 
 /**
  * @private
  */
-function IJLeveltoBoundUV(ij, level) {
+function convertIJLeveltoBoundUV(ij, level) {
   var result = [[], []];
-  var cellSize = GetSizeIJ(level);
+  var cellSize = getSizeIJ(level);
   for (var d = 0; d < 2; ++d) {
     var ijLo = ij[d] & -cellSize;
     var ijHi = ijLo + cellSize;
-    result[d][0] = STtoUV(IJtoSTMin(ijLo));
-    result[d][1] = STtoUV(IJtoSTMin(ijHi));
+    result[d][0] = convertSTtoUV(convertIJtoSTMin(ijLo));
+    result[d][1] = convertSTtoUV(convertIJtoSTMin(ijHi));
   }
   return result;
 }
@@ -469,14 +551,14 @@ function IJLeveltoBoundUV(ij, level) {
 /**
  * @private
  */
-function GetSizeIJ(level) {
+function getSizeIJ(level) {
   return (1 << (S2MaxLevel - level)) >>> 0;
 }
 
 /**
  * @private
  */
-function IJtoSTMin(i) {
+function convertIJtoSTMin(i) {
   return (1.0 / S2LimitIJ) * i;
 }
 
@@ -576,14 +658,8 @@ function lsbForLevel(level) {
  * Return the number of trailing zeros in number.
  * @private
  */
-function countTrailingZero(x) {
-  var count = 0;
-  // eslint-disable-next-line
-  while ((x & BigInt(1)) === BigInt(0)) {
-    x = x >> BigInt(1); // eslint-disable-line
-    count++;
-  }
-  return count;
+function countTrailingZeroBits(x) {
+  return Mod67BitPosition[(-x & x) % BigInt(67)]; // eslint-disable-line
 }
 
 export default S2Cell;

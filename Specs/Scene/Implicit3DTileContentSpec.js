@@ -583,47 +583,37 @@ describe(
             "3DTILES_bounding_volume_S2": simpleBoundingVolumeS2,
           },
         },
+        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
       };
 
       it("throws if implicitTileset is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2(undefined, {}, false, 0, "");
+          deriveBoundingVolumeS2(undefined, {}, false, 0);
         }).toThrowDeveloperError();
       });
 
       it("throws if parentTile is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2({}, undefined, false, 0, "");
+          deriveBoundingVolumeS2({}, undefined, false, 0);
         }).toThrowDeveloperError();
       });
 
       it("throws if parentIsPlaceholderTile is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2({}, {}, undefined, 0, "");
+          deriveBoundingVolumeS2({}, {}, undefined, 0);
         }).toThrowDeveloperError();
       });
 
       it("throws if childIndex is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2({}, {}, false, undefined, "");
-        }).toThrowDeveloperError();
-      });
-
-      it("throws if implicitSubdivisionScheme is undefined", function () {
-        expect(function () {
-          deriveBoundingVolumeS2({}, {}, false, 0, undefined);
+          deriveBoundingVolumeS2({}, {}, false, undefined);
         }).toThrowDeveloperError();
       });
 
       it("returns implicit tileset boundingVolume if parentIsPlaceholderTile is true", function () {
-        var result = deriveBoundingVolumeS2(
-          implicitTilesetS2,
-          {},
-          true,
-          0,
-          ImplicitSubdivisionScheme.QUADTREE
-        );
+        var result = deriveBoundingVolumeS2(implicitTilesetS2, {}, true, 0);
         expect(result).toEqual(implicitTilesetS2.boundingVolume);
+        expect(result).not.toBe(implicitTilesetS2.boundingVolume);
       });
 
       it("subdivides correctly using QUADTREE", function () {
@@ -643,8 +633,7 @@ describe(
           implicitTilesetS2,
           parentTile,
           false,
-          0,
-          ImplicitSubdivisionScheme.QUADTREE
+          0
         );
         expect(result).toEqual({
           extensions: {
@@ -654,6 +643,7 @@ describe(
       });
 
       it("subdivides correctly using OCTREE", function () {
+        implicitTilesetS2.subdivisionScheme = ImplicitSubdivisionScheme.OCTREE;
         var parentTile = {
           s2Cell: S2Cell.fromToken(simpleBoundingVolumeS2.token),
           _boundingVolume:
@@ -675,8 +665,7 @@ describe(
           implicitTilesetS2,
           parentTile,
           false,
-          0,
-          ImplicitSubdivisionScheme.OCTREE
+          0
         );
         expect(result0).toEqual({
           extensions: {
@@ -687,8 +676,7 @@ describe(
           implicitTilesetS2,
           parentTile,
           false,
-          4,
-          ImplicitSubdivisionScheme.OCTREE
+          4
         );
         expect(result1).toEqual({
           extensions: {

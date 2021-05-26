@@ -249,6 +249,13 @@ describe("Core/S2Cell", function () {
     );
   });
 
+  it("throws on invalid vertex index", function () {
+    var cell = new S2Cell(BigInt("3383782026971709440"));
+    expect(function () {
+      cell.getVertex(4);
+    }).toThrowDeveloperError();
+  });
+
   it("gets correct vertices of cell", function () {
     var cell = S2Cell.fromToken("2ef59bd352b93ac3");
     Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977);

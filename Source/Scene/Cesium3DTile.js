@@ -419,6 +419,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @type {S2Cell}
    *
    * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.s2Cell = undefined;
 
@@ -1654,10 +1655,10 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   if (!defined(boundingVolumeHeader)) {
     throw new RuntimeError("boundingVolume must be defined");
   }
-  if (defined(boundingVolumeHeader.extensions)) {
-    var boundingVolumeS2 =
-      boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"];
-    return new TileBoundingS2Cell(boundingVolumeS2);
+  if (has3DTilesExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
+    return new TileBoundingS2Cell(
+      boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"]
+    );
   }
 
   if (defined(boundingVolumeHeader.box)) {
