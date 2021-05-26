@@ -9,6 +9,90 @@ import Ellipsoid from "./Ellipsoid.js";
 import FeatureDetection from "./FeatureDetection.js";
 import RuntimeError from "./RuntimeError.js";
 
+/**
+ * S2
+ * --
+ *
+ * This implementation is based on the S2 C++ reference implementation: https://github.com/google/s2geometry
+ *
+ * Overview:
+ * ---------
+ * The S2 library decomposes the unit sphere into a hierarchy of cell. A cell a quadrilateral bounded by 4 geodesics.
+ * The 6 root cells are obtained by projecting the six faces of a cube on a unit sphere. Each root cell follows a quadtree
+ * subdivision. The S2 cell hierarchy extends from level 0 (root cells) to level 30 (leaf cells). The root cells are rotated
+ * to enable a single Hilbert curve to map all 6 faces of the cube.
+ *
+ *
+ * Cell ID:
+ * --------
+ * Each cell in S2 can be uniquely identified using a 64-bit unsigned integer. The first 3 bits of the cell ID are the face bits, i.e.
+ * they indicate which of the 6 faces of the cube the cell lies on. After the first bits are the position bits, i.e. they indicate the position
+ * of the cell along the Hilbert curve. After the positions bits is the sentinel bit, which is always set to 1, and it indicates the level of the
+ * cell. Again, the level can be between 0 and 30 in S2.
+ *
+ *   Cell ID (base 10): 3170534137668829184
+ *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
+ *
+ *   001 0110000000000000000000000000000000000000000000000000000000000
+ *   fff pps----------------------------------------------------------
+ *
+ * For the cell above, we can see that it lies on face 1, with a Hilbert index of 2.
+ *
+ * Cell Subdivision:
+ * ------------------
+ * Cells in S2 subdivide recursively using quadtree subdivision. For each cell, you can get a child of index [0-3]. To compute the child at index i,
+ * insert the base 2 representation of i to the right of the parent's position bits. Ensure that the sentinel bit is also shifted two places to the right.
+ *
+ *   Parent Cell ID (base 10) : 3170534137668829184
+ *   Parent Cell ID (base 2)  : 0010110000000000000000000000000000000000000000000000000000000000
+ *
+ *   001 0110000000000000000000000000000000000000000000000000000000000
+ *   fff pps----------------------------------------------------------
+ *
+ *   To get the 3rd child of the cell above, we insert the binary representation of 3 to the right of the parent's position bits:
+ *
+ *   001 0111100000000000000000000000000000000000000000000000000000000
+ *   fff pppps--------------------------------------------------------
+ *         ^^
+ *
+ *   Child(3) Cell ID (base 10) : 3386706919782612992
+ *   Child(3) Cell ID (base 2)  : 0010111100000000000000000000000000000000000000000000000000000000
+ *
+ * Cell Token:
+ * -----------
+ * To provide a more concise representation of the S2 cell ID, we can their hexadecimal representation.
+ *
+ *   Cell ID (base 10): 3170534137668829184
+ *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
+ *
+ *   We remove all trailing zero bits, until we reach the nybble (4 bit mulitple) that contains the sentinel bit.
+ *
+ *   0010110000000000000000000000000000000000000000000000000000000000
+ *   fffpps--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ *
+ *   We convert the remaining bits to their hexadecimal representation.
+ *
+ *   0010 1100
+ *    "2"  "c"
+ *
+ *   Cell Token: "2c"
+ *
+ * To compute the cell ID from the token, we simple add enough zeros to the right to make the ID span 64 bits.
+ *
+ * Coordinate Transforms:
+ * ----------------------
+ *
+ * To go from a cell in S2 to a point on the ellipsoid, the following order of transforms is applied:
+ *
+ *   1. (Cell ID): S2 cell ID
+ *   2. (Face, I, J): Leaf cell coordinates, where i and j are in range [0, 2^30 - 1]
+ *   3. (Face, S, T): Cell space coordinates, where s and t are in range [0, 1]
+ *   4. (Face, Si, Ti): Discrete cell space coordinates, where si and ti are in range [0, 2^31]
+ *   5. (Face, U, V): Cube space coordinates, where u and v are in range [-1, 1]
+ *   6. (X, Y, Z): Direction vector, where vector may not be unit length. Can be normalized to obtain point on unit sphere
+ *   7. (Latitude, Longitude): Direction vector, where latitude is in range [-90, 90] and longitude is in range [-180, 180]
+ */
+
 // The maximum level supported within an S2 cell ID. Each level is represented by two bits in the final cell ID
 var S2MaxLevel = 30;
 
