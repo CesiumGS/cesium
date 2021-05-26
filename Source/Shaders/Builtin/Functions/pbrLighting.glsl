@@ -1,26 +1,31 @@
-vec3 lambertianDiffuse(vec3 diffuseColor) {
+vec3 lambertianDiffuse(vec3 diffuseColor)
+{
     return diffuseColor / czm_pi;
 }
 
-vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) {
+vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
+{
     return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);
 }
 
-float smithVisibilityG1(float NdotV, float roughness) {
+float smithVisibilityG1(float NdotV, float roughness)
+{
     // this is the k value for direct lighting.
     // for image based lighting it will be roughness^2 / 2
     float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
     return NdotV / (NdotV * (1.0 - k) + k);
 }
 
-float smithVisibilityGGX(float roughness, float NdotL, float NdotV) {
+float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
+{
     return (
         smithVisibilityG1(NdotL, roughness) *
         smithVisibilityG1(NdotV, roughness)
     );
 }
 
-float GGX(float roughness, float NdotH) {
+float GGX(float roughness, float NdotH)
+{
     float roughnessSquared = roughness * roughness;
     float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;
     return roughnessSquared / (czm_pi * f * f);
