@@ -199,6 +199,8 @@ function transcodeCompressed(
 
   for (var i = 0; i < header.levels.length; ++i) {
     var level = (result[i] = {});
+    width = header.pixelWidth >> i;
+    height = header.pixelHeight >> i;
 
     for (var j = 0; j < header.faceCount; ++j) {
       var dstSize = ktx2File.getImageTranscodedSizeInBytes(
