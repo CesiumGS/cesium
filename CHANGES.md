@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
+- Fixed the handling of errors in `GlobeSurfaceTile`. The console should now print the error that caused the terrain tile request to fail. [#8313](https://github.com/CesiumGS/cesium/issues/8313)
 
 ### 1.81 - 2021-05-01
 

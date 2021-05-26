@@ -563,7 +563,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
     surfaceTile.request = undefined;
   }
 
-  function failure() {
+  function failure(error) {
     if (surfaceTile.request.state === RequestState.CANCELLED) {
       // Cancelled due to low priority - try again later.
       surfaceTile.terrainData = undefined;
@@ -584,7 +584,9 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
       y +
       " Level: " +
       level +
-      ".";
+      '. Error message: "' +
+      error +
+      '"';
     terrainProvider._requestError = TileProviderError.handleError(
       terrainProvider._requestError,
       terrainProvider,
@@ -605,6 +607,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
       type: RequestType.TERRAIN,
     });
     surfaceTile.request = request;
+
     var requestPromise = terrainProvider.requestTileGeometry(
       x,
       y,
