@@ -15,11 +15,9 @@ import GeometryInstance from "../Core/GeometryInstance.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import S2Cell from "../Core/S2Cell.js";
 
 var centerCartographicScratch = new Cartographic();
-var scratchCartographic = new Cartographic();
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
  * The bounding volume is a k DOP. A k-DOP is the Boolean intersection of extents along k directions.
@@ -96,26 +94,7 @@ function TileBoundingS2Cell(options) {
     center
   );
 
-  var points = new Array(7);
-
-  // Add center of cell.
-  points[0] = center;
-  scratchCartographic = Cartographic.fromCartesian(points[0]);
-  scratchCartographic.height = this.maximumHeight;
-  points[0] = Cartographic.toCartesian(scratchCartographic);
-  scratchCartographic.height = this.minimumHeight;
-  points[1] = Cartographic.toCartesian(scratchCartographic);
-  for (i = 0; i <= 3; i++) {
-    scratchCartographic = Cartographic.fromCartesian(this.s2Cell.getVertex(i));
-    scratchCartographic.height = this.maximumHeight;
-    points[2 + i] = Cartographic.toCartesian(scratchCartographic);
-    scratchCartographic.height = this.minimumHeight;
-    points[2 + i + 1] = Cartographic.toCartesian(scratchCartographic);
-  }
-  this._orientedBoundingBox = OrientedBoundingBox.fromPoints(points);
-  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this._orientedBoundingBox
-  );
+  this._boundingSphere = BoundingSphere.fromPoints(vertices);
 }
 
 var centerGeodeticNormalScratch = new Cartesian3();
@@ -500,7 +479,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       ),
       vertices,
       this._boundingPlanes[0],
-      edgeNormals[0],
+      this._edgeNormals[0],
       1
     );
     return Cartesian3.distance(facePoint, point);
