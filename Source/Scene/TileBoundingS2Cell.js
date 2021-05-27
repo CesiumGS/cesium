@@ -62,7 +62,7 @@ function TileBoundingS2Cell(options) {
     boundingPlanes[2]
   );
 
-  var points = new Array(8);
+  var points = new Array(7);
 
   this.center = this.s2Cell.getCenter();
 
@@ -299,6 +299,59 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
   },
 });
 
+/**
+ * The distance to point check for this kDOP involves checking the signed distance of the point to each bounding
+ * plane. A plane qualifies for a distance check if the point being tested against is in the half-space in the direction
+ * of the normal i.e. if the signed distance of the point from the plane is greater than 0.
+ *
+ * There are 3 possible cases for a point:
+ *
+ * Case I: There is only one plane selected.
+ *
+ *     \             X            /
+ *      \                        /
+ *  -----\----------------------/-----
+ *        \                    /
+ *         \                  /
+ *          \                /
+ *      -----\--------------/-----
+ *            \            /
+ *             \          /
+ *
+ * In this case, we project the point onto the plane and do a point polygon distance check to find the closest point on the polygon.
+ * The point may lie inside the "face" of the polygon or outside. If it is outside, we need to determine which edges to test against.
+ *
+ * Case II: There are two planes selected.
+ *
+ *  X  \                          /
+ *      \                        /
+ *  -----\----------------------/-----
+ *        \                    /
+ *         \                  /
+ *          \                /
+ *      -----\--------------/-----
+ *            \            /
+ *             \          /
+ *
+ * In this case, the point will lie somewhere on the line created at the intersection of the selected planes.
+ *
+ * Case III: There are three planes selected.
+ *
+ *
+ *     \                          /
+ *      \                        /
+ *  -----X----------------------/-----
+ *        \                    /
+ *         \                  /
+ *          \                /
+ *      -----\--------------/-----
+ *            \            /
+ *             \          /
+ *
+ * Note: The diagram above is not fully accurate because it's difficult to draw the true 3D picture with ASCII art.
+ *
+ * In this case, the point will lie on the vertex, at the intersection of the selected planes.
+ */
 TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("frameState", frameState);
@@ -339,23 +392,37 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     return 0.0;
   }
 
-  // Test all planes.
-  var minDistance = Number.MAX_VALUE;
-  var distance;
   var facePoint;
-  for (i = 0; i < planes.length; i++) {
+  if (planes.length === 1) {
     facePoint = closestPointPolygon(
-      Plane.projectPointOntoPlane(planes[i], point),
-      vertices[i],
-      planes[i],
-      dir[i]
+      Plane.projectPointOntoPlane(planes[0], point),
+      vertices[0],
+      planes[0],
+      dir[0]
     );
-    distance = Cartesian3.distanceSquared(facePoint, point);
-    if (distance < minDistance) {
-      minDistance = distance;
-    }
+    return Cartesian3.distance(facePoint, point);
+  } else if (planes.length === 2) {
+    // Find the vertices shared by the two planes.
+    var sharedVertices = vertices[0].filter(function (n) {
+      return vertices[1].indexOf(n) !== -1;
+    });
+    facePoint = closestPointLineSegment(
+      point,
+      sharedVertices[0],
+      sharedVertices[1]
+    );
+    return Cartesian3.distance(facePoint, point);
   }
-  return Math.sqrt(minDistance);
+
+  // Find the vertices shared by the two planes.
+  var v = vertices[0].filter(function (n) {
+    return vertices[1].indexOf(n) !== -1;
+  });
+  v = vertices[0].filter(function (n) {
+    return v.indexOf(n) !== -1;
+  });
+
+  return Cartesian3.distance(point, v[0]);
 };
 
 var dScratch = new Cartesian3();
