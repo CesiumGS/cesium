@@ -184,8 +184,8 @@ require({
   var searchTerm = "";
   var searchRegExp;
   var hintTimer;
-  var defaultDemo = "3D Tiles Interactivity";
-  var defaultLabel = "Showcases";
+  var defaultDemo = "Hello World";
+  var defaultLabel = "3D Tiles";
   var currentTab = defaultLabel;
   var newDemo;
   var demoHtml = "";
