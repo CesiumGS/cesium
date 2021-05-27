@@ -67,12 +67,12 @@ import RuntimeError from "./RuntimeError.js";
  *
  * Cell Token:
  * -----------
- * To provide a more concise representation of the S2 cell ID, we can their hexadecimal representation.
+ * To provide a more concise representation of the S2 cell ID, we can use their hexadecimal representation.
  *
  *   Cell ID (base 10): 3170534137668829184
  *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
  *
- *   We remove all trailing zero bits, until we reach the nybble (4 bit multiple) that contains the sentinel bit.
+ *   We remove all trailing zero bits, until we reach the nybble (4 bits) that contains the sentinel bit.
  *
  *   Note: In the illustration below, the bits to be removed are highlighted with 'X'.
  *
@@ -95,9 +95,9 @@ import RuntimeError from "./RuntimeError.js";
  *
  *   1. (Cell ID): S2 cell ID
  *   2. (Face, I, J): Leaf cell coordinates, where i and j are in range [0, 2^30 - 1]
- *   3. (Face, S, T): Cell space coordinates, where s and t are in range [0, 1]
+ *   3. (Face, S, T): Cell space coordinates, where s and t are in range [0, 1].
  *   4. (Face, Si, Ti): Discrete cell space coordinates, where si and ti are in range [0, 2^31]
- *   5. (Face, U, V): Cube space coordinates, where u and v are in range [-1, 1]
+ *   5. (Face, U, V): Cube space coordinates, where u and v are in range [-1, 1]. We apply the non-linear quadratic transform here.
  *   6. (X, Y, Z): Direction vector, where vector may not be unit length. Can be normalized to obtain point on unit sphere
  *   7. (Latitude, Longitude): Direction vector, where latitude is in range [-90, 90] and longitude is in range [-180, 180]
  */
