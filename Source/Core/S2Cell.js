@@ -103,28 +103,28 @@ import RuntimeError from "./RuntimeError.js";
  */
 
 // The maximum level supported within an S2 cell ID. Each level is represented by two bits in the final cell ID
-var S2MaxLevel = 30;
+var S2_MAX_LEVEL = 30;
 
-// The maximum index of a valid leaf cell plus one.  The range of valid leaf cell indices is [0..S2LimitIJ-1].
-var S2LimitIJ = 1 << S2MaxLevel;
+// The maximum index of a valid leaf cell plus one.  The range of valid leaf cell indices is [0..S2_LIMIT_IJ-1].
+var S2_LIMIT_IJ = 1 << S2_MAX_LEVEL;
 
-// The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..S2MaxSiTi].  Use `>>>` to convert to unsigned.
-var S2MaxSiTi = (1 << (S2MaxLevel + 1)) >>> 0;
+// The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..S2_MAX_SITI].  Use `>>>` to convert to unsigned.
+var S2_MAX_SITI = (1 << (S2_MAX_LEVEL + 1)) >>> 0;
 
 // The number of bits in a S2 cell ID used for specifying the position along the Hilbert curve
-var S2PositionBits = 2 * S2MaxLevel + 1;
+var S2_POSITION_BITS = 2 * S2_MAX_LEVEL + 1;
 
 // The number of bits per I and J in the lookup tables
-var S2LookupBits = 4;
+var S2_LOOKUP_BITS = 4;
 
 // Lookup table for mapping 10 bits of IJ + orientation to 10 bits of Hilbert curve position + orientation.
-var S2LookupPositions = [];
+var S2_LOOKUP_POSITIONS = [];
 
 // Lookup table for mapping 10 bits of IJ + orientation to 10 bits of Hilbert curve position + orientation.
-var S2LookupIJ = [];
+var S2_LOOKUP_IJ = [];
 
 // Lookup table of two bits of IJ from two bits of curve position, based also on the current curve orientation from the swap and invert bits
-var S2PosToIJ = [
+var S2_POSITION_TO_IJ = [
   [0, 1, 3, 2], // 0: Normal order, no swap or invert
   [0, 2, 3, 1], // 1: Swap bit set, swap I and J bits
   [3, 2, 0, 1], // 2: Invert bit set, invert bits
@@ -132,14 +132,19 @@ var S2PosToIJ = [
 ];
 
 // Mask that specifies the swap orientation bit for the Hilbert curve
-var S2SwapMask = 1;
+var S2_SWAP_MASK = 1;
 
 // Mask that specifies the invert orientation bit for the Hilbert curve
-var S2InvertMask = 2;
+var S2_INVERT_MASK = 2;
 
 // Lookup for the orientation update mask of one of the four sub-cells within a higher level cell.
 // This mask is XOR'ed with the current orientation to get the sub-cell orientation.
-var S2PosToOrientationMask = [S2SwapMask, 0, 0, S2SwapMask | S2InvertMask];
+var S2_POSITION_TO_ORIENTATION_MASK = [
+  S2_SWAP_MASK,
+  0,
+  0,
+  S2_SWAP_MASK | S2_INVERT_MASK,
+];
 
 /**
  * Represents a cell in the S2 geometry library.
@@ -197,10 +202,16 @@ S2Cell.isValidId = function (cellId) {
   Check.typeOf.bigint("cellId", cellId);
   //>>includeEnd('debug');
 
-  if (cellId <= 0) return false;
+  // Check if sentinel bit is missing.
+  if (cellId <= 0) {
+    return false;
+  }
 
-  // Check if face bits indicate a value <= 5.
-  if (cellId >> BigInt(S2PositionBits) > 5) return false; // eslint-disable-line
+  // Check if face bits indicate a valid value, in range [0-5].
+  // eslint-disable-next-line
+  if (cellId >> BigInt(S2_POSITION_BITS) > 5) {
+    return false;
+  }
 
   // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
   var lowestSetBit = cellId & (~cellId + BigInt(1)); // eslint-disable-line
@@ -293,8 +304,8 @@ S2Cell.getLevel = function (cellId) {
     cellId = cellId >> BigInt(1); // eslint-disable-line
   }
 
-  //
-  return S2MaxLevel - (lsbPosition >> 1);
+  // We use (>> 1) because there are 2 bits per level.
+  return S2_MAX_LEVEL - (lsbPosition >> 1);
 };
 
 /**
@@ -315,7 +326,9 @@ S2Cell.prototype.getChild = function (index) {
   }
   //>>includeEnd('debug');
 
+  // Shift sentinel bit 2 positions to the right.
   var newLsb = lsb(this._cellId) >> BigInt(2); // eslint-disable-line
+  // Insert child index before the sentinel bit.
   var childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb; // eslint-disable-line
   return new S2Cell(childCellId);
 };
@@ -332,7 +345,9 @@ S2Cell.prototype.getParent = function () {
     throw new DeveloperError("cannot get parent of root cell.");
   }
   //>>includeEnd('debug');
+  // Shift the sentinel bit 2 positions to the left.
   var newLsb = lsb(this._cellId) << BigInt(2); // eslint-disable-line
+  // Erase the left over bits to the right of the sentinel bit.
   return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb); // eslint-disable-line
 };
 
@@ -350,27 +365,6 @@ S2Cell.prototype.getParentAtLevel = function (level) {
   //>>includeEnd('debug');
   var newLsb = lsbForLevel(level);
   return new S2Cell((this._cellId & -newLsb) | newLsb);
-};
-
-/**
- * @private
- */
-S2Cell.fromFacePosLevel = function (face, pos, level) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bigint("pos", pos);
-  if (face < 0 || face > 5) {
-    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
-  }
-
-  if (level < 0 || level > S2MaxLevel) {
-    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
-  }
-  if (pos < 0 || pos > Math.pow(4, level)) {
-    throw new DeveloperError("Invalid Hilbert position for level");
-  }
-  //>>includeEnd('debug');
-  var cell = new S2Cell((face << BigInt(S2PositionBits)) + (pos | BigInt(1))); // eslint-disable-line
-  return cell.getParentAtLevel(level);
 };
 
 /**
@@ -395,9 +389,9 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
 };
 
 /**
- * Get vertex of the S2 cell.
+ * Get vertex of the S2 cell. Vertices are indexed in CCW order.
  *
- * @param {Number} index An integer index of the vertex.
+ * @param {Number} index An integer index of the vertex. Must be in the range [0-3].
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @returns {Cartesian} The position of the vertex of the S2 cell.
  * @private
@@ -439,6 +433,7 @@ function getS2Vertex(cellId, index) {
     [faceIJ[1], faceIJ[2]],
     S2Cell.getLevel(cellId)
   );
+  // Handles CCW ordering of the vertices.
   var y = (index >> 1) & 1;
   return convertFaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
 }
@@ -467,32 +462,33 @@ function convertCellIdToFaceSiTi(cellId) {
  * @private
  */
 function convertCellIdToFaceIJ(cellId) {
-  if (S2LookupPositions.length === 0) {
+  if (S2_LOOKUP_POSITIONS.length === 0) {
     generateLookupTable();
   }
 
-  var face = Number(cellId >> BigInt(S2PositionBits)); // eslint-disable-line
-  var bits = face & S2SwapMask;
-  var lookupMask = (1 << S2LookupBits) - 1;
+  var face = Number(cellId >> BigInt(S2_POSITION_BITS)); // eslint-disable-line
+  var bits = face & S2_SWAP_MASK;
+  var lookupMask = (1 << S2_LOOKUP_BITS) - 1;
 
   var i = 0;
   var j = 0;
 
   for (var k = 7; k >= 0; k--) {
-    var numberOfBits = k === 7 ? S2MaxLevel - 7 * S2LookupBits : S2LookupBits;
+    var numberOfBits =
+      k === 7 ? S2_MAX_LEVEL - 7 * S2_LOOKUP_BITS : S2_LOOKUP_BITS;
     var extractMask = (1 << (2 * numberOfBits)) - 1;
     bits +=
       Number(
-        (cellId >> BigInt(k * 2 * S2LookupBits + 1)) & BigInt(extractMask) // eslint-disable-line
+        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask) // eslint-disable-line
       ) << 2;
 
-    bits = S2LookupIJ[bits];
+    bits = S2_LOOKUP_IJ[bits];
 
-    var offset = k * S2LookupBits;
-    i += (bits >> (S2LookupBits + 2)) << offset;
+    var offset = k * S2_LOOKUP_BITS;
+    i += (bits >> (S2_LOOKUP_BITS + 2)) << offset;
     j += ((bits >> 2) & lookupMask) << offset;
 
-    bits &= S2SwapMask | S2InvertMask;
+    bits &= S2_SWAP_MASK | S2_INVERT_MASK;
   }
 
   return [face, i, j];
@@ -531,6 +527,12 @@ function convertFaceUVtoXYZ(face, u, v) {
 }
 
 /**
+ * S2 provides 3 methods for the non-linear transform: linear, quadratic and tangential.
+ * This implementation uses the quadratic method because it provides a good balance of
+ * accuracy and speed.
+ *
+ * For a more detailed comparison of these transform methods, see
+ * {@link https://github.com/google/s2geometry/blob/0c4c460bdfe696da303641771f9def900b3e440f/src/s2/s2metrics.cc}
  * @private
  */
 function convertSTtoUV(s) {
@@ -542,7 +544,7 @@ function convertSTtoUV(s) {
  * @private
  */
 function convertSiTitoST(si) {
-  return (1.0 / S2MaxSiTi) * si;
+  return (1.0 / S2_MAX_SITI) * si;
 }
 
 /**
@@ -552,10 +554,10 @@ function convertIJLeveltoBoundUV(ij, level) {
   var result = [[], []];
   var cellSize = getSizeIJ(level);
   for (var d = 0; d < 2; ++d) {
-    var ijLo = ij[d] & -cellSize;
-    var ijHi = ijLo + cellSize;
-    result[d][0] = convertSTtoUV(convertIJtoSTMin(ijLo));
-    result[d][1] = convertSTtoUV(convertIJtoSTMin(ijHi));
+    var ijLow = ij[d] & -cellSize;
+    var ijHigh = ijLow + cellSize;
+    result[d][0] = convertSTtoUV(convertIJtoSTMinimum(ijLow));
+    result[d][1] = convertSTtoUV(convertIJtoSTMinimum(ijHigh));
   }
   return result;
 }
@@ -564,20 +566,20 @@ function convertIJLeveltoBoundUV(ij, level) {
  * @private
  */
 function getSizeIJ(level) {
-  return (1 << (S2MaxLevel - level)) >>> 0;
+  return (1 << (S2_MAX_LEVEL - level)) >>> 0;
 }
 
 /**
  * @private
  */
-function convertIJtoSTMin(i) {
-  return (1.0 / S2LimitIJ) * i;
+function convertIJtoSTMinimum(i) {
+  return (1.0 / S2_LIMIT_IJ) * i;
 }
 
 // Utility Functions
 
 /**
- * This function generates 4 variations of a Hilbert curve of level 4, based on the S2PosToIJ table, for fast lookups of (i, j)
+ * This function generates 4 variations of a Hilbert curve of level 4, based on the S2_POSITION_TO_IJ table, for fast lookups of (i, j)
  * to position along Hilbert curve. The reference C++ implementation uses an iterative approach, however, this function is implemented
  * recursively.
  *
@@ -592,24 +594,25 @@ function generateLookupCell(
   position,
   orientation
 ) {
-  if (level === S2LookupBits) {
-    var ij = (i << S2LookupBits) + j;
-    S2LookupPositions[(ij << 2) + originalOrientation] =
+  if (level === S2_LOOKUP_BITS) {
+    var ij = (i << S2_LOOKUP_BITS) + j;
+    S2_LOOKUP_POSITIONS[(ij << 2) + originalOrientation] =
       (position << 2) + orientation;
-    S2LookupIJ[(position << 2) + originalOrientation] = (ij << 2) + orientation;
+    S2_LOOKUP_IJ[(position << 2) + originalOrientation] =
+      (ij << 2) + orientation;
   } else {
     level++;
     i <<= 1;
     j <<= 1;
     position <<= 2;
-    var r = S2PosToIJ[orientation];
+    var r = S2_POSITION_TO_IJ[orientation];
     generateLookupCell(
       level,
       i + (r[0] >> 1),
       j + (r[0] & 1),
       originalOrientation,
       position,
-      orientation ^ S2PosToOrientationMask[0]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[0]
     );
     generateLookupCell(
       level,
@@ -617,7 +620,7 @@ function generateLookupCell(
       j + (r[1] & 1),
       originalOrientation,
       position + 1,
-      orientation ^ S2PosToOrientationMask[1]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[1]
     );
     generateLookupCell(
       level,
@@ -625,7 +628,7 @@ function generateLookupCell(
       j + (r[2] & 1),
       originalOrientation,
       position + 2,
-      orientation ^ S2PosToOrientationMask[2]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[2]
     );
     generateLookupCell(
       level,
@@ -633,7 +636,7 @@ function generateLookupCell(
       j + (r[3] & 1),
       originalOrientation,
       position + 3,
-      orientation ^ S2PosToOrientationMask[3]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[3]
     );
   }
 }
@@ -643,15 +646,15 @@ function generateLookupCell(
  */
 function generateLookupTable() {
   generateLookupCell(0, 0, 0, 0, 0, 0);
-  generateLookupCell(0, 0, 0, S2SwapMask, 0, S2SwapMask);
-  generateLookupCell(0, 0, 0, S2InvertMask, 0, S2InvertMask);
+  generateLookupCell(0, 0, 0, S2_SWAP_MASK, 0, S2_SWAP_MASK);
+  generateLookupCell(0, 0, 0, S2_INVERT_MASK, 0, S2_INVERT_MASK);
   generateLookupCell(
     0,
     0,
     0,
-    S2SwapMask | S2InvertMask,
+    S2_SWAP_MASK | S2_INVERT_MASK,
     0,
-    S2SwapMask | S2InvertMask
+    S2_SWAP_MASK | S2_INVERT_MASK
   );
 }
 
@@ -668,7 +671,7 @@ function lsb(cellId) {
  * @private
  */
 function lsbForLevel(level) {
-  return BigInt(1) << BigInt(2 * (S2MaxLevel - level)); // eslint-disable-line
+  return BigInt(1) << BigInt(2 * (S2_MAX_LEVEL - level)); // eslint-disable-line
 }
 
 // Lookup table for getting trailing zero bits.
