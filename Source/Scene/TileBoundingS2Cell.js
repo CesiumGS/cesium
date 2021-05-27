@@ -370,73 +370,29 @@ var facePointScratch = new Cartesian3();
  *
  * There are 4 possible cases for a point:
  *
+ *   \     X     /     X \           /       \           /       \           /
+ * ---\---------/---   ---\---------/---   ---X---------/---   ---\---------/---
+ *     \       /           \       /           \       /           \       /
+ *   ---\-----/---       ---\-----/---       ---\-----/---       ---\-----/---
+ *       \   /               \   /               \   /               \   /
+ *                                                                    \ /
+ *                                                                     \
+ *                                                                    / \
+ *                                                                   / X \
+ *
+ *         I                  II                  III                 IV
+ *
  * Case I: There is only one plane selected.
- *
- *     \             X            /
- *      \                        /
- *  -----\----------------------/-----
- *        \                    /
- *         \                  /
- *          \                /
- *      -----\--------------/-----
- *            \            /
- *             \          /
- *
  * In this case, we project the point onto the plane and do a point polygon distance check to find the closest point on the polygon.
  * The point may lie inside the "face" of the polygon or outside. If it is outside, we need to determine which edges to test against.
  *
  * Case II: There are two planes selected.
- *
- *  X  \                          /
- *      \                        /
- *  -----\----------------------/-----
- *        \                    /
- *         \                  /
- *          \                /
- *      -----\--------------/-----
- *            \            /
- *             \          /
- *
  * In this case, the point will lie somewhere on the line created at the intersection of the selected planes.
  *
  * Case III: There are three planes selected.
- *
- *
- *     \                          /
- *      \                        /
- *  -----X----------------------/-----
- *        \                    /
- *         \                  /
- *          \                /
- *      -----\--------------/-----
- *            \            /
- *             \          /
- *
- * Note: The diagram above is not fully accurate because it's difficult to draw the true 3D picture with ASCII art.
- *
  * In this case, the point will lie on the vertex, at the intersection of the selected planes.
  *
  * Case IV: There are more than three planes selected.
- *
- *
- *     \                          /
- *      \                        /
- *  -----X----------------------/-----
- *        \                    /
- *         \                  /
- *          \                /
- *      -----\--------------/-----
- *            \            /
- *             \          /
- *              \        /
- *               \      /
- *                \    /
- *                 \  /
- *                  \/
- *                  /\
- *                 /  \
- *                   X
- *
  * Since we are on an ellipsoid, this will only happen in the bottom plane, which is what we will use for the distance test.
  */
 TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
