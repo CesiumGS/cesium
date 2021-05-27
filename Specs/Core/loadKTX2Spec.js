@@ -6,7 +6,7 @@ import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { RuntimeError } from "../../Source/Cesium.js";
 
-describe("Core/loadKTX2", function () {
+fdescribe("Core/loadKTX2", function () {
   var validCompressed = new Uint8Array([
     171,
     75,
@@ -309,11 +309,11 @@ describe("Core/loadKTX2", function () {
         for (var i = 0; i < resolvedValue.length; ++i) {
           expect(resolvedValue[i].width).toEqual(dims[i]);
           expect(resolvedValue[i].height).toEqual(dims[i]);
+          expect(
+            PixelFormat.isCompressedFormat(resolvedValue[i].internalFormat)
+          ).toEqual(false);
           expect(resolvedValue[i].bufferView).toBeDefined();
         }
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(false);
       });
     });
   });
@@ -353,11 +353,11 @@ describe("Core/loadKTX2", function () {
         for (var i = 0; i < resolvedValue.length; ++i) {
           expect(resolvedValue[i].width).toEqual(dims[i]);
           expect(resolvedValue[i].height).toEqual(dims[i]);
+          expect(
+            PixelFormat.isCompressedFormat(resolvedValue[i].internalFormat)
+          ).toEqual(true);
           expect(resolvedValue[i].bufferView).toBeDefined();
         }
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
       });
     });
   });
