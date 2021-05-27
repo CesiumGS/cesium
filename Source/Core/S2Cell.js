@@ -15,20 +15,24 @@ import RuntimeError from "./RuntimeError.js";
  *
  * This implementation is based on the S2 C++ reference implementation: https://github.com/google/s2geometry
  *
+ *
  * Overview:
  * ---------
- * The S2 library decomposes the unit sphere into a hierarchy of cell. A cell a quadrilateral bounded by 4 geodesics.
+ * The S2 library decomposes the unit sphere into a hierarchy of cells. A cell is a quadrilateral bounded by 4 geodesics.
  * The 6 root cells are obtained by projecting the six faces of a cube on a unit sphere. Each root cell follows a quadtree
- * subdivision. The S2 cell hierarchy extends from level 0 (root cells) to level 30 (leaf cells). The root cells are rotated
- * to enable a single Hilbert curve to map all 6 faces of the cube.
+ * subdivision scheme, i.e. each cell subdivides into 4 smaller cells that cover the same area as the parent cell. The S2 cell
+ * hierarchy extends from level 0 (root cells) to level 30 (leaf cells). The root cells are rotated to enable a continuous Hilbert
+ * curve to map all 6 faces of the cube.
  *
  *
  * Cell ID:
  * --------
- * Each cell in S2 can be uniquely identified using a 64-bit unsigned integer. The first 3 bits of the cell ID are the face bits, i.e.
- * they indicate which of the 6 faces of the cube the cell lies on. After the first bits are the position bits, i.e. they indicate the position
+ * Each cell in S2 can be uniquely identified using a 64-bit unsigned integer, its cell ID. The first 3 bits of the cell ID are the face bits, i.e.
+ * they indicate which of the 6 faces of the cube a cell lies on. After the face bits are the position bits, i.e. they indicate the position
  * of the cell along the Hilbert curve. After the positions bits is the sentinel bit, which is always set to 1, and it indicates the level of the
  * cell. Again, the level can be between 0 and 30 in S2.
+ *
+ *   Note: In the illustration below, the face bits are marked with 'f', the position bits are marked with 'p', the zero bits are marked with '-'.
  *
  *   Cell ID (base 10): 3170534137668829184
  *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
@@ -36,7 +40,8 @@ import RuntimeError from "./RuntimeError.js";
  *   001 0110000000000000000000000000000000000000000000000000000000000
  *   fff pps----------------------------------------------------------
  *
- * For the cell above, we can see that it lies on face 1, with a Hilbert index of 2.
+ * For the cell above, we can see that it lies on face 1 (01), with a Hilbert index of 1 (1).
+ *
  *
  * Cell Subdivision:
  * ------------------
@@ -50,6 +55,8 @@ import RuntimeError from "./RuntimeError.js";
  *   fff pps----------------------------------------------------------
  *
  *   To get the 3rd child of the cell above, we insert the binary representation of 3 to the right of the parent's position bits:
+ *
+ *   Note: In the illustration below, the bits to be added are highlighted with '^'.
  *
  *   001 0111100000000000000000000000000000000000000000000000000000000
  *   fff pppps--------------------------------------------------------
@@ -65,19 +72,21 @@ import RuntimeError from "./RuntimeError.js";
  *   Cell ID (base 10): 3170534137668829184
  *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
  *
- *   We remove all trailing zero bits, until we reach the nybble (4 bit mulitple) that contains the sentinel bit.
+ *   We remove all trailing zero bits, until we reach the nybble (4 bit multiple) that contains the sentinel bit.
+ *
+ *   Note: In the illustration below, the bits to be removed are highlighted with 'X'.
  *
  *   0010110000000000000000000000000000000000000000000000000000000000
  *   fffpps--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  *
  *   We convert the remaining bits to their hexadecimal representation.
  *
- *   0010 1100
- *    "2"  "c"
+ *   Base 2: 0010 1100
+ *   Base 16: "2"  "c"
  *
  *   Cell Token: "2c"
  *
- * To compute the cell ID from the token, we simple add enough zeros to the right to make the ID span 64 bits.
+ * To compute the cell ID from the token, we simply add enough zeros to the right to make the ID span 64 bits.
  *
  * Coordinate Transforms:
  * ----------------------
