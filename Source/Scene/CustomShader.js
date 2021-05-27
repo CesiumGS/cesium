@@ -1,4 +1,3 @@
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -43,6 +42,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 // TODO: doc: custom shader cannot have discard or fragColor
 // TODO: require frag shader if VTF is not supported and properties are stored in textures (how can you know this from this file)
 // TODO: highp
+// TODO: support tile/group/content metadata with more than 4 elements in array because they're uniforms
 
 function CustomShader() {
   this.inputs = [];
@@ -781,14 +781,14 @@ CustomShader.fromShaderString = function (options) {
   return customShader;
 };
 
-function getGlslName(name, uniqueId) {
+function getGlslName(name, type, uniqueId) {
   // If the variable name is not compatible with GLSL - e.g. has non-alphanumeric
   // characters like `:`, `-`, `#`, spaces, or unicode - use a placeholder variable name
   var glslCompatibleRegex = /^[a-zA-Z_]\w*$/;
   if (glslCompatibleRegex.test(name)) {
     return name;
   }
-  return "czm_style_variable_" + uniqueId;
+  return "czm_style_" + type + "_" + uniqueId;
 }
 
 function parseVariableAsInput(
@@ -816,7 +816,6 @@ function parseVariableAsInput(
 
 function parseVariableAsAttribute(
   variable,
-  variableId,
   primitive,
   attributes,
   variableSubstitutionMap,
@@ -829,7 +828,11 @@ function parseVariableAsAttribute(
 
   if (!hasAttribute(attributes, attribute)) {
     attributes.push(attribute);
-    var glslName = getGlslName(attribute.name, variableId);
+    var glslName = getGlslName(
+      attribute.name,
+      "attribute",
+      attributes.length - 1
+    );
     attributeNameMap[attribute.name] = glslName;
     variableSubstitutionMap[variable] = "attribute." + glslName;
   }
@@ -839,7 +842,6 @@ function parseVariableAsAttribute(
 
 function parseVariableAsUniform(
   variable,
-  variableId,
   uniforms,
   uniformMap,
   variableSubstitutionMap,
@@ -851,7 +853,11 @@ function parseVariableAsUniform(
 
   if (!hasUniform(uniforms, variable)) {
     uniforms[variable] = uniformMap[variable];
-    var glslName = getGlslName(variable, variableId);
+    var glslName = getGlslName(
+      variable,
+      "uniform",
+      Object.keys(uniforms).length - 1
+    );
     uniformNameMap[variable] = glslName;
     variableSubstitutionMap[variable] = "uniform." + glslName;
   }
@@ -861,7 +867,6 @@ function parseVariableAsUniform(
 
 function parseVariableAsProperty(
   variable,
-  variableId,
   primitive,
   featureMetadata,
   content,
@@ -883,7 +888,7 @@ function parseVariableAsProperty(
   if (!hasProperty(properties, variable)) {
     properties.push(property);
     var propertyId = property.propertyId;
-    var glslName = getGlslName(propertyId, variableId);
+    var glslName = getGlslName(propertyId, "property", properties.length - 1);
     propertyNameMap[propertyId] = glslName;
     variableSubstitutionMap[variable] = "property." + glslName;
 
@@ -1000,7 +1005,6 @@ CustomShader.fromStyle = function (options) {
       ) ||
       parseVariableAsAttribute(
         variable,
-        i,
         primitive,
         attributes,
         variableSubstitutionMap,
@@ -1008,7 +1012,6 @@ CustomShader.fromStyle = function (options) {
       ) ||
       parseVariableAsUniform(
         variable,
-        i,
         uniforms,
         uniformMap,
         variableSubstitutionMap,
@@ -1016,7 +1019,6 @@ CustomShader.fromStyle = function (options) {
       ) ||
       parseVariableAsProperty(
         variable,
-        i,
         primitive,
         featureMetadata,
         content,

@@ -1,6 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -100,6 +101,8 @@ function ModelShader(options) {
     context
   );
 
+  var attributeNameMap = getAttributeNameMap(attributes, customShader);
+
   // TODO: ignore second set for joints/weights
 
   // Shader cache key includes: the style object, the custom shader
@@ -122,6 +125,40 @@ function ModelShader(options) {
   // Need an area that sets the struct values: input, attribute, uniform, property
   //
   // Need a solution for storing metadata, as textures (float textures...), or vertex attributes in the case of point clouds
+}
+
+function getAttributeNameMap(attributes, customShader) {
+  var attributeNameMap = defined(customShader)
+    ? clone(customShader.attributeNameMap, false)
+    : {};
+  var attributesLength = attributes.length;
+  for (var i = 0; i < attributesLength; ++i) {
+    var attribute = attributes[i];
+    var attributeName = attribute.name;
+    if (defined(attribute.semantic)) {
+      attributeNameMap[attributeName] = VertexAttributeSemantic.getVariableName(
+        attribute.semantic,
+        attribute.setIndex
+      );
+    } else if (!defined(attributeNameMap[attributeName])) {
+      attributeNameMap[attributeName] = getGlslName(
+        attributeName,
+        "attribute",
+        i
+      );
+    }
+  }
+  return attributeNameMap;
+}
+
+function getGlslName(name, type, uniqueId) {
+  // If the variable name is not compatible with GLSL - e.g. has non-alphanumeric
+  // characters like `:`, `-`, `#`, spaces, or unicode - use a placeholder variable name
+  var glslCompatibleRegex = /^[a-zA-Z_]\w*$/;
+  if (glslCompatibleRegex.test(name)) {
+    return name;
+  }
+  return "czm_model_" + type + "_" + uniqueId;
 }
 
 function checkRequiredAttributes(primitive, customShader) {
@@ -147,15 +184,30 @@ function checkRequiredAttributes(primitive, customShader) {
   }
 }
 
-function createCustomShader(customShader) {
+function buildShader(primitive, attributes, attributeNameMap) {
+  var attributesLength = attributes.length;
+  for (var i = 0; i < attributesLength; ++i) {
+    var attribute = attributes[i];
+    var attributeName = attribute.name;
+    var attributeName = defaultValue(
+      attributeNameMap[attribute.name],
+      attribute.name
+    );
+    if (defined(attribute.semantic)) {
+      attributeName = VertexAttributeSemantic.getVariableName(
+        attribute.semantic,
+        attribute.setIndex
+      );
+    }
+  }
+}
+
+function createCustomShader(customShader, attributeNameMap) {
   // Initialize the structs that are passed to the custom shaders
   var inputs = customShader.inputs;
   var attributes = customShader.attributes;
   var uniforms = customShader.uniforms;
   var properties = customShader.properties;
-  var attributeNameMap = customShader.attributeNameMap;
-  var uniformNameMap = customShader.uniformNameMap;
-  var propertyNameMap = customShader.propertyNameMap;
   var shaderString = customShader.shaderString;
   var applyInVertexShader = customShader.applyInVertexShader;
 
@@ -171,15 +223,6 @@ function createCustomShader(customShader) {
     var input = inputs[i];
     var inputName = InputSemantic.getVariableName(input);
 
-    // TODO: do this computation elsewhere
-    // if (input.semantic === InputSemantic.POSITION_ABSOLUTE) {
-    //   var positionVariableName = InputSemantic.getVariableName({
-    //     semantic: InputSemantic.POSITION,
-    //   });
-    //   inputVariableName =
-    //     "vec3(czm_model * vec4(" + positionVariableName + ", 1.0))";
-    // }
-
     inputStruct += "input." + inputName + " = " + inputName + ";\n";
   }
 
@@ -187,23 +230,23 @@ function createCustomShader(customShader) {
   for (i = 0; i < attributesLength; ++i) {
     var attribute = attributes[i];
     var attributeName = defaultValue(
+      customShader.attributeNameMap[attribute.name],
+      attribute.name
+    );
+    var attributeVariableName = defaultValue(
       attributeNameMap[attribute.name],
       attribute.name
     );
-    var attributeVariableName = attributeName;
-    if (defined(attribute.semantic)) {
-      attributeVariableName = VertexAttributeSemantic.getVariableName(
-        attribute.semantic,
-        attribute.setIndex
-      );
-    }
     attributeStruct +=
       "attribute." + attributeName + " = " + attributeVariableName + ";\n";
   }
 
   for (var uniformName in uniforms) {
     if (uniforms.hasOwnProperty(uniformName)) {
-      uniformName = defaultValue(uniformNameMap[uniformName], uniformName);
+      uniformName = defaultValue(
+        customShader.uniformNameMap[uniformName],
+        uniformName
+      );
       uniformStruct += "uniform." + uniformName + " = " + uniformName + ";\n";
     }
   }
@@ -218,7 +261,10 @@ function createCustomShader(customShader) {
   for (i = 0; i < propertiesLength; ++i) {
     var property = properties[i];
     var propertyId = property.propertyId;
-    var propertyName = defaultValue(propertyNameMap[propertyId], propertyId);
+    var propertyName = defaultValue(
+      customShader.propertyNameMap[propertyId],
+      propertyId
+    );
     propertyStruct += "property." + propertyName + " = " + propertyName + ";\n";
   }
 
@@ -431,7 +477,7 @@ function usesWeights(primitive, setIndex) {
   );
 }
 
-function usesFeatureId(primitive, customShader, styleInfo, setIndex) {
+function usesFeatureId(primitive, customShader, setIndex) {
   var semantic = VertexAttributeSemantic.FEATURE_ID;
 
   if (!hasAttributeWithSemantic(primitive.attributes, semantic, setIndex)) {
@@ -501,7 +547,7 @@ function usesAttribute(
     case VertexAttributeSemantic.WEIGHTS:
       return usesWeights(primitive, setIndex);
     case VertexAttributeSemantic.FEATURE_ID:
-      return usesFeatureId(customShader, setIndex);
+      return usesFeatureId(primitive, customShader, setIndex);
     default:
   }
 }
