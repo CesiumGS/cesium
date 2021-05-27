@@ -362,6 +362,7 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
   },
 });
 
+var facePointScratch = new Cartesian3();
 /**
  * The distance to point check for this kDOP involves checking the signed distance of the point to each bounding
  * plane. A plane qualifies for a distance check if the point being tested against is in the half-space in the direction
@@ -506,7 +507,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   if (selectedPlaneIndices.length === 1) {
     var selectedPlane = this._boundingPlanes[selectedPlaneIndices[0]];
     facePoint = closestPointPolygon(
-      Plane.projectPointOntoPlane(selectedPlane, point),
+      Plane.projectPointOntoPlane(selectedPlane, point, facePointScratch),
       vertices,
       selectedPlane,
       edgeNormals,
@@ -536,7 +537,11 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length > 3) {
     facePoint = closestPointPolygon(
-      Plane.projectPointOntoPlane(this._boundingPlanes[0], point),
+      Plane.projectPointOntoPlane(
+        this._boundingPlanes[0],
+        point,
+        facePointScratch
+      ),
       vertices,
       this._boundingPlanes[0],
       edgeNormals[0],
