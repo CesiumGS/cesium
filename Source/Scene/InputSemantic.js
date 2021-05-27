@@ -130,24 +130,25 @@ function semanticToVariableName(semantic) {
   return undefined;
 }
 
-function getVertexAttributeSemantic(semantic) {
+function getVertexAttributeSemantics(semantic) {
   switch (semantic) {
     case InputSemantic.POSITION:
     case InputSemantic.POSITION_ABSOLUTE:
-      return VertexAttributeSemantic.POSITION;
+      return [VertexAttributeSemantic.POSITION];
     case InputSemantic.NORMAL:
-      return VertexAttributeSemantic.NORMAL;
+      return [VertexAttributeSemantic.NORMAL];
     case InputSemantic.TANGENT:
+      return [VertexAttributeSemantic.TANGENT];
     case InputSemantic.BITANGENT:
-      return VertexAttributeSemantic.TANGENT;
+      return [VertexAttributeSemantic.TANGENT, VertexAttributeSemantic.NORMAL];
     case InputSemantic.TEXCOORD:
-      return VertexAttributeSemantic.TEXCOORD;
+      return [VertexAttributeSemantic.TEXCOORD];
     case InputSemantic.COLOR:
-      return VertexAttributeSemantic.COLOR;
+      return [VertexAttributeSemantic.COLOR];
     case InputSemantic.FEATURE_ID:
-      return VertexAttributeSemantic.FEATURE_ID;
+      return [VertexAttributeSemantic.FEATURE_ID];
   }
-  return undefined;
+  return [];
 }
 
 /**
@@ -155,8 +156,8 @@ function getVertexAttributeSemantic(semantic) {
  *
  * @typedef {Object} InputSemanticInfo
  * @property {InputSemantic} semantic The input semantic.
- * @property {VertexAttributeSemantic} vertexAttributeSemantic The vertex attribute semantic that the input semantic is derived from.
- * @property {Number} [setIndex] The optional set index.
+ * @property {VertexAttributeSemantic[]} vertexAttributeSemantics An array of vertex attribute semantics that the input semantic is derived from.
+ * @property {Number[]} setIndices An array of set indices corresponding to the vertex attribute semantics. Elements may be undefined.
  * @private
  */
 
@@ -195,21 +196,25 @@ InputSemantic.fromVariableName = function (variableName) {
     return;
   }
 
-  var vertexAttributeSemantic = getVertexAttributeSemantic(semantic);
+  var vertexAttributeSemantics = getVertexAttributeSemantics(semantic);
+  var vertexAttributeSemanticsLength = vertexAttributeSemantics.length;
 
-  var setIndex;
-  if (VertexAttributeSemantic.hasSetIndex(vertexAttributeSemantic)) {
-    if (match[2] === "") {
-      setIndex = 0;
-    } else {
-      setIndex = parseInt(setIndex);
+  var setIndices = new Array(vertexAttributeSemanticsLength);
+
+  for (var i = 0; i < vertexAttributeSemanticsLength; ++i) {
+    if (VertexAttributeSemantic.hasSetIndex(vertexAttributeSemantics[i])) {
+      if (match[2] === "") {
+        setIndices[i] = 0;
+      } else {
+        setIndices[i] = parseInt(match[2]);
+      }
     }
   }
 
   return {
     semantic: semantic,
-    vertexAttributeSemantic: vertexAttributeSemantic,
-    setIndex: setIndex,
+    vertexAttributeSemantics: vertexAttributeSemantics,
+    setIndices: setIndices,
   };
 };
 
@@ -247,21 +252,25 @@ InputSemantic.fromEnumName = function (enumName) {
     return;
   }
 
-  var vertexAttributeSemantic = getVertexAttributeSemantic(semantic);
+  var vertexAttributeSemantics = getVertexAttributeSemantics(semantic);
+  var vertexAttributeSemanticsLength = vertexAttributeSemantics.length;
 
-  var setIndex;
-  if (VertexAttributeSemantic.hasSetIndex(vertexAttributeSemantic)) {
-    if (match[2] === "") {
-      setIndex = 0;
-    } else {
-      setIndex = parseInt(setIndex);
+  var setIndices = new Array(vertexAttributeSemanticsLength);
+
+  for (var i = 0; i < vertexAttributeSemanticsLength; ++i) {
+    if (VertexAttributeSemantic.hasSetIndex(vertexAttributeSemantics[i])) {
+      if (match[2] === "") {
+        setIndices[i] = 0;
+      } else {
+        setIndices[i] = parseInt(match[2]);
+      }
     }
   }
 
   return {
     semantic: semantic,
-    vertexAttributeSemantic: vertexAttributeSemantic,
-    setIndex: setIndex,
+    vertexAttributeSemantics: vertexAttributeSemantics,
+    setIndices: setIndices,
   };
 };
 
@@ -314,7 +323,17 @@ InputSemantic.getVariableName = function (inputSemanticInfo) {
   //>>includeEnd('debug');
 
   var semantic = inputSemanticInfo.semantic;
-  var setIndex = inputSemanticInfo.setIndex;
+
+  // If any derived vertex attributes have a set index use it
+  var setIndex;
+  var setIndices = inputSemanticInfo.setIndices;
+  var setIndicesLength = setIndices.length;
+  for (var i = 0; i < setIndicesLength; ++i) {
+    if (defined(setIndices[i])) {
+      setIndex = setIndices[i];
+      break;
+    }
+  }
 
   var variableName = semanticToVariableName(semantic);
   if (defined(setIndex)) {

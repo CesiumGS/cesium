@@ -459,13 +459,40 @@ function getPropertyInfo(propertyName, primitive, featureMetadata, content) {
   return undefined;
 }
 
+function inputsEqual(inputA, inputB) {
+  if (inputA.semantic !== inputB.semantic) {
+    return false;
+  }
+
+  var vertexAttributeSemanticsA = inputA.vertexAttributeSemantics;
+  var vertexAttributeSemanticsB = inputB.vertexAttributeSemantics;
+
+  var setIndicesA = inputA.setIndices;
+  var setIndicesB = inputB.setIndices;
+
+  var lengthA = vertexAttributeSemanticsA.length;
+  var lengthB = vertexAttributeSemanticsB.length;
+
+  if (lengthA !== lengthB) {
+    return false;
+  }
+
+  for (var i = 0; i < lengthA; ++i) {
+    if (vertexAttributeSemanticsA[i] !== vertexAttributeSemanticsB[i]) {
+      return false;
+    }
+    if (setIndicesA[i] !== setIndicesB[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function hasInput(inputs, input) {
   var inputsLength = inputs.length;
   for (var i = 0; i < inputsLength; ++i) {
-    if (
-      inputs[i].semantic === input.semantic &&
-      inputs[i].setIndex === input.setIndex
-    ) {
+    if (inputsEqual(inputs[i], input)) {
       return true;
     }
   }
@@ -490,11 +517,34 @@ function hasProperty(properties, property) {
   return false;
 }
 
+function getDerivedAttributes(primitive, input, derivedAttributes) {
+  // Find the vertex attribute that the input semantic is derived from.
+  // The calling code is responsible for throwing an error if the
+  // vertex attribute doesn't exist. Note that some input semantics may be
+  // synthetically generated in the shader and an error should not be thrown.
+  var vertexAttributeSemantics = input.vertexAttributeSemantics;
+  var setIndices = input.setIndices;
+  var derivedAttributesLength = vertexAttributeSemantics.length;
+  for (var i = 0; i < derivedAttributesLength; ++i) {
+    var derivedAttribute = getAttributeWithSemantic(
+      primitive,
+      vertexAttributeSemantics[i],
+      setIndices[i]
+    );
+    if (
+      defined(derivedAttribute) &&
+      !hasAttribute(derivedAttributes, derivedAttribute)
+    ) {
+      derivedAttributes.push(derivedAttribute);
+    }
+  }
+}
+
 function getInputsUsedInShader(
   shaderString,
   primitive,
   inputs,
-  attributes,
+  derivedAttributes,
   variableSubstitutionMap
 ) {
   var regex = /input\.(\w+)/;
@@ -504,22 +554,11 @@ function getInputsUsedInShader(
     var inputName = match[1];
     var input = InputSemantic.fromVariableName(inputName);
     if (defined(input)) {
-      // Find the vertex attribute that the input semantic is derived from.
-      // The calling code is responsible for throwing an error if the
-      // vertex attribute doesn't exist. Note that some input semantics may be
-      // synthetically generated in the shader and an error should not be thrown.
-      var attribute = getAttributeWithSemantic(
-        primitive,
-        input.vertexAttributeSemantic,
-        input.setIndex
-      );
-      if (defined(attribute) && !hasAttribute(attributes, attribute)) {
-        attributes.push(attribute);
-      }
-
       if (!hasInput(inputs, input)) {
         inputs.push(input);
       }
+
+      getDerivedAttributes(primitive, input, derivedAttributes);
 
       // Add set index "0" to inputs that don't have a set index.
       // The input struct will always have the version with the zero.
@@ -583,7 +622,7 @@ function getPropertiesUsedInShader(
   primitive,
   featureMetadata,
   content,
-  attributes,
+  helperAttributes,
   properties
 ) {
   if (!defined(featureMetadata)) {
@@ -616,13 +655,13 @@ function getPropertiesUsedInShader(
       properties.push(property);
 
       var texCoord = getTexCoordUsedByProperty(primitive, property);
-      if (defined(texCoord) && !hasAttribute(attributes, texCoord)) {
-        attributes.push(texCoord);
+      if (defined(texCoord) && !hasAttribute(helperAttributes, texCoord)) {
+        helperAttributes.push(texCoord);
       }
 
       var featureId = getFeatureIdAttributeUsedByProperty(primitive, property);
-      if (defined(featureId) && !hasAttribute(attributes, featureId)) {
-        attributes.push(featureId);
+      if (defined(featureId) && !hasAttribute(helperAttributes, featureId)) {
+        helperAttributes.push(featureId);
       }
     }
 
@@ -756,7 +795,7 @@ function parseVariableAsInput(
   variable,
   primitive,
   inputs,
-  attributes,
+  derivedAttributes,
   variableSubstitutionMap
 ) {
   var input = InputSemantic.fromEnumName(variable);
@@ -764,21 +803,13 @@ function parseVariableAsInput(
     return false;
   }
 
-  var attribute = getAttributeWithSemantic(
-    primitive,
-    input.vertexAttributeSemantic,
-    input.setIndex
-  );
-
-  if (!hasAttribute(attributes, attribute)) {
-    attributes.push(attribute);
-  }
-
   if (!hasInput(inputs, input)) {
     inputs.push(input);
     variableSubstitutionMap[variable] =
       "input." + InputSemantic.getVariableName(input);
   }
+
+  getDerivedAttributes(primitive, input, derivedAttributes);
 
   return true;
 }

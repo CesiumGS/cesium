@@ -82,19 +82,7 @@ function ModelShader(options) {
   }
 
   if (defined(customShader)) {
-    var inputs = customShader.inputs;
-    var inputsLength = inputs.length;
-    for (var i = 0; i < inputsLength; ++i) {
-      var input = inputs[i];
-      var attributes = primitive.attributes;
-      var vertexAttributeSemantic = input.vertexAttributeSemantic;
-      if (!hasAttributeWithSemantic(attributes, vertexAttributeSemantic)) {
-        var name = defined(styleInfo) ? "Style" : "Custom shader";
-        throw new RuntimeError(
-          name + " uses input that has no matching vertex attribute: " + input
-        );
-      }
-    }
+    checkRequiredAttributes(primitive, customShader);
   }
 
   var materialInfo = getMaterialInfo(
@@ -134,6 +122,29 @@ function ModelShader(options) {
   // Need an area that sets the struct values: input, attribute, uniform, property
   //
   // Need a solution for storing metadata, as textures (float textures...), or vertex attributes in the case of point clouds
+}
+
+function checkRequiredAttributes(primitive, customShader) {
+  var attributes = primitive.attributes;
+  var inputs = customShader.inputs;
+  var inputsLength = inputs.length;
+  for (var i = 0; i < inputsLength; ++i) {
+    var input = inputs[i];
+    var vertexAttributeSemantics = input.vertexAttributeSemantics;
+    var setIndices = input.setIndices;
+    var vertexAttributeSemanticsLength = vertexAttributeSemantics.length;
+    for (var j = 0; j < vertexAttributeSemanticsLength; ++j) {
+      var vertexAttributeSemantic = vertexAttributeSemantics[i];
+      var setIndex = setIndices[i];
+      if (
+        !hasAttributeWithSemantic(attributes, vertexAttributeSemantic, setIndex)
+      ) {
+        throw new RuntimeError(
+          "Required vertex attribute is missing: " + vertexAttributeSemantic
+        );
+      }
+    }
+  }
 }
 
 function createCustomShader(customShader) {
@@ -242,6 +253,21 @@ function hasAttributeWithSemantic(attributes, semantic, setIndex) {
   return defined(getAttributeWithSemantic(attributes, semantic, setIndex));
 }
 
+function customShaderUsesAttributeWithSemantic(
+  customShader,
+  semantic,
+  setIndex
+) {
+  var attributes = customShader.attributes;
+  var derivedAttributes = customShader.derivedAttributes;
+  var helperAttributes = customShader.helperAttributes;
+  return (
+    hasAttributeWithSemantic(attributes, semantic, setIndex) ||
+    hasAttributeWithSemantic(derivedAttributes, semantic, setIndex) ||
+    hasAttributeWithSemantic(helperAttributes, semantic, setIndex)
+  );
+}
+
 function usesUnlitShader(primitive, customShader, colorBlendMode) {
   if (defined(customShader) && colorBlendMode === ColorBlendMode.REPLACE) {
     return false;
@@ -307,7 +333,7 @@ function usesNormal(primitive, customShader, colorBlendMode) {
   }
 
   if (defined(customShader)) {
-    if (hasAttributeWithSemantic(customShader.attributes, semantic)) {
+    if (customShaderUsesAttributeWithSemantic(customShader, semantic)) {
       return true;
     }
     if (colorBlendMode === ColorBlendMode.REPLACE) {
@@ -326,7 +352,7 @@ function usesTangent(primitive, customShader, colorBlendMode, context) {
   }
 
   if (defined(customShader)) {
-    if (hasAttributeWithSemantic(customShader.attributes, semantic)) {
+    if (customShaderUsesAttributeWithSemantic(customShader, semantic)) {
       return true;
     }
     if (colorBlendMode === ColorBlendMode.REPLACE) {
@@ -355,7 +381,9 @@ function usesTexCoord(
   }
 
   if (defined(customShader)) {
-    if (hasAttributeWithSemantic(customShader.attributes, semantic, setIndex)) {
+    if (
+      customShaderUsesAttributeWithSemantic(customShader, semantic, setIndex)
+    ) {
       return true;
     }
     if (colorBlendMode === ColorBlendMode.REPLACE) {
@@ -374,7 +402,9 @@ function usesColor(primitive, customShader, colorBlendMode, setIndex) {
   }
 
   if (defined(customShader)) {
-    if (hasAttributeWithSemantic(customShader.attributes, semantic, setIndex)) {
+    if (
+      customShaderUsesAttributeWithSemantic(customShader, semantic, setIndex)
+    ) {
       return true;
     }
     if (colorBlendMode === ColorBlendMode.REPLACE) {
@@ -409,7 +439,9 @@ function usesFeatureId(primitive, customShader, styleInfo, setIndex) {
   }
 
   if (defined(customShader)) {
-    if (hasAttributeWithSemantic(customShader.attributes, semantic, setIndex)) {
+    if (
+      customShaderUsesAttributeWithSemantic(customShader, semantic, setIndex)
+    ) {
       return true;
     }
   }
@@ -422,7 +454,9 @@ function usesCustomAttribute(attribute, customShader) {
   var setIndex = attribute.setIndex;
 
   if (defined(customShader)) {
-    if (hasAttributeWithSemantic(customShader.attributes, semantic, setIndex)) {
+    if (
+      customShaderUsesAttributeWithSemantic(customShader, semantic, setIndex)
+    ) {
       return true;
     }
   }
