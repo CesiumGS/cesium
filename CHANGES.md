@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
+- Fixed the Sandcastles webpage so that the default tab is "3D Tiles" instead of "Showcases." [#7462](https://github.com/CesiumGS/cesium/issues/7462)
 
 ### 1.81 - 2021-05-01
 
