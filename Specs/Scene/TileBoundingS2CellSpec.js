@@ -13,7 +13,7 @@ describe("Scene/TileBoundingS2Cell", function () {
   var s2Options = {
     token: "1",
     minimumHeight: 0,
-    maximumHeight: 1000,
+    maximumHeight: 100000,
   };
 
   var tileS2Cell = new TileBoundingS2Cell(s2Options);
@@ -25,33 +25,6 @@ describe("Scene/TileBoundingS2Cell", function () {
     frameState = createFrameState();
     camera = frameState.camera;
   });
-
-  function getPointAwayFromSidePlane(tileBoundingVolume, planeIndex, distance) {
-    var planePoint = getSidePlaneMidpoint(tileBoundingVolume, planeIndex);
-    var plane = Plane.clone(tileBoundingVolume._sidePlanes[planeIndex]);
-    plane.distance += distance;
-    return Plane.projectPointOntoPlane(plane, planePoint);
-  }
-
-  var midPointScratch = new Cartesian3();
-  var midPoint1Scratch = new Cartesian3();
-  var midPoint2Scratch = new Cartesian3();
-  function getSidePlaneMidpoint(tileBoundingVolume, planeIndex) {
-    var i = (planeIndex + 3) % 4;
-    return Cartesian3.midpoint(
-      Cartesian3.midpoint(
-        tileBoundingVolume._vertices[i % 4],
-        tileBoundingVolume._vertices[4 + i],
-        midPoint1Scratch
-      ),
-      Cartesian3.midpoint(
-        tileBoundingVolume._vertices[4 + ((i + 1) % 4)],
-        tileBoundingVolume._vertices[(i + 1) % 4],
-        midPoint2Scratch
-      ),
-      midPointScratch
-    );
-  }
 
   it("throws when options.token is undefined", function () {
     expect(function () {
@@ -96,7 +69,7 @@ describe("Scene/TileBoundingS2Cell", function () {
 
   it("distance to camera for top and bottom planes", function () {
     var testDistance = 1;
-    var plane = Plane.clone(tileS2Cell._topPlane);
+    var plane = Plane.clone(tileS2Cell._boundingPlanes[0]);
     plane.distance -= testDistance;
     camera.position = Plane.projectPointOntoPlane(plane, tileS2Cell.center);
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
@@ -104,7 +77,7 @@ describe("Scene/TileBoundingS2Cell", function () {
       CesiumMath.EPSILON6
     );
 
-    plane = Plane.clone(tileS2Cell._bottomPlane);
+    plane = Plane.clone(tileS2Cell._boundingPlanes[1]);
     plane.distance -= testDistance;
     camera.position = Plane.projectPointOntoPlane(plane, tileS2Cell.center);
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
@@ -113,11 +86,34 @@ describe("Scene/TileBoundingS2Cell", function () {
     );
   });
 
+  var edgeOneScratch = new Cartesian3();
+  var edgeTwoScratch = new Cartesian3();
+  var planeCenterScratch = new Cartesian3();
   it("distance to camera for side planes", function () {
-    var testDistance = 1;
+    var testDistance = 100000;
     for (var i = 0; i < 4; i++) {
-      var testPoint = getPointAwayFromSidePlane(tileS2Cell, i, testDistance);
-      camera.position = testPoint;
+      var plane = Plane.clone(tileS2Cell._boundingPlanes[2 + i]);
+
+      var edgeOne = Cartesian3.midpoint(
+        tileS2Cell._vertices[i % 4],
+        tileS2Cell._vertices[4 + i],
+        edgeOneScratch
+      );
+
+      var edgeTwo = Cartesian3.midpoint(
+        tileS2Cell._vertices[4 + ((i + 1) % 4)],
+        tileS2Cell._vertices[(i + 1) % 4],
+        edgeTwoScratch
+      );
+
+      var planeCenter = Cartesian3.midpoint(
+        edgeOne,
+        edgeTwo,
+        planeCenterScratch
+      );
+
+      plane.distance -= testDistance;
+      camera.position = Plane.projectPointOntoPlane(plane, planeCenter);
       expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
         testDistance,
         CesiumMath.EPSILON6
@@ -128,11 +124,11 @@ describe("Scene/TileBoundingS2Cell", function () {
   it("distanceToCamera", function () {
     // On top "edge"
     camera.position = Plane.projectPointOntoPlane(
-      tileS2Cell._topPlane,
+      tileS2Cell._boundingPlanes[0],
       new Cartesian3(0, 0, Ellipsoid.WGS84.maximumRadius * 2)
     );
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-      Ellipsoid.WGS84.maximumRadius * 2 - tileS2Cell._vertices[1].z,
+      Ellipsoid.WGS84.maximumRadius * 2 - tileS2Cell._vertices[2].z,
       CesiumMath.EPSILON6
     );
 
