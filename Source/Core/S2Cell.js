@@ -215,7 +215,7 @@ S2Cell.isValidId = function (cellId) {
 /**
  * Validates an S2 cell token.
  *
- * @param {String} [token] The hexadecimal representation of an S2CellId. 0 must be represented using "X".
+ * @param {String} [token] The hexadecimal representation of an S2CellId.
  * @returns {Boolean} Returns true if the token is valid, returns false otherwise.
  * @private
  */
@@ -224,8 +224,7 @@ S2Cell.isValidToken = function (token) {
   Check.typeOf.string("token", token);
   //>>includeEnd('debug');
 
-  var regex = new RegExp("^[0-9a-fA-F]{1,16}$");
-  if (!regex.test(token)) {
+  if (!/^[0-9a-fA-F]{1,16}$/.test(token)) {
     return false;
   }
 
@@ -235,7 +234,7 @@ S2Cell.isValidToken = function (token) {
 /**
  * Converts an S2 cell token to a 64-bit S2 cell ID.
  *
- * @param {String} [token] The hexadecimal representation of an S2CellId. 0 must be represented using "X". Expected to be a valid S2 token.
+ * @param {String} [token] The hexadecimal representation of an S2CellId. Expected to be a valid S2 token.
  * @returns {BigInt} Returns the S2 cell ID.
  * @private
  */
@@ -243,11 +242,6 @@ S2Cell.getIdFromToken = function (token) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("token", token);
   //>>includeEnd('debug');
-
-  // 'X' is a special case of the S2Token, representing the 0 cell.
-  if (token === "X") {
-    return BigInt(0); // eslint-disable-line
-  }
 
   return BigInt("0x" + token + "0".repeat(16 - token.length)); // eslint-disable-line
 };
@@ -264,16 +258,13 @@ S2Cell.getTokenFromId = function (cellId) {
   Check.typeOf.bigint("cellId", cellId);
   //>>includeEnd('debug');
 
-  // 'X' is a special case of the S2Token, representing the 0 cell.
-  // eslint-disable-next-line
-  if (cellId === BigInt(0)) {
-    return "X";
-  }
-  var trailingZeroBits = Math.floor(countTrailingZeroBits(cellId) / 4);
-  return cellId
-    .toString(16)
-    .replace(/0*$/, "")
-    .padStart(16 - trailingZeroBits, "0");
+  var trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
+  var hexString = cellId.toString(16).replace(/0*$/, "");
+
+  var zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
+    "0"
+  );
+  return zeroString + hexString;
 };
 
 /**
@@ -302,6 +293,7 @@ S2Cell.getLevel = function (cellId) {
     cellId = cellId >> BigInt(1); // eslint-disable-line
   }
 
+  //
   return S2MaxLevel - (lsbPosition >> 1);
 };
 
@@ -585,6 +577,11 @@ function convertIJtoSTMin(i) {
 // Utility Functions
 
 /**
+ * This function generates 4 variations of a Hilbert curve of level 4, based on the S2PosToIJ table, for fast lookups of (i, j)
+ * to position along Hilbert curve. The reference C++ implementation uses an iterative approach, however, this function is implemented
+ * recursively.
+ *
+ * See {@link https://github.com/google/s2geometry/blob/c59d0ca01ae3976db7f8abdc83fcc871a3a95186/src/s2/s2cell_id.cc#L75-L109}
  * @private
  */
 function generateLookupCell(

@@ -111,7 +111,6 @@ describe("Core/S2Cell", function () {
   });
 
   it("correctly converts cell ID to token", function () {
-    expect(S2Cell.getIdFromToken("X")).toEqual(BigInt("0"));
     expect(S2Cell.getIdFromToken("04")).toEqual(BigInt("288230376151711744"));
     expect(S2Cell.getIdFromToken("3")).toEqual(BigInt("3458764513820540928"));
     expect(S2Cell.getIdFromToken("2ef59bd352b93ac3")).toEqual(
@@ -120,7 +119,6 @@ describe("Core/S2Cell", function () {
   });
 
   it("correctly converts token to cell ID", function () {
-    expect(S2Cell.getTokenFromId(BigInt("0"))).toEqual("X");
     expect(S2Cell.getTokenFromId(BigInt("288230376151711744"))).toEqual("04");
     expect(S2Cell.getTokenFromId(BigInt("3458764513820540928"))).toEqual("3");
     expect(S2Cell.getTokenFromId(BigInt("3383782026967071427"))).toEqual(
