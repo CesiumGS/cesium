@@ -968,11 +968,11 @@ describe(
 
       // Render with faded shadows
       var horizonShadowedColor = renderAndReadPixels();
-      expect(horizonShadowedColor).not.toEqual(shadowedColor);
 
       // Render with unfaded shadows
       scene.shadowMap.fadingEnabled = false;
       renderAndCall(function (rgba) {
+        expect(horizonShadowedColor).not.toEqual(shadowedColor);
         expect(rgba).not.toEqual(horizonShadowedColor);
       });
     });
