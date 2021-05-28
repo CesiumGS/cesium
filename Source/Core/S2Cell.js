@@ -100,6 +100,8 @@ import RuntimeError from "./RuntimeError.js";
  *   5. (Face, U, V): Cube space coordinates, where u and v are in range [-1, 1]. We apply the non-linear quadratic transform here.
  *   6. (X, Y, Z): Direction vector, where vector may not be unit length. Can be normalized to obtain point on unit sphere
  *   7. (Latitude, Longitude): Direction vector, where latitude is in range [-90, 90] and longitude is in range [-180, 180]
+ *
+ * @ignore
  */
 
 // The maximum level supported within an S2 cell ID. Each level is represented by two bits in the final cell ID
