@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
