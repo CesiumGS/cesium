@@ -374,7 +374,7 @@ var facePointScratch = new Cartesian3();
  * The point may lie inside the "face" of the polygon or outside. If it is outside, we need to determine which edges to test against.
  *
  * Case II: There are two planes selected.
- * In this case, the point will lie somewhere on the line created at the intersection of the selected planes.
+ * In this case, the point will lie somewhere on the line created at the intersection of the selected planes or one of the planes.
  *
  * Case III: There are three planes selected.
  * In this case, the point will lie on the vertex, at the intersection of the selected planes.
@@ -390,17 +390,17 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   var point = frameState.camera.positionWC;
 
   var selectedPlaneIndices = [];
-  var vertices;
+  var vertices = [];
   var edgeNormals;
 
   // PERFORMANCE_IDEA: Look into removing any unnecessary allocations here.
   if (Plane.getPointDistance(this._boundingPlanes[0], point) > 0) {
     selectedPlaneIndices.push(0);
-    vertices = this._vertices.slice(0, 4);
+    vertices.push(this._vertices.slice(0, 4));
     edgeNormals = this._edgeNormals[0];
   } else if (Plane.getPointDistance(this._boundingPlanes[1], point) > 0) {
     selectedPlaneIndices.push(1);
-    vertices = this._vertices.slice(4, 8);
+    vertices.push(this._vertices.slice(4, 8));
     edgeNormals = this._edgeNormals[1];
   }
 
@@ -413,12 +413,12 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     ) {
       selectedPlaneIndices.push(2 + i);
       // Store vertices in CCW order.
-      vertices = [
+      vertices.push([
         this._vertices[i % 4],
         this._vertices[(i + 1) % 4],
         this._vertices[4 + ((i + 1) % 4)],
         this._vertices[4 + i],
-      ];
+      ]);
       edgeNormals = this._edgeNormals[2 + i];
     }
   }
@@ -431,42 +431,36 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   // We use the skip variable when the side plane indices are non-consecutive.
   var skip;
   var facePoint;
+  var selectedPlane;
   if (selectedPlaneIndices.length === 1) {
     // Handles Case I
-    var selectedPlane = this._boundingPlanes[selectedPlaneIndices[0]];
+    selectedPlane = this._boundingPlanes[selectedPlaneIndices[0]];
     facePoint = closestPointPolygon(
       Plane.projectPointOntoPlane(selectedPlane, point, facePointScratch),
-      vertices,
+      vertices[0],
       selectedPlane,
       edgeNormals
     );
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length === 2) {
     // Handles Case II
+    var minimumDistance = Number.MAX_VALUE;
+    var distance;
+    for (i = 0; i < 2; i++) {
+      selectedPlane = this._boundingPlanes[selectedPlaneIndices[i]];
+      facePoint = closestPointPolygon(
+        Plane.projectPointOntoPlane(selectedPlane, point, facePointScratch),
+        vertices[i],
+        selectedPlane,
+        this._edgeNormals[selectedPlaneIndices[i]]
+      );
 
-    var edge = [];
-    if (selectedPlaneIndices[0] === 0 || selectedPlaneIndices[0] === 1) {
-      // This handles the case where one of the bottom or top planes is one of the planes
-      // selected.
-      edge = [
-        this._vertices[
-          4 * selectedPlaneIndices[0] + (selectedPlaneIndices[1] - 2)
-        ],
-        this._vertices[
-          4 * selectedPlaneIndices[0] + ((selectedPlaneIndices[1] - 2 + 1) % 4)
-        ],
-      ];
-    } else {
-      // This handles the case where two side planes are selected.
-      skip =
-        selectedPlaneIndices[0] === 2 && selectedPlaneIndices[1] === 5 ? 0 : 1;
-      edge = [
-        this._vertices[(selectedPlaneIndices[0] - 2 + skip) % 4],
-        this._vertices[4 + ((selectedPlaneIndices[0] - 2 + skip) % 4)],
-      ];
+      distance = Cartesian3.distanceSquared(facePoint, point);
+      if (distance < minimumDistance) {
+        minimumDistance = distance;
+      }
     }
-    facePoint = closestPointLineSegment(point, edge[0], edge[1]);
-    return Cartesian3.distance(facePoint, point);
+    return Math.sqrt(minimumDistance);
   } else if (selectedPlaneIndices.length > 3) {
     // Handles Case IV
     facePoint = closestPointPolygon(
@@ -483,7 +477,6 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   }
 
   // Handles Case III
-
   skip = selectedPlaneIndices[1] === 2 && selectedPlaneIndices[2] === 5 ? 0 : 1;
 
   // Vertex is on top plane.

@@ -141,6 +141,19 @@ describe("Scene/TileBoundingS2Cell", function () {
       Math.SQRT2,
       CesiumMath.EPSILON7
     );
+
+    // Test with bottom plane and second side plane. Handles the acute dihedral angle case.
+    camera.position = Cartesian3.midpoint(
+      tileS2Cell._vertices[5],
+      tileS2Cell._vertices[6],
+      edgeMidpointScratch
+    );
+    camera.position.x -= 10000;
+    camera.position.y -= 1;
+    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
+      10000,
+      CesiumMath.EPSILON7
+    );
   });
 
   var vertex2Scratch = new Cartesian3();
