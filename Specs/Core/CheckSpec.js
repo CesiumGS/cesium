@@ -1,4 +1,4 @@
-import { Check } from "../../Source/Cesium.js";
+import { Check, FeatureDetection } from "../../Source/Cesium.js";
 
 describe("Core/Check", function () {
   describe("type checks", function () {
@@ -23,6 +23,43 @@ describe("Core/Check", function () {
       }).toThrowDeveloperError();
       expect(function () {
         Check.typeOf.bool("mockName", function () {
+          return true;
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("Check.typeOf.bigint does not throw when passed a bigint", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      expect(function () {
+        Check.typeOf.bigint("bigint", BigInt()); // eslint-disable-line
+      }).not.toThrowDeveloperError();
+    });
+
+    it("Check.typeOf.bigint throws when passed a non-bigint", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      expect(function () {
+        Check.typeOf.bigint("mockName", {});
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", []);
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", 1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", true);
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", "snth");
+      }).toThrowDeveloperError();
+      expect(function () {
+        Check.typeOf.bigint("mockName", function () {
           return true;
         });
       }).toThrowDeveloperError();
