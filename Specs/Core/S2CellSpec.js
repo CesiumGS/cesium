@@ -224,23 +224,29 @@ describe("Core/S2Cell", function () {
   });
 
   it("gets correct center of cell", function () {
-    expect(S2Cell.fromToken("1").getCenter()).toEqual(
-      Cartesian3.fromDegrees(0, 0)
+    expect(S2Cell.fromToken("1").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(0.0, 0.0),
+      CesiumMath.EPSILON15
     );
-    expect(S2Cell.fromToken("3").getCenter()).toEqual(
-      Cartesian3.fromDegrees(90, 0)
+    expect(S2Cell.fromToken("3").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(90.0, 0.0),
+      CesiumMath.EPSILON15
     );
-    expect(S2Cell.fromToken("5").getCenter()).toEqual(
-      Cartesian3.fromDegrees(-180, 90)
+    expect(S2Cell.fromToken("5").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(-180.0, 90.0),
+      CesiumMath.EPSILON15
     );
-    expect(S2Cell.fromToken("7").getCenter()).toEqual(
-      Cartesian3.fromDegrees(-180, 0)
+    expect(S2Cell.fromToken("7").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(-180.0, 0.0),
+      CesiumMath.EPSILON15
     );
-    expect(S2Cell.fromToken("9").getCenter()).toEqual(
-      Cartesian3.fromDegrees(-90, 0)
+    expect(S2Cell.fromToken("9").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(-90.0, 0.0),
+      CesiumMath.EPSILON15
     );
-    expect(S2Cell.fromToken("b").getCenter()).toEqual(
-      Cartesian3.fromDegrees(0, -90)
+    expect(S2Cell.fromToken("b").getCenter()).toEqualEpsilon(
+      Cartesian3.fromDegrees(0.0, -90.0),
+      CesiumMath.EPSILON15
     );
     expect(S2Cell.fromToken("2ef59bd352b93ac3").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131803774308, -10.490091033598308),
@@ -254,6 +260,10 @@ describe("Core/S2Cell", function () {
 
   it("throws on invalid vertex index", function () {
     var cell = new S2Cell(BigInt("3383782026971709440"));
+    expect(function () {
+      cell.getVertex(-1);
+    }).toThrowDeveloperError();
+
     expect(function () {
       cell.getVertex(4);
     }).toThrowDeveloperError();
