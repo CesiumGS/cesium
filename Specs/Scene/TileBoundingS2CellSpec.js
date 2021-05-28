@@ -67,83 +67,101 @@ describe("Scene/TileBoundingS2Cell", function () {
     expect(tileS2Cell.distanceToCamera(frameState)).toEqual(0.0);
   });
 
-  it("distance to camera for top and bottom planes", function () {
-    var testDistance = 1;
-    var plane = Plane.clone(tileS2Cell._boundingPlanes[0]);
-    plane.distance -= testDistance;
-    camera.position = Plane.projectPointOntoPlane(plane, tileS2Cell.center);
-    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-      testDistance,
-      CesiumMath.EPSILON6
-    );
-
-    plane = Plane.clone(tileS2Cell._boundingPlanes[1]);
-    plane.distance -= testDistance;
-    camera.position = Plane.projectPointOntoPlane(plane, tileS2Cell.center);
-    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-      testDistance,
-      CesiumMath.EPSILON6
-    );
-  });
-
   var edgeOneScratch = new Cartesian3();
   var edgeTwoScratch = new Cartesian3();
-  var planeCenterScratch = new Cartesian3();
-  it("distance to camera for side planes", function () {
-    var testDistance = 100000;
-    for (var i = 0; i < 4; i++) {
-      var plane = Plane.clone(tileS2Cell._boundingPlanes[2 + i]);
+  var faceCenterScratch = new Cartesian3();
+  var topPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0, 0.0);
+  var sidePlane0Scratch = new Plane(Cartesian3.UNIT_X, 0.0, 0.0);
+  // Testing for Case I
+  it("distanceToCamera works when camera is facing only one plane", function () {
+    var testDistance = 100;
 
-      var edgeOne = Cartesian3.midpoint(
-        tileS2Cell._vertices[i % 4],
-        tileS2Cell._vertices[4 + i],
-        edgeOneScratch
-      );
+    // Test against the top plane.
+    var topPlane = Plane.clone(tileS2Cell._boundingPlanes[0], topPlaneScratch);
+    topPlane.distance -= testDistance;
+    camera.position = Plane.projectPointOntoPlane(topPlane, tileS2Cell.center);
+    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
+      testDistance,
+      CesiumMath.EPSILON7
+    );
 
-      var edgeTwo = Cartesian3.midpoint(
-        tileS2Cell._vertices[4 + ((i + 1) % 4)],
-        tileS2Cell._vertices[(i + 1) % 4],
-        edgeTwoScratch
-      );
+    // Test against the first side plane.
+    var sidePlane0 = Plane.clone(
+      tileS2Cell._boundingPlanes[2],
+      sidePlane0Scratch
+    );
+    var edgeOne = Cartesian3.midpoint(
+      tileS2Cell._vertices[0],
+      tileS2Cell._vertices[1],
+      edgeOneScratch
+    );
 
-      var planeCenter = Cartesian3.midpoint(
-        edgeOne,
-        edgeTwo,
-        planeCenterScratch
-      );
+    var edgeTwo = Cartesian3.midpoint(
+      tileS2Cell._vertices[4],
+      tileS2Cell._vertices[5],
+      edgeTwoScratch
+    );
 
-      plane.distance -= testDistance;
-      camera.position = Plane.projectPointOntoPlane(plane, planeCenter);
-      expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-        testDistance,
-        CesiumMath.EPSILON6
-      );
-    }
+    var faceCenter = Cartesian3.midpoint(edgeOne, edgeTwo, faceCenterScratch);
+
+    sidePlane0.distance -= testDistance;
+    camera.position = Plane.projectPointOntoPlane(sidePlane0, faceCenter);
+    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
+      testDistance,
+      CesiumMath.EPSILON7
+    );
   });
 
-  it("distanceToCamera", function () {
-    // On top "edge"
-    camera.position = Plane.projectPointOntoPlane(
-      tileS2Cell._boundingPlanes[0],
-      new Cartesian3(0, 0, Ellipsoid.WGS84.maximumRadius * 2)
+  var edgeMidpointScratch = new Cartesian3();
+  // Testing for Case II
+  it("distanceToCamera works when camera is facing two planes", function () {
+    var testDistance = 5;
+
+    // Test with the top plane and the first side plane.
+    camera.position = Cartesian3.midpoint(
+      tileS2Cell._vertices[0],
+      tileS2Cell._vertices[1],
+      edgeMidpointScratch
     );
+    camera.position.z -= testDistance;
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-      Ellipsoid.WGS84.maximumRadius * 2 - tileS2Cell._vertices[2].z,
-      CesiumMath.EPSILON6
+      testDistance,
+      CesiumMath.EPSILON7
     );
 
-    // On top left vertex
-    camera.position = tileS2Cell._vertices[1];
-    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-      0,
-      CesiumMath.EPSILON6
+    // Test with first and second side planes.
+    camera.position = Cartesian3.midpoint(
+      tileS2Cell._vertices[0],
+      tileS2Cell._vertices[4],
+      edgeMidpointScratch
     );
-
-    // On top right vertex
-    camera.position = tileS2Cell._vertices[2];
+    camera.position.x -= 1;
+    camera.position.z -= 1;
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
-      0,
-      CesiumMath.EPSILON6
+      Math.SQRT2,
+      CesiumMath.EPSILON7
+    );
+  });
+
+  var vertex2Scratch = new Cartesian3();
+  // Testing for Case III
+  it("distanceToCamera works when camera is facing three planes", function () {
+    camera.position = Cartesian3.clone(tileS2Cell._vertices[2], vertex2Scratch);
+    camera.position.x += 1;
+    camera.position.y += 1;
+    camera.position.z += 1;
+    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
+      Math.sqrt(3),
+      CesiumMath.EPSILON7
+    );
+  });
+
+  // Testing for Case IV
+  it("distanceToCamera works when camera is facing more than three planes", function () {
+    camera.position = new Cartesian3(-Ellipsoid.WGS84.maximumRadius, 0, 0);
+    expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
+      Ellipsoid.WGS84.maximumRadius + tileS2Cell._boundingPlanes[1].distance,
+      CesiumMath.EPSILON7
     );
   });
 
@@ -156,11 +174,6 @@ describe("Scene/TileBoundingS2Cell", function () {
     expect(function () {
       return tileS2Cell.createDebugVolume();
     }).toThrowDeveloperError();
-  });
-
-  it("can create a debug volume", function () {
-    var debugVolume = tileS2Cell.createDebugVolume(Color.BLUE);
-    expect(debugVolume).toBeDefined();
   });
 
   it("intersectPlane throws when plane is undefined", function () {

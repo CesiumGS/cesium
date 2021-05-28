@@ -65,21 +65,33 @@ function TileBoundingS2Cell(options) {
 
   // Pre-compute edge normals to speed up the point-polygon distance check in distanceToCamera.
   this._edgeNormals = new Array(6);
+
   this._edgeNormals[0] = computeEdgeNormals(
     boundingPlanes[0],
     vertices.slice(0, 4)
   );
+  var i;
+  // Based on the way the edge normals are computed, the edge normals all point away from the "face"
+  // of the polyhedron they surround, except the plane for the top plane. Therefore, we negate the normals
+  // for the top plane.
+  for (i = 0; i < 4; i++) {
+    this._edgeNormals[0][i] = Cartesian3.negate(
+      this._edgeNormals[0][i],
+      this._edgeNormals[0][i]
+    );
+  }
+
   this._edgeNormals[1] = computeEdgeNormals(
     boundingPlanes[1],
     vertices.slice(4, 8)
   );
-  var i;
   for (i = 0; i < 4; i++) {
+    // For each plane, iterate through the vertices in CCW order.
     this._edgeNormals[2 + i] = computeEdgeNormals(boundingPlanes[2 + i], [
       vertices[i % 4],
-      vertices[4 + i],
-      vertices[4 + ((i + 1) % 4)],
       vertices[(i + 1) % 4],
+      vertices[4 + ((i + 1) % 4)],
+      vertices[4 + i],
     ]);
   }
 
@@ -148,9 +160,11 @@ function computeBoundingPlanes(
   // - Translate top plane by the distance
   var maxDistance = 0;
   var i;
+  var vertices = [];
   var vertex, vertexCartographic;
   for (i = 0; i < 4; i++) {
     vertex = s2Cell.getVertex(i);
+    vertices[i] = vertex;
     vertexCartographic = ellipsoid.cartesianToCartographic(
       vertex,
       vertexCartographicScratch
@@ -174,15 +188,14 @@ function computeBoundingPlanes(
   planes[1] = bottomPlane;
 
   // Compute side planes.
-  // - Iterate through vertices
+  // - Iterate through vertices (in CCW order, by default)
   //   - Get a vertex and another vertex adjacent to it.
-  //   - Compute midpoint of geodesic between two vertices.
-  //   - Compute geodetic surface normal at center point.
+  //   - Compute geodetic surface normal at one vertex.
   //   - Compute vector between vertices.
   //   - Compute normal of side plane. (cross product of top dir and side dir)
   for (i = 0; i < 4; i++) {
-    vertex = s2Cell.getVertex(i);
-    var adjacentVertex = s2Cell.getVertex((i + 1) % 4);
+    vertex = vertices[i];
+    var adjacentVertex = vertices[(i + 1) % 4];
     var geodeticNormal = ellipsoid.geodeticSurfaceNormal(
       vertex,
       vertexGeodeticNormalScratch
@@ -209,6 +222,7 @@ var f0Scratch = new Cartesian3();
 var f1Scratch = new Cartesian3();
 var f2Scratch = new Cartesian3();
 var sScratch = new Cartesian3();
+var matrixScratch = new Matrix3();
 /**
  * Computes intersection of 3 planes.
  * @private
@@ -238,23 +252,18 @@ function computeIntersection(p0, p1, p2) {
     f2Scratch
   );
 
-  var matrix = new Matrix3(
-    n0Scratch.x,
-    n0Scratch.y,
-    n0Scratch.z,
-    n1Scratch.x,
-    n1Scratch.y,
-    n1Scratch.z,
-    n2Scratch.x,
-    n2Scratch.y,
-    n2Scratch.z
-  );
-  var determinant = Matrix3.determinant(matrix);
-  sScratch = Cartesian3.add(
-    Cartesian3.add(f0Scratch, f1Scratch, sScratch),
-    f2Scratch,
-    sScratch
-  );
+  matrixScratch[0] = n0Scratch.x;
+  matrixScratch[1] = n1Scratch.x;
+  matrixScratch[2] = n2Scratch.x;
+  matrixScratch[3] = n0Scratch.y;
+  matrixScratch[4] = n1Scratch.y;
+  matrixScratch[5] = n2Scratch.y;
+  matrixScratch[6] = n0Scratch.z;
+  matrixScratch[7] = n1Scratch.z;
+  matrixScratch[8] = n2Scratch.z;
+  var determinant = Matrix3.determinant(matrixScratch);
+  sScratch = Cartesian3.add(f0Scratch, f1Scratch, sScratch);
+  sScratch = Cartesian3.add(sScratch, f2Scratch, sScratch);
   return new Cartesian3(
     sScratch.x / determinant,
     sScratch.y / determinant,
@@ -294,8 +303,8 @@ function computeEdgeNormals(plane, vertices) {
   var edgeNormals = [];
   for (var i = 0; i < 4; i++) {
     edgeScratch = Cartesian3.subtract(
-      vertices[i],
       vertices[(i + 1) % 4],
+      vertices[i],
       edgeScratch
     );
     edgeNormalScratch = Cartesian3.cross(
@@ -347,7 +356,7 @@ var facePointScratch = new Cartesian3();
  * plane. A plane qualifies for a distance check if the point being tested against is in the half-space in the direction
  * of the normal i.e. if the signed distance of the point from the plane is greater than 0.
  *
- * There are 4 possible cases for a point:
+ * There are 4 possible cases for a point if it is outside the polyhedron:
  *
  *   \     X     /     X \           /       \           /       \           /
  * ---\---------/---   ---\---------/---   ---X---------/---   ---\---------/---
@@ -384,30 +393,16 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   var selectedPlaneIndices = [];
   var vertices;
   var edgeNormals;
-  var rotation;
 
-  if (
-    CesiumMath.greaterThan(
-      Plane.getPointDistance(this._boundingPlanes[0], point),
-      0,
-      CesiumMath.EPSILON14
-    )
-  ) {
+  // PERFORMANCE_IDEA: Look into removing any unnecessary allocations here.
+  if (Plane.getPointDistance(this._boundingPlanes[0], point) > 0) {
     selectedPlaneIndices.push(0);
     vertices = this._vertices.slice(0, 4);
     edgeNormals = this._edgeNormals[0];
-    rotation = -1;
-  } else if (
-    CesiumMath.greaterThan(
-      Plane.getPointDistance(this._boundingPlanes[1], point),
-      0,
-      CesiumMath.EPSILON14
-    )
-  ) {
+  } else if (Plane.getPointDistance(this._boundingPlanes[1], point) > 0) {
     selectedPlaneIndices.push(1);
     vertices = this._vertices.slice(4, 8);
     edgeNormals = this._edgeNormals[1];
-    rotation = 1;
   }
 
   var i;
@@ -415,21 +410,17 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   for (i = 0; i < 4; i++) {
     sidePlaneIndex = 2 + i;
     if (
-      CesiumMath.greaterThan(
-        Plane.getPointDistance(this._boundingPlanes[sidePlaneIndex], point),
-        0,
-        CesiumMath.EPSILON14
-      )
+      Plane.getPointDistance(this._boundingPlanes[sidePlaneIndex], point) > 0
     ) {
       selectedPlaneIndices.push(2 + i);
+      // Store vertices in CCW order.
       vertices = [
         this._vertices[i % 4],
-        this._vertices[4 + i],
-        this._vertices[4 + ((i + 1) % 4)],
         this._vertices[(i + 1) % 4],
+        this._vertices[4 + ((i + 1) % 4)],
+        this._vertices[4 + i],
       ];
       edgeNormals = this._edgeNormals[2 + i];
-      rotation = -1;
     }
   }
 
@@ -438,64 +429,76 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     return 0.0;
   }
 
+  // We use the skip variable when the side plane indices are non-consecutive.
+  var skip;
   var facePoint;
   if (selectedPlaneIndices.length === 1) {
+    // Handles Case I
     var selectedPlane = this._boundingPlanes[selectedPlaneIndices[0]];
     facePoint = closestPointPolygon(
       Plane.projectPointOntoPlane(selectedPlane, point, facePointScratch),
       vertices,
       selectedPlane,
-      edgeNormals,
-      rotation
+      edgeNormals
     );
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length === 2) {
-    // Find the vertices shared by the two planes.
+    // Handles Case II
+
     var edge = [];
-    if (selectedPlaneIndices[0] === 0) {
+    if (selectedPlaneIndices[0] === 0 || selectedPlaneIndices[0] === 1) {
+      // This handles the case where one of the bottom or top planes is one of the planes
+      // selected.
       edge = [
-        this._vertices[(selectedPlaneIndices[1] + 3) % 4],
-        this._vertices[(selectedPlaneIndices[1] + 2) % 4],
-      ];
-    } else if (selectedPlaneIndices[0] === 1) {
-      edge = [
-        this._vertices[selectedPlaneIndices[1] % 4],
-        this._vertices[(selectedPlaneIndices[1] + 1) % 4],
+        this._vertices[
+          4 * selectedPlaneIndices[0] + (selectedPlaneIndices[1] - 2)
+        ],
+        this._vertices[
+          4 * selectedPlaneIndices[0] + ((selectedPlaneIndices[1] - 2 + 1) % 4)
+        ],
       ];
     } else {
+      // This handles the case where two side planes are selected.
+      skip =
+        selectedPlaneIndices[0] === 2 && selectedPlaneIndices[1] === 5 ? 0 : 1;
       edge = [
-        this._vertices[4 + ((selectedPlaneIndices[0] + 3) % 4)],
-        this._vertices[(selectedPlaneIndices[0] + 3) % 4],
+        this._vertices[(selectedPlaneIndices[0] - 2 + skip) % 4],
+        this._vertices[4 + ((selectedPlaneIndices[0] - 2 + skip) % 4)],
       ];
     }
     facePoint = closestPointLineSegment(point, edge[0], edge[1]);
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length > 3) {
+    // Handles Case IV
     facePoint = closestPointPolygon(
       Plane.projectPointOntoPlane(
-        this._boundingPlanes[0],
+        this._boundingPlanes[1],
         point,
         facePointScratch
       ),
-      vertices,
-      this._boundingPlanes[0],
-      this._edgeNormals[0],
-      1
+      this._vertices.slice(4, 8),
+      this._boundingPlanes[1],
+      this._edgeNormals[1]
     );
     return Cartesian3.distance(facePoint, point);
   }
+
+  // Handles Case III
+
+  skip = selectedPlaneIndices[1] === 2 && selectedPlaneIndices[2] === 5 ? 0 : 1;
+
   // Vertex is on top plane.
   if (selectedPlaneIndices[0] === 0) {
     return Cartesian3.distance(
       point,
-      this._vertices[selectedPlaneIndices[1] % 4]
+      this._vertices[(selectedPlaneIndices[1] - 2 + skip) % 4]
     );
   }
 
   // Vertex is on bottom plane.
   return Cartesian3.distance(
     point,
-    this._vertices[4 + ((selectedPlaneIndices[0] + 1) % 4)]
+    this._vertices[4 + ((selectedPlaneIndices[1] - 2 + skip) % 4)]
   );
 };
 
@@ -533,7 +536,7 @@ var edgePlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
  * a point. The test point and the polygon are all on the same plane.
  * @private
  */
-function closestPointPolygon(p, vertices, plane, edgeNormals, dir) {
+function closestPointPolygon(p, vertices, plane, edgeNormals) {
   var minDistance = Number.MAX_VALUE;
   var distance;
   var closestPoint;
@@ -547,7 +550,9 @@ function closestPointPolygon(p, vertices, plane, edgeNormals, dir) {
     );
     var edgePlaneDistance = Plane.getPointDistance(edgePlane, p);
 
-    if (dir * edgePlaneDistance > 0) {
+    // Skip checking against the edge if the point is not in the half-space that the
+    // edgePlane's normal points towards i.e. if the edgePlane is facing away from the point.
+    if (edgePlaneDistance < 0) {
       continue;
     }
 
