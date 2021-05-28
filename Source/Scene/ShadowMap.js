@@ -69,7 +69,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
  * @param {Number} [options.darkness=0.3] The shadow darkness.
  * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
- * @param {Boolean} [options.fadingEnabled=true] Whether Shadows start to fade out once the light gets closer to the horizon.
+ * @param {Boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
  *
  * @exception {DeveloperError} Only one or four cascades are supported.
  *
