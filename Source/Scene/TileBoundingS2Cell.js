@@ -445,7 +445,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   } else if (selectedPlaneIndices.length === 2) {
     // Handles Case II
     // Since we are on the ellipsoid, the dihedral angle between a top plane and a side plane
-    // will always acute, so we can do a faster check there.
+    // will always be acute, so we can do a faster check there.
     if (selectedPlaneIndices[0] === 0) {
       var edge = [
         this._vertices[
