@@ -491,21 +491,6 @@ function deriveChildTile(
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
 
-  if (
-    has3DTilesExtension(
-      implicitTileset.boundingVolume,
-      "3DTILES_bounding_volume_S2"
-    )
-  ) {
-    if (defaultValue(parentIsPlaceholderTile, false)) {
-      childTile.s2Cell = parentTile.s2Cell;
-    } else {
-      childTile.s2Cell = S2Cell.fromToken(
-        boundingVolume.extensions["3DTILES_bounding_volume_S2"].token
-      );
-    }
-  }
-
   return childTile;
 }
 
@@ -638,17 +623,28 @@ function deriveBoundingVolumeS2(
   Check.typeOf.number("childIndex", childIndex);
   //>>includeEnd('debug');
 
+  var boundingVolumeS2;
+
   // Handle the placeholder tile case.
   if (parentIsPlaceholderTile) {
-    return clone(implicitTileset.boundingVolume, true);
+    boundingVolumeS2 = parentTile._boundingVolume;
+    return {
+      extensions: {
+        "3DTILES_bounding_volume_S2": {
+          token: S2Cell.getTokenFromId(boundingVolumeS2.s2Cell._cellId),
+          minimumHeight: boundingVolumeS2.minimumHeight,
+          maximumHeight: boundingVolumeS2.maximumHeight,
+        },
+      },
+    };
   }
-  var boundingVolumeS2 = parentTile._boundingVolume;
+  boundingVolumeS2 = parentTile._boundingVolume;
 
   // Decode Morton index. The modulus 4 ensures that it works for both quadtrees and octrees.
   var childCoords = MortonOrder.decode2D(childIndex % 4);
   // Encode Hilbert index.
   var hilbertIndex = HilbertOrder.encode2D(1, childCoords[0], childCoords[1]);
-  var childCell = parentTile.s2Cell.getChild(hilbertIndex);
+  var childCell = boundingVolumeS2.s2Cell.getChild(hilbertIndex);
 
   var minHeight, maxHeight;
   if (implicitTileset.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
@@ -836,7 +832,10 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
 
   var childBoundingVolume = deriveBoundingVolume(
     implicitTileset,
-    implicitCoordinates
+    implicitCoordinates,
+    childIndex,
+    false,
+    parentTile
   );
   var childGeometricError =
     implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);

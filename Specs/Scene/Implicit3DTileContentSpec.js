@@ -16,8 +16,8 @@ import {
   GroupMetadata,
   Multiple3DTileContent,
   Resource,
-  S2Cell,
   TileBoundingSphere,
+  TileBoundingS2Cell,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -577,6 +577,9 @@ describe(
         minimumHeight: 0,
         maximumHeight: 10,
       };
+      var simpleBoundingVolumeS2Cell = new TileBoundingS2Cell(
+        simpleBoundingVolumeS2
+      );
       var implicitTilesetS2 = {
         boundingVolume: {
           extensions: {
@@ -611,18 +614,22 @@ describe(
       });
 
       it("returns implicit tileset boundingVolume if parentIsPlaceholderTile is true", function () {
-        var result = deriveBoundingVolumeS2(implicitTilesetS2, {}, true, 0);
+        var placeholderTile = {
+          _boundingVolume: simpleBoundingVolumeS2Cell,
+        };
+        var result = deriveBoundingVolumeS2(
+          implicitTilesetS2,
+          placeholderTile,
+          true,
+          0
+        );
         expect(result).toEqual(implicitTilesetS2.boundingVolume);
         expect(result).not.toBe(implicitTilesetS2.boundingVolume);
       });
 
       it("subdivides correctly using QUADTREE", function () {
         var parentTile = {
-          s2Cell: S2Cell.fromToken(simpleBoundingVolumeS2.token),
-          _boundingVolume:
-            implicitTilesetS2.boundingVolume.extensions[
-              "3DTILES_bounding_volume_S2"
-            ],
+          _boundingVolume: simpleBoundingVolumeS2Cell,
         };
         var expected = {
           token: "04",
@@ -645,11 +652,7 @@ describe(
       it("subdivides correctly using OCTREE", function () {
         implicitTilesetS2.subdivisionScheme = ImplicitSubdivisionScheme.OCTREE;
         var parentTile = {
-          s2Cell: S2Cell.fromToken(simpleBoundingVolumeS2.token),
-          _boundingVolume:
-            implicitTilesetS2.boundingVolume.extensions[
-              "3DTILES_bounding_volume_S2"
-            ],
+          _boundingVolume: simpleBoundingVolumeS2Cell,
         };
         var expected0 = {
           token: "04",

@@ -18,7 +18,6 @@ import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import S2Cell from "../Core/S2Cell.js";
 import Transforms from "../Core/Transforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
@@ -1857,13 +1856,6 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
     tile.implicitTileset = implicitTileset;
     tile.implicitCoordinates = rootCoordinates;
-    if (
-      has3DTilesExtension(tileJson.boundingVolume, "3DTILES_bounding_volume_S2")
-    ) {
-      var boundingVolumeS2 =
-        tileJson.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
-      tile.s2Cell = S2Cell.fromToken(boundingVolumeS2.token);
-    }
     return tile;
   }
 
