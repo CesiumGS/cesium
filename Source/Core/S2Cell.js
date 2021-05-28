@@ -451,6 +451,10 @@ function convertCellIdToFaceSiTi(cellId) {
   var i = faceIJ[1];
   var j = faceIJ[2];
 
+  // We're resolving the center when we do the coordinate transform here. For the leaf cells, we're adding half the cell size
+  // (remember that this space has 31 levels - which allows us to pick center and edges of the leaf cells). For non leaf cells,
+  // we get one of either two cells diagonal to the cell center. The correction is used to make sure we pick the leaf cell edges
+  // that represent the parent cell center.
   var isLeaf = S2Cell.getLevel(cellId) === 30;
   var shouldCorrect =
     !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1); // eslint-disable-line
