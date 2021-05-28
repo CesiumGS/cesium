@@ -9,6 +9,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import AlphaMode from "./AlphaMode.js";
+import AttributeType from "./AttributeType.js";
 import ColorBlendMode from "./ColorBlendMode.js";
 import CustomShader from "./CustomShader.js";
 import InputSemantic from "./InputSemantic.js";
@@ -184,21 +185,112 @@ function checkRequiredAttributes(primitive, customShader) {
   }
 }
 
+function getAttributeShaderName(attribute, attributeNameMap) {
+  if (defined(attribute.semantic)) {
+    return VertexAttributeSemantic.getVariableName(
+      attribute.semantic,
+      attribute.setIndex
+    );
+  }
+
+  return defaultValue(attributeNameMap[attribute.name], attribute.name);
+}
+
+function capitalize(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function addOctEncodedAttribute(attribute, attributeNameMap, shaderBuilder) {
+  var name = getAttributeShaderName(attribute, attributeNameMap);
+  var quantization = attribute.quantization;
+  var quantizationType = quantization.type;
+  var quantizationComponentDatatype = quantization.componentDatatype;
+  var quantizationShaderType = AttributeType.getShaderType(
+    quantizationType,
+    quantizationComponentDatatype
+  );
+
+  var type = attribute.type;
+  var componentDatatype = attribute.componentDatatype;
+  var shaderType = AttributeType.getShaderType(type, componentDatatype);
+
+  var attributeDefinition =
+    "attribute " + quantizationShaderType + " " + name + ";\n";
+  var uniformName = "u_" + name + "OctEncodedRange";
+  var uniformDefinition = "uniform float " + uniformName + ";\n";
+  var swizzle = quantization.octEncodedZXY ? "zxy" : "";
+
+  // vec3 readNormal(in vec2 normal)
+  // {
+  //     return czm_octDecode(normal, u_normalOctEncodedRange).zxy;
+  // }
+  var readFunction =
+    shaderType +
+    " read" +
+    capitalize(name) +
+    "(in " +
+    quantizationShaderType +
+    " " +
+    name +
+    ")\n{\n    return czm_octDecode(" +
+    name +
+    ", " +
+    uniformName +
+    ")" +
+    swizzle +
+    ";\n}\n";
+
+  shaderBuilder.uniforms += uniformDefinition;
+  shaderBuilder.attributes += attributeDefinition;
+  shaderBuilder.functions += readFunction;
+  // shaderBuilder.attributes
+  // shaderBuilder.functions +=
+}
+
+function addQuantizedAttribute(attribute, name, shaderBuilder) {
+  var quantization = attribute.quantization;
+  var type = quantization.type;
+  var componentDatatype = quantization.componentDatatype;
+
+  var shaderType = AttributeType.getShaderType(type, componentDatatype);
+  shaderBuilder.attributes += "attribute " + shaderType + " " + name + ";\n";
+
+  shaderBuilder.uniforms += "uniform float u_" + name + ";\n";
+}
+
+// function getAttributes(attributes, attributeNameMap) {
+//   var attributeInput = "";
+//   var attributeUniforms = "";
+//   var attributeGetters = "";
+
+//   var attributesLength = attributes.length;
+//   for (var i = 0; i < attributesLength; ++i) {
+//     var attribute = attributes[i];
+//     var name = defaultValue(attributeNameMap[attribute.name], attribute.name);
+//     var type = attribute.type;
+//     var componentDatatype = attribute.componentDatatype;
+
+//     var quantization = attribute.quantization;
+//     if (defined(quantization)) {
+//       // TODO: tangents
+//       type = quantization.type;
+//       componentDatatype = quantization.componentDatatype;
+//       if (quantization.octEncoded) {
+//       } else {
+//         attributeUniforms +=
+//           "uniform " + type + " u_" + name + "DequantizationOffset;";
+//         attributeUniforms +=
+//           "uniform " + type + " u_" + name + "DequantizationScale;";
+//       }
+//     }
+
+//   }
+// }
+
 function buildShader(primitive, attributes, attributeNameMap) {
   var attributesLength = attributes.length;
   for (var i = 0; i < attributesLength; ++i) {
     var attribute = attributes[i];
-    var attributeName = attribute.name;
-    var attributeName = defaultValue(
-      attributeNameMap[attribute.name],
-      attribute.name
-    );
-    if (defined(attribute.semantic)) {
-      attributeName = VertexAttributeSemantic.getVariableName(
-        attribute.semantic,
-        attribute.setIndex
-      );
-    }
   }
 }
 
