@@ -142,7 +142,7 @@ describe("Scene/TileBoundingS2Cell", function () {
       CesiumMath.EPSILON7
     );
 
-    // Test with bottom plane and second side plane. Handles the acute dihedral angle case.
+    // Test with bottom plane and second side plane. Handles the obtuse dihedral angle case.
     camera.position = Cartesian3.midpoint(
       tileS2Cell._vertices[5],
       tileS2Cell._vertices[6],
