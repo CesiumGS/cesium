@@ -115,6 +115,33 @@ describe("Scene/ImplicitTileset", function () {
     expect(implicitTileset.contentUriTemplates).toEqual([]);
   });
 
+  it("accepts tilesets with 3DTILES_bounding_volume_S2", function () {
+    var tileJson = clone(implicitTileJson, true);
+    tileJson.boundingVolume = {
+      extensions: {
+        "3DTILES_bounding_volume_S2": {
+          token: "1",
+          minimumHeight: 0,
+          maximumHeight: 100,
+        },
+      },
+    };
+    var tileJsonS2 =
+      tileJson.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
+
+    var metadataSchema;
+    var implicitTileset = new ImplicitTileset(
+      baseResource,
+      tileJson,
+      metadataSchema
+    );
+    var implicitTilesetS2 =
+      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
+    expect(implicitTilesetS2.token).toEqual(tileJsonS2.token);
+    expect(implicitTilesetS2.minimumHeight).toEqual(tileJsonS2.minimumHeight);
+    expect(implicitTilesetS2.maximumHeight).toEqual(tileJsonS2.maximumHeight);
+  });
+
   it("rejects bounding spheres", function () {
     var sphereJson = {
       boundingVolume: {

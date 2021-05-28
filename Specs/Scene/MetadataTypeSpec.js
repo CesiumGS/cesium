@@ -353,4 +353,27 @@ describe("Scene/MetadataType", function () {
       MetadataType.unnormalize(10.0, MetadataType.STRING);
     }).toThrowDeveloperError();
   });
+
+  it("getSizeInBytes", function () {
+    expect(MetadataType.getSizeInBytes(MetadataType.INT8)).toBe(1);
+    expect(MetadataType.getSizeInBytes(MetadataType.UINT8)).toBe(1);
+    expect(MetadataType.getSizeInBytes(MetadataType.INT16)).toBe(2);
+    expect(MetadataType.getSizeInBytes(MetadataType.UINT16)).toBe(2);
+    expect(MetadataType.getSizeInBytes(MetadataType.INT32)).toBe(4);
+    expect(MetadataType.getSizeInBytes(MetadataType.UINT32)).toBe(4);
+    expect(MetadataType.getSizeInBytes(MetadataType.FLOAT32)).toBe(4);
+    expect(MetadataType.getSizeInBytes(MetadataType.FLOAT64)).toBe(8);
+  });
+
+  it("getSizeInBytes throws without type", function () {
+    expect(function () {
+      MetadataType.getSizeInBytes();
+    }).toThrowDeveloperError();
+  });
+
+  it("getSizeInBytes throws if type is not a numeric type", function () {
+    expect(function () {
+      MetadataType.getSizeInBytes(MetadataType.STRING);
+    }).toThrowDeveloperError();
+  });
 });
