@@ -393,7 +393,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   var vertices = [];
   var edgeNormals;
 
-  // PERFORMANCE_IDEA: Look into removing any unnecessary allocations here.
+  // PERFORMANCE_IDEA: Look into removing any unnecessary allocations here. Pre-compute dihedral angles.
   if (Plane.getPointDistance(this._boundingPlanes[0], point) > 0) {
     selectedPlaneIndices.push(0);
     vertices.push(this._vertices.slice(0, 4));
@@ -444,6 +444,20 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length === 2) {
     // Handles Case II
+    // Since we are on the ellipsoid, the dihedral angle between a top plane and a side plane
+    // will always acute, so we can do a faster check there.
+    if (selectedPlaneIndices[0] === 0) {
+      var edge = [
+        this._vertices[
+          4 * selectedPlaneIndices[0] + (selectedPlaneIndices[1] - 2)
+        ],
+        this._vertices[
+          4 * selectedPlaneIndices[0] + ((selectedPlaneIndices[1] - 2 + 1) % 4)
+        ],
+      ];
+      facePoint = closestPointLineSegment(point, edge[0], edge[1]);
+      return Cartesian3.distance(facePoint, point);
+    }
     var minimumDistance = Number.MAX_VALUE;
     var distance;
     for (i = 0; i < 2; i++) {
