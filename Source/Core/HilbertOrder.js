@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
 var HilbertOrder = {};
 
 /**
- * Computes the Hilbert index from 2D coordinates.
+ * Computes the Hilbert index at the given level from 2D coordinates.
  *
  * @param {Number} level The level of the curve
  * @param {Number} x The X coordinate
@@ -51,11 +51,11 @@ HilbertOrder.encode2D = function (level, x, y) {
 };
 
 /**
- * Computes the Hilbert index from 2D coordinates.
+ * Computes the 2D coordinates from the Hilbert index at the given level.
  *
  * @param {Number} level The level of the curve
  * @param {Number} index The Hilbert index
- * @returns {Number[]} An array containing the 2D coordinates corresponding to the Morton index.
+ * @returns {Number[]} An array containing the 2D coordinates ([x, y]) corresponding to the Morton index.
  * @private
  */
 HilbertOrder.decode2D = function (level, index) {
