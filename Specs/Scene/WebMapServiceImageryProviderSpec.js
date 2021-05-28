@@ -1867,4 +1867,62 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         });
     });
   });
+
+  it("uses featureurl in parameters for getFeatureInfo", function () {
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      parameters: {
+        featureurl: "made/up/wms/feature/server",
+      },
+    });
+
+    Resource._Implementations.loadWithXhr = function (
+      featureurl,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      expect(featureurl).toContain("GetFeatureInfo");
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/WMS/GetFeatureInfo-GeoJSON.json",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      );
+    };
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        var uri = new Uri(request.url);
+        var params = queryToObject(uri.query);
+        expect(params.featureurl).toEqual("made/up/wms/feature/server");
+      });
+      return provider
+        .pickFeatures(0, 0, 0, 0.5, 0.5)
+        .then(function (pickResult) {
+          expect(pickResult.length).toBe(1);
+
+          var firstResult = pickResult[0];
+          expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+          expect(firstResult.name).toBe("TOP TANK");
+          expect(firstResult.description).toContain("GEOSCIENCE AUSTRALIA");
+          expect(firstResult.position).toEqual(
+            Cartographic.fromDegrees(145.91299, -30.19445)
+          );
+        });
+    });
+  });
 });
