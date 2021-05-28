@@ -5,6 +5,10 @@ import { Math as CesiumMath } from "../../Source/Cesium.js";
 import S2Cell from "../../Source/Core/S2Cell.js";
 
 describe("Core/S2Cell", function () {
+  if (!FeatureDetection.supportsBigInt()) {
+    return;
+  }
+
   it("constructor", function () {
     var cell = new S2Cell(BigInt("3458764513820540928"));
     expect(cell._cellId).toEqual(BigInt("3458764513820540928"));
@@ -256,10 +260,6 @@ describe("Core/S2Cell", function () {
 
   it("gets correct vertices of cell", function () {
     var cell = S2Cell.fromToken("2ef59bd352b93ac3");
-    Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977);
-    Cartesian3.fromDegrees(105.64131808248949, -10.490091072946313);
-    Cartesian3.fromDegrees(105.64131808248948, -10.490090989764633);
-    Cartesian3.fromDegrees(105.64131799299665, -10.4900909942503);
     expect(cell.getVertex(0)).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977),
       CesiumMath.EPSILON15
