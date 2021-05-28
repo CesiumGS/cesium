@@ -1,8 +1,9 @@
 /* eslint-disable new-cap */
 /* eslint-disable no-undef */
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import S2Cell from "../../Source/Core/S2Cell.js";
+import { S2Cell } from "../../Source/Cesium.js";
 
 describe("Core/S2Cell", function () {
   if (!FeatureDetection.supportsBigInt()) {
