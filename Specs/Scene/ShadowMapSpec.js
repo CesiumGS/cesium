@@ -941,7 +941,7 @@ describe(
       });
     });
 
-    it("disable shadows fade out", function () {
+    it("disables shadow fading", function () {
       box.show = true;
       floor.show = true;
 
