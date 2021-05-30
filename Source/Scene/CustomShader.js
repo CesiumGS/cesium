@@ -1,3 +1,4 @@
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -43,6 +44,9 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 // TODO: require frag shader if VTF is not supported and properties are stored in textures (how can you know this from this file)
 // TODO: highp
 // TODO: support tile/group/content metadata with more than 4 elements in array because they're uniforms
+// TODO: how to make feature ids available in shader if attribute is implicit
+// TODO: this goes against the Point Cloud spec which says that POSITION stores the position before the quantization offset is applied
+// TODO: quantization uniforms should always match the type. e.g. for tangents it should be a Cartesian3 - for color it should be a Cartesian3 or Cartesian4
 
 function CustomShader() {
   this.inputs = [];
@@ -149,10 +153,7 @@ function getFinalShaderString(
   var inputStruct = getStructDefinition("Input", inputDefinitions);
 
   var attributeDefinitions = attributes.map(function (attribute) {
-    var type = AttributeType.getShaderType(
-      attribute.type,
-      attribute.componentDatatype
-    );
+    var type = AttributeType.getShaderType(attribute.type);
     var name = defaultValue(attributeNameMap[attribute.name], attribute.name);
     return type + " " + name;
   });

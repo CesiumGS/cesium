@@ -2,6 +2,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -185,116 +186,467 @@ function checkRequiredAttributes(primitive, customShader) {
   }
 }
 
-function getAttributeShaderName(attribute, attributeNameMap) {
-  if (defined(attribute.semantic)) {
-    return VertexAttributeSemantic.getVariableName(
-      attribute.semantic,
-      attribute.setIndex
-    );
-  }
-
-  return defaultValue(attributeNameMap[attribute.name], attribute.name);
-}
-
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function addOctEncodedAttribute(attribute, attributeNameMap, shaderBuilder) {
-  var name = getAttributeShaderName(attribute, attributeNameMap);
-  var quantization = attribute.quantization;
-  var quantizationType = quantization.type;
-  var quantizationComponentDatatype = quantization.componentDatatype;
-  var quantizationShaderType = AttributeType.getShaderType(
-    quantizationType,
-    quantizationComponentDatatype
-  );
+function getAttributeDefinitionName(attributeName) {
+  return "a_" + attributeName;
+}
+
+function getAttributeDefinition(shaderType, attributeDefinitionName) {
+  return "attribute " + shaderType + " " + attributeDefinitionName + ";\n";
+}
+
+function getUniformName(name, suffix) {
+  return "u_" + name + suffix;
+}
+
+function getUniformDefinition(shaderType, uniformName) {
+  return "uniform " + shaderType + " " + uniformName + ";\n";
+}
+
+function getShaderType(attribute) {
+  var semantic = attribute.semantic;
+  if (defined(semantic)) {
+    return VertexAttributeSemantic.getShaderType(semantic);
+  }
 
   var type = attribute.type;
   var componentDatatype = attribute.componentDatatype;
-  var shaderType = AttributeType.getShaderType(type, componentDatatype);
 
-  var attributeDefinition =
-    "attribute " + quantizationShaderType + " " + name + ";\n";
-  var uniformName = "u_" + name + "OctEncodedRange";
-  var uniformDefinition = "uniform float " + uniformName + ";\n";
-  var swizzle = quantization.octEncodedZXY ? "zxy" : "";
+  if (type === AttributeType.SCALAR) {
+    switch (componentDatatype) {
+      case ComponentDatatype.BYTE:
+      case ComponentDatatype.UNSIGNED_BYTE:
+      case ComponentDatatype.SHORT:
+      case ComponentDatatype.UNSIGNED_SHORT:
+        return "int";
+      case ComponentDatatype.FLOAT:
+        return "float";
+    }
+  }
 
-  // vec3 readNormal(in vec2 normal)
-  // {
-  //     return czm_octDecode(normal, u_normalOctEncodedRange).zxy;
-  // }
-  var readFunction =
-    shaderType +
-    " read" +
-    capitalize(name) +
-    "(in " +
-    quantizationShaderType +
-    " " +
-    name +
-    ")\n{\n    return czm_octDecode(" +
-    name +
-    ", " +
-    uniformName +
-    ")" +
-    swizzle +
-    ";\n}\n";
+  if (type === AttributeType.MAT2) {
+    return "mat2";
+  }
+  if (type === AttributeType.MAT3) {
+    return "mat3";
+  }
+  if (type === AttributeType.MAT4) {
+    return "mat4";
+  }
 
-  shaderBuilder.uniforms += uniformDefinition;
-  shaderBuilder.attributes += attributeDefinition;
-  shaderBuilder.functions += readFunction;
-  // shaderBuilder.attributes
-  // shaderBuilder.functions +=
-}
+  var vectorPrefix = "";
 
-function addQuantizedAttribute(attribute, name, shaderBuilder) {
-  var quantization = attribute.quantization;
-  var type = quantization.type;
-  var componentDatatype = quantization.componentDatatype;
+  if (
+    componentDatatype === ComponentDatatype.BYTE ||
+    componentDatatype === ComponentDatatype.UNSIGNED_BYTE ||
+    componentDatatype === ComponentDatatype.SHORT ||
+    componentDatatype === ComponentDatatype.UNSIGNED_SHORT
+  ) {
+    vectorPrefix = "i";
+  }
 
-  var shaderType = AttributeType.getShaderType(type, componentDatatype);
-  shaderBuilder.attributes += "attribute " + shaderType + " " + name + ";\n";
-
-  shaderBuilder.uniforms += "uniform float u_" + name + ";\n";
-}
-
-// function getAttributes(attributes, attributeNameMap) {
-//   var attributeInput = "";
-//   var attributeUniforms = "";
-//   var attributeGetters = "";
-
-//   var attributesLength = attributes.length;
-//   for (var i = 0; i < attributesLength; ++i) {
-//     var attribute = attributes[i];
-//     var name = defaultValue(attributeNameMap[attribute.name], attribute.name);
-//     var type = attribute.type;
-//     var componentDatatype = attribute.componentDatatype;
-
-//     var quantization = attribute.quantization;
-//     if (defined(quantization)) {
-//       // TODO: tangents
-//       type = quantization.type;
-//       componentDatatype = quantization.componentDatatype;
-//       if (quantization.octEncoded) {
-//       } else {
-//         attributeUniforms +=
-//           "uniform " + type + " u_" + name + "DequantizationOffset;";
-//         attributeUniforms +=
-//           "uniform " + type + " u_" + name + "DequantizationScale;";
-//       }
-//     }
-
-//   }
-// }
-
-function buildShader(primitive, attributes, attributeNameMap) {
-  var attributesLength = attributes.length;
-  for (var i = 0; i < attributesLength; ++i) {
-    var attribute = attributes[i];
+  switch (type) {
+    case AttributeType.VEC2:
+      return vectorPrefix + "vec2";
+    case AttributeType.VEC3:
+      return vectorPrefix + "vec3";
+    case AttributeType.VEC4:
+      return vectorPrefix + "vec4";
   }
 }
 
-function createCustomShader(customShader, attributeNameMap) {
+function addAttributeDefinition(attribute, attributeName, shaderBuilder) {
+  var attributeDefinitionName = getAttributeDefinitionName(attributeName);
+  var quantization = attribute.quantization;
+  var type = attribute.type;
+  if (defined(quantization)) {
+    type = quantization.type;
+  }
+  var attributeType = AttributeType.getShaderType(type);
+  var attributeDefinition = getAttributeDefinition(
+    attributeType,
+    attributeDefinitionName
+  );
+  shaderBuilder.attributes += attributeDefinition;
+}
+
+function getAttributeReadFunction(
+  attributeValue,
+  attributeName,
+  attributeType,
+  shaderType
+) {
+  return (
+    shaderType +
+    " read" +
+    capitalize(attributeName) +
+    "(in " +
+    attributeType +
+    " " +
+    attributeName +
+    ")\n" +
+    "{\n" +
+    "    return " +
+    attributeValue +
+    ";\n" +
+    "}\n"
+  );
+}
+
+function addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder) {
+  var quantization = attribute.quantization;
+  var type = quantization.type;
+  var attributeType = AttributeType.getShaderType(type);
+  var shaderType = getShaderType(attribute);
+
+  var rangeUniformName = getUniformName(attributeName, "OctEncodedRange");
+  var rangeUniformDefinition = getUniformDefinition("float", rangeUniformName);
+  var swizzle = quantization.octEncodedZXY ? ".zxy" : "";
+
+  var attributeValue =
+    "czm_octDecode(" +
+    attributeName +
+    ".xy," +
+    rangeUniformName +
+    ")" +
+    swizzle;
+
+  var readFunction = getAttributeReadFunction(
+    attributeValue,
+    attributeName,
+    attributeType,
+    shaderType
+  );
+
+  shaderBuilder.functions += readFunction;
+  shaderBuilder.uniforms += rangeUniformDefinition;
+}
+
+function castAttribute(attribute, attributeValue, attributeType, shaderType) {
+  var semantic = attribute.semantic;
+  if (semantic === VertexAttributeSemantic.COLOR) {
+    if (attribute.type === AttributeType.VEC3) {
+      return "vec4(" + attributeValue + ", 1.0)";
+    }
+  }
+  if (attributeType !== shaderType) {
+    return shaderType + "(" + attributeValue + ")";
+  }
+  return attributeValue;
+}
+
+function addQuantizedAttributeReader(attribute, attributeName, shaderBuilder) {
+  var quantization = attribute.quantization;
+  var type = quantization.type;
+  var attributeType = AttributeType.getShaderType(type);
+  var shaderType = getShaderType(attribute);
+
+  var scaleUniformName = getUniformName(attributeName, "DequantizationScale");
+  var offsetUniformName = getUniformName(attributeName, "DequantizationOffset");
+  var scaleUniformDefinition = getUniformDefinition(
+    shaderType,
+    scaleUniformName
+  );
+  var offsetUniformDefinition = getUniformDefinition(
+    shaderType,
+    offsetUniformName
+  );
+
+  var attributeValue = attributeName + " * " + scaleUniformName;
+  if (defined(quantization.quantizedVolumeOffset)) {
+    attributeValue = " + " + offsetUniformName;
+  }
+  attributeValue = castAttribute(
+    attribute,
+    attributeValue,
+    attributeType,
+    shaderType
+  );
+
+  var readFunction = getAttributeReadFunction(
+    attributeValue,
+    attributeName,
+    attributeType,
+    shaderType
+  );
+
+  shaderBuilder.functions += readFunction;
+  shaderBuilder.uniforms += scaleUniformDefinition;
+  if (defined(quantization.quantizedVolumeOffset)) {
+    shaderBuilder.uniforms += offsetUniformDefinition;
+  }
+}
+
+function addAttributeReader(attribute, attributeName, shaderBuilder) {
+  var type = attribute.type;
+  var attributeType = AttributeType.getShaderType(type);
+  var shaderType = getShaderType(attribute);
+
+  var attributeValue = castAttribute(
+    attribute,
+    attributeName,
+    attributeType,
+    shaderType
+  );
+
+  var readFunction = getAttributeReadFunction(
+    attributeValue,
+    attributeName,
+    attributeType,
+    shaderType
+  );
+  shaderBuilder.functions += readFunction;
+}
+
+function ShaderBuilder() {
+  this.uniformDefinitions = "";
+  this.attributeDefinitions = "";
+  this.functions = "";
+  this.vertexShaderMain = "";
+}
+
+function addPositionDeclaration(
+  usesMorphTargets,
+  usesSkinning,
+  usesInstancing,
+  shaderBuilder
+) {
+  var positionDeclaration = "    vec3 position = readPosition(a_position);\n";
+  if (usesMorphTargets) {
+    positionDeclaration += "    position += getTargetPosition();\n";
+  }
+  if (usesSkinning) {
+    positionDeclaration +=
+      "    position = vec3(skinningMatrix * vec4(position, 1.0));";
+  }
+  if (usesInstancing) {
+    positionDeclaration +=
+      "    position = vec3(instanceMatrix * vec4(position, 1.0));";
+  }
+
+  shaderBuilder.vertexShaderMain += positionDeclaration;
+}
+
+function addNormalDeclaration(
+  usesMorphTargets,
+  usesSkinning,
+  usesInstancing,
+  shaderBuilder
+) {
+  var normalDeclaration = "    vec3 normal = readNormal(a_normal);\n";
+
+  if (usesMorphTargets) {
+    normalDeclaration += "    normal += getTargetNormal();\n";
+  }
+  if (usesSkinning) {
+    normalDeclaration += "    normal += mat3(skinningMatrix) * normal;\n";
+  }
+  if (usesInstancing) {
+    normalDeclaration +=
+      "    normal = transpose(inverse(mat3(instanceMatrix))) * normal;\n";
+  }
+
+  normalDeclaration += "    normal = normalize(normal);\n";
+
+  shaderBuilder.vertexShaderMain += normalDeclaration;
+}
+
+function addTangentDeclaration(
+  attribute,
+  usesMorphTargets,
+  usesSkinning,
+  usesInstancing,
+  shaderBuilder
+) {
+  var type = attribute.type;
+  var quantization = attribute.quantization;
+  if (defined(quantization)) {
+    type = quantization.type;
+  }
+
+  var shaderType = AttributeType.getShaderType(type);
+  var lastComponent = type === AttributeType.VEC4 ? ".w" : ".z";
+
+  var readTangentHandedness =
+    "float readTangentHandedness(in " +
+    shaderType +
+    " tangent)\n" +
+    "{\n" +
+    "    return tangent" +
+    lastComponent +
+    ";\n" +
+    "}\n";
+
+  var tangentDeclaration =
+    "    vec3 tangent = readTangent(a_tangent);\n" +
+    "    float tangentHandedness = readTangentHandedness(a_tangent);\n";
+
+  if (usesMorphTargets) {
+    tangentDeclaration += "    tangent += getTargetTangent();\n";
+  }
+  if (usesSkinning) {
+    tangentDeclaration += "    tangent += mat3(skinningMatrix) * tangent;\n";
+  }
+  if (usesInstancing) {
+    tangentDeclaration += "    tangent = mat3(instanceMatrix) * tangent;\n";
+  }
+
+  tangentDeclaration += "    tangent = normalize(tangent);\n";
+
+  shaderBuilder.functions += readTangentHandedness;
+  shaderBuilder.vertexShaderMain += tangentDeclaration;
+}
+
+function addBitangentDeclaration(shaderBuilder) {
+  shaderBuilder.vertexShaderMain +=
+    "    vec3 bitangent = cross(normal, tangent) * tangentHandedness;";
+}
+
+function addPositionAbsoluteDeclaration(shaderBuilder) {
+  shaderBuilder.vertexShaderMain +=
+    "vec3 positionAbsolute = vec3(czm_model * vec4(position, 1.0));\n";
+}
+
+function addAttributeDeclaration(attribute, attributeName, shaderBuilder) {
+  var shaderType = getShaderType(attribute);
+  var attributeDefinitionName = getAttributeDefinitionName(attributeName);
+
+  var attributeDeclaration =
+    shaderType +
+    " " +
+    attributeName +
+    " = read" +
+    capitalize(attributeName) +
+    "(" +
+    attributeDefinitionName +
+    ");\n";
+
+  shaderBuilder.vertexShaderMain += attributeDeclaration;
+}
+
+function usesInputSemantic(inputs, inputSemantic) {
+  var inputsLength = inputs.length;
+  for (var i = 0; i < inputsLength; ++i) {
+    var input = inputs[i];
+    if (input.semantic === inputSemantic) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function usesBitangent(customShader, materialInfo) {
+  if (defined(materialInfo.normalTextureInfo)) {
+    return true;
+  }
+
+  if (
+    defined(customShader) &&
+    usesInputSemantic(customShader.inputs, InputSemantic.BITANGENT)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function usesPositionAbsolute(customShader) {
+  if (
+    defined(customShader) &&
+    usesInputSemantic(customShader.inputs, InputSemantic.POSITION_ABSOLUTE)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function buildShader(
+  primitive,
+  attributes,
+  attributeNameMap,
+  inputs,
+  materialInfo,
+  usesMorphTargets,
+  usesSkinning,
+  usesInstancing,
+  customShader
+) {
+  var shaderBuilder = new ShaderBuilder();
+
+  var attributesLength = attributes.length;
+  for (var i = 0; i < attributesLength; ++i) {
+    var attribute = attributes[i];
+    var attributeName = attributeNameMap[attribute.name];
+    addAttributeDefinition(attribute, attributeName, shaderBuilder);
+
+    var quantization = attribute.quantization;
+    if (defined(quantization)) {
+      if (attribute.octEncoded) {
+        addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder);
+      } else {
+        addQuantizedAttributeReader(attribute, attributeNameMap, shaderBuilder);
+      }
+    } else {
+      addAttributeReader(attribute, attributeNameMap, shaderBuilder);
+    }
+
+    var semantic = attribute.semantic;
+
+    if (semantic === VertexAttributeSemantic.POSITION) {
+      addPositionDeclaration(
+        usesMorphTargets,
+        usesSkinning,
+        usesInstancing,
+        shaderBuilder
+      );
+    } else if (semantic === VertexAttributeSemantic.NORMAL) {
+      addNormalDeclaration(
+        usesMorphTargets,
+        usesSkinning,
+        usesInstancing,
+        shaderBuilder
+      );
+    } else if (semantic === VertexAttributeSemantic.TANGENT) {
+      addTangentDeclaration(
+        attribute,
+        usesMorphTargets,
+        usesSkinning,
+        usesInstancing,
+        shaderBuilder
+      );
+    } else {
+      addAttributeDeclaration(attribute, attributeName, shaderBuilder);
+    }
+  }
+
+  // Need to add shader code for instances, morph targets, skinning
+  // Need to apply vertex color
+  // Custom shader can be applied in vert or frag (it will say)
+  // Material can be applied in vert or frag (TODO) - can probably use ModelShading.glsl
+  // when an attribute is generated for an input/custom shader how does this interact with values computed for eye coordinates
+  //   prefer multiply in frag shader I guess, the local version would be passed as the varying
+  // need to deal with feature textures
+  // need to deal with batch texture (vert and frag) - pass feature ID through as varying
+  // Need to handle feature ID texture, feature ID attribute
+
+  if (usesBitangent(customShader, materialInfo)) {
+    addBitangentDeclaration(shaderBuilder);
+  }
+
+  if (usesPositionAbsolute(customShader)) {
+    addPositionAbsoluteDeclaration(shaderBuilder);
+  }
+
+  if (defined(customShader)) {
+    addCustomShader(customShader, attributeNameMap, shaderBuilder);
+  }
+}
+
+function createCustomShader(customShader, attributeNameMap, shaderBuilder) {
   // Initialize the structs that are passed to the custom shaders
   var inputs = customShader.inputs;
   var attributes = customShader.attributes;

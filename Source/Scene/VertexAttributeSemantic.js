@@ -200,6 +200,42 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
 };
 
 /**
+ * Gets the shader type for the given vertex attribute.
+ *
+ * @param {VertexAttributeSemantic} semantic The semantic.
+ *
+ * @returns {String} The shader type.
+ *
+ * @private
+ */
+VertexAttributeSemantic.getShaderType = function (semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  switch (semantic) {
+    case VertexAttributeSemantic.POSITION:
+    case VertexAttributeSemantic.NORMAL:
+    case VertexAttributeSemantic.TANGENT:
+      return "vec3";
+    case VertexAttributeSemantic.TEXCOORD:
+      return "vec2";
+    case VertexAttributeSemantic.COLOR:
+      return "vec4";
+    case VertexAttributeSemantic.JOINTS:
+      return "ivec4";
+    case VertexAttributeSemantic.WEIGHTS:
+      return "vec4";
+    case VertexAttributeSemantic.FEATURE_ID:
+      return "int";
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("semantic is not a valid value.");
+    //>>includeEnd('debug');
+  }
+};
+
+/**
  * Gets the variable name for the given semantic and set index.
  *
  * @param {VertexAttributeSemantic} semantic The semantic.

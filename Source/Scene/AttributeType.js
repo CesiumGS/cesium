@@ -112,47 +112,26 @@ AttributeType.getMathType = function (attributeType) {
  *
  * @private
  */
-AttributeType.getShaderType = function (attributeType, componentDatatype) {
-  if (attributeType === AttributeType.SCALAR) {
-    switch (componentDatatype) {
-      case ComponentDatatype.BYTE:
-      case ComponentDatatype.UNSIGNED_BYTE:
-      case ComponentDatatype.SHORT:
-      case ComponentDatatype.UNSIGNED_SHORT:
-        return "int"; // No uint type in WebGL 1.0
-      case ComponentDatatype.FLOAT:
-        return "float";
-    }
-  }
-
-  if (attributeType == AttributeType.MAT2) {
-    return "mat2";
-  }
-  if (attributeType === AttributeType.MAT3) {
-    return "mat3";
-  }
-  if (attributeType === AttributeType.MAT4) {
-    return "mat4";
-  }
-
-  var vectorPrefix = "";
-
-  if (
-    componentDatatype === ComponentDatatype.BYTE ||
-    componentDatatype === ComponentDatatype.UNSIGNED_BYTE ||
-    componentDatatype === ComponentDatatype.SHORT ||
-    componentDatatype === ComponentDatatype.UNSIGNED_SHORT
-  ) {
-    vectorPrefix = "i";
-  }
-
+AttributeType.getShaderType = function (attributeType) {
   switch (attributeType) {
+    case AttributeType.SCALAR:
+      return "float";
     case AttributeType.VEC2:
-      return vectorPrefix + "vec2";
+      return "vec2";
     case AttributeType.VEC3:
-      return vectorPrefix + "vec3";
+      return "vec3";
     case AttributeType.VEC4:
-      return vectorPrefix + "vec4";
+      return "vec4";
+    case AttributeType.MAT2:
+      return "mat2";
+    case AttributeType.MAT3:
+      return "mat3";
+    case AttributeType.MAT4:
+      return "mat4";
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
