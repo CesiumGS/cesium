@@ -63,7 +63,7 @@ import deprecationWarning from "./deprecationWarning.js";
 function loadKTX(resourceOrUrlOrBuffer) {
   deprecationWarning(
     "loadKTX",
-    "loadKTX is deprecated and will be removed in CesiumJS 1.82."
+    "loadKTX is deprecated and will be removed in CesiumJS 1.83."
   );
   //>>includeStart('debug', pragmas.debug);
   Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
