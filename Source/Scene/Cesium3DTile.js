@@ -36,6 +36,7 @@ import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
+import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
@@ -1644,6 +1645,12 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   if (!defined(boundingVolumeHeader)) {
     throw new RuntimeError("boundingVolume must be defined");
   }
+  if (has3DTilesExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
+    return new TileBoundingS2Cell(
+      boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"]
+    );
+  }
+
   if (defined(boundingVolumeHeader.box)) {
     return createBox(boundingVolumeHeader.box, transform, result);
   }

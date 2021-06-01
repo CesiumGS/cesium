@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
+- Fixed broken image URL in the KML Sandcastle. [#9527](https://github.com/CesiumGS/cesium/issues/9527)
 
 ### 1.81 - 2021-05-01
 
@@ -20,7 +21,7 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `loadCRN` and `loadKTX` have been deprecated and will be removed in CesiumJS 1.82. They will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
+- `loadCRN` and `loadKTX` have been deprecated and will be removed in CesiumJS 1.83. They will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
 
 ### 1.80 - 2021-04-01
 
