@@ -372,6 +372,28 @@ describe(
         });
     });
 
+    it("rejects readyPromise with unsupported extension", function () {
+      var tilesetJson = {
+        asset: {
+          version: 1.0,
+        },
+        extensionsUsed: ["unsupported_extension"],
+        extensionsRequired: ["unsupported_extension"],
+      };
+
+      var uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+
+      options.url = uri;
+      var tileset = scene.primitives.add(new Cesium3DTileset(options));
+      return tileset.readyPromise
+        .then(function () {
+          fail("should not resolve");
+        })
+        .otherwise(function (error) {
+          expect(tileset.ready).toEqual(false);
+        });
+    });
+
     it("url and tilesetUrl set up correctly given tileset JSON filepath", function () {
       var path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
       var tileset = new Cesium3DTileset({
