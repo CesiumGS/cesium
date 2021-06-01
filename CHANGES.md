@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.83 - 2021-07-01
+
+##### Additions :tada:
+
+- Added checks for supported 3D tiles extensions.[#9552](https://github.com/CesiumGS/cesium/issues/9552)
+
 ### 1.82 - 2021-06-01
 
 ##### Additions :tada:
