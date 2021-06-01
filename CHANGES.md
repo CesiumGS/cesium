@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.83 - 2021-07-01
+
+##### Additions :tada:
+
+- Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
+
+##### Fixes :wrench:
+
+- Fixed an issue in `ScreenSpaceCameraController.tilt3DOnTerrain` that caused unexpected camera behavior when tilting terrain diagonally along the screen. [#9562](https://github.com/CesiumGS/cesium/pull/9562)
+- Fixed error handling in `GlobeSurfaceTile` to print terrain tile request errors to console. [#9570](https://github.com/CesiumGS/cesium/pull/9570)
+- Fixed broken image URL in the KML Sandcastle. [#9579](https://github.com/CesiumGS/cesium/pull/9579)
+
 ### 1.82.1 - 2021-06-01
 
 - This is an npm only release to fix the improperly published 1.82.0.
@@ -13,7 +25,6 @@
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
-- Fixed broken image URL in the KML Sandcastle. [#9527](https://github.com/CesiumGS/cesium/issues/9527)
 
 ### 1.81 - 2021-05-01
 
