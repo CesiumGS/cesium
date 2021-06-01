@@ -1,12 +1,16 @@
 # Change Log
 
+### 1.83 - 2021-07-01
+
+##### Additions :tada:
+
+- Added `ShadowMap.fadingEnabled` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
+
 ### 1.82 - 2021-06-01
 
 ##### Additions :tada:
 
 - Added `FeatureDetection.supportsBigInt64Array`, `FeatureDetection.supportsBigUint64Array` and `FeatureDetection.supportsBigInt`.
-
-- Added `ShadowMap.fadingEnabled` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
 
 ##### Fixes :wrench:
 
