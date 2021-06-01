@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `ShadowMap.fadingEnabled` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
+- Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
 
 ### 1.82 - 2021-06-01
 
