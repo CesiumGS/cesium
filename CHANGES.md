@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.82.1 - 2021-06-01
+
+- This is an npm only release to fix the improperly published 1.82.0.
+
 ### 1.82 - 2021-06-01
 
 ##### Additions :tada:

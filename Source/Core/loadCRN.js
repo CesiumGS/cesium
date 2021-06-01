@@ -37,12 +37,12 @@ var transcodeTaskProcessor = new TaskProcessor("transcodeCRNToDXT");
  * @see {@link https://github.com/BinomialLLC/crunch|crunch DXTc texture compression and transcoding library}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
- * @deprecated This function has been deprecated and will be removed in CesiumJS 1.82.
+ * @deprecated This function has been deprecated and will be removed in CesiumJS 1.83.
  */
 function loadCRN(resourceOrUrlOrBuffer) {
   deprecationWarning(
     "loadCRN",
-    "loadCRN is deprecated and will be removed in CesiumJS 1.82."
+    "loadCRN is deprecated and will be removed in CesiumJS 1.83."
   );
   //>>includeStart('debug', pragmas.debug);
   if (!defined(resourceOrUrlOrBuffer)) {
