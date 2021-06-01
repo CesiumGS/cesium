@@ -771,6 +771,18 @@ function loadMorphTarget(loader, gltf, target) {
   return morphTarget;
 }
 
+function stringCompare(a, b) {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function sortAttributes(attributes) {
+  attributes.sort(function (attributeA, attributeB) {
+    var attributeNameA = defaultValue(attributeA.semantic, attributeA.name);
+    var attributeNameB = defaultValue(attributeB.semantic, attributeB.name);
+    return stringCompare(attributeNameA, attributeNameB);
+  });
+}
+
 function loadPrimitive(
   loader,
   gltf,
@@ -790,6 +802,8 @@ function loadPrimitive(
       gltf.materials[materialId],
       supportedImageFormats
     );
+  } else {
+    primitive.material = new Material();
   }
 
   var extensions = defaultValue(
@@ -810,6 +824,10 @@ function loadPrimitive(
       }
     }
   }
+
+  // Sort attributes so that unique IDs in CustomShader and ModelShader
+  // are
+  sortAttributes(primitive.attributes);
 
   var targets = gltfPrimitive.targets;
   if (defined(targets)) {

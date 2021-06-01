@@ -27,7 +27,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 // TODO: getShaderTypeFromUniformValue throw error if no match
 // TODO: error handling if custom shader uses unknown input.property or attribute.property
 // TODO: doc
-// TODO: should the retrieved attribute be the quantization type or the regular type?
+// TODO: should the retrieved attribute be the quantization type or the regular type? Same question for VEC3 vs. VEC4 tangent
 // TODO: need to add to the attributeNameMap?
 // TODO: better error message when requireGpu and requireCpu are both true
 // TODO: is CPU required for FLOAT64 and INT64?
@@ -47,6 +47,12 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 // TODO: how to make feature ids available in shader if attribute is implicit
 // TODO: this goes against the Point Cloud spec which says that POSITION stores the position before the quantization offset is applied
 // TODO: quantization uniforms should always match the type. e.g. for tangents it should be a Cartesian3 - for color it should be a Cartesian3 or Cartesian4
+// TODO: what to do if divisor is not 1 but 2 or 3? should that still be on the GPU because it's impractically big?
+// TODO: A feature whose color evaluates to white (1.0, 1.0, 1.0) is always rendered without color blending, regardless of the tileset's color blend mode.
+// TODO: ColorBlendMode and Cesium3DTileColorBlendMode -> consolidate? also redefine what REPLACE means. Also improve doc.
+// TODO: might need to set featureId varying to be computeSt like in Cesium3DTileBatchTable
+// TODO: what if shader references integer vertex attribute that gets interpolated? what do you really do? Really there should be a mode that lets you pick styling on the vertex itself (an interpolate the color) vs. the interpolated values
+// TODO: oct encoded requires float for oct encoded range
 
 function CustomShader() {
   this.inputs = [];
@@ -782,14 +788,32 @@ CustomShader.fromShaderString = function (options) {
   return customShader;
 };
 
-function getGlslName(name, type, uniqueId) {
+function getGlslName(name, type) {
   // If the variable name is not compatible with GLSL - e.g. has non-alphanumeric
   // characters like `:`, `-`, `#`, spaces, or unicode - use a placeholder variable name
   var glslCompatibleRegex = /^[a-zA-Z_]\w*$/;
   if (glslCompatibleRegex.test(name)) {
     return name;
   }
-  return "czm_style_" + type + "_" + uniqueId;
+
+  var encoded = encodeURIComponent(name);
+  var encodedLength = encoded.length;
+
+  var glslCharRegex = /\w/;
+  var glslName = "";
+
+  for (var i = 0; i < encodedLength; ++i) {
+    var char = encoded.charAt(i);
+    if (char !== "%") {
+      if (!glslCharRegex.test(char)) {
+        glslName += encoded.charCodeAt(i).toString(16);
+      } else {
+        glslName += char;
+      }
+    }
+  }
+
+  return "czm_style_" + type + "_" + glslName;
 }
 
 function parseVariableAsInput(
@@ -829,11 +853,7 @@ function parseVariableAsAttribute(
 
   if (!hasAttribute(attributes, attribute)) {
     attributes.push(attribute);
-    var glslName = getGlslName(
-      attribute.name,
-      "attribute",
-      attributes.length - 1
-    );
+    var glslName = getGlslName(attribute.name, "attribute");
     attributeNameMap[attribute.name] = glslName;
     variableSubstitutionMap[variable] = "attribute." + glslName;
   }
@@ -854,11 +874,7 @@ function parseVariableAsUniform(
 
   if (!hasUniform(uniforms, variable)) {
     uniforms[variable] = uniformMap[variable];
-    var glslName = getGlslName(
-      variable,
-      "uniform",
-      Object.keys(uniforms).length - 1
-    );
+    var glslName = getGlslName(variable, "uniform");
     uniformNameMap[variable] = glslName;
     variableSubstitutionMap[variable] = "uniform." + glslName;
   }
@@ -889,7 +905,7 @@ function parseVariableAsProperty(
   if (!hasProperty(properties, variable)) {
     properties.push(property);
     var propertyId = property.propertyId;
-    var glslName = getGlslName(propertyId, "property", properties.length - 1);
+    var glslName = getGlslName(propertyId, "property");
     propertyNameMap[propertyId] = glslName;
     variableSubstitutionMap[variable] = "property." + glslName;
 
@@ -1041,6 +1057,7 @@ CustomShader.fromStyle = function (options) {
 
   if (attributes.length + derivedAttributes.length > 0) {
     requireGpu = true;
+    // TODO: if POSITION attribute probably want to render in frag shader for smooth color ramps, regardless of primitive type
     if (primitive.primitiveType !== PrimitiveType.POINTS) {
       requireFragShader = true;
     }
@@ -1105,6 +1122,19 @@ CustomShader.fromStyle = function (options) {
   ) {
     // Styles that uses custom evaluate functions must be evaluated on the CPU.
     requireCpu = true;
+  }
+
+  var vertexTextureFetchSupported =
+    ContextLimits.maximumVertexTextureImageUnits === 0;
+
+  if (requireGpu && !vertexTextureFetchSupported) {
+    // If vertex texture fetch is not supported property textures need to be read in the frag shader
+    for (i = 0; i < propertiesLength; ++i) {
+      featureIdAttribute = properties[i].featureIdAttribute;
+      if (defined(featureIdAttribute) && featureIdAttribute.divisor !== 1) {
+        requireFragShader = true;
+      }
+    }
   }
 
   if (requireGpu) {
@@ -1209,7 +1239,7 @@ CustomShader.fromStyle = function (options) {
     }
   }
 
-  if (requireCpu && ContextLimits.maximumVertexTextureImageUnits === 0) {
+  if (requireCpu && !vertexTextureFetchSupported) {
     // If vertex texture fetch is not supported the batch texture needs to be
     // applied in the frag shader
     requireFragShader = true;
@@ -1226,6 +1256,7 @@ CustomShader.fromStyle = function (options) {
   var styleInfo = new StyleInfo();
   styleInfo.customShader = customShader;
   styleInfo.applyInVertexShader = !requireFragShader;
+  styleInfo.helperAttributes = helperAttributes;
   styleInfo.featureIdAttribute = featureIdAttribute;
   styleInfo.featureIdTexture = featureIdTexture;
 

@@ -47,6 +47,8 @@ function Quantization() {
 
   /**
    * The bottom-left corner of the quantization volume. Not applicable for oct encoded attributes.
+   * The attribute type should match the math type - e.g. if the attribute type
+   * is AttributeType.VEC4 the offset should be a Cartesian4.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -55,6 +57,8 @@ function Quantization() {
 
   /**
    * The dimensions of the quantization volume. Not applicable for oct encoded attributes.
+   * The attribute type should match the math type - e.g. if the attribute type
+   * is AttributeType.VEC4 the dimensions should be a Cartesian4.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -845,7 +849,7 @@ function Material() {
    * @type {ModelComponents.MetallicRoughness}
    * @private
    */
-  this.metallicRoughness = undefined;
+  this.metallicRoughness = new MetallicRoughness();
 
   /**
    * Material properties for the PBR specular glossiness shading model.
