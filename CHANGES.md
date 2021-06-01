@@ -1,5 +1,15 @@
 # Change Log
 
+### 1.82 - 2021-06-01
+
+##### Additions :tada:
+
+- Added `FeatureDetection.supportsBigInt64Array`, `FeatureDetection.supportsBigUint64Array` and `FeatureDetection.supportsBigInt`.
+
+##### Fixes :wrench:
+
+- Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
+
 ### 1.81 - 2021-05-01
 
 ##### Fixes :wrench:
@@ -10,7 +20,7 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `loadCRN` and `loadKTX` have been deprecated and will be removed in CesiumJS 1.82. They will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
+- `loadCRN` and `loadKTX` have been deprecated and will be removed in CesiumJS 1.83. They will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
 
 ### 1.80 - 2021-04-01
 

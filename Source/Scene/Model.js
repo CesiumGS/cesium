@@ -624,6 +624,7 @@ function Model(options) {
   this._geometryByteLength = 0;
   this._texturesByteLength = 0;
   this._trianglesLength = 0;
+  this._pointsLength = 0;
 
   // Hold references for shader reconstruction.
   // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
@@ -1030,6 +1031,17 @@ Object.defineProperties(Model.prototype, {
   trianglesLength: {
     get: function () {
       return this._trianglesLength;
+    },
+  },
+
+  /**
+   * Gets the model's point count.
+   *
+   * @private
+   */
+  pointsLength: {
+    get: function () {
+      return this._pointsLength;
     },
   },
 
@@ -3820,6 +3832,10 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       primitive,
       count
     );
+
+    if (primitive.mode === PrimitiveType.POINTS) {
+      model._pointsLength += count;
+    }
 
     var um = uniformMaps[primitive.material];
     var uniformMap = um.uniformMap;
