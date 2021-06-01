@@ -58,7 +58,7 @@ import deprecationWarning from "./deprecationWarning.js";
  * @see {@link https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/|KTX file format}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
- * @deprecated This function has been deprecated and will be removed in CesiumJS 1.82.
+ * @deprecated This function has been deprecated and will be removed in CesiumJS 1.83.
  */
 function loadKTX(resourceOrUrlOrBuffer) {
   deprecationWarning(
