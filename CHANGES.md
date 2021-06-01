@@ -6,6 +6,10 @@
 
 - Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
 
+##### Fixes :wrench:
+
+- Fixed an issue in `ScreenSpaceCameraController.tilt3DOnTerrain` that caused unexpected camera behavior when tilting terrain diagonally along the screen. [#9562](https://github.com/CesiumGS/cesium/pull/9562)
+
 ### 1.82.1 - 2021-06-01
 
 - This is an npm only release to fix the improperly published 1.82.0.
