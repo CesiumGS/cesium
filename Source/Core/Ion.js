@@ -5,7 +5,7 @@ import Resource from "./Resource.js";
 var defaultTokenCredit;
 
 var cesiumWebsiteToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhOGFlYzkxNC1hNTE5LTQxYjItYmFmOC0wYTkwNzUzMmYwZmUiLCJpZCI6MjU5LCJpYXQiOjE2MjAwNTk1MzV9.t8YP00dwR0SrbtNoMUCYQNspeB-bSGA-dlbkabByEJU";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmMTYxYjE3Zi0yM2ZjLTQzOTUtOTUyZS0wNGRlYTI0NzZkNWEiLCJpZCI6MjU5LCJpYXQiOjE2MjI1Nzc1NzF9.wBdlWsqCoHM9tpplqxAPCdQWsERtxJc65IFZRf4g0z4";
 var defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMTQ1MTJkOC1kODA1LTQ3ZjMtYjFiMS1lNDljNGM3NDEzMTkiLCJpZCI6MjU5LCJpYXQiOjE2MjI1NjA5OTF9.DSp0vQUYQfm1d9ffL0PjA1WgnGTnmNdh3-JEl1Aiouw";
 /**
