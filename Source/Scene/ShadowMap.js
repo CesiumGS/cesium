@@ -69,6 +69,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
  * @param {Number} [options.darkness=0.3] The shadow darkness.
  * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
+ * @param {Boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
  *
  * @exception {DeveloperError} Only one or four cascades are supported.
  *
@@ -116,6 +117,14 @@ function ShadowMap(options) {
    */
   this.darkness = defaultValue(options.darkness, 0.3);
   this._darkness = this.darkness;
+
+  /**
+   * Determines whether shadows start to fade out once the light gets closer to the horizon.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.fadingEnabled = defaultValue(options.fadingEnabled, true);
 
   /**
    * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
@@ -1421,15 +1430,18 @@ function checkVisibility(shadowMap, frameState) {
       scratchCartesian2
     );
     var dot = Cartesian3.dot(surfaceNormal, lightDirection);
-
-    // Shadows start to fade out once the light gets closer to the horizon.
-    // At this point the globe uses vertex lighting alone to darken the surface.
-    var darknessAmount = CesiumMath.clamp(dot / 0.1, 0.0, 1.0);
-    shadowMap._darkness = CesiumMath.lerp(
-      1.0,
-      shadowMap.darkness,
-      darknessAmount
-    );
+    if (shadowMap.fadingEnabled) {
+      // Shadows start to fade out once the light gets closer to the horizon.
+      // At this point the globe uses vertex lighting alone to darken the surface.
+      var darknessAmount = CesiumMath.clamp(dot / 0.1, 0.0, 1.0);
+      shadowMap._darkness = CesiumMath.lerp(
+        1.0,
+        shadowMap.darkness,
+        darknessAmount
+      );
+    } else {
+      shadowMap._darkness = shadowMap.darkness;
+    }
 
     if (dot < 0.0) {
       shadowMap._outOfView = true;
