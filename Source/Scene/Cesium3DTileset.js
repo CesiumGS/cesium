@@ -1751,6 +1751,8 @@ Cesium3DTileset.prototype.loadTileset = function (
     throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
   }
 
+  Cesium3DTileset.checkSupportedExtensions(this._extensions);
+
   var statistics = this._statistics;
 
   var tilesetVersion = asset.tilesetVersion;
@@ -2802,6 +2804,26 @@ Cesium3DTileset.prototype.destroy = function () {
 
   this._root = undefined;
   return destroyObject(this);
+};
+
+Cesium3DTileset.supportedExtensions = {
+  CESIUM_3DTILES_metadata: true,
+  CESIUM_3DTILES_implicit_tiling: true,
+  CESIUM_3DTILES_content_gltf: true,
+  CESIUM_3DTILES_multiple_contents: true,
+  CESIUM_3DTILES_bounding_volume_S2: true,
+  CESIUM_3DTILES_batch_table_hierarchy: true,
+  CESIUM_3DTILES_draco_point_compression: true,
+};
+
+Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
+  for (var extension in extensionsRequired) {
+    if (extensionsRequired.hasOwnProperty(extension)) {
+      if (!Cesium3DTileset.supportedExtensions[extension]) {
+        throw new RuntimeError("Unsupported 3D Tiles Extension: " + extension);
+      }
+    }
+  }
 };
 
 /**

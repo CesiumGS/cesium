@@ -152,6 +152,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Nithin Pranesh](https://github.com/nithinp7)
   - [Alexander Gallegos](https://github.com/argallegos)
   - [Janine Liu](https://github.com/j9liu)
+  - [Sam Rothstein](https://github.com/srothst1)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
