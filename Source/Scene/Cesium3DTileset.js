@@ -2829,7 +2829,9 @@ Cesium3DTileset.supportedExtensions = {
 Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   for (var i = 0; i < extensionsRequired.length; i++) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
-      throw new RuntimeError("Unsupported 3D Tiles Extension: " + extension);
+      throw new RuntimeError(
+        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+      );
     }
   }
 };
