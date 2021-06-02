@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed an issue in `ScreenSpaceCameraController.tilt3DOnTerrain` that caused unexpected camera behavior when tilting terrain diagonally along the screen. [#9562](https://github.com/CesiumGS/cesium/pull/9562)
+- Fixed error handling in `GlobeSurfaceTile` to print terrain tile request errors to console. [#9570](https://github.com/CesiumGS/cesium/pull/9570)
 
 ### 1.82.1 - 2021-06-01
 
@@ -23,7 +24,6 @@
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
-- Fixed the handling of errors in `GlobeSurfaceTile`. The console should now print the error that caused the terrain tile request to fail. [#8313](https://github.com/CesiumGS/cesium/issues/8313)
 
 ### 1.81 - 2021-05-01
 
