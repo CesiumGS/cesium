@@ -2807,13 +2807,13 @@ Cesium3DTileset.prototype.destroy = function () {
 };
 
 Cesium3DTileset.supportedExtensions = {
-  CESIUM_3DTILES_metadata: true,
-  CESIUM_3DTILES_implicit_tiling: true,
-  CESIUM_3DTILES_content_gltf: true,
-  CESIUM_3DTILES_multiple_contents: true,
-  CESIUM_3DTILES_bounding_volume_S2: true,
-  CESIUM_3DTILES_batch_table_hierarchy: true,
-  CESIUM_3DTILES_draco_point_compression: true,
+  3DTILES_metadata: true,
+  3DTILES_implicit_tiling: true,
+  3DTILES_content_gltf: true,
+  3DTILES_multiple_contents: true,
+  3DTILES_bounding_volume_S2: true,
+  3DTILES_batch_table_hierarchy: true,
+  3DTILES_draco_point_compression: true,
 };
 
 /**
