@@ -2442,7 +2442,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   var constrainedAxis = Cartesian3.UNIT_Z;
 
   var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
-  camera._setTransform(transform);
+  camera._setTransform(verticalTransform);
 
   var tangent = Cartesian3.cross(
     verticalCenter,
@@ -2450,10 +2450,6 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
     tilt3DCartesian3
   );
   var dot = Cartesian3.dot(camera.rightWC, tangent);
-
-  rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
-
-  camera._setTransform(verticalTransform);
 
   if (dot < 0.0) {
     var movementDelta = movement.startPosition.y - movement.endPosition.y;
@@ -2474,6 +2470,9 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   } else {
     rotate3D(controller, startPosition, movement, constrainedAxis, true, false);
   }
+
+  camera._setTransform(transform);
+  rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
 
   if (defined(camera.constrainedAxis)) {
     var right = Cartesian3.cross(
