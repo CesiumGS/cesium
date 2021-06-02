@@ -23,6 +23,7 @@
 ##### Fixes :wrench:
 
 - Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
+- Fixed broken image URL in the KML Sandcastle. [#9527](https://github.com/CesiumGS/cesium/issues/9527)
 
 ### 1.81 - 2021-05-01
 
