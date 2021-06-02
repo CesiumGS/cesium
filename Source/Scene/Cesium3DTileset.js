@@ -2816,6 +2816,14 @@ Cesium3DTileset.supportedExtensions = {
   CESIUM_3DTILES_draco_point_compression: true,
 };
 
+/**
+ * Checks to see if a given extension is supported by Cesium3DTileset. If 
+ * the extension is not supported by Cesium3DTileset, it throws a RuntimeError.
+ *
+ * @param {3DTILES_metadata} extensionsRequired The extensions we wish to check
+ *
+ * @private
+ */
 Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   for (var extension in extensionsRequired) {
     if (extensionsRequired.hasOwnProperty(extension)) {
