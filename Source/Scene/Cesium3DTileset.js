@@ -2822,7 +2822,7 @@ Cesium3DTileset.supportedExtensions = {
  * Checks to see if a given extension is supported by Cesium3DTileset. If 
  * the extension is not supported by Cesium3DTileset, it throws a RuntimeError.
  *
- * @param {3DTILES_metadata} extensionsRequired The extensions we wish to check
+ * @param {Object} extensionsRequired The extensions we wish to check
  *
  * @private
  */
