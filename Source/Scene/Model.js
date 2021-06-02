@@ -76,6 +76,7 @@ import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import StencilConstants from "./StencilConstants.js";
 
 var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -623,6 +624,7 @@ function Model(options) {
   this._geometryByteLength = 0;
   this._texturesByteLength = 0;
   this._trianglesLength = 0;
+  this._pointsLength = 0;
 
   // Hold references for shader reconstruction.
   // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
@@ -1029,6 +1031,17 @@ Object.defineProperties(Model.prototype, {
   trianglesLength: {
     get: function () {
       return this._trianglesLength;
+    },
+  },
+
+  /**
+   * Gets the model's point count.
+   *
+   * @private
+   */
+  pointsLength: {
+    get: function () {
+      return this._pointsLength;
     },
   },
 
@@ -3820,6 +3833,10 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       count
     );
 
+    if (primitive.mode === PrimitiveType.POINTS) {
+      model._pointsLength += count;
+    }
+
     var um = uniformMaps[primitive.material];
     var uniformMap = um.uniformMap;
     if (defined(um.jointMatrixUniformName)) {
@@ -4482,20 +4499,26 @@ function updateShadows(model) {
   }
 }
 
-function getTranslucentRenderState(renderState) {
+function getTranslucentRenderState(model, renderState) {
   var rs = clone(renderState, true);
   rs.cull.enabled = false;
   rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
 
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    rs.stencilTest = StencilConstants.setCesium3DTileBit();
+    rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
   return RenderState.fromCache(rs);
 }
 
-function deriveTranslucentCommand(command) {
+function deriveTranslucentCommand(model, command) {
   var translucentCommand = DrawCommand.shallowClone(command);
   translucentCommand.pass = Pass.TRANSLUCENT;
   translucentCommand.renderState = getTranslucentRenderState(
+    model,
     command.renderState
   );
   return translucentCommand;
@@ -4515,10 +4538,14 @@ function updateColor(model, frameState, forceDerive) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
-        nodeCommand.translucentCommand = deriveTranslucentCommand(command);
+        nodeCommand.translucentCommand = deriveTranslucentCommand(
+          model,
+          command
+        );
         if (!scene3DOnly) {
           var command2D = nodeCommand.command2D;
           nodeCommand.translucentCommand2D = deriveTranslucentCommand(
+            model,
             command2D
           );
         }
@@ -5505,10 +5532,6 @@ Model.prototype.update = function (frameState) {
     // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
     var clippingPlanes = this._clippingPlanes;
     var currentClippingPlanesState = 0;
-    var useClippingPlanes =
-      defined(clippingPlanes) &&
-      clippingPlanes.enabled &&
-      clippingPlanes.length > 0;
 
     // If defined, use the reference matrix to transform miscellaneous properties like
     // clipping planes and IBL instead of the modelMatrix. This is so that when
@@ -5516,7 +5539,7 @@ Model.prototype.update = function (frameState) {
     // a common reference (such as the root).
     var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
 
-    if (useClippingPlanes) {
+    if (isClippingEnabled(this)) {
       var clippingPlanesMatrix = scratchClippingPlanesMatrix;
       clippingPlanesMatrix = Matrix4.multiply(
         context.uniformState.view3D,

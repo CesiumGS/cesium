@@ -16,6 +16,8 @@ import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import Vector3DTilePoints from "./Vector3DTilePoints.js";
 import Vector3DTilePolygons from "./Vector3DTilePolygons.js";
 import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
+import Vector3DTileClampedPolylines from "./Vector3DTileClampedPolylines.js";
+import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
 
 /**
  * Represents the contents of a
@@ -49,6 +51,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -143,6 +146,15 @@ Object.defineProperties(Vector3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });
@@ -247,6 +259,14 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 }
 
 var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
+function createFloatingPolylines(options) {
+  return new Vector3DTilePolylines(options);
+}
+
+function createClampedPolylines(options) {
+  return new Vector3DTileClampedPolylines(options);
+}
 
 function initialize(content, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
@@ -533,7 +553,32 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
     byteOffset += polylinePositionByteLength;
 
-    content._polylines = new Vector3DTilePolylines({
+    var tileset = content._tileset;
+    var examineVectorLinesFunction = tileset.examineVectorLinesFunction;
+    if (defined(examineVectorLinesFunction)) {
+      var decodedPositions = decodeVectorPolylinePositions(
+        new Uint16Array(polylinePositions),
+        rectangle,
+        minHeight,
+        maxHeight,
+        Ellipsoid.WGS84
+      );
+      examineVectorLines(
+        decodedPositions,
+        polylineCounts,
+        batchIds.polylines,
+        batchTable,
+        content.url,
+        examineVectorLinesFunction
+      );
+    }
+
+    var createPolylines = createFloatingPolylines;
+    if (defined(tileset.classificationType)) {
+      createPolylines = createClampedPolylines;
+    }
+
+    content._polylines = createPolylines({
       positions: polylinePositions,
       widths: widths,
       counts: polylineCounts,
@@ -544,6 +589,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       rectangle: rectangle,
       boundingVolume: content.tile.boundingVolume.boundingVolume,
       batchTable: batchTable,
+      tileset: tileset,
     });
   }
 
@@ -664,6 +710,9 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
       .all([pointsPromise, polygonPromise, polylinePromise])
       .then(function () {
         that._readyPromise.resolve(that);
+      })
+      .otherwise(function (error) {
+        that._readyPromise.reject(error);
       });
   }
 };
@@ -679,4 +728,24 @@ Vector3DTileContent.prototype.destroy = function () {
   this._batchTable = this._batchTable && this._batchTable.destroy();
   return destroyObject(this);
 };
+
+function examineVectorLines(
+  positions,
+  counts,
+  batchIds,
+  batchTable,
+  url,
+  callback
+) {
+  var countsLength = counts.length;
+  var polylineStart = 0;
+  for (var i = 0; i < countsLength; i++) {
+    var count = counts[i] * 3;
+    var linePositions = positions.slice(polylineStart, polylineStart + count);
+    polylineStart += count;
+
+    callback(linePositions, batchIds[i], url, batchTable);
+  }
+}
+
 export default Vector3DTileContent;

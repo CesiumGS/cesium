@@ -539,6 +539,46 @@
       "classificationType":"TERRAIN",
       "zIndex":17658
     },
+    "polylineVolume":{
+      "show":true,
+      "positions":{
+        "cartesian":[
+          62250,34803,52359,
+          59852,58857,24549
+        ]
+      },
+      "shape":{
+        "cartesian2":[
+          45301,43952,
+          34475,28294
+        ]
+      },
+      "cornerType":"BEVELED",
+      "granularity":12007,
+      "fill":true,
+      "material":{
+        "solidColor":{
+          "color":{
+            "rgba":[
+              232,0,34,154
+            ]
+          }
+        }
+      },
+      "outline":true,
+      "outlineColor":{
+        "rgba":[
+          179,137,151,42
+        ]
+      },
+      "outlineWidth":23162,
+      "shadows":"CAST_ONLY",
+      "distanceDisplayCondition":{
+        "distanceDisplayCondition":[
+          49375,57097
+        ]
+      }
+    },
     "rectangle":{
       "show":true,
       "coordinates":{
@@ -702,7 +742,19 @@
         ]
       },
       "environmentIntersectionWidth":13317,
-      "showThroughEllipsoid":true
+      "showThroughEllipsoid":true,
+      "showViewshed":true,
+      "viewshedVisibleColor":{
+        "rgba":[
+          80,142,248,57
+        ]
+      },
+      "viewshedOccludedColor":{
+        "rgba":[
+          166,20,225,110
+        ]
+      },
+      "viewshedResolution":9164
     },
     "agi_customPatternSensor":{
       "show":true,
@@ -779,7 +831,19 @@
         ]
       },
       "environmentIntersectionWidth":53576,
-      "showThroughEllipsoid":true
+      "showThroughEllipsoid":true,
+      "showViewshed":true,
+      "viewshedVisibleColor":{
+        "rgba":[
+          38,54,223,91
+        ]
+      },
+      "viewshedOccludedColor":{
+        "rgba":[
+          229,38,249,99
+        ]
+      },
+      "viewshedResolution":25862
     },
     "agi_rectangularSensor":{
       "show":true,
@@ -852,7 +916,19 @@
         ]
       },
       "environmentIntersectionWidth":64839,
-      "showThroughEllipsoid":true
+      "showThroughEllipsoid":true,
+      "showViewshed":true,
+      "viewshedVisibleColor":{
+        "rgba":[
+          239,86,8,93
+        ]
+      },
+      "viewshedOccludedColor":{
+        "rgba":[
+          20,22,45,26
+        ]
+      },
+      "viewshedResolution":33690
     },
     "agi_fan":{
       "show":true,
@@ -3400,6 +3476,233 @@
     }
   },
   {
+    "id":"constant_polylineVolume_positions_cartographicRadians",
+    "polylineVolume":{
+      "positions":{
+        "cartographicRadians":[
+          0.0883087457516627,0.924587529983249,8130,
+          0.613491452287313,1.45657735287148,19697
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_positions_cartographicDegrees",
+    "polylineVolume":{
+      "positions":{
+        "cartographicDegrees":[
+          7,43,57136,
+          44,37,65346
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_solidColor_color",
+    "polylineVolume":{
+      "material":{
+        "solidColor":{
+          "color":{
+            "rgbaf":[
+              0.8666666666666667,0.12941176470588237,0.13333333333333333,0.6431372549019608
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"material_polylineVolume_material_image",
+    "polylineVolume":{
+      "material":{
+        "image":{
+          "image":"http://example.com/25029",
+          "repeat":{
+            "cartesian2":[
+              16806,36161
+            ]
+          },
+          "color":{
+            "rgba":[
+              29,171,22,0
+            ]
+          },
+          "transparent":true
+        }
+      }
+    }
+  },
+  {
+    "id":"material_polylineVolume_material_grid",
+    "polylineVolume":{
+      "material":{
+        "grid":{
+          "color":{
+            "rgba":[
+              180,62,202,240
+            ]
+          },
+          "cellAlpha":58563,
+          "lineCount":{
+            "cartesian2":[
+              13158,59443
+            ]
+          },
+          "lineThickness":{
+            "cartesian2":[
+              11642,8493
+            ]
+          },
+          "lineOffset":{
+            "cartesian2":[
+              2361,14345
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"material_polylineVolume_material_stripe",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "orientation":"VERTICAL",
+          "evenColor":{
+            "rgba":[
+              100,38,210,254
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              27,12,194,159
+            ]
+          },
+          "offset":38819,
+          "repeat":1822
+        }
+      }
+    }
+  },
+  {
+    "id":"material_polylineVolume_material_checkerboard",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              146,199,90,246
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              74,232,2,60
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              13666,60213
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_image_color",
+    "polylineVolume":{
+      "material":{
+        "image":{
+          "color":{
+            "rgbaf":[
+              0.44313725490196076,0.15294117647058825,0.4627450980392157,0.7019607843137254
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_grid_color",
+    "polylineVolume":{
+      "material":{
+        "grid":{
+          "color":{
+            "rgbaf":[
+              0.3568627450980392,0.7568627450980392,0.9686274509803922,0.10980392156862745
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_stripe_evenColor",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "evenColor":{
+            "rgbaf":[
+              0.09019607843137255,0.4235294117647059,0.5764705882352941,0.26666666666666666
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_stripe_oddColor",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "oddColor":{
+            "rgbaf":[
+              0.6823529411764706,0.9294117647058824,0.33725490196078434,0.9333333333333333
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_checkerboard_evenColor",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.8549019607843137,0.6274509803921569,0.33725490196078434,0.24313725490196078
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_material_checkerboard_oddColor",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.8431372549019608,0.03529411764705882,0.5058823529411764,0.8901960784313725
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polylineVolume_outlineColor_rgbaf",
+    "polylineVolume":{
+      "outlineColor":{
+        "rgbaf":[
+          0.5490196078431373,0.40784313725490196,0.4666666666666667,0.4235294117647059
+        ]
+      }
+    }
+  },
+  {
     "id":"constant_rectangle_coordinates_wsenDegrees",
     "rectangle":{
       "coordinates":{
@@ -4837,6 +5140,26 @@
     }
   },
   {
+    "id":"constant_agi_conicSensor_viewshedVisibleColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedVisibleColor":{
+        "rgbaf":[
+          0.5490196078431373,0.23529411764705882,0.34509803921568627,0.20392156862745098
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_conicSensor_viewshedOccludedColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedOccludedColor":{
+        "rgbaf":[
+          0.9529411764705882,0.3843137254901961,0.8901960784313725,0.00784313725490196
+        ]
+      }
+    }
+  },
+  {
     "id":"constant_agi_customPatternSensor_directions_unitSpherical",
     "agi_customPatternSensor":{
       "directions":{
@@ -5865,6 +6188,26 @@
     }
   },
   {
+    "id":"constant_agi_customPatternSensor_viewshedVisibleColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedVisibleColor":{
+        "rgbaf":[
+          0.011764705882352941,0.3058823529411765,0.09019607843137255,0.9490196078431372
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_customPatternSensor_viewshedOccludedColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedOccludedColor":{
+        "rgbaf":[
+          0.6196078431372549,0.08627450980392157,0.47843137254901963,0.2549019607843137
+        ]
+      }
+    }
+  },
+  {
     "id":"constant_agi_rectangularSensor_intersectionColor_rgbaf",
     "agi_rectangularSensor":{
       "intersectionColor":{
@@ -6855,6 +7198,26 @@
       "environmentIntersectionColor":{
         "rgbaf":[
           0.1607843137254902,0.16862745098039217,0.30196078431372547,0.11764705882352941
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_rectangularSensor_viewshedVisibleColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedVisibleColor":{
+        "rgbaf":[
+          0.9215686274509803,0.3411764705882353,0.16470588235294117,0.054901960784313725
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_rectangularSensor_viewshedOccludedColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedOccludedColor":{
+        "rgbaf":[
+          0.1843137254901961,0.6392156862745098,0.6666666666666666,0.5568627450980392
         ]
       }
     }
@@ -7956,6 +8319,48 @@
         "reference":"Constant#polyline.zIndex"
       }
     },
+    "polylineVolume":{
+      "show":{
+        "reference":"Constant#polylineVolume.show"
+      },
+      "positions":{
+        "references":[
+          "ConstantPosition1#position",
+          "ConstantPosition2#position"
+        ]
+      },
+      "cornerType":{
+        "reference":"Constant#polylineVolume.cornerType"
+      },
+      "granularity":{
+        "reference":"Constant#polylineVolume.granularity"
+      },
+      "fill":{
+        "reference":"Constant#polylineVolume.fill"
+      },
+      "material":{
+        "solidColor":{
+          "color":{
+            "reference":"Constant#polylineVolume.material.color"
+          }
+        }
+      },
+      "outline":{
+        "reference":"Constant#polylineVolume.outline"
+      },
+      "outlineColor":{
+        "reference":"Constant#polylineVolume.outlineColor"
+      },
+      "outlineWidth":{
+        "reference":"Constant#polylineVolume.outlineWidth"
+      },
+      "shadows":{
+        "reference":"Constant#polylineVolume.shadows"
+      },
+      "distanceDisplayCondition":{
+        "reference":"Constant#polylineVolume.distanceDisplayCondition"
+      }
+    },
     "rectangle":{
       "show":{
         "reference":"Constant#rectangle.show"
@@ -8173,6 +8578,18 @@
       },
       "showThroughEllipsoid":{
         "reference":"Constant#conicSensor.showThroughEllipsoid"
+      },
+      "showViewshed":{
+        "reference":"Constant#conicSensor.showViewshed"
+      },
+      "viewshedVisibleColor":{
+        "reference":"Constant#conicSensor.viewshedVisibleColor"
+      },
+      "viewshedOccludedColor":{
+        "reference":"Constant#conicSensor.viewshedOccludedColor"
+      },
+      "viewshedResolution":{
+        "reference":"Constant#conicSensor.viewshedResolution"
       }
     },
     "agi_customPatternSensor":{
@@ -8258,6 +8675,18 @@
       },
       "showThroughEllipsoid":{
         "reference":"Constant#customPatternSensor.showThroughEllipsoid"
+      },
+      "showViewshed":{
+        "reference":"Constant#customPatternSensor.showViewshed"
+      },
+      "viewshedVisibleColor":{
+        "reference":"Constant#customPatternSensor.viewshedVisibleColor"
+      },
+      "viewshedOccludedColor":{
+        "reference":"Constant#customPatternSensor.viewshedOccludedColor"
+      },
+      "viewshedResolution":{
+        "reference":"Constant#customPatternSensor.viewshedResolution"
       }
     },
     "agi_rectangularSensor":{
@@ -8349,6 +8778,18 @@
       },
       "showThroughEllipsoid":{
         "reference":"Constant#rectangularSensor.showThroughEllipsoid"
+      },
+      "showViewshed":{
+        "reference":"Constant#rectangularSensor.showViewshed"
+      },
+      "viewshedVisibleColor":{
+        "reference":"Constant#rectangularSensor.viewshedVisibleColor"
+      },
+      "viewshedOccludedColor":{
+        "reference":"Constant#rectangularSensor.viewshedOccludedColor"
+      },
+      "viewshedResolution":{
+        "reference":"Constant#rectangularSensor.viewshedResolution"
       }
     },
     "agi_fan":{
@@ -9387,6 +9828,93 @@
           },
           "repeat":{
             "reference":"material_polyline_depthFailMaterial_checkerboard#polyline.depthFailMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_polylineVolume_material_image",
+    "polylineVolume":{
+      "material":{
+        "image":{
+          "image":{
+            "reference":"material_polylineVolume_material_image#polylineVolume.material.image"
+          },
+          "repeat":{
+            "reference":"material_polylineVolume_material_image#polylineVolume.material.repeat"
+          },
+          "color":{
+            "reference":"material_polylineVolume_material_image#polylineVolume.material.color"
+          },
+          "transparent":{
+            "reference":"material_polylineVolume_material_image#polylineVolume.material.transparent"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_polylineVolume_material_grid",
+    "polylineVolume":{
+      "material":{
+        "grid":{
+          "color":{
+            "reference":"material_polylineVolume_material_grid#polylineVolume.material.color"
+          },
+          "cellAlpha":{
+            "reference":"material_polylineVolume_material_grid#polylineVolume.material.cellAlpha"
+          },
+          "lineCount":{
+            "reference":"material_polylineVolume_material_grid#polylineVolume.material.lineCount"
+          },
+          "lineThickness":{
+            "reference":"material_polylineVolume_material_grid#polylineVolume.material.lineThickness"
+          },
+          "lineOffset":{
+            "reference":"material_polylineVolume_material_grid#polylineVolume.material.lineOffset"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_polylineVolume_material_stripe",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "orientation":{
+            "reference":"material_polylineVolume_material_stripe#polylineVolume.material.orientation"
+          },
+          "evenColor":{
+            "reference":"material_polylineVolume_material_stripe#polylineVolume.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_polylineVolume_material_stripe#polylineVolume.material.oddColor"
+          },
+          "offset":{
+            "reference":"material_polylineVolume_material_stripe#polylineVolume.material.offset"
+          },
+          "repeat":{
+            "reference":"material_polylineVolume_material_stripe#polylineVolume.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_polylineVolume_material_checkerboard",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_polylineVolume_material_checkerboard#polylineVolume.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_polylineVolume_material_checkerboard#polylineVolume.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_polylineVolume_material_checkerboard#polylineVolume.material.repeat"
           }
         }
       }
@@ -11850,6 +12378,47 @@
         ]
       }
     },
+    "polylineVolume":{
+      "granularity":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,9144,
+          3600,5282
+        ]
+      },
+      "material":{
+        "solidColor":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,3,0,198,193,
+              3600,210,44,29,16
+            ]
+          }
+        }
+      },
+      "outlineColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,248,163,212,115,
+          3600,22,27,199,98
+        ]
+      },
+      "outlineWidth":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,17507,
+          3600,55396
+        ]
+      },
+      "distanceDisplayCondition":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "distanceDisplayCondition":[
+          0,20986,34897,
+          3600,14877,46650
+        ]
+      }
+    },
     "rectangle":{
       "coordinates":{
         "epoch":"2016-06-17T12:00:00Z",
@@ -12101,6 +12670,27 @@
           0,54383,
           3600,48814
         ]
+      },
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,219,102,126,208,
+          3600,165,12,88,3
+        ]
+      },
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,47,229,96,105,
+          3600,65,153,9,64
+        ]
+      },
+      "viewshedResolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,38357,
+          3600,30316
+        ]
       }
     },
     "agi_customPatternSensor":{
@@ -12192,6 +12782,27 @@
         "number":[
           0,15461,
           3600,8e3
+        ]
+      },
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,221,155,36,117,
+          3600,249,126,78,129
+        ]
+      },
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,228,27,237,134,
+          3600,254,162,80,84
+        ]
+      },
+      "viewshedResolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,44590,
+          3600,31959
         ]
       }
     },
@@ -12298,6 +12909,27 @@
         "number":[
           0,637,
           3600,10677
+        ]
+      },
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,220,157,178,92,
+          3600,213,65,75,26
+        ]
+      },
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,202,44,192,10,
+          3600,107,226,246,207
+        ]
+      },
+      "viewshedResolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,24619,
+          3600,54818
         ]
       }
     },
@@ -15425,6 +16057,264 @@
     }
   },
   {
+    "id":"sampled_polylineVolume_material_solidColor_color",
+    "polylineVolume":{
+      "material":{
+        "solidColor":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.023529411764705882,0.8784313725490196,0.054901960784313725,0.7607843137254902,
+              3600,0.40784313725490196,0.788235294117647,0.5803921568627451,0.7019607843137254
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_image",
+    "polylineVolume":{
+      "material":{
+        "image":{
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,54883,39382,
+              3600,42188,27300
+            ]
+          },
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,145,236,4,141,
+              3600,126,69,220,191
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_grid",
+    "polylineVolume":{
+      "material":{
+        "grid":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,98,87,231,46,
+              3600,222,91,113,105
+            ]
+          },
+          "cellAlpha":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,32451,
+              3600,49677
+            ]
+          },
+          "lineCount":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,14089,52279,
+              3600,59996,36842
+            ]
+          },
+          "lineThickness":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,49037,8639,
+              3600,59785,47337
+            ]
+          },
+          "lineOffset":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,40768,50335,
+              3600,6098,48919
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_stripe",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,206,34,152,54,
+              3600,182,38,96,39
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,84,117,45,107,
+              3600,79,76,73,177
+            ]
+          },
+          "offset":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,18479,
+              3600,19855
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,36294,
+              3600,34071
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_checkerboard",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,185,168,171,241,
+              3600,111,194,153,164
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,84,96,248,117,
+              3600,129,55,81,196
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,45209,63152,
+              3600,42552,3238
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_image_color",
+    "polylineVolume":{
+      "material":{
+        "image":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.5215686274509804,0.7450980392156863,0.5372549019607843,0.22745098039215686,
+              3600,0.792156862745098,0.19215686274509805,0.5647058823529412,0.07058823529411765
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_grid_color",
+    "polylineVolume":{
+      "material":{
+        "grid":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.27450980392156865,0.5450980392156862,0.20392156862745098,0.6509803921568628,
+              3600,0.3843137254901961,0.3843137254901961,0.6705882352941176,0.3607843137254902
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_stripe_evenColor",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.058823529411764705,0.3411764705882353,0.8392156862745098,0.8235294117647058,
+              3600,0.8392156862745098,0.24705882352941178,0.5686274509803921,0.9058823529411765
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_stripe_oddColor",
+    "polylineVolume":{
+      "material":{
+        "stripe":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.8509803921568627,0.30980392156862746,0.8235294117647058,0.12156862745098039,
+              3600,0.9764705882352941,0.5647058823529412,0.7764705882352941,0.6078431372549019
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_checkerboard_evenColor",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.396078431372549,0.7176470588235294,0.9764705882352941,0.5647058823529412,
+              3600,0.38823529411764707,0.5686274509803921,0.023529411764705882,0.807843137254902
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_material_checkerboard_oddColor",
+    "polylineVolume":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.06666666666666667,0.796078431372549,0.5764705882352941,0.1803921568627451,
+              3600,0.5764705882352941,0.5215686274509804,0.6235294117647059,0.3843137254901961
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polylineVolume_outlineColor_rgbaf",
+    "polylineVolume":{
+      "outlineColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.4549019607843137,0.6745098039215687,0.3686274509803922,0.8509803921568627,
+          3600,0.23921568627450981,0.5254901960784314,0.13333333333333333,0.9490196078431372
+        ]
+      }
+    }
+  },
+  {
     "id":"sampled_rectangle_coordinates_wsenDegrees",
     "rectangle":{
       "coordinates":{
@@ -17207,6 +18097,30 @@
     }
   },
   {
+    "id":"sampled_conicSensor_viewshedVisibleColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.6666666666666666,0.13333333333333333,0.2784313725490196,0.2549019607843137,
+          3600,0.11372549019607843,0.5372549019607843,0.4666666666666667,0.7098039215686275
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_viewshedOccludedColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.32941176470588235,0.29411764705882354,0.4666666666666667,0.00784313725490196,
+          3600,0.2901960784313726,0.5254901960784314,0.6,0.5882352941176471
+        ]
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_intersectionColor_rgbaf",
     "agi_customPatternSensor":{
       "intersectionColor":{
@@ -18461,6 +19375,30 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_viewshedVisibleColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.10196078431372549,0.23529411764705882,0.5372549019607843,0.6509803921568628,
+          3600,0.9450980392156862,0.047058823529411764,0.3686274509803922,0.7450980392156863
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_viewshedOccludedColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.6588235294117647,0.7058823529411765,0.4823529411764706,0.6078431372549019,
+          3600,0.9176470588235294,0.5568627450980392,0.596078431372549,0.7372549019607844
+        ]
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_intersectionColor_rgbaf",
     "agi_rectangularSensor":{
       "intersectionColor":{
@@ -19710,6 +20648,30 @@
         "rgbaf":[
           0,0.788235294117647,0.8156862745098039,0.3568627450980392,0.08235294117647059,
           3600,0.5098039215686274,0.49411764705882355,0.984313725490196,0.5490196078431373
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_viewshedVisibleColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.26666666666666666,0.15294117647058825,0.8196078431372549,0.08235294117647059,
+          3600,0.19215686274509805,0.06274509803921569,0.4666666666666667,0.06274509803921569
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_viewshedOccludedColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.35294117647058826,0.32941176470588235,0.050980392156862744,0.1843137254901961,
+          3600,0.7254901960784313,0.16470588235294117,0.06666666666666667,0.27450980392156865
         ]
       }
     }

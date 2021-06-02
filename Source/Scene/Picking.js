@@ -768,7 +768,7 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   var position;
-  var object = view.pickFramebuffer.end(context);
+  var object = view.pickFramebuffer.end(scratchRectangle);
 
   if (scene.context.depthTexture) {
     var numFrustums = view.frustumCommandsList.length;

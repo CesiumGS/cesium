@@ -300,6 +300,10 @@ function interpolateUsingSurfaceDistance(
   ellipticity,
   result
 ) {
+  if (distance === 0.0) {
+    return Cartographic.clone(start, result);
+  }
+
   var ellipticitySquared = ellipticity * ellipticity;
 
   var longitude;

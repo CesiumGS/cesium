@@ -1,11 +1,72 @@
 # Change Log
 
+### 1.83 - 2021-07-01
+
+##### Additions :tada:
+
+- Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
+
+##### Fixes :wrench:
+
+- Fixed an issue in `ScreenSpaceCameraController.tilt3DOnTerrain` that caused unexpected camera behavior when tilting terrain diagonally along the screen. [#9562](https://github.com/CesiumGS/cesium/pull/9562)
+- Fixed error handling in `GlobeSurfaceTile` to print terrain tile request errors to console. [#9570](https://github.com/CesiumGS/cesium/pull/9570)
+
+### 1.82.1 - 2021-06-01
+
+- This is an npm only release to fix the improperly published 1.82.0.
+
+### 1.82 - 2021-06-01
+
+##### Additions :tada:
+
+- Added `FeatureDetection.supportsBigInt64Array`, `FeatureDetection.supportsBigUint64Array` and `FeatureDetection.supportsBigInt`.
+
+##### Fixes :wrench:
+
+- Fixed `processTerrain` in `decodeGoogleEarthEnterprisePacket` to handle a newer terrain packet format that includes water surface meshes after terrain meshes. [#9519](https://github.com/CesiumGS/cesium/pull/9519)
+
+### 1.81 - 2021-05-01
+
+##### Fixes :wrench:
+
+- Fixed an issue where `Camera.flyTo` would not work properly with a non-WGS84 Ellipsoid. [#9498](https://github.com/CesiumGS/cesium/pull/9498)
+- Fixed an issue where setting the `ViewportQuad` rectangle after creating the viewport had no effect.[#9511](https://github.com/CesiumGS/cesium/pull/9511)
+- Fixed an issue where TypeScript was not picking up type defintions for `ArcGISTiledElevationTerrainProvider`. [#9522](https://github.com/CesiumGS/cesium/pull/9522)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `loadCRN` and `loadKTX` have been deprecated and will be removed in CesiumJS 1.83. They will be replaced with support for KTX2. [#9478](https://github.com/CesiumGS/cesium/pull/9478)
+
+### 1.80 - 2021-04-01
+
+##### Additions :tada:
+
+- Added support for drawing ground primitives on translucent 3D Tiles. [#9399](https://github.com/CesiumGS/cesium/pull/9399)
+
+### 1.79.1 - 2021-03-01
+
+##### Fixes :wrench:
+
+- Fixed a regression in 1.79 that broke terrain exaggeration. [#9397](https://github.com/CesiumGS/cesium/pull/9397)
+- Fixed an issue where interpolating certain small rhumblines with surface distance 0.0 would not return the expected result. [#9430](https://github.com/CesiumGS/cesium/pull/9430)
+
 ### 1.79 - 2021-03-01
+
+##### Breaking Changes :mega:
+
+- Removed `Cesium3DTileset.url`, which was deprecated in CesiumJS 1.78. Use `Cesium3DTileset.resource.url` to retrieve the url value.
+- Removed `EasingFunction.QUADRACTIC_IN`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_IN`.
+- Removed `EasingFunction.QUADRACTIC_OUT`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_OUT`.
+- Removed `EasingFunction.QUADRACTIC_IN_OUT`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_IN_OUT`.
+- Changed `TaskProcessor.maximumActiveTasks` constructor option to be infinity by default. [#9313](https://github.com/CesiumGS/cesium/pull/9313)
 
 ##### Fixes :wrench:
 
 - Fixed an issue that prevented use of the full CesiumJS zip release package in a Node.js application.
 - Fixed an issue where certain inputs to EllipsoidGeodesic would result in a surfaceDistance of NaN. [#9316](https://github.com/CesiumGS/cesium/pull/9316)
+- Fixed `sampleTerrain` and `sampleTerrainMostDetailed` not working for `ArcGISTiledElevationTerrainProvider`. [#9286](https://github.com/CesiumGS/cesium/pull/9286)
+- Consistent with the spec, CZML `polylineVolume` now expects its shape positions to specified using the `cartesian2` property. Use of the `cartesian` is also supported for backward-compatibility. [#9384](https://github.com/CesiumGS/cesium/pull/9384)
+- Removed an unnecessary matrix copy each time a `Cesium3DTileset` is updated. [#9366](https://github.com/CesiumGS/cesium/pull/9366)
 
 ### 1.78 - 2021-02-01
 
@@ -75,8 +136,8 @@
 
 ##### Breaking Changes :mega:
 
-- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
-- Removed `BingMapsApi`, which was deprecated in v1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
+- Removed `MapboxApi`, which was deprecated in CesiumJS 1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+- Removed `BingMapsApi`, which was deprecated in CesiumJS 1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
 
 ##### Additions :tada:
 

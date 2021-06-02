@@ -161,7 +161,8 @@ function packBuffer(polylines) {
 }
 
 var createVerticesTaskProcessor = new TaskProcessor(
-  "createVectorTilePolylines"
+  "createVectorTilePolylines",
+  5
 );
 var attributeLocations = {
   previousPosition: 0,
@@ -431,11 +432,11 @@ function createShaders(primitive, context) {
     "a_batchId",
     undefined
   )(Vector3DTilePolylinesVS);
-  var fsSource = batchTable.getFragmentShaderCallback()(
-    PolylineFS,
+  var fsSource = batchTable.getFragmentShaderCallback(
     false,
-    undefined
-  );
+    undefined,
+    false
+  )(PolylineFS);
 
   var vs = new ShaderSource({
     defines: [

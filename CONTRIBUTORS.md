@@ -150,6 +150,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Erixen Cruz](https://github.com/ErixenCruz)
   - [Dzung Nguyen](https://github.com/dzungpng)
   - [Nithin Pranesh](https://github.com/nithinp7)
+  - [Alexander Gallegos](https://github.com/argallegos)
+  - [Janine Liu](https://github.com/j9liu)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -160,6 +162,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Joey Rafidi](https://github.com/jrafidi)
 - [Geoplex GIS GmbH](https://www.geoplex.de)
   - [Leonard Holst](https://github.com/LHolst)
+- [Google LLC](https://www.google.com)
+  - [Mark Aubin](https://github.com/markaubin)
+  - [Michael Shantzis](https://github.com/shantzis1962)
+  - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -284,4 +290,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Will Jadkowski](https://github.com/willjad)
 - [Mac Clayton](https://github.com/mclayton7)
 - [Ben Murphy](https://github.com/littlemurph)
+- [Ethan Wong](https://github.com/GetToSet)
+- [Calogero Mauceri](https://github.com/kalosma)
+- [Ren Jianqiang](https://github.com/renjianqiang)
 - [qiuyan_wang](https://github.com/wqy224488)

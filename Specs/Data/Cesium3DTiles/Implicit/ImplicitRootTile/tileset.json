@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "geometricError": 10000,
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling"
+  ],
+  "root": {
+    "boundingVolume": {
+      "box": [
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+      ]
+    },
+    "content": {
+      "uri": "content/{level}/{x}/{y}.b3dm"
+    },
+    "refine": "REPLACE",
+    "geometricError": 100,
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "OCTREE",
+        "subtreeLevels": 2,
+        "maximumLevel": 5,
+        "subtrees": {
+          "uri": "subtrees/{level}/{x}/{y}/{z}.subtree"
+        }
+      }
+    }
+  }
+}

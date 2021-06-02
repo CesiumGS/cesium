@@ -1,7 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -17,21 +14,16 @@ import when from "../ThirdParty/when.js";
  *
  * @private
  */
-function Tileset3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset
-) {
+function Tileset3DTileContent(tileset, tile, resource, json) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
-  initialize(this, arrayBuffer, byteOffset);
+  initialize(this, json);
 }
 
 Object.defineProperties(Tileset3DTileContent.prototype, {
@@ -106,21 +98,19 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
       return undefined;
     },
   },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
+    },
+  },
 });
 
-function initialize(content, arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var tilesetJson;
-
-  try {
-    tilesetJson = getJsonFromTypedArray(uint8Array, byteOffset);
-  } catch (error) {
-    content._readyPromise.reject(new RuntimeError("Invalid tile content."));
-    return;
-  }
-
-  content._tileset.loadTileset(content._resource, tilesetJson, content._tile);
+function initialize(content, json) {
+  content._tileset.loadTileset(content._resource, json, content._tile);
   content._readyPromise.resolve(content);
 }
 

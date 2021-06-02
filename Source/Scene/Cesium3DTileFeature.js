@@ -191,6 +191,76 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 };
 
 /**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * inherited.
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
+  var value;
+  var content = this._content;
+  var batchTable = this._content.batchTable;
+  if (defined(batchTable)) {
+    value = batchTable.getProperty(this._batchId, name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var tileMetadata = content.tile.metadata;
+  if (defined(tileMetadata)) {
+    value = tileMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = tileMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var groupMetadata = content.groupMetadata;
+  if (defined(groupMetadata)) {
+    value = groupMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = groupMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var tilesetMetadata = content.tileset.metadata;
+  if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
+    tilesetMetadata = tilesetMetadata.tileset;
+    value = tilesetMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = tilesetMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+/**
  * Sets the value of the feature's property with the given name.
  * <p>
  * If a property with the given name doesn't exist, it is created.

@@ -941,6 +941,42 @@ describe(
       });
     });
 
+    it("disables shadow fading", function () {
+      box.show = true;
+      floor.show = true;
+
+      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
+      );
+
+      // Create light camera pointing straight down
+      var lightCamera = new Camera(scene);
+      lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
+
+      scene.shadowMap = new ShadowMap({
+        context: scene.context,
+        lightCamera: lightCamera,
+      });
+
+      // Render with light looking straight down
+      var shadowedColor = renderAndReadPixels();
+
+      // Move the light close to the horizon
+      lightCamera.lookAt(center, new Cartesian3(1.0, 0.0, 0.01));
+
+      // Render with faded shadows
+      var horizonShadowedColor = renderAndReadPixels();
+
+      // Render with unfaded shadows
+      scene.shadowMap.fadingEnabled = false;
+      renderAndCall(function (rgba) {
+        expect(horizonShadowedColor).not.toEqual(shadowedColor);
+        expect(rgba).not.toEqual(horizonShadowedColor);
+      });
+    });
+
     function depthFramebufferSupported() {
       var framebuffer = new Framebuffer({
         context: scene.context,

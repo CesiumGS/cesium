@@ -15,7 +15,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     this._properties[name] = value;
   };
 
-  MockFeature.prototype.getProperty = function (name) {
+  MockFeature.prototype.getPropertyInherited = function (name) {
     return this._properties[name];
   };
 

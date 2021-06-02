@@ -19,7 +19,7 @@
 /Cesium-*.zip
 /Documentation
 /favicon.ico
-/gulpfile.js
+/gulpfile.cjs
 /index.html
 /index.release.html
 /launches

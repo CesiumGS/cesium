@@ -50,8 +50,8 @@ npm start
 
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
-- **Hello World** : an example using the combined and minified Cesium library to create a 3D globe. [Tutorial here](http://cesiumjs.org/tutorials/cesium-up-and-running/)
-- **Sandcastle** : an app for viewing and creating [code examples](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases), complete with a live preview
+- **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/docs/tutorials/quick-start//)
+- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
 - **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
 - **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
@@ -124,7 +124,7 @@ Here's the full set of scripts and what they do.
 
 ## Travis and Continuous Integration
 
-Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
+Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
 
 Travis triggers a build whenever someone opens a pull request or pushes code to the Cesium repository. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
 
@@ -138,7 +138,7 @@ Additional set up is required for deployment if you do not have commit access to
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
 - In `travis.yml`, edit the following line:
 
@@ -147,7 +147,7 @@ It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a d
 ```
 
 - Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
-- In `gulpfile.js`, edit the following line:
+- In `gulpfile.cjs`, edit the following line:
 
 ```
 var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
