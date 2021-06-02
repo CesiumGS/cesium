@@ -2819,7 +2819,7 @@ Cesium3DTileset.supportedExtensions = {
 };
 
 /**
- * Checks to see if a given extension is supported by Cesium3DTileset. If 
+ * Checks to see if a given extension is supported by Cesium3DTileset. If
  * the extension is not supported by Cesium3DTileset, it throws a RuntimeError.
  *
  * @param {Object} extensionsRequired The extensions we wish to check
@@ -2827,11 +2827,9 @@ Cesium3DTileset.supportedExtensions = {
  * @private
  */
 Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
-  for (var extension in extensionsRequired) {
-    if (extensionsRequired.hasOwnProperty(extension)) {
-      if (!Cesium3DTileset.supportedExtensions[extension]) {
-        throw new RuntimeError("Unsupported 3D Tiles Extension: " + extension);
-      }
+  for (var i = 0; i < extensionsRequired.length; i++) {
+    if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
+      throw new RuntimeError("Unsupported 3D Tiles Extension: " + extension);
     }
   }
 };
