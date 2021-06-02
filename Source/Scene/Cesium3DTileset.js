@@ -1751,7 +1751,9 @@ Cesium3DTileset.prototype.loadTileset = function (
     throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
   }
 
-  Cesium3DTileset.checkSupportedExtensions(this._extensions);
+  if (defined(tilesetJson.extensionsRequired)) {
+    Cesium3DTileset.checkSupportedExtensions(tilesetJson.extensionsRequired);
+  }
 
   var statistics = this._statistics;
 
