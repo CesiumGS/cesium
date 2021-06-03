@@ -6,6 +6,8 @@ import defined from "../Core/defined.js";
  * @constructor
  *
  * @param {Number} duration entry duration
+ *
+ * @see KmlTour
  */
 function KmlTourWait(duration) {
   this.type = "KmlTourWait";
