@@ -1,5 +1,7 @@
 import defined from "../Core/defined.js";
 /**
+ * Pauses the KmlTour for a given number of seconds.
+ *
  * @alias KmlTourWait
  * @constructor
  *
