@@ -5,7 +5,7 @@
 ##### Additions :tada:
 
 - Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
-- Added checks for supported 3D tiles extensions.[#9552](https://github.com/CesiumGS/cesium/issues/9552)
+- Added checks for supported 3D Tiles extensions. [#9552](https://github.com/CesiumGS/cesium/issues/9552)
 
 ##### Fixes :wrench:
 
