@@ -56,24 +56,25 @@ export default function parseFeatureMetadata(options) {
     }
   }
 
-  var featureTextures = {};
-  if (defined(extension.featureTextures)) {
-    for (var featureTextureId in extension.featureTextures) {
-      if (extension.featureTextures.hasOwnProperty(featureTextureId)) {
-        var featureTexture = extension.featureTextures[featureTextureId];
-        featureTextures[featureTextureId] = new FeatureTexture({
-          featureTexture: featureTexture,
-          class: schema.classes[featureTexture.class],
-          textures: options.textures,
-        });
-      }
-    }
-  }
+  // TODO: this is commented until feature textures are supported on this branch
+  // var featureTextures = {};
+  // if (defined(extension.featureTextures)) {
+  //   for (var featureTextureId in extension.featureTextures) {
+  //     if (extension.featureTextures.hasOwnProperty(featureTextureId)) {
+  //       var featureTexture = extension.featureTextures[featureTextureId];
+  //       featureTextures[featureTextureId] = new FeatureTexture({
+  //         featureTexture: featureTexture,
+  //         class: schema.classes[featureTexture.class],
+  //         textures: options.textures,
+  //       });
+  //     }
+  //   }
+  // }
 
   return new FeatureMetadata({
     schema: schema,
     featureTables: featureTables,
-    featureTextures: featureTextures,
+    //featureTextures: featureTextures,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,
