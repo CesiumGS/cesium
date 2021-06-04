@@ -62,6 +62,7 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
           var face = faces[faceKeys[j]];
           faces[faceKeys[j]] = new CompressedTextureBuffer(
             face.internalFormat,
+            face.datatype,
             face.width,
             face.height,
             face.levelBuffer

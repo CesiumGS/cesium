@@ -6,12 +6,20 @@ import defined from "./defined.js";
  * @constructor
  *
  * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
+ * @param {PixelDatatype} pixelDatatype The pixel datatype of the compressed texture.
  * @param {Number} width The width of the texture.
  * @param {Number} height The height of the texture.
  * @param {Uint8Array} buffer The compressed texture buffer.
  */
-function CompressedTextureBuffer(internalFormat, width, height, buffer) {
+function CompressedTextureBuffer(
+  internalFormat,
+  pixelDatatype,
+  width,
+  height,
+  buffer
+) {
   this._format = internalFormat;
+  this._datatype = pixelDatatype;
   this._width = width;
   this._height = height;
   this._buffer = buffer;
@@ -27,6 +35,17 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
   internalFormat: {
     get: function () {
       return this._format;
+    },
+  },
+  /**
+   * The datatype of the compressed texture.
+   * @type PixelDatatype
+   * @readonly
+   * @memberof CompressedTextureBuffer.prototype
+   */
+  pixelDatatype: {
+    get: function () {
+      return this._datatype;
     },
   },
   /**
@@ -77,6 +96,7 @@ CompressedTextureBuffer.clone = function (object) {
 
   return new CompressedTextureBuffer(
     object._format,
+    object._datatype,
     object._width,
     object._height,
     object._buffer

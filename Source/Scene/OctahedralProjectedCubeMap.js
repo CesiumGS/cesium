@@ -304,11 +304,17 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   }
 
   var defines = [];
-  if (
-    PixelFormat.isNormalizedFormat(cubeMapBuffers[0].positiveX.internalFormat)
-  ) {
+  // Datatype is defined if it is a normalized type (i.e. ..._UNORM, ..._SFLOAT)
+  var pixelDatatype = cubeMapBuffers[0].positiveX.pixelDatatype;
+  if (!defined(pixelDatatype)) {
+    pixelDatatype = context.halfFloatingPointTexture
+      ? PixelDatatype.HALF_FLOAT
+      : PixelDatatype.FLOAT;
+  } else {
     defines.push("RGBA_NORMALIZED");
   }
+  var pixelFormat = PixelFormat.RGBA;
+
   var fs = new ShaderSource({
     defines: defines,
     sources: [OctahedralProjectionFS],
@@ -336,11 +342,6 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
       return originalSize;
     },
   };
-
-  var pixelDatatype = context.halfFloatingPointTexture
-    ? PixelDatatype.HALF_FLOAT
-    : PixelDatatype.FLOAT;
-  var pixelFormat = PixelFormat.RGBA;
 
   // First we project each cubemap onto a flat octahedron, and write that to a texture.
   for (var i = 0; i < length; ++i) {
