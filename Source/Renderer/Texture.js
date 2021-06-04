@@ -212,6 +212,7 @@ function Texture(options) {
 
       // Source: typed array
       var arrayBufferView = source.arrayBufferView;
+      var i, mipWidth, mipHeight;
       if (isCompressed) {
         gl.compressedTexImage2D(
           textureTarget,
@@ -223,9 +224,9 @@ function Texture(options) {
           arrayBufferView
         );
         if (defined(source.mipLevels)) {
-          var mipWidth = width;
-          var mipHeight = height;
-          for (var i = 0; i < source.mipLevels.length; ++i) {
+          mipWidth = width;
+          mipHeight = height;
+          for (i = 0; i < source.mipLevels.length; ++i) {
             mipWidth = Math.floor(mipWidth / 2) | 0;
             if (mipWidth < 1) {
               mipWidth = 1;
@@ -268,9 +269,9 @@ function Texture(options) {
         );
 
         if (defined(source.mipLevels)) {
-          var mipWidth = width;
-          var mipHeight = height;
-          for (var i = 0; i < source.mipLevels.length; ++i) {
+          mipWidth = width;
+          mipHeight = height;
+          for (i = 0; i < source.mipLevels.length; ++i) {
             mipWidth = Math.floor(mipWidth / 2) | 0;
             if (mipWidth < 1) {
               mipWidth = 1;

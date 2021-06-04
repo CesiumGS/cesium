@@ -439,9 +439,9 @@ Material.prototype.update = function (context) {
     var mipLevels;
     if (Array.isArray(image)) {
       // highest detail mip should be level 0
-      mipLevels = image
-        .slice(1, image.length)
-        .map((mipLevel) => mipLevel.bufferView);
+      mipLevels = image.slice(1, image.length).map(function (mipLevel) {
+        return mipLevel.bufferView;
+      });
       image = image[0];
     }
 
