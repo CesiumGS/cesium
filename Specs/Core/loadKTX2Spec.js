@@ -6,7 +6,7 @@ import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { RuntimeError } from "../../Source/Cesium.js";
 
-fdescribe("Core/loadKTX2", function () {
+describe("Core/loadKTX2", function () {
   var validCompressed = new Uint8Array([
     171,
     75,

@@ -233,7 +233,10 @@ PixelFormat.isDepthFormat = function (pixelFormat) {
  * @private
  */
 PixelFormat.isNormalizedFormat = function (pixelFormat) {
-  return pixelFormat === PixelFormat.RGBA_UNORM;
+  return (
+    pixelFormat === PixelFormat.RGBA_UNORM ||
+    pixelFormat === PixelFormat.RGBA_BC7
+  );
 };
 
 /**
