@@ -48,6 +48,14 @@ var PixelFormat = {
   RGBA: WebGLConstants.RGBA,
 
   /**
+   * A pixel format containing unsigned normalized red, green, blue, and alpha channels.
+   *
+   * @type {Number}
+   * @constant
+   */
+  RGBA_UNORM: WebGLConstants.UNSIGNED_NORMALIZED,
+
+  /**
    * A pixel format containing a luminance (intensity) channel.
    *
    * @type {Number}
@@ -160,6 +168,7 @@ PixelFormat.componentsLength = function (pixelFormat) {
     case PixelFormat.RGB:
       return 3;
     case PixelFormat.RGBA:
+    case PixelFormat.RGBA_UNORM:
       return 4;
     case PixelFormat.LUMINANCE_ALPHA:
       return 2;
@@ -218,6 +227,13 @@ PixelFormat.isDepthFormat = function (pixelFormat) {
     pixelFormat === PixelFormat.DEPTH_COMPONENT ||
     pixelFormat === PixelFormat.DEPTH_STENCIL
   );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isNormalizedFormat = function (pixelFormat) {
+  return pixelFormat === PixelFormat.RGBA_UNORM;
 };
 
 /**

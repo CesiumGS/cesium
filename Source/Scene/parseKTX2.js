@@ -110,8 +110,8 @@ function parseUncompressed(header, result) {
       : internalFormat;
   internalFormat =
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_UNORM
-      ? PixelFormat.RGBA
-      : PixelFormat.RGB;
+      ? PixelFormat.RGBA_UNORM
+      : internalFormat;
 
   for (var i = 0; i < header.levels.length; ++i) {
     var level = (result[i] = {});

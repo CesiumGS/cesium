@@ -11,6 +11,7 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CubeMap from "../Renderer/CubeMap.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
+import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import OctahedralProjectionAtlasFS from "../Shaders/OctahedralProjectionAtlasFS.js";
@@ -47,7 +48,7 @@ function OctahedralProjectedCubeMap(url) {
 
 Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   /**
-   * The url to the KTX file containing the specular environment map and convoluted mipmaps.
+   * The url to the KTX2 file containing the specular environment map and convoluted mipmaps.
    * @memberof OctahedralProjectedCubeMap.prototype
    * @type {String}
    * @readonly
@@ -302,11 +303,22 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     return;
   }
 
+  var defines = [];
+  if (
+    PixelFormat.isNormalizedFormat(cubeMapBuffers[0].positiveX.internalFormat)
+  ) {
+    defines.push("RGBA_NORMALIZED");
+  }
+  var fs = new ShaderSource({
+    defines: defines,
+    sources: [OctahedralProjectionFS],
+  });
+
   this._va = createVertexArray(context);
   this._sp = ShaderProgram.fromCache({
     context: context,
     vertexShaderSource: OctahedralProjectionVS,
-    fragmentShaderSource: OctahedralProjectionFS,
+    fragmentShaderSource: fs,
     attributeLocations: {
       position: 0,
       cubeMapCoordinates: 1,
