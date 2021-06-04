@@ -30,6 +30,7 @@ import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Quaternion from "../Core/Quaternion.js";
 import Resource from "../Core/Resource.js";
+import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
 import Transforms from "../Core/Transforms.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import Buffer from "../Renderer/Buffer.js";
@@ -1876,6 +1877,35 @@ function parseShaders(model) {
         );
     }
   });
+}
+
+function parseGeopose(model) {
+  var gltf = model.gltf;
+  if (
+    !hasExtension(gltf, "EXT_geopose_basic_euler") ||
+    !defined(gltf.extensions) ||
+    !defined(gltf.extensions.EXT_geopose_basic_euler)
+  ) {
+    return;
+  }
+
+  var geopose = gltf.extensions.EXT_geopose_basic_euler;
+  var hpr = HeadingPitchRoll.fromDegrees(
+    geopose.ypr.yaw,
+    geopose.ypr.pitch,
+    geopose.ypr.roll
+  );
+  var origin = Cartesian3.fromDegrees(
+    geopose.longitude,
+    geopose.latitude,
+    geopose.height
+  );
+  var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr);
+  model.modelMatrix = Matrix4.multiply(
+    modelMatrix,
+    model.modelMatrix,
+    model.modelMatrix
+  );
 }
 
 function parsePrograms(model) {
@@ -5289,6 +5319,7 @@ Model.prototype.update = function (frameState) {
         parseMaterials(this);
         parseMeshes(this);
         parseNodes(this);
+        parseGeopose(this);
 
         // Start draco decoding
         DracoLoader.parse(this, context);

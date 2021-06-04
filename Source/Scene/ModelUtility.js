@@ -561,6 +561,7 @@ ModelUtility.getRequiredExtensions = function (gltf) {
 ModelUtility.supportedExtensions = {
   AGI_articulations: true,
   CESIUM_RTC: true,
+  EXT_geopose_basic_euler: true,
   EXT_texture_webp: true,
   KHR_blend: true,
   KHR_binary_glTF: true,
