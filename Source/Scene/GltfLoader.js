@@ -16,11 +16,14 @@ import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
+import MetadataType from "./MetadataType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 var Attribute = ModelComponents.Attribute;
 var Indices = ModelComponents.Indices;
@@ -37,6 +40,17 @@ var Texture = ModelComponents.Texture;
 var MetallicRoughness = ModelComponents.MetallicRoughness;
 var SpecularGlossiness = ModelComponents.SpecularGlossiness;
 var Material = ModelComponents.Material;
+
+var GltfLoaderState = {
+  UNLOADED: 0,
+  LOADING: 1,
+  READY_TO_PROCESS: 2,
+  PROCESSING: 3,
+  READY_TO_FINALIZE: 4,
+  PROCESSING_TEXTURES: 4,
+  READY: 4,
+  FAILED: 5,
+};
 
 /**
  * Loads a glTF model.
@@ -84,7 +98,7 @@ export default function GltfLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._gltfJsonLoader = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._parsed = false;
+  this._texturesLoaded = false;
   this._promise = when.defer();
   this._texturesLoadedPromise = when.defer();
 
@@ -210,24 +224,20 @@ function handleError(gltfLoader, error) {
  * @private
  */
 GltfLoader.prototype.process = function (frameState) {
+  // TODO: clean up this loop
+  // TODO: feature id N support
+
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
-
-  if (
-    this._state !== ResourceLoaderState.PROCESSING &&
-    this._state !== ResourceLoaderState.READY // In case textures still need to be processed when incrementallyLoadTextures is true
-  ) {
-    return;
-  }
 
   if (!FeatureDetection.supportsWebP.initialized) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
 
-  if (!this._parsed) {
-    this._parsed = true; // Make sure parse is only called once
+  if (this._state === GltfLoaderState.READY_TO_PROCESS) {
+    this._state = GltfLoaderState.PROCESSING;
 
     var supportedImageFormats = new SupportedImageFormats({
       webp: FeatureDetection.supportsWebP(),
@@ -255,27 +265,40 @@ GltfLoader.prototype.process = function (frameState) {
     }
   }
 
-  var i;
-  var textureLoaders = this._textureLoaders;
-  var textureLoadersLength = textureLoaders.length;
-  for (i = 0; i < textureLoadersLength; ++i) {
-    textureLoaders[i].process(frameState);
+  if (this._state === GltfLoaderState.PROCESSING) {
+    var i;
+    var textureLoaders = this._textureLoaders;
+    var textureLoadersLength = textureLoaders.length;
+    for (i = 0; i < textureLoadersLength; ++i) {
+      textureLoaders[i].process(frameState);
+    }
+
+    var bufferViewLoaders = this._bufferViewLoaders;
+    var bufferViewLoadersLength = bufferViewLoaders.length;
+    for (i = 0; i < bufferViewLoadersLength; ++i) {
+      bufferViewLoaders[i].process(frameState);
+    }
+
+    var geometryLoaders = this._geometryLoaders;
+    var geometryLoadersLength = geometryLoaders.length;
+    for (i = 0; i < geometryLoadersLength; ++i) {
+      geometryLoaders[i].process(frameState);
+    }
+
+    if (defined(this._featureMetadataLoader)) {
+      this._featureMetadataLoader.process(frameState);
+    }
   }
 
-  var bufferViewLoaders = this._bufferViewLoaders;
-  var bufferViewLoadersLength = bufferViewLoaders.length;
-  for (i = 0; i < bufferViewLoadersLength; ++i) {
-    bufferViewLoaders[i].process(frameState);
-  }
+  if (this._state === GltfLoaderState.READY_TO_FINALIZE) {
+    loader._state = ResourceLoaderState.READY;
 
-  var geometryLoaders = this._geometryLoaders;
-  var geometryLoadersLength = geometryLoaders.length;
-  for (i = 0; i < geometryLoadersLength; ++i) {
-    geometryLoaders[i].process(frameState);
-  }
+    finalize(loader, frameState);
 
-  if (defined(this._featureMetadataLoader)) {
-    this._featureMetadataLoader.process(frameState);
+    // Buffer views can be unloaded after the data has been copied
+    unloadBufferViews(loader);
+
+    loader._promise.resolve(loader);
   }
 };
 
@@ -395,12 +418,14 @@ function getDefault(MathType) {
   return new MathType(); // defaults to 0.0 for all types
 }
 
-function createAttribute(gltf, accessorId, semantic) {
+function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   var accessor = gltf.accessors[accessorId];
   var MathType = AttributeType.getMathType(accessor.type);
 
   var attribute = new Attribute();
+  attribute.name = name;
   attribute.semantic = semantic;
+  attribute.setIndex = setIndex;
   attribute.constant = getDefault(MathType);
   attribute.componentDatatype = accessor.componentType;
   attribute.normalized = defaultValue(accessor.normalized, false);
@@ -414,11 +439,24 @@ function createAttribute(gltf, accessorId, semantic) {
   return attribute;
 }
 
-function loadVertexAttribute(loader, gltf, accessorId, semantic, draco) {
+function getSetIndex(gltfSemantic) {
+  var setIndexRegex = /^\w+_(\d+)$/;
+  var setIndexMatch = setIndexRegex.exec(gltfSemantic);
+  if (setIndexMatch !== null) {
+    return parseInt(setIndexMatch[1]);
+  }
+  return undefined;
+}
+
+function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
 
-  var attribute = createAttribute(gltf, accessorId, semantic);
+  var name = gltfSemantic;
+  var semantic = VertexAttributeSemantic.fromGltfSemantic(gltfSemantic);
+  var setIndex = defined(semantic) ? getSetIndex(gltfSemantic) : undefined;
+
+  var attribute = createAttribute(gltf, accessorId, name, semantic, setIndex);
 
   if (!defined(draco) && !defined(bufferViewId)) {
     return attribute;
@@ -428,7 +466,7 @@ function loadVertexAttribute(loader, gltf, accessorId, semantic, draco) {
     loader,
     gltf,
     accessorId,
-    semantic,
+    gltfSemantic,
     draco
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
@@ -441,7 +479,7 @@ function loadVertexAttribute(loader, gltf, accessorId, semantic, draco) {
     if (
       defined(draco) &&
       defined(draco.attributes) &&
-      defined(draco.attributes[semantic])
+      defined(draco.attributes[gltfSemantic])
     ) {
       // The accessor's byteOffset and byteStride should be ignored for draco.
       // Each attribute is tightly packed in its own buffer after decode.
@@ -458,26 +496,31 @@ function loadInstancedAttribute(
   loader,
   gltf,
   accessorId,
-  semantic,
+  gltfSemantic,
+  loadAsTypedArray,
   frameState
 ) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
 
-  var attribute = createAttribute(gltf, accessorId, semantic);
+  var name = gltfSemantic;
+  var semantic = InstanceAttributeSemantic.fromGltfSemantic(gltfSemantic);
+  var setIndex = defined(semantic) ? getSetIndex(gltfSemantic) : undefined;
+
+  var attribute = createAttribute(gltf, accessorId, name, semantic, setIndex);
 
   if (!defined(bufferViewId)) {
     return attribute;
   }
 
-  if (frameState.context.instancedArrays) {
+  if (!loadAsTypedArray && frameState.context.instancedArrays) {
     // Only create a GPU buffer if the browser supports WebGL instancing
     // Don't pass in draco object since instanced attributes can't be draco compressed
     var vertexBufferLoader = loadVertexBuffer(
       loader,
       gltf,
       accessorId,
-      semantic,
+      gltfSemantic,
       undefined
     );
     vertexBufferLoader.promise.then(function (vertexBufferLoader) {
@@ -556,10 +599,7 @@ function loadTexture(loader, gltf, textureInfo, supportedImageFormats) {
 
   loader._textureLoaders.push(textureLoader);
 
-  var texture = new Texture();
-  texture.texCoord = textureInfo.texCoord;
-  texture.sampler = GltfLoaderUtil.createSampler({
-    gltf: gltf,
+  var texture = GltfLoaderUtil.createModelTexture({
     textureInfo: textureInfo,
   });
 
@@ -684,7 +724,7 @@ function loadFeatureIdAttribute(gltfFeatureIdAttribute) {
   var featureIdAttribute = new FeatureIdAttribute();
   var featureIds = gltfFeatureIdAttribute.featureIds;
   featureIdAttribute.featureTableId = gltfFeatureIdAttribute.featureTable;
-  featureIdAttribute.semantic = featureIds.attribute;
+  featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
   featureIdAttribute.constant = defaultValue(featureIds.constant, 0);
   featureIdAttribute.divisor = defaultValue(featureIds.divisor, 0);
   return featureIdAttribute;
@@ -701,7 +741,6 @@ function loadFeatureIdTexture(
   var textureInfo = featureIds.texture;
 
   featureIdTexture.featureTableId = gltfFeatureIdTexture.featureTable;
-  featureIdTexture.channel = featureIds.channels;
   featureIdTexture.texture = loadTexture(
     loader,
     gltf,
@@ -711,6 +750,7 @@ function loadFeatureIdTexture(
 
   // Feature ID textures require nearest sampling
   featureIdTexture.texture.sampler = Sampler.NEAREST;
+  featureIdTexture.texture.channels = featureIds.channels;
 
   return featureIdTexture;
 }
@@ -729,6 +769,18 @@ function loadMorphTarget(loader, gltf, target) {
   }
 
   return morphTarget;
+}
+
+function stringCompare(a, b) {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function sortAttributes(attributes) {
+  attributes.sort(function (attributeA, attributeB) {
+    var attributeNameA = defaultValue(attributeA.semantic, attributeA.name);
+    var attributeNameB = defaultValue(attributeB.semantic, attributeB.name);
+    return stringCompare(attributeNameA, attributeNameB);
+  });
 }
 
 function loadPrimitive(
@@ -750,6 +802,8 @@ function loadPrimitive(
       gltf.materials[materialId],
       supportedImageFormats
     );
+  } else {
+    primitive.material = new Material();
   }
 
   var extensions = defaultValue(
@@ -770,6 +824,10 @@ function loadPrimitive(
       }
     }
   }
+
+  // Sort attributes so that unique IDs in CustomShader and ModelShader
+  // are
+  sortAttributes(primitive.attributes);
 
   var targets = gltfPrimitive.targets;
   if (defined(targets)) {
@@ -826,15 +884,45 @@ function loadPrimitive(
   return primitive;
 }
 
+function getAttributeBySemantic(attributes, semantic) {
+  var attributesLength = attributes.length;
+  for (var i = 0; i < attributesLength; ++i) {
+    var attribute = attributes[i];
+    if (attribute.semantic === semantic) {
+      return attribute;
+    }
+  }
+  return undefined;
+}
+
 function loadInstances(loader, gltf, instancingExtension, frameState) {
   var instances = new Instances();
   var attributes = instancingExtension.attributes;
   if (defined(attributes)) {
+    var hasRotation = defined(
+      getAttributeBySemantic(attributes, InstanceAttributeSemantic.ROTATION)
+    );
     for (var semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
+        // If the instances have rotations load the attributes as typed arrays
+        // so that instance matrices are computed on the CPU. This avoids the
+        // expensive quaternion -> rotation matrix conversion in the shader.
+        var loadAsTypedArray =
+          hasRotation &&
+          (semantic === InstanceAttributeSemantic.TRANSLATION ||
+            semantic === InstanceAttributeSemantic.ROTATION ||
+            semantic === InstanceAttributeSemantic.SCALE);
+
         var accessorId = attributes[semantic];
         instances.attributes.push(
-          loadInstancedAttribute(loader, gltf, accessorId, semantic, frameState)
+          loadInstancedAttribute(
+            loader,
+            gltf,
+            accessorId,
+            semantic,
+            loadAsTypedArray,
+            frameState
+          )
         );
       }
     }
@@ -1071,12 +1159,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
       if (loader.isDestroyed()) {
         return;
       }
-
-      // Buffer views can be unloaded after the data has been copied
-      unloadBufferViews(loader);
-
-      loader._state = ResourceLoaderState.READY;
-      loader._promise.resolve(loader);
+      loader._state = GltfLoaderState.READY_TO_FINALIZE;
     })
     .otherwise(function (error) {
       if (loader.isDestroyed()) {
@@ -1089,8 +1172,36 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     if (loader.isDestroyed()) {
       return;
     }
+    loader._texturesLoaded = true;
     loader._texturesLoadedPromise.resolve(loader);
   });
+}
+
+function invalidVertexAttributeProperty(property) {
+  var type = property.type;
+  var enumType = property.enumType;
+  var valueType = property.valueType;
+  var componentCount = property.componentCount;
+
+  if (
+    type === MetadataType.ARRAY &&
+    (!defined(componentCount) || componentCount > 4)
+  ) {
+    // Variable-size arrays or arrays with more than 4 components are not supported
+    return true;
+  }
+
+  if (defined(enumType)) {
+    // Enums or arrays of enums are not supported
+    return true;
+  }
+
+  if (valueType === MetadataType.STRING) {
+    // Strings or arrays of strings are not supported
+    return true;
+  }
+
+  return false;
 }
 
 function unloadTextures(loader) {
@@ -1120,6 +1231,13 @@ function unloadGeometry(loader) {
   loader._geometryLoaders.length = 0;
 }
 
+function unloadFeatureMetadata(loader) {
+  if (defined(loader._featureMetadataLoader)) {
+    loader._featureMetadataLoader.destroy();
+    loader._featureMetadataLoader = undefined;
+  }
+}
+
 /**
  * Unloads the resource.
  * @private
@@ -1133,11 +1251,7 @@ GltfLoader.prototype.unload = function () {
   unloadTextures(this);
   unloadBufferViews(this);
   unloadGeometry(this);
-
-  if (defined(this._featureMetadataLoader)) {
-    this._featureMetadataLoader.destroy();
-    this._featureMetadataLoader = undefined;
-  }
+  unloadFeatureMetadata(this);
 
   this._components = undefined;
 };

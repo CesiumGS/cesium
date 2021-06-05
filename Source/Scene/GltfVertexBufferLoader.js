@@ -193,18 +193,21 @@ function getQuantizationInformation(
   componentCount,
   type
 ) {
+  var MathType = AttributeType.getMathType(type);
   var quantizationBits = dracoQuantization.quantizationBits;
-  var range = (1 << quantizationBits) - 1;
+  var normalizationRange = (1 << quantizationBits) - 1;
 
   var quantization = new ModelComponents.Quantization();
   quantization.componentDatatype = componentDatatype;
   quantization.octEncoded = dracoQuantization.octEncoded;
-  quantization.normalizationRange = range;
+  quantization.octEncodedZXY = true;
+  quantization.normalizationRange = MathType.unpack(
+    arrayFill(new Array(componentCount), normalizationRange)
+  );
 
   if (quantization.octEncoded) {
     quantization.type = AttributeType.VEC2;
   } else {
-    var MathType = AttributeType.getMathType(type);
     if (MathType === Number) {
       quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
       quantization.quantizedVolumeDimensions = dracoQuantization.range;

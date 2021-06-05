@@ -1,10 +1,13 @@
+import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
+import ModelComponents from "./ModelComponents.js";
 
 /**
  * glTF loading utilities.
@@ -186,6 +189,85 @@ GltfLoaderUtil.createSampler = function (options) {
     minificationFilter: minFilter,
     magnificationFilter: magFilter,
   });
+};
+
+var defaultScale = new Cartesian2(1.0, 1.0);
+
+/**
+ * Create a model texture.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.textureInfo The texture info JSON.
+ * @param {String} [options.channels] The texture channels to read from.
+ * @param {Texture} [options.texture] The texture object.
+ *
+ * @returns {ModelComponents.Texture} The texture.
+ */
+GltfLoaderUtil.createModelTexture = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var textureInfo = options.textureInfo;
+  var channels = options.channels;
+  var texture = options.texture;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.textureInfo", textureInfo);
+  //>>includeEnd('debug');
+
+  var texCoord = defaultValue(textureInfo.texCoord, 0);
+  var transform;
+
+  var textureTransform = defaultValue(
+    textureInfo.extensions,
+    defaultValue.EMPTY_OBJECT
+  ).KHR_texture_transform;
+
+  if (defined(textureTransform)) {
+    texCoord = defaultValue(textureTransform.texCoord, texCoord);
+
+    var offset = defined(textureTransform.offset)
+      ? Cartesian2.unpack(textureTransform.offset)
+      : Cartesian2.ZERO;
+    var rotation = defaultValue(textureTransform.rotation, 0.0);
+    var scale = defined(textureTransform.scale)
+      ? Cartesian2.unpack(textureTransform.scale)
+      : defaultScale;
+
+    // prettier-ignore
+    transform = new Matrix3(
+        Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
+        Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
+        0.0, 0.0, 1.0
+      );
+  }
+
+  var modelTexture = new ModelComponents.Texture();
+  modelTexture.texture = texture;
+  modelTexture.texCoord = texCoord;
+  modelTexture.transform = transform;
+  modelTexture.channels = channels;
+
+  return modelTexture;
+};
+
+GltfLoaderUtil.parseAttributeSemantic = function (gltfSemantic, semanticEnum) {
+  var name = gltfSemantic;
+  var semantic;
+  var setIndex;
+
+  var setIndexRegex = /(\w+)_(\d+)$/;
+  var setIndexMatch = setIndexRegex.exec(gltfSemantic);
+  if (setIndexMatch !== null) {
+    // Example: _FEATURE_ID_0 is split into FEATURE_ID and 0 (preceding underscore is removed)
+    semantic = setIndexMatch[1];
+    setIndex = setIndexMatch[2];
+  }
+
+  if (semantic === "POSITION")
+    return {
+      name: name,
+      semantic: semantic,
+      setIndex: setIndex,
+    };
 };
 
 export default GltfLoaderUtil;
