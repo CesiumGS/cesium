@@ -336,11 +336,11 @@ function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
 }
 
 /**
- * Returns whether this property exists.
+ * Returns whether the feature has this property.
  *
  * @param {Number} batchId the batch ID of the feature
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the feature has this property.
  * @private
  */
 BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
@@ -409,7 +409,7 @@ BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
  *
  * @param {Number} batchId the batch ID of the feature
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 BatchTableHierarchy.prototype.getProperty = function (batchId, propertyId) {

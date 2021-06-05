@@ -66,10 +66,11 @@ export default function ImplicitTileset(
 
   if (
     !defined(tileJson.boundingVolume.box) &&
-    !defined(tileJson.boundingVolume.region)
+    !defined(tileJson.boundingVolume.region) &&
+    !has3DTilesExtension(tileJson.boundingVolume, "3DTILES_bounding_volume_S2")
   ) {
     throw new RuntimeError(
-      "Only box and region are supported for implicit tiling"
+      "Only box, region and 3DTILES_bounding_volume_S2 are supported for implicit tiling"
     );
   }
 

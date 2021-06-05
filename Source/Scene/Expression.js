@@ -194,11 +194,12 @@ Expression.prototype.getShaderFunction = function (
     returnType +
     " " +
     functionHeader +
-    "{ \n" +
+    "\n" +
+    "{\n" +
     "    return " +
     shaderExpression +
-    "; \n" +
-    "} \n";
+    ";\n" +
+    "}\n";
 
   return shaderExpression;
 };
@@ -233,7 +234,14 @@ Expression.prototype.getShaderExpression = function (
  */
 Expression.prototype.getVariables = function () {
   var variables = [];
+
   this._runtimeAst.getVariables(variables);
+
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
+
   return variables;
 };
 
@@ -2326,20 +2334,6 @@ Node.prototype.getShaderExpression = function (
   }
 };
 
-function addVariable(variable, variables) {
-  if (variables.indexOf(variable) === -1) {
-    variables.push(variable);
-  }
-}
-
-function addVariablesInString(string, variables) {
-  var match = variableRegex.exec(string);
-  while (match !== null) {
-    addVariable(match[1], variables);
-    match = variableRegex.exec(string);
-  }
-}
-
 Node.prototype.getVariables = function (variables, parent) {
   var array;
   var length;
@@ -2381,11 +2375,15 @@ Node.prototype.getVariables = function (variables, parent) {
   switch (type) {
     case ExpressionNodeType.VARIABLE:
       if (!checkFeature(this)) {
-        addVariable(value, variables);
+        variables.push(value);
       }
       break;
     case ExpressionNodeType.VARIABLE_IN_STRING:
-      addVariablesInString(value, variables);
+      var match = variableRegex.exec(value);
+      while (match !== null) {
+        variables.push(match[1]);
+        match = variableRegex.exec(value);
+      }
       break;
     case ExpressionNodeType.LITERAL_STRING:
       if (
@@ -2393,7 +2391,7 @@ Node.prototype.getVariables = function (variables, parent) {
         parent._type === ExpressionNodeType.MEMBER &&
         checkFeature(parent._left)
       ) {
-        addVariable(value, variables);
+        variables.push(value);
       }
       break;
   }

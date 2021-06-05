@@ -359,13 +359,12 @@ describe(
 
         var colorProperty = mapTexture.getProperty("color");
         var intensityProperty = mapTexture.getProperty("intensity");
+        var vegetationProperty = orthoTexture.getProperty("vegetation");
 
-        // TODO
         expect(colorProperty.texture.width).toBe(1);
         expect(colorProperty.texture.height).toBe(1);
         expect(colorProperty.texture).toBe(intensityProperty.texture);
 
-        var vegetationProperty = orthoTexture.getProperty("vegetation");
         expect(vegetationProperty.texture.width).toBe(1);
         expect(vegetationProperty.texture.height).toBe(1);
         expect(vegetationProperty.texture).not.toBe(colorProperty.texture);

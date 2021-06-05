@@ -478,4 +478,40 @@ MetadataType.unnormalize = function (value, type) {
   return value;
 };
 
+/**
+ * Gets the size in bytes for the numeric type.
+ *
+ * @param {MetadataType} type The type.
+ * @returns {Number} The size in bytes.
+ *
+ * @exception {DeveloperError} type must be a numeric type
+ *
+ * @private
+ */
+MetadataType.getSizeInBytes = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!MetadataType.isNumericType(type)) {
+    throw new DeveloperError("type must be a numeric type");
+  }
+  //>>includeEnd('debug');
+  switch (type) {
+    case MetadataType.INT8:
+    case MetadataType.UINT8:
+      return 1;
+    case MetadataType.INT16:
+    case MetadataType.UINT16:
+      return 2;
+    case MetadataType.INT32:
+    case MetadataType.UINT32:
+      return 4;
+    case MetadataType.INT64:
+    case MetadataType.UINT64:
+      return 8;
+    case MetadataType.FLOAT32:
+      return 4;
+    case MetadataType.FLOAT64:
+      return 8;
+  }
+};
+
 export default Object.freeze(MetadataType);

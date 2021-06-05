@@ -103,7 +103,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
  * @return {Number} The minimum height
  * @private
  */
-function parseMinimumHeight(prefix, tileMetadata, results) {
+function parseMinimumHeight(prefix, tileMetadata) {
   var minimumHeightSemantic = prefix + "_MINIMUM_HEIGHT";
   return tileMetadata.getPropertyBySemantic(minimumHeightSemantic);
 }

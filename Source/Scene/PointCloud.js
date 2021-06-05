@@ -996,7 +996,8 @@ function getStyleablePropertyIds(source, propertyIds) {
 }
 
 function getBuiltinPropertyNames(source, propertyNames) {
-  // Get all the builtin property names used by this style
+  // Get all the builtin property names used by this style, ignoring the function header
+  source = source.slice(source.indexOf("\n"));
   var regex = /czm_3dtiles_builtin_property_(\w+)/g;
   var matches = regex.exec(source);
   while (matches !== null) {
@@ -1109,17 +1110,14 @@ function createShaders(pointCloud, frameState, style) {
   if (hasColorStyle) {
     getStyleablePropertyIds(colorStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(colorStyleFunction, builtinPropertyNames);
-    colorStyleFunction = modifyStyleFunction(colorStyleFunction);
   }
   if (hasShowStyle) {
     getStyleablePropertyIds(showStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(showStyleFunction, builtinPropertyNames);
-    showStyleFunction = modifyStyleFunction(showStyleFunction);
   }
   if (hasPointSizeStyle) {
     getStyleablePropertyIds(pointSizeStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(pointSizeStyleFunction, builtinPropertyNames);
-    pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
   }
 
   var usesColorSemantic = builtinPropertyNames.indexOf("COLOR") >= 0;

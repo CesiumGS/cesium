@@ -175,24 +175,25 @@ ConditionsExpression.prototype.getShaderFunction = function (
       (i === 0 ? "if" : "else if") +
       " (" +
       condition +
-      ") \n" +
-      "    { \n" +
+      ")\n" +
+      "    {\n" +
       "        return " +
       expression +
-      "; \n" +
-      "    } \n";
+      ";\n" +
+      "    }\n";
   }
 
   shaderFunction =
     returnType +
     " " +
     functionHeader +
-    "{ \n" +
+    "\n" +
+    "{\n" +
     shaderFunction +
     "    return " +
     returnType +
-    "(1.0); \n" + // Return a default value if no conditions are met
-    "} \n";
+    "(1.0);\n" + // Return a default value if no conditions are met
+    "}\n";
 
   return shaderFunction;
 };
@@ -218,6 +219,11 @@ ConditionsExpression.prototype.getVariables = function () {
     variables.push.apply(variables, statement.condition.getVariables());
     variables.push.apply(variables, statement.expression.getVariables());
   }
+
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
 
   return variables;
 };

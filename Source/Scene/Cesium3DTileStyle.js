@@ -1760,6 +1760,11 @@ Cesium3DTileStyle.prototype.getVariables = function () {
     variables.push.apply(variables, this.pointSize.getVariables());
   }
 
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
+
   return variables;
 };
 

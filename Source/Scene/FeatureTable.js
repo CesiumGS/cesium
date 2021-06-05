@@ -109,11 +109,11 @@ Object.defineProperties(FeatureTable.prototype, {
 });
 
 /**
- * Returns whether this property exists. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
+ * Returns whether the feature has this property. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
  *
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the feature has this property.
  * @private
  */
 FeatureTable.prototype.hasProperty = function (index, propertyId) {
@@ -147,10 +147,10 @@ FeatureTable.prototype.hasProperty = function (index, propertyId) {
 };
 
 /**
- * Returns whether a property with the given semantic exists.
+ * Returns whether the feature has a property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether a property with the given semantic exists.
+ * @returns {Boolean} Whether the feature has a property with the given semantic.
  * @private
  */
 FeatureTable.prototype.hasPropertyBySemantic = function (index, semantic) {
@@ -270,7 +270,7 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
  *
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 FeatureTable.prototype.getProperty = function (index, propertyId) {
@@ -337,7 +337,7 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
