@@ -109,11 +109,11 @@ Object.defineProperties(FeatureTable.prototype, {
 });
 
 /**
- * Returns whether this property exists. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
+ * Returns whether the feature has this property. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
  *
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the feature has this property.
  * @private
  */
 FeatureTable.prototype.hasProperty = function (index, propertyId) {
@@ -141,6 +141,83 @@ FeatureTable.prototype.hasProperty = function (index, propertyId) {
     this._batchTableHierarchy.hasProperty(index, propertyId)
   ) {
     return true;
+  }
+
+  return false;
+};
+
+/**
+ * Returns whether the feature has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the feature has a property with the given semantic.
+ * @private
+ */
+FeatureTable.prototype.hasPropertyBySemantic = function (index, semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  if (defined(this._metadataTable)) {
+    return this._metadataTable.hasPropertyBySemantic(semantic);
+  }
+
+  return false;
+};
+
+/**
+ * Returns whether any feature has this property.
+ * This is mainly useful for checking whether a property exists in the class
+ * hierarchy when using the <code>3DTILES_batch_table_hierarchy</code> extension.
+ *
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @returns {Boolean} Whether any feature has this property.
+ * @private
+ */
+FeatureTable.prototype.propertyExists = function (propertyId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
+  if (
+    defined(this._metadataTable) &&
+    this._metadataTable.hasProperty(propertyId)
+  ) {
+    return true;
+  }
+
+  if (
+    defined(this._jsonMetadataTable) &&
+    this._jsonMetadataTable.hasProperty(propertyId)
+  ) {
+    return true;
+  }
+
+  if (
+    defined(this._batchTableHierarchy) &&
+    this._batchTableHierarchy.propertyExists(propertyId)
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Returns whether any feature has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether any feature has a property with the given semantic.
+ * @private
+ */
+FeatureTable.prototype.propertyExistsBySemantic = function (semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  if (defined(this._metadataTable)) {
+    return this._metadataTable.hasPropertyBySemantic(semantic);
   }
 
   return false;
@@ -193,7 +270,7 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
  *
  * @param {Number} index The index of the feature.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 FeatureTable.prototype.getProperty = function (index, propertyId) {
@@ -260,7 +337,7 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
@@ -307,6 +384,26 @@ FeatureTable.prototype.getPropertyTypedArray = function (propertyId) {
 
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyTypedArray(propertyId);
+  }
+
+  return undefined;
+};
+
+/**
+ * Returns a typed array containing the property values for the property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
+ * @private
+ */
+FeatureTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  if (defined(this._metadataTable)) {
+    return this._metadataTable.getPropertyTypedArrayBySemantic(semantic);
   }
 
   return undefined;
