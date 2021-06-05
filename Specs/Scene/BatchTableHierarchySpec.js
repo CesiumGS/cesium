@@ -166,18 +166,32 @@ describe("Scene/BatchTableHierarchy", function () {
     expect(hierarchy.hasProperty(0, "color")).toBe(true);
   });
 
-  it("hasProperty returns false if property does not have this property", function () {
+  it("hasProperty returns false if the feature does not have this property", function () {
     var hierarchy = new BatchTableHierarchy({
       extension: hierarchyExtension,
     });
     expect(hierarchy.hasProperty(0, "height")).toBe(false);
   });
 
-  it("hasProperty returns false if feature does not inherit property", function () {
+  it("hasProperty returns false if the feature does not inherit this property", function () {
     var hierarchy = new BatchTableHierarchy({
       extension: hierarchyExtension,
     });
     expect(hierarchy.hasProperty(6, "color")).toBe(false);
+  });
+
+  it("propertyExists returns true if any feature has this property", function () {
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.propertyExists("color")).toBe(true);
+  });
+
+  it("propertyExists returns false if no features have this property", function () {
+    var hierarchy = new BatchTableHierarchy({
+      extension: hierarchyExtension,
+    });
+    expect(hierarchy.propertyExists("other")).toBe(false);
   });
 
   it("getProperty returns property value", function () {

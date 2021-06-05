@@ -94,6 +94,21 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
 };
 
 /**
+ * Returns whether the table has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the table has a property with the given semantic.
+ * @private
+ */
+MetadataTable.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
+};
+
+/**
  * Returns an array of property IDs.
  *
  * @param {String[]} [results] An array into which to store the results.
@@ -264,6 +279,29 @@ MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
 
   if (defined(property)) {
     return property.getTypedArray();
+  }
+
+  return undefined;
+};
+
+/**
+ * Returns a typed array containing the property values for the property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
+ * @private
+ */
+MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  if (defined(this._class)) {
+    var property = this._class.propertiesBySemantic[semantic];
+    if (defined(property)) {
+      return this.getPropertyTypedArray(property.id);
+    }
   }
 
   return undefined;

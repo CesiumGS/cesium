@@ -97,6 +97,17 @@ ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
 };
 
 /**
+ * Returns whether the tile has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the tile has a property with the given semantic.
+ * @private
+ */
+ImplicitTileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return this._metadataTable.hasPropertyBySemantic(semantic);
+};
+
+/**
  * Returns an array of property IDs.
  *
  * @param {String[]} [results] An array into which to store the results.

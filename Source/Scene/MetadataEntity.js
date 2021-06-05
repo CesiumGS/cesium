@@ -48,6 +48,17 @@ MetadataEntity.prototype.hasProperty = function (propertyId) {
 };
 
 /**
+ * Returns whether the entity has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the entity has a property with the given semantic.
+ * @private
+ */
+MetadataEntity.prototype.hasPropertyBySemantic = function (semantic) {
+  DeveloperError.throwInstantiationError();
+};
+
+/**
  * Returns an array of property IDs.
  *
  * @param {String[]} [results] An array into which to store the results.
@@ -142,6 +153,34 @@ MetadataEntity.hasProperty = function (
   }
 
   return false;
+};
+
+/**
+ * Returns whether the entity has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {Object} properties The dictionary containing properties.
+ * @param {MetadataClass} [classDefinition] The class.
+ * @returns {Boolean} Whether the entity has a property with the given semantic.
+ *
+ * @private
+ */
+MetadataEntity.hasPropertyBySemantic = function (
+  semantic,
+  properties,
+  classDefinition
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  Check.typeOf.object("properties", properties);
+  //>>includeEnd('debug');
+
+  if (!defined(classDefinition)) {
+    return false;
+  }
+
+  var property = classDefinition.propertiesBySemantic[semantic];
+  return defined(property);
 };
 
 /**

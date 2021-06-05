@@ -120,6 +120,21 @@ TilesetMetadata.prototype.hasProperty = function (propertyId) {
 };
 
 /**
+ * Returns whether the tileset has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the tileset has a property with the given semantic.
+ * @private
+ */
+TilesetMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
+};
+
+/**
  * Returns an array of property IDs.
  *
  * @param {String[]} [results] An array into which to store the results.

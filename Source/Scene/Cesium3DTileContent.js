@@ -247,7 +247,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 });
 
 /**
- * Determines if the feature has this property.
+ * Returns whether the feature has this property.
  *
  * @param {Number} batchId The batchId for the feature.
  * @param {String} name The case-sensitive name of the property.
