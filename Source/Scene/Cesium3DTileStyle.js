@@ -1637,8 +1637,8 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
 /**
  * Gets the color shader function for this style.
  *
- * @param {String} functionName Name to give to the generated function.
- * @param {String} propertyNameMap Maps property variable names to shader attribute names.
+ * @param {String} functionHeader Header of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1646,8 +1646,8 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
  * @private
  */
 Cesium3DTileStyle.prototype.getColorShaderFunction = function (
-  functionName,
-  propertyNameMap,
+  functionHeader,
+  variableSubstitutionMap,
   shaderState
 ) {
   if (this._colorShaderFunctionReady) {
@@ -1657,14 +1657,15 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
   }
 
   this._colorShaderFunctionReady = true;
-  this._colorShaderFunction = defined(this.color)
-    ? this.color.getShaderFunction(
-        functionName,
-        propertyNameMap,
-        shaderState,
-        "vec4"
-      )
-    : undefined;
+  this._colorShaderFunction =
+    defined(this.color) && defined(this.color.getShaderFunction)
+      ? this.color.getShaderFunction(
+          functionHeader,
+          variableSubstitutionMap,
+          shaderState,
+          "vec4"
+        )
+      : undefined;
   this._colorShaderTranslucent = shaderState.translucent;
   return this._colorShaderFunction;
 };
@@ -1672,8 +1673,8 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
 /**
  * Gets the show shader function for this style.
  *
- * @param {String} functionName Name to give to the generated function.
- * @param {String} propertyNameMap Maps property variable names to shader attribute names.
+ * @param {String} functionHeader Header of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1681,8 +1682,8 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
  * @private
  */
 Cesium3DTileStyle.prototype.getShowShaderFunction = function (
-  functionName,
-  propertyNameMap,
+  functionHeader,
+  variableSubstitutionMap,
   shaderState
 ) {
   if (this._showShaderFunctionReady) {
@@ -1691,22 +1692,23 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
   }
 
   this._showShaderFunctionReady = true;
-  this._showShaderFunction = defined(this.show)
-    ? this.show.getShaderFunction(
-        functionName,
-        propertyNameMap,
-        shaderState,
-        "bool"
-      )
-    : undefined;
+  this._showShaderFunction =
+    defined(this.show) && defined(this.show.getShaderFunction)
+      ? this.show.getShaderFunction(
+          functionHeader,
+          variableSubstitutionMap,
+          shaderState,
+          "bool"
+        )
+      : undefined;
   return this._showShaderFunction;
 };
 
 /**
  * Gets the pointSize shader function for this style.
  *
- * @param {String} functionName Name to give to the generated function.
- * @param {String} propertyNameMap Maps property variable names to shader attribute names.
+ * @param {String} functionHeader Header of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1714,8 +1716,8 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
  * @private
  */
 Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
-  functionName,
-  propertyNameMap,
+  functionHeader,
+  variableSubstitutionMap,
   shaderState
 ) {
   if (this._pointSizeShaderFunctionReady) {
@@ -1724,14 +1726,46 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
   }
 
   this._pointSizeShaderFunctionReady = true;
-  this._pointSizeShaderFunction = defined(this.pointSize)
-    ? this.pointSize.getShaderFunction(
-        functionName,
-        propertyNameMap,
-        shaderState,
-        "float"
-      )
-    : undefined;
+  this._pointSizeShaderFunction =
+    defined(this.pointSize) && defined(this.pointSize.getShaderFunction)
+      ? this.pointSize.getShaderFunction(
+          functionHeader,
+          variableSubstitutionMap,
+          shaderState,
+          "float"
+        )
+      : undefined;
   return this._pointSizeShaderFunction;
 };
+
+/**
+ * Gets the variables used by the style.
+ *
+ * @returns {String[]} The variables used by the style.
+ *
+ * @private
+ */
+Cesium3DTileStyle.prototype.getVariables = function () {
+  var variables = [];
+
+  if (defined(this.color) && defined(this.color.getVariables)) {
+    variables.push.apply(variables, this.color.getVariables());
+  }
+
+  if (defined(this.show) && defined(this.show.getVariables)) {
+    variables.push.apply(variables, this.show.getVariables());
+  }
+
+  if (defined(this.pointSize) && defined(this.pointSize.getVariables)) {
+    variables.push.apply(variables, this.pointSize.getVariables());
+  }
+
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
+
+  return variables;
+};
+
 export default Cesium3DTileStyle;
