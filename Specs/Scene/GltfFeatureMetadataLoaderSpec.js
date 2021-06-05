@@ -357,17 +357,17 @@ describe(
         ]);
         expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
 
-        var colorProperty = mapTexture._properties.color;
-        var intensityProperty = mapTexture._properties.intensity;
+        var colorProperty = mapTexture.getProperty("color");
+        var intensityProperty = mapTexture.getProperty("intensity");
+        var vegetationProperty = orthoTexture.getProperty("vegetation");
 
-        expect(colorProperty._texture.width).toBe(1);
-        expect(colorProperty._texture.height).toBe(1);
-        expect(colorProperty._texture).toBe(intensityProperty._texture);
+        expect(colorProperty.texture.width).toBe(1);
+        expect(colorProperty.texture.height).toBe(1);
+        expect(colorProperty.texture).toBe(intensityProperty.texture);
 
-        var vegetationProperty = orthoTexture._properties.vegetation;
-        expect(colorProperty._texture.width).toBe(1);
-        expect(colorProperty._texture.height).toBe(1);
-        expect(vegetationProperty._texture).not.toBe(colorProperty._texture);
+        expect(vegetationProperty.texture.width).toBe(1);
+        expect(vegetationProperty.texture.height).toBe(1);
+        expect(vegetationProperty.texture).not.toBe(colorProperty.texture);
 
         expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
           "building",
