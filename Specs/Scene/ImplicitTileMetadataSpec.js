@@ -197,11 +197,11 @@ describe("Scene/ImplicitTileMetadata", function () {
     expect(tileMetadata.extensions).toBe(undefined);
   });
 
-  it("hasProperty returns true if a property exists", function () {
+  it("hasProperty returns true if the tile has this property", function () {
     expect(tileMetadata.hasProperty("highlightColor")).toBe(true);
   });
 
-  it("hasProperty returns false if a property does not exist", function () {
+  it("hasProperty returns false if the tile does not have this property", function () {
     expect(tileMetadata.hasProperty("numberOfPoints")).toBe(false);
   });
 
@@ -211,7 +211,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     expect(propertyIds).toEqual(["buildingCount", "highlightColor"]);
   });
 
-  it("getProperty returns undefined if a property does not exist", function () {
+  it("getProperty returns undefined if the property does not exist", function () {
     expect(tileMetadata.getProperty("numberOfPoints")).not.toBeDefined();
   });
 

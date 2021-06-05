@@ -159,14 +159,14 @@ describe("Scene/BatchTableHierarchy", function () {
     }).toThrowRuntimeError();
   });
 
-  it("hasProperty returns true if property exists", function () {
+  it("hasProperty returns true if the feature has this property", function () {
     var hierarchy = new BatchTableHierarchy({
       extension: hierarchyExtension,
     });
     expect(hierarchy.hasProperty(0, "color")).toBe(true);
   });
 
-  it("hasProperty returns false if property does not exist", function () {
+  it("hasProperty returns false if property does not have this property", function () {
     var hierarchy = new BatchTableHierarchy({
       extension: hierarchyExtension,
     });

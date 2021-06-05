@@ -78,10 +78,10 @@ Object.defineProperties(TileMetadata.prototype, {
 });
 
 /**
- * Returns whether this property exists.
+ * Returns whether the tile has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the tile has this property.
  * @private
  */
 TileMetadata.prototype.hasProperty = function (propertyId) {
@@ -106,7 +106,7 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
 TileMetadata.prototype.getProperty = function (propertyId) {
@@ -137,7 +137,7 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
 TileMetadata.prototype.getPropertyBySemantic = function (semantic) {

@@ -247,12 +247,11 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 });
 
 /**
- * Determines if the tile's batch table has a property.  If it does, each feature in
- * the tile will have the property.
+ * Determines if the feature has this property.
  *
  * @param {Number} batchId The batchId for the feature.
  * @param {String} name The case-sensitive name of the property.
- * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
  */
 Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
   DeveloperError.throwInstantiationError();

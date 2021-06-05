@@ -88,12 +88,12 @@ describe("Scene/FeatureTable", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasProperty returns true if a property exists", function () {
+  it("hasProperty returns true if the feature has this property", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.hasProperty(0, "name")).toBe(true);
   });
 
-  it("hasProperty returns false if a property does not exist", function () {
+  it("hasProperty returns false if the feature does not have this property", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.hasProperty(0, "numberOfPoints")).toBe(false);
   });
@@ -105,7 +105,7 @@ describe("Scene/FeatureTable", function () {
     expect(propertyIds).toEqual(["height", "name"]);
   });
 
-  it("getProperty returns undefined if a property does not exist", function () {
+  it("getProperty returns undefined if the property does not exist", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.getProperty(0, "numberOfPoints")).not.toBeDefined();
   });
