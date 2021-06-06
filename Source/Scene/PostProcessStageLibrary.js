@@ -222,7 +222,7 @@ PostProcessStageLibrary.isDepthOfFieldSupported = function (scene) {
  * <p>
  * This stage is not supported in 2D.
  * </p>
- * @return {PostProcessStageComposite} A post-process stage that applies an edge detection effect.
+ * @return {PostProcessStage} A post-process stage that applies an edge detection effect.
  *
  * @example
  * // multiple silhouette effects
