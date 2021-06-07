@@ -94,6 +94,19 @@ function TileBoundingS2Cell(options) {
     ]);
   }
 
+  this._planeVertices = [
+    this._vertices.slice(0, 4),
+    this._vertices.slice(4, 8),
+  ];
+  for (i = 0; i < 4; i++) {
+    this._planeVertices.push([
+      this._vertices[i % 4],
+      this._vertices[(i + 1) % 4],
+      this._vertices[4 + ((i + 1) % 4)],
+      this._vertices[4 + i],
+    ]);
+  }
+
   var center = s2Cell.getCenter();
   centerCartographicScratch = ellipsoid.cartesianToCartographic(
     center,
@@ -393,14 +406,13 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   var vertices = [];
   var edgeNormals;
 
-  // PERFORMANCE_IDEA: Look into removing any unnecessary allocations here. Pre-compute dihedral angles.
   if (Plane.getPointDistance(this._boundingPlanes[0], point) > 0) {
     selectedPlaneIndices.push(0);
-    vertices.push(this._vertices.slice(0, 4));
+    vertices.push(this._planeVertices[0]);
     edgeNormals = this._edgeNormals[0];
   } else if (Plane.getPointDistance(this._boundingPlanes[1], point) > 0) {
     selectedPlaneIndices.push(1);
-    vertices.push(this._vertices.slice(4, 8));
+    vertices.push(this._planeVertices[1]);
     edgeNormals = this._edgeNormals[1];
   }
 
@@ -411,15 +423,10 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     if (
       Plane.getPointDistance(this._boundingPlanes[sidePlaneIndex], point) > 0
     ) {
-      selectedPlaneIndices.push(2 + i);
+      selectedPlaneIndices.push(sidePlaneIndex);
       // Store vertices in CCW order.
-      vertices.push([
-        this._vertices[i % 4],
-        this._vertices[(i + 1) % 4],
-        this._vertices[4 + ((i + 1) % 4)],
-        this._vertices[4 + i],
-      ]);
-      edgeNormals = this._edgeNormals[2 + i];
+      vertices.push(this._planeVertices[sidePlaneIndex]);
+      edgeNormals = this._edgeNormals[sidePlaneIndex];
     }
   }
 
@@ -483,7 +490,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         point,
         facePointScratch
       ),
-      this._vertices.slice(4, 8),
+      this._planeVertices[1],
       this._boundingPlanes[1],
       this._edgeNormals[1]
     );
@@ -630,7 +637,7 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
   var topPlanePolygon = new CoplanarPolygonOutlineGeometry({
     polygonHierarchy: {
-      positions: this._vertices.slice(0, 4),
+      positions: this._planeVertices[0],
     },
   });
   var topPlaneGeometry = CoplanarPolygonOutlineGeometry.createGeometry(
@@ -638,7 +645,7 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   );
   var topPlaneInstance = new GeometryInstance({
     geometry: topPlaneGeometry,
-    id: "topPlane",
+    id: "outline",
     modelMatrix: modelMatrix,
     attributes: {
       color: ColorGeometryInstanceAttribute.fromColor(color),
@@ -647,7 +654,7 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
 
   var bottomPlanePolygon = new CoplanarPolygonOutlineGeometry({
     polygonHierarchy: {
-      positions: this._vertices.slice(4),
+      positions: this._planeVertices[1],
     },
   });
   var bottomPlaneGeometry = CoplanarPolygonOutlineGeometry.createGeometry(
@@ -666,12 +673,7 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   for (var i = 0; i < 4; i++) {
     var sidePlanePolygon = new CoplanarPolygonOutlineGeometry({
       polygonHierarchy: {
-        positions: [
-          this._vertices[i % 4],
-          this._vertices[4 + i],
-          this._vertices[4 + ((i + 1) % 4)],
-          this._vertices[(i + 1) % 4],
-        ],
+        positions: this._planeVertices[2 + i],
       },
     });
     var sidePlaneGeometry = CoplanarPolygonOutlineGeometry.createGeometry(
