@@ -14,6 +14,7 @@ import GeometryInstance from "../Core/GeometryInstance.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
+import Color from "../Core/Color.js";
 import S2Cell from "../Core/S2Cell.js";
 
 var centerCartographicScratch = new Cartographic();
@@ -119,6 +120,8 @@ function TileBoundingS2Cell(options) {
   );
 
   this._boundingSphere = BoundingSphere.fromPoints(vertices);
+
+  this._debugText = "";
 }
 
 var centerGeodeticNormalScratch = new Cartesian3();
@@ -448,6 +451,15 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       selectedPlane,
       edgeNormals
     );
+
+    if (selectedPlaneIndices[0] === 0) {
+      this._debugText = "Top Plane";
+    } else if (selectedPlaneIndices[0] === 1) {
+      this._debugText = "Bottom Plane";
+    } else {
+      this._debugText = "Side Plane";
+    }
+
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length === 2) {
     // Handles Case II
@@ -463,6 +475,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         ],
       ];
       facePoint = closestPointLineSegment(point, edge[0], edge[1]);
+      this._debugText = "Edge of Top Plane";
       return Cartesian3.distance(facePoint, point);
     }
     var minimumDistance = Number.MAX_VALUE;
@@ -481,6 +494,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         minimumDistance = distance;
       }
     }
+    this._debugText = "Side or Bottom Plane";
     return Math.sqrt(minimumDistance);
   } else if (selectedPlaneIndices.length > 3) {
     // Handles Case IV
@@ -494,20 +508,25 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       this._boundingPlanes[1],
       this._edgeNormals[1]
     );
+    this._color = Color.RED;
+    this._debugText = "Bottom Plane (Degenerate)";
     return Cartesian3.distance(facePoint, point);
   }
 
   // Handles Case III
   skip = selectedPlaneIndices[1] === 2 && selectedPlaneIndices[2] === 5 ? 0 : 1;
+  this._color = Color.YELLOW;
 
   // Vertex is on top plane.
   if (selectedPlaneIndices[0] === 0) {
+    this._debugText = "Vertex on Top Plane";
     return Cartesian3.distance(
       point,
       this._vertices[(selectedPlaneIndices[1] - 2 + skip) % 4]
     );
   }
 
+  this._debugText = "Vertex on Bottom Plane";
   // Vertex is on bottom plane.
   return Cartesian3.distance(
     point,
