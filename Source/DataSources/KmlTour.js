@@ -1,7 +1,7 @@
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 /**
- * Describes a KmlTour, which uses KmlTourFlyTo, KmlTourWait, and KmlTourSoundCues to
+ * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
  * guide the camera to a specified destinations on given time intervals.
  *
  * @alias KmlTour
@@ -9,7 +9,7 @@ import Event from "../Core/Event.js";
  *
  * @param {String} name name parsed from KML
  * @param {String} id id parsed from KML
- * @param {Array} playlist array with KmlTourFlyTos, KmlTourWaits and KmlTourSoundCues
+ * @param {Array} playlist array with KmlTourFlyTos and KmlTourWaits
  *
  * @see KmlTourFlyTo
  * @see KmlTourWait
