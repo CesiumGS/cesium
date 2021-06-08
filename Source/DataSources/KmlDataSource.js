@@ -3349,6 +3349,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {KmlTour} [KmlTours] The KmlTour that is used to guide the camera to specified destinations on given time intervals.
  */
 
 /**
