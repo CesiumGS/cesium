@@ -14,7 +14,7 @@ import Event from "../Core/Event.js";
  * @see KmlTourFlyTo
  * @see KmlTourWait
  *
- * @demo {@link https://sandcastle.cesium.com/?src=KML%20Tours.html KML Tours}
+ * @demo {@link https://sandcastle.cesium.com/?src=KML%20Tours.html|KML Tours}
  */
 function KmlTour(name, id) {
   /**
