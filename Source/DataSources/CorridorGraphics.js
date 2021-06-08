@@ -114,7 +114,7 @@ Object.defineProperties(CorridorGraphics.prototype, {
   positions: createPropertyDescriptor("positions"),
 
   /**
-   * Gets or sets the numeric Property specifying the width of the corridor.
+   * Gets or sets the numeric Property specifying the width of the outline. Please note that this property will be ignored on all major browsers that are running on Windows platforms. For technical details, see this {@link https://github.com/CesiumGS/cesium/issues/40|issue} or this {@link https://stackoverflow.com/questions/25394677/how-do-you-change-the-width-on-an-ellipseoutlinegeometry-in-cesium-map/25405483#25405483|Stack Overflow post}.
    * @memberof CorridorGraphics.prototype
    * @type {Property|undefined}
    */
