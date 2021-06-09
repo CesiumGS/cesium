@@ -153,14 +153,14 @@ FeatureTable.prototype.hasProperty = function (index, propertyId) {
  * @returns {Boolean} Whether the feature has a property with the given semantic.
  * @private
  */
-FeatureTable.prototype.hasPropertyBySemantic = function (index, semantic) {
+FeatureTable.prototype.hasSemantic = function (index, semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("index", index);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
   if (defined(this._metadataTable)) {
-    return this._metadataTable.hasPropertyBySemantic(semantic);
+    return this._metadataTable.hasSemantic(semantic);
   }
 
   return false;
@@ -211,13 +211,13 @@ FeatureTable.prototype.propertyExists = function (propertyId) {
  * @returns {Boolean} Whether any feature has a property with the given semantic.
  * @private
  */
-FeatureTable.prototype.propertyExistsBySemantic = function (semantic) {
+FeatureTable.prototype.semanticExists = function (semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
   if (defined(this._metadataTable)) {
-    return this._metadataTable.hasPropertyBySemantic(semantic);
+    return this._metadataTable.hasSemantic(semantic);
   }
 
   return false;

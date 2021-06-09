@@ -151,14 +151,14 @@ describe("Scene/MetadataTable", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasPropertyBySemantic returns false when there's no properties", function () {
+  it("hasSemantic returns false when there's no properties", function () {
     var metadataTable = new MetadataTable({
       count: 10,
     });
-    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(false);
+    expect(metadataTable.hasSemantic("HEIGHT")).toBe(false);
   });
 
-  it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
+  it("hasSemantic returns false when there's no property with the given semantic", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -172,10 +172,10 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(false);
+    expect(metadataTable.hasSemantic("HEIGHT")).toBe(false);
   });
 
-  it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
+  it("hasSemantic returns true when there's a property with the given semantic", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -190,10 +190,10 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(true);
+    expect(metadataTable.hasSemantic("HEIGHT")).toBe(true);
   });
 
-  it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
+  it("hasSemantic returns true when the class has a default value for a missing property", function () {
     var properties = {
       height: {
         type: "FLOAT32",
@@ -214,15 +214,15 @@ describe("Scene/MetadataTable", function () {
       propertyValues: propertyValues,
     });
 
-    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(true);
+    expect(metadataTable.hasSemantic("HEIGHT")).toBe(true);
   });
 
-  it("hasPropertyBySemantic throws without semantic", function () {
+  it("hasSemantic throws without semantic", function () {
     var metadataTable = new MetadataTable({
       count: 10,
     });
     expect(function () {
-      metadataTable.hasPropertyBySemantic(undefined);
+      metadataTable.hasSemantic(undefined);
     }).toThrowDeveloperError();
   });
 

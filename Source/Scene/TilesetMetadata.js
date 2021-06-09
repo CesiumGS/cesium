@@ -126,12 +126,8 @@ TilesetMetadata.prototype.hasProperty = function (propertyId) {
  * @returns {Boolean} Whether the tileset has a property with the given semantic.
  * @private
  */
-TilesetMetadata.prototype.hasPropertyBySemantic = function (semantic) {
-  return MetadataEntity.hasPropertyBySemantic(
-    semantic,
-    this._properties,
-    this._class
-  );
+TilesetMetadata.prototype.hasSemantic = function (semantic) {
+  return MetadataEntity.hasSemantic(semantic, this._properties, this._class);
 };
 
 /**

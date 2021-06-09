@@ -152,14 +152,14 @@ describe("Scene/TilesetMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasPropertyBySemantic returns false when there's no properties", function () {
+  it("hasSemantic returns false when there's no properties", function () {
     var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
-    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
+    expect(tilesetMetadata.hasSemantic("HEIGHT")).toBe(false);
   });
 
-  it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
+  it("hasSemantic returns false when there's no property with the given semantic", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -179,10 +179,10 @@ describe("Scene/TilesetMetadata", function () {
         },
       },
     });
-    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
+    expect(tilesetMetadata.hasSemantic("HEIGHT")).toBe(false);
   });
 
-  it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
+  it("hasSemantic returns true when there's a property with the given semantic", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -203,10 +203,10 @@ describe("Scene/TilesetMetadata", function () {
         },
       },
     });
-    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(true);
+    expect(tilesetMetadata.hasSemantic("HEIGHT")).toBe(true);
   });
 
-  it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
+  it("hasSemantic returns true when the class has a default value for a missing property", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -225,16 +225,16 @@ describe("Scene/TilesetMetadata", function () {
       tileset: {},
     });
 
-    expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(true);
+    expect(tilesetMetadata.hasSemantic("HEIGHT")).toBe(true);
   });
 
-  it("hasPropertyBySemantic throws without semantic", function () {
+  it("hasSemantic throws without semantic", function () {
     var tilesetMetadata = new TilesetMetadata({
       tileset: {},
     });
 
     expect(function () {
-      tilesetMetadata.hasPropertyBySemantic(undefined);
+      tilesetMetadata.hasSemantic(undefined);
     }).toThrowDeveloperError();
   });
 
