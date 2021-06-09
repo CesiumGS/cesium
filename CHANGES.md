@@ -13,6 +13,7 @@
 - Fixed an issue in `ScreenSpaceCameraController.tilt3DOnTerrain` that caused unexpected camera behavior when tilting terrain diagonally along the screen. [#9562](https://github.com/CesiumGS/cesium/pull/9562)
 - Fixed error handling in `GlobeSurfaceTile` to print terrain tile request errors to console. [#9570](https://github.com/CesiumGS/cesium/pull/9570)
 - Fixed broken image URL in the KML Sandcastle. [#9579](https://github.com/CesiumGS/cesium/pull/9579)
+- Fixed an error where the `positionToEyeEC` and `tangentToEyeMatrix` properties for custom materials were not set in `GlobeFS`. [#9597](https://github.com/CesiumGS/cesium/pull/9597)
 
 ### 1.82.1 - 2021-06-01
 
