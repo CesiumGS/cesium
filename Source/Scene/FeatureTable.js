@@ -10,7 +10,7 @@ import defined from "../Core/defined.js";
  * For batch tables, properties are resolved in the following order:
  * </p>
  * <ol>
- *   <li>binary properties from options.featureTable</li>
+ *   <li>binary properties from options.metadataTable</li>
  *   <li>JSON properties from options.jsonMetadataTable</li>
  *   <li>batch table hierarchy properties from options.batchTableHierarchy</li>
  * </ol>
@@ -334,6 +334,11 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
 
 /**
  * Returns a copy of the value of the property with the given semantic.
+ * <p>
+ * This only operates on the underlying {@link MetadataTable} (if present) as
+ * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not have
+ * semantics.
+ * </p>
  *
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
@@ -350,6 +355,11 @@ FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
 
 /**
  * Sets the value of the property with the given semantic.
+ * <p>
+ * This only operates on the underlying {@link MetadataTable} (if present) as
+ * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not have
+ * semantics.
+ * </p>
  *
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
@@ -371,6 +381,11 @@ FeatureTable.prototype.setPropertyBySemantic = function (
 
 /**
  * Returns a typed array containing the property values for a given propertyId.
+ * <p>
+ * This only operates on the underlying {@link MetadataTable} (if present) as
+ * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not store
+ * values in typed arrays.
+ * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
@@ -391,6 +406,11 @@ FeatureTable.prototype.getPropertyTypedArray = function (propertyId) {
 
 /**
  * Returns a typed array containing the property values for the property with the given semantic.
+ * <p>
+ * This only operates on the underlying {@link MetadataTable} (if present) as
+ * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not have
+ * semantics.
+ * </p>
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
