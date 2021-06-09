@@ -143,7 +143,6 @@ function configureCameraFrustum(widget) {
  * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
  *        to the bottom of the widget itself.
  * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
- * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
  * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
  * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
@@ -292,6 +291,9 @@ function CesiumWidget(container, options) {
     var globe = options.globe;
     if (!defined(globe)) {
       globe = new Globe(ellipsoid);
+    }
+    if (defined(options.terrainExaggeration)) {
+      globe.terrainExaggeration = options.terrainExaggeration;
     }
     if (globe !== false) {
       scene.globe = globe;
