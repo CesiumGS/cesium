@@ -742,7 +742,19 @@
         ]
       },
       "environmentIntersectionWidth":13317,
-      "showThroughEllipsoid":true
+      "showThroughEllipsoid":true,
+      "showViewshed":true,
+      "viewshedVisibleColor":{
+        "rgba":[
+          80,142,248,57
+        ]
+      },
+      "viewshedOccludedColor":{
+        "rgba":[
+          166,20,225,110
+        ]
+      },
+      "viewshedResolution":9164
     },
     "agi_customPatternSensor":{
       "show":true,
@@ -819,7 +831,19 @@
         ]
       },
       "environmentIntersectionWidth":53576,
-      "showThroughEllipsoid":true
+      "showThroughEllipsoid":true,
+      "showViewshed":true,
+      "viewshedVisibleColor":{
+        "rgba":[
+          38,54,223,91
+        ]
+      },
+      "viewshedOccludedColor":{
+        "rgba":[
+          229,38,249,99
+        ]
+      },
+      "viewshedResolution":25862
     },
     "agi_rectangularSensor":{
       "show":true,
@@ -892,7 +916,19 @@
         ]
       },
       "environmentIntersectionWidth":64839,
-      "showThroughEllipsoid":true
+      "showThroughEllipsoid":true,
+      "showViewshed":true,
+      "viewshedVisibleColor":{
+        "rgba":[
+          239,86,8,93
+        ]
+      },
+      "viewshedOccludedColor":{
+        "rgba":[
+          20,22,45,26
+        ]
+      },
+      "viewshedResolution":33690
     },
     "agi_fan":{
       "show":true,
@@ -5104,6 +5140,26 @@
     }
   },
   {
+    "id":"constant_agi_conicSensor_viewshedVisibleColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedVisibleColor":{
+        "rgbaf":[
+          0.5490196078431373,0.23529411764705882,0.34509803921568627,0.20392156862745098
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_conicSensor_viewshedOccludedColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedOccludedColor":{
+        "rgbaf":[
+          0.9529411764705882,0.3843137254901961,0.8901960784313725,0.00784313725490196
+        ]
+      }
+    }
+  },
+  {
     "id":"constant_agi_customPatternSensor_directions_unitSpherical",
     "agi_customPatternSensor":{
       "directions":{
@@ -6132,6 +6188,26 @@
     }
   },
   {
+    "id":"constant_agi_customPatternSensor_viewshedVisibleColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedVisibleColor":{
+        "rgbaf":[
+          0.011764705882352941,0.3058823529411765,0.09019607843137255,0.9490196078431372
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_customPatternSensor_viewshedOccludedColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedOccludedColor":{
+        "rgbaf":[
+          0.6196078431372549,0.08627450980392157,0.47843137254901963,0.2549019607843137
+        ]
+      }
+    }
+  },
+  {
     "id":"constant_agi_rectangularSensor_intersectionColor_rgbaf",
     "agi_rectangularSensor":{
       "intersectionColor":{
@@ -7122,6 +7198,26 @@
       "environmentIntersectionColor":{
         "rgbaf":[
           0.1607843137254902,0.16862745098039217,0.30196078431372547,0.11764705882352941
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_rectangularSensor_viewshedVisibleColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedVisibleColor":{
+        "rgbaf":[
+          0.9215686274509803,0.3411764705882353,0.16470588235294117,0.054901960784313725
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_agi_rectangularSensor_viewshedOccludedColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedOccludedColor":{
+        "rgbaf":[
+          0.1843137254901961,0.6392156862745098,0.6666666666666666,0.5568627450980392
         ]
       }
     }
@@ -8482,6 +8578,18 @@
       },
       "showThroughEllipsoid":{
         "reference":"Constant#conicSensor.showThroughEllipsoid"
+      },
+      "showViewshed":{
+        "reference":"Constant#conicSensor.showViewshed"
+      },
+      "viewshedVisibleColor":{
+        "reference":"Constant#conicSensor.viewshedVisibleColor"
+      },
+      "viewshedOccludedColor":{
+        "reference":"Constant#conicSensor.viewshedOccludedColor"
+      },
+      "viewshedResolution":{
+        "reference":"Constant#conicSensor.viewshedResolution"
       }
     },
     "agi_customPatternSensor":{
@@ -8567,6 +8675,18 @@
       },
       "showThroughEllipsoid":{
         "reference":"Constant#customPatternSensor.showThroughEllipsoid"
+      },
+      "showViewshed":{
+        "reference":"Constant#customPatternSensor.showViewshed"
+      },
+      "viewshedVisibleColor":{
+        "reference":"Constant#customPatternSensor.viewshedVisibleColor"
+      },
+      "viewshedOccludedColor":{
+        "reference":"Constant#customPatternSensor.viewshedOccludedColor"
+      },
+      "viewshedResolution":{
+        "reference":"Constant#customPatternSensor.viewshedResolution"
       }
     },
     "agi_rectangularSensor":{
@@ -8658,6 +8778,18 @@
       },
       "showThroughEllipsoid":{
         "reference":"Constant#rectangularSensor.showThroughEllipsoid"
+      },
+      "showViewshed":{
+        "reference":"Constant#rectangularSensor.showViewshed"
+      },
+      "viewshedVisibleColor":{
+        "reference":"Constant#rectangularSensor.viewshedVisibleColor"
+      },
+      "viewshedOccludedColor":{
+        "reference":"Constant#rectangularSensor.viewshedOccludedColor"
+      },
+      "viewshedResolution":{
+        "reference":"Constant#rectangularSensor.viewshedResolution"
       }
     },
     "agi_fan":{
@@ -12538,6 +12670,27 @@
           0,54383,
           3600,48814
         ]
+      },
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,219,102,126,208,
+          3600,165,12,88,3
+        ]
+      },
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,47,229,96,105,
+          3600,65,153,9,64
+        ]
+      },
+      "viewshedResolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,38357,
+          3600,30316
+        ]
       }
     },
     "agi_customPatternSensor":{
@@ -12629,6 +12782,27 @@
         "number":[
           0,15461,
           3600,8e3
+        ]
+      },
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,221,155,36,117,
+          3600,249,126,78,129
+        ]
+      },
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,228,27,237,134,
+          3600,254,162,80,84
+        ]
+      },
+      "viewshedResolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,44590,
+          3600,31959
         ]
       }
     },
@@ -12735,6 +12909,27 @@
         "number":[
           0,637,
           3600,10677
+        ]
+      },
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,220,157,178,92,
+          3600,213,65,75,26
+        ]
+      },
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,202,44,192,10,
+          3600,107,226,246,207
+        ]
+      },
+      "viewshedResolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,24619,
+          3600,54818
         ]
       }
     },
@@ -17902,6 +18097,30 @@
     }
   },
   {
+    "id":"sampled_conicSensor_viewshedVisibleColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.6666666666666666,0.13333333333333333,0.2784313725490196,0.2549019607843137,
+          3600,0.11372549019607843,0.5372549019607843,0.4666666666666667,0.7098039215686275
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_viewshedOccludedColor_rgbaf",
+    "agi_conicSensor":{
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.32941176470588235,0.29411764705882354,0.4666666666666667,0.00784313725490196,
+          3600,0.2901960784313726,0.5254901960784314,0.6,0.5882352941176471
+        ]
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_intersectionColor_rgbaf",
     "agi_customPatternSensor":{
       "intersectionColor":{
@@ -19156,6 +19375,30 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_viewshedVisibleColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.10196078431372549,0.23529411764705882,0.5372549019607843,0.6509803921568628,
+          3600,0.9450980392156862,0.047058823529411764,0.3686274509803922,0.7450980392156863
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_viewshedOccludedColor_rgbaf",
+    "agi_customPatternSensor":{
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.6588235294117647,0.7058823529411765,0.4823529411764706,0.6078431372549019,
+          3600,0.9176470588235294,0.5568627450980392,0.596078431372549,0.7372549019607844
+        ]
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_intersectionColor_rgbaf",
     "agi_rectangularSensor":{
       "intersectionColor":{
@@ -20405,6 +20648,30 @@
         "rgbaf":[
           0,0.788235294117647,0.8156862745098039,0.3568627450980392,0.08235294117647059,
           3600,0.5098039215686274,0.49411764705882355,0.984313725490196,0.5490196078431373
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_viewshedVisibleColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedVisibleColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.26666666666666666,0.15294117647058825,0.8196078431372549,0.08235294117647059,
+          3600,0.19215686274509805,0.06274509803921569,0.4666666666666667,0.06274509803921569
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_viewshedOccludedColor_rgbaf",
+    "agi_rectangularSensor":{
+      "viewshedOccludedColor":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.35294117647058826,0.32941176470588235,0.050980392156862744,0.1843137254901961,
+          3600,0.7254901960784313,0.16470588235294117,0.06666666666666667,0.27450980392156865
         ]
       }
     }

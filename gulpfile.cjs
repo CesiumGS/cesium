@@ -1445,7 +1445,7 @@ export default "' +
 }
 
 function createCesiumJs() {
-  let contents = `export const VERSION = '${version}';\n`;
+  let contents = `export var VERSION = '${version}';\n`;
   globby.sync(sourceFiles).forEach(function (file) {
     file = path.relative("Source", file);
 
@@ -1510,6 +1510,7 @@ function createTypeScriptDefinitions() {
     firstNode,
     node
   );
+  newSource += "\n\n";
   node.forEachChild((child) => {
     if (
       typescript.SyntaxKind[child.kind] !== "EnumDeclaration" ||

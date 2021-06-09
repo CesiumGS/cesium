@@ -8,6 +8,7 @@ import { Resource } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import { Uri } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
+import dataUriToBuffer from "../dataUriToBuffer.js";
 
 describe("Core/Resource", function () {
   var dataUri =
@@ -1640,15 +1641,9 @@ describe("Core/Resource", function () {
         expect(headers).toEqual(expectedHeaders);
         expect(responseType).toEqual("blob");
 
-        var binary = atob(dataUri.split(",")[1]);
-        var array = [];
-        for (var i = 0; i < binary.length; i++) {
-          array.push(binary.charCodeAt(i));
-        }
+        var binary = dataUriToBuffer(dataUri);
 
-        deferred.resolve(
-          new Blob([new Uint8Array(array)], { type: "image/png" })
-        );
+        deferred.resolve(new Blob([binary], { type: "image/png" }));
       });
 
       var testResource = new Resource({

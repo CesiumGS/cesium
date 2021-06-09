@@ -135,6 +135,7 @@ ViewportQuad.prototype.update = function (frameState) {
 
     this._material.update(context);
 
+    this._overlayCommand.renderState = this._rs;
     this._overlayCommand.uniformMap = this._material._uniforms;
     frameState.commandList.push(this._overlayCommand);
   }

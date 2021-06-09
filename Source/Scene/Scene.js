@@ -2658,6 +2658,28 @@ function executeCommands(scene, passState) {
       invertClassification
     );
 
+    // Classification for translucent 3D Tiles
+    var has3DTilesClassificationCommands =
+      frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
+    if (
+      has3DTilesClassificationCommands &&
+      view.translucentTileClassification.isSupported()
+    ) {
+      view.translucentTileClassification.executeTranslucentCommands(
+        scene,
+        executeCommand,
+        passState,
+        commands,
+        globeDepth.framebuffer
+      );
+      view.translucentTileClassification.executeClassificationCommands(
+        scene,
+        executeCommand,
+        passState,
+        frustumCommands
+      );
+    }
+
     if (
       context.depthTexture &&
       scene.useDepthPicking &&
@@ -3543,6 +3565,14 @@ Scene.prototype.resolveFramebuffers = function (passState) {
       ? sceneFramebuffer
       : defaultFramebuffer;
     view.oit.execute(context, passState);
+  }
+
+  var translucentTileClassification = view.translucentTileClassification;
+  if (
+    translucentTileClassification.hasTranslucentDepth &&
+    translucentTileClassification.isSupported()
+  ) {
+    translucentTileClassification.execute(this, passState);
   }
 
   if (usePostProcess) {

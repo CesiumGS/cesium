@@ -19,6 +19,7 @@ import PickFramebuffer from "./PickFramebuffer.js";
 import SceneFramebuffer from "./SceneFramebuffer.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMap from "./ShadowMap.js";
+import TranslucentTileClassification from "./TranslucentTileClassification.js";
 
 function CommandExtent() {
   this.command = undefined;
@@ -58,6 +59,9 @@ function View(scene, camera, viewport) {
   this.globeDepth = globeDepth;
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;
+  this.translucentTileClassification = new TranslucentTileClassification(
+    context
+  );
   this.pickDepths = [];
   this.debugGlobeDepths = [];
   this.frustumCommandsList = [];
@@ -411,6 +415,9 @@ View.prototype.destroy = function () {
     this.sceneFramebuffer && this.sceneFramebuffer.destroy();
   this.globeDepth = this.globeDepth && this.globeDepth.destroy();
   this.oit = this.oit && this.oit.destroy();
+  this.translucentTileClassification =
+    this.translucentTileClassification &&
+    this.translucentTileClassification.destroy();
   this.globeTranslucencyFramebuffer =
     this.globeTranslucencyFramebuffer &&
     this.globeTranslucencyFramebuffer.destroy();

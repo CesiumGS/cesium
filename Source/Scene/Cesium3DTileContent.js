@@ -13,7 +13,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @alias Cesium3DTileContent
  * @constructor
  */
-function Cesium3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+function Cesium3DTileContent() {
   /**
    * Gets or sets if any feature's property changed.  Used to
    * optimized applying a style when a feature's property changed.
@@ -127,10 +127,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the array of {@link Cesium3DTileContent} objects that represent the
-   * content a composite's inner tiles, which can also be composites.
+   * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite|Composite specification}
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -218,6 +217,30 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   batchTable: {
     // eslint-disable-next-line getter-return
     get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+  },
+
+  /**
+   * Gets the group metadata for this content if the content uses the
+   * <code>3DTILES_metadata</code> extension. If the extension is not used,
+   * this property should be undefined.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @type {GroupMetadata|undefined}
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  groupMetadata: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+    set: function (value) {
       DeveloperError.throwInstantiationError();
     },
   },

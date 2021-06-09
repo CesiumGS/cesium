@@ -1,19 +1,23 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { Cesium3DTileset } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { StencilConstants } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cesium3DTileset,
+  Cesium3DTileStyle,
+  ClassificationType,
+  Color,
+  ColorGeometryInstanceAttribute,
+  destroyObject,
+  Ellipsoid,
+  GeometryInstance,
+  MetadataClass,
+  GroupMetadata,
+  Pass,
+  PerInstanceColorAppearance,
+  Primitive,
+  Rectangle,
+  RectangleGeometry,
+  RenderState,
+  StencilConstants,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -955,6 +959,42 @@ xdescribe(
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              type: "STRING",
+            },
+            height: {
+              type: "FLOAT32",
+            },
+          },
+        },
+      });
+      var groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns groupMetadata", function () {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
+          }
+        );
+      });
     });
   },
   "WebGL"

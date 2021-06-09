@@ -1112,7 +1112,7 @@ function getEvaluateTernaryFunction(call) {
 function getFeatureProperty(feature, name) {
   // Returns undefined if the feature is not defined or the property name is not defined for that feature
   if (defined(feature)) {
-    return feature.getProperty(name);
+    return feature.getPropertyInherited(name);
   }
 }
 
