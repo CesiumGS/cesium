@@ -1633,6 +1633,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_cartographicLimitRectangle: function () {
       return this.properties.localizedCartographicLimitRectangle;
     },
+    u_rectangle: function () {
+      return this.properties.rectangle;
+    },
     u_clippingPlanesMatrix: function () {
       var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
       var transform = defined(clippingPlanes)
@@ -1723,6 +1726,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       clippingPlanesEdgeWidth: 0.0,
 
       localizedCartographicLimitRectangle: new Cartesian4(),
+      rectangle: new Cartesian4(),
 
       frontFaceAlphaByDistance: new Cartesian4(),
       backFaceAlphaByDistance: new Cartesian4(),
@@ -2320,6 +2324,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       localizedCartographicLimitRectangle,
       uniformMapProperties.localizedCartographicLimitRectangle
     );
+
+    uniformMapProperties.rectangle.x = cartographicTileRectangle.west;
+    uniformMapProperties.rectangle.y = cartographicTileRectangle.south;
+    uniformMapProperties.rectangle.z = cartographicTileRectangle.east;
+    uniformMapProperties.rectangle.w = cartographicTileRectangle.north;
 
     localizedTranslucencyRectangle.x =
       (clippedTranslucencyRectangle.west - cartographicTileRectangle.west) *

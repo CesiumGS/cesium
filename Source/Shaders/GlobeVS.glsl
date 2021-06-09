@@ -10,6 +10,7 @@ uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
 uniform mat4 u_modifiedModelViewProjection;
 uniform vec4 u_tileRectangle;
+uniform vec4 u_rectangle;
 
 // Uniforms for 2D Mercator projection
 uniform vec2 u_southAndNorthLatitude;
@@ -19,6 +20,7 @@ varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
 varying vec3 v_textureCoordinates;
+varying vec2 v_uv;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
@@ -196,4 +198,7 @@ void main()
     v_aspect = czm_branchFreeTernary(determ < 0.0, 2.0 * czm_pi - v_aspect, v_aspect);
     v_height = height;
 #endif
+
+    v_uv.x = mix(u_rectangle.x, u_rectangle.z, v_textureCoordinates.x);
+    v_uv.y = mix(u_rectangle.y, u_rectangle.w, v_textureCoordinates.y);
 }

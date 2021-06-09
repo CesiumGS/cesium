@@ -126,6 +126,8 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
 
+varying vec2 v_uv;
+
 #if defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
 float interpolateByDistance(vec4 nearFarScalar, float distance)
 {
@@ -379,12 +381,15 @@ void main()
 
 #ifdef APPLY_MATERIAL
     czm_materialInput materialInput;
-    materialInput.st = v_textureCoordinates.st;
+    materialInput.st = v_uv;
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.slope = v_slope;
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
+    materialInput.positionToEyeEC = -v_positionEC;
+    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalize(v_normalEC));
     czm_material material = czm_getMaterial(materialInput);
+    gl_FragColor = vec4(material.diffuse, 1.0); return;
     vec4 materialColor = vec4(material.diffuse, material.alpha);
     color = alphaBlend(materialColor, color);
 #endif

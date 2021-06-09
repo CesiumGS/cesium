@@ -54,5 +54,9 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     material.specular = specularIntensity;
     material.shininess = 10.0;
 
+    // material = czm_getDefaultMaterial(materialInput);
+    // material.diffuse = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
+    // // material.diffuse = vec3(materialInput.st, 0.0);
+    material.diffuse = czm_phong(normalize(materialInput.positionToEyeEC), material, czm_lightDirectionEC).rgb;
     return material;
 }
