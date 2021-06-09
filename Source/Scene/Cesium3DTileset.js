@@ -2312,7 +2312,9 @@ function addTileDebugLabel(tile, tileset, position, frameState) {
       "\nDistance: " +
       tile.boundingVolume.distanceToCamera(frameState) +
       "\nClosest Point is on: " +
-      tile.boundingVolume._debugText,
+      tile.boundingVolume._debugText +
+      "\nToken: " +
+      tile.boundingVolume._token,
     position: position,
     font: 19 - attributes + "px sans-serif",
     showBackground: true,

@@ -642,7 +642,11 @@ function deriveBoundingVolumeS2(
   // Decode Morton index. The modulus 4 ensures that it works for both quadtrees and octrees.
   var childCoords = MortonOrder.decode2D(childIndex % 4);
   // Encode Hilbert index.
-  var hilbertIndex = HilbertOrder.encode2D(1, childCoords[0], childCoords[1]);
+  var hilbertIndex = HilbertOrder.encode2D(
+    1 + (boundingVolumeS2.s2Cell._level % 2),
+    childCoords[0],
+    childCoords[1]
+  );
   var childCell = boundingVolumeS2.s2Cell.getChild(hilbertIndex);
 
   var minHeight, maxHeight;

@@ -16,7 +16,6 @@ import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import Color from "../Core/Color.js";
 import S2Cell from "../Core/S2Cell.js";
-
 var centerCartographicScratch = new Cartographic();
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
@@ -58,6 +57,7 @@ function TileBoundingS2Cell(options) {
     ellipsoid
   );
   this._boundingPlanes = boundingPlanes;
+  this._token = options.token;
 
   // Pre-compute vertices to speed up the plane intersection test.
   var vertices = computeVertices(boundingPlanes);
@@ -132,8 +132,6 @@ var vertexScratch = new Cartesian3();
 var vertexGeodeticNormalScratch = new Cartesian3();
 var sideNormalScratch = new Cartesian3();
 var sideScratch = new Cartesian3();
-var topPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
-var bottomPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Computes bounding planes of the kDOP.
  * @private
@@ -161,11 +159,7 @@ function computeBoundingPlanes(
   );
   topCartographic.height = maximumHeight;
   var top = ellipsoid.cartographicToCartesian(topCartographic, topScratch);
-  var topPlane = Plane.fromPointNormal(
-    top,
-    centerSurfaceNormal,
-    topPlaneScratch
-  );
+  var topPlane = Plane.fromPointNormal(top, centerSurfaceNormal);
   planes[0] = topPlane;
 
   // Compute bottom plane.
@@ -193,7 +187,7 @@ function computeBoundingPlanes(
       maxDistance = distance;
     }
   }
-  var bottomPlane = Plane.clone(topPlane, bottomPlaneScratch);
+  var bottomPlane = Plane.clone(topPlane);
   // Negate the normal of the bottom plane since we want all normals to point "outwards".
   bottomPlane.normal = Cartesian3.negate(
     bottomPlane.normal,
@@ -453,11 +447,11 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
     );
 
     if (selectedPlaneIndices[0] === 0) {
-      this._debugText = "Top Plane";
+      this._debugText = "Case I: Top Plane";
     } else if (selectedPlaneIndices[0] === 1) {
-      this._debugText = "Bottom Plane";
+      this._debugText = "Case I: Bottom Plane";
     } else {
-      this._debugText = "Side Plane";
+      this._debugText = "Case I: Side Plane";
     }
 
     return Cartesian3.distance(facePoint, point);
@@ -475,7 +469,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         ],
       ];
       facePoint = closestPointLineSegment(point, edge[0], edge[1]);
-      this._debugText = "Edge of Top Plane";
+      this._debugText = "Case II: Edge of Top Plane";
       return Cartesian3.distance(facePoint, point);
     }
     var minimumDistance = Number.MAX_VALUE;
@@ -494,7 +488,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
         minimumDistance = distance;
       }
     }
-    this._debugText = "Side or Bottom Plane";
+    this._debugText = "Case II: Side or Bottom Plane";
     return Math.sqrt(minimumDistance);
   } else if (selectedPlaneIndices.length > 3) {
     // Handles Case IV
@@ -509,7 +503,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       this._edgeNormals[1]
     );
     this._color = Color.RED;
-    this._debugText = "Bottom Plane (Degenerate)";
+    this._debugText = "Case IV: Bottom Plane (Degenerate)";
     return Cartesian3.distance(facePoint, point);
   }
 
@@ -519,14 +513,14 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
 
   // Vertex is on top plane.
   if (selectedPlaneIndices[0] === 0) {
-    this._debugText = "Vertex on Top Plane";
+    this._debugText = "Case III: Vertex on Top Plane";
     return Cartesian3.distance(
       point,
       this._vertices[(selectedPlaneIndices[1] - 2 + skip) % 4]
     );
   }
 
-  this._debugText = "Vertex on Bottom Plane";
+  this._debugText = "Case III: Vertex on Bottom Plane";
   // Vertex is on bottom plane.
   return Cartesian3.distance(
     point,
@@ -724,4 +718,5 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
     asynchronous: false,
   });
 };
+
 export default TileBoundingS2Cell;
