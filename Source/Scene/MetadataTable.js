@@ -206,7 +206,7 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {Number} index The index of the entity.
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this semantic.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private

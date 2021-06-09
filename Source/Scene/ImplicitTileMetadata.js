@@ -151,7 +151,7 @@ ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
 ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {

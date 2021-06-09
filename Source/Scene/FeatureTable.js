@@ -337,7 +337,7 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {Number} index The index of the feature.
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this semantic.
  * @private
  */
 FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
