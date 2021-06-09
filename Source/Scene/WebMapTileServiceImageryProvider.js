@@ -228,13 +228,21 @@ function WebMapTileServiceImageryProvider(options) {
   var style = options.style;
   var tileMatrixSetID = options.tileMatrixSetID;
   var url = resource.url;
-  if (url.indexOf("{") >= 0) {
-    var templateValues = {
-      style: style,
-      Style: style,
-      TileMatrixSet: tileMatrixSetID,
-    };
+  var templateValues = {
+    style: style,
+    Style: style,
+    TileMatrixSet: tileMatrixSetID,
+  };
 
+  //If there is only one "{s}" in the url and there are no other keywords (i.e. "{" only appears once) -> it is safe to use KVP
+  if (
+    (url.match(/{s}/g) || []).length == 1 &&
+    (url.match(/{/g) || []).length == 1
+  ) {
+    resource.setTemplateValues(templateValues);
+    this._useKvp = true; //It is safe to use KVP
+  } else if (url.indexOf("{") >= 0) {
+    //else continue like we are now
     resource.setTemplateValues(templateValues);
     this._useKvp = false;
   } else {
@@ -372,6 +380,8 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
       queryParameters: query,
       request: request,
     });
+    //When useKvp is true, replace the {s} keyword in the requested URL. QUESTIONS: modify `resource`? Should I replace {s} with ""?
+    resource.url = resource.url.replace("{s}", "");
   }
 
   return ImageryProvider.loadImage(imageryProvider, resource);
