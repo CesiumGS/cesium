@@ -235,8 +235,8 @@ function WebMapTileServiceImageryProvider(options) {
   };
 
   if (
-    (url.match(/{s}/g) || []).length == 1 &&
-    (url.match(/{/g) || []).length == 1
+    (url.match(/{s}/g) || []).length === 1 &&
+    (url.match(/{/g) || []).length === 1
   ) {
     resource.setTemplateValues(templateValues);
     this._useKvp = true;
