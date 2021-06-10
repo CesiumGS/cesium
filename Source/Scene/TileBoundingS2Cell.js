@@ -56,7 +56,6 @@ function TileBoundingS2Cell(options) {
     ellipsoid
   );
   this._boundingPlanes = boundingPlanes;
-  this._token = options.token;
 
   // Pre-compute vertices to speed up the plane intersection test.
   var vertices = computeVertices(boundingPlanes);
