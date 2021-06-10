@@ -420,6 +420,50 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
 };
 
 /**
+ * Creates an S2Cell from its face, position along the Hilbert curve for a given level.
+ *
+ * @param {Number} face The root face of S2 this cell is on. Must be in the range [0-5].
+ * @param {BigInt} position The position along the Hilbert curve. Must be in the range [0-4**level).
+ * @param {Number} level The level of the S2 curve. Must be in the range [0-30].
+ * @returns {S2Cell} A new S2Cell from the given parameters.
+ * @private
+ */
+S2Cell.fromFacePositionLevel = function (face, position, level) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("position", position);
+  if (face < 0 || face > 5) {
+    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+  }
+
+  if (level < 0 || level > S2_MAX_LEVEL) {
+    throw new DeveloperError("Invalid level (must be within 0-30)");
+  }
+  if (position < 0 || position >= Math.pow(4, level)) {
+    throw new DeveloperError("Invalid Hilbert position for level");
+  }
+  //>>includeEnd('debug');
+
+  var faceBitString =
+    (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
+  var positionBitString = position.toString(2);
+  var positionPrefixPadding = Array(
+    2 * level - positionBitString.length + 1
+  ).join("0");
+  var positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
+
+  // eslint-disable-next-line
+  var cellId = BigInt(
+    "0b" +
+      faceBitString +
+      positionPrefixPadding +
+      positionBitString +
+      "1" + // Adding the sentinel bit that always follows the position bits.
+      positionSuffixPadding
+  );
+  return new S2Cell(cellId);
+};
+
+/**
  * @private
  */
 function getS2Center(cellId, level) {

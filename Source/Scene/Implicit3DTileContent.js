@@ -7,11 +7,9 @@ import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
 import HilbertOrder from "../Core/HilbertOrder.js";
 import Matrix3 from "../Core/Matrix3.js";
-import MortonOrder from "../Core/MortonOrder.js";
 import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
 import when from "../ThirdParty/when.js";
-import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
@@ -559,10 +557,13 @@ function deriveBoundingVolume(
 
   if (has3DTilesExtension(rootBoundingVolume, "3DTILES_bounding_volume_S2")) {
     return deriveBoundingVolumeS2(
-      implicitTileset,
-      parentTile,
       parentIsPlaceholderTile,
-      childIndex
+      parentTile,
+      childIndex,
+      implicitCoordinates.level,
+      implicitCoordinates.x,
+      implicitCoordinates.y,
+      implicitCoordinates.z
     );
   }
 
@@ -594,39 +595,51 @@ function deriveBoundingVolume(
 }
 
 /**
- * Derive a bounding volume for a child tile from a parent tile,
- * assuming a quadtree or octree implicit tiling scheme.
+ * Derive a bounding volume for a descendant tile (child, grandchild, etc.),
+ * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
+ * coordinates are given to select the descendant tile and compute its position
+ * and dimensions.
  * <p>
- * If implicitSubdivisionScheme is OCTREE, octree subdivision is used.
- * Otherwise, quadtree subdivision is used. Quadtrees are always divided
- * using the S2 cell hierarchy. Octrees have an additional split at the midpoint
- * of the the vertical (z) dimension.
+ * If z is present, octree subdivision is used. Otherwise, quadtree subdivision
+ * is used. Quadtrees are always divided at the midpoint of the the horizontal
+ * dimensions, i.e. (x, y), leaving the z axis unchanged.
  * </p>
  *
- * @param {ImplicitTileset} implicitTileset The implicit tileset struct which holds the root bounding volume
- * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @param {Number} childIndex The morton index of the child tile relative to its parent
+ * @param {Number} level The level of the descendant tile relative to the root implicit tile
+ * @param {Number} x The x coordinate of the descendant tile
+ * @param {Number} y The y coordinate of the descendant tile
+ * @param {Number} [z] The z coordinate of the descendant tile (octree only)
+ * @returns {Object} An object with the 3DTILES_bounding_volume_S2 extension.
  * @private
  */
 function deriveBoundingVolumeS2(
-  implicitTileset,
-  parentTile,
   parentIsPlaceholderTile,
-  childIndex
+  parentTile,
+  childIndex,
+  level,
+  x,
+  y,
+  z
 ) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("implicitTileset", implicitTileset);
-  Check.typeOf.object("parentTile", parentTile);
   Check.typeOf.bool("parentIsPlaceholderTile", parentIsPlaceholderTile);
+  Check.typeOf.object("parentTile", parentTile);
   Check.typeOf.number("childIndex", childIndex);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  if (defined(z)) {
+    Check.typeOf.number("z", z);
+  }
   //>>includeEnd('debug');
 
-  var boundingVolumeS2;
+  var boundingVolumeS2 = parentTile._boundingVolume;
 
-  // Handle the placeholder tile case.
+  // Handle the placeholder tile case, where we just duplicate the placeholder's bounding volume.
   if (parentIsPlaceholderTile) {
-    boundingVolumeS2 = parentTile._boundingVolume;
     return {
       extensions: {
         "3DTILES_bounding_volume_S2": {
@@ -637,16 +650,21 @@ function deriveBoundingVolumeS2(
       },
     };
   }
-  boundingVolumeS2 = parentTile._boundingVolume;
 
-  // Decode Morton index. The modulus 4 ensures that it works for both quadtrees and octrees.
-  var childCoords = MortonOrder.decode2D(childIndex % 4);
-  // Encode Hilbert index.
-  var hilbertIndex = HilbertOrder.encode2D(1, childCoords[0], childCoords[1]);
-  var childCell = boundingVolumeS2.s2Cell.getChild(hilbertIndex);
+  // Extract the first 3 face bits from the 64-bit S2 cell ID.
+  // eslint-disable-next-line
+  var face = Number(parentTile._boundingVolume.s2Cell._cellId >> BigInt(61));
+  // The Hilbert curve is rotated for the "odd" faces on the S2 Earthcube.
+  // See http://s2geometry.io/devguide/img/s2cell_global.jpg
+  var position =
+    face % 2 === 0
+      ? HilbertOrder.encode2D(level, x, y)
+      : HilbertOrder.encode2D(level, y, x);
+  // eslint-disable-next-line
+  var cell = S2Cell.fromFacePositionLevel(face, BigInt(position), level);
 
   var minHeight, maxHeight;
-  if (implicitTileset.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+  if (defined(z)) {
     var midpointHeight =
       (boundingVolumeS2.maximumHeight + boundingVolumeS2.minimumHeight) / 2;
     minHeight =
@@ -661,7 +679,7 @@ function deriveBoundingVolumeS2(
   return {
     extensions: {
       "3DTILES_bounding_volume_S2": {
-        token: S2Cell.getTokenFromId(childCell._cellId),
+        token: S2Cell.getTokenFromId(cell._cellId),
         minimumHeight: minHeight,
         maximumHeight: maxHeight,
       },
