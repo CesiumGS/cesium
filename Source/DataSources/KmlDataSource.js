@@ -2389,11 +2389,7 @@ function processTour(dataSource, node, processingData, deferredLoading) {
     }
   }
 
-  if (!defined(dataSource.kmlTours)) {
-    dataSource.kmlTours = [];
-  }
-
-  dataSource.kmlTours.push(tour);
+  dataSource._kmlTours.push(tour);
 }
 
 function processTourUnsupportedNode(tour, entryNode) {
@@ -3441,6 +3437,8 @@ function KmlDataSource(options) {
 
   // Create a list of Credit's from the resource that the user can't remove
   this._resourceCredits = [];
+
+  this._kmlTours = [];
 }
 
 /**
@@ -3598,6 +3596,16 @@ Object.defineProperties(KmlDataSource.prototype, {
   credit: {
     get: function () {
       return this._credit;
+    },
+  },
+  /**
+   * Gets the KML Tours that are used to guide the camera to specified destinations on given time intervals.
+   * @memberof KmlDataSource.prototype
+   * @type {KmlTour[]}
+   */
+  kmlTours: {
+    get: function () {
+      return this._kmlTours;
     },
   },
 });

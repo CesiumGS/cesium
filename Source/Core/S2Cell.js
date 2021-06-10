@@ -379,7 +379,7 @@ S2Cell.prototype.getParentAtLevel = function (level) {
 S2Cell.prototype.getCenter = function (ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var center = getS2Center(this._cellId);
+  var center = getS2Center(this._cellId, this._level);
   // Normalize XYZ.
   center = Cartesian3.normalize(center, center);
   var cartographic = new Cartographic.fromCartesian(
@@ -408,7 +408,7 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
 
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var vertex = getS2Vertex(this._cellId, index);
+  var vertex = getS2Vertex(this._cellId, this._level, index);
   // Normalize XYZ.
   vertex = Cartesian3.normalize(vertex, vertex);
   var cartographic = new Cartographic.fromCartesian(
@@ -420,21 +420,62 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
 };
 
 /**
+ * Creates an S2Cell from its face, position along the Hilbert curve for a given level.
+ *
+ * @param {Number} face The root face of S2 this cell is on. Must be in the range [0-5].
+ * @param {BigInt} position The position along the Hilbert curve. Must be in the range [0-4**level).
+ * @param {Number} level The level of the S2 curve. Must be in the range [0-30].
+ * @returns {S2Cell} A new S2Cell from the given parameters.
  * @private
  */
-function getS2Center(cellId) {
-  var faceSiTi = convertCellIdToFaceSiTi(cellId);
+S2Cell.fromFacePositionLevel = function (face, position, level) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("position", position);
+  if (face < 0 || face > 5) {
+    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+  }
+
+  if (level < 0 || level > S2_MAX_LEVEL) {
+    throw new DeveloperError("Invalid level (must be within 0-30)");
+  }
+  if (position < 0 || position >= Math.pow(4, level)) {
+    throw new DeveloperError("Invalid Hilbert position for level");
+  }
+  //>>includeEnd('debug');
+
+  var faceBitString =
+    (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
+  var positionBitString = position.toString(2);
+  var positionPrefixPadding = Array(
+    2 * level - positionBitString.length + 1
+  ).join("0");
+  var positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
+
+  // eslint-disable-next-line
+  var cellId = BigInt(
+    "0b" +
+      faceBitString +
+      positionPrefixPadding +
+      positionBitString +
+      "1" +
+      positionSuffixPadding
+  );
+  return new S2Cell(cellId);
+};
+
+/**
+ * @private
+ */
+function getS2Center(cellId, level) {
+  var faceSiTi = convertCellIdToFaceSiTi(cellId, level);
   return convertFaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
 /**
  * @private
  */
-function getS2Vertex(cellId, index) {
-  var faceIJ = convertCellIdToFaceIJ(cellId);
-  var uv = convertIJLeveltoBoundUV(
-    [faceIJ[1], faceIJ[2]],
-    S2Cell.getLevel(cellId)
-  );
+function getS2Vertex(cellId, level, index) {
+  var faceIJ = convertCellIdToFaceIJ(cellId, level);
+  var uv = convertIJLeveltoBoundUV([faceIJ[1], faceIJ[2]], level);
   // Handles CCW ordering of the vertices.
   var y = (index >> 1) & 1;
   return convertFaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
@@ -445,7 +486,7 @@ function getS2Vertex(cellId, index) {
 /**
  * @private
  */
-function convertCellIdToFaceSiTi(cellId) {
+function convertCellIdToFaceSiTi(cellId, level) {
   var faceIJ = convertCellIdToFaceIJ(cellId);
   var face = faceIJ[0];
   var i = faceIJ[1];
@@ -455,7 +496,7 @@ function convertCellIdToFaceSiTi(cellId) {
   // (remember that this space has 31 levels - which allows us to pick center and edges of the leaf cells). For non leaf cells,
   // we get one of either two cells diagonal to the cell center. The correction is used to make sure we pick the leaf cell edges
   // that represent the parent cell center.
-  var isLeaf = S2Cell.getLevel(cellId) === 30;
+  var isLeaf = level === 30;
   var shouldCorrect =
     !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1); // eslint-disable-line
   var correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
