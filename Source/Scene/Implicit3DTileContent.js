@@ -654,7 +654,7 @@ function deriveBoundingVolumeS2(
   // Extract the first 3 face bits from the 64-bit S2 cell ID.
   // eslint-disable-next-line
   var face = Number(parentTile._boundingVolume.s2Cell._cellId >> BigInt(61));
-  // The Hilbert curve is rotate for the "odd" faces on the S2 Earthcube.
+  // The Hilbert curve is rotated for the "odd" faces on the S2 Earthcube.
   // See http://s2geometry.io/devguide/img/s2cell_global.jpg
   var position =
     face % 2 === 0
