@@ -661,7 +661,7 @@ function deriveBoundingVolumeS2(
       ? HilbertOrder.encode2D(level, x, y)
       : HilbertOrder.encode2D(level, y, x);
   // eslint-disable-next-line
-  var cell = S2Cell.fromFacePosLevel(face, BigInt(position), level);
+  var cell = S2Cell.fromFacePositionLevel(face, BigInt(position), level);
 
   var minHeight, maxHeight;
   if (defined(z)) {

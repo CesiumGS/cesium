@@ -424,13 +424,13 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
  *
  * @param {Number} face The root face of S2 this cell is on. Must be in the range [0-5].
  * @param {BigInt} position The position along the Hilbert curve. Must be in the range [0-4**level).
- * @param {Number} face The level of the S2 curve. Must be in the range [0-30].
+ * @param {Number} level The level of the S2 curve. Must be in the range [0-30].
  * @returns {S2Cell} A new S2Cell from the given parameters.
  * @private
  */
-S2Cell.fromFacePosLevel = function (face, position, level) {
+S2Cell.fromFacePositionLevel = function (face, position, level) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bigint("pos", position);
+  Check.typeOf.bigint("position", position);
   if (face < 0 || face > 5) {
     throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
   }

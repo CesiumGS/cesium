@@ -41,42 +41,42 @@ describe("Core/S2Cell", function () {
   });
 
   it("creates cell from face, position, level", function () {
-    var cell = S2Cell.fromFacePosLevel(0, BigInt(0), 1);
+    var cell = S2Cell.fromFacePositionLevel(0, BigInt(0), 1);
     expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("04");
-    cell = S2Cell.fromFacePosLevel(BigInt(0), BigInt(1), 1);
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(1), 1);
     expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("0c");
-    cell = S2Cell.fromFacePosLevel(BigInt(0), BigInt(2), 1);
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(2), 1);
     expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("14");
-    cell = S2Cell.fromFacePosLevel(BigInt(0), BigInt(3), 1);
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(3), 1);
     expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("1c");
 
-    cell = S2Cell.fromFacePosLevel(1, BigInt("538969508876688737"), 30);
+    cell = S2Cell.fromFacePositionLevel(1, BigInt("538969508876688737"), 30);
     expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("2ef59bd352b93ac3");
   });
 
   it("throws for creating cell from invalid face, position, level", function () {
     expect(function () {
-      S2Cell.fromFacePosLevel(-1, BigInt(0), 1);
+      S2Cell.fromFacePositionLevel(-1, BigInt(0), 1);
     }).toThrowDeveloperError();
 
     expect(function () {
-      S2Cell.fromFacePosLevel(6, BigInt(0), 1);
+      S2Cell.fromFacePositionLevel(6, BigInt(0), 1);
     }).toThrowDeveloperError();
 
     expect(function () {
-      S2Cell.fromFacePosLevel(0, BigInt(-1), 1);
+      S2Cell.fromFacePositionLevel(0, BigInt(-1), 1);
     }).toThrowDeveloperError();
 
     expect(function () {
-      S2Cell.fromFacePosLevel(0, BigInt(4), 1);
+      S2Cell.fromFacePositionLevel(0, BigInt(4), 1);
     }).toThrowDeveloperError();
 
     expect(function () {
-      S2Cell.fromFacePosLevel(0, BigInt(0), -1);
+      S2Cell.fromFacePositionLevel(0, BigInt(0), -1);
     }).toThrowDeveloperError();
 
     expect(function () {
-      S2Cell.fromFacePosLevel(0, BigInt(0), 31);
+      S2Cell.fromFacePositionLevel(0, BigInt(0), 31);
     }).toThrowDeveloperError();
   });
 
