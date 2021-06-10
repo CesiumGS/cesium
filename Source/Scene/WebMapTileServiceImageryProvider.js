@@ -328,19 +328,18 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   var staticDimensions = imageryProvider._dimensions;
   var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
-  var resource;
+  var resource = imageryProvider._resource.getDerivedResource({
+    request: request,
+  });
   if (!imageryProvider._useKvp) {
-    var templateValues = {
+    var templateValuesKvpFalse = {
       TileMatrix: tileMatrix,
       TileRow: row.toString(),
       TileCol: col.toString(),
       s: subdomains[(col + row + level) % subdomains.length],
     };
 
-    resource = imageryProvider._resource.getDerivedResource({
-      request: request,
-    });
-    resource.setTemplateValues(templateValues);
+    resource.setTemplateValues(templateValuesKvpFalse);
 
     if (defined(staticDimensions)) {
       resource.setTemplateValues(staticDimensions);
@@ -352,6 +351,9 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   } else {
     // build KVP request
     var query = {};
+    var templateValuesKvpTrue = {
+      s: subdomains[(col + row + level) % subdomains.length],
+    };
     query.tilematrix = tileMatrix;
     query.layer = imageryProvider._layer;
     query.style = imageryProvider._style;
@@ -367,12 +369,13 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
     if (defined(dynamicIntervalData)) {
       query = combine(query, dynamicIntervalData);
     }
+
+    resource.setTemplateValues(templateValuesKvpTrue);
+
     resource = imageryProvider._resource.getDerivedResource({
       queryParameters: query,
       request: request,
     });
-
-    resource.url = resource.url.replace("{s}", "");
   }
 
   return ImageryProvider.loadImage(imageryProvider, resource);
