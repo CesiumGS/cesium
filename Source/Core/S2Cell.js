@@ -457,7 +457,7 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
       faceBitString +
       positionPrefixPadding +
       positionBitString +
-      "1" +
+      "1" + // Adding the sentinel bit that always follows the position bits.
       positionSuffixPadding
   );
   return new S2Cell(cellId);
