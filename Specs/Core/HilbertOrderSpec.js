@@ -1,6 +1,11 @@
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { HilbertOrder } from "../../Source/Cesium.js";
 
 describe("Core/HilbertOrder", function () {
+  if (!FeatureDetection.supportsBigInt()) {
+    return;
+  }
+
   it("encode2D throws for undefined inputs", function () {
     expect(function () {
       return HilbertOrder.encode2D(undefined, 0, 0);
