@@ -14,7 +14,6 @@ import GeometryInstance from "../Core/GeometryInstance.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
-import Color from "../Core/Color.js";
 import S2Cell from "../Core/S2Cell.js";
 var centerCartographicScratch = new Cartographic();
 /**
