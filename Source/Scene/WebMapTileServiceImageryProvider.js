@@ -11,12 +11,6 @@ import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 
-var defaultParameters = Object.freeze({
-  service: "WMTS",
-  version: "1.0.0",
-  request: "GetTile",
-});
-
 /**
  * @typedef {Object} WebMapTileServiceImageryProvider.ConstructorOptions
  *
@@ -234,18 +228,17 @@ function WebMapTileServiceImageryProvider(options) {
     TileMatrixSet: tileMatrixSetID,
   };
 
+  var bracketMatch = url.match(/{/g);
   if (
-    (url.match(/{s}/g) || []).length === 1 &&
-    (url.match(/{/g) || []).length === 1
+    !defined(bracketMatch) ||
+    (bracketMatch.length === 1 && /{s}/.test(url))
   ) {
-    resource.setTemplateValues(templateValues);
+    // No brackets or 1 bracket and it belongs to {s}
     this._useKvp = true;
-  } else if (url.indexOf("{") >= 0) {
+  } else {
+    // A bracket not belonging to {s}
     resource.setTemplateValues(templateValues);
     this._useKvp = false;
-  } else {
-    resource.setQueryParameters(defaultParameters);
-    this._useKvp = true;
   }
 
   this._resource = resource;
