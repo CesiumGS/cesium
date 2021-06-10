@@ -2252,7 +2252,7 @@ function computeTileLabelPosition(tile) {
   return position;
 }
 
-function addTileDebugLabel(tile, tileset, position, frameState) {
+function addTileDebugLabel(tile, tileset, position) {
   var labelString = "";
   var attributes = 0;
 
@@ -2307,14 +2307,7 @@ function addTileDebugLabel(tile, tileset, position, frameState) {
   }
 
   var newLabel = {
-    text:
-      labelString +
-      "\nDistance: " +
-      tile.boundingVolume.distanceToCamera(frameState) +
-      "\nClosest Point is on: " +
-      tile.boundingVolume._debugText +
-      "\nToken: " +
-      tile.boundingVolume._token,
+    text: labelString.substring(1),
     position: position,
     font: 19 - attributes + "px sans-serif",
     showBackground: true,
@@ -2338,33 +2331,18 @@ function updateTileDebugLabels(tileset, frameState) {
       var position = defined(tileset.debugPickPosition)
         ? tileset.debugPickPosition
         : computeTileLabelPosition(tileset.debugPickedTile);
-      var label = addTileDebugLabel(
-        tileset.debugPickedTile,
-        tileset,
-        position,
-        frameState
-      );
+      var label = addTileDebugLabel(tileset.debugPickedTile, tileset, position);
       label.pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
     }
   } else {
     for (i = 0; i < selectedLength; ++i) {
       tile = selectedTiles[i];
-      addTileDebugLabel(
-        tile,
-        tileset,
-        computeTileLabelPosition(tile),
-        frameState
-      );
+      addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
     }
     for (i = 0; i < emptyLength; ++i) {
       tile = emptyTiles[i];
       if (tile.hasTilesetContent || tile.hasImplicitContent) {
-        addTileDebugLabel(
-          tile,
-          tileset,
-          computeTileLabelPosition(tile),
-          frameState
-        );
+        addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
       }
     }
   }
