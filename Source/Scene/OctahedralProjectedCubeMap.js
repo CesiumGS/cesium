@@ -353,6 +353,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     var cubeMap = (cubeMaps[i] = new CubeMap({
       context: context,
       source: cubeMapBuffers[i],
+      pixelDatatype: pixelDatatype,
     }));
     var size = cubeMaps[i].width * 2;
 

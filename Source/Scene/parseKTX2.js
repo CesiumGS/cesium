@@ -74,21 +74,17 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
 
 // Parser for uncompressed
 function parseUncompressed(header, result) {
-  var internalFormat, datatype;
-  if (header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB) {
-    internalFormat = PixelFormat.RGBA;
-  } else if (header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_UNORM) {
-    internalFormat = PixelFormat.RGBA;
+  var internalFormat = PixelFormat.RGBA;
+  var datatype;
+  if (header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_UNORM) {
     datatype = PixelDatatype.UNSIGNED_BYTE;
   } else if (
     header.vkFormat === VulkanConstants.VK_FORMAT_R16G16B16A16_SFLOAT
   ) {
-    internalFormat = PixelFormat.RGBA;
     datatype = PixelDatatype.HALF_FLOAT;
   } else if (
     header.vkFormat === VulkanConstants.VK_FORMAT_R32G32B32A32_SFLOAT
   ) {
-    internalFormat = PixelFormat.RGBA;
     datatype = PixelDatatype.FLOAT;
   }
 
@@ -106,7 +102,14 @@ function parseUncompressed(header, result) {
         height *
         PixelFormat.componentsLength(internalFormat);
 
-      var faceView = new Uint8Array(levelBuffer.buffer, faceLength * j);
+      var faceView;
+      if (PixelDatatype.sizeInBytes(datatype) == 1) {
+        var faceView = new Uint8Array(levelBuffer.buffer, faceLength * j);
+      } else if (PixelDatatype.sizeInBytes(datatype) == 2) {
+        var faceView = new Uint16Array(levelBuffer.buffer, faceLength * j);
+      } else {
+        var faceView = new Uint32Array(levelBuffer.buffer, faceLength * j);
+      }
 
       level[faceOrder[j]] = {
         internalFormat: internalFormat,
