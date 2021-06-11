@@ -228,11 +228,6 @@ function WebMapTileServiceImageryProvider(options) {
   var style = options.style;
   var tileMatrixSetID = options.tileMatrixSetID;
   var url = resource.url;
-  var templateValues = {
-    style: style,
-    Style: style,
-    TileMatrixSet: tileMatrixSetID,
-  };
 
   var bracketMatch = url.match(/{/g);
   if (
@@ -242,6 +237,12 @@ function WebMapTileServiceImageryProvider(options) {
     resource.setQueryParameters(defaultParameters);
     this._useKvp = true;
   } else {
+    var templateValues = {
+      style: style,
+      Style: style,
+      TileMatrixSet: tileMatrixSetID,
+    };
+
     resource.setTemplateValues(templateValues);
     this._useKvp = false;
   }
@@ -358,9 +359,6 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   } else {
     // build KVP request
     var query = {};
-    templateValues = {
-      s: subdomains[(col + row + level) % subdomains.length],
-    };
     query.tilematrix = tileMatrix;
     query.layer = imageryProvider._layer;
     query.style = imageryProvider._style;
@@ -376,6 +374,10 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
     if (defined(dynamicIntervalData)) {
       query = combine(query, dynamicIntervalData);
     }
+
+    templateValues = {
+      s: subdomains[(col + row + level) % subdomains.length],
+    };
 
     resource = imageryProvider._resource.getDerivedResource({
       queryParameters: query,
