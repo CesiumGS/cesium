@@ -333,18 +333,20 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   var staticDimensions = imageryProvider._dimensions;
   var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
-  var resource = imageryProvider._resource.getDerivedResource({
-    request: request,
-  });
+  var resource;
+  var templateValues;
   if (!imageryProvider._useKvp) {
-    var templateValuesKvpFalse = {
+    templateValues = {
       TileMatrix: tileMatrix,
       TileRow: row.toString(),
       TileCol: col.toString(),
       s: subdomains[(col + row + level) % subdomains.length],
     };
 
-    resource.setTemplateValues(templateValuesKvpFalse);
+    resource = imageryProvider._resource.getDerivedResource({
+      request: request,
+    });
+    resource.setTemplateValues(templateValues);
 
     if (defined(staticDimensions)) {
       resource.setTemplateValues(staticDimensions);
@@ -356,7 +358,7 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   } else {
     // build KVP request
     var query = {};
-    var templateValuesKvpTrue = {
+    templateValues = {
       s: subdomains[(col + row + level) % subdomains.length],
     };
     query.tilematrix = tileMatrix;
@@ -379,8 +381,7 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
       queryParameters: query,
       request: request,
     });
-
-    resource.setTemplateValues(templateValuesKvpTrue);
+    resource.setTemplateValues(templateValues);
   }
 
   return ImageryProvider.loadImage(imageryProvider, resource);
