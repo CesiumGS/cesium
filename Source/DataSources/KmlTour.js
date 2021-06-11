@@ -1,12 +1,20 @@
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 /**
+ * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
+ * guide the camera to a specified destinations on given time intervals.
+ *
  * @alias KmlTour
  * @constructor
  *
  * @param {String} name name parsed from KML
  * @param {String} id id parsed from KML
- * @param {Array} playlist array with KMLTourFlyTos, KMLTourWaits and KMLTourSoundCues
+ * @param {Array} playlist array with KmlTourFlyTos and KmlTourWaits
+ *
+ * @see KmlTourFlyTo
+ * @see KmlTourWait
+ *
+ * @demo {@link https://sandcastle.cesium.com/?src=KML%20Tours.html|KML Tours}
  */
 function KmlTour(name, id) {
   /**

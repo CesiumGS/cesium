@@ -7,6 +7,7 @@ import {
   Ellipsoid,
   HeadingPitchRange,
   Implicit3DTileContent,
+  ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
   ImplicitTileset,
   Matrix3,
@@ -16,6 +17,7 @@ import {
   Multiple3DTileContent,
   Resource,
   TileBoundingSphere,
+  TileBoundingS2Cell,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -567,6 +569,149 @@ describe(
       });
     });
 
+    describe("_deriveBoundingVolumeS2", function () {
+      var deriveBoundingVolumeS2 =
+        Implicit3DTileContent._deriveBoundingVolumeS2;
+      var simpleBoundingVolumeS2 = {
+        token: "1",
+        minimumHeight: 0,
+        maximumHeight: 10,
+      };
+      var simpleBoundingVolumeS2Cell = new TileBoundingS2Cell(
+        simpleBoundingVolumeS2
+      );
+      var implicitTilesetS2 = {
+        boundingVolume: {
+          extensions: {
+            "3DTILES_bounding_volume_S2": simpleBoundingVolumeS2,
+          },
+        },
+        subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+      };
+
+      it("throws if parentIsPlaceholderTile is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(undefined, {}, 0, 0, 0, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if parentTile is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, undefined, 0, 0, 0, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if childIndex is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, undefined, 0, 0, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if level is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, undefined, 0, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if x is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, 0, undefined, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if y is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, 0, 0, undefined, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if z is defined but not a number", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, 0, 0, 0, "");
+        }).toThrowDeveloperError();
+      });
+
+      it("returns implicit tileset boundingVolume if parentIsPlaceholderTile is true", function () {
+        var placeholderTile = {
+          _boundingVolume: simpleBoundingVolumeS2Cell,
+        };
+        var result = deriveBoundingVolumeS2(
+          true,
+          placeholderTile,
+          0,
+          0,
+          0,
+          0,
+          0
+        );
+        expect(result).toEqual(implicitTilesetS2.boundingVolume);
+        expect(result).not.toBe(implicitTilesetS2.boundingVolume);
+      });
+
+      it("subdivides correctly using QUADTREE", function () {
+        var parentTile = {
+          _boundingVolume: simpleBoundingVolumeS2Cell,
+        };
+        var expected = {
+          token: "04",
+          minimumHeight: 0,
+          maximumHeight: 10,
+        };
+        var result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
+        expect(result).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected,
+          },
+        });
+
+        parentTile._boundingVolume = new TileBoundingS2Cell({
+          token: "3",
+          minimumHeight: 0,
+          maximumHeight: 10,
+        });
+        expected = {
+          token: "24",
+          minimumHeight: 0,
+          maximumHeight: 10,
+        };
+        result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
+        expect(result).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected,
+          },
+        });
+      });
+
+      it("subdivides correctly using OCTREE", function () {
+        implicitTilesetS2.subdivisionScheme = ImplicitSubdivisionScheme.OCTREE;
+        var parentTile = {
+          _boundingVolume: simpleBoundingVolumeS2Cell,
+        };
+        var expected0 = {
+          token: "04",
+          minimumHeight: 0,
+          maximumHeight: 5,
+        };
+        var expected1 = {
+          token: "04",
+          minimumHeight: 5,
+          maximumHeight: 10,
+        };
+        var result0 = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0, 0);
+        expect(result0).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected0,
+          },
+        });
+        var result1 = deriveBoundingVolumeS2(false, parentTile, 4, 1, 0, 0, 0);
+        expect(result1).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected1,
+          },
+        });
+      });
+    });
+
     describe("_deriveBoundingBox", function () {
       var deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
       var simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -808,6 +953,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
       var implicitHeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
+      var implicitS2HeightSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset.json";
       var implicitTileBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
       var implicitContentBoundingVolumeSemanticsUrl =
@@ -905,7 +1052,7 @@ describe(
           var minimumHeight = implicitRegion[4];
           var maximumHeight = implicitRegion[5];
 
-          // This tileset use TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
           // to set tighter bounding volumes
           var tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
@@ -913,6 +1060,34 @@ describe(
             var tileRegion = tiles[i].boundingVolume;
             expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses height semantics to adjust S2 bounding volumes", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitS2HeightSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitS2Volume =
+            placeholderTile.implicitTileset.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ];
+          var minimumHeight = implicitS2Volume.minimumHeight;
+          var maximumHeight = implicitS2Volume.maximumHeight;
+
+          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+          // to set tighter bounding volumes
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var tileS2Volume = tiles[i].boundingVolume;
+            expect(tileS2Volume.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileS2Volume.maximumHeight).toBeLessThan(maximumHeight);
           }
         });
       });
