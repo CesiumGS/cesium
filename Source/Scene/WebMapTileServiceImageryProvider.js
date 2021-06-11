@@ -11,6 +11,12 @@ import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 
+var defaultParameters = Object.freeze({
+  service: "WMTS",
+  version: "1.0.0",
+  request: "GetTile",
+});
+
 /**
  * @typedef {Object} WebMapTileServiceImageryProvider.ConstructorOptions
  *
@@ -233,10 +239,9 @@ function WebMapTileServiceImageryProvider(options) {
     !defined(bracketMatch) ||
     (bracketMatch.length === 1 && /{s}/.test(url))
   ) {
-    // No brackets or 1 bracket and it belongs to {s}
+    resource.setQueryParameters(defaultParameters);
     this._useKvp = true;
   } else {
-    // A bracket not belonging to {s}
     resource.setTemplateValues(templateValues);
     this._useKvp = false;
   }
@@ -370,12 +375,12 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
       query = combine(query, dynamicIntervalData);
     }
 
-    resource.setTemplateValues(templateValuesKvpTrue);
-
     resource = imageryProvider._resource.getDerivedResource({
       queryParameters: query,
       request: request,
     });
+
+    resource.setTemplateValues(templateValuesKvpTrue);
   }
 
   return ImageryProvider.loadImage(imageryProvider, resource);
