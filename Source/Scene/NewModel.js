@@ -1,30 +1,30 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
+//import BoundingSphere from "../Core/BoundingSphere.js";
+//import Cartesian2 from "../Core/Cartesian2.js";
+//import Cartesian3 from "../Core/Cartesian3.js";
+//import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
-import combine from "../Core/combine.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
+//import combine from "../Core/combine.js";
+//import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import ManagedArray from "../Core/ManagedArray.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import Quaternion from "../Core/Quaternion.js";
+//import ManagedArray from "../Core/ManagedArray.js";
+//import Matrix3 from "../Core/Matrix3.js";
+//import Matrix4 from "../Core/Matrix4.js";
+//import oneTimeWarning from "../Core/oneTimeWarning.js";
+//import Quaternion from "../Core/Quaternion.js";
 import Resource from "../Core/Resource.js";
-import Buffer from "../Renderer/Buffer.js";
-import BufferUsage from "../Renderer/BufferUsage.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
+//import Buffer from "../Renderer/Buffer.js";
+//import BufferUsage from "../Renderer/BufferUsage.js";
+//import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import when from "../ThirdParty/when.js";
-import AlphaMode from "./AlphaMode.js";
-import AttributeType from "./AttributeType.js";
+//import AlphaMode from "./AlphaMode.js";
+//import AttributeType from "./AttributeType.js";
 import GltfLoader from "./GltfLoader.js";
-import MetadataType from "./MetadataType.js";
-import ModelComponents from "./ModelComponents.js";
+//import MetadataType from "./MetadataType.js";
+//import ModelComponents from "./ModelComponents.js";
 import SceneMode from "./SceneMode.js";
 
-var Attribute = ModelComponents.Attribute;
+//var Attribute = ModelComponents.Attribute;
 
 var ModelState = {
   UNLOADED: 0,
@@ -215,7 +215,7 @@ Model.prototype.update = function (frameState) {
 
   if (this._state === ModelState.READY && !this._commandsCreated) {
     this._commandsCreated = true;
-    createCommands(this, frameState);
+    //createCommands(this, frameState);
 
     frameState.afterRender.push(function () {
       that._readyPromise.resolve(that);
@@ -229,14 +229,19 @@ Model.prototype.update = function (frameState) {
   }
 };
 
+/*
 var scratchStack = new ManagedArray();
+*/
 
+/*
 function getUniformFunction(value) {
   return function () {
     return value;
   };
 }
+*/
 
+/*
 function getBoundingSphere(positionAttribute) {
   var min = Cartesian3.clone(positionAttribute.min);
   var max = Cartesian3.clone(positionAttribute.max);
@@ -256,7 +261,9 @@ function getBoundingSphere(positionAttribute) {
 
   return BoundingSphere.fromCornerPoints(min, max);
 }
+*/
 
+/*
 function isVertexAttributeSupported(property) {
   var type = property.type;
   var enumType = property.enumType;
@@ -283,7 +290,9 @@ function isVertexAttributeSupported(property) {
 
   return true;
 }
+*/
 
+/*
 function isVertexAttributeLossy(property) {
   // WebGL does not support vertex attributes with these types
   var valueType = property.valueType;
@@ -295,14 +304,18 @@ function isVertexAttributeLossy(property) {
     valueType === MetadataType.FLOAT64
   );
 }
+*/
 
+/*
 var attributeTypes = [
   AttributeType.SCALAR,
   AttributeType.VEC2,
   AttributeType.VEC3,
   AttributeType.VEC4,
 ];
+*/
 
+/*
 function getMetadataVertexAttributes(
   primitive,
   vertexCount,
@@ -381,9 +394,11 @@ function getMetadataVertexAttributes(
 
   return metadataVertexAttributes;
 }
+*/
 
 // TODO: feature id attribute for implicit feature ids with non-1 divisor and non-constant
 
+/*
 function RuntimeNode() {
   this._computedMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._localMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -398,7 +413,9 @@ function RuntimePrimitive() {
 function RuntimeAttribute() {
   this._;
 }
+*/
 
+/*
 function getAttributeBySemantic(primitive, semantic) {
   // var attributes = primitive.attributes;
   // var attributesLength = attributes.length;
@@ -409,13 +426,17 @@ function getAttributeBySemantic(primitive, semantic) {
   //   }
   // }
 }
+*/
 
-var scratchPositionQuantizationScale = new Cartesian3();
+//var scratchPositionQuantizationScale = new Cartesian3();
+/*
 var scratchLocalScale = new Cartesian3();
 var scratchModelMatrix = new Matrix4();
 var cartesian3One = Object.freeze(new Cartesian3(1.0, 1.0, 1.0));
 var cartesian4One = Object.freeze(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+*/
 
+/*
 function getPositionQuantizationMatrix(positionAttribute) {
   var quantization = positionAttribute.quantization;
   var quantizedVolumeScale = Cartesian3.divideByScalar(
@@ -430,29 +451,39 @@ function getPositionQuantizationMatrix(positionAttribute) {
     quantizedVolumeScale
   );
 }
+*/
 
 // TODO: what uniforms are needed for style or for custom shader? E.g. normal might be used for slope rendering but material might be unlit.
 // TODO: assign defaults in ModelComponents
 // TODO: how to prevent using too many attributes
 
+/*
 function usesTextureTransform(texture) {
   return !Matrix3.equals(texture.transform, Matrix3.IDENTITY);
 }
+*/
 
+/*
 function usesTexCoord0(texture) {
   return texture.texCoord === 0;
 }
+*/
 
+/*
 function usesUnlitShader(primitive) {
   var normalAttribute = getAttributeBySemantic(primitive, "NORMAL");
   return !defined(normalAttribute) || primitive.material.unlit;
 }
+*/
 
+/*
 function usesNormalAttribute(primitive) {
   var normalAttribute = getAttributeBySemantic(primitive, "NORMAL");
   return defined(normalAttribute) && !usesUnlitShader(primitive);
 }
+*/
 
+/*
 function usesTangentAttribute(primitive) {
   var tangentAttribute = getAttributeBySemantic(primitive, "TANGENT");
   var usesNormalTexture = defined(primitive.material.normalTexture);
@@ -462,7 +493,9 @@ function usesTangentAttribute(primitive) {
     usesNormalTexture
   );
 }
+*/
 
+/*
 function getMaterialUniforms(primitive, material, context) {
   var uniformMap = {};
   var uniformProperties = {
@@ -741,7 +774,9 @@ function getMaterialUniforms(primitive, material, context) {
     uniformProperties: uniformProperties,
   };
 }
+*/
 
+/*
 function getPositionUniforms(positionAttribute) {
   var uniformMap = {};
   var uniformProperties = {};
@@ -771,7 +806,9 @@ function getPositionUniforms(positionAttribute) {
     uniformProperties: uniformProperties,
   };
 }
+*/
 
+/*
 function getNormalUniforms(node, positionAttribute, normalAttribute, context) {
   var uniformMap = {};
   var uniformProperties = {
@@ -886,7 +923,9 @@ function getNormalUniforms(node, positionAttribute, normalAttribute, context) {
     uniformProperties: uniformProperties,
   };
 }
+*/
 
+/*
 function getTangentUniforms(
   node,
   positionAttribute,
@@ -962,13 +1001,17 @@ function getTangentUniforms(
     uniformProperties: uniformProperties,
   };
 }
+*/
 
+/*
 function combineUniforms(a, b) {
   a.uniformMap = combine(a.uniformMap, b.uniformMap);
   a.uniformProperties = combine(a.uniformProperties, b.uniformProperties);
   return a;
 }
+*/
 
+/*
 function getAttributeUniforms(node, primitive, context) {
   var positionAttribute = getAttributeBySemantic(primitive, "POSITION");
   var normalAttribute = getAttributeBySemantic(primitive, "NORMAL");
@@ -1007,7 +1050,9 @@ function getAttributeUniforms(node, primitive, context) {
 
   return uniforms;
 }
+*/
 
+/*
 function getUniformMap(model, node, primitive, context) {
   // TODO: model matrix dirty
   // TODO: i3dm has instance matrices in world space but EXT_mesh_gpu_instancing has then in object space
@@ -1246,5 +1291,6 @@ function createCommands(model, frameState) {
   //   }
   // }
 }
+*/
 
 function update(model) {}

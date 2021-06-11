@@ -1,16 +1,16 @@
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import AttributeType from "./AttributeType.js";
-import CustomShader from "./CustomShader.js";
-import InputSemantic from "./InputSemantic.js";
-import ModelMaterialInfo from "./ModelMaterialInfo.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-
-function ModelShader(options) {
+//import Check from "../Core/Check.js";
+//import ComponentDatatype from "../Core/ComponentDatatype.js";
+//import defaultValue from "../Core/defaultValue.js";
+//import defined from "../Core/defined.js";
+//import DeveloperError from "../Core/DeveloperError.js";
+//import RuntimeError from "../Core/RuntimeError.js";
+//import AttributeType from "./AttributeType.js";
+//import CustomShader from "./CustomShader.js";
+//import InputSemantic from "./InputSemantic.js";
+//import ModelMaterialInfo from "./ModelMaterialInfo.js";
+//import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+export default function ModelShader(options) {
+  /*
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var model = options.model;
   var node = options.node;
@@ -77,11 +77,10 @@ function ModelShader(options) {
   );
 
   var attributeNameMap = getAttributeNameMap(attributes);
-
-
-
+  */
 }
 
+/*
 function getAttributeWithSemantic(attributes, semantic, setIndex) {
   var attributesLength = attributes.length;
   for (var i = 0; i < attributesLength; ++i) {
@@ -92,11 +91,15 @@ function getAttributeWithSemantic(attributes, semantic, setIndex) {
   }
   return undefined;
 }
+*/
 
+/*
 function hasAttributeWithSemantic(attributes, semantic, setIndex) {
   return defined(getAttributeWithSemantic(attributes, semantic, setIndex));
 }
+*/
 
+/*
 function checkRequiredAttributes(primitive, customShader) {
   var attributes = primitive.attributes;
   var inputs = customShader.inputs;
@@ -119,7 +122,9 @@ function checkRequiredAttributes(primitive, customShader) {
     }
   }
 }
+*/
 
+/*
 function getAttributesRequiredByVertexShader(primitive) {
   return primitive.attributes.filter(function (attribute) {
     var semantic = attribute.semantic;
@@ -134,7 +139,9 @@ function getAttributesRequiredByVertexShader(primitive) {
     return false;
   });
 }
+*/
 
+/*
 function organizeAttributes(primitive, customShader, styleInfo, materialInfo) {
   var result = {
     attributes: [],
@@ -168,7 +175,9 @@ function organizeAttributes(primitive, customShader, styleInfo, materialInfo) {
     return attributes.indexOf(attribute) === index;
   });
 }
+*/
 
+/*
 function getAttributeNameMap(attributes) {
   var attributeNameMap = {};
   var attributesLength = attributes.length;
@@ -186,9 +195,9 @@ function getAttributeNameMap(attributes) {
   }
   return attributeNameMap;
 }
+*/
 
-function 
-
+/*
 function getGlslName(name, type) {
   // If the variable name is not compatible with GLSL - e.g. has non-alphanumeric
   // characters like `:`, `-`, `#`, spaces, or unicode - use a placeholder variable name
@@ -216,27 +225,39 @@ function getGlslName(name, type) {
 
   return "czm_model_" + type + "_" + glslName;
 }
+*/
 
+/*
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+*/
 
+/*
 function getAttributeDefinitionName(attributeName) {
   return "a_" + attributeName;
 }
+*/
 
+/*
 function getAttributeDefinition(shaderType, attributeDefinitionName) {
   return "attribute " + shaderType + " " + attributeDefinitionName + ";\n";
 }
+*/
 
+/*
 function getUniformName(name, suffix) {
   return "u_" + name + suffix;
 }
+*/
 
+/*
 function getUniformDefinition(shaderType, uniformName) {
   return "uniform " + shaderType + " " + uniformName + ";\n";
 }
+*/
 
+/*
 function getAttributeShaderType(attribute) {
   var type = attribute.type;
   var componentDatatype = attribute.componentDatatype;
@@ -283,7 +304,9 @@ function getAttributeShaderType(attribute) {
       return vectorPrefix + "vec4";
   }
 }
+*/
 
+/*
 function addAttributeDefinition(attribute, attributeName, shaderBuilder) {
   var attributeDefinitionName = getAttributeDefinitionName(attributeName);
   var quantization = attribute.quantization;
@@ -298,7 +321,9 @@ function addAttributeDefinition(attribute, attributeName, shaderBuilder) {
   );
   shaderBuilder.attributes += attributeDefinition;
 }
+*/
 
+/*
 function getAttributeReadFunction(
   attributeValue,
   attributeName,
@@ -321,7 +346,9 @@ function getAttributeReadFunction(
     "}\n"
   );
 }
+*/
 
+/*
 function addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder) {
   var quantization = attribute.quantization;
   var type = quantization.type;
@@ -350,14 +377,18 @@ function addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder) {
   shaderBuilder.functions += readFunction;
   shaderBuilder.uniforms += rangeUniformDefinition;
 }
+*/
 
+/*
 function castAttribute(attributeValue, attributeType, shaderType) {
   if (attributeType !== shaderType) {
     return shaderType + "(" + attributeValue + ")";
   }
   return attributeValue;
 }
+*/
 
+/*
 function addQuantizedAttributeReader(attribute, attributeName, shaderBuilder) {
   var quantization = attribute.quantization;
   var type = quantization.type;
@@ -394,7 +425,9 @@ function addQuantizedAttributeReader(attribute, attributeName, shaderBuilder) {
     shaderBuilder.uniforms += offsetUniformDefinition;
   }
 }
+*/
 
+/*
 function addAttributeReader(attribute, attributeName, shaderBuilder) {
   var type = attribute.type;
   var attributeType = AttributeType.getShaderType(type);
@@ -410,14 +443,18 @@ function addAttributeReader(attribute, attributeName, shaderBuilder) {
   );
   shaderBuilder.functions += readFunction;
 }
+*/
 
+/*
 function ShaderBuilder() {
   this.uniformDefinitions = "";
   this.attributeDefinitions = "";
   this.functions = "";
   this.vertexShaderMain = "";
 }
+*/
 
+/*
 function addPositionDeclaration(
   usesMorphTargets,
   usesSkinning,
@@ -439,7 +476,9 @@ function addPositionDeclaration(
 
   shaderBuilder.vertexShaderMain += positionDeclaration;
 }
+*/
 
+/*
 function addNormalDeclaration(
   usesMorphTargets,
   usesSkinning,
@@ -463,7 +502,9 @@ function addNormalDeclaration(
 
   shaderBuilder.vertexShaderMain += normalDeclaration;
 }
+*/
 
+/*
 function addTangentDeclaration(
   attribute,
   usesMorphTargets,
@@ -507,17 +548,23 @@ function addTangentDeclaration(
   shaderBuilder.functions += readTangentHandedness;
   shaderBuilder.vertexShaderMain += tangentDeclaration;
 }
+*/
 
+/*
 function addBitangentDeclaration(shaderBuilder) {
   shaderBuilder.vertexShaderMain +=
     "    vec3 bitangent = cross(normal, tangent) * readTangentHandedness(a_tangent);";
 }
+*/
 
+/*
 function addPositionAbsoluteDeclaration(shaderBuilder) {
   shaderBuilder.vertexShaderMain +=
     "vec3 positionAbsolute = vec3(czm_model * vec4(position, 1.0));\n";
 }
+*/
 
+/*
 function addAttributeDeclaration(attribute, attributeName, shaderBuilder) {
   var shaderType = getShaderType(attribute);
   var attributeDefinitionName = getAttributeDefinitionName(attributeName);
@@ -534,7 +581,9 @@ function addAttributeDeclaration(attribute, attributeName, shaderBuilder) {
 
   shaderBuilder.vertexShaderMain += attributeDeclaration;
 }
+*/
 
+/*
 function usesInputSemantic(inputs, inputSemantic) {
   var inputsLength = inputs.length;
   for (var i = 0; i < inputsLength; ++i) {
@@ -545,7 +594,9 @@ function usesInputSemantic(inputs, inputSemantic) {
   }
   return false;
 }
+*/
 
+/*
 function usesBitangent(customShader, materialInfo) {
   if (defined(materialInfo.normalTextureInfo)) {
     return true;
@@ -560,7 +611,9 @@ function usesBitangent(customShader, materialInfo) {
 
   return false;
 }
+*/
 
+/*
 function usesPositionAbsolute(customShader) {
   if (
     defined(customShader) &&
@@ -571,7 +624,9 @@ function usesPositionAbsolute(customShader) {
 
   return false;
 }
+*/
 
+/*
 function buildShader(
   primitive,
   attributes,
@@ -649,7 +704,10 @@ function buildShader(
     addPositionAbsoluteDeclaration(shaderBuilder);
   }
 
+  /*
   if (defined(customShader)) {
     addCustomShader(customShader, attributeNameMap, shaderBuilder);
   }
+  /
 }
+*/

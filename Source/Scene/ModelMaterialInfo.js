@@ -13,7 +13,7 @@ var Material = ModelComponents.Material;
 var MetallicRoughness = ModelComponents.MetallicRoughness;
 var SpecularGlossiness = ModelComponents.SpecularGlossiness;
 
-function ModelMaterialInfo() {
+export default function ModelMaterialInfo() {
   this.diffuseTextureInfo = undefined;
   this.specularGlossinessTextureInfo = undefined;
   this.baseColorTextureInfo = undefined;

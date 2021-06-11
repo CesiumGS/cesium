@@ -17,7 +17,7 @@ import AttributeType from "./AttributeType.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
-import MetadataType from "./MetadataType.js";
+//import MetadataType from "./MetadataType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -36,7 +36,7 @@ var Skin = ModelComponents.Skin;
 var Node = ModelComponents.Node;
 var Scene = ModelComponents.Scene;
 var Components = ModelComponents.Components;
-var Texture = ModelComponents.Texture;
+//var Texture = ModelComponents.Texture;
 var MetallicRoughness = ModelComponents.MetallicRoughness;
 var SpecularGlossiness = ModelComponents.SpecularGlossiness;
 var Material = ModelComponents.Material;
@@ -290,6 +290,7 @@ GltfLoader.prototype.process = function (frameState) {
     }
   }
 
+  /*
   if (this._state === GltfLoaderState.READY_TO_FINALIZE) {
     loader._state = ResourceLoaderState.READY;
 
@@ -300,6 +301,7 @@ GltfLoader.prototype.process = function (frameState) {
 
     loader._promise.resolve(loader);
   }
+  */
 };
 
 function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
@@ -1177,6 +1179,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   });
 }
 
+/*
 function invalidVertexAttributeProperty(property) {
   var type = property.type;
   var enumType = property.enumType;
@@ -1203,6 +1206,7 @@ function invalidVertexAttributeProperty(property) {
 
   return false;
 }
+*/
 
 function unloadTextures(loader) {
   var textureLoaders = loader._textureLoaders;

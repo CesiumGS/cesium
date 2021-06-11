@@ -1,26 +1,27 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix3 from "../Core/Matrix3.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import AlphaMode from "./AlphaMode.js";
-import AttributeType from "./AttributeType.js";
-import CustomShader from "./CustomShader.js";
-import Expression from "./Expression.js";
-import InputSemantic from "./InputSemantic.js";
-import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
-import MetadataType from "./MetadataType.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+//import Cartesian3 from "../Core/Cartesian3.js";
+//import Cartesian4 from "../Core/Cartesian4.js";
+//import Check from "../Core/Check.js";
+//import defaultValue from "../Core/defaultValue.js";
+//import defined from "../Core/defined.js";
+//import DeveloperError from "../Core/DeveloperError.js";
+//import Matrix3 from "../Core/Matrix3.js";
+//import oneTimeWarning from "../Core/oneTimeWarning.js";
+//import PrimitiveType from "../Core/PrimitiveType.js";
+//import RuntimeError from "../Core/RuntimeError.js";
+//import AlphaMode from "./AlphaMode.js";
+//import AttributeType from "./AttributeType.js";
+//import CustomShader from "./CustomShader.js";
+//import Expression from "./Expression.js";
+//import InputSemantic from "./InputSemantic.js";
+//import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
+//import MetadataType from "./MetadataType.js";
+//import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
-var CARTESIAN3_ONE = Object.freeze(new Cartesian3(1.0, 1.0, 1.0));
-var CARTESIAN4_ONE = Object.freeze(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+//var CARTESIAN3_ONE = Object.freeze(new Cartesian3(1.0, 1.0, 1.0));
+//var CARTESIAN4_ONE = Object.freeze(new Cartesian4(1.0, 1.0, 1.0, 1.0));
 
 function ModelCommandInfo(options) {
+  /*
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var node = options.node;
   var primitive = options.primitive;
@@ -77,6 +78,7 @@ function ModelCommandInfo(options) {
   this.materialInfo = materialInfo;
   this.geometryInfo = geometryInfo;
   this.useFragmentShading = primitive.primitiveType !== PrimitiveType.POINTS;
+  */
 }
 
 ModelCommandInfo.prototype.getShaderKey = function () {
@@ -258,6 +260,7 @@ MaterialInfo.prototype.getShaderKey = function () {
   return part1 + "_" + part2;
 };
 
+/*
 function materialUsesTexCoord0(materialInfo) {
   return (
     materialInfo.usesDiffuseTexture &&
@@ -276,7 +279,9 @@ function materialUsesTexCoord0(materialInfo) {
     materialInfo.usesOcclusionTexCoord0
   );
 }
+*/
 
+/*
 function materialUsesTexCoord1(materialInfo) {
   return (
     materialInfo.usesDiffuseTexture &&
@@ -295,7 +300,9 @@ function materialUsesTexCoord1(materialInfo) {
     !materialInfo.usesOcclusionTexCoord0
   );
 }
+*/
 
+/*
 function getAttribute(attributes, semantic) {
   var attributesLength = attributes.length;
   for (var i = 0; i < attributesLength; ++i) {
@@ -314,7 +321,9 @@ function usesTextureTransform(texture) {
 function usesTexCoord0(texture) {
   return texture.texCoord === 0;
 }
+*/
 
+/*
 function usesUnlitShader(primitive) {
   var normalAttribute = getAttribute(
     primitive.attributes,
@@ -322,7 +331,9 @@ function usesUnlitShader(primitive) {
   );
   return !defined(normalAttribute) || primitive.material.unlit;
 }
+*/
 
+/*
 function usesNormalAttribute(primitive, customShaderInfo) {
   var normalAttribute = getAttribute(
     primitive.attributes,
@@ -339,7 +350,9 @@ function usesNormalAttribute(primitive, customShaderInfo) {
 
   return !usesUnlitShader(primitive);
 }
+*/
 
+/*
 function usesTangentAttribute(primitive, customShaderInfo) {
   var normalAttribute = getAttribute(
     primitive.attributes,
@@ -365,7 +378,9 @@ function usesTangentAttribute(primitive, customShaderInfo) {
     defined(normalAttribute)
   );
 }
+*/
 
+/*
 function usesTexCoord0Attribute(primitive, materialInfo, customShaderInfo) {
   var texCoord0Attribute = getAttribute(
     primitive.attributes,
@@ -382,7 +397,9 @@ function usesTexCoord0Attribute(primitive, materialInfo, customShaderInfo) {
 
   return materialUsesTexCoord0(materialInfo);
 }
+*/
 
+/*
 function usesTexCoord1Attribute(primitive, materialInfo, customShaderInfo) {
   var texCoord1Attribute = getAttribute(
     primitive.attributes,
@@ -399,7 +416,9 @@ function usesTexCoord1Attribute(primitive, materialInfo, customShaderInfo) {
 
   return materialUsesTexCoord1(materialInfo);
 }
+*/
 
+/*
 function usesVertexColorAttribute(primitive) {
   var vertexColorAttribute = getAttribute(
     primitive.attributes,
@@ -416,7 +435,9 @@ function usesVertexColorAttribute(primitive) {
 
   return true;
 }
+*/
 
+/*
 function getGeometryInfo(
   node,
   primitive,
@@ -644,7 +665,9 @@ function getGeometryInfo(
 
   return geometryInfo;
 }
+*/
 
+/*
 function getMaterialInfo(primitive, context) {
   var material = primitive.material;
   var specularGlossiness = material.specularGlossiness;
@@ -802,5 +825,6 @@ function getMaterialInfo(primitive, context) {
 
   return materialInfo;
 }
+*/
 
 export default ModelCommandInfo;

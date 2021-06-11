@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * An enum describing the built-in vertex attribute semantics.
