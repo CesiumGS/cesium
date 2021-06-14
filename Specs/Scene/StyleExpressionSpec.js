@@ -18,5 +18,13 @@ describe("Scene/StyleExpression", function () {
     expect(function () {
       return expression.evaluateColor(feature);
     }).toThrowDeveloperError();
+
+    expect(function () {
+      return expression.getShaderFunction("getColor()", {}, {}, "vec4");
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      return expression.getVariables("");
+    }).toThrowDeveloperError();
   });
 });
