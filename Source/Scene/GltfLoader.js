@@ -290,18 +290,17 @@ GltfLoader.prototype.process = function (frameState) {
     }
   }
 
-  /*
   if (this._state === GltfLoaderState.READY_TO_FINALIZE) {
-    loader._state = ResourceLoaderState.READY;
+    this._state = ResourceLoaderState.READY;
 
-    finalize(loader, frameState);
+    // TODO: What needs to be finalized?
+    //finalize(loader, frameState);
 
     // Buffer views can be unloaded after the data has been copied
-    unloadBufferViews(loader);
+    unloadBufferViews(this);
 
-    loader._promise.resolve(loader);
+    this._promise.resolve(this);
   }
-  */
 };
 
 function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {

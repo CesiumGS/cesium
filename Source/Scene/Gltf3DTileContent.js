@@ -1,11 +1,14 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import RequestType from "../Core/RequestType.js";
-import Pass from "../Renderer/Pass.js";
-import Axis from "./Axis.js";
-import Model from "./Model.js";
-import ModelAnimationLoop from "./ModelAnimationLoop.js";
+//import RequestType from "../Core/RequestType.js";
+//import Pass from "../Renderer/Pass.js";
+import when from "../ThirdParty/when.js";
+//import Axis from "./Axis.js";
+import GltfLoader from "./GltfLoader.js";
+//import Model from "./Model.js";
+//import ModelAnimationLoop from "./ModelAnimationLoop.js";
+import NewModel from "./NewModel.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
@@ -26,6 +29,8 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
+  this._readyPromise = when.defer();
+  this._gltfLoader = undefined;
   this._model = undefined;
 
   this.featurePropertiesDirty = false;
@@ -79,7 +84,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._model.readyPromise;
+      return this._readyPromise;
     },
   },
 
@@ -118,6 +123,40 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 });
 
 function initialize(content, gltf) {
+  // TODO: This isn't quite right:
+  // 1. NewModel.fromglTF should be the entry point
+  // 2. NewModel listens on the readyPromise
+  var loader = new GltfLoader({
+    gltfResource: content._resource,
+    typedArray: gltf,
+    // In 3D Tiles, each glTF is typically unique, so no sense caching them
+    releaseGltfJson: true,
+    // TODO: Should baseResource be different than gltfResource?
+    // TODO: Should asynchronous ever be false?
+    // TODO: if incrementallyLoadTextures is hard-coded to false, where would it be set to true?
+    incrementallyLoadTextures: false,
+  });
+  content._gltfLoader = loader;
+  loader.load();
+  loader.promise
+    .then(function (loader) {
+      console.log(loader);
+      var model = new NewModel({
+        loader: loader,
+      });
+      model._readyPromise.then(function () {
+        content._readyPromise.resolve();
+      });
+      /*
+    model.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+    */
+      content._model = model;
+    })
+    .otherwise(console.error);
+
+  /*
   var tileset = content._tileset;
   var tile = content._tile;
   var resource = content._resource;
@@ -154,6 +193,7 @@ function initialize(content, gltf) {
       loop: ModelAnimationLoop.REPEAT,
     });
   });
+  */
 }
 
 Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
@@ -179,10 +219,18 @@ Gltf3DTileContent.prototype.applyStyle = function (style) {
 };
 
 Gltf3DTileContent.prototype.update = function (tileset, frameState) {
+  if (!defined(this._model)) {
+    this._gltfLoader.process(frameState);
+    return;
+  }
+
   var model = this._model;
   var tile = this._tile;
 
   model.modelMatrix = tile.computedTransform;
+  model.update(frameState);
+
+  /*
   model.shadows = tileset.shadows;
   model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
   model.lightColor = tileset.lightColor;
@@ -216,6 +264,7 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
   }
 
   model.update(frameState);
+  */
 };
 
 Gltf3DTileContent.prototype.isDestroyed = function () {

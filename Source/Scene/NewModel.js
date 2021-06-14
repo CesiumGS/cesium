@@ -215,7 +215,7 @@ Model.prototype.update = function (frameState) {
 
   if (this._state === ModelState.READY && !this._commandsCreated) {
     this._commandsCreated = true;
-    //createCommands(this, frameState);
+    createCommands(this, frameState);
 
     frameState.afterRender.push(function () {
       that._readyPromise.resolve(that);
@@ -1078,8 +1078,10 @@ function getUniformMap(model, node, primitive, context) {
 
   return uniforms;
 }
+*/
 
 function createCommands(model, frameState) {
+  /*
   frameState.context.cache.modelShaderCache = defaultValue(
     frameState.context.cache.modelShaderCache,
     {}
@@ -1290,7 +1292,7 @@ function createCommands(model, frameState) {
   //     }
   //   }
   // }
+  */
 }
-*/
 
 function update(model) {}
