@@ -99,28 +99,28 @@ describe("Scene/FeatureTable", function () {
     expect(featureTable.hasProperty(0, "numberOfPoints")).toBe(false);
   });
 
-  it("hasSemantic throws without index", function () {
+  it("hasPropertyBySemantic throws without index", function () {
     var featureTable = createFeatureTable();
     expect(function () {
-      featureTable.hasSemantic(undefined, "NAME");
+      featureTable.hasPropertyBySemantic(undefined, "NAME");
     }).toThrowDeveloperError();
   });
 
-  it("hasSemantic throws without semantic", function () {
+  it("hasPropertyBySemantic throws without semantic", function () {
     var featureTable = createFeatureTable();
     expect(function () {
-      featureTable.hasSemantic(0, undefined);
+      featureTable.hasPropertyBySemantic(0, undefined);
     }).toThrowDeveloperError();
   });
 
-  it("hasSemantic returns true if the feature has a property with the given semantic", function () {
+  it("hasPropertyBySemantic returns true if the feature has a property with the given semantic", function () {
     var featureTable = createFeatureTable();
-    expect(featureTable.hasSemantic(0, "NAME")).toBe(true);
+    expect(featureTable.hasPropertyBySemantic(0, "NAME")).toBe(true);
   });
 
-  it("hasSemantic returns false if the feature does not a property with the given semantic", function () {
+  it("hasPropertyBySemantic returns false if the feature does not a property with the given semantic", function () {
     var featureTable = createFeatureTable();
-    expect(featureTable.hasSemantic(0, "ID")).toBe(false);
+    expect(featureTable.hasPropertyBySemantic(0, "ID")).toBe(false);
   });
 
   it("propertyExists throws without propertyId", function () {
@@ -140,21 +140,21 @@ describe("Scene/FeatureTable", function () {
     expect(featureTable.propertyExists("numberOfPoints")).toBe(false);
   });
 
-  it("semanticExists throws without semantic", function () {
+  it("propertyExistsBySemantic throws without semantic", function () {
     var featureTable = createFeatureTable();
     expect(function () {
-      featureTable.semanticExists(undefined);
+      featureTable.propertyExistsBySemantic(undefined);
     }).toThrowDeveloperError();
   });
 
-  it("semanticExists returns true if the property exists", function () {
+  it("propertyExistsBySemantic returns true if the property exists", function () {
     var featureTable = createFeatureTable();
-    expect(featureTable.semanticExists("NAME")).toBe(true);
+    expect(featureTable.propertyExistsBySemantic("NAME")).toBe(true);
   });
 
-  it("semanticExists returns false if the property does not exist", function () {
+  it("propertyExistsBySemantic returns false if the property does not exist", function () {
     var featureTable = createFeatureTable();
-    expect(featureTable.semanticExists("ID")).toBe(false);
+    expect(featureTable.propertyExistsBySemantic("ID")).toBe(false);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
@@ -414,8 +414,8 @@ describe("Scene/FeatureTable", function () {
       expect(batchTable.hasProperty(0, "widgets")).toBe(false);
     });
 
-    it("hasSemantic returns false when there is no metadata table", function () {
-      expect(batchTableJsonOnly.hasSemantic(0, "NAME")).toBe(false);
+    it("hasPropertyBySemantic returns false when there is no metadata table", function () {
+      expect(batchTableJsonOnly.hasPropertyBySemantic(0, "NAME")).toBe(false);
     });
 
     it("propertyExists uses feature metadata", function () {
@@ -439,8 +439,8 @@ describe("Scene/FeatureTable", function () {
       expect(batchTable.propertyExists("widgets")).toBe(false);
     });
 
-    it("semanticExists returns false when there is no metadata table", function () {
-      expect(batchTableJsonOnly.semanticExists("NAME")).toBe(false);
+    it("propertyExistsBySemantic returns false when there is no metadata table", function () {
+      expect(batchTableJsonOnly.propertyExistsBySemantic("NAME")).toBe(false);
     });
 
     it("getProperty uses feature metadata", function () {

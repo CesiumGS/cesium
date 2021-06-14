@@ -205,12 +205,12 @@ describe("Scene/ImplicitTileMetadata", function () {
     expect(tileMetadata.hasProperty("numberOfPoints")).toBe(false);
   });
 
-  it("hasSemantic returns true if the tile has a property with the given semantic", function () {
-    expect(tileMetadata.hasSemantic("_HIGHLIGHT_COLOR")).toBe(true);
+  it("hasPropertyBySemantic returns true if the tile has a property with the given semantic", function () {
+    expect(tileMetadata.hasPropertyBySemantic("_HIGHLIGHT_COLOR")).toBe(true);
   });
 
-  it("hasSemantic returns false if the tile does not have a property with the given semantic", function () {
-    expect(tileMetadata.hasSemantic("_NUMBER_OF_POINTS")).toBe(false);
+  it("hasPropertyBySemantic returns false if the tile does not have a property with the given semantic", function () {
+    expect(tileMetadata.hasPropertyBySemantic("_NUMBER_OF_POINTS")).toBe(false);
   });
 
   it("getPropertyIds returns array of property IDs", function () {

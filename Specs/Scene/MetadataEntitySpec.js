@@ -41,7 +41,7 @@ describe("Scene/MetadataEntity", function () {
       entity.hasProperty();
     }).toThrowDeveloperError();
     expect(function () {
-      entity.hasSemantic();
+      entity.hasPropertyBySemantic();
     }).toThrowDeveloperError();
     expect(function () {
       entity.getPropertyIds();
@@ -99,42 +99,54 @@ describe("Scene/MetadataEntity", function () {
     expect(MetadataEntity.hasProperty("volume", properties)).toBe(false);
   });
 
-  it("hasSemantic returns false when there's no properties", function () {
-    expect(MetadataEntity.hasSemantic("NAME", {})).toBe(false);
+  it("hasPropertyBySemantic returns false when there's no properties", function () {
+    expect(MetadataEntity.hasPropertyBySemantic("NAME", {})).toBe(false);
   });
 
-  it("hasSemantic returns false when there's no property with the given property ID", function () {
+  it("hasPropertyBySemantic returns false when there's no property with the given property ID", function () {
     expect(
-      MetadataEntity.hasSemantic("VOLUME", properties, classDefinition)
+      MetadataEntity.hasPropertyBySemantic(
+        "VOLUME",
+        properties,
+        classDefinition
+      )
     ).toBe(false);
   });
 
-  it("hasSemantic returns false when there's no class definition", function () {
-    expect(MetadataEntity.hasSemantic("NAME", properties)).toBe(false);
-    expect(MetadataEntity.hasSemantic("VOLUME", properties)).toBe(false);
+  it("hasPropertyBySemantic returns false when there's no class definition", function () {
+    expect(MetadataEntity.hasPropertyBySemantic("NAME", properties)).toBe(
+      false
+    );
+    expect(MetadataEntity.hasPropertyBySemantic("VOLUME", properties)).toBe(
+      false
+    );
   });
 
-  it("hasSemantic returns true when there's a property with the given property ID", function () {
+  it("hasPropertyBySemantic returns true when there's a property with the given property ID", function () {
     expect(
-      MetadataEntity.hasSemantic("NAME", properties, classDefinition)
+      MetadataEntity.hasPropertyBySemantic("NAME", properties, classDefinition)
     ).toBe(true);
   });
 
-  it("hasSemantic returns true when the class has a default value for a missing property", function () {
+  it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
     expect(
-      MetadataEntity.hasSemantic("NAME", properties, classDefinition)
+      MetadataEntity.hasPropertyBySemantic("NAME", properties, classDefinition)
     ).toBe(true);
   });
 
-  it("hasSemantic throws without semantic", function () {
+  it("hasPropertyBySemantic throws without semantic", function () {
     expect(function () {
-      MetadataEntity.hasSemantic(undefined, properties, classDefinition);
+      MetadataEntity.hasPropertyBySemantic(
+        undefined,
+        properties,
+        classDefinition
+      );
     }).toThrowDeveloperError();
   });
 
-  it("hasSemantic throws without properties", function () {
+  it("hasPropertyBySemantic throws without properties", function () {
     expect(function () {
-      MetadataEntity.hasSemantic("NAME", undefined, classDefinition);
+      MetadataEntity.hasPropertyBySemantic("NAME", undefined, classDefinition);
     }).toThrowDeveloperError();
   });
 

@@ -54,7 +54,7 @@ MetadataEntity.prototype.hasProperty = function (propertyId) {
  * @returns {Boolean} Whether the entity has a property with the given semantic.
  * @private
  */
-MetadataEntity.prototype.hasSemantic = function (semantic) {
+MetadataEntity.prototype.hasPropertyBySemantic = function (semantic) {
   DeveloperError.throwInstantiationError();
 };
 
@@ -165,7 +165,11 @@ MetadataEntity.hasProperty = function (
  *
  * @private
  */
-MetadataEntity.hasSemantic = function (semantic, properties, classDefinition) {
+MetadataEntity.hasPropertyBySemantic = function (
+  semantic,
+  properties,
+  classDefinition
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   Check.typeOf.object("properties", properties);

@@ -173,15 +173,15 @@ describe("Scene/GroupMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasSemantic returns false when there's no properties", function () {
+  it("hasPropertyBySemantic returns false when there's no properties", function () {
     var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
-    expect(groupMetadata.hasSemantic("HEIGHT")).toBe(false);
+    expect(groupMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
   });
 
-  it("hasSemantic returns false when there's no property with the given semantic", function () {
+  it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -202,10 +202,10 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    expect(groupMetadata.hasSemantic("HEIGHT")).toBe(false);
+    expect(groupMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
   });
 
-  it("hasSemantic returns true when there's a property with the given semantic", function () {
+  it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -227,10 +227,10 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    expect(groupMetadata.hasSemantic("HEIGHT")).toBe(true);
+    expect(groupMetadata.hasPropertyBySemantic("HEIGHT")).toBe(true);
   });
 
-  it("hasSemantic returns true when the class has a default value for a missing property", function () {
+  it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
     var buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -250,17 +250,17 @@ describe("Scene/GroupMetadata", function () {
       group: {},
     });
 
-    expect(groupMetadata.hasSemantic("HEIGHT")).toBe(true);
+    expect(groupMetadata.hasPropertyBySemantic("HEIGHT")).toBe(true);
   });
 
-  it("hasSemantic throws without semantic", function () {
+  it("hasPropertyBySemantic throws without semantic", function () {
     var groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
 
     expect(function () {
-      groupMetadata.hasSemantic(undefined);
+      groupMetadata.hasPropertyBySemantic(undefined);
     }).toThrowDeveloperError();
   });
 

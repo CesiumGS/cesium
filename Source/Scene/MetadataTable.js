@@ -100,8 +100,12 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
  * @returns {Boolean} Whether the table has a property with the given semantic.
  * @private
  */
-MetadataTable.prototype.hasSemantic = function (semantic) {
-  return MetadataEntity.hasSemantic(semantic, this._properties, this._class);
+MetadataTable.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
 };
 
 /**

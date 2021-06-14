@@ -103,8 +103,8 @@ ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
  * @returns {Boolean} Whether the tile has a property with the given semantic.
  * @private
  */
-ImplicitTileMetadata.prototype.hasSemantic = function (semantic) {
-  return this._metadataTable.hasSemantic(semantic);
+ImplicitTileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return this._metadataTable.hasPropertyBySemantic(semantic);
 };
 
 /**

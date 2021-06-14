@@ -95,8 +95,12 @@ TileMetadata.prototype.hasProperty = function (propertyId) {
  * @returns {Boolean} Whether the tile has a property with the given semantic.
  * @private
  */
-TileMetadata.prototype.hasSemantic = function (semantic) {
-  return MetadataEntity.hasSemantic(semantic, this._properties, this._class);
+TileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
 };
 
 /**
