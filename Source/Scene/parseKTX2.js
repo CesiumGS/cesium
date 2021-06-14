@@ -108,7 +108,7 @@ function parseUncompressed(header, result) {
       } else if (PixelDatatype.sizeInBytes(datatype) == 2) {
         var faceView = new Uint16Array(levelBuffer.buffer, faceLength * j);
       } else {
-        var faceView = new Uint32Array(levelBuffer.buffer, faceLength * j);
+        var faceView = new Float32Array(levelBuffer.buffer, faceLength * j);
       }
 
       level[faceOrder[j]] = {
