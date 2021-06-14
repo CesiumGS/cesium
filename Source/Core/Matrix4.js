@@ -1235,7 +1235,7 @@ Matrix4.setColumn = function (matrix, index, cartesian, result) {
 
 /**
  * Computes a new matrix that replaces the translation in the rightmost column of the provided
- * matrix with the provided translation. This assumes the matrix is a rigid transformation.
+ * matrix with the provided translation. This assumes the matrix is an affine transformation.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} translation The translation that replaces the translation of the provided matrix.
@@ -1275,7 +1275,7 @@ Matrix4.setTranslation = function (matrix, translation, result) {
 var scaleScratch = new Cartesian3();
 /**
  * Computes a new matrix that replaces the scale with the provided scale.
- * This assumes the matrix is a rigid transformation.
+ * This assumes the matrix is an affine transformation.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} scale The scale that replaces the scale of the provided matrix.
@@ -1395,7 +1395,7 @@ Matrix4.setRow = function (matrix, index, cartesian, result) {
 var scratchColumn = new Cartesian3();
 
 /**
- * Extracts the non-uniform scale assuming the matrix is a rigid transformation.
+ * Extracts the non-uniform scale assuming the matrix is an affine transformation.
  *
  * @param {Matrix4} matrix The matrix.
  * @param {Cartesian3} result The object onto which to store the result.
@@ -1422,7 +1422,7 @@ Matrix4.getScale = function (matrix, result) {
 var scratchScale = new Cartesian3();
 
 /**
- * Computes the maximum scale assuming the matrix is a rigid transformation.
+ * Computes the maximum scale assuming the matrix is an affine transformation.
  * The maximum scale is the maximum length of the column vectors in the upper-left
  * 3x3 matrix.
  *
