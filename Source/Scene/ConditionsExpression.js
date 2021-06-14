@@ -135,8 +135,8 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionHeader Header of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader names.
+ * @param {String} functionSignature Signature of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -145,7 +145,7 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * @private
  */
 ConditionsExpression.prototype.getShaderFunction = function (
-  functionHeader,
+  functionSignature,
   variableSubstitutionMap,
   shaderState,
   returnType
@@ -186,7 +186,7 @@ ConditionsExpression.prototype.getShaderFunction = function (
   shaderFunction =
     returnType +
     " " +
-    functionHeader +
+    functionSignature +
     "\n" +
     "{\n" +
     shaderFunction +

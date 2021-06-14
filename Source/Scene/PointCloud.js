@@ -996,7 +996,7 @@ function getStyleablePropertyIds(source, propertyIds) {
 }
 
 function getBuiltinPropertyNames(source, propertyNames) {
-  // Get all the builtin property names used by this style, ignoring the function header
+  // Get all the builtin property names used by this style, ignoring the function signature
   source = source.slice(source.indexOf("\n"));
   var regex = /czm_3dtiles_builtin_property_(\w+)/g;
   var matches = regex.exec(source);
@@ -1069,7 +1069,7 @@ function createShaders(pointCloud, frameState, style) {
     var shaderState = {
       translucent: false,
     };
-    var functionHeader =
+    var parameterList =
       "(" +
       "vec3 czm_3dtiles_builtin_property_POSITION, " +
       "vec3 czm_3dtiles_builtin_property_POSITION_ABSOLUTE, " +
@@ -1077,17 +1077,17 @@ function createShaders(pointCloud, frameState, style) {
       "vec3 czm_3dtiles_builtin_property_NORMAL" +
       ")";
     colorStyleFunction = style.getColorShaderFunction(
-      "getColorFromStyle" + functionHeader,
+      "getColorFromStyle" + parameterList,
       variableSubstitutionMap,
       shaderState
     );
     showStyleFunction = style.getShowShaderFunction(
-      "getShowFromStyle" + functionHeader,
+      "getShowFromStyle" + parameterList,
       variableSubstitutionMap,
       shaderState
     );
     pointSizeStyleFunction = style.getPointSizeShaderFunction(
-      "getPointSizeFromStyle" + functionHeader,
+      "getPointSizeFromStyle" + parameterList,
       variableSubstitutionMap,
       shaderState
     );
