@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Custom Primitive example." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar input[type="range"] {
+        width: 70px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        var viewer = new Cesium.Viewer("cesiumContainer");
+
+        /**
+         * Simple example of writing a Primitive from scratch. This
+         * primitive displays a procedurally-generated surface at a given
+         * position on the globe.
+         */
+        function CustomPrimitive(cartographicPosition, context) {
+          this.show = true;
+
+          this.drawCommand = undefined;
+
+          // number of faces wide. There are resolution + 1 vertices.
+          this.resolution = 100;
+
+          // Compute a model matrix that puts the surface at a specific point on
+          // the globe.
+          this.cartographicPosition = cartographicPosition;
+          var cartesianPosition = Cesium.Cartographic.toCartesian(
+            cartographicPosition,
+            Cesium.Ellipsoid.WGS84,
+            new Cesium.Cartesian3()
+          );
+          this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+            cartesianPosition,
+            Cesium.Ellipsoid.WGS84,
+            new Cesium.Matrix4()
+          );
+
+          this.halfWidthMeters = 10000;
+          this.boundingSphere = new Cesium.BoundingSphere(
+            cartesianPosition,
+            this.halfWidthMeters * Math.SQRT2
+          );
+
+          initialize(this, context);
+        }
+
+        /**
+         * generate a quad that's subdivided into faceResolution x faceResolution quads.
+         * The vertices will be adjusted in the vertex shader.
+         */
+        function generateQuad(faceResolution, halfWidthMeters) {
+          var vertexResolution = faceResolution + 1;
+          var vertexCount = vertexResolution * vertexResolution;
+          var componentsPerVertex = 3;
+          var vertices = new Float32Array(vertexCount * componentsPerVertex);
+          for (var i = 0; i < vertexResolution; i++) {
+            for (var j = 0; j < vertexResolution; j++) {
+              var u = i / (vertexResolution + 1);
+              var v = j / (vertexResolution + 1);
+              var index = i * vertexResolution + j;
+              var x = halfWidthMeters * (2 * u - 1);
+              var y = halfWidthMeters * (2 * v - 1);
+              var z = 0;
+
+              vertices[index * componentsPerVertex] = x;
+              vertices[index * componentsPerVertex + 1] = y;
+              vertices[index * componentsPerVertex + 2] = z;
+            }
+          }
+          return vertices;
+        }
+
+        /**
+         * tesellate a big square region into faceResolution x faceResolution quads
+         */
+        function tesellate(faceResolution) {
+          var indicesPerQuad = 6;
+          var indexCount = faceResolution * faceResolution * indicesPerQuad;
+          var indices = new Uint16Array(indexCount);
+
+          var vertexResolution = faceResolution + 1;
+
+          for (var i = 0; i < faceResolution; i++) {
+            for (var j = 0; j < faceResolution; j++) {
+              var a = i * vertexResolution + j;
+              var b = i * vertexResolution + (j + 1);
+              var c = (i + 1) * vertexResolution + (j + 1);
+              var d = (i + 1) * vertexResolution + j;
+
+              indices[a * indicesPerQuad] = a;
+              indices[a * indicesPerQuad + 1] = b;
+              indices[a * indicesPerQuad + 2] = c;
+              indices[a * indicesPerQuad + 3] = c;
+              indices[a * indicesPerQuad + 4] = d;
+              indices[a * indicesPerQuad + 5] = a;
+            }
+          }
+
+          return indices;
+        }
+
+        function initialize(primitive, context) {
+          var vertexShader =
+            "attribute vec3 a_position;\n" +
+            "varying vec3 v_position;\n" +
+            "void main()\n" +
+            "{\n" +
+            "    vec2 k = vec2(0.0004, 0.0001);\n" +
+            "    float z = 1000.0 * sin(2.0 * czm_pi * dot(a_position.xy, k));\n" +
+            "    v_position = a_position;\n" +
+            "    gl_Position = czm_modelViewProjection * vec4(a_position.xy, z, 1.0);\n" +
+            "}\n";
+
+          var fragmentShader =
+            "varying vec3 v_position;\n" +
+            "void main()\n" +
+            "{\n" +
+            "    vec2 k = vec2(0.0004, 0.0001);\n" +
+            "    float z = 0.5 + 0.5 * sin(2.0 * czm_pi * dot(v_position.xy, k));\n" +
+            "    gl_FragColor = z * vec4(1.0, 0.5, 0.0, 1.0);\n" +
+            "}\n";
+
+          var positionLocation = 0;
+          var attributeLocations = {
+            a_position: positionLocation,
+          };
+
+          var renderState = Cesium.RenderState.fromCache({
+            depthTest: {
+              enabled: true,
+            },
+          });
+
+          var shaderProgram = Cesium.ShaderProgram.fromCache({
+            context: context,
+            vertexShaderSource: vertexShader,
+            fragmentShaderSource: fragmentShader,
+            attributeLocations: attributeLocations,
+          });
+
+          var positionTypedArray = generateQuad(
+            primitive.resolution,
+            primitive.halfWidthMeters
+          );
+          var positionVertexBuffer = Cesium.Buffer.createVertexBuffer({
+            context: context,
+            typedArray: positionTypedArray,
+            usage: Cesium.BufferUsage.STATIC_DRAW,
+          });
+
+          var positionAttribute = {
+            index: positionLocation,
+            vertexBuffer: positionVertexBuffer,
+            componentsPerAttribute: 3,
+            componentDatatype: Cesium.ComponentDatatype.fromTypedArray(
+              positionTypedArray
+            ),
+          };
+
+          var indexCount = primitive.resolution * primitive.resolution * 6;
+          var indexTypedArray = tesellate(primitive.resolution);
+          var indexBuffer = Cesium.Buffer.createIndexBuffer({
+            context: context,
+            typedArray: indexTypedArray,
+            indexDatatype: Cesium.ComponentDatatype.fromTypedArray(
+              indexTypedArray
+            ),
+            usage: Cesium.BufferUsage.STATIC_DRAW,
+          });
+
+          var vertexArray = new Cesium.VertexArray({
+            context: context,
+            attributes: [positionAttribute],
+            indexBuffer: indexBuffer,
+          });
+
+          var drawCommand = new Cesium.DrawCommand({
+            boundingVolume: primitive.boundingSphere,
+            modelMatrix: primitive.modelMatrix,
+            pass: Cesium.Pass.OPAQUE,
+            shaderProgram: shaderProgram,
+            renderState: renderState,
+            vertexArray: vertexArray,
+            count: indexCount,
+            primitiveType: Cesium.PrimitiveType.TRIANGLES,
+            uniformMap: {},
+          });
+          primitive.drawCommand = drawCommand;
+        }
+
+        CustomPrimitive.prototype.update = function (frameState) {
+          if (!this.show || !Cesium.defined(this.drawCommand)) {
+            return;
+          }
+
+          frameState.commandList.push(this.drawCommand);
+        };
+
+        var position = new Cesium.Cartographic(0, 0, 1000.0);
+        var primitive = viewer.scene.primitives.add(
+          new CustomPrimitive(position, viewer.scene.context)
+        );
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
