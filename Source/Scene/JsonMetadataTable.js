@@ -26,10 +26,10 @@ export default function JsonMetadataTable(options) {
 }
 
 /**
- * Returns whether this property exists.
+ * Returns whether the table has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the table has this property.
  * @private
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
@@ -52,7 +52,7 @@ JsonMetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @exception {DeveloperError} index is out of bounds
  * @private

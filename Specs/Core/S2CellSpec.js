@@ -40,6 +40,49 @@ describe("Core/S2Cell", function () {
     }).toThrowDeveloperError();
   });
 
+  it("creates cell from valid face, position, level", function () {
+    var cell = S2Cell.fromFacePositionLevel(0, BigInt(0), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("04");
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(1), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("0c");
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(2), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("14");
+    cell = S2Cell.fromFacePositionLevel(BigInt(0), BigInt(3), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("1c");
+    cell = S2Cell.fromFacePositionLevel(2, BigInt("0"), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("44");
+    cell = S2Cell.fromFacePositionLevel(4, BigInt("0"), 1);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("84");
+    cell = S2Cell.fromFacePositionLevel(1, BigInt("538969508876688737"), 30);
+    expect(S2Cell.getTokenFromId(cell._cellId)).toEqual("2ef59bd352b93ac3");
+  });
+
+  it("throws for creating cell from invalid face, position, level", function () {
+    expect(function () {
+      S2Cell.fromFacePositionLevel(-1, BigInt(0), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(6, BigInt(0), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(-1), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(4), 1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(0), -1);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      S2Cell.fromFacePositionLevel(0, BigInt(0), 31);
+    }).toThrowDeveloperError();
+  });
+
   it("accepts valid token", function () {
     var tokenValidity = S2Cell.isValidToken("1");
     expect(tokenValidity).toBe(true);

@@ -15,7 +15,6 @@ import Matrix4 from "../Core/Matrix4.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import S2Cell from "../Core/S2Cell.js";
-
 var centerCartographicScratch = new Cartographic();
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
@@ -129,8 +128,6 @@ var vertexScratch = new Cartesian3();
 var vertexGeodeticNormalScratch = new Cartesian3();
 var sideNormalScratch = new Cartesian3();
 var sideScratch = new Cartesian3();
-var topPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
-var bottomPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Computes bounding planes of the kDOP.
  * @private
@@ -158,11 +155,7 @@ function computeBoundingPlanes(
   );
   topCartographic.height = maximumHeight;
   var top = ellipsoid.cartographicToCartesian(topCartographic, topScratch);
-  var topPlane = Plane.fromPointNormal(
-    top,
-    centerSurfaceNormal,
-    topPlaneScratch
-  );
+  var topPlane = Plane.fromPointNormal(top, centerSurfaceNormal);
   planes[0] = topPlane;
 
   // Compute bottom plane.
@@ -190,7 +183,7 @@ function computeBoundingPlanes(
       maxDistance = distance;
     }
   }
-  var bottomPlane = Plane.clone(topPlane, bottomPlaneScratch);
+  var bottomPlane = Plane.clone(topPlane);
   // Negate the normal of the bottom plane since we want all normals to point "outwards".
   bottomPlane.normal = Cartesian3.negate(
     bottomPlane.normal,
@@ -448,6 +441,7 @@ TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
       selectedPlane,
       edgeNormals
     );
+
     return Cartesian3.distance(facePoint, point);
   } else if (selectedPlaneIndices.length === 2) {
     // Handles Case II
@@ -705,4 +699,5 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
     asynchronous: false,
   });
 };
+
 export default TileBoundingS2Cell;
