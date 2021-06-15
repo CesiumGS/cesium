@@ -1737,6 +1737,8 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
       shaderState,
       "float"
     );
+  } else {
+    this._pointSizeShaderFunction = undefined;
   }
 
   return this._pointSizeShaderFunction;
