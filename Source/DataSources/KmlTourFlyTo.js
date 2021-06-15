@@ -3,12 +3,18 @@ import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 import EasingFunction from "../Core/EasingFunction.js";
 /**
+ * Transitions the KmlTour to the next destination. This transition is facilitated
+ * using a specified flyToMode over a given number of seconds.
+ *
  * @alias KmlTourFlyTo
  * @constructor
  *
  * @param {Number} duration entry duration
  * @param {String} flyToMode KML fly to mode: bounce, smooth, etc
  * @param {KmlCamera|KmlLookAt} view KmlCamera or KmlLookAt
+ *
+ * @see KmlTour
+ * @see KmlTourWait
  */
 function KmlTourFlyTo(duration, flyToMode, view) {
   this.type = "KmlTourFlyTo";
