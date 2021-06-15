@@ -1608,9 +1608,9 @@ Matrix4.subtract = function (left, right, result) {
 
 /**
  * Computes the product of two matrices assuming the matrices are
- * rigid transformation matrices, where the upper left 3x3 elements
- * are a rotation and/or reflection matrix, and the upper three elements
- * in the fourth column are the translation.
+ * proper rigid transformation matrices,
+ * where the upper left 3x3 elements are a rotation matrix,
+ * and the upper three elements in the fourth column are the translation.
  * The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
  * This method is faster than computing the product for general 4x4
@@ -1820,10 +1820,10 @@ Matrix4.multiplyByTranslation = function (matrix, translation, result) {
 var uniformScaleScratch = new Cartesian3();
 
 /**
- * Multiplies a rigid transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+ * Multiplies a proper rigid transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
  * by an implicit uniform scale matrix.  This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
- * <code>m</code> must be a rigid matrix.
+ * <code>m</code> must be a proper rigid matrix.
  * This function performs fewer allocations and arithmetic operations.
  *
  * @param {Matrix4} matrix The rigid matrix on the left-hand side.
@@ -1853,13 +1853,13 @@ Matrix4.multiplyByUniformScale = function (matrix, scale, result) {
 };
 
 /**
- * Multiplies a rigid transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+ * Multiplies a proper rigid transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
  * by an implicit non-uniform scale matrix.  This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
- * <code>m</code> must be a rigid matrix.
+ * <code>m</code> must be a proper rigid matrix.
  * This function performs fewer allocations and arithmetic operations.
  *
- * @param {Matrix4} matrix The rigid matrix on the left-hand side.
+ * @param {Matrix4} matrix The proper rigid matrix on the left-hand side.
  * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -2311,7 +2311,7 @@ Matrix4.equalsEpsilon = function (left, right, epsilon) {
 };
 
 /**
- * Gets the translation portion of the provided matrix, assuming the matrix is a rigid transformation matrix.
+ * Gets the translation portion of the provided matrix, assuming the matrix is an affine transformation matrix.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} result The object onto which to store the result.
@@ -2330,8 +2330,8 @@ Matrix4.getTranslation = function (matrix, result) {
 };
 
 /**
- * Gets the upper left 3x3 rotation or reflection matrix of the provided matrix,
- * assuming the matrix is a rigid transformation matrix.
+ * Gets the upper left 3x3 rotation matrix of the provided matrix,
+ * assuming the matrix is a proper rigid transformation matrix.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Matrix3} result The object onto which to store the result.
@@ -2378,7 +2378,7 @@ var scratchExpectedBottomRow = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 /**
  * Computes the inverse of the provided matrix using Cramers Rule.
  * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
- * If the matrix is a rigid transformation, it is more efficient
+ * If the matrix is a proper rigid transformation, it is more efficient
  * to invert it with {@link Matrix4.inverseTransformation}.
  *
  * @param {Matrix4} matrix The matrix to invert.
@@ -2589,8 +2589,8 @@ Matrix4.inverse = function (matrix, result) {
 };
 
 /**
- * Computes the inverse of the provided matrix assuming it is a rigid matrix,
- * where the upper left 3x3 elements are a rotation or reflection matrix,
+ * Computes the inverse of the provided matrix assuming it is a proper rigid matrix,
+ * where the upper left 3x3 elements are a rotation matrix,
  * and the upper three elements in the fourth column are the translation.
  * The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
