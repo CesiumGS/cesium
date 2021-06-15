@@ -1,5 +1,5 @@
 import ForEach from './ForEach.js'
-import hasExtension from './hasExtension.js'
+import usesExtension from './usesExtension.js'
 import defaultValue from '../../Core/defaultValue.js'
 import defined from '../../Core/defined.js'
 
@@ -148,7 +148,7 @@ import defined from '../../Core/defined.js'
             });
         });
 
-        if (hasExtension(gltf, 'KHR_draco_mesh_compression')) {
+        if (usesExtension(gltf, 'KHR_draco_mesh_compression')) {
             ForEach.mesh(gltf, function(mesh) {
                 ForEach.meshPrimitive(mesh, function(primitive) {
                     if (defined(primitive.extensions) &&
@@ -333,7 +333,7 @@ import defined from '../../Core/defined.js'
             });
         });
 
-        if (hasExtension(gltf, 'KHR_draco_mesh_compression')) {
+        if (usesExtension(gltf, 'KHR_draco_mesh_compression')) {
             ForEach.mesh(gltf, function(mesh) {
                 ForEach.meshPrimitive(mesh, function(primitive) {
                     if (defined(primitive.extensions) &&
