@@ -41,9 +41,9 @@ var Material = ModelComponents.Material;
 var GltfLoaderState = {
   UNLOADED: 0,
   LOADING: 1,
-  DONE_LOADING: 2,
+  LOADED: 2,
   PROCESSING: 3,
-  DONE_PROCESSING: 4,
+  PROCESSED: 4,
   READY: 4,
   FAILED: 5,
 };
@@ -196,8 +196,8 @@ GltfLoader.prototype.load = function () {
       if (that.isDestroyed()) {
         return;
       }
-      that._state = GltfLoaderState.DONE_LOADING;
-      that._textureState = GltfLoaderState.DONE_LOADING;
+      that._state = GltfLoaderState.LOADED;
+      that._textureState = GltfLoaderState.LOADED;
     })
     .otherwise(function (error) {
       if (that.isDestroyed()) {
@@ -258,7 +258,7 @@ GltfLoader.prototype.process = function (frameState) {
     return;
   }
 
-  if (this._state === GltfLoaderState.DONE_LOADING) {
+  if (this._state === GltfLoaderState.LOADED) {
     this._state = GltfLoaderState.PROCESSING;
 
     var supportedImageFormats = new SupportedImageFormats({
@@ -287,7 +287,7 @@ GltfLoader.prototype.process = function (frameState) {
     }
   }
 
-  if (this._textureState === GltfLoaderState.DONE_LOADING) {
+  if (this._textureState === GltfLoaderState.LOADED) {
     this._textureState = GltfLoaderState.PROCESSING;
   }
 
@@ -298,13 +298,13 @@ GltfLoader.prototype.process = function (frameState) {
     process(this, frameState);
   }
 
-  if (this._state === GltfLoaderState.DONE_PROCESSING) {
+  if (this._state === GltfLoaderState.PROCESSED) {
     unloadBufferViews(this); // Buffer views can be unloaded after the data has been copied
     this._state = GltfLoaderState.READY;
     this._promise.resolve(this);
   }
 
-  if (this._textureState === GltfLoaderState.DONE_PROCESSING) {
+  if (this._textureState === GltfLoaderState.PROCESSED) {
     this._textureState = GltfLoaderState.READY;
     this._texturesLoadedPromise.resolve(this);
   }
@@ -1144,7 +1144,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
       if (loader.isDestroyed()) {
         return;
       }
-      loader._state = GltfLoaderState.DONE_PROCESSING;
+      loader._state = GltfLoaderState.PROCESSED;
     })
     .otherwise(function (error) {
       if (loader.isDestroyed()) {
@@ -1157,7 +1157,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     if (loader.isDestroyed()) {
       return;
     }
-    loader._textureState = GltfLoaderState.DONE_PROCESSING;
+    loader._textureState = GltfLoaderState.PROCESSED;
   });
 }
 
