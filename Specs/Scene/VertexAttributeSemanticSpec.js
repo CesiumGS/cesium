@@ -131,7 +131,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getShaderType", function () {
+  it("getGlslType", function () {
     var semantics = [
       VertexAttributeSemantic.POSITION,
       VertexAttributeSemantic.NORMAL,
@@ -156,21 +156,21 @@ describe("Scene/VertexAttributeSemantic", function () {
 
     var semanticsLength = semantics.length;
     for (var i = 0; i < semanticsLength; ++i) {
-      expect(VertexAttributeSemantic.getShaderType(semantics[i])).toBe(
+      expect(VertexAttributeSemantic.getGlslType(semantics[i])).toBe(
         expectedShaderTypes[i]
       );
     }
   });
 
-  it("getShaderType throws if semantic is undefined", function () {
+  it("getGlslType throws if semantic is undefined", function () {
     expect(function () {
-      VertexAttributeSemantic.getShaderType(undefined);
+      VertexAttributeSemantic.getGlslType(undefined);
     }).toThrowDeveloperError();
   });
 
-  it("getShaderType throws if semantic is not a valid value", function () {
+  it("getGlslType throws if semantic is not a valid value", function () {
     expect(function () {
-      VertexAttributeSemantic.getShaderType("OTHER");
+      VertexAttributeSemantic.getGlslType("OTHER");
     }).toThrowDeveloperError();
   });
 

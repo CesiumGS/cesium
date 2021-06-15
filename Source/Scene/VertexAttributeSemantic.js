@@ -214,7 +214,8 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
 };
 
 /**
- * Gets the shader type for the given vertex attribute.
+ * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
+ * given vertex attribute.
  *
  * @param {VertexAttributeSemantic} semantic The semantic.
  *
@@ -222,7 +223,7 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
  *
  * @private
  */
-VertexAttributeSemantic.getShaderType = function (semantic) {
+VertexAttributeSemantic.getGlslType = function (semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
