@@ -95,11 +95,11 @@ describe("Scene/FeatureTextureProperty", function () {
       0.0, 0.0, 1.0
     );
 
-    var modelTexture = featureTextureProperty.texture;
-    expect(modelTexture.texture).toBe(texture);
-    expect(modelTexture.texCoord).toBe(1);
-    expect(modelTexture.transform).toEqual(expectedTransform);
-    expect(modelTexture.channels).toBe("rgb");
+    var modelTextureReader = featureTextureProperty.textureReader;
+    expect(modelTextureReader.texture).toBe(texture);
+    expect(modelTextureReader.texCoord).toBe(1);
+    expect(modelTextureReader.transform).toEqual(expectedTransform);
+    expect(modelTextureReader.channels).toBe("rgb");
   });
 
   it("constructor throws without property", function () {

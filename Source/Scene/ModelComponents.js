@@ -361,10 +361,10 @@ function FeatureIdTexture() {
   /**
    * The texture containing feature IDs.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
-  this.texture = undefined;
+  this.textureReader = undefined;
 }
 
 /**
@@ -647,21 +647,21 @@ function Components() {
 }
 
 /**
- * A texture.
+ * The components for reading a texture.
  *
- * @alias ModelComponents.Texture
+ * @alias ModelComponents.TextureReader
  * @constructor
  *
  * @private
  */
-function Texture() {
+function TextureReader() {
   /**
    * The underlying GPU texture. The {@link Texture} contains the sampler.
    *
    * @type {Texture}
    * @private
    */
-  this.texture = undefined;
+  this.textureReader = undefined;
 
   /**
    * The texture coordinate set.
@@ -700,7 +700,7 @@ function MetallicRoughness() {
   /**
    * The base color texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.baseColorTexture = undefined;
@@ -708,7 +708,7 @@ function MetallicRoughness() {
   /**
    * The metallic roughness texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.metallicRoughnessTexture = undefined;
@@ -775,7 +775,7 @@ function SpecularGlossiness() {
   /**
    * The diffuse texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.diffuseTexture = undefined;
@@ -783,7 +783,7 @@ function SpecularGlossiness() {
   /**
    * The specular glossiness texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.specularGlossinessTexture = undefined;
@@ -863,7 +863,7 @@ function Material() {
   /**
    * The emissive texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.emissiveTexture = undefined;
@@ -871,7 +871,7 @@ function Material() {
   /**
    * The normal texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.normalTexture = undefined;
@@ -879,7 +879,7 @@ function Material() {
   /**
    * The occlusion texture.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.occlusionTexture = undefined;
@@ -947,7 +947,7 @@ ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
 ModelComponents.Components = Components;
-ModelComponents.Texture = Texture;
+ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;
 ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Material = Material;

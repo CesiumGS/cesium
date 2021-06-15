@@ -361,16 +361,16 @@ describe(
         var intensityProperty = mapTexture.getProperty("intensity");
         var vegetationProperty = orthoTexture.getProperty("vegetation");
 
-        expect(colorProperty.texture.texture.width).toBe(1);
-        expect(colorProperty.texture.texture.height).toBe(1);
-        expect(colorProperty.texture.texture).toBe(
-          intensityProperty.texture.texture
+        expect(colorProperty.textureReader.texture.width).toBe(1);
+        expect(colorProperty.textureReader.texture.height).toBe(1);
+        expect(colorProperty.textureReader.texture).toBe(
+          intensityProperty.textureReader.texture
         );
 
-        expect(vegetationProperty.texture.texture.width).toBe(1);
-        expect(vegetationProperty.texture.texture.height).toBe(1);
-        expect(vegetationProperty.texture.texture).not.toBe(
-          colorProperty.texture.texture
+        expect(vegetationProperty.textureReader.texture.width).toBe(1);
+        expect(vegetationProperty.textureReader.texture.height).toBe(1);
+        expect(vegetationProperty.textureReader.texture).not.toBe(
+          colorProperty.textureReader.texture
         );
 
         expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([

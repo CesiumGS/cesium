@@ -791,11 +791,13 @@ describe(
         expect(primitive.featureTextureIds).toEqual(["vegetationTexture"]);
 
         expect(featureIdTexture.featureTableId).toBe("landCoverTable");
-        expect(featureIdTexture.texture.channels).toBe("r");
-        expect(featureIdTexture.texture.texCoord).toBe(0);
-        expect(featureIdTexture.texture.texture.width).toBe(256);
-        expect(featureIdTexture.texture.texture.height).toBe(256);
-        expect(featureIdTexture.texture.texture.sampler).toBe(Sampler.NEAREST);
+        expect(featureIdTexture.textureReader.channels).toBe("r");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture.width).toBe(256);
+        expect(featureIdTexture.textureReader.texture.height).toBe(256);
+        expect(featureIdTexture.textureReader.texture.sampler).toBe(
+          Sampler.NEAREST
+        );
 
         var classDefinition = featureMetadata.schema.classes.landCover;
         var properties = classDefinition.properties;
@@ -823,8 +825,8 @@ describe(
           "vegetationDensity"
         );
 
-        expect(vegetationProperty.texture.texture.width).toBe(256);
-        expect(vegetationProperty.texture.texture.height).toBe(256);
+        expect(vegetationProperty.textureReader.texture.width).toBe(256);
+        expect(vegetationProperty.textureReader.texture.height).toBe(256);
       });
     });
 

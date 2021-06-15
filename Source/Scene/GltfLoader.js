@@ -613,7 +613,7 @@ function loadTexture(
 
   loader._textureLoaders.push(textureLoader);
 
-  var texture = GltfLoaderUtil.createModelTexture({
+  var textureReader = GltfLoaderUtil.createModelTexture({
     textureInfo: textureInfo,
   });
 
@@ -621,13 +621,13 @@ function loadTexture(
     if (loader.isDestroyed()) {
       return;
     }
-    texture.texture = textureLoader.texture;
+    textureReader.texture = textureLoader.texture;
     if (defined(samplerOverride)) {
-      texture.texture.sampler = samplerOverride;
+      textureReader.texture.sampler = samplerOverride;
     }
   });
 
-  return texture;
+  return textureReader;
 }
 
 function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
@@ -758,7 +758,7 @@ function loadFeatureIdTexture(
   var textureInfo = featureIds.texture;
 
   featureIdTexture.featureTableId = gltfFeatureIdTexture.featureTable;
-  featureIdTexture.texture = loadTexture(
+  featureIdTexture.textureReader = loadTexture(
     loader,
     gltf,
     textureInfo,
@@ -766,7 +766,7 @@ function loadFeatureIdTexture(
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
 
-  featureIdTexture.texture.channels = featureIds.channels;
+  featureIdTexture.textureReader.channels = featureIds.channels;
 
   return featureIdTexture;
 }

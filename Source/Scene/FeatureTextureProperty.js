@@ -32,13 +32,13 @@ function FeatureTextureProperty(options) {
   //>>includeEnd('debug');
 
   var textureInfo = property.texture;
-  var texture = GltfLoaderUtil.createModelTexture({
+  var textureReader = GltfLoaderUtil.createModelTexture({
     textureInfo: textureInfo,
     channels: property.channels,
     texture: textures[textureInfo.index],
   });
 
-  this._texture = texture;
+  this._textureReader = textureReader;
   this._classProperty = classProperty;
   this._extras = property.extras;
   this._extensions = property.extensions;
@@ -49,13 +49,13 @@ Object.defineProperties(FeatureTextureProperty.prototype, {
    * The texture.
    *
    * @memberof FeatureTextureProperty.prototype
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @readonly
    * @private
    */
-  texture: {
+  textureReader: {
     get: function () {
-      return this._texture;
+      return this._textureReader;
     },
   },
 
