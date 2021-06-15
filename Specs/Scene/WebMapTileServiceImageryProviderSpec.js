@@ -117,11 +117,9 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
-    expect(uri.scheme + "://" + uri.authority).toEqual(
-      "http://wmtsa.invalid" || "http://wmtsb.invalid" || "http://wmtsc.invalid"
-    );
+    expect(uri.authority).toEqual("wmtsa.invalid");
 
-    tilecol = 1;
+    tilecol = 2;
     tilerow = 3;
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
@@ -138,9 +136,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
-    expect(uri.scheme + "://" + uri.authority).toEqual(
-      "http://wmtsa.invalid" || "http://wmtsb.invalid" || "http://wmtsc.invalid"
-    );
+    expect(uri.authority).toEqual("wmtsb.invalid");
   });
 
   it("supports subdomains string urls", function () {
