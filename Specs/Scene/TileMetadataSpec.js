@@ -84,12 +84,20 @@ describe("Scene/TileMetadata", function () {
     expect(tileMetadata.extensions).toBe(extensions);
   });
 
-  it("hasProperty returns true if a property exists", function () {
+  it("hasProperty returns true if the tile has this property", function () {
     expect(tileMetadata.hasProperty("color")).toBe(true);
   });
 
-  it("hasProperty returns false if a property does not exist", function () {
+  it("hasProperty returns false if the tile does not have this property", function () {
     expect(tileMetadata.hasProperty("numberOfPoints")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic returns true if the tile has a property with the given semantic", function () {
+    expect(tileMetadata.hasPropertyBySemantic("COLOR")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic returns false if the tile does not have a property with the given semantic", function () {
+    expect(tileMetadata.hasProperty("NUMBER_OF_POINTS")).toBe(false);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
