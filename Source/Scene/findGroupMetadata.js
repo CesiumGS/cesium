@@ -1,4 +1,4 @@
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 
 /**
  * Check if a content has a <code>3DTILES_metadata</code> extension, and if so,
@@ -13,7 +13,7 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function findGroupMetadata(tileset, contentHeader) {
-  if (has3DTilesExtension(contentHeader, "3DTILES_metadata")) {
+  if (hasExtension(contentHeader, "3DTILES_metadata")) {
     var extension = contentHeader.extensions["3DTILES_metadata"];
     var groupId = extension.group;
     return tileset.metadata.groups[groupId];

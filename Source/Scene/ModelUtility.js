@@ -13,7 +13,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
+import usesExtension from "../ThirdParty/GltfPipeline/usesExtension.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 
@@ -437,7 +437,7 @@ function getTechniqueAttributeOrUniformFunction(
   semantic,
   ignoreNodes
 ) {
-  if (hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return function (attributeOrUniform, attributeOrUniformName) {
       if (
         attributeOrUniform.semantic === semantic &&
@@ -633,7 +633,7 @@ function getAttributeVariableName(gltf, primitive, attributeSemantic) {
   var material = gltf.materials[materialId];
 
   if (
-    !hasExtension(gltf, "KHR_techniques_webgl") ||
+    !usesExtension(gltf, "KHR_techniques_webgl") ||
     !defined(material.extensions) ||
     !defined(material.extensions.KHR_techniques_webgl)
   ) {
