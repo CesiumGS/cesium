@@ -613,7 +613,7 @@ function loadTexture(
 
   loader._textureLoaders.push(textureLoader);
 
-  var textureReader = GltfLoaderUtil.createModelTexture({
+  var textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
   });
 

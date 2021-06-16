@@ -211,12 +211,12 @@ describe("Scene/GltfLoaderUtil", function () {
     expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
   });
 
-  it("createModelTexture creates texture with default values", function () {
+  it("createModelTextureReader creates texture with default values", function () {
     var textureInfo = {
       index: 0,
     };
 
-    var modelTexture = GltfLoaderUtil.createModelTexture({
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
     });
 
@@ -226,7 +226,7 @@ describe("Scene/GltfLoaderUtil", function () {
     expect(modelTexture.channels).toBeUndefined();
   });
 
-  it("createModelTexture creates texture with KHR_texture_transform extension", function () {
+  it("createModelTextureReader creates texture with KHR_texture_transform extension", function () {
     var textureInfo = {
       index: 0,
       texCoord: 0,
@@ -246,7 +246,7 @@ describe("Scene/GltfLoaderUtil", function () {
       0.0, 0.0, 1.0
     );
 
-    var modelTexture = GltfLoaderUtil.createModelTexture({
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
     });
 
@@ -254,7 +254,7 @@ describe("Scene/GltfLoaderUtil", function () {
     expect(modelTexture.transform).toEqual(expectedTransform);
   });
 
-  it("createModelTexture creates texture", function () {
+  it("createModelTextureReader creates texture", function () {
     var context = createContext();
 
     var texture = new Texture({
@@ -273,7 +273,7 @@ describe("Scene/GltfLoaderUtil", function () {
       texCoord: 1,
     };
 
-    var modelTexture = GltfLoaderUtil.createModelTexture({
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
       channels: "r",
       texture: texture,
@@ -288,9 +288,9 @@ describe("Scene/GltfLoaderUtil", function () {
     context.destroyForSpecs();
   });
 
-  it("createModelTexture throws if textureInfo is undefined", function () {
+  it("createModelTextureReader throws if textureInfo is undefined", function () {
     expect(function () {
-      GltfLoaderUtil.createModelTexture();
+      GltfLoaderUtil.createModelTextureReader();
     }).toThrowDeveloperError();
   });
 });

@@ -359,7 +359,7 @@ function FeatureIdTexture() {
   this.featureTableId = undefined;
 
   /**
-   * The texture containing feature IDs.
+   * The texture reader containing feature IDs.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -647,7 +647,7 @@ function Components() {
 }
 
 /**
- * The components for reading a texture.
+ * Information about a GPU texture, including the texture itself
  *
  * @alias ModelComponents.TextureReader
  * @constructor
@@ -698,7 +698,7 @@ function TextureReader() {
  */
 function MetallicRoughness() {
   /**
-   * The base color texture.
+   * The base color texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -706,7 +706,7 @@ function MetallicRoughness() {
   this.baseColorTexture = undefined;
 
   /**
-   * The metallic roughness texture.
+   * The metallic roughness texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -773,7 +773,7 @@ MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR = 1.0;
  */
 function SpecularGlossiness() {
   /**
-   * The diffuse texture.
+   * The diffuse texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -781,7 +781,7 @@ function SpecularGlossiness() {
   this.diffuseTexture = undefined;
 
   /**
-   * The specular glossiness texture.
+   * The specular glossiness texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -861,7 +861,7 @@ function Material() {
   this.specularGlossiness = undefined;
 
   /**
-   * The emissive texture.
+   * The emissive texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -869,7 +869,7 @@ function Material() {
   this.emissiveTexture = undefined;
 
   /**
-   * The normal texture.
+   * The normal texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -877,7 +877,7 @@ function Material() {
   this.normalTexture = undefined;
 
   /**
-   * The occlusion texture.
+   * The occlusion texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private

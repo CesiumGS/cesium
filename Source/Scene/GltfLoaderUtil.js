@@ -194,16 +194,16 @@ GltfLoaderUtil.createSampler = function (options) {
 var defaultScale = new Cartesian2(1.0, 1.0);
 
 /**
- * Create a model texture.
+ * Create a model texture reader.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.textureInfo The texture info JSON.
  * @param {String} [options.channels] The texture channels to read from.
  * @param {Texture} [options.texture] The texture object.
  *
- * @returns {ModelComponents.TextureReader} The texture.
+ * @returns {ModelComponents.TextureReader} The texture reader for this model.
  */
-GltfLoaderUtil.createModelTexture = function (options) {
+GltfLoaderUtil.createModelTextureReader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var textureInfo = options.textureInfo;
   var channels = options.channels;
