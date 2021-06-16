@@ -1607,10 +1607,9 @@ Matrix4.subtract = function (left, right, result) {
 };
 
 /**
- * Computes the product of two matrices assuming the matrices are
- * proper rigid transformation matrices,
- * where the upper left 3x3 elements are a rotation matrix,
- * and the upper three elements in the fourth column are the translation.
+ * Computes the product of two matrices assuming the matrices are affine transformation matrices,
+ * where the upper left 3x3 elements are any affine matrix, and
+ * the upper three elements in the fourth column are the translation.
  * The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
  * This method is faster than computing the product for general 4x4
@@ -1820,13 +1819,13 @@ Matrix4.multiplyByTranslation = function (matrix, translation, result) {
 var uniformScaleScratch = new Cartesian3();
 
 /**
- * Multiplies a proper rigid transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+ * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
  * by an implicit uniform scale matrix.  This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
- * <code>m</code> must be a proper rigid matrix.
+ * <code>m</code> must be an affine matrix.
  * This function performs fewer allocations and arithmetic operations.
  *
- * @param {Matrix4} matrix The rigid matrix on the left-hand side.
+ * @param {Matrix4} matrix The affine matrix on the left-hand side.
  * @param {Number} scale The uniform scale on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -1853,13 +1852,13 @@ Matrix4.multiplyByUniformScale = function (matrix, scale, result) {
 };
 
 /**
- * Multiplies a proper rigid transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
- * by an implicit non-uniform scale matrix.  This is an optimization
+ * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+ * by an implicit non-uniform scale matrix. This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
- * <code>m</code> must be a proper rigid matrix.
+ * <code>m</code> must be an affine matrix.
  * This function performs fewer allocations and arithmetic operations.
  *
- * @param {Matrix4} matrix The proper rigid matrix on the left-hand side.
+ * @param {Matrix4} matrix The affine matrix on the left-hand side.
  * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -2330,8 +2329,7 @@ Matrix4.getTranslation = function (matrix, result) {
 };
 
 /**
- * Gets the upper left 3x3 rotation matrix of the provided matrix,
- * assuming the matrix is a proper rigid transformation matrix.
+ * Gets the upper left 3x3 matrix of the provided matrix.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Matrix3} result The object onto which to store the result.
