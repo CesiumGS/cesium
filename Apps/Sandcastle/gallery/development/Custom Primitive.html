@@ -76,6 +76,8 @@
             this.halfWidthMeters * Math.SQRT2
           );
 
+          this.time = undefined;
+
           initialize(this, context);
         }
 
@@ -134,25 +136,67 @@
           return indices;
         }
 
+        var scratchColor = new Cesium.Color();
+        function generateTexture(context) {
+          var width = 256;
+          var textureTypedArray = new Uint8Array(width * 4);
+          for (var i = 0; i < width; i++) {
+            var bucket32 = 32 * Math.floor(i / 32);
+            var bucket4 = 4 * Math.floor(i / 4);
+            var color = Cesium.Color.fromHsl(
+              bucket32 / width,
+              bucket32 / width,
+              (255 - bucket4) / width,
+              1.0,
+              scratchColor
+            );
+            textureTypedArray[4 * i] = 255 * color.red;
+            textureTypedArray[4 * i + 1] = 255 * color.green;
+            textureTypedArray[4 * i + 2] = 255 * color.blue;
+            textureTypedArray[4 * i + 3] = 255 * color.alpha;
+          }
+
+          return new Cesium.Texture({
+            context: context,
+            pixelFormat: Cesium.PixelFormat.RGBA,
+            pixelDataType: Cesium.ComponentDatatype.fromTypedArray(
+              textureTypedArray
+            ),
+            source: {
+              width: width,
+              height: 1,
+              arrayBufferView: textureTypedArray,
+            },
+            flipY: false,
+            sampler: new Cesium.Sampler({
+              minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
+              magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
+            }),
+          });
+        }
+
         function initialize(primitive, context) {
           var vertexShader =
             "attribute vec3 a_position;\n" +
             "varying vec3 v_position;\n" +
+            "uniform float u_time;\n" +
             "void main()\n" +
             "{\n" +
             "    vec2 k = vec2(0.0004, 0.0001);\n" +
-            "    float z = 1000.0 * sin(2.0 * czm_pi * dot(a_position.xy, k));\n" +
+            "    float z = 1000.0 * sin(2.0 * czm_pi * dot(a_position.xy, k) - 0.002 * u_time);\n" +
             "    v_position = a_position;\n" +
             "    gl_Position = czm_modelViewProjection * vec4(a_position.xy, z, 1.0);\n" +
             "}\n";
 
           var fragmentShader =
             "varying vec3 v_position;\n" +
+            "uniform float u_time;\n" +
+            "uniform sampler2D u_texture;\n" +
             "void main()\n" +
             "{\n" +
             "    vec2 k = vec2(0.0004, 0.0001);\n" +
-            "    float z = 0.5 + 0.5 * sin(2.0 * czm_pi * dot(v_position.xy, k));\n" +
-            "    gl_FragColor = z * vec4(1.0, 0.5, 0.0, 1.0);\n" +
+            "    float z = 0.5 + 0.5 * sin(2.0 * czm_pi * dot(v_position.xy, k) - 0.002 * u_time);\n" +
+            "    gl_FragColor = texture2D(u_texture, vec2(z, 0.5));\n" +
             "}\n";
 
           var positionLocation = 0;
@@ -209,6 +253,19 @@
             indexBuffer: indexBuffer,
           });
 
+          var texture = generateTexture(context);
+
+          primitive.time = performance.now();
+          var uniformMap = {
+            u_time: function () {
+              var now = performance.now();
+              return now - primitive.time;
+            },
+            u_texture: function () {
+              return texture;
+            },
+          };
+
           var drawCommand = new Cesium.DrawCommand({
             boundingVolume: primitive.boundingSphere,
             modelMatrix: primitive.modelMatrix,
@@ -218,7 +275,7 @@
             vertexArray: vertexArray,
             count: indexCount,
             primitiveType: Cesium.PrimitiveType.TRIANGLES,
-            uniformMap: {},
+            uniformMap: uniformMap,
           });
           primitive.drawCommand = drawCommand;
         }
@@ -235,6 +292,10 @@
         var primitive = viewer.scene.primitives.add(
           new CustomPrimitive(position, viewer.scene.context)
         );
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(0, 0, 50000),
+          duration: 0.1,
+        });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
