@@ -1608,7 +1608,7 @@ Matrix4.subtract = function (left, right, result) {
 
 /**
  * Computes the product of two matrices assuming the matrices are affine transformation matrices,
- * where the upper left 3x3 elements are any affine matrix, and
+ * where the upper left 3x3 elements are any matrix, and
  * the upper three elements in the fourth column are the translation.
  * The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
