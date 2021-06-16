@@ -3,7 +3,7 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
-import KTX2Transcoder from "../Scene/KTX2Transcoder.js";
+import KTX2Transcoder from "./KTX2Transcoder.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -11,8 +11,8 @@ import when from "../ThirdParty/when.js";
  *
  * @param {Boolean} s3tc Whether or not S3TC is supported
  * @param {Boolean} pvrtc Whether or not PVRTC is supported
- * @param {Boolean} astc Whether or not ETC1 is supported
- * @param {Boolean} etc1 Whether or not ASTC is supported
+ * @param {Boolean} astc Whether or not ASTC is supported
+ * @param {Boolean} etc1 Whether or not ETC1 is supported
  * @param {Boolean} bc7 Whether or not BC7 is supported
  * @private
  */
@@ -41,13 +41,12 @@ loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
  *     <li>3D textures</li>
  *     <li>Texture Arrays</li>
  *     <li>Video</li>
- *     <li>Compressed Mipmaps</li>
  * </ul>
  * </p>
  *
  * @exports loadKTX2
  *
- * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or a ArrayBuffer.
+ * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @exception {RuntimeError} Invalid KTX2 file.

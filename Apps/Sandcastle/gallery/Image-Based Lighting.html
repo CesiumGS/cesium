@@ -59,12 +59,6 @@
         //Sandcastle_Begin
         var viewer = new Cesium.Viewer("cesiumContainer");
 
-        if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
-          window.alert(
-            "This browser does not support the Basis Universal format"
-          );
-        }
-
         if (!viewer.scene.specularEnvironmentMapsSupported) {
           window.alert(
             "This browser does not support specular environment maps."

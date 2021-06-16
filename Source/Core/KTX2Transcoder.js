@@ -1,6 +1,6 @@
-import CompressedTextureBuffer from "../Core/CompressedTextureBuffer.js";
-import defined from "../Core/defined.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
+import CompressedTextureBuffer from "./CompressedTextureBuffer.js";
+import defined from "./defined.js";
+import TaskProcessor from "./TaskProcessor.js";
 
 /**
  * Transcodes KTX2 textures using web workers.

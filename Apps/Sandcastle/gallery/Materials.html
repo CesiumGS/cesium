@@ -367,6 +367,11 @@
             {
               text: "ETC1S Compressed Image",
               onselect: function () {
+                if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+                  window.alert(
+                    "This browser does not support Basis Universal compressed textures"
+                  );
+                }
                 toggleRectangleVisibility();
                 applyETC1SCompressedTextureMaterial(rectangle, scene);
                 Sandcastle.highlight(applyETC1SCompressedTextureMaterial);
@@ -375,6 +380,11 @@
             {
               text: "UASTC Compressed Image",
               onselect: function () {
+                if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+                  window.alert(
+                    "This browser does not support Basis Universal compressed textures"
+                  );
+                }
                 toggleRectangleVisibility();
                 applyUASTCCompressedTextureMaterial(rectangle, scene);
                 Sandcastle.highlight(applyUASTCCompressedTextureMaterial);
@@ -604,12 +614,6 @@
 
         var viewer = new Cesium.Viewer("cesiumContainer");
         var scene = viewer.scene;
-
-        if (!Cesium.FeatureDetection.supportsBasis(scene)) {
-          window.alert(
-            "This browser does not support the Basis Universal format"
-          );
-        }
 
         createPrimitives(scene);
         createButtons(scene);

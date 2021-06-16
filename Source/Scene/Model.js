@@ -2920,7 +2920,7 @@ function createTexture(gltfTexture, model, context) {
       flipY: false,
     });
     // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-    if (mipmap) {
+    if (true || mipmap) {
       tx.generateMipmap();
     }
   }

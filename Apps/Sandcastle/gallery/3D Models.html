@@ -39,12 +39,6 @@
           shouldAnimate: true,
         });
 
-        if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
-          window.alert(
-            "This browser does not support the Basis Universal format"
-          );
-        }
-
         function createModel(url, height) {
           viewer.entities.removeAll();
 
@@ -142,6 +136,11 @@
           {
             text: "KTX2 Compressed Balloon",
             onselect: function () {
+              if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
+                window.alert(
+                  "This browser does not support Basis Universal compressed textures"
+                );
+              }
               createModel(
                 "../../SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
                 1000.0

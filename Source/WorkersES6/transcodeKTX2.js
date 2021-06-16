@@ -1,6 +1,6 @@
 /* global require */
 import defined from "../Core/defined.js";
-import parseKTX2 from "../Scene/parseKTX2.js";
+import parseKTX2 from "../Core/parseKTX2.js";
 
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -14,7 +14,6 @@ function transcode(parameters) {
 
 function initWorker(compiledModule) {
   transcoderModule = compiledModule;
-  // transcoderModule.initTranscoders();
   transcoderModule.initializeBasis();
 
   self.onmessage = createTaskProcessorWorker(transcode);
