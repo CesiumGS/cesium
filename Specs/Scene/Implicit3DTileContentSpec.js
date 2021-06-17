@@ -589,27 +589,45 @@ describe(
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
       };
 
-      it("throws if implicitTileset is undefined", function () {
+      it("throws if parentIsPlaceholderTile is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2(undefined, {}, false, 0);
+          deriveBoundingVolumeS2(undefined, {}, 0, 0, 0, 0, 0);
         }).toThrowDeveloperError();
       });
 
       it("throws if parentTile is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2({}, undefined, false, 0);
-        }).toThrowDeveloperError();
-      });
-
-      it("throws if parentIsPlaceholderTile is undefined", function () {
-        expect(function () {
-          deriveBoundingVolumeS2({}, {}, undefined, 0);
+          deriveBoundingVolumeS2(false, undefined, 0, 0, 0, 0, 0);
         }).toThrowDeveloperError();
       });
 
       it("throws if childIndex is undefined", function () {
         expect(function () {
-          deriveBoundingVolumeS2({}, {}, false, undefined);
+          deriveBoundingVolumeS2(false, {}, undefined, 0, 0, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if level is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, undefined, 0, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if x is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, 0, undefined, 0, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if y is undefined", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, 0, 0, undefined, 0);
+        }).toThrowDeveloperError();
+      });
+
+      it("throws if z is defined but not a number", function () {
+        expect(function () {
+          deriveBoundingVolumeS2(false, {}, 0, 0, 0, 0, "");
         }).toThrowDeveloperError();
       });
 
@@ -618,9 +636,12 @@ describe(
           _boundingVolume: simpleBoundingVolumeS2Cell,
         };
         var result = deriveBoundingVolumeS2(
-          implicitTilesetS2,
-          placeholderTile,
           true,
+          placeholderTile,
+          0,
+          0,
+          0,
+          0,
           0
         );
         expect(result).toEqual(implicitTilesetS2.boundingVolume);
@@ -636,12 +657,24 @@ describe(
           minimumHeight: 0,
           maximumHeight: 10,
         };
-        var result = deriveBoundingVolumeS2(
-          implicitTilesetS2,
-          parentTile,
-          false,
-          0
-        );
+        var result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
+        expect(result).toEqual({
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected,
+          },
+        });
+
+        parentTile._boundingVolume = new TileBoundingS2Cell({
+          token: "3",
+          minimumHeight: 0,
+          maximumHeight: 10,
+        });
+        expected = {
+          token: "24",
+          minimumHeight: 0,
+          maximumHeight: 10,
+        };
+        result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
         expect(result).toEqual({
           extensions: {
             "3DTILES_bounding_volume_S2": expected,
@@ -664,23 +697,13 @@ describe(
           minimumHeight: 5,
           maximumHeight: 10,
         };
-        var result0 = deriveBoundingVolumeS2(
-          implicitTilesetS2,
-          parentTile,
-          false,
-          0
-        );
+        var result0 = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0, 0);
         expect(result0).toEqual({
           extensions: {
             "3DTILES_bounding_volume_S2": expected0,
           },
         });
-        var result1 = deriveBoundingVolumeS2(
-          implicitTilesetS2,
-          parentTile,
-          false,
-          4
-        );
+        var result1 = deriveBoundingVolumeS2(false, parentTile, 4, 1, 0, 0, 0);
         expect(result1).toEqual({
           extensions: {
             "3DTILES_bounding_volume_S2": expected1,

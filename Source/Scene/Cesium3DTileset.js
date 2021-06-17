@@ -36,7 +36,7 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
@@ -1751,6 +1751,10 @@ Cesium3DTileset.prototype.loadTileset = function (
     throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
   }
 
+  if (defined(tilesetJson.extensionsRequired)) {
+    Cesium3DTileset.checkSupportedExtensions(tilesetJson.extensionsRequired);
+  }
+
   var statistics = this._statistics;
 
   var tilesetVersion = asset.tilesetVersion;
@@ -1814,7 +1818,7 @@ Cesium3DTileset.prototype.loadTileset = function (
  * @private
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
-  if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+  if (hasExtension(tileHeader, "3DTILES_implicit_tiling")) {
     var metadataSchema = defined(tileset.metadata)
       ? tileset.metadata.schema
       : undefined;
@@ -1873,7 +1877,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {
-  if (!has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
+  if (!hasExtension(tilesetJson, "3DTILES_metadata")) {
     return when.resolve(tilesetJson);
   }
 
@@ -2802,6 +2806,34 @@ Cesium3DTileset.prototype.destroy = function () {
 
   this._root = undefined;
   return destroyObject(this);
+};
+
+Cesium3DTileset.supportedExtensions = {
+  "3DTILES_metadata": true,
+  "3DTILES_implicit_tiling": true,
+  "3DTILES_content_gltf": true,
+  "3DTILES_multiple_contents": true,
+  "3DTILES_bounding_volume_S2": true,
+  "3DTILES_batch_table_hierarchy": true,
+  "3DTILES_draco_point_compression": true,
+};
+
+/**
+ * Checks to see if a given extension is supported by Cesium3DTileset. If
+ * the extension is not supported by Cesium3DTileset, it throws a RuntimeError.
+ *
+ * @param {Object} extensionsRequired The extensions we wish to check
+ *
+ * @private
+ */
+Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
+  for (var i = 0; i < extensionsRequired.length; i++) {
+    if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
+      throw new RuntimeError(
+        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+      );
+    }
+  }
 };
 
 /**
