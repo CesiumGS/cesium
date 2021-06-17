@@ -1371,16 +1371,14 @@ describe(
       });
     });
 
-    fit("renders textured box with embedded KTX2 texture with mipmap", function () {
+    it("renders textured box with embedded KTX2 texture with mipmap", function () {
+      var gl = scene.context._gl;
+      spyOn(gl, "compressedTexImage2D").and.callThrough();
       return loadModel(texturedBoxKTX2MipmapUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
-        var gl = scene.context._gl;
-        spyOn(gl, "compressedTexImage2D").and.callThrough();
-
         verifyRender(m);
-
-        expect(gl.compressedTexImage2D.calls.count()).toEqual(1);
+        expect(gl.compressedTexImage2D.calls.count()).toEqual(9);
         expect(Object.keys(m._rendererResources.textures).length).toBe(1);
         primitives.remove(m);
       });
