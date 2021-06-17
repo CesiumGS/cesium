@@ -46,8 +46,8 @@ var GltfLoaderState = {
   LOADED: 2,
   PROCESSING: 3,
   PROCESSED: 4,
-  READY: 4,
-  FAILED: 5,
+  READY: 5,
+  FAILED: 6,
 };
 
 /**

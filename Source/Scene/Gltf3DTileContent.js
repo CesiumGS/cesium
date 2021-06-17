@@ -8,7 +8,7 @@ import when from "../ThirdParty/when.js";
 import GltfLoader from "./GltfLoader.js";
 //import Model from "./Model.js";
 //import ModelAnimationLoop from "./ModelAnimationLoop.js";
-import NewModel from "./NewModel.js";
+import Model from "./Model2.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
@@ -141,7 +141,7 @@ function initialize(content, gltf) {
   loader.promise
     .then(function (loader) {
       console.log(loader);
-      var model = new NewModel({
+      var model = new Model({
         loader: loader,
       });
       model._readyPromise.then(function () {
