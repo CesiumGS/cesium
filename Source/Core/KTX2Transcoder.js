@@ -83,7 +83,7 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
       return result;
     })
     .otherwise(function (error) {
-      console.log(error.message);
+      throw error;
     });
 };
 
