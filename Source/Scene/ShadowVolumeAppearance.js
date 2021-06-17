@@ -64,6 +64,11 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
       materialShaderSource.indexOf("materialInput.st") !== -1;
   }
 
+  if (appearance.material.type == "WrapImage") {
+    pickShaderDependencies.requiresVertexTextureCoords = true;
+    colorShaderDependencies.requiresVertexTextureCoords = true;
+  }
+
   this._colorShaderDependencies = colorShaderDependencies;
   this._pickShaderDependencies = pickShaderDependencies;
   this._appearance = appearance;
@@ -97,7 +102,9 @@ ShadowVolumeAppearance.prototype.createFragmentShader = function (
   if (dependencies.requiresWC) {
     defines.push("REQUIRES_WC");
   }
-  if (dependencies.requiresTextureCoordinates) {
+  if (
+    dependencies.requiresTextureCoordinates /*&& !dependencies.requiresVertexTextureCoords*/
+  ) {
     defines.push("TEXTURE_COORDINATES");
   }
   if (this._extentsCulling) {
@@ -108,6 +115,9 @@ ShadowVolumeAppearance.prototype.createFragmentShader = function (
   }
   if (appearance instanceof PerInstanceColorAppearance) {
     defines.push("PER_INSTANCE_COLOR");
+  }
+  if (dependencies.requiresVertexTextureCoords) {
+    defines.push("VERTEX_TEXTURE_COORDS");
   }
 
   // Material inputs. Use of parameters in the material is different
@@ -122,7 +132,7 @@ ShadowVolumeAppearance.prototype.createFragmentShader = function (
   if (dependencies.tangentToEyeMatrix) {
     defines.push("USES_TANGENT_TO_EYE");
   }
-  if (dependencies.st) {
+  if (dependencies.st && !dependencies.requiresVertexTextureCoords) {
     defines.push("USES_ST");
   }
 
@@ -313,6 +323,10 @@ function createShadowVolumeAppearanceVS(
     if (columbusView2D) {
       allDefines.push("COLUMBUS_VIEW_2D");
     }
+  }
+
+  if (shaderDependencies.requiresVertexTextureCoords) {
+    allDefines.push("VERTEX_TEXTURE_COORDS");
   }
 
   return new ShaderSource({

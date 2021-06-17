@@ -90,7 +90,7 @@ MaterialProperty.getValue = function (time, materialProperty, material) {
       if (!defined(material) || material.type !== type) {
         material = Material.fromType(type);
       }
-      materialProperty.getValue(time, material.uniforms);
+      materialProperty.getValue(time, material.uniforms, material);
       return material;
     }
   }

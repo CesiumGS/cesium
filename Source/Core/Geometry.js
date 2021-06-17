@@ -227,6 +227,13 @@ var enuRotationMatrixScratch = new Matrix4();
 var rotation2DScratch = new Matrix2();
 
 /**
+ * Вернуть массив вершин (меш сети), в CEF координатах (по 3 на вершину)
+ **/
+Geometry.prototype.getVertexes = function () {
+  return this.attributes.position.values;
+};
+
+/**
  * For remapping texture coordinates when rendering GroundPrimitives with materials.
  * GroundPrimitive texture coordinates are computed to align with the cartographic coordinate system on the globe.
  * However, EllipseGeometry, RectangleGeometry, and PolygonGeometry all bake rotations to per-vertex texture coordinates

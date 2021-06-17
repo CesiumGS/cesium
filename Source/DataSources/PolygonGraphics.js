@@ -6,6 +6,8 @@ import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 import ConstantProperty from "./ConstantProperty.js";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
+import WrapImageMaterialProperty from "./WrapImageMaterialProperty.js";
+import Resource from "../Core/Resource.js";
 
 function createPolygonHierarchyProperty(value) {
   if (Array.isArray(value)) {
@@ -357,7 +359,31 @@ PolygonGraphics.prototype.merge = function (source) {
   this.stRotation = defaultValue(this.stRotation, source.stRotation);
   this.granularity = defaultValue(this.granularity, source.granularity);
   this.fill = defaultValue(this.fill, source.fill);
-  this.material = defaultValue(this.material, source.material);
+  if (typeof source.material.wrapImage != "undefined") {
+    //текстура материала натягивается на геометрию с учетом текстурных координат
+    let value = source.material.wrapImage;
+    if (
+      typeof value === "string" ||
+      value instanceof Resource ||
+      value instanceof HTMLCanvasElement ||
+      value instanceof HTMLVideoElement
+    ) {
+      this.material = new WrapImageMaterialProperty({
+        image: value,
+        setupUniform: source.material.setupUniform,
+      });
+      //      this.material.image = value;
+    } else {
+      throw new DeveloperError(
+        "Unable to infer material type (required: URL or Resource or HTMLCanvasElement or HTMLVideoElement), but return: " +
+          value
+      );
+    }
+    this.material = defaultValue(this.material, source.material.wrapImage);
+  } else {
+    this.material = defaultValue(this.material, source.material);
+  }
+
   this.outline = defaultValue(this.outline, source.outline);
   this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);

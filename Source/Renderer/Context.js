@@ -1146,6 +1146,21 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   //>>includeEnd('debug');
 
   context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
+  if (
+    drawCommand.owner &&
+    drawCommand.owner.appearance &&
+    drawCommand.owner.appearance.material &&
+    drawCommand.owner.appearance.material.processUniform
+  ) {
+    drawCommand.owner.appearance.material.processUniform(
+      drawCommand.owner.geometryInstances
+        ? drawCommand.owner.geometryInstances.geometry
+        : undefined,
+      uniformMap,
+      drawCommand.owner.appearance.material,
+      context.uniformState
+    );
+  }
   shaderProgram._setUniforms(
     uniformMap,
     context._us,

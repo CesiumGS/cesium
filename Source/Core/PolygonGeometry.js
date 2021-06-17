@@ -1303,6 +1303,11 @@ PolygonGeometry.createShadowVolume = function (
   });
 };
 
+/**Массив вершин, образующих контур полигона, без замыкающей точки**/
+PolygonGeometry.prototype.ringVertexes = function () {
+  return this._polygonHierarchy ? this._polygonHierarchy.positions : undefined;
+};
+
 function textureCoordinateRotationPoints(polygonGeometry) {
   var stRotation = -polygonGeometry._stRotation;
   if (stRotation === 0.0) {

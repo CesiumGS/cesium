@@ -1385,6 +1385,14 @@ function loadSynchronous(primitive, frameState) {
       createdGeometry = geometry.constructor.createGeometry(geometry);
     }
 
+    if (
+      primitive &&
+      primitive.appearance &&
+      primitive.appearance.material &&
+      primitive.appearance.material.processGeometry
+    ) {
+      primitive.appearance.material.processGeometry(geometry, createdGeometry);
+    }
     clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
     instanceIds.push(instance.id);
   }

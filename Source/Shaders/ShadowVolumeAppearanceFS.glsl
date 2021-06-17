@@ -15,6 +15,17 @@ varying vec3 v_uMaxAndInverseDistance;
 varying vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
 
+// Transmitting texture coordinates from geometry vertexes
+// This feature isn't compatible with TEXTURE_COORDINATES and USES_ST
+#ifdef VERTEX_TEXTURE_COORDS
+//Coordinates of textured polygon vertexes in EyeSpace
+uniform vec2 anchorEyeCoords[4];
+//Texture coordinates of polygon vertexes
+uniform vec2 anchorTCoords[4];
+// Matrix transforms Cesium view coordinates to OES textures coordinates
+uniform mat4 cesiumView2OesTexture;
+#endif
+
 #ifdef PER_INSTANCE_COLOR
 varying vec4 v_color;
 #endif
@@ -133,6 +144,14 @@ void main(void)
     materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoordinate, normalEC);
 #endif
 
+#ifdef VERTEX_TEXTURE_COORDS
+          if(!gl_FrontFacing)
+            discard;
+
+        vec4 tCoord = cesiumView2OesTexture * eyeCoordinate;
+        materialInput.st = 0.5 * ((1.0 / tCoord.z) * tCoord.xy + vec2(1.0, 1.0));
+#endif
+
 #ifdef USES_ST
     // Remap texture coordinates from computed (approximately aligned with cartographic space) to the desired
     // texture coordinate system, which typically forms a tight oriented bounding box around the geometry.
@@ -146,7 +165,14 @@ void main(void)
 #ifdef FLAT
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #else // FLAT
+    const float lineEps = 0.001;
+//    gl_FragColor = vec4(materialInput.st, 0.0, 1.0);
     gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
+    // grid
+    for (float i = 0.0; i<1.1; i+=0.1) {
+        if ((abs(materialInput.st.x - i) < lineEps) || (abs(materialInput.st.y - i) < lineEps)) {gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);}
+    }
+    if ((abs(materialInput.st.x - 0.5) < lineEps) || (abs(materialInput.st.y - 0.5) < lineEps)) {gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);}
 #endif // FLAT
 
     // Premultiply alpha. Required for classification primitives on translucent globe.

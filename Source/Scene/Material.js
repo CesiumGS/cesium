@@ -36,6 +36,10 @@ import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.j
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import WaterMaterial from "../Shaders/Materials/Water.js";
 import when from "../ThirdParty/when.js";
+import GeometryAttribute from "../Core/GeometryAttribute.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
  * A Material defines surface appearance through a combination of diffuse, specular,
@@ -593,6 +597,9 @@ function initializeMaterial(options, result) {
     translucent = cachedMaterial.translucent;
   }
 
+  result.processGeometry = result._template.processGeometry;
+  result.processUniform = result._template.processUniform;
+
   // Make sure the template has no obvious errors. More error checking happens later.
   checkForTemplateErrors(result);
 
@@ -669,6 +676,8 @@ var templateProperties = [
   "uniforms",
   "components",
   "source",
+  "processGeometry", // позволяет материалу повлиять на геометрию отображаемого объекта
+  "processUniform", // позволяет материалу создать дополнительные перменные шейдера напрямую
 ];
 var componentProperties = [
   "diffuse",
@@ -1245,6 +1254,39 @@ Material._materialCache.addMaterial(Material.ImageType, {
 });
 
 /**
+ * Материал, для которого можно задать привязку вершин многоугольника к текстурным координатам.
+ */
+Material.WrapImageType = "WrapImage";
+Material._materialCache.addMaterial(Material.WrapImageType, {
+  fabric: {
+    type: Material.WrapImageType,
+    uniforms: {
+      image: Material.DefaultImageId,
+      repeat: new Cartesian2(1.0, 1.0),
+      color: new Color(1.0, 1.0, 1.0, 1.0),
+    },
+    components: {
+      diffuse: "texture2D(image, materialInput.st).rgb * color.rgb",
+      alpha: "texture2D(image, materialInput.st).a * color.a",
+    },
+    // позволяет обработать геометрию перед отображением кадра, чтобы задать дополнительные атрибуты вершин для шейдера
+    processGeometry: function (polygonGeometry, glGeometry) {},
+
+    processUniform: function (
+      polygonGeometry,
+      uniformMap,
+      materialInstance,
+      uniformState
+    ) {
+      this.setupUniform(uniformMap, uniformState);
+    },
+  },
+  translucent: function (material) {
+    return material.uniforms.color.alpha < 1.0;
+  },
+});
+
+/**
  * Gets the name of the diffuce map material.
  * @type {String}
  * @readonly
@@ -1485,7 +1527,7 @@ Material._materialCache.addMaterial(Material.WaterType, {
   translucent: function (material) {
     var uniforms = material.uniforms;
     return (
-      uniforms.baseWaterColor.alpha < 1.0 || uniforms.blendColor.alpha < 1.0
+      uniforms.ffbaseWaterColor.alpha < 1.0 || uniforms.blendColor.alpha < 1.0
     );
   },
 });
