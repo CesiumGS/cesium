@@ -318,11 +318,15 @@ var FeatureDetection = {
   typedArrayTypes: typedArrayTypes,
 };
 
-function supportsBasis(scene) {
+/**
+ * Detects whether the current browser supports Basis Universal textures and the web assembly modules needed to transcode them.
+ *
+ * @param {Scene} scene
+ * @returns {Boolean} true if the browser supports web assembly modules and the scene supports Basis Universal textures, false if not.
+ */
+FeatureDetection.supportsBasis = function (scene) {
   return FeatureDetection.supportsWebAssembly() && scene.context.supportsBasis;
-}
-
-FeatureDetection.supportsBasis = supportsBasis;
+};
 
 /**
  * Detects whether the current browser supports the full screen standard.

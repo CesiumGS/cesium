@@ -759,7 +759,7 @@ Object.defineProperties(Context.prototype, {
    * access to ASTC compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_astc/}
    */
   astc: {
     get: function () {
