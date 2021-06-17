@@ -1944,7 +1944,9 @@ function imageLoad(model, textureId) {
     var mipLevels;
     if (Array.isArray(image)) {
       // highest detail mip should be level 0
-      mipLevels = image.slice(1, image.length);
+      mipLevels = image.slice(1, image.length).map(function (mipLevel) {
+        return mipLevel.bufferView;
+      });
       image = image[0];
     }
 
@@ -2891,6 +2893,7 @@ function createTexture(gltfTexture, model, context) {
       context: context,
       source: {
         arrayBufferView: gltfTexture.bufferView,
+        mipLevels: gltfTexture.mipLevels,
       },
       width: gltfTexture.width,
       height: gltfTexture.height,
@@ -2932,7 +2935,7 @@ function createTexture(gltfTexture, model, context) {
       flipY: false,
     });
     // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-    if (true || mipmap) {
+    if (mipmap) {
       tx.generateMipmap();
     }
   }

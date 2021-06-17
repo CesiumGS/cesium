@@ -74,7 +74,10 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
 
 // Parser for uncompressed
 function parseUncompressed(header, result) {
-  var internalFormat = PixelFormat.RGBA;
+  var internalFormat =
+    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8
+      ? PixelFormat.RGBA
+      : PixelFormat.RGB;
   var datatype;
   if (header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_UNORM) {
     datatype = PixelDatatype.UNSIGNED_BYTE;

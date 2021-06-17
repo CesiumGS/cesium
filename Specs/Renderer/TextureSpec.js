@@ -91,7 +91,7 @@ describe(
       );
 
       promises.push(
-        loadKTX2("./Data/Images/Green64x64_Basis255.ktx2").then(function (
+        loadKTX2("./Data/Images/Green4x4Compressed.ktx2").then(function (
           image
         ) {
           greenBasisKTX2Image = image;
@@ -444,20 +444,16 @@ describe(
         },
       });
 
-      expect(texture.sizeInBytes).toBe(32);
+      expect(texture.sizeInBytes).toBe(16);
 
       expect({
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([0, 255, 0, 255]);
+      }).contextToRender([2, 255, 2, 255]);
     });
 
-    it("draws the expected KTX2 compressed texture color", function () {
-      if (!context.etc1) {
-        return;
-      }
-
+    it("draws the expected KTX2 uncompressed texture color", function () {
       texture = new Texture({
         context: context,
         pixelFormat: greenKTX2Image.internalFormat,
@@ -468,13 +464,13 @@ describe(
         },
       });
 
-      expect(texture.sizeInBytes).toBe(8);
+      expect(texture.sizeInBytes).toBe(48);
 
       expect({
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([0, 253, 0, 255]);
+      }).contextToRender([0, 255, 24, 255]);
     });
 
     it("renders with premultiplied alpha", function () {

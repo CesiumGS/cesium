@@ -44,7 +44,7 @@ loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
  * </ul>
  * </p>
  *
- * @exports loadKTX2
+ * @function loadKTX2
  *
  * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
