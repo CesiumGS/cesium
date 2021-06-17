@@ -1,0 +1,103 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "properties": {
+    "id": {
+      "minimum": 0,
+      "maximum": 9
+    },
+    "Longitude": {
+      "minimum": -1.3196959060375169,
+      "maximum": -1.3196607462778132
+    },
+    "Latitude": {
+      "minimum": 0.6988590050687061,
+      "maximum": 0.6988864387845588
+    },
+    "Height": {
+      "minimum": 6.1022464875131845,
+      "maximum": 20
+    }
+  },
+  "extensionsRequired": ["3DTILES_multiple_contents"],
+  "extensionsUsed": ["3DTILES_multiple_contents", "3DTILES_metadata"],
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "layer": {
+            "properties": {
+              "color": {
+                "type": "ARRAY",
+                "componentType": "UINT8",
+                "componentCount": 3
+              },
+              "priority": {
+                "type": "UINT8"
+              },
+              "isInstanced": {
+                "type": "BOOLEAN"
+              }
+            }
+          }
+        }
+      },
+      "groups": {
+        "buildings": {
+          "class": "layer",
+          "properties": {
+            "color": [255, 127, 0],
+            "priority": 10,
+            "isInstanced": false
+          }
+        },
+        "cubes": {
+          "class": "layer",
+          "properties": {
+            "color": [0, 255, 127],
+            "priority": 5,
+            "isInstanced": true
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 70,
+  "root": {
+    "refine": "ADD",
+    "boundingVolume": {
+      "region": [
+        -1.3197004795898053,
+        0.6988582109,
+        -1.3196595204101946,
+        0.6988897891,
+        0,
+        30
+      ]
+    },
+    "geometricError": 0,
+    "extensions": {
+      "3DTILES_multiple_contents": {
+        "content": [
+          {
+            "uri": "batched.b3dm",
+            "extensions": {
+              "3DTILES_metadata": {
+                "group": "buildings"
+              }
+            }
+          },
+          {
+            "uri": "instanced.i3dm",
+            "extensions": {
+              "3DTILES_metadata": {
+                "group": "cubes"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

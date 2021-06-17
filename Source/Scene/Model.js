@@ -47,7 +47,7 @@ import addDefaults from "../ThirdParty/GltfPipeline/addDefaults.js";
 import addPipelineExtras from "../ThirdParty/GltfPipeline/addPipelineExtras.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
+import usesExtension from "../ThirdParty/GltfPipeline/usesExtension.js";
 import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import parseGlb from "../ThirdParty/GltfPipeline/parseGlb.js";
 import updateVersion from "../ThirdParty/GltfPipeline/updateVersion.js";
@@ -625,6 +625,7 @@ function Model(options) {
   this._geometryByteLength = 0;
   this._texturesByteLength = 0;
   this._trianglesLength = 0;
+  this._pointsLength = 0;
 
   // Hold references for shader reconstruction.
   // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
@@ -1031,6 +1032,17 @@ Object.defineProperties(Model.prototype, {
   trianglesLength: {
     get: function () {
       return this._trianglesLength;
+    },
+  },
+
+  /**
+   * Gets the model's point count.
+   *
+   * @private
+   */
+  pointsLength: {
+    get: function () {
+      return this._pointsLength;
     },
   },
 
@@ -1795,7 +1807,7 @@ function parseBufferViews(model) {
 function parseTechniques(model) {
   // retain references to gltf techniques
   var gltf = model.gltf;
-  if (!hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (!usesExtension(gltf, "KHR_techniques_webgl")) {
     return;
   }
 
@@ -1891,7 +1903,7 @@ function parseArticulations(model) {
 
   var gltf = model.gltf;
   if (
-    !hasExtension(gltf, "AGI_articulations") ||
+    !usesExtension(gltf, "AGI_articulations") ||
     !defined(gltf.extensions) ||
     !defined(gltf.extensions.AGI_articulations)
   ) {
@@ -3793,6 +3805,10 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       count
     );
 
+    if (primitive.mode === PrimitiveType.POINTS) {
+      model._pointsLength += count;
+    }
+
     var um = uniformMaps[primitive.material];
     var uniformMap = um.uniformMap;
     if (defined(um.jointMatrixUniformName)) {
@@ -5489,10 +5505,6 @@ Model.prototype.update = function (frameState) {
     // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
     var clippingPlanes = this._clippingPlanes;
     var currentClippingPlanesState = 0;
-    var useClippingPlanes =
-      defined(clippingPlanes) &&
-      clippingPlanes.enabled &&
-      clippingPlanes.length > 0;
 
     // If defined, use the reference matrix to transform miscellaneous properties like
     // clipping planes and IBL instead of the modelMatrix. This is so that when
@@ -5500,7 +5512,7 @@ Model.prototype.update = function (frameState) {
     // a common reference (such as the root).
     var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
 
-    if (useClippingPlanes) {
+    if (isClippingEnabled(this)) {
       var clippingPlanesMatrix = scratchClippingPlanesMatrix;
       clippingPlanesMatrix = Matrix4.multiply(
         context.uniformState.view3D,

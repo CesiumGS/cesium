@@ -1,6 +1,10 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Color,
+  HeadingPitchRange,
+  MetadataClass,
+  GroupMetadata,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -137,6 +141,47 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, compositeUrl);
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              type: "STRING",
+            },
+            height: {
+              type: "FLOAT32",
+            },
+          },
+        },
+      });
+      var groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigning groupMetadata propagates to inner contents", function () {
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
+
+            var innerContents = content.innerContents;
+            for (var i = 0; i < innerContents.length; i++) {
+              expect(innerContents[i].groupMetadata).toBe(groupMetadata);
+            }
+          }
+        );
+      });
     });
   },
   "WebGL"

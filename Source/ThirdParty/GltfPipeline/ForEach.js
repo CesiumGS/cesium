@@ -1,4 +1,4 @@
-import hasExtension from './hasExtension.js'
+import usesExtension from './usesExtension.js'
 import defined from '../../Core/defined.js'
 
     /**
@@ -315,7 +315,7 @@ import defined from '../../Core/defined.js'
     };
 
     ForEach.program = function(gltf, handler) {
-        if (hasExtension(gltf, 'KHR_techniques_webgl')) {
+        if (usesExtension(gltf, 'KHR_techniques_webgl')) {
             return ForEach.object(gltf.extensions.KHR_techniques_webgl.programs, handler);
         }
 
@@ -331,7 +331,7 @@ import defined from '../../Core/defined.js'
     };
 
     ForEach.shader = function(gltf, handler) {
-        if (hasExtension(gltf, 'KHR_techniques_webgl')) {
+        if (usesExtension(gltf, 'KHR_techniques_webgl')) {
             return ForEach.object(gltf.extensions.KHR_techniques_webgl.shaders, handler);
         }
 
@@ -397,7 +397,7 @@ import defined from '../../Core/defined.js'
     };
 
     ForEach.technique = function(gltf, handler) {
-        if (hasExtension(gltf, 'KHR_techniques_webgl')) {
+        if (usesExtension(gltf, 'KHR_techniques_webgl')) {
             return ForEach.object(gltf.extensions.KHR_techniques_webgl.techniques, handler);
         }
 
