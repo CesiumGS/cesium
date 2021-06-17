@@ -1,9 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
@@ -221,10 +220,7 @@ function getMimeTypeFromTypedArray(typedArray) {
     return "image/png";
   } else if (header[0] === 0xab && header[1] === 0x4b) {
     // See http://github.khronos.org/KTX-Specification/#_identifier
-    return "image/ktx";
-  } else if (header[0] === 0x48 && header[1] === 0x78) {
-    // See https://github.com/BinomialLLC/crunch/blob/671a0648c8a440b4397f1d96ea5cf5700f830417/inc/crn_decomp.h#L268
-    return "image/crn";
+    return "image/ktx2";
   } else if (header[0] === 0x73 && header[1] === 0x42) {
     // See https://github.com/BinomialLLC/basis_universal/blob/ed135f03a05de315dd7ec7c1b8ef0589099b3e52/spec/basis_spec.txt#L125
     return "image/basis";
@@ -247,12 +243,9 @@ function getMimeTypeFromTypedArray(typedArray) {
 
 function loadImageFromBufferTypedArray(typedArray) {
   var mimeType = getMimeTypeFromTypedArray(typedArray);
-  if (mimeType === "image/ktx") {
+  if (mimeType === "image/ktx2") {
     // Resolves to a CompressedTextureBuffer
-    return loadKTX(typedArray);
-  } else if (mimeType === "image/crn") {
-    // Resolves to a CompressedTextureBuffer
-    return loadCRN(typedArray);
+    return loadKTX2(typedArray);
   }
   // Resolves to an Image or ImageBitmap
   return GltfImageLoader._loadImageFromTypedArray({
@@ -262,17 +255,13 @@ function loadImageFromBufferTypedArray(typedArray) {
   });
 }
 
-var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
-var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
+var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function loadImageFromUri(resource) {
   var uri = resource.url;
-  if (ktxRegex.test(uri)) {
+  if (ktx2Regex.test(uri)) {
     // Resolves to a CompressedTextureBuffer
-    return loadKTX(resource);
-  } else if (crnRegex.test(uri)) {
-    // Resolves to a CompressedTextureBuffer
-    return loadCRN(resource);
+    return loadKTX2(resource);
   }
   // Resolves to an ImageBitmap or Image
   return resource.fetchImage();
