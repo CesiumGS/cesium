@@ -170,8 +170,8 @@ Expression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionHeader Header of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader names.
+ * @param {String} functionSignature Signature of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -180,7 +180,7 @@ Expression.prototype.evaluateColor = function (feature, result) {
  * @private
  */
 Expression.prototype.getShaderFunction = function (
-  functionHeader,
+  functionSignature,
   variableSubstitutionMap,
   shaderState,
   returnType
@@ -193,12 +193,13 @@ Expression.prototype.getShaderFunction = function (
   shaderExpression =
     returnType +
     " " +
-    functionHeader +
-    "{ \n" +
+    functionSignature +
+    "\n" +
+    "{\n" +
     "    return " +
     shaderExpression +
-    "; \n" +
-    "} \n";
+    ";\n" +
+    "}\n";
 
   return shaderExpression;
 };
@@ -207,7 +208,7 @@ Expression.prototype.getShaderFunction = function (
  * Gets the shader expression for this expression.
  * Returns undefined if the shader expression can't be generated from this expression.
  *
- * @param {Object} variableSubstitutionMap Maps variable names to shader names.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader expression.
@@ -233,7 +234,14 @@ Expression.prototype.getShaderExpression = function (
  */
 Expression.prototype.getVariables = function () {
   var variables = [];
+
   this._runtimeAst.getVariables(variables);
+
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
+
   return variables;
 };
 

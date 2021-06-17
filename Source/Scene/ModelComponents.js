@@ -38,7 +38,8 @@ function Quantization() {
 
   /**
    * The range used to convert buffer values to normalized values [0.0, 1.0]
-   * This is typically computed as (1 << quantizationBits) - 1
+   * This is typically computed as (1 << quantizationBits) - 1.
+   * For oct-encoded values this value is a single Number.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -47,7 +48,7 @@ function Quantization() {
 
   /**
    * The bottom-left corner of the quantization volume. Not applicable for oct encoded attributes.
-   * The attribute type should match the math type - e.g. if the attribute type
+   * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the offset should be a Cartesian4.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
@@ -57,7 +58,7 @@ function Quantization() {
 
   /**
    * The dimensions of the quantization volume. Not applicable for oct encoded attributes.
-   * The attribute type should match the math type - e.g. if the attribute type
+   * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
@@ -358,12 +359,12 @@ function FeatureIdTexture() {
   this.featureTableId = undefined;
 
   /**
-   * The texture containing feature IDs.
+   * The texture reader containing feature IDs.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
-  this.texture = undefined;
+  this.textureReader = undefined;
 }
 
 /**
@@ -646,14 +647,14 @@ function Components() {
 }
 
 /**
- * A texture.
+ * Information about a GPU texture, including the texture itself
  *
- * @alias ModelComponents.Texture
+ * @alias ModelComponents.TextureReader
  * @constructor
  *
  * @private
  */
-function Texture() {
+function TextureReader() {
   /**
    * The underlying GPU texture. The {@link Texture} contains the sampler.
    *
@@ -697,17 +698,17 @@ function Texture() {
  */
 function MetallicRoughness() {
   /**
-   * The base color texture.
+   * The base color texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.baseColorTexture = undefined;
 
   /**
-   * The metallic roughness texture.
+   * The metallic roughness texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.metallicRoughnessTexture = undefined;
@@ -772,17 +773,17 @@ MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR = 1.0;
  */
 function SpecularGlossiness() {
   /**
-   * The diffuse texture.
+   * The diffuse texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.diffuseTexture = undefined;
 
   /**
-   * The specular glossiness texture.
+   * The specular glossiness texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.specularGlossinessTexture = undefined;
@@ -860,25 +861,25 @@ function Material() {
   this.specularGlossiness = undefined;
 
   /**
-   * The emissive texture.
+   * The emissive texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.emissiveTexture = undefined;
 
   /**
-   * The normal texture.
+   * The normal texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.normalTexture = undefined;
 
   /**
-   * The occlusion texture.
+   * The occlusion texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.occlusionTexture = undefined;
@@ -946,7 +947,7 @@ ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
 ModelComponents.Components = Components;
-ModelComponents.Texture = Texture;
+ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;
 ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Material = Material;

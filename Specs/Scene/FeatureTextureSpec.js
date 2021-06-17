@@ -8,29 +8,38 @@ import {
 import createContext from "../createContext.js";
 
 describe("Scene/FeatureTexture", function () {
-  var classDefinition = new MetadataClass({
-    id: "map",
-    class: {
-      properties: {
-        color: {
-          type: "ARRAY",
-          componentType: "UINT8",
-          componentCount: 3,
-        },
-        intensity: {
-          type: "UINT8",
-        },
-        ortho: {
-          type: "UINT8",
-          normalized: true,
+  var classDefinition;
+  var context;
+  var texture0;
+  var texture1;
+  var extras;
+  var extensions;
+  var featureTexture;
+
+  beforeAll(function () {
+    classDefinition = new MetadataClass({
+      id: "map",
+      class: {
+        properties: {
+          color: {
+            type: "ARRAY",
+            componentType: "UINT8",
+            componentCount: 3,
+          },
+          intensity: {
+            type: "UINT8",
+          },
+          ortho: {
+            type: "UINT8",
+            normalized: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  it("creates feature texture", function () {
-    var context = createContext();
-    var texture0 = new Texture({
+    context = createContext();
+
+    texture0 = new Texture({
       context: context,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
@@ -40,7 +49,8 @@ describe("Scene/FeatureTexture", function () {
         height: 1,
       },
     });
-    var texture1 = new Texture({
+
+    texture1 = new Texture({
       context: context,
       pixelFormat: PixelFormat.LUMINANCE,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
@@ -51,11 +61,11 @@ describe("Scene/FeatureTexture", function () {
       },
     });
 
-    var extras = {
+    extras = {
       description: "Extra",
     };
 
-    var extensions = {
+    extensions = {
       EXT_other_extension: {},
     };
 
@@ -87,7 +97,8 @@ describe("Scene/FeatureTexture", function () {
         },
       },
     };
-    var featureTexture = new FeatureTexture({
+
+    featureTexture = new FeatureTexture({
       featureTexture: featureTextureJson,
       class: classDefinition,
       textures: {
@@ -95,14 +106,18 @@ describe("Scene/FeatureTexture", function () {
         1: texture1,
       },
     });
+  });
 
-    expect(featureTexture.class).toBe(classDefinition);
-    expect(featureTexture.extras).toBe(extras);
-    expect(featureTexture.extensions).toBe(extensions);
-
+  afterAll(function () {
     texture0.destroy();
     texture1.destroy();
     context.destroyForSpecs();
+  });
+
+  it("creates feature texture", function () {
+    expect(featureTexture.class).toBe(classDefinition);
+    expect(featureTexture.extras).toBe(extras);
+    expect(featureTexture.extensions).toBe(extensions);
   });
 
   it("constructor throws without featureTexture", function () {
@@ -129,6 +144,22 @@ describe("Scene/FeatureTexture", function () {
         featureTexture: {},
         class: classDefinition,
       });
+    }).toThrowDeveloperError();
+  });
+
+  it("getProperty returns feature texture property", function () {
+    expect(featureTexture.getProperty("color")).toBeDefined();
+    expect(featureTexture.getProperty("intensity")).toBeDefined();
+    expect(featureTexture.getProperty("ortho")).toBeDefined();
+  });
+
+  it("getProperty returns undefined if the property doesn't exist", function () {
+    expect(featureTexture.getProperty("other")).toBeUndefined();
+  });
+
+  it("getProperty throws if propertyId is undefined", function () {
+    expect(function () {
+      featureTexture.getProperty(undefined);
     }).toThrowDeveloperError();
   });
 });

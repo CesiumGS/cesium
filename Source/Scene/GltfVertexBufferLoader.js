@@ -204,22 +204,25 @@ function getQuantizationInformation(
   quantization.normalizationRange = MathType.unpack(
     arrayFill(new Array(componentCount), normalizationRange)
   );
+  quantization.type = type;
 
   if (quantization.octEncoded) {
     quantization.type = AttributeType.VEC2;
+    quantization.normalizationRange = normalizationRange;
+  } else if (MathType === Number) {
+    quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
+    quantization.quantizedVolumeDimensions = dracoQuantization.range;
+    quantization.normalizationRange = normalizationRange;
   } else {
-    if (MathType === Number) {
-      quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
-      quantization.quantizedVolumeDimensions = dracoQuantization.range;
-    } else {
-      quantization.quantizedVolumeOffset = MathType.unpack(
-        dracoQuantization.minValues
-      );
-      quantization.quantizedVolumeDimensions = MathType.unpack(
-        arrayFill(new Array(componentCount), dracoQuantization.range)
-      );
-    }
-    quantization.type = type;
+    quantization.quantizedVolumeOffset = MathType.unpack(
+      dracoQuantization.minValues
+    );
+    quantization.quantizedVolumeDimensions = MathType.unpack(
+      arrayFill(new Array(componentCount), dracoQuantization.range)
+    );
+    quantization.normalizationRange = MathType.unpack(
+      arrayFill(new Array(componentCount), normalizationRange)
+    );
   }
 
   return quantization;

@@ -19,6 +19,7 @@ describe("Scene/FeatureTable", function () {
     },
     height: {
       type: "FLOAT32",
+      semantic: "HEIGHT",
     },
   };
 
@@ -88,14 +89,72 @@ describe("Scene/FeatureTable", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasProperty returns true if a property exists", function () {
+  it("hasProperty returns true if the feature has this property", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.hasProperty(0, "name")).toBe(true);
   });
 
-  it("hasProperty returns false if a property does not exist", function () {
+  it("hasProperty returns false if the feature does not have this property", function () {
     var featureTable = createFeatureTable();
     expect(featureTable.hasProperty(0, "numberOfPoints")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic throws without index", function () {
+    var featureTable = createFeatureTable();
+    expect(function () {
+      featureTable.hasPropertyBySemantic(undefined, "NAME");
+    }).toThrowDeveloperError();
+  });
+
+  it("hasPropertyBySemantic throws without semantic", function () {
+    var featureTable = createFeatureTable();
+    expect(function () {
+      featureTable.hasPropertyBySemantic(0, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("hasPropertyBySemantic returns true if the feature has a property with the given semantic", function () {
+    var featureTable = createFeatureTable();
+    expect(featureTable.hasPropertyBySemantic(0, "NAME")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic returns false if the feature does not a property with the given semantic", function () {
+    var featureTable = createFeatureTable();
+    expect(featureTable.hasPropertyBySemantic(0, "ID")).toBe(false);
+  });
+
+  it("propertyExists throws without propertyId", function () {
+    var featureTable = createFeatureTable();
+    expect(function () {
+      featureTable.propertyExists(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("propertyExists returns true if the property exists", function () {
+    var featureTable = createFeatureTable();
+    expect(featureTable.propertyExists("name")).toBe(true);
+  });
+
+  it("propertyExists returns false if the property does not exist", function () {
+    var featureTable = createFeatureTable();
+    expect(featureTable.propertyExists("numberOfPoints")).toBe(false);
+  });
+
+  it("propertyExistsBySemantic throws without semantic", function () {
+    var featureTable = createFeatureTable();
+    expect(function () {
+      featureTable.propertyExistsBySemantic(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("propertyExistsBySemantic returns true if the property exists", function () {
+    var featureTable = createFeatureTable();
+    expect(featureTable.propertyExistsBySemantic("NAME")).toBe(true);
+  });
+
+  it("propertyExistsBySemantic returns false if the property does not exist", function () {
+    var featureTable = createFeatureTable();
+    expect(featureTable.propertyExistsBySemantic("ID")).toBe(false);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
@@ -188,6 +247,29 @@ describe("Scene/FeatureTable", function () {
     }).toThrowDeveloperError();
   });
 
+  it("getPropertyTypedArrayBySemantic returns typed array", function () {
+    var featureTable = createFeatureTable();
+    var expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
+
+    expect(featureTable.getPropertyTypedArrayBySemantic("HEIGHT")).toEqual(
+      expectedTypedArray
+    );
+  });
+
+  it("getPropertyTypedArrayBySemantic returns undefined if semantic does not exist", function () {
+    var featureTable = createFeatureTable();
+
+    expect(featureTable.getPropertyTypedArrayBySemantic("ID")).toBeUndefined();
+  });
+
+  it("getPropertyTypedArrayBySemantic throws if semantic is undefined", function () {
+    var featureTable = createFeatureTable();
+
+    expect(function () {
+      featureTable.getPropertyTypedArrayBySemantic(undefined);
+    }).toThrowDeveloperError();
+  });
+
   describe("batch table compatibility", function () {
     var schemaJson = {
       classes: {
@@ -255,6 +337,8 @@ describe("Scene/FeatureTable", function () {
     };
 
     var batchTable;
+    var batchTableJsonOnly;
+
     beforeEach(function () {
       var jsonTable = new JsonMetadataTable({
         count: count,
@@ -277,6 +361,11 @@ describe("Scene/FeatureTable", function () {
         metadataTable: metadataTable,
         jsonMetadataTable: jsonTable,
         batchTableHierarchy: hierarchy,
+      });
+
+      batchTableJsonOnly = new FeatureTable({
+        count: count,
+        jsonMetadataTable: jsonTable,
       });
     });
 
@@ -323,6 +412,35 @@ describe("Scene/FeatureTable", function () {
 
     it("hasProperty returns false for unknown property", function () {
       expect(batchTable.hasProperty(0, "widgets")).toBe(false);
+    });
+
+    it("hasPropertyBySemantic returns false when there is no metadata table", function () {
+      expect(batchTableJsonOnly.hasPropertyBySemantic(0, "NAME")).toBe(false);
+    });
+
+    it("propertyExists uses feature metadata", function () {
+      expect(batchTable.propertyExists("itemId")).toBe(true);
+      expect(batchTable.propertyExists("itemCount")).toBe(true);
+    });
+
+    it("propertyExists uses JSON metadata", function () {
+      expect(batchTable.propertyExists("priority")).toBe(true);
+      expect(batchTable.propertyExists("uri")).toBe(true);
+    });
+
+    it("propertyExists uses batch table hierarchy", function () {
+      expect(batchTable.propertyExists("tireLocation")).toBe(true);
+      expect(batchTable.propertyExists("color")).toBe(true);
+      expect(batchTable.propertyExists("type")).toBe(true);
+      expect(batchTable.propertyExists("year")).toBe(true);
+    });
+
+    it("propertyExists returns false for unknown property", function () {
+      expect(batchTable.propertyExists("widgets")).toBe(false);
+    });
+
+    it("propertyExistsBySemantic returns false when there is no metadata table", function () {
+      expect(batchTableJsonOnly.propertyExistsBySemantic("NAME")).toBe(false);
     });
 
     it("getProperty uses feature metadata", function () {
@@ -405,6 +523,18 @@ describe("Scene/FeatureTable", function () {
       expect(batchTable.getPropertyTypedArray("priority")).not.toBeDefined();
       expect(
         batchTable.getPropertyTypedArray("tireLocation")
+      ).not.toBeDefined();
+    });
+
+    it("getPropertyTypedArray returns undefined when there is no metadata table", function () {
+      expect(
+        batchTableJsonOnly.getPropertyTypedArray("priority")
+      ).not.toBeDefined();
+    });
+
+    it("getPropertyTypedArrayBySemantic returns undefined when there is no metadata table", function () {
+      expect(
+        batchTableJsonOnly.getPropertyTypedArrayBySemantic("PRIORITY")
       ).not.toBeDefined();
     });
   });

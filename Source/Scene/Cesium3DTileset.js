@@ -36,7 +36,7 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
@@ -1818,7 +1818,7 @@ Cesium3DTileset.prototype.loadTileset = function (
  * @private
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
-  if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+  if (hasExtension(tileHeader, "3DTILES_implicit_tiling")) {
     var metadataSchema = defined(tileset.metadata)
       ? tileset.metadata.schema
       : undefined;
@@ -1877,7 +1877,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {
-  if (!has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
+  if (!hasExtension(tilesetJson, "3DTILES_metadata")) {
     return when.resolve(tilesetJson);
   }
 

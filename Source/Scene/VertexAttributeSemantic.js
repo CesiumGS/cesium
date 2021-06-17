@@ -93,8 +93,11 @@ function semanticToVariableName(semantic) {
       return "weights";
     case VertexAttributeSemantic.FEATURE_ID:
       return "featureId";
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("semantic is not a valid value.");
+    //>>includeEnd('debug');
   }
-  return undefined;
 }
 
 /**
@@ -122,6 +125,10 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
     case VertexAttributeSemantic.WEIGHTS:
     case VertexAttributeSemantic.FEATURE_ID:
       return true;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("semantic is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -182,6 +189,10 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
  * @private
  */
 VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("pntsSemantic", pntsSemantic);
+  //>>includeEnd('debug');
+
   switch (pntsSemantic) {
     case "POSITION":
     case "POSITION_QUANTIZED":
@@ -195,13 +206,16 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
       return VertexAttributeSemantic.NORMAL;
     case "BATCH_ID":
       return VertexAttributeSemantic.FEATURE_ID;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("pntsSemantic is not a valid value.");
+    //>>includeEnd('debug');
   }
-
-  return undefined;
 };
 
 /**
- * Gets the shader type for the given vertex attribute.
+ * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
+ * given vertex attribute.
  *
  * @param {VertexAttributeSemantic} semantic The semantic.
  *
@@ -209,7 +223,7 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
  *
  * @private
  */
-VertexAttributeSemantic.getShaderType = function (semantic) {
+VertexAttributeSemantic.getGlslType = function (semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');

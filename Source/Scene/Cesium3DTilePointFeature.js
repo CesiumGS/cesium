@@ -745,7 +745,7 @@ Cesium3DTilePointFeature.prototype.getPropertyNames = function (results) {
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a feature in the console log.

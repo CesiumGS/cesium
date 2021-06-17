@@ -135,8 +135,8 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionHeader Header of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader names.
+ * @param {String} functionSignature Signature of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -145,7 +145,7 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * @private
  */
 ConditionsExpression.prototype.getShaderFunction = function (
-  functionHeader,
+  functionSignature,
   variableSubstitutionMap,
   shaderState,
   returnType
@@ -175,24 +175,25 @@ ConditionsExpression.prototype.getShaderFunction = function (
       (i === 0 ? "if" : "else if") +
       " (" +
       condition +
-      ") \n" +
-      "    { \n" +
+      ")\n" +
+      "    {\n" +
       "        return " +
       expression +
-      "; \n" +
-      "    } \n";
+      ";\n" +
+      "    }\n";
   }
 
   shaderFunction =
     returnType +
     " " +
-    functionHeader +
-    "{ \n" +
+    functionSignature +
+    "\n" +
+    "{\n" +
     shaderFunction +
     "    return " +
     returnType +
-    "(1.0); \n" + // Return a default value if no conditions are met
-    "} \n";
+    "(1.0);\n" + // Return a default value if no conditions are met
+    "}\n";
 
   return shaderFunction;
 };
@@ -218,6 +219,11 @@ ConditionsExpression.prototype.getVariables = function () {
     variables.push.apply(variables, statement.condition.getVariables());
     variables.push.apply(variables, statement.expression.getVariables());
   }
+
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
 
   return variables;
 };

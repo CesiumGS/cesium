@@ -360,15 +360,18 @@ describe(
         var colorProperty = mapTexture.getProperty("color");
         var intensityProperty = mapTexture.getProperty("intensity");
 
-        // TODO
-        expect(colorProperty.texture.width).toBe(1);
-        expect(colorProperty.texture.height).toBe(1);
-        expect(colorProperty.texture).toBe(intensityProperty.texture);
+        expect(colorProperty.textureReader.texture.width).toBe(1);
+        expect(colorProperty.textureReader.texture.height).toBe(1);
+        expect(colorProperty.textureReader.texture).toBe(
+          intensityProperty.textureReader.texture
+        );
 
         var vegetationProperty = orthoTexture.getProperty("vegetation");
-        expect(vegetationProperty.texture.width).toBe(1);
-        expect(vegetationProperty.texture.height).toBe(1);
-        expect(vegetationProperty.texture).not.toBe(colorProperty.texture);
+        expect(vegetationProperty.textureReader.texture.width).toBe(1);
+        expect(vegetationProperty.textureReader.texture.height).toBe(1);
+        expect(vegetationProperty.textureReader.texture).not.toBe(
+          colorProperty.textureReader.texture
+        );
 
         expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
           "building",

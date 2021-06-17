@@ -1,3 +1,5 @@
+import Check from "../Core/Check.js";
+
 /**
  * An enum describing the built-in instance attribute semantics.
  *
@@ -47,6 +49,10 @@ var InstanceAttributeSemantic = {
  * @private
  */
 InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("gltfSemantic", gltfSemantic);
+  //>>includeEnd('debug')
+
   var semantic = gltfSemantic;
 
   // Strip the set index from the semantic

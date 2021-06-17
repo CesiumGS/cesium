@@ -83,10 +83,10 @@ Object.defineProperties(MetadataTable.prototype, {
 });
 
 /**
- * Returns whether this property exists.
+ * Returns whether the table has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the table has this property.
  * @private
  */
 MetadataTable.prototype.hasProperty = function (propertyId) {
@@ -94,10 +94,10 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
 };
 
 /**
- * Returns whether a property with the given semantic exists.
+ * Returns whether the table has a property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether a property with the given semantic exists.
+ * @returns {Boolean} Whether the table has a property with the given semantic.
  * @private
  */
 MetadataTable.prototype.hasPropertyBySemantic = function (semantic) {
@@ -139,7 +139,7 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
@@ -210,7 +210,7 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {Number} index The index of the entity.
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this semantic.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
@@ -300,7 +300,7 @@ MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   if (defined(this._class)) {
     var property = this._class.propertiesBySemantic[semantic];
     if (defined(property)) {
-      return property.getTypedArray();
+      return this.getPropertyTypedArray(property.id);
     }
   }
 

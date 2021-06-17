@@ -3416,13 +3416,12 @@ describe("Scene/Expression", function () {
   it("gets shader function", function () {
     var expression = new Expression("true");
     var shaderFunction = expression.getShaderFunction(
-      "getShow",
+      "getShow()",
       {},
       {},
       "bool"
     );
-    var expected =
-      "bool getShow() \n" + "{ \n" + "    return true; \n" + "} \n";
+    var expected = "bool getShow()\n" + "{\n" + "    return true;\n" + "}\n";
     expect(shaderFunction).toEqual(expected);
   });
 
@@ -4126,6 +4125,14 @@ describe("Scene/Expression", function () {
     var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "czm_infinity";
     expect(shaderExpression).toEqual(expected);
+  });
+
+  it("gets variables", function () {
+    var expression = new Expression(
+      '${feature["w"]} + ${feature.x} + ${y} + ${y} + "${z}"'
+    );
+    var variables = expression.getVariables();
+    expect(variables.sort()).toEqual(["w", "x", "y", "z"]);
   });
 
   it("throws when getting shader expression for regex", function () {
