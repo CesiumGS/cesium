@@ -6,10 +6,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import defined from "../Core/defined.js";
-import Buffer from "../Renderer/Buffer.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import BufferUsage from "../Renderer/BufferUsage.js";
-import Transforms from "../Core/Transforms.js";
+import Matrix4 from "../Core/Matrix4.js";
 import VertexArray from "../Renderer/VertexArray.js";
 
 export default function Model(options) {
@@ -21,7 +18,9 @@ export default function Model(options) {
 }
 
 Model.prototype.update = function (frameState) {
-  if (!defined(this.drawCommand)) createCommand(this, frameState);
+  if (!defined(this.drawCommand)) {
+    this.drawCommand = createCommand(this, frameState);
+  }
 
   frameState.commandList.push(this.drawCommand);
 };
@@ -35,7 +34,6 @@ function createCommand(model, frameState) {
 
   // Hard code first primitive
   var primitive = model.components.scene.nodes[0].children[0].primitives[0];
-  //var normalAttribute = primitive.attributes[0];
   var positionAttribute = primitive.attributes[1];
 
   var boundingSphere = BoundingSphere.fromCornerPoints(
@@ -48,7 +46,8 @@ function createCommand(model, frameState) {
     -4736339.477299974,
     4081627.9570209784
   );
-  var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+  boundingSphere.center = center;
+  var modelMatrix = Matrix4.fromTranslation(center);
 
   var shaderProgram = createShader(frameState.context);
 
@@ -72,15 +71,19 @@ function createCommand(model, frameState) {
 function createShader(context) {
   var vertexShader =
     "attribute vec3 a_position;\n" +
+    "attribute vec3 a_normal;\n" +
+    "varying vec3 v_normal;\n" +
     "void main()\n" +
     "{\n" +
+    "    v_normal = a_normal;\n" +
     "    gl_Position = czm_modelViewProjection * vec4(a_position, 1.0);\n" +
     "}\n";
 
   var fragmentShader =
+    "varying vec3 v_normal;\n" +
     "void main()\n" +
     "{\n" +
-    "    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
+    "    gl_FragColor = vec4(abs(v_normal), 1.0);\n" +
     "}\n";
 
   return ShaderProgram.fromCache({
@@ -89,6 +92,7 @@ function createShader(context) {
     fragmentShaderSource: fragmentShader,
     attributeLocations: {
       a_position: 0,
+      a_normal: 1,
     },
   });
 }
@@ -101,17 +105,17 @@ function createVertexArray(primitive, context) {
     componentDatatype: primitive.attributes[1].componentDatatype,
   };
 
-  var indexBuffer = Buffer.createIndexBuffer({
-    context: context,
-    typedArray: primitive.indices.buffer,
-    indexDatatype: primitive.indices.indexDatatype,
-    usage: BufferUsage.STATIC_DRAW,
-  });
+  var normalAttribute = {
+    index: 1,
+    vertexBuffer: primitive.attributes[0].buffer,
+    componentsPerAttribute: 3,
+    componentDatatype: primitive.attributes[0].componentDatatype,
+  };
 
   var vertexArray = new VertexArray({
     context: context,
-    attributes: [positionAttribute],
-    indexBuffer: indexBuffer,
+    attributes: [positionAttribute, normalAttribute],
+    indexBuffer: primitive.indices.buffer,
   });
 
   return vertexArray;
