@@ -9,7 +9,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference from "../Scene/HeightReference.js";
-import Model from "../Scene/Model.js";
+import Model2 from "../Scene/Model2.js";
 import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
@@ -113,7 +113,7 @@ ModelVisualizer.prototype.update = function (time) {
         primitives.removeAndDestroy(model);
         delete modelHash[entity.id];
       }
-      model = Model.fromGltf({
+      model = Model2.fromGltf({
         url: resource,
         incrementallyLoadTextures: Property.getValueOrDefault(
           modelGraphics._incrementallyLoadTextures,

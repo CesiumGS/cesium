@@ -769,9 +769,6 @@ function loadFeatureIdTexture(
     supportedImageFormats,
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
-
-  // Feature ID textures require nearest sampling
-  featureIdTexture.textureReader.texture.sampler = Sampler.NEAREST;
   featureIdTexture.textureReader.channels = featureIds.channels;
 
   return featureIdTexture;
