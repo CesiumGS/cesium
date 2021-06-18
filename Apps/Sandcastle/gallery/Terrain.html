@@ -64,11 +64,32 @@
             "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
         });
 
+        // Sine wave
+        var customHeightmapWidth = 32;
+        var customHeightmapHeight = 32;
         var customHeightmapProvider = new Cesium.CustomHeightmapTerrainProvider(
           {
-            callback: proceduralTerrain,
-            width: 32,
-            height: 32,
+            width: customHeightmapWidth,
+            height: customHeightmapHeight,
+            callback: function (x, y, level) {
+              var width = customHeightmapWidth;
+              var height = customHeightmapHeight;
+              var buffer = new Float32Array(width * height);
+
+              for (var yy = 0; yy < height; yy++) {
+                for (var xx = 0; xx < width; xx++) {
+                  var u = (x + xx / (width - 1)) / Math.pow(2, level);
+                  var v = (y + yy / (height - 1)) / Math.pow(2, level);
+
+                  var heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
+
+                  var index = yy * width + xx;
+                  buffer[index] = heightValue;
+                }
+              }
+
+              return buffer;
+            },
           }
         );
 
@@ -317,78 +338,6 @@
           },
           "sampleButtons"
         );
-
-        function proceduralTerrain(x, y, level) {
-          function fract(x) {
-            return x - Math.floor(x);
-          }
-          function smoothstep(x) {
-            return x * x * (3.0 - 2.0 * x);
-          }
-          function hash(x, y) {
-            var a = 50.0 * fract(x * 0.3183099 + 0.71);
-            var b = 50.0 * fract(y * 0.3183099 + 0.113);
-            var v = fract(a * b * (a + b));
-            return -1.0 + 2.0 * v; // -1 to +1
-          }
-          function lerp(x, y, t) {
-            return x * (1.0 - t) + y * t;
-          }
-          function noise(x, y) {
-            // Value noise: lerp between random values
-            var ix = Math.floor(x);
-            var iy = Math.floor(y);
-            var fx = fract(x);
-            var fy = fract(y);
-            var tx = smoothstep(fx);
-            var ty = smoothstep(fy);
-            var v00 = hash(ix, iy);
-            var v10 = hash(ix + 1, iy);
-            var v01 = hash(ix, iy + 1);
-            var v11 = hash(ix + 1, iy + 1);
-            var v = lerp(lerp(v00, v10, tx), lerp(v01, v11, tx), ty);
-            return v; // -1 to +1
-          }
-          function fbm(x, y) {
-            // Fractal brownian motion: accumulate octaves of self-similar noise
-            var v = 0.5 * noise(x * 1.0, y * 1.0);
-            v += 0.25 * noise(x * 0.4, y * 2.8);
-            v += 0.125 * noise(x * -2.72, y * 4.96);
-            v += 0.0625 * noise(x * -10.3, y * 4.67);
-            v += 0.03125 * noise(x * -22.09, y * -4.89);
-            v += 0.015625 * noise(x * -29.48, y * -34.33);
-            // v += 0.0078125 * noise(x * -5.97, y * -90.31);
-            // v += 0.00390625 * noise(x * 98.83, y * -151.66);
-            return v; // -1 to +1
-          }
-          function terrainNoise(x, y) {
-            var v = fbm(x, y);
-            // Move to 0 to 1 range, then make it pointier
-            v = Math.pow(v * 0.5 + 0.5, 2.0);
-            return v;
-          }
-
-          var width = customHeightmapProvider.width;
-          var height = customHeightmapProvider.height;
-          var buffer = new Float32Array(width * height);
-
-          for (var yy = 0; yy < height; yy++) {
-            for (var xx = 0; xx < width; xx++) {
-              var u = (x + xx / (width - 1)) / Math.pow(2, level);
-              var v = (y + yy / (height - 1)) / Math.pow(2, level);
-
-              var heightValue = 9000 * terrainNoise(u * 1750 - 10, v * 1500);
-
-              // Or: a simple sine wave
-              // var heightValue = 8000 * (Math.sin(4000 * v) * 0.5 + 0.5);
-
-              var index = yy * width + xx;
-              buffer[index] = heightValue;
-            }
-          }
-
-          return Cesium.when.resolve(buffer);
-        }
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
