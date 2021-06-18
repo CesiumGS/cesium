@@ -96,6 +96,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * are passed an instance of {@link TileProviderError}.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Event}
+   * @readonly
    */
   errorEvent: {
     get: function () {
@@ -108,6 +109,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * the source of the terrain.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Credit}
+   * @readonly
    */
   credit: {
     get: function () {
@@ -119,6 +121,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * Gets the tiling scheme used by this provider.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {TilingScheme}
+   * @readonly
    */
   tilingScheme: {
     get: function () {
@@ -130,6 +133,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   ready: {
     get: function () {
@@ -157,6 +161,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * value will always be false.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasWaterMask: {
     get: function () {
@@ -170,6 +175,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * value will always be false.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasVertexNormals: {
     get: function () {
@@ -181,6 +187,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * Gets the number of columns per heightmap tile.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   width: {
     get: function () {
@@ -192,6 +199,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * Gets the number of rows per heightmap tile.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   height: {
     get: function () {

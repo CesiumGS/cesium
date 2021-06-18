@@ -280,6 +280,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasWaterMask: {
     get: function () {
@@ -292,6 +293,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasVertexNormals: {
     get: function () {
@@ -306,6 +308,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * information is not available.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {TileAvailability}
+   * @readonly
    */
   availability: {
     get: function () {

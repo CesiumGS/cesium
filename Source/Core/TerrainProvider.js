@@ -27,6 +27,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * are passed an instance of {@link TileProviderError}.
    * @memberof TerrainProvider.prototype
    * @type {Event}
+   * @readonly
    */
   errorEvent: {
     get: DeveloperError.throwInstantiationError,
@@ -38,6 +39,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * not be called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
    * @type {Credit}
+   * @readonly
    */
   credit: {
     get: DeveloperError.throwInstantiationError,
@@ -48,6 +50,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * not be called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
    * @type {TilingScheme}
+   * @readonly
    */
   tilingScheme: {
     get: DeveloperError.throwInstantiationError,
@@ -57,6 +60,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof TerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
@@ -79,6 +83,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasWaterMask: {
     get: DeveloperError.throwInstantiationError,
@@ -89,6 +94,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * This function should not be called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasVertexNormals: {
     get: DeveloperError.throwInstantiationError,
@@ -101,6 +107,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * information is not available.
    * @memberof TerrainProvider.prototype
    * @type {TileAvailability}
+   * @readonly
    */
   availability: {
     get: DeveloperError.throwInstantiationError,
