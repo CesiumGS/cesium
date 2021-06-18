@@ -2958,6 +2958,7 @@ function createTexture(gltfTexture, model, context) {
       pixelDatatype: texture.type,
       sampler: sampler,
       flipY: false,
+      skipColorSpaceConversion: true,
     });
     // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
     if (mipmap) {

@@ -196,7 +196,15 @@ function Texture(options) {
   }
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
-  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+
+  if (options.skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
 
   if (defined(source)) {
     if (defined(source.arrayBufferView)) {
