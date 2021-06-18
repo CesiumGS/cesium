@@ -2899,7 +2899,6 @@ function createTexture(gltfTexture, model, context) {
       height: gltfTexture.height,
       pixelFormat: internalFormat,
       sampler: sampler,
-      mipLevels: gltfTexture.mipLevels,
     });
   } else if (defined(source)) {
     var npot =
