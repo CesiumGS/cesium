@@ -22,6 +22,10 @@ import TerrainProvider from "./TerrainProvider.js";
  * It can be used for procedurally generated terrain or as a way to load custom
  * heightmap data without creating a subclass of {@link TerrainProvider}.
  *
+ * There are some limitations such as no water mask, no vertex normals, and no
+ * availability, so a full-fledged {@link TerrainProvider} subclass is better suited
+ * for these more sophisticated use cases.
+ *
  * @alias CustomHeightmapTerrainProvider
  * @constructor
  *
@@ -40,11 +44,11 @@ import TerrainProvider from "./TerrainProvider.js";
  * @example
  * var viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrainProvider: new Cesium.CustomHeightmapTerrainProvider({
+ *     width: 32,
+ *     height: 32,
  *     callback: function (x, y, level) {
  *       return new Float32Array(32 * 32); // all zeros
  *     },
- *     width: 32,
- *     height: 32,
  *   }),
  * });
  *
