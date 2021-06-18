@@ -2032,7 +2032,9 @@ function parseTextures(model, context, supportsWebP) {
       } else if (crnRegex.test(uri)) {
         promise = loadCRN(imageResource);
       } else {
-        promise = imageResource.fetchImage();
+        promise = imageResource.fetchImage({
+          preferImageBitmap: true,
+        });
       }
       promise
         .then(imageLoad(model, id, imageId))

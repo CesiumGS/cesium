@@ -275,7 +275,9 @@ function loadImageFromUri(resource) {
     return loadCRN(resource);
   }
   // Resolves to an ImageBitmap or Image
-  return resource.fetchImage();
+  return resource.fetchImage({
+    preferImageBitmap: true,
+  });
 }
 
 /**
