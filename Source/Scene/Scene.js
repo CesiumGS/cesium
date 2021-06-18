@@ -1441,7 +1441,6 @@ Object.defineProperties(Scene.prototype, {
    * Gets or sets the scalar used to exaggerate the terrain.
    * @memberof Scene.prototype
    * @type {Number}
-   * @readonly
    */
   terrainExaggeration: {
     get: function () {
