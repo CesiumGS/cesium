@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
 /**
  * A property in a feature texture.
@@ -31,16 +32,33 @@ function FeatureTextureProperty(options) {
   //>>includeEnd('debug');
 
   var textureInfo = property.texture;
+  var textureReader = GltfLoaderUtil.createModelTextureReader({
+    textureInfo: textureInfo,
+    channels: property.channels,
+    texture: textures[textureInfo.index],
+  });
 
-  this._channels = property.channels;
-  this._texCoord = textureInfo.texCoord;
-  this._texture = textures[textureInfo.index];
+  this._textureReader = textureReader;
   this._classProperty = classProperty;
   this._extras = property.extras;
   this._extensions = property.extensions;
 }
 
 Object.defineProperties(FeatureTextureProperty.prototype, {
+  /**
+   * The texture reader.
+   *
+   * @memberof FeatureTextureProperty.prototype
+   * @type {ModelComponents.TextureReader}
+   * @readonly
+   * @private
+   */
+  textureReader: {
+    get: function () {
+      return this._textureReader;
+    },
+  },
+
   /**
    * Extras in the JSON object.
    *

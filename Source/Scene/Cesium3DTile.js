@@ -31,7 +31,7 @@ import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findGroupMetadata from "./findGroupMetadata.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
@@ -205,7 +205,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
+  if (hasExtension(header, "3DTILES_multiple_contents")) {
     hasMultipleContents = true;
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
@@ -293,7 +293,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasMultipleContents = hasMultipleContents;
 
   var metadata;
-  if (has3DTilesExtension(header, "3DTILES_metadata")) {
+  if (hasExtension(header, "3DTILES_metadata")) {
     // This assumes that tileset.metadata has been created before any
     // tiles are constructed.
     var extension = header.extensions["3DTILES_metadata"];
@@ -1645,7 +1645,7 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   if (!defined(boundingVolumeHeader)) {
     throw new RuntimeError("boundingVolume must be defined");
   }
-  if (has3DTilesExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
+  if (hasExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
     return new TileBoundingS2Cell(
       boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"]
     );

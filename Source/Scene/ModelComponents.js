@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Matrix3 from "../Core/Matrix3.js";
 import AlphaMode from "./AlphaMode.js";
 
 /**
@@ -29,16 +30,26 @@ function Quantization() {
   this.octEncoded = false;
 
   /**
-   * The range used to convert buffer values to normalized values [0.0, 1.0]
-   * This is typically computed as (1 << quantizationBits) - 1
+   * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
    *
-   * @type {Number}
+   * @type {Boolean}
+   */
+  this.octEncodedZXY = false;
+
+  /**
+   * The range used to convert buffer values to normalized values [0.0, 1.0]
+   * This is typically computed as (1 << quantizationBits) - 1.
+   * For oct-encoded values this value is a single Number.
+   *
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.normalizationRange = undefined;
 
   /**
    * The bottom-left corner of the quantization volume. Not applicable for oct encoded attributes.
+   * The type should match the attribute type - e.g. if the attribute type
+   * is AttributeType.VEC4 the offset should be a Cartesian4.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -47,6 +58,8 @@ function Quantization() {
 
   /**
    * The dimensions of the quantization volume. Not applicable for oct encoded attributes.
+   * The type should match the attribute type - e.g. if the attribute type
+   * is AttributeType.VEC4 the dimensions should be a Cartesian4.
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -55,6 +68,15 @@ function Quantization() {
 
   /**
    * The component data type of the quantized attribute, e.g. ComponentDatatype.UNSIGNED_SHORT.
+   *
+   * <p>
+   * The following component datatypes are not supported:
+   * <ul>
+   *   <li>ComponentDatatype.INT</li>
+   *   <li>ComponentDatatype.UNSIGNED_INT</li>
+   *   <li>ComponentDatatype.DOUBLE</li>
+   * </ul>
+   * </p>
    *
    * @type {ComponentDatatype}
    * @private
@@ -80,30 +102,51 @@ function Quantization() {
  */
 function Attribute() {
   /**
-   * The attribute semantic. The following semantics have defined behavior:
-   * <ul>
-   *   <li>POSITION: per-vertex position</li>
-   *   <li>NORMAL: per-vertex normal</li>
-   *   <li>TANGENT: per-vertex tangent</li>
-   *   <li>TEXCOORD_0: per-vertex texture coordinates (first set)</li>
-   *   <li>TEXCOORD_1: per-vertex texture coordinates (second set)</li>
-   *   <li>COLOR_0: per-vertex colors</li>
-   *   <li>JOINTS_0: per-vertex joint IDs for skinning</li>
-   *   <li>WEIGHTS_0: per-vertex joint weights for skinning</li>
-   *   <li>_FEATURE_ID_0: per-vertex or per-instance feature IDs (first set)</li>
-   *   <li>_FEATURE_ID_1: per-vertex or per-instance feature IDs (second set)</li>
-   *   <li>TRANSLATION: per-instance translation</li>
-   *   <li>ROTATION: per-instance rotation</li>
-   *   <li>SCALE: per-instance scale</li>
-   * </ul>
+   * The attribute name. Must be unique within the attributes array.
    *
    * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The attribute semantic. The combination of semantic and setIndex must be
+   * unique within the attributes array.
+   *
+   * @type {VertexAttributeSemantic|InstanceAttributeSemantic}
    * @private
    */
   this.semantic = undefined;
 
   /**
-   * The component data type of the attribute, e.g. ComponentDatatype.FLOAT.
+   * The set index of the attribute. Only applicable when the attribute has one
+   * of the following semantics:
+   *
+   * <ul>
+   *   <li>{@link VertexAttributeSemantic.TEXCOORD}</li>
+   *   <li>{@link VertexAttributeSemantic.COLOR}</li>
+   *   <li>{@link VertexAttributeSemantic.JOINTS}</li>
+   *   <li>{@link VertexAttributeSemantic.WEIGHTS}</li>
+   *   <li>{@link VertexAttributeSemantic.FEATURE_ID}</li>
+   *   <li>{@link InstanceAttributeSemantic.FEATURE_ID}</li>
+   * </ul>
+   */
+  this.setIndex = undefined;
+
+  /**
+   * The component data type of the attribute.
+   * <p>
+   * When the data is quantized the componentDatatype should match the
+   * dequantized data, which is typically ComponentDatatype.FLOAT.
+   * </p>
+   * <p>
+   * The following component datatypes are not supported:
+   * <ul>
+   *   <li>ComponentDatatype.INT</li>
+   *   <li>ComponentDatatype.UNSIGNED_INT</li>
+   *   <li>ComponentDatatype.DOUBLE</li>
+   * </ul>
+   * </p>
    *
    * @type {ComponentDatatype}
    * @private
@@ -111,7 +154,11 @@ function Attribute() {
   this.componentDatatype = undefined;
 
   /**
-   * The type of the attribute, e.g. AttributeType.VEC3.
+   * The type of the attribute.
+   * <p>
+   * When the data is oct-encoded the type should match the decoded data, which
+   * is typically AttributeType.VEC3.
+   * </p>
    *
    * @type {AttributeType}
    * @private
@@ -137,6 +184,13 @@ function Attribute() {
 
   /**
    * Minimum value of each component in the attribute.
+   * <p>
+   * When the data is quantized the min should match the dequantized data.
+   * The normalized property has no effect on these values.
+   * </p>
+   * <p>
+   * Must be defined for POSITION attributes.
+   * </p>
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -145,6 +199,13 @@ function Attribute() {
 
   /**
    * Maximum value of each component in the attribute.
+   * <p>
+   * When the data is quantized the max should match the dequantized data.
+   * The normalized property has no effect on these values.
+   * </p>
+   * <p>
+   * Must be defined for POSITION attributes.
+   * </p>
    *
    * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
@@ -254,15 +315,15 @@ function FeatureIdAttribute() {
   this.featureTableId = undefined;
 
   /**
-   * The semantic of the attribute containing feature IDs, e.g. "_FEATURE_ID_0".
+   * The set index of feature ID attribute containing feature IDs.
    *
-   * @type {String}
+   * @type {Number}
    * @private
    */
-  this.semantic = undefined;
+  this.setIndex = undefined;
 
   /**
-   * A constant feature ID to use when semantic is undefined.
+   * A constant feature ID to use when setIndex is undefined.
    *
    * @type {Number}
    * @default 0
@@ -271,7 +332,7 @@ function FeatureIdAttribute() {
   this.constant = 0;
 
   /**
-   * The rate at which feature IDs increment when semantic is undefined.
+   * The rate at which feature IDs increment when setIndex is undefined.
    *
    * @type {Number}
    * @default 0
@@ -298,20 +359,12 @@ function FeatureIdTexture() {
   this.featureTableId = undefined;
 
   /**
-   * The texture channel containing feature IDs, may be "r", "g", "b", or "a".
+   * The texture reader containing feature IDs.
    *
-   * @type {String}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
-  this.channel = undefined;
-
-  /**
-   * The texture containing feature IDs.
-   *
-   * @type {ModelComponents.Texture}
-   * @private
-   */
-  this.texture = undefined;
+  this.textureReader = undefined;
 }
 
 /**
@@ -594,21 +647,21 @@ function Components() {
 }
 
 /**
- * A texture.
+ * Information about a GPU texture, including the texture itself
  *
- * @alias ModelComponents.Texture
+ * @alias ModelComponents.TextureReader
  * @constructor
  *
  * @private
  */
-function Texture() {
+function TextureReader() {
   /**
-   * The underlying GPU texture.
+   * The underlying GPU texture. The {@link Texture} contains the sampler.
    *
    * @type {Texture}
    * @private
    */
-  this.texture = undefined;
+  this.textureReader = undefined;
 
   /**
    * The texture coordinate set.
@@ -620,12 +673,19 @@ function Texture() {
   this.texCoord = 0;
 
   /**
-   * The sampler.
+   * Transformation matrix to apply to texture coordinates.
    *
-   * @type {Sampler}
-   * @private
+   * @type {Matrix3}
+   * @default Matrix3.IDENTITY
    */
-  this.sampler = undefined;
+  this.transform = Matrix3.clone(Matrix3.IDENTITY);
+
+  /**
+   * The texture channels to read from. When undefined all channels are read.
+   *
+   * @type {String}
+   */
+  this.channels = undefined;
 }
 
 /**
@@ -638,17 +698,17 @@ function Texture() {
  */
 function MetallicRoughness() {
   /**
-   * The base color texture.
+   * The base color texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.baseColorTexture = undefined;
 
   /**
-   * The metallic roughness texture.
+   * The metallic roughness texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.metallicRoughnessTexture = undefined;
@@ -660,7 +720,9 @@ function MetallicRoughness() {
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
    * @private
    */
-  this.baseColorFactor = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+  this.baseColorFactor = Cartesian4.clone(
+    MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR
+  );
 
   /**
    * The metallic factor.
@@ -669,7 +731,7 @@ function MetallicRoughness() {
    * @default 1.0
    * @private
    */
-  this.metallicFactor = 1.0;
+  this.metallicFactor = MetallicRoughness.DEFAULT_METALLIC_FACTOR;
 
   /**
    * The roughness factor.
@@ -678,8 +740,28 @@ function MetallicRoughness() {
    * @default 1.0
    * @private
    */
-  this.roughnessFactor = 1.0;
+  this.roughnessFactor = MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR;
 }
+
+/**
+ * @private
+ */
+MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR = new Cartesian4(
+  1.0,
+  1.0,
+  1.0,
+  1.0
+);
+
+/**
+ * @private
+ */
+MetallicRoughness.DEFAULT_METALLIC_FACTOR = 1.0;
+
+/**
+ * @private
+ */
+MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR = 1.0;
 
 /**
  * Material properties for the PBR specular glossiness shading model.
@@ -691,17 +773,17 @@ function MetallicRoughness() {
  */
 function SpecularGlossiness() {
   /**
-   * The diffuse texture.
+   * The diffuse texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.diffuseTexture = undefined;
 
   /**
-   * The specular glossiness texture.
+   * The specular glossiness texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.specularGlossinessTexture = undefined;
@@ -713,7 +795,9 @@ function SpecularGlossiness() {
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
    * @private
    */
-  this.diffuseFactor = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+  this.diffuseFactor = Cartesian4.clone(
+    SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR
+  );
 
   /**
    * The specular factor.
@@ -722,7 +806,9 @@ function SpecularGlossiness() {
    * @default new Cartesian3(1.0, 1.0, 1.0, 1.0)
    * @private
    */
-  this.specularFactor = new Cartesian3(1.0, 1.0, 1.0);
+  this.specularFactor = Cartesian3.clone(
+    SpecularGlossiness.DEFAULT_SPECULAR_FACTOR
+  );
 
   /**
    * The glossiness factor.
@@ -731,8 +817,23 @@ function SpecularGlossiness() {
    * @default 1.0
    * @private
    */
-  this.glossinessFactor = 1.0;
+  this.glossinessFactor = SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR;
 }
+
+/**
+ * @private
+ */
+SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+
+/**
+ * @private
+ */
+SpecularGlossiness.DEFAULT_SPECULAR_FACTOR = new Cartesian3(1.0, 1.0, 1.0);
+
+/**
+ * @private
+ */
+SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR = 1.0;
 
 /**
  * The material appearance of a primitive.
@@ -749,7 +850,7 @@ function Material() {
    * @type {ModelComponents.MetallicRoughness}
    * @private
    */
-  this.metallicRoughness = undefined;
+  this.metallicRoughness = new MetallicRoughness();
 
   /**
    * Material properties for the PBR specular glossiness shading model.
@@ -760,25 +861,25 @@ function Material() {
   this.specularGlossiness = undefined;
 
   /**
-   * The emissive texture.
+   * The emissive texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.emissiveTexture = undefined;
 
   /**
-   * The normal texture.
+   * The normal texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.normalTexture = undefined;
 
   /**
-   * The occlusion texture.
+   * The occlusion texture reader.
    *
-   * @type {ModelComponents.Texture}
+   * @type {ModelComponents.TextureReader}
    * @private
    */
   this.occlusionTexture = undefined;
@@ -790,7 +891,7 @@ function Material() {
    * @default Cartesian3.ZERO
    * @private
    */
-  this.emissiveFactor = new Cartesian3(0.0, 0.0, 0.0);
+  this.emissiveFactor = Cartesian3.clone(Material.DEFAULT_EMISSIVE_FACTOR);
 
   /**
    * The alpha mode.
@@ -829,6 +930,11 @@ function Material() {
   this.unlit = false;
 }
 
+/**
+ * @private
+ */
+Material.DEFAULT_EMISSIVE_FACTOR = Cartesian3.ZERO;
+
 ModelComponents.Quantization = Quantization;
 ModelComponents.Attribute = Attribute;
 ModelComponents.Indices = Indices;
@@ -841,7 +947,7 @@ ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
 ModelComponents.Components = Components;
-ModelComponents.Texture = Texture;
+ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;
 ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Material = Material;
