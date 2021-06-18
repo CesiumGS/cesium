@@ -1398,7 +1398,6 @@ function updateHeights(primitive, frameState) {
   var tryNextFrame = scratchArray;
   tryNextFrame.length = 0;
   var tilesToUpdateHeights = primitive._tileToUpdateHeights;
-  var terrainProvider = primitive._tileProvider.terrainProvider;
 
   var startTime = getTimestamp();
   var timeSlice = primitive._updateHeightsTimeSlice;
@@ -1435,7 +1434,12 @@ function updateHeights(primitive, frameState) {
     for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
       var data = customData[i];
 
-      if (tile.level > data.level) {
+      // No need to run this code when the tile is upsampled, because the height will be the same as its parent.
+      var terrainData = tile.data.terrainData;
+      var upsampledGeometryFromParent =
+        defined(terrainData) && terrainData.wasCreatedByUpsampling();
+
+      if (tile.level > data.level && !upsampledGeometryFromParent) {
         if (!defined(data.positionOnEllipsoidSurface)) {
           // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
           data.positionOnEllipsoidSurface = Cartesian3.fromRadians(
@@ -1513,38 +1517,6 @@ function updateHeights(primitive, frameState) {
         if (defined(position)) {
           data.callback(position);
           data.level = tile.level;
-        }
-      } else if (tile.level === data.level) {
-        var children = tile.children;
-        var childrenLength = children.length;
-
-        var child;
-        for (var j = 0; j < childrenLength; ++j) {
-          child = children[j];
-          if (Rectangle.contains(child.rectangle, data.positionCartographic)) {
-            break;
-          }
-        }
-
-        var tileDataAvailable = terrainProvider.getTileDataAvailable(
-          child.x,
-          child.y,
-          child.level
-        );
-        var parentTile = tile.parent;
-        if (
-          (defined(tileDataAvailable) && !tileDataAvailable) ||
-          (defined(parentTile) &&
-            defined(parentTile.data) &&
-            defined(parentTile.data.terrainData) &&
-            !parentTile.data.terrainData.isChildAvailable(
-              parentTile.x,
-              parentTile.y,
-              child.x,
-              child.y
-            ))
-        ) {
-          data.removeFunc();
         }
       }
 
