@@ -2,7 +2,6 @@ import arraySlice from "./arraySlice.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import KTX2Transcoder from "./KTX2Transcoder.js";
 import when from "../ThirdParty/when.js";
 
@@ -50,16 +49,12 @@ loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @exception {RuntimeError} Invalid KTX2 file.
- * @exception {RuntimeError} File is the wrong endianness.
  * @exception {RuntimeError} glInternalFormat is not a valid format.
  * @exception {RuntimeError} glType must be zero when the texture is compressed.
  * @exception {RuntimeError} The type size for compressed textures must be 1.
  * @exception {RuntimeError} glFormat must be zero when the texture is compressed.
- * @exception {RuntimeError} Generating mipmaps for a compressed texture is unsupported.
- * @exception {RuntimeError} The base internal format must be the same as the format for uncompressed textures.
- * @exception {RuntimeError} 3D textures are not supported.
- * @exception {RuntimeError} Texture arrays are not supported.
- * @exception {RuntimeError} Cubemaps are not supported.
+ * @exception {RuntimeError} KTX2 texture arrays are not supported.
+ * @exception {RuntimeError} KTX2 3D textures are unsupported.
  *
  * @example
  * // load a single URL asynchronously
@@ -100,13 +95,10 @@ function loadKTX2(resourceOrUrlOrBuffer) {
 
   // load module then return
   return loadPromise.then(function (data) {
-    if (defined(data)) {
-      // data array can be a view of a shared buffer,
-      // so make a copy that can be given to the worker.
-      var copy = arraySlice(data);
-      return KTX2Transcoder.transcode(copy, supportedTranscoderFormats);
-    }
-    return when.reject(new RuntimeError("failed to load KTX2 data."));
+    // data array can be a view of a shared buffer,
+    // so make a copy that can be given to the worker.
+    var copy = arraySlice(data);
+    return KTX2Transcoder.transcode(copy, supportedTranscoderFormats);
   });
 }
 

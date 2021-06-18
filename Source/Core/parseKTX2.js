@@ -43,7 +43,7 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   }
 
   if (header.layerCount !== 0) {
-    throw new RuntimeError("KTX2 Videos are not supported");
+    throw new RuntimeError("KTX2 texture arrays are not supported.");
   }
 
   if (header.pixelDepth !== 0) {
