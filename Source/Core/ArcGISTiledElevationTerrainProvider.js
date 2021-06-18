@@ -459,7 +459,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = fu
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean} Undefined if not supported, otherwise true or false.
+ * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
   x,
