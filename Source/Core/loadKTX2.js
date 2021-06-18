@@ -49,12 +49,11 @@ loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @exception {RuntimeError} Invalid KTX2 file.
- * @exception {RuntimeError} glInternalFormat is not a valid format.
- * @exception {RuntimeError} glType must be zero when the texture is compressed.
- * @exception {RuntimeError} The type size for compressed textures must be 1.
- * @exception {RuntimeError} glFormat must be zero when the texture is compressed.
  * @exception {RuntimeError} KTX2 texture arrays are not supported.
  * @exception {RuntimeError} KTX2 3D textures are unsupported.
+ * @exception {RuntimeError} No transcoding format target available.
+ * @exception {RuntimeError} startTranscoding() failed.
+ * @exception {RuntimeError} transcodeImage() failed.
  *
  * @example
  * // load a single URL asynchronously

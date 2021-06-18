@@ -170,13 +170,13 @@ function transcodeCompressed(
       ? BasisFormat.cTFPVRTC1_4_RGBA
       : BasisFormat.cTFPVRTC1_4_RGB;
   } else {
-    throw new RuntimeError("No transcoding format target available");
+    throw new RuntimeError("No transcoding format target available.");
   }
 
   if (!ktx2File.startTranscoding()) {
     ktx2File.close();
     ktx2File.delete();
-    throw new RuntimeError("startTranscoding failed");
+    throw new RuntimeError("startTranscoding() failed");
   }
 
   for (var i = 0; i < header.levels.length; ++i) {
@@ -208,7 +208,7 @@ function transcodeCompressed(
     );
 
     if (!transcoded) {
-      throw new RuntimeError("transcodeImage() failed");
+      throw new RuntimeError("transcodeImage() failed.");
     }
 
     level[faceOrder[0]] = {
