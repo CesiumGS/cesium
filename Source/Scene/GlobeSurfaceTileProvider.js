@@ -494,7 +494,7 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
   var continueProcessing = false;
 
   if (processingChange) {
-    quadtree.forEachLoadedTile(function (tile) {
+    quadtree.forEachRenderedTile(function (tile) {
       var surfaceTile = tile.data;
       var mesh = surfaceTile.renderedMesh;
       if (mesh !== undefined) {
