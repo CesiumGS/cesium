@@ -1868,17 +1868,15 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
   });
 
-  it("uses featureurl in parameters for getFeatureInfo", function () {
+  it("uses getFeatureInfoUrl in options for getFeatureInfo", function () {
     var provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
-      parameters: {
-        featureurl: "made/up/wms/feature/server",
-      },
+      getFeatureInfoUrl: "made/up/wms/feature/server",
     });
 
     Resource._Implementations.loadWithXhr = function (
-      featureurl,
+      getFeatureInfoUrl,
       responseType,
       method,
       data,
@@ -1886,7 +1884,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       deferred,
       overrideMimeType
     ) {
-      expect(featureurl).toContain("GetFeatureInfo");
+      expect(getFeatureInfoUrl).toContain("GetFeatureInfo");
       Resource._DefaultImplementations.loadWithXhr(
         "Data/WMS/GetFeatureInfo-GeoJSON.json",
         responseType,
@@ -1908,7 +1906,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       ) {
         var uri = new Uri(request.url);
         var params = queryToObject(uri.query);
-        expect(params.featureurl).toEqual("made/up/wms/feature/server");
+        expect(getFeatureInfoUrl).toEqual("made/up/wms/feature/server");
       });
       return provider
         .pickFeatures(0, 0, 0, 0.5, 0.5)

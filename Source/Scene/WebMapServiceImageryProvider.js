@@ -87,7 +87,6 @@ function WebMapServiceImageryProvider(options) {
     throw new DeveloperError("options.layers is required.");
   }
   //>>includeEnd('debug');
-
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
       "options.times was specified, so options.clock is required."
@@ -182,14 +181,13 @@ function WebMapServiceImageryProvider(options) {
 
   var resource = Resource.createIfNeeded(options.url);
 
-  var pickFeatureResource = resource.clone();
-
-  // If the getFeatureInfo url is specified in the parameters (featureurl),
-  // we should use it instead of the url
-  if (defined(options.parameters) && defined(options.parameters.featureurl)) {
-    var featureurl = Resource.createIfNeeded(options.parameters.featureurl);
-    pickFeatureResource = featureurl.clone();
-  }
+  /**
+   * the pickFeatureResource should be able to modify, because some
+   * WMS servers might have different URL for GetFeatureInfo, e.g. ALA
+   */
+  var pickFeatureResource = defined(options.getFeatureInfoUrl)
+    ? Resource.createIfNeeded(options.getFeatureInfoUrl)
+    : resource.clone();
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
@@ -275,6 +273,8 @@ function WebMapServiceImageryProvider(options) {
   pickFeatureResource.setQueryParameters(pickFeatureParams, true);
 
   this._resource = resource;
+
+  // TODO: change this pickFeatureResource to something like options.getFeaturesUrl if this option exists, else use the getCapabilities default URL
   this._pickFeaturesResource = pickFeatureResource;
   this._layers = options.layers;
 
