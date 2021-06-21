@@ -5102,7 +5102,7 @@ describe(
             asset: {
               version: "1.0",
             },
-            geometricError: 100.0,
+            root: {},
           };
           var buffer = generateJsonBuffer(externalTileset).buffer;
           return when.resolve(buffer);
