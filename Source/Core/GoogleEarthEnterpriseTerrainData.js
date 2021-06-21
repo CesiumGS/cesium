@@ -138,6 +138,7 @@ var rectangleScratch = new Rectangle();
  * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
  * @param {Number} options.level The level of the tile for which to create the terrain data.
  * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Number} [options.exaggerationRelativeHeight=0.0] The height from which terrain is exaggerated.
  * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
@@ -158,6 +159,10 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
   var y = options.y;
   var level = options.level;
   var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var exaggerationRelativeHeight = defaultValue(
+    options.exaggerationRelativeHeight,
+    0.0
+  );
   var throttle = defaultValue(options.throttle, true);
 
   var ellipsoid = tilingScheme.ellipsoid;
@@ -185,6 +190,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
     ellipsoid: ellipsoid,
     skirtHeight: this._skirtHeight,
     exaggeration: exaggeration,
+    exaggerationRelativeHeight: exaggerationRelativeHeight,
     includeWebMercatorT: true,
     negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
     negativeElevationThreshold: this._negativeElevationThreshold,
@@ -212,7 +218,6 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
       result.numberOfAttributes,
       OrientedBoundingBox.clone(result.orientedBoundingBox),
       TerrainEncoding.clone(result.encoding),
-      exaggeration,
       result.westIndicesSouthToNorth,
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
@@ -333,7 +338,6 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
     isNorthChild: isNorthChild,
     childRectangle: childRectangle,
     ellipsoid: ellipsoid,
-    exaggeration: mesh.exaggeration,
   });
 
   if (!defined(upsamplePromise)) {
