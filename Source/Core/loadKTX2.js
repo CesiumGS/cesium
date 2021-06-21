@@ -1,4 +1,3 @@
-import arraySlice from "./arraySlice.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import Resource from "./Resource.js";
@@ -96,8 +95,8 @@ function loadKTX2(resourceOrUrlOrBuffer) {
   return loadPromise.then(function (data) {
     // data array can be a view of a shared buffer,
     // so make a copy that can be given to the worker.
-    var copy = arraySlice(data);
-    return KTX2Transcoder.transcode(copy, supportedTranscoderFormats);
+    // var copy = arraySlice(data);
+    return KTX2Transcoder.transcode(data, supportedTranscoderFormats);
   });
 }
 

@@ -1,4 +1,4 @@
-import { loadKTX2 } from "../../Source/Cesium.js";
+import { DeveloperError, loadKTX2 } from "../../Source/Cesium.js";
 import { KTX2Transcoder } from "../../Source/Cesium.js";
 import { PixelFormat } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
@@ -9,6 +9,25 @@ describe("Core/loadKTX2", function () {
     expect(function () {
       loadKTX2();
     }).toThrowDeveloperError();
+  });
+
+  it("throws with unknown supported formats", function () {
+    var promise = KTX2Transcoder.transcode(new Uint8Array());
+    expect(promise).toBeDefined();
+
+    var resolvedValue;
+    var rejectedError;
+    return promise.then(
+      function (value) {
+        resolvedValue = value;
+      },
+      function (error) {
+        rejectedError = error;
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeDefined();
+        expect(rejectedError).toBeInstanceOf(DeveloperError);
+      }
+    );
   });
 
   it("returns a promise that resolves to undefined when there is no data", function () {
@@ -36,7 +55,7 @@ describe("Core/loadKTX2", function () {
     var resource = Resource.createIfNeeded("./Data/Images/Green4x4.ktx2");
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
-      var promise = KTX2Transcoder.transcode(buffer, { pvrtc: true });
+      var promise = loadKTX2(buffer);
       expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
@@ -54,7 +73,7 @@ describe("Core/loadKTX2", function () {
     var resource = Resource.createIfNeeded("./Data/Images/Green4x4Mipmap.ktx2");
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
-      var promise = KTX2Transcoder.transcode(buffer, { pvrtc: true });
+      var promise = loadKTX2(buffer);
       expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
@@ -78,7 +97,7 @@ describe("Core/loadKTX2", function () {
     );
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
-      var promise = KTX2Transcoder.transcode(buffer, { pvrtc: true });
+      var promise = loadKTX2(buffer);
       expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
@@ -98,7 +117,7 @@ describe("Core/loadKTX2", function () {
     );
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
-      var promise = KTX2Transcoder.transcode(buffer, { pvrtc: true });
+      var promise = loadKTX2(buffer);
       expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
@@ -131,9 +150,7 @@ describe("Core/loadKTX2", function () {
         rejectedError = error;
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError).toBeInstanceOf(RuntimeError);
-        expect(rejectedError.message).toEqual(
-          "Invalid KTX2 file." //glInternalFormat is not a valid format."
-        );
+        expect(rejectedError.message).toEqual("Invalid KTX2 file.");
       }
     );
   });
