@@ -93,8 +93,27 @@ function createCommand(model, frameState) {
   );
 
   var shaderProgram = createShader(frameState.context);
-
   var vertexArray = createVertexArray(primitive, frameState.context);
+
+  var start = performance.now();
+  var uniformMap = {
+    u_baseColor: function () {
+      return primitive.material.metallicRoughness.baseColorTexture.texture;
+    },
+    u_featureIdTexture: function () {
+      return primitive.featureIdTextures[0].textureReader.texture;
+    },
+    u_featureTexture: function () {
+      var featureTextureId = primitive.featureTextureIds[0];
+      var featureTexture =
+        model._components.featureMetadata._featureTextures[featureTextureId];
+      return featureTexture._properties["vegetationDensity"].textureReader
+        .texture;
+    },
+    u_time: function () {
+      return performance.now() - start;
+    },
+  };
 
   var drawCommand = new DrawCommand({
     boundingVolume: boundingSphere,
@@ -105,7 +124,7 @@ function createCommand(model, frameState) {
     vertexArray: vertexArray,
     count: primitive.indices.count,
     primitiveType: primitive.primitiveType,
-    uniformMap: undefined,
+    uniformMap: uniformMap,
   });
 
   return drawCommand;
@@ -115,23 +134,38 @@ function createShader(context) {
   var vertexShader =
     "attribute vec3 a_position;\n" +
     "attribute vec2 a_texcoord0;\n" +
+    "attribute vec2 a_texcoord1;\n" +
     "varying vec2 v_texcoord0;\n" +
+    "varying vec2 v_texcoord1;\n" +
     //"attribute vec3 a_normal;\n" +
     //"varying vec3 v_normal;\n" +
     "void main()\n" +
     "{\n" +
     //"    v_normal = a_normal;\n" +
     "    v_texcoord0 = a_texcoord0;\n" +
+    "    v_texcoord1 = a_texcoord1;\n" +
     "    gl_Position = czm_modelViewProjection * vec4(a_position, 1.0);\n" +
     "}\n";
 
   var fragmentShader =
     "varying vec3 v_normal;\n" +
     "varying vec2 v_texcoord0;\n" +
+    "varying vec2 v_texcoord1;\n" +
+    "uniform sampler2D u_baseColor;\n" +
+    "uniform sampler2D u_featureIdTexture;\n" +
+    "uniform sampler2D u_featureTexture;\n" +
+    "uniform float u_time;\n" +
     "void main()\n" +
     "{\n" +
     //"    gl_FragColor = vec4(abs(v_normal), 1.0);\n" +
-    "    gl_FragColor = vec4(v_texcoord0, 0.0, 1.0);\n" +
+    "    float timeBucket = mod(floor(3.0 * u_time * 0.0002), 3.0);\n" +
+    "    if (timeBucket == 0.0) {\n" +
+    "        gl_FragColor = texture2D(u_baseColor, v_texcoord0);\n" +
+    "    } else if (timeBucket == 1.0) {\n" +
+    "        gl_FragColor = texture2D(u_featureIdTexture, v_texcoord1);\n" +
+    "    } else {\n" +
+    "        gl_FragColor = texture2D(u_featureTexture, v_texcoord1);\n" +
+    "    }\n" +
     "}\n";
 
   return ShaderProgram.fromCache({
@@ -141,7 +175,8 @@ function createShader(context) {
     attributeLocations: {
       a_position: 0,
       //a_normal: 1,
-      a_texcoord0: 1,
+      a_texcoord0: 1, // material coords
+      a_texcoord1: 2, // metadata coords
     },
   });
 }
@@ -165,7 +200,7 @@ function createVertexArray(primitive, context) {
   };
   */
 
-  // microcosm has 2 texcoords: one for actual texcoords, another for feature textures. I forget which is which...
+  // microcosm has 2 texcoords: one for actual texcoords, another for feature ID textures
   var texcoordAttribute = {
     index: 1,
     vertexBuffer: primitive.attributes[2].buffer,
@@ -173,11 +208,18 @@ function createVertexArray(primitive, context) {
     componentDatatype: primitive.attributes[2].componentDatatype,
   };
 
+  var featureIdTexcoord = {
+    index: 2,
+    vertexBuffer: primitive.attributes[1].buffer,
+    componentsPerAttribute: 2,
+    componentDatatype: primitive.attributes[1].componentDatatype,
+  };
+
   var vertexArray = new VertexArray({
     context: context,
     // basic tileset
     //attributes: [positionAttribute, normalAttribute],
-    attributes: [positionAttribute, texcoordAttribute],
+    attributes: [positionAttribute, texcoordAttribute, featureIdTexcoord],
     indexBuffer: primitive.indices.buffer,
   });
 
