@@ -1869,58 +1869,33 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses getFeatureInfoUrl in options for getFeatureInfo", function () {
+    var featureUrl = "made/up/wms/feature/server";
     var provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
-      getFeatureInfoUrl: "made/up/wms/feature/server",
+      getFeatureInfoUrl: featureUrl,
     });
-
-    Resource._Implementations.loadWithXhr = function (
-      getFeatureInfoUrl,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(getFeatureInfoUrl).toContain("GetFeatureInfo");
-      Resource._DefaultImplementations.loadWithXhr(
-        "Data/WMS/GetFeatureInfo-GeoJSON.json",
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      );
-    };
 
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
-        crossOrigin,
-        deferred
-      ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
-        expect(getFeatureInfoUrl).toEqual("made/up/wms/feature/server");
-      });
-      return provider
-        .pickFeatures(0, 0, 0, 0.5, 0.5)
-        .then(function (pickResult) {
-          expect(pickResult.length).toBe(1);
+      expect(provider._pickFeaturesResource._url).toContain(featureUrl);
+    });
+  });
 
-          var firstResult = pickResult[0];
-          expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-          expect(firstResult.name).toBe("TOP TANK");
-          expect(firstResult.description).toContain("GEOSCIENCE AUSTRALIA");
-          expect(firstResult.position).toEqual(
-            Cartographic.fromDegrees(145.91299, -30.19445)
-          );
-        });
+  it("uses url in options if getFeatureInfoUrl is absent for pickResources", function () {
+    var featureUrl = "made/up/wms/feature/server";
+    var getCapabilitiesUrl = "made/up/wms/server";
+    var provider = new WebMapServiceImageryProvider({
+      url: getCapabilitiesUrl,
+      layers: "someLayer",
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource._url).not.toContain(featureUrl);
+      expect(provider._pickFeaturesResource._url).toContain(getCapabilitiesUrl);
     });
   });
 });
