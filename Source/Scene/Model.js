@@ -2779,6 +2779,7 @@ function loadTexturesFromBufferViews(model) {
         uint8Array: loadResources.getBuffer(bufferView),
         format: gltfTexture.mimeType,
         flipY: false,
+        skipColorSpaceConversion: true,
       })
         .then(onload)
         .otherwise(onerror);

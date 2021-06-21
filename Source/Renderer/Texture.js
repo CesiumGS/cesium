@@ -176,6 +176,10 @@ function Texture(options) {
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.LUMINANCE;
   var flipY = defaultValue(options.flipY, true);
+  var skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
   var initialized = true;
 
@@ -197,7 +201,7 @@ function Texture(options) {
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
-  if (options.skipColorSpaceConversion) {
+  if (skipColorSpaceConversion) {
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
   } else {
     gl.pixelStorei(
@@ -356,6 +360,7 @@ function Texture(options) {
   this._sizeInBytes = sizeInBytes;
   this._preMultiplyAlpha = preMultiplyAlpha;
   this._flipY = flipY;
+  this._skipColorSpaceConversion = skipColorSpaceConversion;
   this._initialized = initialized;
   this._sampler = undefined;
 
@@ -584,6 +589,11 @@ Object.defineProperties(Texture.prototype, {
       return this._flipY;
     },
   },
+  skipColorSpaceConversion: {
+    get: function () {
+      return this._skipColorSpaceConversion;
+    },
+  },
   width: {
     get: function () {
       return this._width;
@@ -682,6 +692,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
   var flipY = this._flipY;
+  var skipColorSpaceConversion = this._skipColorSpaceConversion;
 
   var unpackAlignment = 4;
   if (defined(arrayBufferView)) {
@@ -693,6 +704,15 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   }
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
 
   var uploaded = false;
   if (!this._initialized) {

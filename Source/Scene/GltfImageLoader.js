@@ -259,6 +259,7 @@ function loadImageFromBufferTypedArray(typedArray) {
     uint8Array: typedArray,
     format: mimeType,
     flipY: false,
+    skipColorSpaceConversion: true,
   });
 }
 

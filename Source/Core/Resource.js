@@ -379,6 +379,7 @@ Resource.supportsImageBitmapOptions = function () {
       return createImageBitmap(blob, {
         imageOrientation: "flipY",
         premultiplyAlpha: "none",
+        colorSpaceConversion: "none",
       });
     })
     .then(function (imageBitmap) {
@@ -925,6 +926,7 @@ Resource.prototype.fetchImage = function (options) {
         return Resource.createImageBitmapFromBlob(blob, {
           flipY: flipY,
           premultiplyAlpha: false,
+          skipColorSpaceConversion: true,
         });
       }
       var blobUrl = window.URL.createObjectURL(blob);
@@ -936,6 +938,7 @@ Resource.prototype.fetchImage = function (options) {
         resource: generatedBlobResource,
         flipY: flipY,
         preferImageBitmap: false,
+        skipColorSpaceConversion: true,
       });
     })
     .then(function (image) {
@@ -1940,6 +1943,7 @@ Resource._Implementations.createImage = function (
           return Resource.createImageBitmapFromBlob(blob, {
             flipY: flipY,
             premultiplyAlpha: false,
+            skipColorSpaceConversion: true,
           });
         })
         .then(deferred.resolve);
@@ -1956,10 +1960,15 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.defined("options", options);
   Check.typeOf.bool("options.flipY", options.flipY);
   Check.typeOf.bool("options.premultiplyAlpha", options.premultiplyAlpha);
+  Check.typeOf.bool(
+    "options.skipColorSpaceConversion",
+    options.skipColorSpaceConversion
+  );
 
   return createImageBitmap(blob, {
     imageOrientation: options.flipY ? "flipY" : "none",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
+    colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
   });
 };
 
