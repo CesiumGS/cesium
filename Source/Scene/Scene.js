@@ -1673,6 +1673,8 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
       context.s3tc) ||
     ((format === "WEBGL_compressed_texture_pvrtc" || format === "pvrtc") &&
       context.pvrtc) ||
+    ((format === "WEBGL_compressed_texture_etc" || format === "etc") &&
+      context.etc) ||
     ((format === "WEBGL_compressed_texture_etc1" || format === "etc1") &&
       context.etc1) ||
     ((format === "WEBGL_compressed_texture_astc" || format === "astc") &&
