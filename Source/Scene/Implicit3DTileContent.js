@@ -12,7 +12,7 @@ import S2Cell from "../Core/S2Cell.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
 
 /**
@@ -439,7 +439,7 @@ function deriveChildTile(
     // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
     // can be used to tighten the bounding volume
     if (
-      has3DTilesExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
+      hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
       defined(tileBounds)
     ) {
       updateS2CellHeights(
@@ -555,7 +555,7 @@ function deriveBoundingVolume(
 ) {
   var rootBoundingVolume = implicitTileset.boundingVolume;
 
-  if (has3DTilesExtension(rootBoundingVolume, "3DTILES_bounding_volume_S2")) {
+  if (hasExtension(rootBoundingVolume, "3DTILES_bounding_volume_S2")) {
     return deriveBoundingVolumeS2(
       parentIsPlaceholderTile,
       parentTile,

@@ -278,6 +278,7 @@ function loadImageFromUri(resource) {
   // Resolves to an ImageBitmap or Image
   return resource.fetchImage({
     skipColorSpaceConversion: true,
+    preferImageBitmap: true,
   });
 }
 

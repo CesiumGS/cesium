@@ -1,14 +1,13 @@
-import { ResourceLoaderState } from "../Source/Cesium.js";
-
 import pollToPromise from "./pollToPromise.js";
 
 export default function waitForLoaderProcess(loader, scene) {
+  var loaderFinished = false;
+  loader.promise.always(function () {
+    loaderFinished = true;
+  });
   return pollToPromise(function () {
     loader.process(scene.frameState);
-    return (
-      loader._state === ResourceLoaderState.READY ||
-      loader._state === ResourceLoaderState.FAILED
-    );
+    return loaderFinished;
   }).then(function () {
     return loader.promise;
   });

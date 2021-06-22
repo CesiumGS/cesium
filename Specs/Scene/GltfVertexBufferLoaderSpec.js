@@ -484,7 +484,9 @@ describe(
         expect(quantization.quantizedVolumeDimensions).toEqual(
           new Cartesian3(2.0, 2.0, 2.0)
         );
-        expect(quantization.normalizationRange).toBe(16383);
+        expect(quantization.normalizationRange).toEqual(
+          new Cartesian3(16383, 16383, 16383)
+        );
         expect(quantization.componentDatatype).toBe(
           ComponentDatatype.UNSIGNED_SHORT
         );
@@ -521,6 +523,7 @@ describe(
 
         var quantization = vertexBufferLoader.quantization;
         expect(quantization.octEncoded).toBe(true);
+        expect(quantization.octEncodedZXY).toBe(true);
         expect(quantization.quantizedVolumeOffset).toBeUndefined();
         expect(quantization.quantizedVolumeDimensions).toBeUndefined();
         expect(quantization.normalizationRange).toBe(1023);

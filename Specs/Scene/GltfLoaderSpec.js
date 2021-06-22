@@ -12,6 +12,7 @@ import {
   GltfTextureLoader,
   GltfVertexBufferLoader,
   IndexDatatype,
+  InstanceAttributeSemantic,
   JobScheduler,
   PrimitiveType,
   Matrix4,
@@ -24,6 +25,7 @@ import {
   TextureMagnificationFilter,
   TextureMinificationFilter,
   TextureWrap,
+  VertexAttributeSemantic,
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
@@ -61,6 +63,8 @@ describe(
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
     var boxInstancedInterleaved =
       "./Data/Models/GltfLoader/BoxInstancedInterleaved/glTF/box-instanced-interleaved.gltf";
+    var boxInstancedTranslation =
+      "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
     var duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
     var boomBoxSpecularGlossiness =
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
@@ -133,11 +137,14 @@ describe(
       });
     }
 
-    function getAttribute(attributes, semantic) {
+    function getAttribute(attributes, semantic, setIndex) {
       var attributesLength = attributes.length;
       for (var i = 0; i < attributesLength; ++i) {
         var attribute = attributes[i];
-        if (attribute.semantic === semantic) {
+        if (
+          attribute.semantic === semantic &&
+          attribute.setIndex === setIndex
+        ) {
           return attribute;
         }
       }
@@ -152,8 +159,14 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(12);
@@ -177,9 +190,19 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
 
         var indices = primitive.indices;
         var material = primitive.material;
@@ -212,7 +235,11 @@ describe(
         expect(primitive.attributes.length).toBe(3);
         expect(primitive.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
-        expect(positionAttribute.semantic).toBe("POSITION");
+        expect(positionAttribute.name).toBe("POSITION");
+        expect(positionAttribute.semantic).toBe(
+          VertexAttributeSemantic.POSITION
+        );
+        expect(positionAttribute.setIndex).toBeUndefined();
         expect(positionAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -228,7 +255,9 @@ describe(
         expect(positionAttribute.byteOffset).toBe(288);
         expect(positionAttribute.byteStride).toBe(12);
 
-        expect(normalAttribute.semantic).toBe("NORMAL");
+        expect(normalAttribute.name).toBe("NORMAL");
+        expect(normalAttribute.semantic).toBe(VertexAttributeSemantic.NORMAL);
+        expect(normalAttribute.setIndex).toBeUndefined();
         expect(normalAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(normalAttribute.type).toBe(AttributeType.VEC3);
         expect(normalAttribute.normalized).toBe(false);
@@ -242,7 +271,11 @@ describe(
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBe(12);
 
-        expect(texcoordAttribute.semantic).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.name).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.semantic).toBe(
+          VertexAttributeSemantic.TEXCOORD
+        );
+        expect(texcoordAttribute.setIndex).toBe(0);
         expect(texcoordAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -278,7 +311,7 @@ describe(
         expect(metallicRoughness.baseColorTexture.texture.height).toBe(256);
         expect(metallicRoughness.baseColorTexture.texCoord).toBe(0);
 
-        var sampler = metallicRoughness.baseColorTexture.sampler;
+        var sampler = metallicRoughness.baseColorTexture.texture.sampler;
         expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
         expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
         expect(sampler.magnificationFilter).toBe(
@@ -334,10 +367,24 @@ describe(
         var childNode = rootNode.children[1];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
-        var colorAttribute = getAttribute(attributes, "COLOR_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        var colorAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.COLOR,
+          0
+        );
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(0);
@@ -351,7 +398,9 @@ describe(
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBe(8);
 
-        expect(colorAttribute.semantic).toBe("COLOR_0");
+        expect(colorAttribute.name).toBe("COLOR_0");
+        expect(colorAttribute.semantic).toBe(VertexAttributeSemantic.COLOR);
+        expect(colorAttribute.setIndex).toBe(0);
         expect(colorAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(colorAttribute.type).toBe(AttributeType.VEC4);
         expect(colorAttribute.normalized).toBe(false);
@@ -387,10 +436,24 @@ describe(
         var childNode = rootNode.children[1];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
-        var colorAttribute = getAttribute(attributes, "COLOR_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        var colorAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.COLOR,
+          0
+        );
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(normalAttribute.buffer).toBeDefined();
@@ -409,14 +472,25 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
         var morphTargets = primitive.morphTargets;
         var morphTarget0 = morphTargets[0];
         var morphTarget1 = morphTargets[1];
-        var morphPositions0 = getAttribute(morphTarget0.attributes, "POSITION");
-        var morphPositions1 = getAttribute(morphTarget1.attributes, "POSITION");
+        var morphPositions0 = getAttribute(
+          morphTarget0.attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var morphPositions1 = getAttribute(
+          morphTarget1.attributes,
+          VertexAttributeSemantic.POSITION
+        );
 
-        expect(morphPositions0.semantic).toBe("POSITION");
+        expect(morphPositions0.name).toBe("POSITION");
+        expect(morphPositions0.semantic).toBe(VertexAttributeSemantic.POSITION);
+        expect(morphPositions0.setIndex).toBeUndefined();
         expect(morphPositions0.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(morphPositions0.type).toBe(AttributeType.VEC3);
         expect(morphPositions0.normalized).toBe(false);
@@ -430,7 +504,9 @@ describe(
         expect(morphPositions0.byteOffset).toBe(36);
         expect(morphPositions0.byteStride).toBe(12);
 
-        expect(morphPositions1.semantic).toBe("POSITION");
+        expect(morphPositions1.name).toBe("POSITION");
+        expect(morphPositions1.semantic).toBe(VertexAttributeSemantic.POSITION);
+        expect(morphPositions1.setIndex).toBeUndefined();
         expect(morphPositions1.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(morphPositions1.type).toBe(AttributeType.VEC3);
         expect(morphPositions1.normalized).toBe(false);
@@ -479,15 +555,28 @@ describe(
         var skin = rootNode.skin;
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var jointsAttribute = getAttribute(attributes, "JOINTS_0");
-        var weightsAttribute = getAttribute(attributes, "WEIGHTS_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var jointsAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.JOINTS,
+          0
+        );
+        var weightsAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.WEIGHTS,
+          0
+        );
 
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(0);
         expect(positionAttribute.byteStride).toBe(12);
 
-        expect(jointsAttribute.semantic).toBe("JOINTS_0");
+        expect(jointsAttribute.name).toBe("JOINTS_0");
+        expect(jointsAttribute.semantic).toBe(VertexAttributeSemantic.JOINTS);
+        expect(jointsAttribute.setIndex).toBe(0);
         expect(jointsAttribute.componentDatatype).toBe(
           ComponentDatatype.UNSIGNED_SHORT
         );
@@ -503,7 +592,9 @@ describe(
         expect(jointsAttribute.byteOffset).toBe(0);
         expect(jointsAttribute.byteStride).toBe(16);
 
-        expect(weightsAttribute.semantic).toBe("WEIGHTS_0");
+        expect(weightsAttribute.name).toBe("WEIGHTS_0");
+        expect(weightsAttribute.semantic).toBe(VertexAttributeSemantic.WEIGHTS);
+        expect(weightsAttribute.setIndex).toBe(0);
         expect(weightsAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -569,7 +660,10 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
 
         expect(positionAttribute).toBeDefined();
         expect(primitive.indices).toBeDefined();
@@ -595,7 +689,10 @@ describe(
           var rootNode = scene.nodes[0];
           var primitive = rootNode.primitives[0];
           var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(attributes, "POSITION");
+          var positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
 
           expect(positionAttribute).toBeDefined();
           expect(primitive.indices).toBeUndefined();
@@ -610,7 +707,10 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
 
         expect(positionAttribute).toBeDefined();
         expect(primitive.indices).toBeUndefined();
@@ -626,10 +726,23 @@ describe(
         var material = primitive.material;
         var metallicRoughness = material.metallicRoughness;
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var tangentAttribute = getAttribute(attributes, "TANGENT");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var tangentAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TANGENT
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
@@ -678,11 +791,13 @@ describe(
         expect(primitive.featureTextureIds).toEqual(["vegetationTexture"]);
 
         expect(featureIdTexture.featureTableId).toBe("landCoverTable");
-        expect(featureIdTexture.channel).toBe("r");
-        expect(featureIdTexture.texture.texCoord).toBe(0);
-        expect(featureIdTexture.texture.texture.width).toBe(256);
-        expect(featureIdTexture.texture.texture.height).toBe(256);
-        expect(featureIdTexture.texture.sampler).toBe(Sampler.NEAREST);
+        expect(featureIdTexture.textureReader.channels).toBe("r");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture.width).toBe(256);
+        expect(featureIdTexture.textureReader.texture.height).toBe(256);
+        expect(featureIdTexture.textureReader.texture.sampler).toBe(
+          Sampler.NEAREST
+        );
 
         var classDefinition = featureMetadata.schema.classes.landCover;
         var properties = classDefinition.properties;
@@ -706,10 +821,12 @@ describe(
         var featureTexture = featureMetadata.getFeatureTexture(
           "vegetationTexture"
         );
-        var vegetationProperty = featureTexture._properties.vegetationDensity;
+        var vegetationProperty = featureTexture.getProperty(
+          "vegetationDensity"
+        );
 
-        expect(vegetationProperty._texture.width).toBe(256);
-        expect(vegetationProperty._texture.height).toBe(256);
+        expect(vegetationProperty.textureReader.texture.width).toBe(256);
+        expect(vegetationProperty.textureReader.texture.height).toBe(256);
       });
     });
 
@@ -721,15 +838,29 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var featureIdAttribute = getAttribute(attributes, "_FEATURE_ID_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var featureIdAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.FEATURE_ID,
+          0
+        );
         var featureMetadata = components.featureMetadata;
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(featureIdAttribute.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.semantic).toBe(
+          VertexAttributeSemantic.FEATURE_ID
+        );
+        expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -751,7 +882,7 @@ describe(
 
         var featureIdAttributeMapping = primitive.featureIdAttributes[0];
         expect(featureIdAttributeMapping.featureTableId).toBe("buildings");
-        expect(featureIdAttributeMapping.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttributeMapping.setIndex).toBe(0);
         expect(featureIdAttributeMapping.constant).toBe(0);
         expect(featureIdAttributeMapping.divisor).toBe(0);
 
@@ -777,8 +908,15 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var featureIdAttribute = getAttribute(attributes, "_FEATURE_ID_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var featureIdAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.FEATURE_ID,
+          0
+        );
         var featureMetadata = components.featureMetadata;
 
         expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
@@ -792,13 +930,13 @@ describe(
 
         var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
         expect(featureIdAttributeMapping0.featureTableId).toBe("weatherTable");
-        expect(featureIdAttributeMapping0.semantic).toBeUndefined();
+        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.constant).toBe(0);
         expect(featureIdAttributeMapping0.divisor).toBe(1);
 
         var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
         expect(featureIdAttributeMapping1.featureTableId).toBe("townTable");
-        expect(featureIdAttributeMapping1.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.constant).toBe(0);
         expect(featureIdAttributeMapping1.divisor).toBe(0);
 
@@ -860,26 +998,41 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
         var featureMetadata = components.featureMetadata;
         var instances = rootNode.instances;
         var instancedAttributes = instances.attributes;
         var translationAttribute = getAttribute(
           instancedAttributes,
-          "TRANSLATION"
+          InstanceAttributeSemantic.TRANSLATION
         );
-        var rotationAttribute = getAttribute(instancedAttributes, "ROTATION");
-        var scaleAttribute = getAttribute(instancedAttributes, "SCALE");
+        var rotationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.ROTATION
+        );
+        var scaleAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.SCALE
+        );
         var featureIdAttribute = getAttribute(
           instancedAttributes,
-          "_FEATURE_ID_0"
+          InstanceAttributeSemantic.FEATURE_ID,
+          0
         );
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(translationAttribute.semantic).toBe("TRANSLATION");
+        expect(translationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.TRANSLATION
+        );
         expect(translationAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -890,12 +1043,16 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeUndefined();
-        expect(translationAttribute.buffer).toBeDefined();
+        expect(translationAttribute.typedArray).toEqual(
+          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+        );
+        expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBe(12);
+        expect(translationAttribute.byteStride).toBeUndefined();
 
-        expect(rotationAttribute.semantic).toBe("ROTATION");
+        expect(rotationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.ROTATION
+        );
         expect(rotationAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -906,12 +1063,20 @@ describe(
         expect(rotationAttribute.max).toBeUndefined();
         expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
         expect(rotationAttribute.quantization).toBeUndefined();
-        expect(rotationAttribute.typedArray).toBeUndefined();
-        expect(rotationAttribute.buffer).toBeDefined();
+        expect(rotationAttribute.typedArray).toEqual(
+          // prettier-ignore
+          new Float32Array([
+            0.3826833963394165, 0, 0, 0.9238795042037964,
+            0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
+            0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
+            0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
+          ])
+        );
+        expect(rotationAttribute.buffer).toBeUndefined();
         expect(rotationAttribute.byteOffset).toBe(0);
-        expect(rotationAttribute.byteStride).toBe(16);
+        expect(rotationAttribute.byteStride).toBeUndefined();
 
-        expect(scaleAttribute.semantic).toBe("SCALE");
+        expect(scaleAttribute.semantic).toBe(InstanceAttributeSemantic.SCALE);
         expect(scaleAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(scaleAttribute.type).toBe(AttributeType.VEC3);
         expect(scaleAttribute.normalized).toBe(false);
@@ -920,12 +1085,20 @@ describe(
         expect(scaleAttribute.max).toBeUndefined();
         expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(scaleAttribute.quantization).toBeUndefined();
-        expect(scaleAttribute.typedArray).toBeUndefined();
-        expect(scaleAttribute.buffer).toBeDefined();
+        expect(scaleAttribute.typedArray).toEqual(
+          // prettier-ignore
+          new Float32Array([
+            0.6000000238418579, 0.699999988079071, 1,
+            1, 1, 0.5,
+            0.75, 0.20000000298023224, 0.5,
+            0.800000011920929, 0.6000000238418579, 0.8999999761581421,
+          ])
+        );
+        expect(scaleAttribute.buffer).toBeUndefined();
         expect(scaleAttribute.byteOffset).toBe(0);
-        expect(scaleAttribute.byteStride).toBe(12);
+        expect(scaleAttribute.byteStride).toBeUndefined();
 
-        expect(featureIdAttribute.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.setIndex).toBe(0);
         expect(featureIdAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -945,13 +1118,13 @@ describe(
 
         var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
         expect(featureIdAttributeMapping0.featureTableId).toBe("boxTable");
-        expect(featureIdAttributeMapping0.semantic).toBeUndefined();
+        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.constant).toBe(0);
         expect(featureIdAttributeMapping0.divisor).toBe(1);
 
         var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
         expect(featureIdAttributeMapping1.featureTableId).toBe("sectionTable");
-        expect(featureIdAttributeMapping1.semantic).toBe("_FEATURE_ID_0");
+        expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.constant).toBe(0);
         expect(featureIdAttributeMapping1.divisor).toBe(0);
 
@@ -999,125 +1172,31 @@ describe(
           var rootNode = scene.nodes[0];
           var primitive = rootNode.primitives[0];
           var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(attributes, "POSITION");
-          var normalAttribute = getAttribute(attributes, "NORMAL");
+          var positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          var normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
           var instances = rootNode.instances;
           var instancedAttributes = instances.attributes;
           var translationAttribute = getAttribute(
             instancedAttributes,
-            "TRANSLATION"
+            InstanceAttributeSemantic.TRANSLATION
           );
-          var rotationAttribute = getAttribute(instancedAttributes, "ROTATION");
-          var scaleAttribute = getAttribute(instancedAttributes, "SCALE");
+          var rotationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.ROTATION
+          );
+          var scaleAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.SCALE
+          );
           var featureIdAttribute = getAttribute(
             instancedAttributes,
-            "_FEATURE_ID_0"
-          );
-
-          expect(positionAttribute).toBeDefined();
-          expect(normalAttribute).toBeDefined();
-
-          expect(translationAttribute.typedArray).toEqual(
-            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
-          );
-          expect(translationAttribute.buffer).toBeUndefined();
-          expect(translationAttribute.byteOffset).toBe(0);
-          expect(translationAttribute.byteStride).toBeUndefined();
-
-          expect(rotationAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-            0.3826833963394165, 0, 0, 0.9238795042037964,
-            0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
-            0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
-            0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
-          ])
-          );
-          expect(rotationAttribute.buffer).toBeUndefined();
-          expect(rotationAttribute.byteOffset).toBe(0);
-          expect(rotationAttribute.byteStride).toBeUndefined();
-
-          expect(scaleAttribute.typedArray).toEqual(
-            // prettier-ignore
-            new Float32Array([
-            0.6000000238418579, 0.699999988079071, 1,
-            1, 1, 0.5,
-            0.75, 0.20000000298023224, 0.5,
-            0.800000011920929, 0.6000000238418579, 0.8999999761581421,
-          ])
-          );
-          expect(scaleAttribute.buffer).toBeUndefined();
-          expect(scaleAttribute.byteOffset).toBe(0);
-          expect(scaleAttribute.byteStride).toBeUndefined();
-
-          expect(featureIdAttribute.typedArray).toEqual(
-            new Float32Array([0, 0, 1, 1])
-          );
-          expect(featureIdAttribute.buffer).toBeUndefined();
-          expect(featureIdAttribute.byteOffset).toBe(0);
-          expect(featureIdAttribute.byteStride).toBeUndefined();
-        })
-        .always(function () {
-          // Re-enable extension
-          scene.context._instancedArrays = instancedArrays;
-        });
-    });
-
-    it("loads BoxInstanced with default feature ids", function () {
-      if (!scene.context.instancedArrays) {
-        return;
-      }
-
-      function modifyGltf(gltf) {
-        // Delete feature ID accessor's buffer view
-        delete gltf.accessors[6].bufferView;
-        return gltf;
-      }
-
-      return loadModifiedGltfAndTest(boxInstanced, undefined, modifyGltf).then(
-        function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var instances = rootNode.instances;
-          var instancedAttributes = instances.attributes;
-          var featureIdAttribute = getAttribute(
-            instancedAttributes,
-            "_FEATURE_ID_0"
-          );
-
-          expect(featureIdAttribute.buffer).toBeUndefined();
-          expect(featureIdAttribute.typedArray).toBeUndefined();
-          expect(featureIdAttribute.constant).toEqual(0.0);
-        }
-      );
-    });
-
-    it("loads BoxInstancedInterleaved", function () {
-      // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
-      scene.context._instancedArrays = undefined;
-
-      return loadGltf(boxInstancedInterleaved)
-        .then(function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var primitive = rootNode.primitives[0];
-          var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(attributes, "POSITION");
-          var normalAttribute = getAttribute(attributes, "NORMAL");
-          var instances = rootNode.instances;
-          var instancedAttributes = instances.attributes;
-          var translationAttribute = getAttribute(
-            instancedAttributes,
-            "TRANSLATION"
-          );
-          var rotationAttribute = getAttribute(instancedAttributes, "ROTATION");
-          var scaleAttribute = getAttribute(instancedAttributes, "SCALE");
-          var featureIdAttribute = getAttribute(
-            instancedAttributes,
-            "_FEATURE_ID_0"
+            InstanceAttributeSemantic.FEATURE_ID_0
           );
 
           expect(positionAttribute).toBeDefined();
@@ -1169,6 +1248,217 @@ describe(
         });
     });
 
+    it("loads BoxInstanced with default feature ids", function () {
+      if (!scene.context.instancedArrays) {
+        return;
+      }
+
+      function modifyGltf(gltf) {
+        // Delete feature ID accessor's buffer view
+        delete gltf.accessors[6].bufferView;
+        return gltf;
+      }
+
+      return loadModifiedGltfAndTest(boxInstanced, undefined, modifyGltf).then(
+        function (gltfLoader) {
+          var components = gltfLoader.components;
+          var scene = components.scene;
+          var rootNode = scene.nodes[0];
+          var instances = rootNode.instances;
+          var instancedAttributes = instances.attributes;
+          var featureIdAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.FEATURE_ID,
+            0
+          );
+
+          expect(featureIdAttribute.buffer).toBeUndefined();
+          expect(featureIdAttribute.typedArray).toBeUndefined();
+          expect(featureIdAttribute.constant).toEqual(0.0);
+        }
+      );
+    });
+
+    it("loads BoxInstancedInterleaved", function () {
+      // Disable extension
+      var instancedArrays = scene.context._instancedArrays;
+      scene.context._instancedArrays = undefined;
+
+      return loadGltf(boxInstancedInterleaved)
+        .then(function (gltfLoader) {
+          var components = gltfLoader.components;
+          var scene = components.scene;
+          var rootNode = scene.nodes[0];
+          var primitive = rootNode.primitives[0];
+          var attributes = primitive.attributes;
+          var positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          var normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          var instances = rootNode.instances;
+          var instancedAttributes = instances.attributes;
+          var translationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.TRANSLATION
+          );
+          var rotationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.ROTATION
+          );
+          var scaleAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.SCALE
+          );
+          var featureIdAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.FEATURE_ID_0
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeDefined();
+
+          expect(translationAttribute.typedArray).toEqual(
+            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+          );
+          expect(translationAttribute.buffer).toBeUndefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBeUndefined();
+
+          expect(rotationAttribute.typedArray).toEqual(
+            // prettier-ignore
+            new Float32Array([
+              0.3826833963394165, 0, 0, 0.9238795042037964,
+              0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
+              0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
+              0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
+            ])
+          );
+          expect(rotationAttribute.buffer).toBeUndefined();
+          expect(rotationAttribute.byteOffset).toBe(0);
+          expect(rotationAttribute.byteStride).toBeUndefined();
+
+          expect(scaleAttribute.typedArray).toEqual(
+            // prettier-ignore
+            new Float32Array([
+              0.6000000238418579, 0.699999988079071, 1,
+              1, 1, 0.5,
+              0.75, 0.20000000298023224, 0.5,
+              0.800000011920929, 0.6000000238418579, 0.8999999761581421,
+            ])
+          );
+          expect(scaleAttribute.buffer).toBeUndefined();
+          expect(scaleAttribute.byteOffset).toBe(0);
+          expect(scaleAttribute.byteStride).toBeUndefined();
+
+          expect(featureIdAttribute.typedArray).toEqual(
+            new Float32Array([0, 0, 1, 1])
+          );
+          expect(featureIdAttribute.buffer).toBeUndefined();
+          expect(featureIdAttribute.byteOffset).toBe(0);
+          expect(featureIdAttribute.byteStride).toBeUndefined();
+        })
+        .always(function () {
+          // Re-enable extension
+          scene.context._instancedArrays = instancedArrays;
+        });
+    });
+
+    it("loads BoxInstancedTranslation", function () {
+      if (!scene.context.instancedArrays) {
+        return;
+      }
+
+      return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var primitive = rootNode.primitives[0];
+        var attributes = primitive.attributes;
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var instances = rootNode.instances;
+        var instancedAttributes = instances.attributes;
+        var translationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.TRANSLATION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+
+        expect(translationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.TRANSLATION
+        );
+        expect(translationAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(translationAttribute.type).toBe(AttributeType.VEC3);
+        expect(translationAttribute.normalized).toBe(false);
+        expect(translationAttribute.count).toBe(4);
+        expect(translationAttribute.min).toBeUndefined();
+        expect(translationAttribute.max).toBeUndefined();
+        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+        expect(translationAttribute.quantization).toBeUndefined();
+        expect(translationAttribute.typedArray).toBeUndefined();
+        expect(translationAttribute.buffer).toBeDefined();
+        expect(translationAttribute.byteOffset).toBe(0);
+        expect(translationAttribute.byteStride).toBe(12);
+      });
+    });
+
+    it("loads BoxInstancedTranslation when WebGL instancing is disabled", function () {
+      // Disable extension
+      var instancedArrays = scene.context._instancedArrays;
+      scene.context._instancedArrays = undefined;
+
+      return loadGltf(boxInstancedTranslation)
+        .then(function (gltfLoader) {
+          var components = gltfLoader.components;
+          var scene = components.scene;
+          var rootNode = scene.nodes[0];
+          var primitive = rootNode.primitives[0];
+          var attributes = primitive.attributes;
+          var positionAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.POSITION
+          );
+          var normalAttribute = getAttribute(
+            attributes,
+            VertexAttributeSemantic.NORMAL
+          );
+          var instances = rootNode.instances;
+          var instancedAttributes = instances.attributes;
+          var translationAttribute = getAttribute(
+            instancedAttributes,
+            InstanceAttributeSemantic.TRANSLATION
+          );
+
+          expect(positionAttribute).toBeDefined();
+          expect(normalAttribute).toBeDefined();
+
+          expect(translationAttribute.typedArray).toEqual(
+            new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+          );
+          expect(translationAttribute.buffer).toBeUndefined();
+          expect(translationAttribute.byteOffset).toBe(0);
+          expect(translationAttribute.byteStride).toBeUndefined();
+        })
+        .always(function () {
+          // Re-enable extension
+          scene.context._instancedArrays = instancedArrays;
+        });
+    });
+
     it("loads Duck", function () {
       return loadGltf(duckDraco).then(function (gltfLoader) {
         var components = gltfLoader.components;
@@ -1177,16 +1467,30 @@ describe(
         var childNode = rootNode.children[0];
         var primitive = childNode.primitives[0];
         var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(attributes, "POSITION");
-        var normalAttribute = getAttribute(attributes, "NORMAL");
-        var texcoordAttribute = getAttribute(attributes, "TEXCOORD_0");
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
         var positionQuantization = positionAttribute.quantization;
         var normalQuantization = normalAttribute.quantization;
         var texcoordQuantization = texcoordAttribute.quantization;
 
         var indices = primitive.indices;
 
-        expect(positionAttribute.semantic).toBe("POSITION");
+        expect(positionAttribute.name).toBe("POSITION");
+        expect(positionAttribute.semantic).toBe(
+          VertexAttributeSemantic.POSITION
+        );
+        expect(positionAttribute.setIndex).toBeUndefined();
         expect(positionAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -1213,7 +1517,9 @@ describe(
         expect(positionAttribute.byteOffset).toBe(0);
         expect(positionAttribute.byteStride).toBeUndefined();
         expect(positionQuantization.octEncoded).toBe(false);
-        expect(positionQuantization.normalizationRange).toBe(2047);
+        expect(positionQuantization.normalizationRange).toEqual(
+          new Cartesian3(2047, 2047, 2047)
+        );
         expect(positionQuantization.quantizedVolumeOffset).toEqual(
           new Cartesian3(
             -69.29850006103516,
@@ -1233,7 +1539,9 @@ describe(
         );
         expect(positionQuantization.type).toBe(AttributeType.VEC3);
 
-        expect(normalAttribute.semantic).toBe("NORMAL");
+        expect(normalAttribute.name).toBe("NORMAL");
+        expect(normalAttribute.semantic).toBe(VertexAttributeSemantic.NORMAL);
+        expect(normalAttribute.setIndex).toBeUndefined();
         expect(normalAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
         expect(normalAttribute.type).toBe(AttributeType.VEC3);
         expect(normalAttribute.normalized).toBe(false);
@@ -1266,7 +1574,11 @@ describe(
         );
         expect(normalQuantization.type).toBe(AttributeType.VEC2);
 
-        expect(texcoordAttribute.semantic).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.name).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.semantic).toBe(
+          VertexAttributeSemantic.TEXCOORD
+        );
+        expect(texcoordAttribute.setIndex).toBe(0);
         expect(texcoordAttribute.componentDatatype).toBe(
           ComponentDatatype.FLOAT
         );
@@ -1285,7 +1597,9 @@ describe(
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBeUndefined();
         expect(texcoordQuantization.octEncoded).toBe(false);
-        expect(texcoordQuantization.normalizationRange).toBe(1023);
+        expect(texcoordQuantization.normalizationRange).toEqual(
+          new Cartesian2(1023, 1023)
+        );
         expect(texcoordQuantization.quantizedVolumeOffset).toEqual(
           new Cartesian2(0.026409000158309937, 0.01996302604675293)
         );
@@ -1320,10 +1634,8 @@ describe(
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
         var material = primitive.material;
-        var metallicRoughness = material.metallicRoughness;
         var specularGlossiness = material.specularGlossiness;
 
-        expect(metallicRoughness).toBeUndefined();
         expect(material.occlusionTexture.texture.width).toBe(128);
         expect(material.normalTexture.texture.width).toBe(128);
         expect(material.emissiveTexture.texture.width).toBe(128);

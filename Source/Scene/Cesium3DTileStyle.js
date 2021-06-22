@@ -1664,6 +1664,8 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
       shaderState,
       "vec4"
     );
+  } else {
+    this._colorShaderFunction = undefined;
   }
 
   this._colorShaderTranslucent = shaderState.translucent;
@@ -1700,6 +1702,8 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
       shaderState,
       "bool"
     );
+  } else {
+    this._showShaderFunction = undefined;
   }
   return this._showShaderFunction;
 };
@@ -1733,6 +1737,8 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
       shaderState,
       "float"
     );
+  } else {
+    this._pointSizeShaderFunction = undefined;
   }
 
   return this._pointSizeShaderFunction;
