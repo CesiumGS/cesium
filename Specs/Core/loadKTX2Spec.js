@@ -135,7 +135,7 @@ describe("Core/loadKTX2", function () {
     });
   });
 
-  it("cannot parse invalid KTX buffer", function () {
+  it("cannot parse invalid KTX2 buffer", function () {
     var invalidKTX = new Uint8Array([0, 1, 2, 3, 4, 5]);
 
     var resolvedValue;

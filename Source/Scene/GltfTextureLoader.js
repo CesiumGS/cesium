@@ -235,7 +235,7 @@ function createTexture(gltf, textureInfo, image, context) {
   // WebGL. Also note from the KHR_texture_basisu spec:
   //
   //   When a texture refers to a sampler with mipmap minification or when the
-  //   sampler is undefined, the KTX image SHOULD contain a full mip pyramid.
+  //   sampler is undefined, the KTX2 image SHOULD contain a full mip pyramid.
   //
   var generateMipmap = !defined(internalFormat) && samplerRequiresMipmap;
 

@@ -744,7 +744,7 @@ function Scene(options) {
   this.sphericalHarmonicCoefficients = undefined;
 
   /**
-   * The url to the KTX file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
+   * The url to the KTX2 file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
    * @type {String}
    */
   this.specularEnvironmentMaps = undefined;
