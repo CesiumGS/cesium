@@ -103,9 +103,6 @@ function loadKTX2(resourceOrUrlOrBuffer) {
 
   // load module then return
   return loadPromise.then(function (data) {
-    // data array can be a view of a shared buffer,
-    // so make a copy that can be given to the worker.
-    // var copy = arraySlice(data);
     return KTX2Transcoder.transcode(data, supportedTranscoderFormats);
   });
 }
