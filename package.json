@@ -92,11 +92,6 @@
     "typescript": "^4.3.4",
     "yargs": "^17.0.1"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
   "scripts": {
     "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
@@ -130,6 +125,7 @@
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\"",
-    "pretty-quick": "pretty-quick"
+    "pretty-quick": "pretty-quick",
+    "prepare": "husky install"
   }
 }
