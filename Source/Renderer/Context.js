@@ -731,7 +731,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_s3tc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_s3tc is supported.  This extension provides
    * access to DXT compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -744,7 +744,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_pvrtc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_pvrtc is supported.  This extension provides
    * access to PVR compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -757,7 +757,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_astc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_astc is supported.  This extension provides
    * access to ASTC compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}

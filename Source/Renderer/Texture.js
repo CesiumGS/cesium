@@ -153,6 +153,10 @@ function Texture(options) {
       throw new DeveloperError(
         "When options.pixelFormat is ASTC compressed, this WebGL implementation must support the WEBGL_texture_compression_astc extension. Check context.astc."
       );
+    } else if (PixelFormat.isETC2Format(internalFormat) && !context.etc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ETC2 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc extension. Check context.etc."
+      );
     } else if (PixelFormat.isETC1Format(internalFormat) && !context.etc1) {
       throw new DeveloperError(
         "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1."

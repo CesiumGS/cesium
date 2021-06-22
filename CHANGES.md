@@ -16,7 +16,7 @@
   - Added support for glTF models with the [`KHR_texture_basisu`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md) extension.
   - Added support for 8-bit, 16-bit float, and 32-bit float KTX2 specular environment maps.
   - Added support for KTX2 images in `Material`.
-  - Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_texture_astc` and `EXT_texture_compression_bptc`.
+  - Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_texture_etc`, `WEBGL_compressed_texture_astc`, and `EXT_texture_compression_bptc`.
 
 ##### Fixes :wrench:
 

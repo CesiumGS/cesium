@@ -434,7 +434,7 @@ Material.prototype.update = function (context) {
     var image = loadedImage.image;
 
     // Images transcoded from KTX2 can contain multiple mip levels:
-    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+    // https://github.khronos.org/KTX-Specification/#_mip_level_array
     var mipLevels;
     if (Array.isArray(image)) {
       // highest detail mip should be level 0
