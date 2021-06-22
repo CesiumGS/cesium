@@ -63,7 +63,6 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
 
   var encoding = TerrainEncoding.clone(parameters.encoding);
   var hasVertexNormals = encoding.hasVertexNormals;
-  var exaggeration = parameters.exaggeration;
 
   var vertexCount = 0;
   var quantizedVertexCount = parameters.vertexCountWithoutSkirts;
@@ -89,7 +88,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       i,
       decodeTexCoordsScratch
     );
-    height = encoding.decodeHeight(parentVertices, i) / exaggeration;
+    height = encoding.decodeHeight(parentVertices, i);
 
     u = CesiumMath.clamp((texCoords.x * maxShort) | 0, 0, maxShort);
     v = CesiumMath.clamp((texCoords.y * maxShort) | 0, 0, maxShort);
