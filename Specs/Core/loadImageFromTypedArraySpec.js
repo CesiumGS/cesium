@@ -52,6 +52,7 @@ describe("Core/loadImageFromTypedArray", function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
             imageOrientation: "flipY",
             premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
           });
 
           window.createImageBitmap.calls.reset();
@@ -62,6 +63,50 @@ describe("Core/loadImageFromTypedArray", function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
             imageOrientation: "none",
             premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
+          });
+        });
+    });
+  });
+
+  it("stores colorSpaceConversion correctly", function () {
+    if (!supportsImageBitmapOptions) {
+      return;
+    }
+
+    var options = {
+      uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
+      format: "image/png",
+      flipY: false,
+      skipColorSpaceConversion: true,
+    };
+    spyOn(window, "createImageBitmap").and.returnValue(when.resolve({}));
+    var blob = new Blob([options.uint8Array], {
+      type: options.format,
+    });
+
+    return Resource.supportsImageBitmapOptions().then(function (result) {
+      if (!result) {
+        return;
+      }
+
+      return loadImageFromTypedArray(options)
+        .then(function () {
+          expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+            imageOrientation: "none",
+            premultiplyAlpha: "none",
+            colorSpaceConversion: "none",
+          });
+
+          window.createImageBitmap.calls.reset();
+          options.skipColorSpaceConversion = false;
+          return loadImageFromTypedArray(options);
+        })
+        .then(function () {
+          expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+            imageOrientation: "none",
+            premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
           });
         });
     });

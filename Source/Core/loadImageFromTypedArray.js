@@ -46,6 +46,7 @@ function loadImageFromTypedArray(options) {
 
       return resource.fetchImage({
         flipY: flipY,
+        skipColorSpaceConversion: skipColorSpaceConversion,
       });
     })
     .then(function (result) {

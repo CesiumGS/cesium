@@ -360,7 +360,6 @@ function Texture(options) {
   this._sizeInBytes = sizeInBytes;
   this._preMultiplyAlpha = preMultiplyAlpha;
   this._flipY = flipY;
-  this._skipColorSpaceConversion = skipColorSpaceConversion;
   this._initialized = initialized;
   this._sampler = undefined;
 
@@ -589,11 +588,6 @@ Object.defineProperties(Texture.prototype, {
       return this._flipY;
     },
   },
-  skipColorSpaceConversion: {
-    get: function () {
-      return this._skipColorSpaceConversion;
-    },
-  },
   width: {
     get: function () {
       return this._width;
@@ -692,7 +686,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
   var flipY = this._flipY;
-  var skipColorSpaceConversion = this._skipColorSpaceConversion;
+  var skipColorSpaceConversion = false;
 
   var unpackAlignment = 4;
   if (defined(arrayBufferView)) {

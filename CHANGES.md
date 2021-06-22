@@ -7,6 +7,7 @@
 - Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
 - Added checks for supported 3D Tiles extensions. [#9552](https://github.com/CesiumGS/cesium/issues/9552)
 - Added documentation for `KmlTour`, `KmlTourFlyTo`, and `KmlTourWait`. Added documentation and a `kmlTours` getter to `KmlDataSource`. Removed references to `KmlTourSoundCues`. [#8073](https://github.com/CesiumGS/cesium/issues/8073)
+- Added option to ignore extraneous colorspace information in glTF textures and `ImageBitmap`. [#9624](https://github.com/CesiumGS/cesium/pull/9624)
 
 ##### Fixes :wrench:
 
@@ -14,7 +15,6 @@
 - Fixed error handling in `GlobeSurfaceTile` to print terrain tile request errors to console. [#9570](https://github.com/CesiumGS/cesium/pull/9570)
 - Fixed broken image URL in the KML Sandcastle. [#9579](https://github.com/CesiumGS/cesium/pull/9579)
 - Fixed an error where the `positionToEyeEC` and `tangentToEyeMatrix` properties for custom materials were not set in `GlobeFS`. [#9597](https://github.com/CesiumGS/cesium/pull/9597)
-- Fixed the mishandling of extraneous colorspace information in glTF textures. [#9624](https://github.com/CesiumGS/cesium/pull/9624)
 
 ### 1.82.1 - 2021-06-01
 
