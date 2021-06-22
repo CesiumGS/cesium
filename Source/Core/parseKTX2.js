@@ -145,32 +145,79 @@ function transcodeCompressed(
     throw new RuntimeError("Invalid KTX2 file");
   }
 
-  // Determine target format based on platform support
   var internalFormat, transcoderFormat;
+  var dfd = header.dataFormatDescriptor[0];
   var BasisFormat = transcoderModule.transcoder_texture_format;
-  if (supportedTargetFormats.astc && hasAlpha) {
-    internalFormat = PixelFormat.RGBA_ASTC;
-    transcoderFormat = BasisFormat.cTFASTC_4x4_RGBA;
-  } else if (supportedTargetFormats.bc7) {
-    internalFormat = PixelFormat.RGBA_BC7;
-    transcoderFormat = BasisFormat.cTFBC7_RGBA;
-  } else if (supportedTargetFormats.etc1 && !hasAlpha) {
-    internalFormat = PixelFormat.RGB_ETC1;
-    transcoderFormat = BasisFormat.cTFETC1_RGB;
-  } else if (supportedTargetFormats.s3tc) {
-    internalFormat = hasAlpha ? PixelFormat.RGBA_DXT5 : PixelFormat.RGB_DXT1;
-    transcoderFormat = hasAlpha
-      ? BasisFormat.cTFBC3_RGBA
-      : BasisFormat.cTFBC1_RGB;
-  } else if (supportedTargetFormats.pvrtc) {
-    internalFormat = hasAlpha
-      ? PixelFormat.RGBA_PVRTC_4BPPV1
-      : PixelFormat.RGB_PVRTC_4BPPV1;
-    transcoderFormat = hasAlpha
-      ? BasisFormat.cTFPVRTC1_4_RGBA
-      : BasisFormat.cTFPVRTC1_4_RGB;
-  } else {
-    throw new RuntimeError("No transcoding format target available.");
+
+  // Determine target format based on platform support
+  if (dfd.colorModel === colorModelETC1S) {
+    if (supportedTargetFormats.etc) {
+      internalFormat = hasAlpha
+        ? PixelFormat.RGBA8_ETC2_EAC
+        : PixelFormat.RGB8_ETC2;
+      transcoderFormat = hasAlpha
+        ? BasisFormat.cTFETC2_RGBA
+        : BasisFormat.cTFETC1_RGB;
+    } else if (supportedTargetFormats.etc1 && !hasAlpha) {
+      internalFormat = PixelFormat.RGB_ETC1;
+      transcoderFormat = BasisFormat.cTFETC1_RGB;
+    } else if (supportedTargetFormats.s3tc) {
+      internalFormat = hasAlpha ? PixelFormat.RGBA_DXT5 : PixelFormat.RGB_DXT1;
+      transcoderFormat = hasAlpha
+        ? BasisFormat.cTFBC3_RGBA
+        : BasisFormat.cTFBC1_RGB;
+    } else if (supportedTargetFormats.pvrtc) {
+      internalFormat = hasAlpha
+        ? PixelFormat.RGBA_PVRTC_4BPPV1
+        : PixelFormat.RGB_PVRTC_4BPPV1;
+      transcoderFormat = hasAlpha
+        ? BasisFormat.cTFPVRTC1_4_RGBA
+        : BasisFormat.cTFPVRTC1_4_RGB;
+    } else if (supportedTargetFormats.astc && hasAlpha) {
+      internalFormat = PixelFormat.RGBA_ASTC;
+      transcoderFormat = BasisFormat.cTFASTC_4x4_RGBA;
+    } else if (supportedTargetFormats.bc7) {
+      internalFormat = PixelFormat.RGBA_BC7;
+      transcoderFormat = BasisFormat.cTFBC7_RGBA;
+    } else {
+      throw new RuntimeError(
+        "No transcoding format target available for ETC1S compressed ktx2."
+      );
+    }
+  } else if (dfd.colorModel === colorModelUASTC) {
+    if (supportedTargetFormats.astc && hasAlpha) {
+      internalFormat = PixelFormat.RGBA_ASTC;
+      transcoderFormat = BasisFormat.cTFASTC_4x4_RGBA;
+    } else if (supportedTargetFormats.bc7) {
+      internalFormat = PixelFormat.RGBA_BC7;
+      transcoderFormat = BasisFormat.cTFBC7_RGBA;
+    } else if (supportedTargetFormats.s3tc) {
+      internalFormat = hasAlpha ? PixelFormat.RGBA_DXT5 : PixelFormat.RGB_DXT1;
+      transcoderFormat = hasAlpha
+        ? BasisFormat.cTFBC3_RGBA
+        : BasisFormat.cTFBC1_RGB;
+    } else if (supportedTargetFormats.etc) {
+      internalFormat = hasAlpha
+        ? PixelFormat.RGBA8_ETC2_EAC
+        : PixelFormat.RGB8_ETC2;
+      transcoderFormat = hasAlpha
+        ? BasisFormat.cTFETC2_RGBA
+        : BasisFormat.cTFETC1_RGB;
+    } else if (supportedTargetFormats.etc1 && !hasAlpha) {
+      internalFormat = PixelFormat.RGB_ETC1;
+      transcoderFormat = BasisFormat.cTFETC1_RGB;
+    } else if (supportedTargetFormats.pvrtc) {
+      internalFormat = hasAlpha
+        ? PixelFormat.RGBA_PVRTC_4BPPV1
+        : PixelFormat.RGB_PVRTC_4BPPV1;
+      transcoderFormat = hasAlpha
+        ? BasisFormat.cTFPVRTC1_4_RGBA
+        : BasisFormat.cTFPVRTC1_4_RGB;
+    } else {
+      throw new RuntimeError(
+        "No transcoding format target available for UASTC compressed ktx2."
+      );
+    }
   }
 
   if (!ktx2File.startTranscoding()) {

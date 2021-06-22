@@ -316,6 +316,7 @@ function Context(canvas, options) {
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
   this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
+  this._etc = !!getExtension(gl, ["WEBG_compressed_texture_etc"]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
   this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
 
@@ -325,6 +326,7 @@ function Context(canvas, options) {
     this._s3tc,
     this._pvrtc,
     this._astc,
+    this._etc,
     this._etc1,
     this._bc7
   );
@@ -768,7 +770,20 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_etc1 is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_etc is supported.  This extension provides
+   * access to ETC compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc/}
+   */
+  etc: {
+    get: function () {
+      return this._etc;
+    },
+  },
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc1 is supported.  This extension provides
    * access to ETC1 compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -794,13 +809,20 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if S3TC, PVRTC, ASTC, ETC1, or BC7 compression is supported.
+   * <code>true</code> if S3TC, PVRTC, ASTC, ETC, ETC1, or BC7 compression is supported.
    * @memberof Context.prototype
    * @type {Boolean}
    */
   supportsBasis: {
     get: function () {
-      return this._s3tc || this._pvrtc || this._astc || this._etc1 || this._bc7;
+      return (
+        this._s3tc ||
+        this._pvrtc ||
+        this._astc ||
+        this._etc ||
+        this._etc1 ||
+        this._bc7
+      );
     },
   },
 

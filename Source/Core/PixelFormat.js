@@ -144,6 +144,22 @@ var PixelFormat = {
   RGB_ETC1: WebGLConstants.COMPRESSED_RGB_ETC1_WEBGL,
 
   /**
+   * A pixel format containing red, green, and blue channels that is ETC2 compressed.
+   *
+   * @type {Number}
+   * @constant
+   */
+  RGB8_ETC2: WebGLConstants.COMPRESSED_RGB8_ETC2,
+
+  /**
+   * A pixel format containing red, green, blue, and alpha channels that is ETC2 compressed.
+   *
+   * @type {Number}
+   * @constant
+   */
+  RGBA8_ETC2_EAC: WebGLConstants.COMPRESSED_RGBA8_ETC2_EAC,
+
+  /**
    * A pixel format containing red, green, blue, and alpha channels that is BC7 compressed.
    *
    * @type {Number}
@@ -193,6 +209,8 @@ PixelFormat.validate = function (pixelFormat) {
     pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
     pixelFormat === PixelFormat.RGBA_ASTC ||
     pixelFormat === PixelFormat.RGB_ETC1 ||
+    pixelFormat === PixelFormat.RGB8_ETC2 ||
+    pixelFormat === PixelFormat.RGBA8_ETC2_EAC ||
     pixelFormat === PixelFormat.RGBA_BC7
   );
 };
@@ -235,6 +253,8 @@ PixelFormat.isCompressedFormat = function (pixelFormat) {
     pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
     pixelFormat === PixelFormat.RGBA_ASTC ||
     pixelFormat === PixelFormat.RGB_ETC1 ||
+    pixelFormat === PixelFormat.RGB8_ETC2 ||
+    pixelFormat === PixelFormat.RGBA8_ETC2_EAC ||
     pixelFormat === PixelFormat.RGBA_BC7
   );
 };
@@ -280,6 +300,16 @@ PixelFormat.isETC1Format = function (pixelFormat) {
 /**
  * @private
  */
+PixelFormat.isETC2Format = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.RGB8_ETC2 ||
+    pixelFormat === PixelFormat.RGBA8_ETC2_EAC
+  );
+};
+
+/**
+ * @private
+ */
 PixelFormat.isBC7Format = function (pixelFormat) {
   return pixelFormat === PixelFormat.RGBA_BC7;
 };
@@ -296,11 +326,13 @@ PixelFormat.compressedTextureSizeInBytes = function (
     case PixelFormat.RGB_DXT1:
     case PixelFormat.RGBA_DXT1:
     case PixelFormat.RGB_ETC1:
+    case PixelFormat.RGB8_ETC2:
       return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 8;
 
     case PixelFormat.RGBA_DXT3:
     case PixelFormat.RGBA_DXT5:
     case PixelFormat.RGBA_ASTC:
+    case PixelFormat.RGBA8_ETC2_EAC:
       return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 16;
 
     case PixelFormat.RGB_PVRTC_4BPPV1:

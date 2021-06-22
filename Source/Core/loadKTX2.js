@@ -10,17 +10,26 @@ import when from "../ThirdParty/when.js";
  * @param {Boolean} s3tc Whether or not S3TC is supported
  * @param {Boolean} pvrtc Whether or not PVRTC is supported
  * @param {Boolean} astc Whether or not ASTC is supported
+ * @param {Boolean} etc Whether or not ETC is supported
  * @param {Boolean} etc1 Whether or not ETC1 is supported
  * @param {Boolean} bc7 Whether or not BC7 is supported
  * @private
  */
 var supportedTranscoderFormats;
 
-loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
+loadKTX2.setKTX2SupportedFormats = function (
+  s3tc,
+  pvrtc,
+  astc,
+  etc,
+  etc1,
+  bc7
+) {
   supportedTranscoderFormats = {
     s3tc: s3tc,
     pvrtc: pvrtc,
     astc: astc,
+    etc: etc,
     etc1: etc1,
     bc7: bc7,
   };
@@ -50,7 +59,8 @@ loadKTX2.setKTX2SupportedFormats = function (s3tc, pvrtc, astc, etc1, bc7) {
  * @exception {RuntimeError} Invalid KTX2 file.
  * @exception {RuntimeError} KTX2 texture arrays are not supported.
  * @exception {RuntimeError} KTX2 3D textures are unsupported.
- * @exception {RuntimeError} No transcoding format target available.
+ * @exception {RuntimeError} No transcoding format target available for ETC1S compressed ktx2s.
+ * @exception {RuntimeError} No transcoding format target available for UASTC compressed ktx2s.
  * @exception {RuntimeError} startTranscoding() failed.
  * @exception {RuntimeError} transcodeImage() failed.
  *
