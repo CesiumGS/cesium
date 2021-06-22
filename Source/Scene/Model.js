@@ -5328,9 +5328,6 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
-        console.log("Back Face Culling: " + this.backFaceCulling); //remove after testing in sandcastle
-        console.log("Show: " + this.show); //remove after testing in sandcastle
-        console.log("Ignore Outline: " + this.ignoreOutline); //remove after testing in sandcastle
         if (this.ignoreOutline === false) {
           ModelOutlineLoader.outlinePrimitives(this);
         }
