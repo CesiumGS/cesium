@@ -656,9 +656,11 @@ describe(
 
       var bytes = new Uint8Array(Color.NAVY.toBytes());
       texture.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: bytes,
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: bytes,
+        },
       });
 
       expect(texture.width).toEqual(1);
@@ -681,7 +683,9 @@ describe(
         height: blueImage.height,
       });
 
-      texture.copyFrom(blueImage);
+      texture.copyFrom({
+        source: blueImage,
+      });
 
       expect({
         context: context,
@@ -731,7 +735,11 @@ describe(
       }).contextToRender([255, 0, 0, 255]);
 
       // After copy...
-      texture.copyFrom(greenImage, 0, 1);
+      texture.copyFrom({
+        source: greenImage,
+        xOffset: 0,
+        yOffset: 1,
+      });
 
       // Now green on top
       txCoords = new Cartesian2(0.5, 0.75);

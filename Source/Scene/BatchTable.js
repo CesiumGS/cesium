@@ -395,9 +395,11 @@ function createTexture(batchTable, context) {
 function updateTexture(batchTable) {
   var dimensions = batchTable._textureDimensions;
   batchTable._texture.copyFrom({
-    width: dimensions.x,
-    height: dimensions.y,
-    arrayBufferView: batchTable._batchValues,
+    source: {
+      width: dimensions.x,
+      height: dimensions.y,
+      arrayBufferView: batchTable._batchValues,
+    },
   });
 }
 

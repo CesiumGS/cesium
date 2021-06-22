@@ -8,6 +8,7 @@
 - Added checks for supported 3D Tiles extensions. [#9552](https://github.com/CesiumGS/cesium/issues/9552)
 - Added documentation for `KmlTour`, `KmlTourFlyTo`, and `KmlTourWait`. Added documentation and a `kmlTours` getter to `KmlDataSource`. Removed references to `KmlTourSoundCues`. [#8073](https://github.com/CesiumGS/cesium/issues/8073)
 - Added option to ignore extraneous colorspace information in glTF textures and `ImageBitmap`. [#9624](https://github.com/CesiumGS/cesium/pull/9624)
+- `Texture.prototype.copyFrom` now takes a single `options` parameter with a required `source` property and optional `xOffset`, `yOffset`, and `skipColorSpaceConversion` properties.
 
 ##### Fixes :wrench:
 

@@ -616,11 +616,12 @@ Object.defineProperties(Texture.prototype, {
 /**
  * Copy new image data into this texture, from a source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement}.
  * or an object with width, height, and arrayBufferView properties.
- *
- * @param {Object} source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
  *                        or an object with width, height, and arrayBufferView properties.
- * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
- * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
+ * @param {Number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
+ * @param {Number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
+ * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
  *
  * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
@@ -637,12 +638,16 @@ Object.defineProperties(Texture.prototype, {
  *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
  * });
  */
-Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
+Texture.prototype.copyFrom = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options", options);
+  //>>includeEnd('debug');
+
+  var xOffset = defaultValue(options.xOffset, 0);
+  var yOffset = defaultValue(options.yOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("source", source);
+  Check.defined("options.source", options.source);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {
     throw new DeveloperError(
       "Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL."
@@ -656,16 +661,18 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
   Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
   Check.typeOf.number.lessThanOrEquals(
-    "xOffset + source.width",
-    xOffset + source.width,
+    "xOffset + options.source.width",
+    xOffset + options.source.width,
     this._width
   );
   Check.typeOf.number.lessThanOrEquals(
-    "yOffset + source.height",
-    yOffset + source.height,
+    "yOffset + options.source.height",
+    yOffset + options.source.height,
     this._height
   );
   //>>includeEnd('debug');
+
+  var source = options.source;
 
   var context = this._context;
   var gl = context._gl;
@@ -686,7 +693,10 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
   var flipY = this._flipY;
-  var skipColorSpaceConversion = false;
+  var skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
   var unpackAlignment = 4;
   if (defined(arrayBufferView)) {
