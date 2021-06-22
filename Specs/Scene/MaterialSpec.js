@@ -368,7 +368,7 @@ describe(
       renderMaterial(material);
     });
 
-    it("creates a material with an ktx compressed image uniform", function () {
+    it("creates a material with an KTX2 compressed image uniform", function () {
       var compressedUrl;
       if (FeatureDetection.supportsBasis(scene)) {
         compressedUrl = "./Data/Images/Green4x4.ktx2";
