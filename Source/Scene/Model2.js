@@ -38,22 +38,61 @@ function createCommand(model, frameState) {
   return createModelCommands(model.components, frameState, renderState);
 }
 
+function createInstancedShader(context) {
+  var vertexShader =
+    "attribute vec3 a_position;\n" +
+    "attribute vec3 a_normal;\n" +
+    "attribute vec3 a_translation;\n" +
+    "varying vec3 v_normal;\n" +
+    "varying float v_featureId;\n" +
+    "void main()\n" +
+    "{\n" +
+    "    v_normal = a_normal;\n" +
+    "    v_featureId = a_featureId;\n" +
+    "    gl_Position = czm_modelViewProjection * (vec4(a_position, 1.0) + vec4(a_translation, 1.0));\n" +
+    "}\n";
+
+  var fragmentShader =
+    "varying vec3 v_normal;\n" +
+    "varying float v_featureId;\n" +
+    "void main()\n" +
+    "{\n" +
+    "   float n = v_featureId / 10.0;" +
+    "   gl_FragColor = vec4(1.0, 1.0, 1.0);\n" +
+    "}\n";
+  return ShaderProgram.fromCache({
+    context: context,
+    vertexShaderSource: vertexShader,
+    fragmentShaderSource: fragmentShader,
+    attributeLocations: {
+      a_position: 0,
+      a_normal: 1,
+      a_translation: 2,
+    },
+  });
+}
+
 function createShader(context) {
   var vertexShader =
     "attribute vec3 a_position;\n" +
     "attribute vec3 a_normal;\n" +
+    "attribute float a_featureId;\n" +
     "varying vec3 v_normal;\n" +
+    "varying float v_featureId;\n" +
     "void main()\n" +
     "{\n" +
     "    v_normal = a_normal;\n" +
+    "    v_featureId = a_featureId;\n" +
     "    gl_Position = czm_modelViewProjection * vec4(a_position, 1.0);\n" +
     "}\n";
 
   var fragmentShader =
     "varying vec3 v_normal;\n" +
+    "varying float v_featureId;\n" +
     "void main()\n" +
     "{\n" +
-    "    gl_FragColor = vec4(abs(v_normal), 1.0);\n" +
+    "   float n = v_featureId / 10.0;" +
+    "   gl_FragColor = vec4(czm_HSLToRGB(vec3(n, 1.0, 0.5)), 1.0);\n" +
     "}\n";
 
   return ShaderProgram.fromCache({
@@ -63,6 +102,7 @@ function createShader(context) {
     attributeLocations: {
       a_position: 0,
       a_normal: 1,
+      a_featureId: 2,
     },
   });
 }
@@ -156,6 +196,9 @@ function createPrimitiveCommand(primitive, modelMatrix, context, renderState) {
 function createVertexArray(primitive, context) {
   var positionGltfAttribute = getAttributeBySemantic(primitive, "POSITION");
   var normalGltfAttribute = getAttributeBySemantic(primitive, "NORMAL");
+  var featureIdGltfAttribute = getAttributeBySemantic(primitive, "FEATURE_ID");
+
+  var attributes = [];
 
   var positionAttribute = {
     index: 0,
@@ -163,17 +206,30 @@ function createVertexArray(primitive, context) {
     componentsPerAttribute: 3,
     componentDatatype: positionGltfAttribute.componentDatatype,
   };
+  attributes.push(positionAttribute);
+  if (defined(normalGltfAttribute)) {
+    var normalAttribute = {
+      index: 1,
+      vertexBuffer: normalGltfAttribute.buffer,
+      componentsPerAttribute: 3,
+      componentDatatype: normalGltfAttribute.componentDatatype,
+    };
+    attributes.push(normalAttribute);
+  }
 
-  var normalAttribute = {
-    index: 1,
-    vertexBuffer: normalGltfAttribute.buffer,
-    componentsPerAttribute: 3,
-    componentDatatype: primitive.attributes[0].componentDatatype,
-  };
+  if (defined(featureIdGltfAttribute)) {
+    var featureIdAttribute = {
+      index: 2,
+      vertexBuffer: featureIdGltfAttribute.buffer,
+      componentsPerAttribute: 1,
+      componentDatatype: featureIdGltfAttribute.FLOAT,
+    };
+    attributes.push(featureIdAttribute);
+  }
 
   var vertexArray = new VertexArray({
     context: context,
-    attributes: [positionAttribute, normalAttribute],
+    attributes: attributes,
     indexBuffer: primitive.indices.buffer,
   });
 

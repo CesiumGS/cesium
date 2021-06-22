@@ -2,7 +2,7 @@
   "asset": {
     "version": "1.0"
   },
-  "extensionsUsed": ["3DTILES_content_gltf"],
+  "extensionsUsed": ["3DTILES_content_gltf", "EXT_mesh_gpu_instancing"],
   "extensionsRequired": ["3DTILES_content_gltf"],
   "geometricError": 240,
   "root": {
@@ -19,7 +19,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "../../../Models/GltfLoader/BoxInstancedTransform",
+      "uri": "../../../Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.glb",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,
