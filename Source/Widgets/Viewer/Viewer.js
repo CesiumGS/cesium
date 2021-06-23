@@ -1984,7 +1984,6 @@ Viewer.prototype._onDataSourceRemoved = function (
 ) {
   var resetClock = this.clockTrackedDataSource === dataSource;
   var id = dataSource.entities.id;
-  this._dataSourceChangedListeners[id]();
   this._dataSourceChangedListeners[id] = undefined;
   if (resetClock) {
     var numDataSources = dataSourceCollection.length;

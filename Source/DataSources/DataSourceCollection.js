@@ -113,7 +113,7 @@ DataSourceCollection.prototype.remove = function (dataSource, destroy) {
   var index = this._dataSources.indexOf(dataSource);
   if (index !== -1) {
     this._dataSources.splice(index, 1);
-    this._dataSourceRemoved.raiseEvent(this, dataSource); //(remove comment after debugging) this line causes an error
+    this._dataSourceRemoved.raiseEvent(this, dataSource);
 
     if (destroy && typeof dataSource.destroy === "function") {
       dataSource.destroy();
@@ -136,7 +136,7 @@ DataSourceCollection.prototype.removeAll = function (destroy) {
   var dataSources = this._dataSources;
   for (var i = 0, len = dataSources.length; i < len; ++i) {
     var dataSource = dataSources[i];
-    this._dataSourceRemoved.raiseEvent(this, dataSource); //(remove comment after debugging) this line causes an error
+    this._dataSourceRemoved.raiseEvent(this, dataSource);
 
     if (destroy && typeof dataSource.destroy === "function") {
       dataSource.destroy();
