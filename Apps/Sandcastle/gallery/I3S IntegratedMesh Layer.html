@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Add I3S IntegratedMesh Layer from a service."
+    />
+    <meta name="cesium-sandcastle-labels" content="DataSources, I3S" />
+    <title>I3S Consumption Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create a Viewer instances wiht ArcGIS Tiled Elevation Layer
+        let viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
+            url:
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+          }),
+          animation: false,
+          timeline: false,
+        });
+        //Create an I3S DataSource with the camera autocentered to the I3S layers' extent
+        //No need to do a geoid conversion as both the elevation proivder (ArcGISTiledElevationTerrainProvider)
+        //and the I3S layer to be added (San Francisco) use orthometric height systems .
+        let dataSource = new Cesium.I3SDataSource(
+          "San Francisco",
+          viewer.scene,
+          {
+            autoCenterCameraOnStart: true,
+          }
+        );
+        dataSource.camera = viewer.camera;
+        //populate the I3S DataSource with an IntegratedMesh I3S layer URL and add it to the viewer
+        dataSource
+          .loadUrl(
+            "https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer"
+          )
+          .then(function () {});
+        viewer.dataSources.add(dataSource);
+        //Sandcastle_End
+        if (typeof Cesium !== "undefined") {
+          window.startupCalled = true;
+          startup(Cesium);
+        }
+      }
+    </script>
+  </body>
+</html>

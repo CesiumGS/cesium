@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Pick features from an I3S 3D Object Layer."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, I3S" />
+    <title>I3S Feature Picking Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        let viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: new Cesium.createWorldTerrain({}),
+          animation: false,
+          timeline: false,
+        });
+        // Initialize a terrain provider which provides geoid conversion between orthometric (I3S) and ellipsoidial
+        // height systems (cesium world terrain).
+        // source Data was compiled from https://earth-info.nga.mil/#tab_wgs84-data
+        var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
+        });
+        //Create I3S dataSource and autocenters camera to the I3S layers' extent
+        let dataSource = new Cesium.I3SDataSource("New York", viewer.scene, {
+          autoCenterCameraOnStart: true,
+          geoidTiledTerrainProvider: geoidService,
+        });
+        dataSource.camera = viewer.camera;
+        dataSource
+          .loadUrl(
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/NYC_Attributed_v17/SceneServer"
+          )
+          .then(function () {});
+        viewer.dataSources.add(dataSource);
+        // An entity object which will hold info about the currently selected feature for infobox display
+        var selectedEntity = new Cesium.Entity();
+
+        // Silhouette a feature on selection and show metadata in the InfoBox.
+        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
+          movement
+        ) {
+          // Pick a new feature
+          var pickedFeature = viewer.scene.pick(movement.position);
+          if (!Cesium.defined(pickedFeature)) {
+            return;
+          }
+
+          var pickedPosition = viewer.scene.pickPosition(movement.position);
+
+          if (
+            pickedFeature &&
+            pickedFeature.content &&
+            pickedFeature.content.i3sNode
+          ) {
+            let i3sNode = pickedFeature.content.i3sNode;
+            i3sNode.loadFields().then(() => {
+              let geometry = i3sNode.geometryData[0];
+              if (pickedPosition) {
+                let location = geometry.getClosestPointIndex(
+                  pickedPosition.x,
+                  pickedPosition.y,
+                  pickedPosition.z
+                );
+                //console.log("Location", location);
+                var description = "No attributes";
+                var name = "";
+                if (
+                  location.index !== -1 &&
+                  geometry.customAttributes["feature-index"]
+                ) {
+                  let featureIndex =
+                    geometry.customAttributes["feature-index"][location.index];
+                  if (Object.keys(i3sNode.fields).length > 0) {
+                    description =
+                      '<table class="cesium-infoBox-defaultTable"><tbody>';
+                    for (let fieldName in i3sNode.fields) {
+                      let field = i3sNode.fields[fieldName];
+                      //console.log(field.name + ": " + field.values[featureIndex]);
+                      description += "<tr><th>" + field.name + "</th><td>";
+                      description += field.values[featureIndex] + "</td></tr>";
+                      if (
+                        (!name || 0 === name.length) &&
+                        isNameProperty(field.name)
+                      ) {
+                        name = field.values[featureIndex];
+                      }
+                    }
+                    description += "</tbody></table>";
+                  }
+                }
+                if (!name || 0 === name.length) {
+                  name = "unknown";
+                }
+                selectedEntity.name = name;
+                selectedEntity.description = description;
+                viewer.selectedEntity = selectedEntity;
+              }
+            });
+          }
+        },
+        Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        function isNameProperty(propertyName) {
+          var name = propertyName.toLowerCase();
+          if (
+            name.localeCompare("name") === 0 ||
+            name.localeCompare("objname") === 0
+          ) {
+            return true;
+          }
+          return false;
+        }
+        //Sandcastle_End
+        if (typeof Cesium !== "undefined") {
+          window.startupCalled = true;
+          startup(Cesium);
+        }
+      }
+    </script>
+  </body>
+</html>

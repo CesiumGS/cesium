@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Add I3S 3D Object Layer from a service."
+    />
+    <meta name="cesium-sandcastle-labels" content="DataSources, I3S" />
+    <title>I3S Consumption Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        let viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: new Cesium.createWorldTerrain({}),
+          animation: false,
+          timeline: false,
+        });
+        // Initialize a terrain provider which provides geoid conversion between orthometric (I3S) and ellipsoidial
+        // height systems (cesium world terrain).
+        // source Data was compiled from https://earth-info.nga.mil/#tab_wgs84-data
+        var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
+        });
+        //Create I3S dataSource and autocenters camera to the I3S layers' extent
+        let dataSource = new Cesium.I3SDataSource(
+          "San Francisco",
+          viewer.scene,
+          {
+            autoCenterCameraOnStart: true,
+            geoidTiledTerrainProvider: geoidService,
+          }
+        );
+        dataSource.camera = viewer.camera;
+        dataSource
+          .loadUrl(
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_3DObjects_1_7/SceneServer"
+          )
+          .then(function () {});
+        viewer.dataSources.add(dataSource);
+        //Sandcastle_End
+        if (typeof Cesium !== "undefined") {
+          window.startupCalled = true;
+          startup(Cesium);
+        }
+      }
+    </script>
+  </body>
+</html>
