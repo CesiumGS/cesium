@@ -136,13 +136,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("setColor throws with undefined value", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-      expect(function () {
-        batchTable.setColor(0);
-      }).toThrowDeveloperError();
-    });
-
     it("setColor", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
