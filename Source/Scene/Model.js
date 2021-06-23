@@ -2744,7 +2744,12 @@ function loadTexturesFromBufferViews(model) {
     );
 
     if (gltfTexture.mimeType === "image/ktx2") {
-      loadKTX2(loadResources.getBuffer(bufferView))
+      // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
+      // ArrayBuffer may be accessed on both the worker and the main thread and
+      // throw an error like "Cannot perform Construct on a detached ArrayBuffer".
+      // Look into SharedArrayBuffer at some point to get around this.
+      var ktxBuffer = new Uint8Array(loadResources.getBuffer(bufferView));
+      loadKTX2(ktxBuffer)
         .then(imageLoad(model, gltfTexture.id, imageId))
         .otherwise(onerror);
       ++model._loadResources.pendingTextureLoads;

@@ -24,6 +24,9 @@ describe("Scene/GltfLoaderUtil", function () {
       {
         uri: "image.webp",
       },
+      {
+        uri: "image.ktx2",
+      },
     ],
     textures: [
       {
@@ -34,6 +37,14 @@ describe("Scene/GltfLoaderUtil", function () {
         extensions: {
           EXT_texture_webp: {
             source: 2,
+          },
+        },
+      },
+      {
+        source: 0,
+        extensions: {
+          KHR_texture_basisu: {
+            source: 3,
           },
         },
       },
@@ -96,6 +107,28 @@ describe("Scene/GltfLoaderUtil", function () {
       textureId: 1,
       supportedImageFormats: new SupportedImageFormats({
         webp: false,
+      }),
+    });
+    expect(imageId).toBe(0);
+  });
+
+  it("getImageIdFromTexture gets KTX2 image when KHR_texture_basisu extension is supported", function () {
+    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+      gltf: gltfWithTextures,
+      textureId: 2,
+      supportedImageFormats: new SupportedImageFormats({
+        basis: true,
+      }),
+    });
+    expect(imageId).toBe(3);
+  });
+
+  it("getImageIdFromTexture gets default image when KHR_texture_basisu extension is not supported", function () {
+    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+      gltf: gltfWithTextures,
+      textureId: 2,
+      supportedImageFormats: new SupportedImageFormats({
+        basis: false,
       }),
     });
     expect(imageId).toBe(0);

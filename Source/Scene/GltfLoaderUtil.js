@@ -19,75 +19,6 @@ import ModelComponents from "./ModelComponents.js";
 var GltfLoaderUtil = {};
 
 /**
- * Get the uri or buffer view for an image.
- *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.imageId The image ID.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- *
- * @returns {Object} An object containing a <code>uri</code> and <code>bufferView</code> property.
- * @private
- */
-GltfLoaderUtil.getImageUriOrBufferView = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var imageId = options.imageId;
-  var supportedImageFormats = options.supportedImageFormats;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.number("options.imageId", imageId);
-  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
-  //>>includeEnd('debug');
-
-  var image = gltf.images[imageId];
-  var extras = image.extras;
-
-  var bufferViewId = image.bufferView;
-  var uri = image.uri;
-
-  // First check for a compressed texture
-  if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-    var crunch = extras.compressedImage3DTiles.crunch;
-    var s3tc = extras.compressedImage3DTiles.s3tc;
-    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-    var etc1 = extras.compressedImage3DTiles.etc1;
-
-    if (supportedImageFormats.s3tc && defined(crunch)) {
-      if (defined(crunch.bufferView)) {
-        bufferViewId = crunch.bufferView;
-      } else {
-        uri = crunch.uri;
-      }
-    } else if (supportedImageFormats.s3tc && defined(s3tc)) {
-      if (defined(s3tc.bufferView)) {
-        bufferViewId = s3tc.bufferView;
-      } else {
-        uri = s3tc.uri;
-      }
-    } else if (supportedImageFormats.pvrtc && defined(pvrtc)) {
-      if (defined(pvrtc.bufferView)) {
-        bufferViewId = pvrtc.bufferView;
-      } else {
-        uri = pvrtc.uri;
-      }
-    } else if (supportedImageFormats.etc1 && defined(etc1)) {
-      if (defined(etc1.bufferView)) {
-        bufferViewId = etc1.bufferView;
-      } else {
-        uri = etc1.uri;
-      }
-    }
-  }
-
-  return {
-    bufferViewId: bufferViewId,
-    uri: uri,
-  };
-};
-
-/**
  * Get the image ID referenced by a texture.
  * <p>
  * When the texture has the EXT_texture_webp extension and the browser supports
@@ -119,6 +50,11 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
   if (defined(extensions)) {
     if (supportedImageFormats.webp && defined(extensions.EXT_texture_webp)) {
       return extensions.EXT_texture_webp.source;
+    } else if (
+      supportedImageFormats.basis &&
+      defined(extensions.KHR_texture_basisu)
+    ) {
+      return extensions.KHR_texture_basisu.source;
     }
   }
   return texture.source;

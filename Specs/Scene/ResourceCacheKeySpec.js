@@ -197,6 +197,9 @@ describe("ResourceCacheKey", function () {
       {
         uri: "image.webp",
       },
+      {
+        uri: "image.ktx2",
+      },
     ],
     textures: [
       {
@@ -212,6 +215,14 @@ describe("ResourceCacheKey", function () {
         extensions: {
           EXT_texture_webp: {
             source: 2,
+          },
+        },
+      },
+      {
+        source: 0,
+        extensions: {
+          KHR_texture_basisu: {
+            source: 3,
           },
         },
       },
@@ -622,7 +633,6 @@ describe("ResourceCacheKey", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: baseResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(cacheKey).toBe("image:https://example.com/resources/image.png");
@@ -634,7 +644,6 @@ describe("ResourceCacheKey", function () {
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: baseResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(cacheKey).toBe(
@@ -649,7 +658,6 @@ describe("ResourceCacheKey", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: baseResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -661,7 +669,6 @@ describe("ResourceCacheKey", function () {
         imageId: undefined,
         gltfResource: gltfResource,
         baseResource: baseResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -673,7 +680,6 @@ describe("ResourceCacheKey", function () {
         imageId: 0,
         gltfResource: undefined,
         baseResource: baseResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -685,19 +691,6 @@ describe("ResourceCacheKey", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: undefined,
-        supportedImageFormats: new SupportedImageFormats(),
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("getImageCacheKey throws if supportedImageFormats is undefined", function () {
-    expect(function () {
-      ResourceCacheKey.getImageCacheKey({
-        gltf: gltfWithTextures,
-        imageId: 0,
-        gltfResource: gltfResource,
-        baseResource: baseResource,
-        supportedImageFormats: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -760,6 +753,42 @@ describe("ResourceCacheKey", function () {
       gltf: gltfWithTextures,
       textureInfo: {
         index: 2,
+        texCoord: 0,
+      },
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      supportedImageFormats: new SupportedImageFormats(),
+    });
+
+    expect(cacheKey).toBe(
+      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729"
+    );
+  });
+
+  it("getTextureCacheKey works with KHR_texture_basisu extension", function () {
+    var cacheKey = ResourceCacheKey.getTextureCacheKey({
+      gltf: gltfWithTextures,
+      textureInfo: {
+        index: 3,
+        texCoord: 0,
+      },
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      supportedImageFormats: new SupportedImageFormats({
+        basis: true,
+      }),
+    });
+
+    expect(cacheKey).toBe(
+      "texture:https://example.com/resources/image.ktx2-sampler-10497-10497-9729-9729"
+    );
+  });
+
+  it("getTextureCacheKey ignores KHR_texture_basisu extension if Basis is not supported", function () {
+    var cacheKey = ResourceCacheKey.getTextureCacheKey({
+      gltf: gltfWithTextures,
+      textureInfo: {
+        index: 3,
         texCoord: 0,
       },
       gltfResource: gltfResource,

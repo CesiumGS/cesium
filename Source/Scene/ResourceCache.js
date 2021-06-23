@@ -587,7 +587,6 @@ ResourceCache.loadIndexBuffer = function (options) {
  * @param {Number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {GltfImageLoader} The image loader.
  * @private
@@ -598,14 +597,12 @@ ResourceCache.loadImage = function (options) {
   var imageId = options.imageId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
-  var supportedImageFormats = options.supportedImageFormats;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
   //>>includeEnd('debug');
 
   var cacheKey = ResourceCacheKey.getImageCacheKey({
@@ -613,7 +610,6 @@ ResourceCache.loadImage = function (options) {
     imageId: imageId,
     gltfResource: gltfResource,
     baseResource: baseResource,
-    supportedImageFormats: supportedImageFormats,
   });
 
   var imageLoader = ResourceCache.get(cacheKey);
@@ -627,7 +623,6 @@ ResourceCache.loadImage = function (options) {
     imageId: imageId,
     gltfResource: gltfResource,
     baseResource: baseResource,
-    supportedImageFormats: supportedImageFormats,
     cacheKey: cacheKey,
   });
 
