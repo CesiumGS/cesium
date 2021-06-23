@@ -264,7 +264,9 @@ function loadImageFromUri(resource) {
     return loadKTX2(resource);
   }
   // Resolves to an ImageBitmap or Image
-  return resource.fetchImage();
+  return resource.fetchImage({
+    preferImageBitmap: true,
+  });
 }
 
 /**

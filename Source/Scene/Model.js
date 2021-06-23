@@ -2010,7 +2010,9 @@ function parseTextures(model, context, supportsWebP) {
       if (ktx2Regex.test(uri)) {
         promise = loadKTX2(imageResource);
       } else {
-        promise = imageResource.fetchImage();
+        promise = imageResource.fetchImage({
+          preferImageBitmap: true,
+        });
       }
       promise
         .then(imageLoad(model, id, imageId))
