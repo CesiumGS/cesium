@@ -91,9 +91,7 @@ describe(
       );
 
       promises.push(
-        loadKTX2("./Data/Images/Green4x4Compressed.ktx2").then(function (
-          image
-        ) {
+        loadKTX2("./Data/Images/Green4x4_ETC1S.ktx2").then(function (image) {
           greenBasisKTX2Image = image;
         })
       );

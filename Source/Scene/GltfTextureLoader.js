@@ -69,11 +69,11 @@ export default function GltfTextureLoader(options) {
   this._imageId = imageId;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
-  this._supportedImageFormats = supportedImageFormats;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._imageLoader = undefined;
   this._image = undefined;
+  this._mipLevels = undefined;
   this._texture = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
@@ -140,7 +140,6 @@ GltfTextureLoader.prototype.load = function () {
     imageId: this._imageId,
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
-    supportedImageFormats: this._supportedImageFormats,
   });
 
   this._imageLoader = imageLoader;
@@ -155,6 +154,7 @@ GltfTextureLoader.prototype.load = function () {
       }
       // Now wait for process() to run to finish loading
       that._image = imageLoader.image;
+      that._mipLevels = imageLoader.mipLevels;
       that._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
@@ -176,10 +176,17 @@ function CreateTextureJob() {
   this.texture = undefined;
 }
 
-CreateTextureJob.prototype.set = function (gltf, textureInfo, image, context) {
+CreateTextureJob.prototype.set = function (
+  gltf,
+  textureInfo,
+  image,
+  mipLevels,
+  context
+) {
   this.gltf = gltf;
   this.textureInfo = textureInfo;
   this.image = image;
+  this.mipLevels = mipLevels;
   this.context = context;
 };
 
@@ -188,6 +195,7 @@ CreateTextureJob.prototype.execute = function () {
     this.gltf,
     this.textureInfo,
     this.image,
+    this.mipLevels,
     this.context
   );
 };
@@ -211,7 +219,7 @@ function resizeImageToNextPowerOfTwo(image) {
   return canvas;
 }
 
-function createTexture(gltf, textureInfo, image, context) {
+function createTexture(gltf, textureInfo, image, mipLevels, context) {
   var sampler = GltfLoaderUtil.createSampler({
     gltf: gltf,
     textureInfo: textureInfo,
@@ -259,6 +267,7 @@ function createTexture(gltf, textureInfo, image, context) {
       context: context,
       source: {
         arrayBufferView: image.bufferView, // Only defined for CompressedTextureBuffer
+        mipLevels: mipLevels,
       },
       width: image.width,
       height: image.height,
@@ -315,6 +324,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
       this._gltf,
       this._textureInfo,
       this._image,
+      this._mipLevels,
       frameState.context
     );
     var jobScheduler = frameState.jobScheduler;
@@ -328,6 +338,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
       this._gltf,
       this._textureInfo,
       this._image,
+      this._mipLevels,
       frameState.context
     );
   }
@@ -355,6 +366,7 @@ GltfTextureLoader.prototype.unload = function () {
 
   this._imageLoader = undefined;
   this._image = undefined;
+  this._mipLevels = undefined;
   this._texture = undefined;
   this._gltf = undefined;
 };

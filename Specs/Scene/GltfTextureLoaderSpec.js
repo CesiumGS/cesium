@@ -75,6 +75,68 @@ describe(
       ],
     };
 
+    var gltfKtx2BaseResource = new Resource({
+      url: "./Data/Images/",
+    });
+
+    var gltfKtx2 = {
+      images: [
+        {
+          uri: "image.png",
+        },
+        {
+          uri: "Green4x4_ETC1S.ktx2",
+        },
+        {
+          uri: "Green4x4Mipmap_ETC1S.ktx2",
+        },
+      ],
+      textures: [
+        {
+          source: 0,
+          sampler: 0,
+          extensions: {
+            KHR_texture_basisu: {
+              source: 1,
+            },
+          },
+        },
+        {
+          source: 0,
+          sampler: 1,
+          extensions: {
+            KHR_texture_basisu: {
+              source: 2,
+            },
+          },
+        },
+      ],
+      materials: [
+        {
+          emissiveTexture: {
+            index: 0,
+          },
+          occlusionTexture: {
+            index: 1,
+          },
+        },
+      ],
+      samplers: [
+        {
+          magFilter: 9728, // NEAREST
+          minFilter: 9984, // NEAREST_MIPMAP_NEAREST
+          wrapS: 10497, // REPEAT
+          wrapT: 10497, // REPEAT
+        },
+        {
+          magFilter: 9728, // NEAREST
+          minFilter: 9728, // NEAREST
+          wrapS: 33071, // CLAMP_TO_EDGE
+          wrapT: 33071, // CLAMP_TO_EDGE
+        },
+      ],
+    };
+
     var scene;
 
     beforeAll(function () {
@@ -263,6 +325,66 @@ describe(
       });
     });
 
+    it("loads KTX2/Basis texture", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
+
+      var gl = scene.context._gl;
+      spyOn(gl, "compressedTexImage2D").and.callThrough();
+
+      var textureLoader = new GltfTextureLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfKtx2,
+        textureInfo: gltf.materials[0].emissiveTexture,
+        gltfResource: gltfResource,
+        baseResource: gltfKtx2BaseResource,
+        supportedImageFormats: new SupportedImageFormats({
+          basis: true,
+        }),
+      });
+
+      textureLoader.load();
+
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture.width).toBe(4);
+        expect(textureLoader.texture.height).toBe(4);
+        expect(gl.compressedTexImage2D.calls.count()).toEqual(1);
+      });
+    });
+
+    it("loads KTX2/Basis texture with mipmap", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
+
+      var gl = scene.context._gl;
+      spyOn(gl, "compressedTexImage2D").and.callThrough();
+
+      var textureLoader = new GltfTextureLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfKtx2,
+        textureInfo: gltf.materials[0].occlusionTexture,
+        gltfResource: gltfResource,
+        baseResource: gltfKtx2BaseResource,
+        supportedImageFormats: new SupportedImageFormats({
+          basis: true,
+        }),
+      });
+
+      textureLoader.load();
+
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(textureLoader.texture.width).toBe(4);
+        expect(textureLoader.texture.height).toBe(4);
+        expect(gl.compressedTexImage2D.calls.count()).toEqual(3);
+      });
+    });
+
     it("generates mipmap if sampler requires it", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         when.resolve(image)
@@ -397,7 +519,6 @@ describe(
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
 
       var textureLoader = new GltfTextureLoader({
