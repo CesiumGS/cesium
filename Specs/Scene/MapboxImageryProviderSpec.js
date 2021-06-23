@@ -96,7 +96,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       });
 
@@ -128,7 +130,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       });
 
@@ -170,7 +174,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       });
 
@@ -214,7 +220,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       });
 
@@ -296,7 +304,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       } else {
         // fail
@@ -350,7 +360,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       });
 
@@ -386,7 +398,9 @@ describe("Scene/MapboxImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       });
 

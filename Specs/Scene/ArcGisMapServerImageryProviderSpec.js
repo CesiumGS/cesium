@@ -224,7 +224,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           Resource._DefaultImplementations.createImage(
             request,
             crossOrigin,
-            deferred
+            deferred,
+            true,
+            true
           );
         } else {
           expect(url).toEqual(getAbsoluteUri(baseUrl + "tile/0/0/0"));
@@ -233,7 +235,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           Resource._DefaultImplementations.createImage(
             new Request({ url: "Data/Images/Red16x16.png" }),
             crossOrigin,
-            deferred
+            deferred,
+            true,
+            true
           );
         }
       };
@@ -348,7 +352,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           Resource._DefaultImplementations.createImage(
             new Request({ url: "Data/Images/Red16x16.png" }),
             crossOrigin,
-            deferred
+            deferred,
+            true,
+            true
           );
         }
       };
@@ -436,7 +442,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       };
 
@@ -517,7 +525,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       };
 
@@ -588,7 +598,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
           Resource._DefaultImplementations.createImage(
             new Request({ url: "Data/Images/Red16x16.png" }),
             crossOrigin,
-            deferred
+            deferred,
+            true,
+            true
           );
         }
       };
@@ -741,7 +753,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       } else {
         // fail

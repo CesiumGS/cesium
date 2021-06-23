@@ -1401,15 +1401,17 @@ describe(
 
         expect(function () {
           texture.copyFrom({
-            arrayBufferView: new Uint16Array([0]),
-            width: 1,
-            height: 1,
+            source: {
+              arrayBufferView: new Uint16Array([0]),
+              width: 1,
+              height: 1,
+            },
           });
         }).toThrowDeveloperError();
       }
     });
 
-    it("throws when copyFrom is not given a source", function () {
+    it("throws when copyFrom is not given any options", function () {
       texture = new Texture({
         context: context,
         source: blueImage,
@@ -1420,6 +1422,20 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("throws when copyFrom is not given a source", function () {
+      texture = new Texture({
+        context: context,
+        source: blueImage,
+      });
+
+      expect(function () {
+        texture.copyFrom({
+          xOffset: 0,
+          yOffset: 2,
+        });
+      }).toThrowDeveloperError();
+    });
+
     it("throws when copyFrom is given a negative xOffset", function () {
       texture = new Texture({
         context: context,
@@ -1427,7 +1443,10 @@ describe(
       });
 
       expect(function () {
-        texture.copyFrom(blueImage, -1);
+        texture.copyFrom({
+          source: blueImage,
+          xOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1438,7 +1457,11 @@ describe(
       });
 
       expect(function () {
-        texture.copyFrom(blueImage, 0, -1);
+        texture.copyFrom({
+          source: blueImage,
+          xOffset: 0,
+          yOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1451,7 +1474,9 @@ describe(
       image.width = blueImage.width + 1;
 
       expect(function () {
-        texture.copyFrom(image);
+        texture.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1464,7 +1489,9 @@ describe(
       image.height = blueImage.height + 1;
 
       expect(function () {
-        texture.copyFrom(image);
+        texture.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1482,7 +1509,9 @@ describe(
 
         var image = new Image();
         expect(function () {
-          texture.copyFrom(image);
+          texture.copyFrom({
+            source: image,
+          });
         }).toThrowDeveloperError();
       }
     });

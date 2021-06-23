@@ -633,9 +633,11 @@ Object.defineProperties(Texture.prototype, {
  *
  * @example
  * texture.copyFrom({
+ *  source: {
  *   width : 1,
  *   height : 1,
  *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
+ *  }
  * });
  */
 Texture.prototype.copyFrom = function (options) {

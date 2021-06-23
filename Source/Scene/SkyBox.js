@@ -146,7 +146,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
 
     if (typeof sources.positiveX === "string") {
       // Given urls for cube-map images.  Load them.
-      loadCubeMap(context, this._sources).then(function (cubeMap) {
+      loadCubeMap(context, this._sources, false).then(function (cubeMap) {
         that._cubeMap = that._cubeMap && that._cubeMap.destroy();
         that._cubeMap = cubeMap;
       });

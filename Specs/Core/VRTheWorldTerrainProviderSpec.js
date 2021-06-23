@@ -273,7 +273,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: imageUrl }),
           crossOrigin,
-          deferred
+          deferred,
+          true,
+          true
         );
       };
 
