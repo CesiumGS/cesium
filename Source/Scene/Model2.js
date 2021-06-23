@@ -9,6 +9,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
+import Matrix3 from "../Core/Matrix3.js";
 
 export default function Model(options) {
   this.drawCommand = undefined;
@@ -72,18 +73,29 @@ function createInstancedShader(context) {
   });
 }
 
-function createShader(context) {
+function createShader(context, instancingAttributeLocations) {
+  var instancingAttributesShader = "";
+  var instancingAttributes = Object.keys(instancingAttributeLocations);
+  if (instancingAttributes.length > 0) {
+    for (var i = 0; i < instancingAttributes.length; i++) {
+      instancingAttributesShader +=
+        "attribute vec3 " + instancingAttributes[i] + ";\n";
+    }
+  }
+
   var vertexShader =
     "attribute vec3 a_position;\n" +
     "attribute vec3 a_normal;\n" +
     "attribute float a_featureId;\n" +
+    instancingAttributesShader +
     "varying vec3 v_normal;\n" +
     "varying float v_featureId;\n" +
     "void main()\n" +
     "{\n" +
     "    v_normal = a_normal;\n" +
     "    v_featureId = a_featureId;\n" +
-    "    gl_Position = czm_modelViewProjection * vec4(a_position, 1.0);\n" +
+    "    vec3 finalPosition = a_position + a_instanceTranslation;\n" +
+    "    gl_Position = czm_modelViewProjection * vec4(finalPosition, 1.0);\n" +
     "}\n";
 
   var fragmentShader =
@@ -103,6 +115,7 @@ function createShader(context) {
       a_position: 0,
       a_normal: 1,
       a_featureId: 2,
+      a_instanceTranslation: 3,
     },
   });
 }
@@ -145,17 +158,64 @@ function createModelCommands(model, frameState, renderState) {
   while (nodeStack.length > 0) {
     var node = nodeStack.pop();
     var modelMatrix = getNodeTransform(node);
+
+    var instanceCount = 0;
+    var instancingAttributeLocations = {};
+
+    // Handle EXT_mesh_gpu_instancing
+    if (defined(node.instances)) {
+      instanceCount = node.instances.attributes[0].count;
+      var translationAttribute = getAttributeBySemantic(
+        node.instances,
+        "TRANSLATION"
+      );
+
+      // TODO: Handle ROTATION and SCALE.
+
+      if (defined(translationAttribute)) {
+        instancingAttributeLocations["a_instanceTranslation"] = 0;
+      }
+    }
+
     var primitives = node.primitives;
     for (i = 0; i < primitives.length; i++) {
       var primitive = primitives[i];
-      drawCommands.push(
-        createPrimitiveCommand(
-          primitive,
+      var attributes = primitive.attributes;
+      for (var k = 0; k < attributes.length; k++) {
+        var positionAttribute = getAttributeBySemantic(primitive, "POSITION");
+
+        var boundingSphere = BoundingSphere.fromCornerPoints(
+          positionAttribute.min,
+          positionAttribute.max
+        );
+        boundingSphere.center = Matrix4.getTranslation(
           modelMatrix,
+          new Cartesian3()
+        );
+
+        var shaderProgram = createShader(
           frameState.context,
-          renderState
-        )
-      );
+          instancingAttributeLocations
+        );
+        var vertexArray = createVertexArray(
+          primitive,
+          model.instances,
+          frameState.context
+        );
+
+        return new DrawCommand({
+          boundingVolume: boundingSphere,
+          modelMatrix: modelMatrix,
+          pass: Pass.OPAQUE,
+          shaderProgram: shaderProgram,
+          renderState: renderState,
+          vertexArray: vertexArray,
+          count: primitive.indices.count,
+          primitiveType: primitive.primitiveType,
+          uniformMap: undefined,
+          instanceCount: instanceCount,
+        });
+      }
     }
   }
 
@@ -193,7 +253,7 @@ function createPrimitiveCommand(primitive, modelMatrix, context, renderState) {
   }
 }
 
-function createVertexArray(primitive, context) {
+function createVertexArray(primitive, instancing, context) {
   var positionGltfAttribute = getAttributeBySemantic(primitive, "POSITION");
   var normalGltfAttribute = getAttributeBySemantic(primitive, "NORMAL");
   var featureIdGltfAttribute = getAttributeBySemantic(primitive, "FEATURE_ID");
@@ -225,6 +285,16 @@ function createVertexArray(primitive, context) {
       componentDatatype: featureIdGltfAttribute.FLOAT,
     };
     attributes.push(featureIdAttribute);
+  }
+
+  if (defined(instancing)) {
+    var translationAttribute = {
+      index: 3,
+      vertexBuffer: instancing.attributes[0].buffer,
+      componentsPerAttribute: 3,
+      componentDatatype: instancing.attributes[0].FLOAT,
+    };
+    attributes.push(translationAttribute);
   }
 
   var vertexArray = new VertexArray({
