@@ -270,8 +270,14 @@ function getMimeTypeFromTypedArray(typedArray) {
 function loadImageFromBufferTypedArray(typedArray) {
   var mimeType = getMimeTypeFromTypedArray(typedArray);
   if (mimeType === "image/ktx2") {
+    // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
+    // ArrayBuffer may be accessed on both the worker and the main thread and
+    // throw an error like "Cannot perform Construct on a detached ArrayBuffer".
+    // Look into SharedArrayBuffer at some point to get around this.
+    var ktxBuffer = new Uint8Array(typedArray);
+
     // Resolves to a CompressedTextureBuffer
-    return loadKTX2(typedArray);
+    return loadKTX2(ktxBuffer);
   }
   // Resolves to an Image or ImageBitmap
   return GltfImageLoader._loadImageFromTypedArray({
