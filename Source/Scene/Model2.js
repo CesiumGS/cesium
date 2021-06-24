@@ -117,8 +117,8 @@ function createBoundingSphere(primitive, modelMatrix) {
   // FIXME: Currently assuming that POSITION attribute is always present.
   var positionGltfAttribute = getAttributeBySemantic(primitive, "POSITION");
   var boundingSphere = BoundingSphere.fromCornerPoints(
-    positionGltfAttribute.min,
-    positionGltfAttribute.max
+    new Cartesian3(-100, -1000, -100),
+    new Cartesian3(100, 100, 100)
   );
   boundingSphere.center = Matrix4.getTranslation(modelMatrix, new Cartesian3());
   return boundingSphere;
@@ -268,7 +268,9 @@ function createNodeCommands(node, modelMatrix, frameState, renderState) {
     var vertexArray = new VertexArray({
       context: frameState.context,
       attributes: vertexAttributes,
-      indexBuffer: primitive.indices.buffer,
+      indexBuffer: defined(primitive.indices)
+        ? primitive.indices.buffer
+        : undefined,
     });
 
     drawCommands.push(
@@ -279,7 +281,9 @@ function createNodeCommands(node, modelMatrix, frameState, renderState) {
         shaderProgram: shaderProgram,
         renderState: renderState,
         vertexArray: vertexArray,
-        count: primitive.indices.count,
+        count: defined(primitive.indices)
+          ? primitive.indices.count
+          : primitive.attributes[0].count,
         primitiveType: primitive.primitiveType,
         uniformMap: undefined,
         instanceCount: instanceCount,

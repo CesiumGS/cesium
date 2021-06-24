@@ -4,7 +4,7 @@ import Geometry3DTileContent from "./Geometry3DTileContent.js";
 import Gltf3DTileContent from "./Gltf3DTileContent.js";
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Instanced3DModel3DTileContent from "./Instanced3DModel3DTileContent.js";
-import PointCloud3DTileContent from "./PointCloud3DTileContent.js";
+import PointCloud3DTileContent2 from "./PointCloud3DTileContent2.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -25,7 +25,7 @@ var Cesium3DTileContentFactory = {
     );
   },
   pnts: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    return new PointCloud3DTileContent(
+    return new PointCloud3DTileContent2(
       tileset,
       tile,
       resource,
