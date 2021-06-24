@@ -201,9 +201,6 @@ Cesium3DTileBatchTable.prototype.getShow = function (batchId) {
 };
 
 Cesium3DTileBatchTable.prototype.setColor = function (batchId, color) {
-  if (!defined(color)) {
-    return;
-  }
   this._batchTexture.setColor(batchId, color);
 };
 

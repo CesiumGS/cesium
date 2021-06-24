@@ -123,6 +123,26 @@ describe(
       expect(batchTable.getShow(0)).toEqual(false);
     });
 
+    it("setColor throws with invalid batchId", function () {
+      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      expect(function () {
+        batchTable.setColor();
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTable.setColor(-1);
+      }).toThrowDeveloperError();
+      expect(function () {
+        batchTable.setColor(1);
+      }).toThrowDeveloperError();
+    });
+
+    it("setColor throws with undefined value", function () {
+      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      expect(function () {
+        batchTable.setColor(0);
+      }).toThrowDeveloperError();
+    });
+
     it("setColor", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
