@@ -74,298 +74,157 @@ describe("Core/loadKTX2", function () {
     });
   });
 
-  it("transcodes ETC1S ktx2 to etc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4_ETC1S.ktx2");
+  function expectKTX2TranscodeResult(url, supportedFormats, width, height, isCompressed) {
+    var resource = Resource.createIfNeeded(url);
     var loadPromise = resource.fetchArrayBuffer();
     spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
       function () {
-        return { etc: true };
+        return supportedFormats;
       }
     );
     return loadPromise.then(function (buffer) {
       var promise = loadKTX2(buffer);
       expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
+      return promise.then(function (result) {
+        expect(result).toBeDefined();
+        expect(result.width).toEqual(width);
+        expect(result.height).toEqual(height);
         expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
+          PixelFormat.isCompressedFormat(result.internalFormat)
+        ).toEqual(isCompressed);
+        expect(result.bufferView).toBeDefined();
       });
     });
+  }
+
+  it("transcodes ETC1S ktx2 to etc", function () {
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4_ETC1S.ktx2",
+      { etc: true },
+      4,
+      4,
+      true
+    );
   });
 
   it("transcodes UASTC ktx2 to etc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Logo32x32_UASTC_Zstd.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { etc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Logo32x32_UASTC_Zstd.ktx2",
+      { etc: true },
+      32,
+      32,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(32);
-        expect(resolvedValue.height).toEqual(32);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes ETC1S ktx2 to etc1", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4_ETC1S.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { etc1: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4_ETC1S.ktx2",
+      { etc1: true },
+      4,
+      4,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes UASTC ktx2 to etc1", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Logo32x32_UASTC_Zstd.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { etc1: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Logo32x32_UASTC_Zstd.ktx2",
+      { etc1: true },
+      32,
+      32,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(32);
-        expect(resolvedValue.height).toEqual(32);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes ETC1S ktx2 to astc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4_ETC1S.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { astc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4_ETC1S.ktx2",
+      { astc: true },
+      4,
+      4,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes UASTC ktx2 to astc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Logo32x32_UASTC_Zstd.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { astc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Logo32x32_UASTC_Zstd.ktx2",
+      { astc: true },
+      32,
+      32,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(32);
-        expect(resolvedValue.height).toEqual(32);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes ETC1S ktx2 to pvrtc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4_ETC1S.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { pvrtc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4_ETC1S.ktx2",
+      { pvrtc: true },
+      4,
+      4,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes UASTC ktx2 to pvrtc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Logo32x32_UASTC_Zstd.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { pvrtc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Logo32x32_UASTC_Zstd.ktx2",
+      { pvrtc: true },
+      32,
+      32,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(32);
-        expect(resolvedValue.height).toEqual(32);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes ETC1S ktx2 to s3tc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4_ETC1S.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { s3tc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4_ETC1S.ktx2",
+      { s3tc: true },
+      4,
+      4,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes UASTC ktx2 to s3tc", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Logo32x32_UASTC_Zstd.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { s3tc: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Logo32x32_UASTC_Zstd.ktx2",
+      { s3tc: true },
+      32,
+      32,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(32);
-        expect(resolvedValue.height).toEqual(32);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes ETC1S ktx2 to bc7", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4_ETC1S.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { bc7: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4_ETC1S.ktx2",
+      { bc7: true },
+      4,
+      4,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("transcodes UASTC ktx2 to bc7", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Logo32x32_UASTC_Zstd.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return { bc7: true };
-      }
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Logo32x32_UASTC_Zstd.ktx2",
+      { bc7: true },
+      32,
+      32,
+      true
     );
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(32);
-        expect(resolvedValue.height).toEqual(32);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
   });
 
   it("returns a promise that resolves to an uncompressed texture", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(false);
-        expect(resolvedValue.bufferView).toBeDefined();
-      });
-    });
+    return expectKTX2TranscodeResult(
+      "./Data/Images/Green4x4.ktx2",
+      { s3tc: true },
+      4,
+      4,
+      false
+    );
   });
 
   it("returns a promise that resolves to an uncompressed texture containing all mip levels of the original texture", function () {
@@ -386,26 +245,6 @@ describe("Core/loadKTX2", function () {
           ).toEqual(false);
           expect(resolvedValue[i].bufferView).toBeDefined();
         }
-      });
-    });
-  });
-
-  it("returns a promise that resolves to a compressed texture", function () {
-    var resource = Resource.createIfNeeded(
-      "./Data/Images/Green4x4_ETC1S.ktx2"
-    );
-    var loadPromise = resource.fetchArrayBuffer();
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(function (resolvedValue) {
-        expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(
-          PixelFormat.isCompressedFormat(resolvedValue.internalFormat)
-        ).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
       });
     });
   });
@@ -436,7 +275,6 @@ describe("Core/loadKTX2", function () {
 
   it("cannot parse invalid KTX2 buffer", function () {
     var invalidKTX = new Uint8Array([0, 1, 2, 3, 4, 5]);
-
     var resolvedValue;
     var rejectedError;
     var promise = loadKTX2(invalidKTX.buffer);

@@ -442,7 +442,7 @@ describe(
         },
       });
 
-      expect(texture.sizeInBytes).toBe(16);
+      expect(texture.sizeInBytes).toBe(8);
 
       expect({
         context: context,
