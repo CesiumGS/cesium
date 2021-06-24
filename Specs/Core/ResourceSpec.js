@@ -1454,6 +1454,135 @@ describe("Core/Resource", function () {
         });
     });
 
+    it("correctly ignores gamma color profile when ImageBitmapOptions are supported", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/Gamma.png",
+        flipY: false,
+        skipColorSpaceConversion: true,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              0,
+              136,
+              0,
+              255,
+            ]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 59, 0, 255]);
+          }
+        });
+    });
+
+    it("correctly allows gamma color profile when ImageBitmapOptions are supported", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/Gamma.png",
+        flipY: false,
+        skipColorSpaceConversion: false,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 59, 0, 255]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 59, 0, 255]);
+          }
+        });
+    });
+
+    it("correctly ignores custom color profile when ImageBitmapOptions are supported", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/CustomColorProfile.png",
+        flipY: false,
+        skipColorSpaceConversion: true,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              0,
+              136,
+              0,
+              255,
+            ]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              193,
+              0,
+              0,
+              255,
+            ]);
+          }
+        });
+    });
+
+    it("correctly allows custom color profile when ImageBitmapOptions are supported", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/CustomColorProfile.png",
+        flipY: false,
+        skipColorSpaceConversion: false,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              193,
+              0,
+              0,
+              255,
+            ]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              193,
+              0,
+              0,
+              255,
+            ]);
+          }
+        });
+    });
+
     it("does not use ImageBitmap when ImageBitmapOptions are not supported", function () {
       if (!supportsImageBitmapOptions) {
         return;

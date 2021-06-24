@@ -283,6 +283,7 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
       source: image,
       sampler: sampler,
       flipY: false,
+      skipColorSpaceConversion: true,
     });
   }
 
