@@ -173,7 +173,7 @@ function transcodeCompressed(
       transcoderFormat = hasAlpha
         ? BasisFormat.cTFPVRTC1_4_RGBA
         : BasisFormat.cTFPVRTC1_4_RGB;
-    } else if (supportedTargetFormats.astc && hasAlpha) {
+    } else if (supportedTargetFormats.astc) {
       internalFormat = PixelFormat.RGBA_ASTC;
       transcoderFormat = BasisFormat.cTFASTC_4x4_RGBA;
     } else if (supportedTargetFormats.bc7) {
@@ -185,7 +185,7 @@ function transcodeCompressed(
       );
     }
   } else if (dfd.colorModel === colorModelUASTC) {
-    if (supportedTargetFormats.astc && hasAlpha) {
+    if (supportedTargetFormats.astc) {
       internalFormat = PixelFormat.RGBA_ASTC;
       transcoderFormat = BasisFormat.cTFASTC_4x4_RGBA;
     } else if (supportedTargetFormats.bc7) {

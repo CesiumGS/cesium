@@ -52,38 +52,11 @@ describe("Core/loadKTX2", function () {
     expect(rejectedError).toBeUndefined();
   });
 
-  it("throws when there are no supported target formats", function () {
-    var resource = Resource.createIfNeeded("./Data/Images/Green4x4.ktx2");
-    var loadPromise = resource.fetchArrayBuffer();
-    var resolvedValue;
-    var rejectedError;
-    return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
-      expect(promise).toBeDefined();
-      return promise.then(
-        function (value) {
-          resolvedValue = value;
-        },
-        function (error) {
-          rejectedError = error;
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeDefined();
-          expect(rejectedError).toBeInstanceOf(RuntimeError);
-          expect(rejectedError.message).toContain("No transcoding format target available");
-        });
-    });
-  });
-
   function expectKTX2TranscodeResult(url, supportedFormats, width, height, isCompressed) {
     var resource = Resource.createIfNeeded(url);
     var loadPromise = resource.fetchArrayBuffer();
-    spyOn(loadKTX2, "setKTX2SupportedFormats").and.callFake(
-      function () {
-        return supportedFormats;
-      }
-    );
     return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
+      var promise = KTX2Transcoder.transcode(buffer, supportedFormats);
       expect(promise).toBeDefined();
       return promise.then(function (result) {
         expect(result).toBeDefined();
