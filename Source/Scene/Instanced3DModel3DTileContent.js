@@ -314,6 +314,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
+    ignoreOutline: tileset.ignoreOutline,
   };
 
   if (gltfFormat === 0) {
