@@ -236,7 +236,11 @@ Cesium3DTileBatchTable.prototype.applyStyle = function (style) {
       ? style.show.evaluate(feature)
       : DEFAULT_SHOW_VALUE;
     this.setColor(i, color);
-    this.setShow(i, show);
+    if (defined(show)) {
+      this.setShow(i, show);
+    } else {
+      this.setShow(i, false);
+    }
   }
 };
 
