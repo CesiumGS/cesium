@@ -516,6 +516,7 @@ function Model(options) {
    * displayed. When false, outlines are displayed.
    *
    * @type {Boolean}
+   * @readonly
    *
    * @default false
    */

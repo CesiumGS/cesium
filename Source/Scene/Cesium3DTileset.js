@@ -782,6 +782,7 @@ function Cesium3DTileset(options) {
    * displayed. When false, outlines are displayed.
    *
    * @type {Boolean}
+   * @readonly
    *
    * @default false
    */
