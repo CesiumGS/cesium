@@ -446,7 +446,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
       backFaceCulling: tileset.backFaceCulling,
-      ignoreOutline: tileset.ignoreOutline,
+      showOutline: tileset.showOutline,
     });
     content._model.readyPromise.then(function (model) {
       model.activeAnimations.addAll({
