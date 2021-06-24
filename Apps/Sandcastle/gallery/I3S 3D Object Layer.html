@@ -38,7 +38,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        let viewer = new Cesium.Viewer("cesiumContainer", {
+        var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.createWorldTerrain({}),
           animation: false,
           timeline: false,
@@ -51,7 +51,7 @@
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
         });
         //Create I3S dataSource and autocenters camera to the I3S layers' extent
-        let dataSource = new Cesium.I3SDataSource(
+        var dataSource = new Cesium.I3SDataSource(
           "San Francisco",
           viewer.scene,
           {

@@ -38,7 +38,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        let viewer = new Cesium.Viewer("cesiumContainer", {
+        var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.createWorldTerrain({}),
           animation: false,
           timeline: false,
@@ -51,7 +51,7 @@
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
         });
         //Create I3S dataSource and autocenters camera to the I3S layers' extent
-        let dataSource = new Cesium.I3SDataSource("New York", viewer.scene, {
+        var dataSource = new Cesium.I3SDataSource("New York", viewer.scene, {
           autoCenterCameraOnStart: true,
           geoidTiledTerrainProvider: geoidService,
         });
@@ -82,11 +82,11 @@
             pickedFeature.content &&
             pickedFeature.content.i3sNode
           ) {
-            let i3sNode = pickedFeature.content.i3sNode;
+            var i3sNode = pickedFeature.content.i3sNode;
             i3sNode.loadFields().then(() => {
-              let geometry = i3sNode.geometryData[0];
+              var geometry = i3sNode.geometryData[0];
               if (pickedPosition) {
-                let location = geometry.getClosestPointIndex(
+                var location = geometry.getClosestPointIndex(
                   pickedPosition.x,
                   pickedPosition.y,
                   pickedPosition.z
@@ -98,13 +98,13 @@
                   location.index !== -1 &&
                   geometry.customAttributes["feature-index"]
                 ) {
-                  let featureIndex =
+                  var featureIndex =
                     geometry.customAttributes["feature-index"][location.index];
                   if (Object.keys(i3sNode.fields).length > 0) {
                     description =
                       '<table class="cesium-infoBox-defaultTable"><tbody>';
-                    for (let fieldName in i3sNode.fields) {
-                      let field = i3sNode.fields[fieldName];
+                    for (var fieldName in i3sNode.fields) {
+                      var field = i3sNode.fields[fieldName];
                       //console.log(field.name + ": " + field.values[featureIndex]);
                       description += "<tr><th>" + field.name + "</th><td>";
                       description += field.values[featureIndex] + "</td></tr>";

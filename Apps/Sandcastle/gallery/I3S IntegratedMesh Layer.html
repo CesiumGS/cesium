@@ -39,7 +39,7 @@
         "use strict";
         //Sandcastle_Begin
         // Create a Viewer instances wiht ArcGIS Tiled Elevation Layer
-        let viewer = new Cesium.Viewer("cesiumContainer", {
+        var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
             url:
               "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
@@ -50,7 +50,7 @@
         //Create an I3S DataSource with the camera autocentered to the I3S layers' extent
         //No need to do a geoid conversion as both the elevation proivder (ArcGISTiledElevationTerrainProvider)
         //and the I3S layer to be added (San Francisco) use orthometric height systems .
-        let dataSource = new Cesium.I3SDataSource(
+        var dataSource = new Cesium.I3SDataSource(
           "San Francisco",
           viewer.scene,
           {
