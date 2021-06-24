@@ -21,8 +21,8 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *        specified, a default style is used which gives each building or building part a
  *        color inferred from its OpenStreetMap <code>tags</code>. If no color can be inferred,
  *        <code>options.defaultColor</code> is used.
- * @param {Boolean} [options.showOutline=true] Whether to display the outline for models. When true, outlines \
- *        are displayed. When false, outlines are not displayed.
+ * @param {Boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
+ *        outlines are displayed. When false, outlines are not displayed.
  * @returns {Cesium3DTileset}
  *
  * @see Ion

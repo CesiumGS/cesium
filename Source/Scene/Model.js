@@ -512,13 +512,14 @@ function Model(options) {
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
-   * Whether to ignore the 3D model outline. When true, all outlines are not
-   * displayed. When false, outlines are displayed.
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
    *
    * @type {Boolean}
    * @readonly
    *
-   * @default false
+   * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
