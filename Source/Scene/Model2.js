@@ -21,7 +21,7 @@ export default function Model(options) {
 
 Model.prototype.update = function (frameState) {
   if (!defined(this.drawCommand)) {
-    this.drawCommand = createCommand(this, frameState);
+    createCommand(this, frameState);
   }
 
   for (var i = 0; i < this.drawCommand.length; i++) {
@@ -36,7 +36,12 @@ function createCommand(model, frameState) {
     },
   });
 
-  return createModelCommands(model.components, frameState, renderState);
+  model.drawCommand = [];
+
+  var rootNode = model.components.scene.nodes[0];
+  var rootModelMatrix = getNodeTransform(rootNode);
+
+  traverseSceneGraph(model, frameState, renderState, rootNode, rootModelMatrix);
 }
 
 function createShader(context, attributes, instancingAttributes) {
@@ -64,7 +69,9 @@ function createShader(context, attributes, instancingAttributes) {
     attributeShader +
     "void main()\n" +
     "{\n" +
-    "    vec3 finalPosition = a_position + a_instanceTranslation;\n" +
+    "    vec3 finalPosition = a_position " +
+    (defined(instancingAttributes) ? " + a_instanceTranslation" : "") +
+    ";\n" +
     "    gl_Position = czm_modelViewProjection * vec4(finalPosition, 1.0);\n" +
     "}\n";
 
@@ -283,25 +290,32 @@ function createNodeCommands(node, modelMatrix, frameState, renderState) {
   return drawCommands;
 }
 
-function createModelCommands(model, frameState, renderState) {
-  var drawCommands = [];
-
-  var nodes = model.nodes;
-  var nodeStack = [];
-  nodeStack.length = 0;
-
-  var i;
-  for (i = 0; i < nodes.length; i++) {
-    nodeStack.push(nodes[i]);
+function traverseSceneGraph(model, frameState, renderState, node, modelMatrix) {
+  if (!defined(node.children) && !defined(node.primitives)) {
+    return;
   }
 
-  while (nodeStack.length > 0) {
-    var node = nodeStack.pop();
-    var modelMatrix = getNodeTransform(node);
-    drawCommands = drawCommands.concat(
+  if (defined(node.children)) {
+    for (var i = 0; i < node.children.length; i++) {
+      var childNode = node.children[i];
+      var childMatrix = Matrix4.multiply(
+        modelMatrix,
+        getNodeTransform(childNode),
+        new Matrix4()
+      );
+      traverseSceneGraph(
+        model,
+        frameState,
+        renderState,
+        childNode,
+        childMatrix
+      );
+    }
+  }
+
+  if (defined(node.primitives)) {
+    model.drawCommand = model.drawCommand.concat(
       createNodeCommands(node, modelMatrix, frameState, renderState)
     );
   }
-
-  return drawCommands;
 }
