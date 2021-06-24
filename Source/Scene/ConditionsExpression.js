@@ -1,7 +1,6 @@
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import Expression from "./Expression.js";
-import Color from "../Core/Color.js";
 
 /**
  * An expression for a style applied to a {@link Cesium3DTileset}.
@@ -130,7 +129,6 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
       return statement.expression.evaluateColor(feature, result);
     }
   }
-  return Color.clone(Color.WHITE, result);
 };
 
 /**

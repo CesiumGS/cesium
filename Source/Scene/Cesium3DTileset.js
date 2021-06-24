@@ -1257,7 +1257,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * <p>
    * Use an always "true" condition to specify the Color for all objects that are not
    * overridden by pre-existing conditions. Otherwise, the default color Cesium.Color.White
-   * will be used.
+   * will be used. Similarly, use an always "true" condition to specify the show property
+   * for all objects that are not overridden by pre-existing conditions. Otherwise, the
+   * default show value true will be used.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype
