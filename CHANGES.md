@@ -19,6 +19,7 @@
   - Added support for 8-bit, 16-bit float, and 32-bit float KTX2 specular environment maps.
   - Added support for KTX2 images in `Material`.
   - Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_texture_etc`, `WEBGL_compressed_texture_astc`, and `EXT_texture_compression_bptc`.
+- Added option to ignore extraneous colorspace information in glTF textures and `ImageBitmap`. [#9624](https://github.com/CesiumGS/cesium/pull/9624)
 
 ##### Fixes :wrench:
 

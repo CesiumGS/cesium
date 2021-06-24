@@ -339,7 +339,11 @@ function addImage(textureAtlas, image, index) {
     var w = nodeWidth / atlasWidth;
     var h = nodeHeight / atlasHeight;
     textureAtlas._textureCoordinates[index] = new BoundingRectangle(x, y, w, h);
-    textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
+    textureAtlas._texture.copyFrom({
+      source: image,
+      xOffset: node.bottomLeft.x,
+      yOffset: node.bottomLeft.y,
+    });
   } else {
     // No node found, must resize the texture atlas.
     resizeAtlas(textureAtlas, image);
