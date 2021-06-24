@@ -5329,7 +5329,7 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
-        if (!this.showOutline) {
+        if (this.showOutline) {
           ModelOutlineLoader.outlinePrimitives(this);
         }
         createResources(this, frameState);
