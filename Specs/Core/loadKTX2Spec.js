@@ -204,7 +204,7 @@ describe("Core/loadKTX2", function () {
     var resource = Resource.createIfNeeded("./Data/Images/Green4x4Mipmap.ktx2");
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
+      var promise = KTX2Transcoder.transcode(buffer, {});
       expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
@@ -228,7 +228,7 @@ describe("Core/loadKTX2", function () {
     );
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
-      var promise = loadKTX2(buffer);
+      var promise = KTX2Transcoder.transcode(buffer, { etc1: true });
       expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();

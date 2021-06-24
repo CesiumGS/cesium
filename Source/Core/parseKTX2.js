@@ -31,7 +31,7 @@ var colorModelUASTC = 166;
  */
 function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("supportedTargetFormats", supportedTargetFormats);
+  Check.defined("supportedTargetFormats", supportedTargetFormats);
   Check.typeOf.object("transcoderModule", transcoderModule);
   //>>includeEnd('debug');
 
