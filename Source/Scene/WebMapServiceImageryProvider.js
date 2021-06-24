@@ -87,6 +87,7 @@ function WebMapServiceImageryProvider(options) {
     throw new DeveloperError("options.layers is required.");
   }
   //>>includeEnd('debug');
+
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
       "options.times was specified, so options.clock is required."
@@ -275,6 +276,7 @@ function WebMapServiceImageryProvider(options) {
   this._resource = resource;
 
   // TODO: change this pickFeatureResource to something like options.getFeaturesUrl if this option exists, else use the getCapabilities default URL
+  // UPDATE: a new paramter getFeatureInfoUrl has been introduced, if the parameter is found in options, the pickFeaturesRource will refer to the paramter
   this._pickFeaturesResource = pickFeatureResource;
   this._layers = options.layers;
 
