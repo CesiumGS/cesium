@@ -70,9 +70,7 @@ describe(
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 
@@ -171,9 +169,7 @@ describe(
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 
@@ -346,9 +342,7 @@ describe(
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red256x256.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 

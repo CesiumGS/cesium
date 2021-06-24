@@ -216,6 +216,7 @@ describe("Scene/BingMapsImageryProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else {
@@ -238,9 +239,7 @@ describe("Scene/BingMapsImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       }
     };
@@ -592,18 +591,14 @@ describe("Scene/BingMapsImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       } else if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       } else {
         // fail

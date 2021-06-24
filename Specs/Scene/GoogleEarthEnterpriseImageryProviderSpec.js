@@ -108,6 +108,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else {
@@ -122,9 +123,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       }
     };

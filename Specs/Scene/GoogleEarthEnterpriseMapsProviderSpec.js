@@ -247,6 +247,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
             crossOrigin,
             deferred,
             true,
+            false,
             true
           );
         } else {
@@ -258,9 +259,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           Resource._DefaultImplementations.createImage(
             new Request({ url: "Data/Images/Red16x16.png" }),
             crossOrigin,
-            deferred,
-            true,
-            true
+            deferred
           );
         }
       };
@@ -426,6 +425,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else if (tries === 2) {
@@ -433,9 +433,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       } else {
         // fail

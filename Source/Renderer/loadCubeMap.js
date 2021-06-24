@@ -13,7 +13,7 @@ import CubeMap from "./CubeMap.js";
  *
  * @param {Context} context The context to use to create the cube map.
  * @param {Object} urls The source URL of each image.  See the example below.
- * @param {Boolean} skipColorSpaceConversion If true, any custom gamma or color profiles in the images will be ignored.
+ * @param {Boolean} [skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the images will be ignored.
  * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
  *
  * @exception {DeveloperError} context is required.

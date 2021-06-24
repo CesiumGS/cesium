@@ -421,9 +421,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -475,9 +473,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -532,9 +528,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -586,9 +580,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -643,9 +635,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -700,9 +690,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -757,9 +745,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -797,9 +783,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       });
 
@@ -926,9 +910,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           Resource._DefaultImplementations.createImage(
             new Request({ url: "Data/Images/Red16x16.png" }),
             crossOrigin,
-            deferred,
-            true,
-            true
+            deferred
           );
         } else {
           // fail
@@ -1678,9 +1660,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 
@@ -1739,9 +1719,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 
@@ -1798,9 +1776,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 
@@ -1862,9 +1838,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
-          true,
-          true
+          deferred
         );
       };
 
