@@ -64,6 +64,7 @@ var LoadState = {
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
  *
@@ -164,6 +165,8 @@ function ModelInstanceCollection(options) {
   this.specularEnvironmentMaps = options.specularEnvironmentMaps;
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCulling = this.backFaceCulling;
+  this.showOutline = defaultValue(options.showOutline, true);
+  this._showOutline = this.showOutline;
 }
 
 Object.defineProperties(ModelInstanceCollection.prototype, {
