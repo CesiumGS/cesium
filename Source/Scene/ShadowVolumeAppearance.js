@@ -64,7 +64,7 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
       materialShaderSource.indexOf("materialInput.st") !== -1;
   }
 
-  if (appearance.material.type == "WrapImage") {
+  if (appearance.material && appearance.material.type == "WrapImage") {
     pickShaderDependencies.requiresVertexTextureCoords = true;
     colorShaderDependencies.requiresVertexTextureCoords = true;
   }
