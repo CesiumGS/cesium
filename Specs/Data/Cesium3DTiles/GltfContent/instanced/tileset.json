@@ -19,7 +19,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "../../../Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.glb",
+      "uri": "../../../Models/GltfLoader/BoxInstancedTranslation/glTF/box.glb",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,

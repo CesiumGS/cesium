@@ -1,0 +1,194 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 240,
+      "type": "VEC3",
+      "min": [
+        -103.97583675780334,
+        -114.61250572279096,
+        -102.50925003085285
+      ],
+      "max": [
+        118.4458890708629,
+        106.54341480974108,
+        93.78807587129995
+      ]
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 240,
+      "type": "VEC3",
+      "min": [
+        -0.9686356343768793,
+        -0.7415555652213446,
+        -0.765567091384559
+      ],
+      "max": [
+        0.9686356343768793,
+        0.7415555652213446,
+        0.765567091384559
+      ]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 360,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        239
+      ]
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 0,
+      "count": 240,
+      "componentType": 5125,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        9
+      ]
+    }
+  ],
+  "asset": {
+    "generator": "3d-tiles-samples-generator",
+    "version": "2.0"
+  },
+  "buffers": [
+    {
+      "uri": "parent_data.bin",
+      "byteLength": 7440
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 2880,
+      "byteOffset": 0,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2880,
+      "byteOffset": 2880,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteLength": 720,
+      "byteOffset": 5760,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 960,
+      "byteOffset": 6480,
+      "byteStride": 4,
+      "target": 34962
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "roughnessFactor": 1,
+        "metallicFactor": 0
+      },
+      "alphaMode": "OPAQUE",
+      "doubleSided": false,
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "_FEATURE_ID_0": 3
+          },
+          "indices": 2,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Z_UP_TO_Y_UP",
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "children": [
+        1
+      ]
+    },
+    {
+      "name": "RTC_CENTER",
+      "translation": [
+        1215019.2111447915,
+        -4736339.477299974,
+        4081627.9570209784
+      ],
+      "mesh": 0,
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

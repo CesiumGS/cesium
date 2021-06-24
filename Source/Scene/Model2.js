@@ -9,7 +9,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
-import Matrix3 from "../Core/Matrix3.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 
 export default function Model(options) {
   this.drawCommand = undefined;
@@ -39,84 +39,46 @@ function createCommand(model, frameState) {
   return createModelCommands(model.components, frameState, renderState);
 }
 
-function createInstancedShader(context) {
-  var vertexShader =
-    "attribute vec3 a_position;\n" +
-    "attribute vec3 a_normal;\n" +
-    "attribute vec3 a_translation;\n" +
-    "varying vec3 v_normal;\n" +
-    "varying float v_featureId;\n" +
-    "void main()\n" +
-    "{\n" +
-    "    v_normal = a_normal;\n" +
-    "    v_featureId = a_featureId;\n" +
-    "    gl_Position = czm_modelViewProjection * (vec4(a_position, 1.0) + vec4(a_translation, 1.0));\n" +
-    "}\n";
+function createShader(context, attributes, instancingAttributes) {
+  var attributeLocations = {};
+  var attributeShader = "";
 
-  var fragmentShader =
-    "varying vec3 v_normal;\n" +
-    "varying float v_featureId;\n" +
-    "void main()\n" +
-    "{\n" +
-    "   float n = v_featureId / 10.0;" +
-    "   gl_FragColor = vec4(1.0, 1.0, 1.0);\n" +
-    "}\n";
-  return ShaderProgram.fromCache({
-    context: context,
-    vertexShaderSource: vertexShader,
-    fragmentShaderSource: fragmentShader,
-    attributeLocations: {
-      a_position: 0,
-      a_normal: 1,
-      a_translation: 2,
-    },
-  });
-}
+  // Process general vertex attributes (POSITION, NORMAL, FEATURE_ID...)
+  var i, j;
+  for (i = 0; i < attributes.length; i++) {
+    var attribute = attributes[i];
+    attributeShader += "attribute vec3 " + attribute.name + ";\n";
+    attributeLocations[attribute.name] = attribute.attribute.index;
+  }
 
-function createShader(context, instancingAttributeLocations) {
-  var instancingAttributesShader = "";
-  var instancingAttributes = Object.keys(instancingAttributeLocations);
-  if (instancingAttributes.length > 0) {
-    for (var i = 0; i < instancingAttributes.length; i++) {
-      instancingAttributesShader +=
-        "attribute vec3 " + instancingAttributes[i] + ";\n";
+  if (defined(instancingAttributes)) {
+    for (j = 0; j < instancingAttributes.length; j++) {
+      var instanceAttribute = instancingAttributes[j];
+      attributeShader += "attribute vec3 " + instanceAttribute.name + ";\n";
+      attributeLocations[instanceAttribute.name] =
+        i + instanceAttribute.attribute.index;
     }
   }
 
   var vertexShader =
-    "attribute vec3 a_position;\n" +
-    "attribute vec3 a_normal;\n" +
-    "attribute float a_featureId;\n" +
-    instancingAttributesShader +
-    "varying vec3 v_normal;\n" +
-    "varying float v_featureId;\n" +
+    attributeShader +
     "void main()\n" +
     "{\n" +
-    "    v_normal = a_normal;\n" +
-    "    v_featureId = a_featureId;\n" +
     "    vec3 finalPosition = a_position + a_instanceTranslation;\n" +
     "    gl_Position = czm_modelViewProjection * vec4(finalPosition, 1.0);\n" +
     "}\n";
 
   var fragmentShader =
-    "varying vec3 v_normal;\n" +
-    "varying float v_featureId;\n" +
     "void main()\n" +
     "{\n" +
-    "   float n = v_featureId / 10.0;" +
-    "   gl_FragColor = vec4(czm_HSLToRGB(vec3(n, 1.0, 0.5)), 1.0);\n" +
+    "   gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n" +
     "}\n";
 
   return ShaderProgram.fromCache({
     context: context,
     vertexShaderSource: vertexShader,
     fragmentShaderSource: fragmentShader,
-    attributeLocations: {
-      a_position: 0,
-      a_normal: 1,
-      a_featureId: 2,
-      a_instanceTranslation: 3,
-    },
+    attributeLocations: attributeLocations,
   });
 }
 
@@ -133,14 +95,192 @@ function getNodeTransform(node) {
 }
 
 function getAttributeBySemantic(primitive, semantic) {
+  var i;
   var attributes = primitive.attributes;
   var attributesLength = attributes.length;
-  for (var i = 0; i < attributesLength; ++i) {
+  for (i = 0; i < attributesLength; ++i) {
     var attribute = attributes[i];
     if (attribute.semantic === semantic) {
       return attribute;
     }
   }
+}
+
+function createBoundingSphere(primitive, modelMatrix) {
+  // FIXME: Currently assuming that POSITION attribute is always present.
+  var positionGltfAttribute = getAttributeBySemantic(primitive, "POSITION");
+  var boundingSphere = BoundingSphere.fromCornerPoints(
+    positionGltfAttribute.min,
+    positionGltfAttribute.max
+  );
+  boundingSphere.center = Matrix4.getTranslation(modelMatrix, new Cartesian3());
+  return boundingSphere;
+}
+
+function createAttributes(primitive) {
+  // FIXME: Currently assuming that POSITION attribute is always present.
+  var positionGltfAttribute = getAttributeBySemantic(primitive, "POSITION");
+  var normalGltfAttribute = getAttributeBySemantic(primitive, "NORMAL");
+  var featureIdGltfAttribute = getAttributeBySemantic(primitive, "FEATURE_ID");
+
+  var attributeIndex = 0;
+  var attributeObjects = [
+    {
+      name: "a_position",
+      attribute: {
+        index: attributeIndex++,
+        vertexBuffer: positionGltfAttribute.buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: positionGltfAttribute.componentDatatype,
+      },
+    },
+  ];
+
+  if (defined(normalGltfAttribute)) {
+    attributeObjects.push({
+      name: "a_normal",
+      attribute: {
+        index: attributeIndex++,
+        vertexBuffer: normalGltfAttribute.buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: normalGltfAttribute.componentDatatype,
+      },
+    });
+  }
+
+  if (defined(featureIdGltfAttribute)) {
+    attributeObjects.push({
+      name: "a_featureId",
+      attribute: {
+        index: attributeIndex++,
+        vertexBuffer: featureIdGltfAttribute.buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: featureIdGltfAttribute.componentDatatype,
+      },
+    });
+  }
+
+  return attributeObjects;
+}
+
+function createInstancingAttributes(node) {
+  var instanceAttributeIndex = 0;
+  var instanceAttributeObjects = [];
+  var translationAttribute = getAttributeBySemantic(
+    node.instances,
+    "TRANSLATION"
+  );
+  var rotationAttribute = getAttributeBySemantic(node.instances, "ROTATION");
+  var scaleAttribute = getAttributeBySemantic(node.instances, "SCALE");
+
+  if (defined(translationAttribute)) {
+    instanceAttributeObjects.push({
+      name: "a_instanceTranslation",
+      attribute: {
+        index: instanceAttributeIndex++,
+        vertexBuffer: translationAttribute.buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: ComponentDatatype.FLOAT,
+        offsetInBytes: 0,
+        strideInBytes: 0,
+        instanceDivisor: 1,
+      },
+    });
+  }
+  if (defined(rotationAttribute)) {
+    instanceAttributeObjects.push({
+      name: "a_instanceRotation",
+      attribute: {
+        index: instanceAttributeIndex++,
+        vertexBuffer: rotationAttribute.buffer,
+        componentsPerAttribute: 4,
+        componentDatatype: ComponentDatatype.FLOAT,
+        offsetInBytes: 0,
+        strideInBytes: 0,
+        instanceDivisor: 1,
+      },
+    });
+  }
+  if (defined(scaleAttribute)) {
+    instanceAttributeObjects.push({
+      name: "a_instanceScale",
+      attribute: {
+        index: instanceAttributeIndex++,
+        vertexBuffer: scaleAttribute.buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: ComponentDatatype.FLOAT,
+        offsetInBytes: 0,
+        strideInBytes: 0,
+        instanceDivisor: 1,
+      },
+    });
+  }
+
+  return instanceAttributeObjects;
+}
+
+function createNodeCommands(node, modelMatrix, frameState, renderState) {
+  var drawCommands = [];
+
+  var i;
+
+  var instanceCount = 0;
+  var instanceAttributes;
+
+  // Handle EXT_mesh_gpu_instancing
+  if (defined(node.instances)) {
+    instanceCount = node.instances.attributes[0].count;
+    instanceAttributes = createInstancingAttributes(node);
+  }
+
+  var primitives = node.primitives;
+  for (i = 0; i < primitives.length; i++) {
+    var primitive = primitives[i];
+    var attributes = createAttributes(primitive);
+    var boundingSphere = createBoundingSphere(primitive, modelMatrix);
+    var shaderProgram = createShader(
+      frameState.context,
+      attributes,
+      instanceAttributes
+    );
+
+    var j;
+    var vertexAttributes = [];
+
+    for (j = 0; j < attributes.length; j++) {
+      vertexAttributes.push(attributes[j].attribute);
+    }
+
+    if (defined(instanceAttributes)) {
+      for (j = 0; j < instanceAttributes.length; j++) {
+        instanceAttributes[j].attribute.index += attributes.length;
+        vertexAttributes.push(instanceAttributes[j].attribute);
+      }
+    }
+
+    var vertexArray = new VertexArray({
+      context: frameState.context,
+      attributes: vertexAttributes,
+      indexBuffer: primitive.indices.buffer,
+    });
+
+    drawCommands.push(
+      new DrawCommand({
+        boundingVolume: boundingSphere,
+        modelMatrix: modelMatrix,
+        pass: Pass.OPAQUE,
+        shaderProgram: shaderProgram,
+        renderState: renderState,
+        vertexArray: vertexArray,
+        count: primitive.indices.count,
+        primitiveType: primitive.primitiveType,
+        uniformMap: undefined,
+        instanceCount: instanceCount,
+      })
+    );
+  }
+
+  return drawCommands;
 }
 
 function createModelCommands(model, frameState, renderState) {
@@ -158,150 +298,10 @@ function createModelCommands(model, frameState, renderState) {
   while (nodeStack.length > 0) {
     var node = nodeStack.pop();
     var modelMatrix = getNodeTransform(node);
-
-    var instanceCount = 0;
-    var instancingAttributeLocations = {};
-
-    // Handle EXT_mesh_gpu_instancing
-    if (defined(node.instances)) {
-      instanceCount = node.instances.attributes[0].count;
-      var translationAttribute = getAttributeBySemantic(
-        node.instances,
-        "TRANSLATION"
-      );
-
-      // TODO: Handle ROTATION and SCALE.
-
-      if (defined(translationAttribute)) {
-        instancingAttributeLocations["a_instanceTranslation"] = 0;
-      }
-    }
-
-    var primitives = node.primitives;
-    for (i = 0; i < primitives.length; i++) {
-      var primitive = primitives[i];
-      var attributes = primitive.attributes;
-      for (var k = 0; k < attributes.length; k++) {
-        var positionAttribute = getAttributeBySemantic(primitive, "POSITION");
-
-        var boundingSphere = BoundingSphere.fromCornerPoints(
-          positionAttribute.min,
-          positionAttribute.max
-        );
-        boundingSphere.center = Matrix4.getTranslation(
-          modelMatrix,
-          new Cartesian3()
-        );
-
-        var shaderProgram = createShader(
-          frameState.context,
-          instancingAttributeLocations
-        );
-        var vertexArray = createVertexArray(
-          primitive,
-          model.instances,
-          frameState.context
-        );
-
-        return new DrawCommand({
-          boundingVolume: boundingSphere,
-          modelMatrix: modelMatrix,
-          pass: Pass.OPAQUE,
-          shaderProgram: shaderProgram,
-          renderState: renderState,
-          vertexArray: vertexArray,
-          count: primitive.indices.count,
-          primitiveType: primitive.primitiveType,
-          uniformMap: undefined,
-          instanceCount: instanceCount,
-        });
-      }
-    }
+    drawCommands = drawCommands.concat(
+      createNodeCommands(node, modelMatrix, frameState, renderState)
+    );
   }
 
   return drawCommands;
-}
-
-function createPrimitiveCommand(primitive, modelMatrix, context, renderState) {
-  var attributes = primitive.attributes;
-  for (var k = 0; k < attributes.length; k++) {
-    var positionAttribute = getAttributeBySemantic(primitive, "POSITION");
-
-    var boundingSphere = BoundingSphere.fromCornerPoints(
-      positionAttribute.min,
-      positionAttribute.max
-    );
-    boundingSphere.center = Matrix4.getTranslation(
-      modelMatrix,
-      new Cartesian3()
-    );
-
-    var shaderProgram = createShader(context);
-    var vertexArray = createVertexArray(primitive, context);
-
-    return new DrawCommand({
-      boundingVolume: boundingSphere,
-      modelMatrix: modelMatrix,
-      pass: Pass.OPAQUE,
-      shaderProgram: shaderProgram,
-      renderState: renderState,
-      vertexArray: vertexArray,
-      count: primitive.indices.count,
-      primitiveType: primitive.primitiveType,
-      uniformMap: undefined,
-    });
-  }
-}
-
-function createVertexArray(primitive, instancing, context) {
-  var positionGltfAttribute = getAttributeBySemantic(primitive, "POSITION");
-  var normalGltfAttribute = getAttributeBySemantic(primitive, "NORMAL");
-  var featureIdGltfAttribute = getAttributeBySemantic(primitive, "FEATURE_ID");
-
-  var attributes = [];
-
-  var positionAttribute = {
-    index: 0,
-    vertexBuffer: positionGltfAttribute.buffer,
-    componentsPerAttribute: 3,
-    componentDatatype: positionGltfAttribute.componentDatatype,
-  };
-  attributes.push(positionAttribute);
-  if (defined(normalGltfAttribute)) {
-    var normalAttribute = {
-      index: 1,
-      vertexBuffer: normalGltfAttribute.buffer,
-      componentsPerAttribute: 3,
-      componentDatatype: normalGltfAttribute.componentDatatype,
-    };
-    attributes.push(normalAttribute);
-  }
-
-  if (defined(featureIdGltfAttribute)) {
-    var featureIdAttribute = {
-      index: 2,
-      vertexBuffer: featureIdGltfAttribute.buffer,
-      componentsPerAttribute: 1,
-      componentDatatype: featureIdGltfAttribute.FLOAT,
-    };
-    attributes.push(featureIdAttribute);
-  }
-
-  if (defined(instancing)) {
-    var translationAttribute = {
-      index: 3,
-      vertexBuffer: instancing.attributes[0].buffer,
-      componentsPerAttribute: 3,
-      componentDatatype: instancing.attributes[0].FLOAT,
-    };
-    attributes.push(translationAttribute);
-  }
-
-  var vertexArray = new VertexArray({
-    context: context,
-    attributes: attributes,
-    indexBuffer: primitive.indices.buffer,
-  });
-
-  return vertexArray;
 }
