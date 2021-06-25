@@ -1,3 +1,4 @@
+import Check from "./Check.js";
 import CompressedTextureBuffer from "./CompressedTextureBuffer.js";
 import defined from "./defined.js";
 import TaskProcessor from "./TaskProcessor.js";
@@ -29,6 +30,10 @@ function makeReadyPromise() {
 }
 
 KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("supportedTargetFormats", supportedTargetFormats);
+  //>>includeEnd('debug');
+
   if (!defined(KTX2Transcoder._readyPromise)) {
     makeReadyPromise();
   }

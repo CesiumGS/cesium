@@ -12,26 +12,14 @@ describe("Core/loadKTX2", function () {
   });
 
   it("throws with unknown supported formats", function () {
-    var promise = KTX2Transcoder.transcode(new Uint8Array());
-    expect(promise).toBeDefined();
-    return promise.then(
-      function () {
-        return;
-      },
-      function (error) {
-        expect(function () {
-          throw error;
-        }).toThrowDeveloperError();
-      }
-    );
+    expect(function () {
+      KTX2Transcoder.transcode(new Uint8Array());
+    }).toThrowDeveloperError();
   });
 
   it("returns a promise that resolves to undefined when there is no data", function () {
     var testUrl = "http://example.invalid/testuri";
     var promise = loadKTX2(testUrl);
-
-    expect(promise).toBeDefined();
-
     var resolvedValue;
     var rejectedError;
     promise.then(
@@ -58,7 +46,6 @@ describe("Core/loadKTX2", function () {
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
       var promise = KTX2Transcoder.transcode(buffer, supportedFormats);
-      expect(promise).toBeDefined();
       return promise.then(function (result) {
         expect(result).toBeDefined();
         expect(result.width).toEqual(width);
@@ -206,7 +193,6 @@ describe("Core/loadKTX2", function () {
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
       var promise = KTX2Transcoder.transcode(buffer, {});
-      expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
         expect(resolvedValue.length).toEqual(3);
@@ -223,14 +209,13 @@ describe("Core/loadKTX2", function () {
     });
   });
 
-  it("returns a promise that resolves to a compressed texture containing the all mip levels of the original texture", function () {
+  it("returns a promise that resolves to a compressed texture containing all mip levels of the original texture", function () {
     var resource = Resource.createIfNeeded(
       "./Data/Images/Green4x4Mipmap_ETC1S.ktx2"
     );
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
       var promise = KTX2Transcoder.transcode(buffer, { etc1: true });
-      expect(promise).toBeDefined();
       return promise.then(function (resolvedValue) {
         expect(resolvedValue).toBeDefined();
         expect(resolvedValue.length).toEqual(3);
@@ -252,18 +237,16 @@ describe("Core/loadKTX2", function () {
     var resolvedValue;
     var rejectedError;
     var promise = loadKTX2(invalidKTX.buffer);
-    expect(promise).toBeDefined();
-    return promise.then(
-      function (value) {
-        resolvedValue = value;
-      },
-      function (error) {
+    return promise
+      .then(function (value) {
+        fail();
+      })
+      .otherwise(function (error) {
         rejectedError = error;
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual("Invalid KTX2 file.");
-      }
-    );
+      });
   });
 
   it("3D textures are unsupported", function () {
@@ -276,20 +259,18 @@ describe("Core/loadKTX2", function () {
       var resolvedValue;
       var rejectedError;
       var promise = loadKTX2(invalidKTX.buffer);
-      expect(promise).toBeDefined();
-      return promise.then(
-        function (value) {
-          resolvedValue = value;
-        },
-        function (error) {
+      return promise
+        .then(function (value) {
+          fail();
+        })
+        .otherwise(function (error) {
           rejectedError = error;
           expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
           expect(rejectedError.message).toEqual(
             "KTX2 3D textures are unsupported."
           );
-        }
-      );
+        });
     });
   });
 
@@ -303,20 +284,18 @@ describe("Core/loadKTX2", function () {
       var resolvedValue;
       var rejectedError;
       var promise = loadKTX2(invalidKTX.buffer);
-      expect(promise).toBeDefined();
-      return promise.then(
-        function (value) {
-          resolvedValue = value;
-        },
-        function (error) {
+      return promise
+        .then(function (value) {
+          fail();
+        })
+        .otherwise(function (error) {
           rejectedError = error;
           expect(resolvedValue).toBeUndefined();
           expect(rejectedError).toBeInstanceOf(RuntimeError);
           expect(rejectedError.message).toEqual(
             "KTX2 texture arrays are not supported."
           );
-        }
-      );
+        });
     });
   });
 });

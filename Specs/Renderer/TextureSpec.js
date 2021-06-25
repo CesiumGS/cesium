@@ -1,7 +1,7 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { loadKTX2 } from "../../Source/Cesium.js";
-import KTX2Transcoder from "../../Source/Core/KTX2Transcoder.js";
+import { KTX2Transcoder } from "../../Source/Core/KTX2Transcoder.js";
 import { PixelFormat } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { ClearCommand } from "../../Source/Cesium.js";

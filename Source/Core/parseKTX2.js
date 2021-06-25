@@ -35,7 +35,6 @@ function parseKTX2(
   transferableObjects
 ) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("supportedTargetFormats", supportedTargetFormats);
   Check.typeOf.object("transcoderModule", transcoderModule);
   //>>includeEnd('debug');
 
