@@ -391,10 +391,16 @@ describe(
     }
 
     it("loads BoxTexturedKtx2Basis", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
       return loadsBoxTexturedKtx2Basis(boxTexturedKtx2Basis);
     });
 
     it("loads BoxTexturedKtx2BasisBinary", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
       return loadsBoxTexturedKtx2Basis(boxTexturedKtx2BasisBinary);
     });
 

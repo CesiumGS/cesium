@@ -9,7 +9,12 @@ var transcoderModule;
 function transcode(parameters, transferableObjects) {
   var ktx2Buffer = parameters.ktx2Buffer;
   var supportedTargetFormats = parameters.supportedTargetFormats;
-  return parseKTX2(ktx2Buffer, supportedTargetFormats, transcoderModule, transferableObjects);
+  return parseKTX2(
+    ktx2Buffer,
+    supportedTargetFormats,
+    transcoderModule,
+    transferableObjects
+  );
 }
 
 function initWorker(compiledModule) {

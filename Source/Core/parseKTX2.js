@@ -28,7 +28,12 @@ var colorModelUASTC = 166;
  *
  * @private
  */
-function parseKTX2(data, supportedTargetFormats, transcoderModule, transferableObjects) {
+function parseKTX2(
+  data,
+  supportedTargetFormats,
+  transcoderModule,
+  transferableObjects
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("supportedTargetFormats", supportedTargetFormats);
   Check.typeOf.object("transcoderModule", transcoderModule);
@@ -100,20 +105,31 @@ function parseUncompressed(header, result) {
     var width = header.pixelWidth >> i;
     var height = header.pixelHeight >> i;
     var faceLength =
-        width *
-        height *
-        PixelFormat.componentsLength(internalFormat);
+      width * height * PixelFormat.componentsLength(internalFormat);
 
     for (var j = 0; j < header.faceCount; ++j) {
       // multiply levelBuffer.byteOffset by the size in bytes of the pixel data type
-      var faceByteOffset = levelBuffer.byteOffset + faceLength * header.typeSize * j;
+      var faceByteOffset =
+        levelBuffer.byteOffset + faceLength * header.typeSize * j;
       var faceView;
       if (!defined(datatype) || PixelDatatype.sizeInBytes(datatype) === 1) {
-        faceView = new Uint8Array(levelBuffer.buffer, faceByteOffset, faceLength);
+        faceView = new Uint8Array(
+          levelBuffer.buffer,
+          faceByteOffset,
+          faceLength
+        );
       } else if (PixelDatatype.sizeInBytes(datatype) === 2) {
-        faceView = new Uint16Array(levelBuffer.buffer, faceByteOffset, faceLength);
+        faceView = new Uint16Array(
+          levelBuffer.buffer,
+          faceByteOffset,
+          faceLength
+        );
       } else {
-        faceView = new Float32Array(levelBuffer.buffer, faceByteOffset, faceLength);
+        faceView = new Float32Array(
+          levelBuffer.buffer,
+          faceByteOffset,
+          faceLength
+        );
       }
 
       level[faceOrder[j]] = {
@@ -141,7 +157,7 @@ function transcodeCompressed(
   var levels = ktx2File.getLevels();
   var hasAlpha = ktx2File.getHasAlpha();
 
-  if (!(width > 0)  || !(height > 0) || !(levels > 0)) {
+  if (!(width > 0) || !(height > 0) || !(levels > 0)) {
     ktx2File.close();
     ktx2File.delete();
     throw new RuntimeError("Invalid KTX2 file");

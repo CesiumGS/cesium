@@ -52,7 +52,7 @@ describe(
     var texturedBoxKTX2Url =
       "./Data/Models/Box-Textured-KTX2-Basis/CesiumTexturedBoxTest.gltf";
     var texturedBoxKTX2MipmapUrl =
-      "./Data/Models/Box-Textured-KTX2-Mipmap/CesiumTexturedBoxTest.gltf";
+      "./Data/Models/Box-Textured-KTX2-Mipmap/CheckerboardTexturedBoxTest.gltf";
     var texturedBoxCustomUrl =
       "./Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf";
     var texturedBoxKhrBinaryUrl =
@@ -1362,6 +1362,9 @@ describe(
     });
 
     it("renders textured box with embedded KTX2 texture", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
       return loadModel(texturedBoxKTX2Url, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
@@ -1372,6 +1375,9 @@ describe(
     });
 
     it("renders textured box with embedded KTX2 texture with mipmap", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
       var gl = scene.context._gl;
       spyOn(gl, "compressedTexImage2D").and.callThrough();
       return loadModel(texturedBoxKTX2MipmapUrl, {

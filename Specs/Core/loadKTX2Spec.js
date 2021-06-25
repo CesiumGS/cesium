@@ -52,7 +52,13 @@ describe("Core/loadKTX2", function () {
     expect(rejectedError).toBeUndefined();
   });
 
-  function expectKTX2TranscodeResult(url, supportedFormats, width, height, isCompressed) {
+  function expectKTX2TranscodeResult(
+    url,
+    supportedFormats,
+    width,
+    height,
+    isCompressed
+  ) {
     var resource = Resource.createIfNeeded(url);
     var loadPromise = resource.fetchArrayBuffer();
     return loadPromise.then(function (buffer) {
@@ -62,9 +68,9 @@ describe("Core/loadKTX2", function () {
         expect(result).toBeDefined();
         expect(result.width).toEqual(width);
         expect(result.height).toEqual(height);
-        expect(
-          PixelFormat.isCompressedFormat(result.internalFormat)
-        ).toEqual(isCompressed);
+        expect(PixelFormat.isCompressedFormat(result.internalFormat)).toEqual(
+          isCompressed
+        );
         expect(result.bufferView).toBeDefined();
       });
     });
