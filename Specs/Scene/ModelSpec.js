@@ -36,6 +36,7 @@ import { DepthFunction } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
+import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
 
 describe(
   "Scene/Model",
@@ -1201,6 +1202,26 @@ describe(
         }).toRenderAndCall(function (rgba) {
           expect(rgba).toEqualEpsilon([179, 9, 9, 255], 5); // Red
         });
+
+        primitives.remove(m);
+      });
+    });
+
+    it("loads a glTF 2.0 model with showOutline set as false", function () {
+      return loadModel(boxGltf2Url).then(function (m) {
+        verifyRender(m);
+        m.show = true;
+        m.luminanceAtZenith = undefined;
+        m.showOutline = false;
+        spyOn(ModelOutlineLoader, "outlinePrimitives");
+
+        expect({
+          scene: scene,
+          time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+        }).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqualEpsilon([179, 9, 9, 255], 5); // Red
+        });
+        expect(ModelOutlineLoader.outlinePrimitives).not.toHaveBeenCalled();
 
         primitives.remove(m);
       });
