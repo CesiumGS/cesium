@@ -2901,6 +2901,53 @@ describe(
       );
     });
 
+    it("handle else case when applying conditional color style to a tileset", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${id} > 0", 'color("black")']],
+            },
+          });
+          expect(
+            tileset.root.content.getFeature(0).hasProperty('color("white")')
+          );
+          expect(
+            tileset.root.content.getFeature(1).hasProperty('color("black")')
+          );
+        }
+      );
+    });
+
+    it("handle else case when applying conditional show to a tileset", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${id} > 0", 'show("false")']],
+            },
+          });
+          expect(
+            tileset.root.content.getFeature(0).hasProperty('show("true")')
+          );
+          expect(
+            tileset.root.content.getFeature(1).hasProperty('show("false")')
+          );
+          tileset.style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${id} > 0", 'show("true")']],
+            },
+          });
+          expect(
+            tileset.root.content.getFeature(0).hasProperty('show("true")')
+          );
+          expect(
+            tileset.root.content.getFeature(1).hasProperty('show("true")')
+          );
+        }
+      );
+    });
+
     it("loads style from uri", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
