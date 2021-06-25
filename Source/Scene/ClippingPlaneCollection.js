@@ -554,44 +554,48 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
       offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
 
       packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
-      clippingPlanesTexture.copyFrom(
-        {
+      clippingPlanesTexture.copyFrom({
+        source: {
           width: 1,
           height: 1,
           arrayBufferView: this._float32View,
         },
-        offsetX,
-        offsetY
-      );
+        xOffset: offsetX,
+        yOffset: offsetY,
+      });
     } else {
       offsetY = Math.floor((dirtyIndex * 2) / clippingPlanesTexture.width);
       offsetX = Math.floor(
         dirtyIndex * 2 - offsetY * clippingPlanesTexture.width
       );
       packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
-      clippingPlanesTexture.copyFrom(
-        {
+      clippingPlanesTexture.copyFrom({
+        source: {
           width: 2,
           height: 1,
           arrayBufferView: this._uint8View,
         },
-        offsetX,
-        offsetY
-      );
+        xOffset: offsetX,
+        yOffset: offsetY,
+      });
     }
   } else if (useFloatTexture) {
     packPlanesAsFloats(this, 0, this._planes.length);
     clippingPlanesTexture.copyFrom({
-      width: clippingPlanesTexture.width,
-      height: clippingPlanesTexture.height,
-      arrayBufferView: this._float32View,
+      source: {
+        width: clippingPlanesTexture.width,
+        height: clippingPlanesTexture.height,
+        arrayBufferView: this._float32View,
+      },
     });
   } else {
     packPlanesAsUint8(this, 0, this._planes.length);
     clippingPlanesTexture.copyFrom({
-      width: clippingPlanesTexture.width,
-      height: clippingPlanesTexture.height,
-      arrayBufferView: this._uint8View,
+      source: {
+        width: clippingPlanesTexture.width,
+        height: clippingPlanesTexture.height,
+        arrayBufferView: this._uint8View,
+      },
     });
   }
 

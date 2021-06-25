@@ -148,6 +148,10 @@ function CubeMap(options) {
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.LUMINANCE;
   var flipY = defaultValue(options.flipY, true);
+  var skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
   var gl = context._gl;
   var textureTarget = gl.TEXTURE_CUBE_MAP;
@@ -156,7 +160,13 @@ function CubeMap(options) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(textureTarget, texture);
 
-  function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
+  function createFace(
+    target,
+    sourceFace,
+    preMultiplyAlpha,
+    flipY,
+    skipColorSpaceConversion
+  ) {
     var arrayBufferView = sourceFace.arrayBufferView;
     if (!defined(arrayBufferView)) {
       arrayBufferView = sourceFace.bufferView;
@@ -172,6 +182,15 @@ function CubeMap(options) {
     }
 
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+    if (skipColorSpaceConversion) {
+      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    } else {
+      gl.pixelStorei(
+        gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+        gl.BROWSER_DEFAULT_WEBGL
+      );
+    }
 
     if (defined(arrayBufferView)) {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -219,37 +238,43 @@ function CubeMap(options) {
       gl.TEXTURE_CUBE_MAP_POSITIVE_X,
       source.positiveX,
       preMultiplyAlpha,
-      flipY
+      flipY,
+      skipColorSpaceConversion
     );
     createFace(
       gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
       source.negativeX,
       preMultiplyAlpha,
-      flipY
+      flipY,
+      skipColorSpaceConversion
     );
     createFace(
       gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
       source.positiveY,
       preMultiplyAlpha,
-      flipY
+      flipY,
+      skipColorSpaceConversion
     );
     createFace(
       gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
       source.negativeY,
       preMultiplyAlpha,
-      flipY
+      flipY,
+      skipColorSpaceConversion
     );
     createFace(
       gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
       source.positiveZ,
       preMultiplyAlpha,
-      flipY
+      flipY,
+      skipColorSpaceConversion
     );
     createFace(
       gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
       source.negativeZ,
       preMultiplyAlpha,
-      flipY
+      flipY,
+      skipColorSpaceConversion
     );
   } else {
     gl.texImage2D(
