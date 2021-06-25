@@ -6,10 +6,10 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 var transcoderModule;
 
-function transcode(parameters) {
+function transcode(parameters, transferableObjects) {
   var ktx2Buffer = parameters.ktx2Buffer;
   var supportedTargetFormats = parameters.supportedTargetFormats;
-  return parseKTX2(ktx2Buffer, supportedTargetFormats, transcoderModule);
+  return parseKTX2(ktx2Buffer, supportedTargetFormats, transcoderModule, transferableObjects);
 }
 
 function initWorker(compiledModule) {

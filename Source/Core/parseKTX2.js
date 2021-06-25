@@ -1,4 +1,3 @@
-import arraySlice from "./arraySlice.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import PixelFormat from "./PixelFormat.js";
@@ -29,7 +28,7 @@ var colorModelUASTC = 166;
  *
  * @private
  */
-function parseKTX2(data, supportedTargetFormats, transcoderModule) {
+function parseKTX2(data, supportedTargetFormats, transcoderModule, transferableObjects) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("supportedTargetFormats", supportedTargetFormats);
   Check.typeOf.object("transcoderModule", transcoderModule);
@@ -63,9 +62,11 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
       header,
       supportedTargetFormats,
       transcoderModule,
+      transferableObjects,
       result
     );
   } else {
+    transferableObjects.push(data.buffer);
     parseUncompressed(header, result);
   }
 
@@ -94,25 +95,25 @@ function parseUncompressed(header, result) {
   for (var i = 0; i < header.levels.length; ++i) {
     var level = {};
     result[i] = level;
-    var levelBuffer = arraySlice(header.levels[i].levelData);
+    var levelBuffer = header.levels[i].levelData;
 
     var width = header.pixelWidth >> i;
     var height = header.pixelHeight >> i;
-
-    for (var j = 0; j < header.faceCount; ++j) {
-      var faceLength =
-        header.typeSize * // size in bytes of the pixel data type
+    var faceLength =
         width *
         height *
         PixelFormat.componentsLength(internalFormat);
 
+    for (var j = 0; j < header.faceCount; ++j) {
+      // multiply levelBuffer.byteOffset by the size in bytes of the pixel data type
+      var faceByteOffset = levelBuffer.byteOffset + faceLength * header.typeSize * j;
       var faceView;
       if (!defined(datatype) || PixelDatatype.sizeInBytes(datatype) === 1) {
-        faceView = new Uint8Array(levelBuffer.buffer, faceLength * j);
+        faceView = new Uint8Array(levelBuffer.buffer, faceByteOffset, faceLength);
       } else if (PixelDatatype.sizeInBytes(datatype) === 2) {
-        faceView = new Uint16Array(levelBuffer.buffer, faceLength * j);
+        faceView = new Uint16Array(levelBuffer.buffer, faceByteOffset, faceLength);
       } else {
-        faceView = new Float32Array(levelBuffer.buffer, faceLength * j);
+        faceView = new Float32Array(levelBuffer.buffer, faceByteOffset, faceLength);
       }
 
       level[faceOrder[j]] = {
@@ -131,6 +132,7 @@ function transcodeCompressed(
   header,
   supportedTargetFormats,
   transcoderModule,
+  transferableObjects,
   result
 ) {
   var ktx2File = new transcoderModule.KTX2File(data);
@@ -139,7 +141,7 @@ function transcodeCompressed(
   var levels = ktx2File.getLevels();
   var hasAlpha = ktx2File.getHasAlpha();
 
-  if (!width || !height || !levels) {
+  if (!(width > 0)  || !(height > 0) || !(levels > 0)) {
     ktx2File.close();
     ktx2File.delete();
     throw new RuntimeError("Invalid KTX2 file");
@@ -254,9 +256,11 @@ function transcodeCompressed(
       -1 // channel1
     );
 
-    if (!transcoded) {
+    if (!defined(transcoded)) {
       throw new RuntimeError("transcodeImage() failed.");
     }
+
+    transferableObjects.push(dst.buffer);
 
     level[faceOrder[0]] = {
       internalFormat: internalFormat,
