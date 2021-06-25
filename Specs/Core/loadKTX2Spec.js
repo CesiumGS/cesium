@@ -1,4 +1,4 @@
-import { DeveloperError, loadKTX2 } from "../../Source/Cesium.js";
+import { loadKTX2 } from "../../Source/Cesium.js";
 import { KTX2Transcoder } from "../../Source/Cesium.js";
 import { PixelFormat } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
@@ -14,19 +14,14 @@ describe("Core/loadKTX2", function () {
   it("throws with unknown supported formats", function () {
     var promise = KTX2Transcoder.transcode(new Uint8Array());
     expect(promise).toBeDefined();
-
-    var resolvedValue;
-    var rejectedError;
     return promise.then(
-      function (value) {
-        resolvedValue = value;
+      function () {
+        return;
       },
       function (error) {
-        rejectedError = error;
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toBeDefined();
-        expect(rejectedError).toBeInstanceOf(DeveloperError);
-        expect(rejectedError.message).toContain("supportedTargetFormats");
+        expect(function () {
+          throw error;
+        }).toThrowDeveloperError();
       }
     );
   });
