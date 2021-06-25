@@ -13,8 +13,9 @@ import { TextureMinificationFilter } from "../../Source/Cesium.js";
 import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 import { when } from "../../Source/Cesium.js";
+import KTX2Transcoder from "../../Source/Core/KTX2Transcoder.js";
 
-describe(
+fdescribe(
   "Renderer/Texture",
   function () {
     var context;
@@ -84,17 +85,25 @@ describe(
           red16x16Image = image;
         })
       );
+
+      var resource = Resource.createIfNeeded("./Data/Images/Green4x4.ktx2");
+      var loadPromise = resource.fetchArrayBuffer();
       promises.push(
-        loadKTX2("./Data/Images/Green4x4.ktx2").then(function (image) {
-          greenKTX2Image = image;
+        loadPromise.then(function (buffer) {
+          var promise = KTX2Transcoder.transcode(buffer, {});
+          return promise.then(function (result) {
+            greenKTX2Image = result;
+          });
         })
       );
 
-      promises.push(
-        loadKTX2("./Data/Images/Green4x4_ETC1S.ktx2").then(function (image) {
-          greenBasisKTX2Image = image;
-        })
-      );
+      if (context.supportsBasis) {
+        promises.push(
+          loadKTX2("./Data/Images/Green4x4_ETC1S.ktx2").then(function (image) {
+            greenBasisKTX2Image = image;
+          })
+        );
+      }
 
       return when.all(promises);
     });
