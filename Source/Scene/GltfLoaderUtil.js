@@ -249,25 +249,4 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   return modelTextureReader;
 };
 
-GltfLoaderUtil.parseAttributeSemantic = function (gltfSemantic, semanticEnum) {
-  var name = gltfSemantic;
-  var semantic;
-  var setIndex;
-
-  var setIndexRegex = /(\w+)_(\d+)$/;
-  var setIndexMatch = setIndexRegex.exec(gltfSemantic);
-  if (setIndexMatch !== null) {
-    // Example: _FEATURE_ID_0 is split into FEATURE_ID and 0 (preceding underscore is removed)
-    semantic = setIndexMatch[1];
-    setIndex = setIndexMatch[2];
-  }
-
-  if (semantic === "POSITION")
-    return {
-      name: name,
-      semantic: semantic,
-      setIndex: setIndex,
-    };
-};
-
 export default GltfLoaderUtil;

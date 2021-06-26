@@ -1,6 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
@@ -103,15 +104,19 @@ AttributeType.getMathType = function (attributeType) {
 };
 
 /**
- * Gets the shader type for the given attribute type and component datatype.
+ * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
+ * given attribute type.
  *
  * @param {AttributeType} attributeType The attribute type.
- * @param {ComponentDatatype} componentDatatype The component datatype.
- * @returns {String} The shader type.
+ * @returns {String} The GLSL type.
  *
  * @private
  */
-AttributeType.getShaderType = function (attributeType) {
+AttributeType.getGlslType = function (attributeType) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("attributeType", attributeType);
+  //>>includeEnd('debug');
+  
   switch (attributeType) {
     case AttributeType.SCALAR:
       return "float";

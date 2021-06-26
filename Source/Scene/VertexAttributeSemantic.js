@@ -219,7 +219,7 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
  *
  * @param {VertexAttributeSemantic} semantic The semantic.
  *
- * @returns {String} The shader type.
+ * @returns {String} The GLSL type.
  *
  * @private
  */

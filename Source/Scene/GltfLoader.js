@@ -17,7 +17,6 @@ import AttributeType from "./AttributeType.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
-//import MetadataType from "./MetadataType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -35,7 +34,6 @@ var Skin = ModelComponents.Skin;
 var Node = ModelComponents.Node;
 var Scene = ModelComponents.Scene;
 var Components = ModelComponents.Components;
-//var Texture = ModelComponents.Texture;
 var MetallicRoughness = ModelComponents.MetallicRoughness;
 var SpecularGlossiness = ModelComponents.SpecularGlossiness;
 var Material = ModelComponents.Material;
@@ -251,9 +249,6 @@ function process(loader, frameState) {
  * @private
  */
 GltfLoader.prototype.process = function (frameState) {
-  // TODO: clean up this loop
-  // TODO: feature id N support
-
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
@@ -292,6 +287,10 @@ GltfLoader.prototype.process = function (frameState) {
     }
   }
 
+  if (this._textureState === GltfLoaderState.LOADED) {
+    this._textureState = GltfLoaderState.PROCESSING;
+  }
+
   if (
     this._state === GltfLoaderState.PROCESSING ||
     this._textureState === GltfLoaderState.PROCESSING
@@ -300,11 +299,8 @@ GltfLoader.prototype.process = function (frameState) {
   }
 
   if (this._state === GltfLoaderState.PROCESSED) {
-    this._state = GltfLoaderState.READY;
-    // TODO: What needs to be finalized?
-    //finalize(loader, frameState);
-    //
     unloadBufferViews(this); // Buffer views can be unloaded after the data has been copied
+    this._state = GltfLoaderState.READY;
     this._promise.resolve(this);
   }
 
@@ -770,8 +766,6 @@ function loadFeatureIdTexture(
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
 
-  // Feature ID textures require nearest sampling
-  featureIdTexture.textureReader.texture.sampler = Sampler.NEAREST;
   featureIdTexture.textureReader.channels = featureIds.channels;
 
   return featureIdTexture;
@@ -793,18 +787,6 @@ function loadMorphTarget(loader, gltf, target) {
   return morphTarget;
 }
 
-function stringCompare(a, b) {
-  return a < b ? -1 : a > b ? 1 : 0;
-}
-
-function sortAttributes(attributes) {
-  attributes.sort(function (attributeA, attributeB) {
-    var attributeNameA = defaultValue(attributeA.semantic, attributeA.name);
-    var attributeNameB = defaultValue(attributeB.semantic, attributeB.name);
-    return stringCompare(attributeNameA, attributeNameB);
-  });
-}
-
 function loadPrimitive(
   loader,
   gltf,
@@ -824,8 +806,6 @@ function loadPrimitive(
       gltf.materials[materialId],
       supportedImageFormats
     );
-  } else {
-    primitive.material = new Material();
   }
 
   var extensions = defaultValue(
@@ -846,10 +826,6 @@ function loadPrimitive(
       }
     }
   }
-
-  // Sort attributes so that unique IDs in CustomShader and ModelShader
-  // are
-  sortAttributes(primitive.attributes);
 
   var targets = gltfPrimitive.targets;
   if (defined(targets)) {
@@ -1194,40 +1170,9 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     if (loader.isDestroyed()) {
       return;
     }
-    loader._texturesLoaded = true;
-    loader._texturesLoadedPromise.resolve(loader);
     loader._textureState = GltfLoaderState.PROCESSED;
   });
 }
-
-/*
-function invalidVertexAttributeProperty(property) {
-  var type = property.type;
-  var enumType = property.enumType;
-  var valueType = property.valueType;
-  var componentCount = property.componentCount;
-
-  if (
-    type === MetadataType.ARRAY &&
-    (!defined(componentCount) || componentCount > 4)
-  ) {
-    // Variable-size arrays or arrays with more than 4 components are not supported
-    return true;
-  }
-
-  if (defined(enumType)) {
-    // Enums or arrays of enums are not supported
-    return true;
-  }
-
-  if (valueType === MetadataType.STRING) {
-    // Strings or arrays of strings are not supported
-    return true;
-  }
-
-  return false;
-}
-*/
 
 function unloadTextures(loader) {
   var textureLoaders = loader._textureLoaders;

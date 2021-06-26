@@ -1675,13 +1675,8 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
 /**
  * Gets the show shader function for this style.
  *
-<<<<<<< HEAD
- * @param {String} functionHeader Header of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader names.
-=======
  * @param {String} functionSignature Signature of the generated function.
  * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
->>>>>>> master
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader function.
@@ -1699,6 +1694,7 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
   }
 
   this._showShaderFunctionReady = true;
+
   if (defined(this.show) && defined(this.show.getShaderFunction)) {
     this._showShaderFunction = this.show.getShaderFunction(
       functionSignature,

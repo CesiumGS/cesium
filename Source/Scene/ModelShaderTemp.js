@@ -240,8 +240,8 @@ function getAttributeDefinitionName(attributeName) {
 */
 
 /*
-function getAttributeDefinition(shaderType, attributeDefinitionName) {
-  return "attribute " + shaderType + " " + attributeDefinitionName + ";\n";
+function getAttributeDefinition(glslType, attributeDefinitionName) {
+  return "attribute " + glslType + " " + attributeDefinitionName + ";\n";
 }
 */
 
@@ -252,13 +252,13 @@ function getUniformName(name, suffix) {
 */
 
 /*
-function getUniformDefinition(shaderType, uniformName) {
-  return "uniform " + shaderType + " " + uniformName + ";\n";
+function getUniformDefinition(glslType, uniformName) {
+  return "uniform " + glslType + " " + uniformName + ";\n";
 }
 */
 
 /*
-function getAttributeShaderType(attribute) {
+function getAttributeGlslType(attribute) {
   var type = attribute.type;
   var componentDatatype = attribute.componentDatatype;
 
@@ -314,7 +314,7 @@ function addAttributeDefinition(attribute, attributeName, shaderBuilder) {
   if (defined(quantization)) {
     type = quantization.type;
   }
-  var attributeType = AttributeType.getShaderType(type);
+  var attributeType = AttributeType.getGlslType(type);
   var attributeDefinition = getAttributeDefinition(
     attributeType,
     attributeDefinitionName
@@ -328,10 +328,10 @@ function getAttributeReadFunction(
   attributeValue,
   attributeName,
   attributeType,
-  shaderType
+  glslType
 ) {
   return (
-    shaderType +
+    glslType +
     " read" +
     capitalize(attributeName) +
     "(in " +
@@ -352,8 +352,8 @@ function getAttributeReadFunction(
 function addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder) {
   var quantization = attribute.quantization;
   var type = quantization.type;
-  var attributeType = AttributeType.getShaderType(type);
-  var shaderType = getAttributeShaderType(attribute);
+  var attributeType = AttributeType.getGlslType(type);
+  var glslType = getAttributeGlslType(attribute);
 
   var rangeUniformName = getUniformName(attributeName, "OctEncodedRange");
   var rangeUniformDefinition = getUniformDefinition("float", rangeUniformName);
@@ -371,7 +371,7 @@ function addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder) {
     attributeValue,
     attributeName,
     attributeType,
-    shaderType
+    glslType
   );
 
   shaderBuilder.functions += readFunction;
@@ -380,9 +380,9 @@ function addOctEncodedAttributeReader(attribute, attributeName, shaderBuilder) {
 */
 
 /*
-function castAttribute(attributeValue, attributeType, shaderType) {
-  if (attributeType !== shaderType) {
-    return shaderType + "(" + attributeValue + ")";
+function castAttribute(attributeValue, attributeType, glslType) {
+  if (attributeType !== glslType) {
+    return glslType + "(" + attributeValue + ")";
   }
   return attributeValue;
 }
@@ -392,17 +392,17 @@ function castAttribute(attributeValue, attributeType, shaderType) {
 function addQuantizedAttributeReader(attribute, attributeName, shaderBuilder) {
   var quantization = attribute.quantization;
   var type = quantization.type;
-  var attributeType = AttributeType.getShaderType(type);
-  var shaderType = getAttributeShaderType(attribute);
+  var attributeType = AttributeType.getGlslType(type);
+  var glslType = getAttributeGlslType(attribute);
 
   var scaleUniformName = getUniformName(attributeName, "DequantizationScale");
   var offsetUniformName = getUniformName(attributeName, "DequantizationOffset");
   var scaleUniformDefinition = getUniformDefinition(
-    shaderType,
+    glslType,
     scaleUniformName
   );
   var offsetUniformDefinition = getUniformDefinition(
-    shaderType,
+    glslType,
     offsetUniformName
   );
 
@@ -410,13 +410,13 @@ function addQuantizedAttributeReader(attribute, attributeName, shaderBuilder) {
   if (defined(quantization.quantizedVolumeOffset)) {
     attributeValue = " + " + offsetUniformName;
   }
-  attributeValue = castAttribute(attributeValue, attributeType, shaderType);
+  attributeValue = castAttribute(attributeValue, attributeType, glslType);
 
   var readFunction = getAttributeReadFunction(
     attributeValue,
     attributeName,
     attributeType,
-    shaderType
+    glslType
   );
 
   shaderBuilder.functions += readFunction;
@@ -430,16 +430,16 @@ function addQuantizedAttributeReader(attribute, attributeName, shaderBuilder) {
 /*
 function addAttributeReader(attribute, attributeName, shaderBuilder) {
   var type = attribute.type;
-  var attributeType = AttributeType.getShaderType(type);
-  var shaderType = getAttributeShaderType(attribute);
+  var attributeType = AttributeType.getGlslType(type);
+  var glslType = getAttributeGlslType(attribute);
 
-  var attributeValue = castAttribute(attributeName, attributeType, shaderType);
+  var attributeValue = castAttribute(attributeName, attributeType, glslType);
 
   var readFunction = getAttributeReadFunction(
     attributeValue,
     attributeName,
     attributeType,
-    shaderType
+    glslType
   );
   shaderBuilder.functions += readFunction;
 }
@@ -518,12 +518,12 @@ function addTangentDeclaration(
     type = quantization.type;
   }
 
-  var shaderType = AttributeType.getShaderType(type);
+  var glslType = AttributeType.getGlslType(type);
   var lastComponent = type === AttributeType.VEC4 ? ".w" : ".z";
 
   var readTangentHandedness =
     "float readTangentHandedness(in " +
-    shaderType +
+    glslType +
     " tangent)\n" +
     "{\n" +
     "    return tangent" +
@@ -566,11 +566,11 @@ function addPositionAbsoluteDeclaration(shaderBuilder) {
 
 /*
 function addAttributeDeclaration(attribute, attributeName, shaderBuilder) {
-  var shaderType = getShaderType(attribute);
+  var glslType = getGlslType(attribute);
   var attributeDefinitionName = getAttributeDefinitionName(attributeName);
 
   var attributeDeclaration =
-    shaderType +
+    glslType +
     " " +
     attributeName +
     " = read" +

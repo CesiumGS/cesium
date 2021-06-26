@@ -124,7 +124,6 @@ FeatureMetadata.prototype.getFeatureTexture = function (featureTextureId) {
   Check.typeOf.string("featureTextureId", featureTextureId);
   //>>includeEnd('debug');
 
-  // TODO: need to store the texcoord and transform somewhere. Maybe in the ModelComponents primitive?
   return this._featureTextures[featureTextureId];
 };
 

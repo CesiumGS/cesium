@@ -24,7 +24,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 // TODO: support enums in custom shader
 // TODO: which of the PropertyInfo options are needed?
 // TODO: decided not to do scoping yet
-// TODO: getShaderTypeFromUniformValue throw error if no match
+// TODO: getGlslTypeFromUniformValue throw error if no match
 // TODO: error handling if custom shader uses unknown input.property or attribute.property
 // TODO: doc
 // TODO: should the retrieved attribute be the quantization type or the regular type? Same question for VEC3 vs. VEC4 tangent
@@ -95,7 +95,7 @@ function PropertyInfo(options) {
   this.requireFragShader = defaultValue(options.requireFragShader, false);
 }
 
-function getShaderTypeFromUniformValue(uniformValue) {
+function getGlslTypeFromUniformValue(uniformValue) {
   var type = typeof uniformValue;
   if (type === "number") {
     return "float";
@@ -152,14 +152,14 @@ function getFinalShaderString(
   propertyNameMap
 ) {
   var inputDefinitions = inputs.map(function (input) {
-    var type = InputSemantic.getShaderType(input.semantic);
+    var type = InputSemantic.getGlslType(input.semantic);
     var name = InputSemantic.getVariableName(input);
     return type + " " + name;
   });
   var inputStruct = getStructDefinition("Input", inputDefinitions);
 
   var attributeDefinitions = attributes.map(function (attribute) {
-    var type = AttributeType.getShaderType(attribute.type);
+    var type = AttributeType.getGlslType(attribute.type);
     var name = defaultValue(attributeNameMap[attribute.name], attribute.name);
     return type + " " + name;
   });
@@ -169,7 +169,7 @@ function getFinalShaderString(
   for (var uniformName in uniforms) {
     if (uniforms.hasOwnProperty(uniformName)) {
       var uniformValue = uniforms[uniformName];
-      var type = getShaderTypeFromUniformValue(uniformValue);
+      var type = getGlslTypeFromUniformValue(uniformValue);
       var name = defaultValue(uniformNameMap[uniformName], uniformName);
       uniformDefinitions.push(type + " " + name);
     }
@@ -177,7 +177,7 @@ function getFinalShaderString(
   var uniformStruct = getStructDefinition("Uniform", uniformDefinitions);
 
   var propertyDefinitions = properties.map(function (property) {
-    var type = property.classProperty.getShaderType();
+    var type = property.classProperty.getGlslType();
     var propertyId = property.propertyId;
     var name = defaultValue(propertyNameMap[propertyId], propertyId);
     return type + " " + name;

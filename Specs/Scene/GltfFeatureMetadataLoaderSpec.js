@@ -359,6 +359,7 @@ describe(
 
         var colorProperty = mapTexture.getProperty("color");
         var intensityProperty = mapTexture.getProperty("intensity");
+        var vegetationProperty = orthoTexture.getProperty("vegetation");
 
         expect(colorProperty.textureReader.texture.width).toBe(1);
         expect(colorProperty.textureReader.texture.height).toBe(1);
@@ -366,7 +367,6 @@ describe(
           intensityProperty.textureReader.texture
         );
 
-        var vegetationProperty = orthoTexture.getProperty("vegetation");
         expect(vegetationProperty.textureReader.texture.width).toBe(1);
         expect(vegetationProperty.textureReader.texture.height).toBe(1);
         expect(vegetationProperty.textureReader.texture).not.toBe(

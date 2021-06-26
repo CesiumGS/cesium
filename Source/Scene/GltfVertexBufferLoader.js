@@ -193,7 +193,6 @@ function getQuantizationInformation(
   componentCount,
   type
 ) {
-  var MathType = AttributeType.getMathType(type);
   var quantizationBits = dracoQuantization.quantizationBits;
   var normalizationRange = (1 << quantizationBits) - 1;
 
@@ -201,28 +200,28 @@ function getQuantizationInformation(
   quantization.componentDatatype = componentDatatype;
   quantization.octEncoded = dracoQuantization.octEncoded;
   quantization.octEncodedZXY = true;
-  quantization.normalizationRange = MathType.unpack(
-    arrayFill(new Array(componentCount), normalizationRange)
-  );
   quantization.type = type;
 
   if (quantization.octEncoded) {
     quantization.type = AttributeType.VEC2;
     quantization.normalizationRange = normalizationRange;
-  } else if (MathType === Number) {
-    quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
-    quantization.quantizedVolumeDimensions = dracoQuantization.range;
-    quantization.normalizationRange = normalizationRange;
   } else {
-    quantization.quantizedVolumeOffset = MathType.unpack(
-      dracoQuantization.minValues
-    );
-    quantization.quantizedVolumeDimensions = MathType.unpack(
-      arrayFill(new Array(componentCount), dracoQuantization.range)
-    );
-    quantization.normalizationRange = MathType.unpack(
-      arrayFill(new Array(componentCount), normalizationRange)
-    );
+    var MathType = AttributeType.getMathType(type);
+    if (MathType === Number) {
+      quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
+      quantization.quantizedVolumeDimensions = dracoQuantization.range;
+      quantization.normalizationRange = normalizationRange;
+    } else {
+      quantization.quantizedVolumeOffset = MathType.unpack(
+        dracoQuantization.minValues
+      );
+      quantization.quantizedVolumeDimensions = MathType.unpack(
+        arrayFill(new Array(componentCount), dracoQuantization.range)
+      );
+      quantization.normalizationRange = MathType.unpack(
+        arrayFill(new Array(componentCount), normalizationRange)
+      );
+    }
   }
 
   return quantization;

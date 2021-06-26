@@ -5,37 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Node debugging",
             "type": "node",
             "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/index.js"
-        },
-        {
-            "name": "npm test",
-            "type": "node",
-            "request": "launch",
+            "name": "Launch Program",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "test"]
-        },
-        {
-            "name": "swayze",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/modelTiler.js",
-            "args": [
-                "-i", "/home/slilley/Code/gltf-Sample-Models/2.0/Duck/glTF-Binary/Duck.glb", "-o", "/home/slilley/Desktop/Duck", "-I", "PHOTOGRAMMETRY", "--texture-format", "PNG"
-            ],
-        },
-        {
-            "name": "Chrome",
-            "type": "chrome",
-            "request": "launch",
-            "url": "http://localhost:8080/Specs/SpecRunner.html?category=none",
-            "webRoot": "${workspaceFolder}"
-        },
+            "runtimeArgs": ["run-script", "start"],
+            "noDebug": true
+        }
     ]
 }

@@ -29,8 +29,5 @@
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
     "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
     "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false,
-    "glTF.defaultV2Engine": "Cesium",
-    "cSpell.ignoreWords": [
-        "styleable"
-    ]
+    "glTF.defaultV2Engine": "Cesium"
 }

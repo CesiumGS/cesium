@@ -143,7 +143,7 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
     ];
 
-    var expectedShaderTypes = [
+    var expectedGlslTypes = [
       "vec3",
       "vec3",
       "vec3",
@@ -157,7 +157,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     var semanticsLength = semantics.length;
     for (var i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getGlslType(semantics[i])).toBe(
-        expectedShaderTypes[i]
+        expectedGlslTypes[i]
       );
     }
   });

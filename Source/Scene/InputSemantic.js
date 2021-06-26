@@ -275,15 +275,15 @@ InputSemantic.fromEnumName = function (enumName) {
 };
 
 /**
- * Gets the shader type for the given input semantic.
+ * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
+ * given input semantic.
  *
  * @param {InputSemantic} semantic The input semantic.
- *
- * @returns {String} The shader type.
+ * @returns {String} The GLSL type.
  *
  * @private
  */
-InputSemantic.getShaderType = function (semantic) {
+InputSemantic.getGlslType = function (semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');

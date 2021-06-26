@@ -388,17 +388,18 @@ MetadataClassProperty.prototype.packVectorTypes = function (value) {
 };
 
 /**
- * Gets the shader type for the property.
+ * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
+ * property.
  *
- * @returns {String} The shader type.
+ * @returns {String} The GLSL type.
  *
  * @private
  */
-MetadataClassProperty.prototype.getShaderType = function () {
+MetadataClassProperty.prototype.getGlslType = function () {
   var type = this._type;
   var valueType = this._valueType;
 
-  // TODO: some types are converted to floats - see the per-point properties in NewModel
+  // TODO: some types are converted to floats (e.g. UINT64) - be aware of that here
   if (type !== MetadataType.ARRAY) {
     if (MetadataType.isIntegerType(valueType)) {
       return "int"; // No uint type in WebGL 1.0
