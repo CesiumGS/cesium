@@ -43,7 +43,7 @@ export default function preprocess3DTileContent(arrayBuffer) {
   }
 
   var json = getJsonContent(uint8Array);
-  if (defined(json.geometricError)) {
+  if (defined(json.root)) {
     // Most likely a tileset JSON
     return {
       contentType: Cesium3DTileContentType.EXTERNAL_TILESET,

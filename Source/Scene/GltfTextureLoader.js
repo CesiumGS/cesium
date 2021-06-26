@@ -274,6 +274,7 @@ function createTexture(gltf, textureInfo, image, context) {
       source: image,
       sampler: sampler,
       flipY: false,
+      skipColorSpaceConversion: true,
     });
   }
 

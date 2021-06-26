@@ -278,6 +278,13 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.terrainExaggeration = 1.0;
 
   /**
+   * The height relative to which terrain is exaggerated.
+   * @type {Number}
+   * @default 0.0
+   */
+  this.terrainExaggerationRelativeHeight = 0.0;
+
+  /**
    * @typedef FrameState.ShadowState
    * @type {Object}
    * @property {Boolean} shadowsEnabled Whether there are any active shadow maps this frame.
