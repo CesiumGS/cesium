@@ -17,7 +17,7 @@ describe("Core/loadKTX2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("throws if loadKTX2 is with invalid url", function () {
+  it("throws if loadKTX2 is called with invalid url", function () {
     var testUrl = "http://example.invalid/testuri";
     var promise = loadKTX2(testUrl);
     return promise
