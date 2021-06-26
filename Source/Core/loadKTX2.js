@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defined from "./defined.js";
 import Resource from "./Resource.js";
 import KTX2Transcoder from "./KTX2Transcoder.js";
 import when from "../ThirdParty/when.js";
@@ -97,14 +96,14 @@ function loadKTX2(resourceOrUrlOrBuffer) {
     loadPromise = resource.fetchArrayBuffer();
   }
 
-  if (!defined(loadPromise)) {
-    return undefined;
-  }
-
   // load module then return
-  return loadPromise.then(function (data) {
-    return KTX2Transcoder.transcode(data, supportedTranscoderFormats);
-  });
+  return loadPromise
+    .then(function (data) {
+      return KTX2Transcoder.transcode(data, supportedTranscoderFormats);
+    })
+    .otherwise(function (error) {
+      throw error;
+    });
 }
 
 export default loadKTX2;

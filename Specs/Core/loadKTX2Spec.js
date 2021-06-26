@@ -17,22 +17,16 @@ describe("Core/loadKTX2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("returns a promise that resolves to undefined when there is no data", function () {
+  it("throws if loadKTX2 is with invalid url", function () {
     var testUrl = "http://example.invalid/testuri";
     var promise = loadKTX2(testUrl);
-    var resolvedValue;
-    var rejectedError;
-    promise.then(
-      function (value) {
-        resolvedValue = value;
-      },
-      function (error) {
-        rejectedError = error;
-      }
-    );
-
-    expect(resolvedValue).toBeUndefined();
-    expect(rejectedError).toBeUndefined();
+    return promise
+      .then(function (value) {
+        fail();
+      })
+      .otherwise(function (error) {
+        expect(error).toBeDefined();
+      });
   });
 
   function expectKTX2TranscodeResult(
