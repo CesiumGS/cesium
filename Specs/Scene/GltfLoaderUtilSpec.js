@@ -145,7 +145,7 @@ describe("Scene/GltfLoaderUtil", function () {
     }).toThrowDeveloperError();
   });
 
-  it("createSampler throws if gltf is undefined", function () {
+  it("createSampler throws if textureInfo is undefined", function () {
     expect(function () {
       GltfLoaderUtil.getImageIdFromTexture({
         gltf: gltfWithTextures,
@@ -166,6 +166,64 @@ describe("Scene/GltfLoaderUtil", function () {
       textureInfo: {
         index: 0,
       },
+    });
+    expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+    expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+    expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
+    expect(sampler.magnificationFilter).toBe(TextureMagnificationFilter.LINEAR);
+  });
+
+  it("createSampler uses NEAREST when compressedTextureNoMipmap is true and the minFilter uses nearest mipmap filtering", function () {
+    var sampler = GltfLoaderUtil.createSampler({
+      gltf: {
+        textures: [
+          {
+            source: 0,
+            sampler: 0,
+          },
+        ],
+        samplers: [
+          {
+            magFilter: 9729,
+            minFilter: 9986,
+            wrapS: 10497,
+            wrapT: 10497,
+          },
+        ],
+      },
+      textureInfo: {
+        index: 0,
+      },
+      compressedTextureNoMipmap: true,
+    });
+    expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+    expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+    expect(sampler.minificationFilter).toBe(TextureMinificationFilter.NEAREST);
+    expect(sampler.magnificationFilter).toBe(TextureMagnificationFilter.LINEAR);
+  });
+
+  it("createSampler uses LINEAR when compressedTextureNoMipmap is true and the minFilter uses linear mipmap filtering", function () {
+    var sampler = GltfLoaderUtil.createSampler({
+      gltf: {
+        textures: [
+          {
+            source: 0,
+            sampler: 0,
+          },
+        ],
+        samplers: [
+          {
+            magFilter: 9729,
+            minFilter: 9987,
+            wrapS: 10497,
+            wrapT: 10497,
+          },
+        ],
+      },
+      textureInfo: {
+        index: 0,
+      },
+      compressedTextureNoMipmap: true,
     });
     expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
     expect(sampler.wrapT).toBe(TextureWrap.REPEAT);

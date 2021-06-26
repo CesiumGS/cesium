@@ -180,6 +180,11 @@ var uriToGuid = {};
  * </ul>
  * </p>
  * <p>
+ * Note: for models with compressed textures using the KHR_texture_basisu, we recommend power of 2 textures in both dimensions
+ * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
+ * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
+ * </p>
+ * <p>
  * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
  * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
  * relative to a local origin.
@@ -1366,6 +1371,8 @@ function containsGltfMagic(uint8Array) {
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md|KHR_texture_basisu}
  * </li>
  * </ul>
  * </p>
@@ -2872,8 +2879,8 @@ function createTexture(gltfTexture, model, context) {
     sampler = new Sampler({
       wrapS: sampler.wrapS,
       wrapT: sampler.wrapT,
-      textureMinificationFilter: minFilter,
-      textureMagnificationFilter: sampler.magnificationFilter,
+      minificationFilter: minFilter,
+      magnificationFilter: sampler.magnificationFilter,
     });
   }
 
@@ -2893,11 +2900,46 @@ function createTexture(gltfTexture, model, context) {
     wrapS === TextureWrap.MIRRORED_REPEAT ||
     wrapT === TextureWrap.REPEAT ||
     wrapT === TextureWrap.MIRRORED_REPEAT;
-
+  var npot;
   var tx;
   var source = gltfTexture.image;
 
   if (defined(internalFormat)) {
+    npot =
+      !CesiumMath.isPowerOfTwo(gltfTexture.width) ||
+      !CesiumMath.isPowerOfTwo(gltfTexture.height);
+
+    // Warning to encourage power of 2 texture dimensions with KHR_texture_basisu
+    if (npot && PixelFormat.isCompressedFormat(internalFormat)) {
+      console.warn(
+        "For maximim compatibility, we encourage power of 2 dimensions when using compressed textures in glTF. See the Model.js constructor documentation for more information."
+      );
+    }
+
+    if (
+      !defined(gltfTexture.mipLevels) &&
+      (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
+        minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR)
+    ) {
+      sampler = new Sampler({
+        wrapS: sampler.wrapS,
+        wrapT: sampler.wrapT,
+        minificationFilter: TextureMinificationFilter.NEAREST,
+        magnificationFilter: sampler.magnificationFilter,
+      });
+    } else if (
+      !defined(gltfTexture.mipLevels) &&
+      (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
+        minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)
+    ) {
+      sampler = new Sampler({
+        wrapS: sampler.wrapS,
+        wrapT: sampler.wrapT,
+        minificationFilter: TextureMinificationFilter.LINEAR,
+        magnificationFilter: sampler.magnificationFilter,
+      });
+    }
+
     tx = new Texture({
       context: context,
       source: {
@@ -2910,10 +2952,9 @@ function createTexture(gltfTexture, model, context) {
       sampler: sampler,
     });
   } else if (defined(source)) {
-    var npot =
+    npot =
       !CesiumMath.isPowerOfTwo(source.width) ||
       !CesiumMath.isPowerOfTwo(source.height);
-
     if (requiresNpot && npot) {
       // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
       var canvas = document.createElement("canvas");
