@@ -680,7 +680,7 @@ Object.defineProperties(Context.prototype, {
    * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
    * @memberof Context.prototype
    * @type {Boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/}
    */
   halfFloatingPointTexture: {
     get: function () {
