@@ -97,13 +97,9 @@ function loadKTX2(resourceOrUrlOrBuffer) {
   }
 
   // load module then return
-  return loadPromise
-    .then(function (data) {
-      return KTX2Transcoder.transcode(data, supportedTranscoderFormats);
-    })
-    .otherwise(function (error) {
-      throw error;
-    });
+  return loadPromise.then(function (data) {
+    return KTX2Transcoder.transcode(data, supportedTranscoderFormats);
+  });
 }
 
 export default loadKTX2;
