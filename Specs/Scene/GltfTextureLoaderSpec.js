@@ -1,6 +1,7 @@
 import {
   GltfImageLoader,
   GltfTextureLoader,
+  GltfLoaderUtil,
   JobScheduler,
   Resource,
   ResourceCache,
@@ -133,6 +134,33 @@ describe(
           minFilter: 9728, // NEAREST
           wrapS: 33071, // CLAMP_TO_EDGE
           wrapT: 33071, // CLAMP_TO_EDGE
+        },
+      ],
+    };
+
+    var gltfKtx2MissingMipmap = {
+      images: [
+        {
+          uri: "Green4x4_ETC1S.ktx2",
+        },
+      ],
+      textures: [
+        {
+          source: 0,
+          sampler: 0,
+          extensions: {
+            KHR_texture_basisu: {
+              source: 0,
+            },
+          },
+        },
+      ],
+      samplers: [
+        {
+          magFilter: 9728, // NEAREST
+          minFilter: 9984, // NEAREST_MIPMAP_NEAREST
+          wrapS: 10497, // REPEAT
+          wrapT: 10497, // REPEAT
         },
       ],
     };
@@ -382,6 +410,40 @@ describe(
         expect(textureLoader.texture.width).toBe(4);
         expect(textureLoader.texture.height).toBe(4);
         expect(gl.compressedTexImage2D.calls.count()).toEqual(3);
+      });
+    });
+
+    it("createTexture() calls createSampler() with compressedTextureNoMipmap = true", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
+
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(
+        when.resolve(image)
+      );
+      spyOn(GltfLoaderUtil, "createSampler").and.callThrough();
+      var textureLoader = new GltfTextureLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfKtx2MissingMipmap,
+        textureInfo: gltf.materials[0].emissiveTexture,
+        gltfResource: gltfResource,
+        baseResource: gltfKtx2BaseResource,
+        supportedImageFormats: new SupportedImageFormats({
+          basis: true,
+        }),
+        asynchronous: false,
+      });
+
+      textureLoader.load();
+
+      return waitForLoaderProcess(textureLoader, scene).then(function (
+        textureLoader
+      ) {
+        expect(GltfLoaderUtil.createSampler).toHaveBeenCalledWith({
+          gltf: gltfKtx2MissingMipmap,
+          textureInfo: gltf.materials[0].emissiveTexture,
+          compressedTextureNoMipmap: true,
+        });
       });
     });
 

@@ -180,7 +180,7 @@ var uriToGuid = {};
  * </ul>
  * </p>
  * <p>
- * Note: for models with compressed textures using the KHR_texture_basisu, we recommend power of 2 textures in both dimensions
+ * Note: for models with compressed textures using the KHR_texture_basisu extension, we recommend power of 2 textures in both dimensions
  * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
  * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
  * </p>
@@ -2910,35 +2910,37 @@ function createTexture(gltfTexture, model, context) {
       !CesiumMath.isPowerOfTwo(gltfTexture.height);
 
     // Warning to encourage power of 2 texture dimensions with KHR_texture_basisu
-    if (npot && PixelFormat.isCompressedFormat(internalFormat)) {
+    if (
+      !context.webgl2 &&
+      PixelFormat.isCompressedFormat(internalFormat) &&
+      npot &&
+      requiresNpot
+    ) {
       console.warn(
-        "For maximim compatibility, we encourage power of 2 dimensions when using compressed textures in glTF. See the Model.js constructor documentation for more information."
+        "Compressed textures uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly. See the Model.js constructor documentation for more information."
       );
     }
 
+    var minificationFilter;
     if (
       !defined(gltfTexture.mipLevels) &&
       (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
         minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR)
     ) {
-      sampler = new Sampler({
-        wrapS: sampler.wrapS,
-        wrapT: sampler.wrapT,
-        minificationFilter: TextureMinificationFilter.NEAREST,
-        magnificationFilter: sampler.magnificationFilter,
-      });
+        minificationFilter = TextureMinificationFilter.NEAREST;
     } else if (
       !defined(gltfTexture.mipLevels) &&
       (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
         minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)
     ) {
-      sampler = new Sampler({
-        wrapS: sampler.wrapS,
-        wrapT: sampler.wrapT,
-        minificationFilter: TextureMinificationFilter.LINEAR,
-        magnificationFilter: sampler.magnificationFilter,
-      });
+      minificationFilter = TextureMinificationFilter.LINEAR;
     }
+    sampler = new Sampler({
+      wrapS: sampler.wrapS,
+      wrapT: sampler.wrapT,
+      minificationFilter: minificationFilter,
+      magnificationFilter: sampler.magnificationFilter,
+    });
 
     tx = new Texture({
       context: context,

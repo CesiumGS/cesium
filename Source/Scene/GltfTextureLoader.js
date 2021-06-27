@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
@@ -220,17 +221,23 @@ function resizeImageToNextPowerOfTwo(image) {
 }
 
 function createTexture(gltf, textureInfo, image, mipLevels, context) {
+  // internalFormat is only defined for CompressedTextureBuffer
+  var internalFormat = image.internalFormat;
+
+  var compressedTextureNoMipmap = false;
+  if (PixelFormat.isCompressedFormat(internalFormat) && !defined(mipLevels)) {
+    compressedTextureNoMipmap = true;
+  }
+
   var sampler = GltfLoaderUtil.createSampler({
     gltf: gltf,
     textureInfo: textureInfo,
+    compressedTextureNoMipmap: compressedTextureNoMipmap,
   });
 
   var minFilter = sampler.minificationFilter;
   var wrapS = sampler.wrapS;
   var wrapT = sampler.wrapT;
-
-  // internalFormat is only defined for CompressedTextureBuffer
-  var internalFormat = image.internalFormat;
 
   var samplerRequiresMipmap =
     minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
@@ -263,6 +270,17 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
 
   var texture;
   if (defined(internalFormat)) {
+    if (
+      !context.webgl2 &&
+      PixelFormat.isCompressedFormat(internalFormat) &&
+      nonPowerOfTwo &&
+      requiresPowerOfTwo
+    ) {
+      console.warn(
+        "Compressed textures uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
+      );
+    }
+
     texture = Texture.create({
       context: context,
       source: {

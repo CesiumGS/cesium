@@ -66,7 +66,7 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Object} options.textureInfo The texture info object.
- * @param {Object} [options.compressedTextureNoMipmap] Whether the texture is compressed and has an embedded mipmap.
+ * @param {Boolean} [options.compressedTextureNoMipmap=false] True when the texture is compressed and does not have an embedded mipmap.
  *
  * @returns {Sampler} The sampler.
  * @private
@@ -75,7 +75,10 @@ GltfLoaderUtil.createSampler = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var textureInfo = options.textureInfo;
-  var compressedTextureNoMipmap = options.compressedTextureNoMipmap;
+  var compressedTextureNoMipmap = defaultValue(
+    options.compressedTextureNoMipmap,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -107,22 +110,7 @@ GltfLoaderUtil.createSampler = function (options) {
   }
 
   if (
-    compressedTextureNoMipmap &&
-    minFilter !== TextureMinificationFilter.LINEAR &&
-    minFilter !== TextureMinificationFilter.NEAREST
-  ) {
-    if (
-      minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
-      minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
-    ) {
-      minFilter = TextureMinificationFilter.NEAREST;
-    } else {
-      minFilter = TextureMinificationFilter.LINEAR;
-    }
-  }
-
-  if (
-    usesTextureTransform &&
+    (compressedTextureNoMipmap || usesTextureTransform) &&
     minFilter !== TextureMinificationFilter.LINEAR &&
     minFilter !== TextureMinificationFilter.NEAREST
   ) {
