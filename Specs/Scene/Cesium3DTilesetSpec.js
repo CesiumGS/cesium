@@ -2909,12 +2909,8 @@ describe(
               conditions: [["${id} > 0", 'color("black")']],
             },
           });
-          expect(
-            tileset.root.content.getFeature(0).hasProperty('color("white")')
-          );
-          expect(
-            tileset.root.content.getFeature(1).hasProperty('color("black")')
-          );
+          expect(tileset.root.content.getFeature(0).color).toEqual(Color.WHITE);
+          expect(tileset.root.content.getFeature(1).color).toEqual(Color.BLACK);
         }
       );
     });
@@ -2927,23 +2923,15 @@ describe(
               conditions: [["${id} > 0", 'show("false")']],
             },
           });
-          expect(
-            tileset.root.content.getFeature(0).hasProperty('show("true")')
-          );
-          expect(
-            tileset.root.content.getFeature(1).hasProperty('show("false")')
-          );
+          expect(tileset.root.content.getFeature(0).show).toBe(true);
+          expect(tileset.root.content.getFeature(1).show).toBe(false);
           tileset.style = new Cesium3DTileStyle({
             show: {
               conditions: [["${id} > 0", 'show("true")']],
             },
           });
-          expect(
-            tileset.root.content.getFeature(0).hasProperty('show("true")')
-          );
-          expect(
-            tileset.root.content.getFeature(1).hasProperty('show("true")')
-          );
+          expect(tileset.root.content.getFeature(0).show).toBe(true);
+          expect(tileset.root.content.getFeature(1).show).toBe(true);
         }
       );
     });
