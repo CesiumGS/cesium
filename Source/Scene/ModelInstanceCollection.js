@@ -694,6 +694,7 @@ function createModel(collection, context) {
     luminanceAtZenith: collection.luminanceAtZenith,
     sphericalHarmonicCoefficients: collection.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: collection.specularEnvironmentMaps,
+    showOutline: collection.showOutline,
   };
 
   if (!usesBatchTable) {
