@@ -2046,6 +2046,7 @@ function parseTextures(model, context, supportsWebP) {
         promise = loadCRN(imageResource);
       } else {
         promise = imageResource.fetchImage({
+          skipColorSpaceConversion: true,
           preferImageBitmap: true,
         });
       }
@@ -2794,6 +2795,7 @@ function loadTexturesFromBufferViews(model) {
         uint8Array: loadResources.getBuffer(bufferView),
         format: gltfTexture.mimeType,
         flipY: false,
+        skipColorSpaceConversion: true,
       })
         .then(onload)
         .otherwise(onerror);
@@ -2973,6 +2975,7 @@ function createTexture(gltfTexture, model, context) {
       pixelDatatype: texture.type,
       sampler: sampler,
       flipY: false,
+      skipColorSpaceConversion: true,
     });
     // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
     if (mipmap) {

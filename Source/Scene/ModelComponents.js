@@ -661,7 +661,7 @@ function TextureReader() {
    * @type {Texture}
    * @private
    */
-  this.textureReader = undefined;
+  this.texture = undefined;
 
   /**
    * The texture coordinate set.

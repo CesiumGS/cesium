@@ -484,9 +484,11 @@ function updateBatchTexture(batchTexture) {
   // texture updates when less than, for example, 10%, of the values changed.  Or
   // even just optimize the common case when one feature show/color changed.
   batchTexture._batchTexture.copyFrom({
-    width: dimensions.x,
-    height: dimensions.y,
-    arrayBufferView: batchTexture._batchValues,
+    source: {
+      width: dimensions.x,
+      height: dimensions.y,
+      arrayBufferView: batchTexture._batchValues,
+    },
   });
 }
 

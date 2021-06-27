@@ -816,7 +816,9 @@ function createTexture2DUpdateFunction(uniformId) {
           return;
         }
 
-        texture.copyFrom(uniformValue);
+        texture.copyFrom({
+          source: uniformValue,
+        });
       } else if (!defined(texture)) {
         material._textures[uniformId] = context.defaultTexture;
       }

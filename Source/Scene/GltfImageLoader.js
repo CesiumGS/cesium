@@ -259,6 +259,7 @@ function loadImageFromBufferTypedArray(typedArray) {
     uint8Array: typedArray,
     format: mimeType,
     flipY: false,
+    skipColorSpaceConversion: true,
   });
 }
 
@@ -276,6 +277,7 @@ function loadImageFromUri(resource) {
   }
   // Resolves to an ImageBitmap or Image
   return resource.fetchImage({
+    skipColorSpaceConversion: true,
     preferImageBitmap: true,
   });
 }

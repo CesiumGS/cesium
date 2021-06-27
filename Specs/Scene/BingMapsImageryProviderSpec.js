@@ -216,6 +216,7 @@ describe("Scene/BingMapsImageryProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else {
