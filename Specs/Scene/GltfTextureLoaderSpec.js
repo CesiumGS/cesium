@@ -1,4 +1,5 @@
 import {
+  clone,
   GltfImageLoader,
   GltfTextureLoader,
   GltfLoaderUtil,
@@ -7,6 +8,7 @@ import {
   ResourceCache,
   SupportedImageFormats,
   Texture,
+  TextureMinificationFilter,
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
@@ -125,42 +127,15 @@ describe(
       samplers: [
         {
           magFilter: 9728, // NEAREST
-          minFilter: 9984, // NEAREST_MIPMAP_NEAREST
+          minFilter: 9728, // NEAREST
           wrapS: 10497, // REPEAT
           wrapT: 10497, // REPEAT
         },
         {
           magFilter: 9728, // NEAREST
-          minFilter: 9728, // NEAREST
+          minFilter: 9984, // NEAREST_MIPMAP_NEAREST
           wrapS: 33071, // CLAMP_TO_EDGE
           wrapT: 33071, // CLAMP_TO_EDGE
-        },
-      ],
-    };
-
-    var gltfKtx2MissingMipmap = {
-      images: [
-        {
-          uri: "Green4x4_ETC1S.ktx2",
-        },
-      ],
-      textures: [
-        {
-          source: 0,
-          sampler: 0,
-          extensions: {
-            KHR_texture_basisu: {
-              source: 0,
-            },
-          },
-        },
-      ],
-      samplers: [
-        {
-          magFilter: 9728, // NEAREST
-          minFilter: 9984, // NEAREST_MIPMAP_NEAREST
-          wrapS: 10497, // REPEAT
-          wrapT: 10497, // REPEAT
         },
       ],
     };
@@ -413,19 +388,21 @@ describe(
       });
     });
 
-    it("createTexture() calls createSampler() with compressedTextureNoMipmap = true", function () {
+    it("loads KTX2/Basis texture with incompatible mipmap sampler", function () {
       if (!scene.context.supportsBasis) {
         return;
       }
 
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
-      );
       spyOn(GltfLoaderUtil, "createSampler").and.callThrough();
+
+      var gltfKtx2MissingMipmap = clone(gltfKtx2, true);
+      gltfKtx2MissingMipmap.samplers[0].minFilter =
+        TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
+
       var textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltfKtx2MissingMipmap,
-        textureInfo: gltf.materials[0].emissiveTexture,
+        textureInfo: gltfKtx2MissingMipmap.materials[0].emissiveTexture,
         gltfResource: gltfResource,
         baseResource: gltfKtx2BaseResource,
         supportedImageFormats: new SupportedImageFormats({
@@ -444,6 +421,9 @@ describe(
           textureInfo: gltf.materials[0].emissiveTexture,
           compressedTextureNoMipmap: true,
         });
+        expect(textureLoader.texture.sampler.minificationFilter).toBe(
+          TextureMinificationFilter.NEAREST
+        );
       });
     });
 

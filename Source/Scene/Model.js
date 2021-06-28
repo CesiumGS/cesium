@@ -2930,7 +2930,7 @@ function createTexture(gltfTexture, model, context) {
       requiresNpot
     ) {
       console.warn(
-        "Compressed textures uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly. See the Model.js constructor documentation for more information."
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly. See the Model.js constructor documentation for more information."
       );
     }
 

@@ -277,7 +277,7 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
       requiresPowerOfTwo
     ) {
       console.warn(
-        "Compressed textures uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
       );
     }
 
