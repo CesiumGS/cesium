@@ -207,7 +207,11 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  * @return {ShaderProgram} A shader program to use for rendering.
  */
 ShaderBuilder.prototype.build = function (context) {
-  var vertexLines = [this._positionAttributeLine].concat(
+  var positionAttribute = defined(this._positionAttributeLine)
+    ? [this._positionAttributeLine]
+    : [];
+
+  var vertexLines = positionAttribute.concat(
     this._attributeLines,
     this._vertex.uniformLines,
     this._vertex.shaderLines
@@ -218,7 +222,7 @@ ShaderBuilder.prototype.build = function (context) {
   });
 
   var fragmentLines = this._fragment.uniformLines.concat(
-    this.fragment.shaderLines
+    this._fragment.shaderLines
   );
   var fragmentShaderSource = new ShaderSource({
     defines: this._fragment.defineLines,
