@@ -2927,7 +2927,7 @@ function createTexture(gltfTexture, model, context) {
       (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
         minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR)
     ) {
-        minificationFilter = TextureMinificationFilter.NEAREST;
+      minificationFilter = TextureMinificationFilter.NEAREST;
     } else if (
       !defined(gltfTexture.mipLevels) &&
       (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
