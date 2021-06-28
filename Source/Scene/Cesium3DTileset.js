@@ -1267,6 +1267,13 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * properties (e.g. color and show) after the style is applied. When
    * a new style is assigned any manually set properties are overwritten.
    * </p>
+   * <p>
+   * Use an always "true" condition to specify the Color for all objects that are not
+   * overridden by pre-existing conditions. Otherwise, the default color Cesium.Color.White
+   * will be used. Similarly, use an always "true" condition to specify the show property
+   * for all objects that are not overridden by pre-existing conditions. Otherwise, the
+   * default show value true will be used.
+   * </p>
    *
    * @memberof Cesium3DTileset.prototype
    *
