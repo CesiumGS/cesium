@@ -853,6 +853,13 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
+    if (uniformChanged && defined(texture)) {
+      if (!defined(uniforms.image)) {
+        texture.destroy();
+        uniformValue = texture = undefined;
+      }
+    }
+
     if (!defined(texture)) {
       material._texturePaths[uniformId] = undefined;
       if (!defined(material._defaultTexture)) {
