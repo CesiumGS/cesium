@@ -853,10 +853,10 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
-    if (uniformChanged && defined(texture)) {
-      if (!defined(uniforms.image)) {
+    if (uniformChanged) {
+      if (!defined(uniformValue) && defined(texture)) {
         texture.destroy();
-        uniformValue = texture = undefined;
+        texture = undefined;
       }
     }
 
