@@ -2919,24 +2919,22 @@ describe(
     it("handle else case when applying conditional show to a tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          tileset.style = new Cesium3DTileStyle({ show: "${id} > 0" });
-          scene.renderForSpecs();
-          expect(tileset.root.content.getFeature(0).show).toBe(false);
-          expect(tileset.root.content.getFeature(1).show).toBe(true);
-
-          tileset.style = new Cesium3DTileStyle({ show: "${id} < 1" });
-          scene.renderForSpecs();
-          expect(tileset.root.content.getFeature(0).show).toBe(true);
-          expect(tileset.root.content.getFeature(1).show).toBe(false);
-
-          tileset.style = new Cesium3DTileStyle({ show: "true" });
+          tileset.style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${id} > 0", "true"]],
+            },
+          });
           scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).show).toBe(true);
           expect(tileset.root.content.getFeature(1).show).toBe(true);
 
-          tileset.style = new Cesium3DTileStyle({ show: "false" });
+          tileset.style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${id} > 0", "false"]],
+            },
+          });
           scene.renderForSpecs();
-          expect(tileset.root.content.getFeature(0).show).toBe(false);
+          expect(tileset.root.content.getFeature(0).show).toBe(true);
           expect(tileset.root.content.getFeature(1).show).toBe(false);
         }
       );
