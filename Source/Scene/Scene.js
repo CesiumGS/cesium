@@ -15,6 +15,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import Event from "../Core/Event.js";
+import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
@@ -176,6 +177,12 @@ function Scene(options) {
   //>>includeEnd('debug');
   var hasCreditContainer = defined(creditContainer);
   var context = new Context(canvas, contextOptions);
+  if (FeatureDetection.isInternetExplorer()) {
+    deprecationWarning(
+      "Internet Explorer",
+      "Support for Internet Explorer was deprecated in Cesium 1.83 and will end in 1.84."
+    );
+  }
   if (!hasCreditContainer) {
     creditContainer = document.createElement("div");
     creditContainer.style.position = "absolute";
