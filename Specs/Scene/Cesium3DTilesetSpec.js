@@ -1,4 +1,4 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
+import { Cartesian2, Cesium3DTileBatchTable } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
@@ -2909,6 +2909,7 @@ describe(
               conditions: [["${id} > 0", 'color("black")']],
             },
           });
+          scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).color).toEqual(Color.WHITE);
           expect(tileset.root.content.getFeature(1).color).toEqual(Color.BLACK);
         }
@@ -2918,20 +2919,25 @@ describe(
     it("handle else case when applying conditional show to a tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          tileset.style = new Cesium3DTileStyle({
-            show: {
-              conditions: [["${id} > 0", 'show("false")']],
-            },
-          });
+          tileset.style = new Cesium3DTileStyle({ show: "${id} > 0" });
+          scene.renderForSpecs();
+          expect(tileset.root.content.getFeature(0).show).toBe(false);
+          expect(tileset.root.content.getFeature(1).show).toBe(true);
+
+          tileset.style = new Cesium3DTileStyle({ show: "${id} < 1" });
+          scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).show).toBe(true);
           expect(tileset.root.content.getFeature(1).show).toBe(false);
-          tileset.style = new Cesium3DTileStyle({
-            show: {
-              conditions: [["${id} > 0", 'show("true")']],
-            },
-          });
+
+          tileset.style = new Cesium3DTileStyle({ show: "true" });
+          scene.renderForSpecs();
           expect(tileset.root.content.getFeature(0).show).toBe(true);
           expect(tileset.root.content.getFeature(1).show).toBe(true);
+
+          tileset.style = new Cesium3DTileStyle({ show: "false" });
+          scene.renderForSpecs();
+          expect(tileset.root.content.getFeature(0).show).toBe(false);
+          expect(tileset.root.content.getFeature(1).show).toBe(false);
         }
       );
     });
