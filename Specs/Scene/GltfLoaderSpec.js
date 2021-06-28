@@ -376,8 +376,8 @@ describe(
         var texture = metallicRoughness.baseColorTexture.texture;
         var sampler = texture.sampler;
 
-        expect(texture.width).toBe(400);
-        expect(texture.height).toBe(400);
+        expect(texture.width).toBe(256);
+        expect(texture.height).toBe(256);
 
         expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
         expect(sampler.wrapT).toBe(TextureWrap.REPEAT);

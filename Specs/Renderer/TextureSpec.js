@@ -457,7 +457,9 @@ describe(
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([2, 255, 2, 255]);
+      }).contextToRenderAndCall(function (color) {
+        return expect(color).toEqualEpsilon([2, 255, 2, 255], 2);
+      });
     });
 
     it("draws the expected KTX2 uncompressed texture color", function () {
@@ -477,7 +479,9 @@ describe(
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([0, 255, 24, 255]);
+      }).contextToRenderAndCall(function (color) {
+        return expect(color).toEqualEpsilon([0, 255, 24, 255], 2);
+      });
     });
 
     it("renders with premultiplied alpha", function () {
