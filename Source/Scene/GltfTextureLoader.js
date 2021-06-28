@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
@@ -69,11 +70,11 @@ export default function GltfTextureLoader(options) {
   this._imageId = imageId;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
-  this._supportedImageFormats = supportedImageFormats;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._imageLoader = undefined;
   this._image = undefined;
+  this._mipLevels = undefined;
   this._texture = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
@@ -140,7 +141,6 @@ GltfTextureLoader.prototype.load = function () {
     imageId: this._imageId,
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
-    supportedImageFormats: this._supportedImageFormats,
   });
 
   this._imageLoader = imageLoader;
@@ -155,6 +155,7 @@ GltfTextureLoader.prototype.load = function () {
       }
       // Now wait for process() to run to finish loading
       that._image = imageLoader.image;
+      that._mipLevels = imageLoader.mipLevels;
       that._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
@@ -176,10 +177,17 @@ function CreateTextureJob() {
   this.texture = undefined;
 }
 
-CreateTextureJob.prototype.set = function (gltf, textureInfo, image, context) {
+CreateTextureJob.prototype.set = function (
+  gltf,
+  textureInfo,
+  image,
+  mipLevels,
+  context
+) {
   this.gltf = gltf;
   this.textureInfo = textureInfo;
   this.image = image;
+  this.mipLevels = mipLevels;
   this.context = context;
 };
 
@@ -188,6 +196,7 @@ CreateTextureJob.prototype.execute = function () {
     this.gltf,
     this.textureInfo,
     this.image,
+    this.mipLevels,
     this.context
   );
 };
@@ -211,18 +220,24 @@ function resizeImageToNextPowerOfTwo(image) {
   return canvas;
 }
 
-function createTexture(gltf, textureInfo, image, context) {
+function createTexture(gltf, textureInfo, image, mipLevels, context) {
+  // internalFormat is only defined for CompressedTextureBuffer
+  var internalFormat = image.internalFormat;
+
+  var compressedTextureNoMipmap = false;
+  if (PixelFormat.isCompressedFormat(internalFormat) && !defined(mipLevels)) {
+    compressedTextureNoMipmap = true;
+  }
+
   var sampler = GltfLoaderUtil.createSampler({
     gltf: gltf,
     textureInfo: textureInfo,
+    compressedTextureNoMipmap: compressedTextureNoMipmap,
   });
 
   var minFilter = sampler.minificationFilter;
   var wrapS = sampler.wrapS;
   var wrapT = sampler.wrapT;
-
-  // internalFormat is only defined for CompressedTextureBuffer
-  var internalFormat = image.internalFormat;
 
   var samplerRequiresMipmap =
     minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
@@ -235,7 +250,7 @@ function createTexture(gltf, textureInfo, image, context) {
   // WebGL. Also note from the KHR_texture_basisu spec:
   //
   //   When a texture refers to a sampler with mipmap minification or when the
-  //   sampler is undefined, the KTX image SHOULD contain a full mip pyramid.
+  //   sampler is undefined, the KTX2 image SHOULD contain a full mip pyramid.
   //
   var generateMipmap = !defined(internalFormat) && samplerRequiresMipmap;
 
@@ -255,10 +270,22 @@ function createTexture(gltf, textureInfo, image, context) {
 
   var texture;
   if (defined(internalFormat)) {
+    if (
+      !context.webgl2 &&
+      PixelFormat.isCompressedFormat(internalFormat) &&
+      nonPowerOfTwo &&
+      requiresPowerOfTwo
+    ) {
+      console.warn(
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
+      );
+    }
+
     texture = Texture.create({
       context: context,
       source: {
         arrayBufferView: image.bufferView, // Only defined for CompressedTextureBuffer
+        mipLevels: mipLevels,
       },
       width: image.width,
       height: image.height,
@@ -316,6 +343,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
       this._gltf,
       this._textureInfo,
       this._image,
+      this._mipLevels,
       frameState.context
     );
     var jobScheduler = frameState.jobScheduler;
@@ -329,6 +357,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
       this._gltf,
       this._textureInfo,
       this._image,
+      this._mipLevels,
       frameState.context
     );
   }
@@ -356,6 +385,7 @@ GltfTextureLoader.prototype.unload = function () {
 
   this._imageLoader = undefined;
   this._image = undefined;
+  this._mipLevels = undefined;
   this._texture = undefined;
   this._gltf = undefined;
 };

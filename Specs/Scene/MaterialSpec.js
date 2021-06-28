@@ -10,6 +10,7 @@ import { Resource } from "../../Source/Cesium.js";
 import { Material } from "../../Source/Cesium.js";
 import { MaterialAppearance } from "../../Source/Cesium.js";
 import { PolylineCollection } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
 import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
@@ -367,38 +368,14 @@ describe(
       renderMaterial(material);
     });
 
-    it("creates a material with an ktx compressed image uniform", function () {
+    it("creates a material with an KTX2 compressed image uniform", function () {
       var compressedUrl;
-      var context = scene.context;
-      if (context.s3tc) {
-        compressedUrl = "./Data/Images/Green4x4DXT1.ktx";
-      } else if (context.etc1) {
-        compressedUrl = "./Data/Images/Green4x4ETC1.ktx";
-      } else if (context.pvrtc) {
-        compressedUrl = "./Data/Images/Green4x4PVR.ktx";
+      if (FeatureDetection.supportsBasis(scene)) {
+        compressedUrl = "./Data/Images/Green4x4.ktx2";
       } else {
         return;
       }
 
-      var material = new Material({
-        strict: true,
-        fabric: {
-          type: "DiffuseMap",
-          uniforms: {
-            image: compressedUrl,
-          },
-        },
-      });
-      renderMaterial(material);
-    });
-
-    it("creates a material with an crn compressed image uniform", function () {
-      var context = scene.context;
-      if (!context.s3tc) {
-        return;
-      }
-
-      var compressedUrl = "./Data/Images/Green4x4.crn";
       var material = new Material({
         strict: true,
         fabric: {

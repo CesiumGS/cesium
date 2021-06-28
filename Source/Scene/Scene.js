@@ -750,7 +750,7 @@ function Scene(options) {
   this.sphericalHarmonicCoefficients = undefined;
 
   /**
-   * The url to the KTX file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
+   * The url to the KTX2 file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
    * @type {String}
    */
   this.specularEnvironmentMaps = undefined;
@@ -1695,8 +1695,14 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
       context.s3tc) ||
     ((format === "WEBGL_compressed_texture_pvrtc" || format === "pvrtc") &&
       context.pvrtc) ||
+    ((format === "WEBGL_compressed_texture_etc" || format === "etc") &&
+      context.etc) ||
     ((format === "WEBGL_compressed_texture_etc1" || format === "etc1") &&
-      context.etc1)
+      context.etc1) ||
+    ((format === "WEBGL_compressed_texture_astc" || format === "astc") &&
+      context.astc) ||
+    ((format === "EXT_texture_compression_bptc" || format === "bc7") &&
+      context.bc7)
   );
 };
 
