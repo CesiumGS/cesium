@@ -14,7 +14,7 @@ describe(
     var octahedralMap;
 
     var environmentMapUrl =
-      "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx";
+      "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
     var fsOctahedralMap =
       "uniform sampler2D projectedMap;" +
       "uniform vec2 textureSize;" +
@@ -30,10 +30,8 @@ describe(
       "uniform samplerCube cubeMap;" +
       "uniform vec3 direction;" +
       "void main() {" +
-      "   vec4 rgbm = textureCube(cubeMap, direction);" +
-      "   float m = rgbm.a * 16.0;" +
-      "   vec3 r = rgbm.rgb * m;" +
-      "   gl_FragColor = vec4(r * r, 1.0);" +
+      "   vec4 rgba = textureCube(cubeMap, direction);" +
+      "   gl_FragColor = vec4(rgba.rgb, 1.0);" +
       "}";
 
     beforeAll(function () {
@@ -113,7 +111,7 @@ describe(
         sampleOctahedralMap(octahedralMap, directionFlipY, lod, function (
           octahedralMapColor
         ) {
-          return expect(cubeMapColor).toEqualEpsilon(octahedralMapColor, 5);
+          return expect(cubeMapColor).toEqualEpsilon(octahedralMapColor, 6);
         });
       });
     }

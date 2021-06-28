@@ -1,13 +1,15 @@
 import {
+  BufferLoader,
   clone,
+  CompressedTextureBuffer,
   GltfBufferViewLoader,
   GltfImageLoader,
   FeatureDetection,
   Resource,
   ResourceCache,
-  SupportedImageFormats,
   when,
 } from "../../Source/Cesium.js";
+import createContext from "../createContext.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -30,6 +32,9 @@ describe("Scene/GltfImageLoader", function () {
   var gifBuffer = dataUriToBuffer(
     "data:image/gif;base64,R0lGODdhBAAEAIAAAP///////ywAAAAABAAEAAACBISPCQUAOw=="
   );
+
+  var ktx2BasisBuffer;
+  var ktx2BasisMipmapBuffer;
 
   var gltfUri = "https://example.com/model.glb";
   var gltfResource = new Resource({
@@ -58,8 +63,17 @@ describe("Scene/GltfImageLoader", function () {
       {
         uri: "image.png",
       },
+      {
+        mimeType: "image/ktx2",
+        bufferView: 0,
+      },
+      {
+        uri: "image.ktx2",
+      },
     ],
   };
+
+  var context;
 
   function getGltf(imageBuffer) {
     var clonedGltf = clone(gltf, true);
@@ -67,6 +81,26 @@ describe("Scene/GltfImageLoader", function () {
     clonedGltf.bufferViews[0].byteLength = imageBuffer.byteLength;
     return clonedGltf;
   }
+
+  beforeAll(function () {
+    context = createContext();
+    var ktx2BasisBufferPromise = Resource.fetchArrayBuffer({
+      url: "./Data/Images/Green4x4_ETC1S.ktx2",
+    }).then(function (arrayBuffer) {
+      ktx2BasisBuffer = new Uint8Array(arrayBuffer);
+    });
+    var ktx2BasisMipmapBufferPromise = Resource.fetchArrayBuffer({
+      url: "./Data/Images/Green4x4Mipmap_ETC1S.ktx2",
+    }).then(function (arrayBuffer) {
+      ktx2BasisMipmapBuffer = new Uint8Array(arrayBuffer);
+    });
+
+    return when.all([ktx2BasisBufferPromise, ktx2BasisMipmapBufferPromise]);
+  });
+
+  afterAll(function () {
+    context.destroyForSpecs();
+  });
 
   afterEach(function () {
     ResourceCache.clearForSpecs();
@@ -80,7 +114,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -93,7 +126,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -106,7 +138,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: undefined,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -119,7 +150,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: undefined,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
     }).toThrowDeveloperError();
   });
@@ -132,20 +162,6 @@ describe("Scene/GltfImageLoader", function () {
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: undefined,
-        supportedImageFormats: new SupportedImageFormats(),
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws if supportedImageFormats is undefined", function () {
-    expect(function () {
-      return new GltfImageLoader({
-        resourceCache: ResourceCache,
-        gltf: gltf,
-        imageId: 0,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-        supportedImageFormats: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -162,7 +178,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -189,7 +204,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -215,7 +229,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -242,7 +255,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -273,6 +285,60 @@ describe("Scene/GltfImageLoader", function () {
     });
   });
 
+  it("loads KTX2/Basis from buffer view", function () {
+    if (!context.supportsBasis) {
+      return;
+    }
+
+    spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
+      when.resolve(ktx2BasisBuffer)
+    );
+
+    var imageLoader = new GltfImageLoader({
+      resourceCache: ResourceCache,
+      gltf: getGltf(ktx2BasisBuffer),
+      imageId: 2,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    imageLoader.load();
+
+    return imageLoader.promise.then(function (imageLoader) {
+      expect(imageLoader.image instanceof CompressedTextureBuffer).toBe(true);
+      expect(imageLoader.image.width).toBe(4);
+      expect(imageLoader.image.height).toBe(4);
+      expect(imageLoader.mipLevels).toBeUndefined();
+    });
+  });
+
+  it("loads KTX2/Basis with mipmap from buffer view", function () {
+    if (!context.supportsBasis) {
+      return;
+    }
+
+    spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
+      when.resolve(ktx2BasisMipmapBuffer)
+    );
+
+    var imageLoader = new GltfImageLoader({
+      resourceCache: ResourceCache,
+      gltf: getGltf(ktx2BasisMipmapBuffer),
+      imageId: 2,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    imageLoader.load();
+
+    return imageLoader.promise.then(function (imageLoader) {
+      expect(imageLoader.image instanceof CompressedTextureBuffer).toBe(true);
+      expect(imageLoader.image.width).toBe(4);
+      expect(imageLoader.image.height).toBe(4);
+      expect(imageLoader.mipLevels.length).toBe(2);
+    });
+  });
+
   it("loads from uri", function () {
     spyOn(Resource.prototype, "fetchImage").and.returnValue(
       when.resolve(image)
@@ -280,11 +346,10 @@ describe("Scene/GltfImageLoader", function () {
 
     var imageLoader = new GltfImageLoader({
       resourceCache: ResourceCache,
-      gltf: getGltf(pngBuffer),
+      gltf: clone(gltf, true),
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     imageLoader.load();
@@ -292,6 +357,36 @@ describe("Scene/GltfImageLoader", function () {
     return imageLoader.promise.then(function (imageLoader) {
       expect(imageLoader.image.width).toBe(1);
       expect(imageLoader.image.height).toBe(1);
+    });
+  });
+
+  it("loads KTX2/Basis from uri ", function () {
+    if (!context.supportsBasis) {
+      return;
+    }
+
+    var baseResource = new Resource({
+      url: "./Data/Images/",
+    });
+
+    var clonedGltf = clone(gltf, true);
+    clonedGltf.images[3].uri = "Green4x4_ETC1S.ktx2";
+
+    var imageLoader = new GltfImageLoader({
+      resourceCache: ResourceCache,
+      gltf: clonedGltf,
+      imageId: 3,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    imageLoader.load();
+
+    return imageLoader.promise.then(function (imageLoader) {
+      expect(imageLoader.image instanceof CompressedTextureBuffer).toBe(true);
+      expect(imageLoader.image.width).toBe(4);
+      expect(imageLoader.image.height).toBe(4);
+      expect(imageLoader.mipLevels).toBeUndefined();
     });
   });
 
@@ -311,7 +406,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
     expect(imageLoader.image).not.toBeDefined();
 
@@ -350,7 +444,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(imageLoader.image).not.toBeDefined();
@@ -403,7 +496,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 0,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(imageLoader.image).not.toBeDefined();
@@ -443,7 +535,6 @@ describe("Scene/GltfImageLoader", function () {
       imageId: 1,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      supportedImageFormats: new SupportedImageFormats(),
     });
 
     expect(imageLoader.image).not.toBeDefined();

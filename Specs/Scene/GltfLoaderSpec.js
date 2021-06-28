@@ -44,6 +44,10 @@ describe(
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     var boxTexturedEmbedded =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Embedded/BoxTextured.gltf";
+    var boxTexturedKtx2Basis =
+      "./Data/Models/GltfLoader/BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf";
+    var boxTexturedKtx2BasisBinary =
+      "./Data/Models/GltfLoader/BoxTexturedKtx2Basis/glTF-Binary/BoxTexturedKtx2Basis.glb";
     var boxVertexColors =
       "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
     var simpleMorph =
@@ -357,6 +361,47 @@ describe(
           expect(metallicRoughness.baseColorTexture).toBeUndefined();
         }
       );
+    });
+
+    function loadsBoxTexturedKtx2Basis(gltfPath) {
+      return loadGltf(gltfPath).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var childNode = rootNode.children[0];
+        var primitive = childNode.primitives[0];
+        var material = primitive.material;
+        var metallicRoughness = material.metallicRoughness;
+
+        var texture = metallicRoughness.baseColorTexture.texture;
+        var sampler = texture.sampler;
+
+        expect(texture.width).toBe(256);
+        expect(texture.height).toBe(256);
+
+        expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+        expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+        expect(sampler.magnificationFilter).toBe(
+          TextureMagnificationFilter.LINEAR
+        );
+        expect(sampler.minificationFilter).toBe(
+          TextureMinificationFilter.LINEAR
+        );
+      });
+    }
+
+    it("loads BoxTexturedKtx2Basis", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
+      return loadsBoxTexturedKtx2Basis(boxTexturedKtx2Basis);
+    });
+
+    it("loads BoxTexturedKtx2BasisBinary", function () {
+      if (!scene.context.supportsBasis) {
+        return;
+      }
+      return loadsBoxTexturedKtx2Basis(boxTexturedKtx2BasisBinary);
     });
 
     it("loads BoxVertexColors", function () {
