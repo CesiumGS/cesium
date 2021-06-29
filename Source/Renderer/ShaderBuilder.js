@@ -1,5 +1,7 @@
+import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
@@ -84,6 +86,10 @@ export default function ShaderBuilder() {
  * shaderBuilder.addDefine("PI", 3.141593, ShaderDestination.FRAGMENT);
  */
 ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
+
   destination = defaultValue(destination, ShaderDestination.BOTH);
 
   // The ShaderSource created in build() will add the #define part
@@ -116,6 +122,11 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
  * shaderBuilder.addDefine("float", "u_time", ShaderDestination.BOTH);
  */
 ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
+
   destination = defaultValue(destination, ShaderDestination.BOTH);
   var line = "uniform " + type + " " + identifier + ";";
 
@@ -146,6 +157,17 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
  * shaderBuilder.setPositionAttribute("vec3", "a_position");
  */
 ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+
+  if (defined(this._positionAttributeLine)) {
+    throw new DeveloperError(
+      "setPositionAttribute() must be called exactly once for the attribute used for gl_Position. For other attributes, use addAttribute()"
+    );
+  }
+  //>>includeEnd('debug');
+
   this._positionAttributeLine = "attribute " + type + " " + identifier + ";";
 
   // Some WebGL implementations require attribute 0 to always be active, so
@@ -171,6 +193,11 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
  * shaderBuilder.addAttribute("vec2", "a_texCoord0");
  */
 ShaderBuilder.prototype.addAttribute = function (type, identifier) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
+
   var line = "attribute " + type + " " + identifier + ";";
   this._attributeLines.push(line);
 
@@ -186,6 +213,10 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  * @param {String[]} lines the lines to add to the end of the vertex shader source
  */
 ShaderBuilder.prototype.addVertexLines = function (lines) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("lines", lines);
+  //>>includeEnd('debug');
+
   Array.prototype.push.apply(this._vertex.shaderLines, lines);
 };
 
@@ -195,6 +226,9 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  * @param {String[]} lines the lines to add to the end of the fragment shader source
  */
 ShaderBuilder.prototype.addFragmentLines = function (lines) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("lines", lines);
+  //>>includeEnd('debug');
   Array.prototype.push.apply(this._fragment.shaderLines, lines);
 };
 
@@ -207,6 +241,10 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  * @return {ShaderProgram} A shader program to use for rendering.
  */
 ShaderBuilder.prototype.build = function (context) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("context", context);
+  //>>includeEnd('debug');
+
   var positionAttribute = defined(this._positionAttributeLine)
     ? [this._positionAttributeLine]
     : [];
