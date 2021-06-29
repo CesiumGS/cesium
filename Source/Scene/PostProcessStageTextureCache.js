@@ -346,7 +346,9 @@ PostProcessStageTextureCache.prototype.update = function (context) {
     collection.fxaa.enabled &&
     collection.fxaa._isSupported(context);
   var needsCheckDimensionsUpdate =
+    !defined(collection._enabledStages) ||
     !defined(collection._activeStages) ||
+    collection._enabledStages.length > 0 ||
     collection._activeStages.length > 0 ||
     aoEnabled ||
     bloomEnabled ||
