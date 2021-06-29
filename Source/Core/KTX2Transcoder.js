@@ -10,22 +10,15 @@ import TaskProcessor from "./TaskProcessor.js";
  */
 function KTX2Transcoder() {}
 
-KTX2Transcoder._transcoderTaskProcessor = undefined;
-KTX2Transcoder._getTranscoderTaskProcessor = function () {
-  if (!defined(KTX2Transcoder._transcoderTaskProcessor)) {
-    KTX2Transcoder._transcoderTaskProcessor = new TaskProcessor(
-      "transcodeKTX2",
-      Number.POSITIVE_INFINITY // KTX2 transcoding is used in place of Resource.fetchImage, so it can't reject as "just soooo busy right now"
-    );
-  }
-  return KTX2Transcoder._transcoderTaskProcessor;
-};
+KTX2Transcoder._transcodeTaskProcessor = new TaskProcessor(
+  "transcodeKTX2",
+  Number.POSITIVE_INFINITY // KTX2 transcoding is used in place of Resource.fetchImage, so it can't reject as "just soooo busy right now"
+);
 
 KTX2Transcoder._readyPromise = undefined;
 
 function makeReadyPromise() {
-  var taskProcessor = KTX2Transcoder._getTranscoderTaskProcessor();
-  var readyPromise = taskProcessor
+  var readyPromise = KTX2Transcoder._transcodeTaskProcessor
     .initWebAssemblyModule({
       modulePath: "ThirdParty/Workers/basis_transcoder.js",
       wasmBinaryFile: "ThirdParty/basis_transcoder.wasm",
