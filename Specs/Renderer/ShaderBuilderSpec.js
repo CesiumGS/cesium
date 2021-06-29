@@ -17,10 +17,17 @@ describe(
       context.destroyForSpecs();
     });
 
-    function checkVertexShader(shaderProgram, expectedDefines, expecedSources) {
+    function checkVertexShader(
+      shaderProgram,
+      expectedDefines,
+      expectedSources
+    ) {
+      // the ShaderBuilder joins the generated lines with \n
+      // to avoid creating #line 0 at every line. We need to do the same here
+      expectedSources = [expectedSources.join("\n")];
       var expectedText = new ShaderSource({
         defines: expectedDefines,
-        sources: expecedSources,
+        sources: expectedSources,
       }).createCombinedVertexShader(context);
       expect(shaderProgram._vertexShaderText).toEqual(expectedText);
     }
@@ -28,11 +35,14 @@ describe(
     function checkFragmentShader(
       shaderProgram,
       expectedDefines,
-      expecedSources
+      expectedSources
     ) {
+      // the ShaderBuilder joins the generated lines with \n
+      // to avoid creating #line 0 at every line. We need to do the same here
+      expectedSources = [expectedSources.join("\n")];
       var expectedText = new ShaderSource({
         defines: expectedDefines,
-        sources: expecedSources,
+        sources: expectedSources,
       }).createCombinedFragmentShader(context);
       expect(shaderProgram._fragmentShaderText).toEqual(expectedText);
     }

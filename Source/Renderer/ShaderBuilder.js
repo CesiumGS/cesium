@@ -249,22 +249,26 @@ ShaderBuilder.prototype.build = function (context) {
     ? [this._positionAttributeLine]
     : [];
 
-  var vertexLines = positionAttribute.concat(
-    this._attributeLines,
-    this._vertex.uniformLines,
-    this._vertex.shaderLines
-  );
+  // Lines are joined here so the ShaderSource
+  // generates a single #line 0 directive
+  var vertexLines = positionAttribute
+    .concat(
+      this._attributeLines,
+      this._vertex.uniformLines,
+      this._vertex.shaderLines
+    )
+    .join("\n");
   var vertexShaderSource = new ShaderSource({
     defines: this._vertex.defineLines,
-    sources: vertexLines,
+    sources: [vertexLines],
   });
 
-  var fragmentLines = this._fragment.uniformLines.concat(
-    this._fragment.shaderLines
-  );
+  var fragmentLines = this._fragment.uniformLines
+    .concat(this._fragment.shaderLines)
+    .join("\n");
   var fragmentShaderSource = new ShaderSource({
     defines: this._fragment.defineLines,
-    sources: fragmentLines,
+    sources: [fragmentLines],
   });
 
   return ShaderProgram.fromCache({
