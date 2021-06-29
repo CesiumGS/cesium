@@ -97,6 +97,8 @@ function PostProcessStageCollection() {
   this._tonemappingEnabled = undefined;
   this._fxaaEnabled = undefined;
 
+  this._enabledStagesChanged = false;
+  this._activeStagesChanged = false;
   this._stagesRemoved = false;
   this._textureCacheDirty = false;
 
@@ -315,6 +317,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       return false;
     },
   },
+
   /**
    * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
    *
@@ -545,21 +548,7 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
   return this._stageNames[name];
 };
 
-/**
- * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
- *
- * @param {Context} context The context.
- * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
- *
- * @private
- */
-PostProcessStageCollection.prototype.update = function (
-  context,
-  useLogDepth,
-  useHdr
-) {
-  removeStages(this);
-
+PostProcessStageCollection.prototype.updateStagesChanged = function (context) {
   var previousEnabledStages = this._enabledStages;
   var enabledStages = (this._enabledStages = this._previousEnabledStages);
   this._previousEnabledStages = previousEnabledStages;
@@ -587,7 +576,7 @@ PostProcessStageCollection.prototype.update = function (
   enabledStages.length = enabledCount;
   activeStages.length = activeCount;
 
-  var enabledStagesChanged = enabledCount != previousEnabledStages.length;
+  var enabledStagesChanged = enabledCount !== previousEnabledStages.length;
   if (!enabledStagesChanged) {
     for (i = 0; i < enabledCount; ++i) {
       if (enabledStages[i] !== previousEnabledStages[i]) {
@@ -607,6 +596,26 @@ PostProcessStageCollection.prototype.update = function (
     }
   }
 
+  this._enabledStagesChanged = enabledStagesChanged;
+  this._activeStagesChanged = activeStagesChanged;
+};
+
+/**
+ * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
+ *
+ * @param {Context} context The context.
+ * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
+ *
+ * @private
+ */
+PostProcessStageCollection.prototype.update = function (
+  context,
+  useLogDepth,
+  useHdr
+) {
+  removeStages(this);
+  this.updateStagesChanged(context);
+
   var ao = this._ao;
   var bloom = this._bloom;
   var autoexposure = this._autoExposure;
@@ -620,6 +629,15 @@ PostProcessStageCollection.prototype.update = function (
   var tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
   var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+
+  var enabledStagesChanged = this._enabledStagesChanged;
+  var activeStagesChanged = this._activeStagesChanged;
+  var enabledCount = this._enabledStages.length;
+  var activeCount = this._activeStages.count;
+
+  var stages = this._stages;
+  var length = stages.length;
+  var i;
 
   if (
     enabledStagesChanged ||
@@ -773,6 +791,8 @@ PostProcessStageCollection.prototype.execute = function (
   depthTexture,
   idTexture
 ) {
+  this.updateStagesChanged(context);
+
   var activeStages = this._activeStages;
   var length = activeStages.length;
   var fxaa = this._fxaa;

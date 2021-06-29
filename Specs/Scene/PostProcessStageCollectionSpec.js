@@ -23,6 +23,7 @@ describe(
       scene.postProcessStages.fxaa.enabled = false;
       scene.postProcessStages.bloom.enabled = false;
       scene.postProcessStages.ambientOcclusion.enabled = false;
+      scene.postProcessStages.tonemapping = undefined;
     });
 
     it("constructs", function () {
@@ -293,6 +294,87 @@ describe(
       expect(
         scene.postProcessStages.getOutputTexture(stage1.name)
       ).not.toBeDefined();
+    });
+
+    it("shows correct output when single stage is enabled then disabled", function () {
+      var stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it("shows correct output when single stage is disabled then enabled", function () {
+      var stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      stage.enabled = true;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+    });
+
+    it("shows correct output when additional stage is enabled then disabled", function () {
+      scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      var stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); }",
+        })
+      );
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 255, 255, 255]);
+
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+    });
+
+    it("shows correct output when additional stage is disabled then enabled", function () {
+      scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      var stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); }",
+        })
+      );
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+
+      stage.enabled = true;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 255, 255, 255]);
     });
 
     it("uses Reinhard tonemapping", function () {
