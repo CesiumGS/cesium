@@ -359,7 +359,7 @@ PolygonGraphics.prototype.merge = function (source) {
   this.stRotation = defaultValue(this.stRotation, source.stRotation);
   this.granularity = defaultValue(this.granularity, source.granularity);
   this.fill = defaultValue(this.fill, source.fill);
-  if (typeof source.material.wrapImage != "undefined") {
+  if (source.material && typeof source.material.wrapImage != "undefined") {
     //текстура материала натягивается на геометрию с учетом текстурных координат
     let value = source.material.wrapImage;
     if (
