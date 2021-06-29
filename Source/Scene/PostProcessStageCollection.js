@@ -637,6 +637,7 @@ PostProcessStageCollection.prototype.update = function (
     this._textureCache.updateDependencies();
 
     this._lastEnabledLength = enabledCount;
+    this._lastActiveLength = activeCount;
     this._aoEnabled = aoEnabled;
     this._bloomEnabled = bloomEnabled;
     this._tonemappingEnabled = tonemappingEnabled;
