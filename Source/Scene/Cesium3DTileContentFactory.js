@@ -8,6 +8,7 @@ import PointCloud3DTileContent2 from "./PointCloud3DTileContent2.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Batched3DModelTranscoder from "./Batched3DModelTranscoder.js";
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.
@@ -16,7 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  */
 var Cesium3DTileContentFactory = {
   b3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    return new Batched3DModel3DTileContent(
+    return new Batched3DModelTranscoder(
       tileset,
       tile,
       resource,

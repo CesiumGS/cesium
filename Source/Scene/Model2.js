@@ -78,7 +78,7 @@ function createShader(context, attributes, instancingAttributes) {
   var fragmentShader =
     "void main()\n" +
     "{\n" +
-    "   gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n" +
+    "   gl_FragColor = vec4(0.75, 0.75, 0.75, 1.0);\n" +
     "}\n";
 
   return ShaderProgram.fromCache({
