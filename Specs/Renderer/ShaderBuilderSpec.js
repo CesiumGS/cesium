@@ -49,7 +49,7 @@ describe(
 
     it("creates an empty shader by default", function () {
       var shaderBuilder = new ShaderBuilder();
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(shaderProgram, [], []);
       checkFragmentShader(shaderProgram, [], []);
     });
@@ -71,7 +71,7 @@ describe(
     it("addDefine defines macros without values", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addDefine("USE_SHADOWS");
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(shaderProgram, ["USE_SHADOWS"], []);
       checkFragmentShader(shaderProgram, ["USE_SHADOWS"], []);
     });
@@ -79,7 +79,7 @@ describe(
     it("addDefine defines macros with values", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addDefine("PI", 3.1415);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(shaderProgram, ["PI 3.1415"], []);
       checkFragmentShader(shaderProgram, ["PI 3.1415"], []);
     });
@@ -93,7 +93,7 @@ describe(
         1,
         ShaderDestination.BOTH
       );
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         ["POINT_SIZE 2", "USE_FRAGMENT_SHADING 1"],
@@ -109,7 +109,7 @@ describe(
     it("addDefine defaults to both shaders", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addDefine("PI", 3.1415);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(shaderProgram, ["PI 3.1415"], []);
       checkFragmentShader(shaderProgram, ["PI 3.1415"], []);
     });
@@ -155,7 +155,7 @@ describe(
         ShaderDestination.FRAGMENT
       );
       shaderBuilder.addUniform("float", "u_time", ShaderDestination.BOTH);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
@@ -171,7 +171,7 @@ describe(
     it("addUniform defaults to both shaders", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addUniform("float", "u_time");
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(shaderProgram, [], ["uniform float u_time;"]);
       checkFragmentShader(shaderProgram, [], ["uniform float u_time;"]);
     });
@@ -215,7 +215,7 @@ describe(
       );
       expect(positionLocation).toBe(0);
       expect(normalLocation).toBe(1);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       var expectedAttributes = [
         "attribute vec3 a_position;",
         "attribute vec3 a_normal;",
@@ -279,7 +279,7 @@ describe(
       var normalLocation = shaderBuilder.addAttribute("vec3", "a_normal");
       expect(colorLocation).toBe(1);
       expect(normalLocation).toBe(2);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       var expectedAttributes = [
         "attribute vec4 a_color;",
         "attribute vec3 a_normal;",
@@ -317,7 +317,7 @@ describe(
         "}",
       ];
       shaderBuilder.addVertexLines(vertexLines);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(shaderProgram, [], vertexLines);
     });
 
@@ -344,18 +344,18 @@ describe(
         "}",
       ];
       shaderBuilder.addFragmentLines(fragmentLines);
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkFragmentShader(shaderProgram, [], fragmentLines);
     });
 
-    it("build throws for undefined context", function () {
+    it("buildShaderProgram throws for undefined context", function () {
       var shaderBuilder = new ShaderBuilder();
       expect(function () {
-        return shaderBuilder.build(undefined);
+        return shaderBuilder.buildShaderProgram(undefined);
       }).toThrowDeveloperError();
     });
 
-    it("build creates a shaderProgram", function () {
+    it("buildShaderProgram creates a shaderProgram", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.setPositionAttribute("vec3", "a_position");
       shaderBuilder.addAttribute("vec3", "a_uv");
@@ -382,7 +382,7 @@ describe(
         "attribute vec3 a_uv;",
       ];
 
-      var shaderProgram = shaderBuilder.build(context);
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],

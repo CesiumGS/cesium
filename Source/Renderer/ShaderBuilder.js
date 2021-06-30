@@ -251,13 +251,14 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
 
 /**
  * Builds the {@link ShaderProgram} from the pieces added by the other methods.
- * Call this once at the end of building.
+ * Call this one time at the end of modifying the shader through the other
+ * methods in this class.
  *
  * @param {Context} context The context to use for creating the shader.
  * @param {String[]} lines The lines to add to the end of the fragment shader source
  * @return {ShaderProgram} A shader program to use for rendering.
  */
-ShaderBuilder.prototype.build = function (context) {
+ShaderBuilder.prototype.buildShaderProgram = function (context) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("context", context);
   //>>includeEnd('debug');
