@@ -37,7 +37,7 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene` have been deprecated and will be removed in CesiumJS 1.85. They will be replaced with `Globe.terrainExaggeration`.
-- Support for Internet Explorer has been deprecated and will end in Cesium 1.84.
+- Support for Internet Explorer has been deprecated and will end in CesiumJS 1.84.
 
 ### 1.82.1 - 2021-06-01
 
