@@ -76,8 +76,6 @@ function PostProcessStageCollection() {
   this._stages = [];
   this._activeStages = [];
   this._previousActiveStages = [];
-  this._enabledStages = [];
-  this._previousEnabledStages = [];
 
   this._randomTexture = undefined; // For AO
 
@@ -90,14 +88,11 @@ function PostProcessStageCollection() {
   this._bloom = bloom;
   this._fxaa = fxaa;
 
-  this._lastActiveLength = undefined;
-  this._lastEnabledLength = undefined;
   this._aoEnabled = undefined;
   this._bloomEnabled = undefined;
   this._tonemappingEnabled = undefined;
   this._fxaaEnabled = undefined;
 
-  this._enabledStagesChanged = false;
   this._activeStagesChanged = false;
   this._stagesRemoved = false;
   this._textureCacheDirty = false;
@@ -548,58 +543,6 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
   return this._stageNames[name];
 };
 
-PostProcessStageCollection.prototype.updateStagesChanged = function (context) {
-  var previousEnabledStages = this._enabledStages;
-  var enabledStages = (this._enabledStages = this._previousEnabledStages);
-  this._previousEnabledStages = previousEnabledStages;
-
-  var previousActiveStages = this._activeStages;
-  var activeStages = (this._activeStages = this._previousActiveStages);
-  this._previousActiveStages = previousActiveStages;
-
-  var stages = this._stages;
-  var length = (activeStages.length = enabledStages.length = stages.length);
-
-  var i;
-  var stage;
-  var enabledCount = 0;
-  var activeCount = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
-    if (stage.enabled) {
-      enabledStages[enabledCount++] = stage;
-      if (stage.ready && stage._isSupported(context)) {
-        activeStages[activeCount++] = stage;
-      }
-    }
-  }
-  enabledStages.length = enabledCount;
-  activeStages.length = activeCount;
-
-  var enabledStagesChanged = enabledCount !== previousEnabledStages.length;
-  if (!enabledStagesChanged) {
-    for (i = 0; i < enabledCount; ++i) {
-      if (enabledStages[i] !== previousEnabledStages[i]) {
-        enabledStagesChanged = true;
-        break;
-      }
-    }
-  }
-
-  var activeStagesChanged = activeCount !== previousActiveStages.length;
-  if (!activeStagesChanged) {
-    for (i = 0; i < activeCount; ++i) {
-      if (activeStages[i] !== previousActiveStages[i]) {
-        activeStagesChanged = true;
-        break;
-      }
-    }
-  }
-
-  this._enabledStagesChanged = enabledStagesChanged;
-  this._activeStagesChanged = activeStagesChanged;
-};
-
 /**
  * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
  *
@@ -614,7 +557,35 @@ PostProcessStageCollection.prototype.update = function (
   useHdr
 ) {
   removeStages(this);
-  this.updateStagesChanged(context);
+
+  var previousActiveStages = this._activeStages;
+  var activeStages = (this._activeStages = this._previousActiveStages);
+  this._previousActiveStages = previousActiveStages;
+
+  var stages = this._stages;
+  var length = (activeStages.length = stages.length);
+
+  var i;
+  var stage;
+  var count = 0;
+  for (i = 0; i < length; ++i) {
+    stage = stages[i];
+    if (stage.ready && stage.enabled && stage._isSupported(context)) {
+      activeStages[count++] = stage;
+    }
+  }
+
+  activeStages.length = count;
+
+  var activeStagesChanged = count !== previousActiveStages.length;
+  if (!activeStagesChanged) {
+    for (i = 0; i < count; ++i) {
+      if (activeStages[i] !== previousActiveStages[i]) {
+        activeStagesChanged = true;
+        break;
+      }
+    }
+  }
 
   var ao = this._ao;
   var bloom = this._bloom;
@@ -630,21 +601,9 @@ PostProcessStageCollection.prototype.update = function (
     tonemapping.enabled && tonemapping._isSupported(context);
   var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-  var enabledStagesChanged = this._enabledStagesChanged;
-  var activeStagesChanged = this._activeStagesChanged;
-  var enabledCount = this._enabledStages.length;
-  var activeCount = this._activeStages.count;
-
-  var stages = this._stages;
-  var length = stages.length;
-  var i;
-
   if (
-    enabledStagesChanged ||
     activeStagesChanged ||
     this._textureCacheDirty ||
-    enabledCount !== this._lastEnabledLength ||
-    activeCount !== this._lastActiveLength ||
     aoEnabled !== this._aoEnabled ||
     bloomEnabled !== this._bloomEnabled ||
     tonemappingEnabled !== this._tonemappingEnabled ||
@@ -654,8 +613,6 @@ PostProcessStageCollection.prototype.update = function (
     // Update dependencies and recreate framebuffers.
     this._textureCache.updateDependencies();
 
-    this._lastEnabledLength = enabledCount;
-    this._lastActiveLength = activeCount;
     this._aoEnabled = aoEnabled;
     this._bloomEnabled = bloomEnabled;
     this._tonemappingEnabled = tonemappingEnabled;
@@ -707,6 +664,19 @@ PostProcessStageCollection.prototype.update = function (
   length = stages.length;
   for (i = 0; i < length; ++i) {
     stages[i].update(context, useLogDepth);
+  }
+
+  count = 0;
+  for (i = 0; i < length; ++i) {
+    stage = stages[i];
+    if (stage.ready && stage.enabled && stage._isSupported(context)) {
+      count++;
+    }
+  }
+
+  activeStagesChanged = count !== activeStages.length;
+  if (activeStagesChanged) {
+    this.update(context, useLogDepth, useHdr);
   }
 };
 
@@ -791,8 +761,6 @@ PostProcessStageCollection.prototype.execute = function (
   depthTexture,
   idTexture
 ) {
-  this.updateStagesChanged(context);
-
   var activeStages = this._activeStages;
   var length = activeStages.length;
   var fxaa = this._fxaa;
