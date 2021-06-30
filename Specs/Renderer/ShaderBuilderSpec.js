@@ -223,10 +223,12 @@ describe(
       checkVertexShader(shaderProgram, [], expectedAttributes);
       checkFragmentShader(shaderProgram, [], []);
 
-      expect(shaderProgram._attributeLocations).toEqual({
+      var expectedLocations = {
         a_position: 0,
         a_normal: 1,
-      });
+      };
+      expect(shaderBuilder.attributeLocations).toEqual(expectedLocations);
+      expect(shaderProgram._attributeLocations).toEqual(expectedLocations);
     });
 
     it("setPositionAttribute throws if called twice", function () {
@@ -284,10 +286,12 @@ describe(
       ];
       checkVertexShader(shaderProgram, [], expectedAttributes);
       checkFragmentShader(shaderProgram, [], []);
-      expect(shaderProgram._attributeLocations).toEqual({
+      var expectedLocations = {
         a_color: 1,
         a_normal: 2,
-      });
+      };
+      expect(shaderBuilder.attributeLocations).toEqual(expectedLocations);
+      expect(shaderProgram._attributeLocations).toEqual(expectedLocations);
     });
 
     it("addVertexLines throws for undefined lines", function () {

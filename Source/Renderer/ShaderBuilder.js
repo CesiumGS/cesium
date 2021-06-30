@@ -71,6 +71,23 @@ export default function ShaderBuilder() {
   };
 }
 
+Object.defineProperties(ShaderBuilder.prototype, {
+  /**
+   * Get a dictionary of attribute names to the integer location in
+   * the vertex shader.
+   *
+   * @memberof ShaderBuilder.prototype
+   * @type {Object.<String, Number>}
+   * @readonly
+   * @private
+   */
+  attributeLocations: {
+    get: function () {
+      return this._attributeLocations;
+    },
+  },
+});
+
 /**
  * Add a <code>#define</code> macro to one or both of the shaders. These lines
  * will appear at the top of the final shader source.
@@ -111,7 +128,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
  * Add a uniform declaration to one or both of the shaders. These lines
  * will appear grouped near the top of the final shader source.
  *
- * @param {String} type the GLSL type of the uniform.
+ * @param {String} type The GLSL type of the uniform.
  * @param {String} identifier An identifier for the uniform. Identifiers must begin with <code>u_</code> to be consistent with Cesium's style guide.
  * @param {ShaderDestination} [destination=ShaderDestination.BOTH] Whether the uniform appears in the vertex shader, the fragment shader, or both.
  *
