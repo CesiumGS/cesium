@@ -102,7 +102,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
     this._vertex.defineLines.push(line);
   }
 
-  if (ShaderDestination.incluesFragmentShader(destination)) {
+  if (ShaderDestination.includesFragmentShader(destination)) {
     this._fragment.defineLines.push(line);
   }
 };
@@ -134,7 +134,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
     this._vertex.uniformLines.push(line);
   }
 
-  if (ShaderDestination.incluesFragmentShader(destination)) {
+  if (ShaderDestination.includesFragmentShader(destination)) {
     this._fragment.uniformLines.push(line);
   }
 };
