@@ -795,6 +795,12 @@ function createTexture2DUpdateFunction(uniformId) {
     var uniforms = material.uniforms;
     var uniformValue = uniforms[uniformId];
     var uniformChanged = oldUniformValue !== uniformValue;
+
+    var uniformValueIsDefaultImage = uniformValue === Material.DefaultImageId;
+    var oldUniformValueDefined = defined(oldUniformValue);
+    var oldUniformValueIsDefaultImage =
+      oldUniformValue === Material.DefaultImageId;
+
     oldUniformValue = uniformValue;
     var texture = material._textures[uniformId];
 
@@ -853,16 +859,18 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
-    if (uniformChanged) {
-      if (!defined(uniformValue) && defined(texture)) {
-        texture.destroy();
+    if (uniformChanged && defined(texture)) {
+      if (!defined(uniformValue) || uniformValueIsDefaultImage) {
+        if (oldUniformValueDefined && !oldUniformValueIsDefaultImage) {
+          texture.destroy();
+        }
         texture = undefined;
       }
     }
 
     if (!defined(texture)) {
       material._texturePaths[uniformId] = undefined;
-      if (!defined(material._defaultTexture)) {
+      if (uniformValueIsDefaultImage || !defined(material._defaultTexture)) {
         material._defaultTexture = context.defaultTexture;
       }
       texture = material._textures[uniformId] = material._defaultTexture;
@@ -875,7 +883,7 @@ function createTexture2DUpdateFunction(uniformId) {
       }
     }
 
-    if (uniformValue === Material.DefaultImageId) {
+    if (!defined(uniformValue) || uniformValueIsDefaultImage) {
       return;
     }
 
