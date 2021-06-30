@@ -83,15 +83,17 @@
             pickedFeature.content.i3sNode
           ) {
             var i3sNode = pickedFeature.content.i3sNode;
-            i3sNode.loadFields().then(() => {
+            i3sNode.loadFields().then(function () {
+              console.log(i3sNode);
               var geometry = i3sNode.geometryData[0];
+              console.log(geometry);
               if (pickedPosition) {
                 var location = geometry.getClosestPointIndex(
                   pickedPosition.x,
                   pickedPosition.y,
                   pickedPosition.z
                 );
-                //console.log("Location", location);
+                console.log("Location", location);
                 var description = "No attributes";
                 var name = "";
                 if (
@@ -104,15 +106,18 @@
                     description =
                       '<table class="cesium-infoBox-defaultTable"><tbody>';
                     for (var fieldName in i3sNode.fields) {
-                      var field = i3sNode.fields[fieldName];
-                      //console.log(field.name + ": " + field.values[featureIndex]);
-                      description += "<tr><th>" + field.name + "</th><td>";
-                      description += field.values[featureIndex] + "</td></tr>";
-                      if (
-                        (!name || 0 === name.length) &&
-                        isNameProperty(field.name)
-                      ) {
-                        name = field.values[featureIndex];
+                      if (fieldName.legnth > 0) {
+                        var field = i3sNode.fields[fieldName];
+                        //console.log(field.name + ": " + field.values[featureIndex]);
+                        description += "<tr><th>" + field.name + "</th><td>";
+                        description +=
+                          field.values[featureIndex] + "</td></tr>";
+                        if (
+                          (!name || 0 === name.length) &&
+                          isNameProperty(field.name)
+                        ) {
+                          name = field.values[featureIndex];
+                        }
                       }
                     }
                     description += "</tbody></table>";
@@ -127,8 +132,11 @@
               }
             });
           }
+
+          console.log(viewer.scene.camera);
         },
         Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
         function isNameProperty(propertyName) {
           var name = propertyName.toLowerCase();
           if (
@@ -139,6 +147,7 @@
           }
           return false;
         }
+
         //Sandcastle_End
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;

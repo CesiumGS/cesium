@@ -75,7 +75,7 @@
 /*
 
 // Create a Viewer instances and add the DataSource.
-let viewer = new Cesium.Viewer("cesiumContainer", {
+var viewer = new Cesium.Viewer("cesiumContainer", {
 	animation: false,
 	timeline: false,
 });
@@ -83,7 +83,7 @@ let viewer = new Cesium.Viewer("cesiumContainer", {
 viewer.clock.shouldAnimate = false;
 
 
-let tours = {
+var tours = {
 	"Frankfurt": "https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer"
 	};
 
@@ -93,7 +93,7 @@ var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
     url : "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
 });
 
-let dataSource = new Cesium.I3SDataSource("", viewer.scene, {
+var dataSource = new Cesium.I3SDataSource("", viewer.scene, {
     traceFetches : false, // for tracing I3S fetches
     traceVisuals : false, // for tracing visuals
     autoCenterCameraOnStart : true, // auto center to the location of the i3s
@@ -124,19 +124,19 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
 	if (pickedFeature && pickedFeature.content &&
 		pickedFeature.content.i3sNode) {
 
-		let i3sNode = pickedFeature.content.i3sNode;
+		var i3sNode = pickedFeature.content.i3sNode;
 		i3sNode.loadFields().then(() => {
 			console.log(i3sNode);
-			let geometry = i3sNode.geometryData[0];
+			var geometry = i3sNode.geometryData[0];
 			console.log(geometry);
 			if (pickedPosition) {
-				let location = geometry.getClosestPointIndex(
+				var location = geometry.getClosestPointIndex(
 					pickedPosition.x, pickedPosition.y, pickedPosition.z);
 				console.log("Location", location);
 				if (location.index !== -1 && geometry.customAttributes["feature-index"]) {
-					let featureIndex = geometry.customAttributes["feature-index"][location.index];
-					for (let fieldName in i3sNode.fields) {
-						let field = i3sNode.fields[fieldName];
+					var featureIndex = geometry.customAttributes["feature-index"][location.index];
+					for (var fieldName in i3sNode.fields) {
+						var field = i3sNode.fields[fieldName];
 						console.log(field.name + ": " + field.values[featureIndex]);
 					}
 				}
@@ -159,10 +159,7 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
 ..##..##.....##.##........##.....##.##....##.....##....##....##
 .####.##.....##.##.........#######..##.....##....##.....######.
 */
-
-import ArcGISTiledElevationTerrainProvider from "../Core/ArcGISTiledElevationTerrainProvider.js";
 import Batched3DModel3DTileContent from "../Scene/Batched3DModel3DTileContent.js";
-import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
@@ -202,16 +199,16 @@ import when from "../ThirdParty/when.js";
 */
 
 // Maps i3Snode by URI
-let _i3sContentCache = {};
+var _i3sContentCache = {};
 
 // Prevent ESLint from issuing warnings about undefined Promise
-// eslint-disable-next-line no-undef
-let _Promise = Promise;
+//eslint-disable-next-line no-undef
+var _Promise = Promise;
 
 // Code traces
 // set to true to turn on code tracing for debugging purposes
-let _tracecode = false;
-let traceCode = function () {};
+var _tracecode = false;
+var traceCode = function () {};
 if (_tracecode) {
   traceCode = console.log;
 }
@@ -258,7 +255,7 @@ if (_tracecode) {
  *
  *
  * @example
- * let dataSource = new I3SDataSource();
+ * var dataSource = new I3SDataSource();
  * dataSource.loadUrl('https://tiles.arcgis.com/tiles/u0sSNqDXr7puKJrF/arcgis/rest/services/Frankfurt2017_v17/SceneServer');
  * dataSource.dataSources.add(dataSource);
  *
@@ -266,7 +263,7 @@ if (_tracecode) {
  * var geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
  *   url : "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
  *   });
- * let dataSource = new I3SDataSource("", viewer.scene, {
+ * var dataSource = new I3SDataSource("", viewer.scene, {
  *   autoCenterCameraOnStart : true, // auto center to the location of the i3s
  *   geoidTiledTerrainProvider : geoidService,  // pass the geoid service
  *
@@ -502,14 +499,14 @@ Object.defineProperties(I3SDataSource.prototype, {
  * @returns {Promise} a promise that will resolve when the I3S scene is loaded.
  */
 I3SDataSource.prototype.loadUrl = function (url) {
-  let parts = url.split("?");
+  var parts = url.split("?");
   this._url = parts[0];
   this._query = parts[1];
   this._completeUrl = url;
 
-  let deferredPromise = new when.defer();
+  var deferredPromise = new when.defer();
   this._sceneServer = new I3SSceneServer(this);
-  this._sceneServer.load(this._completeUrl).then(() => {
+  this._sceneServer.load(this._completeUrl).then(function () {
     deferredPromise.resolve();
   });
 
@@ -529,7 +526,7 @@ I3SDataSource.prototype.load = function (data) {
 
   //Clear out any data that might already exist.
   this._setLoading(true);
-  let entities = this._entityCollection;
+  var entities = this._entityCollection;
 
   //It's a good idea to suspend events when making changes to a
   //large amount of entities.  This will cause events to be batched up
@@ -558,54 +555,66 @@ I3SDataSource.prototype._setLoading = function (isLoading) {
  * @private
  */
 I3SDataSource.prototype._loadJson = function (uri, success, fail) {
-  return new _Promise((resolve, reject) => {
-    if (this._traceFetches) {
-      console.log("I3S FETCH:", uri);
-    }
-    let request = fetch(uri);
-    request.then((response) => {
-      response.json().then((data) => {
-        if (data.error) {
-          console.error(this._data.error.message);
-          fail(reject);
-        } else {
-          success(data, resolve);
-        }
-      });
-    });
-  });
+  return new _Promise(
+    function (resolve, reject) {
+      if (this._traceFetches) {
+        console.log("I3S FETCH:", uri);
+      }
+      var request = fetch(uri);
+      request.then(
+        function (response) {
+          response.json().then(
+            function (data) {
+              if (data.error) {
+                console.error(this._data.error.message);
+                fail(reject);
+              } else {
+                success(data, resolve);
+              }
+            }.bind(this)
+          );
+        }.bind(this)
+      );
+    }.bind(this)
+  );
 };
 
 /**
  * @private
  */
 I3SDataSource.prototype._loadBinary = function (uri, success, fail) {
-  return new _Promise((resolve, reject) => {
-    if (this._traceFetches) {
-      traceCode("I3S FETCH:", uri);
-    }
-    let request = fetch(uri);
-    request.then((response) => {
-      response.arrayBuffer().then((data) => {
-        if (data.error) {
-          console.error(this._data.error.message);
-          fail(reject);
-        } else {
-          success(data, resolve);
-        }
-      });
-    });
-  });
+  return new _Promise(
+    function (resolve, reject) {
+      if (this._traceFetches) {
+        traceCode("I3S FETCH:", uri);
+      }
+      var request = fetch(uri);
+      request.then(
+        function (response) {
+          response.arrayBuffer().then(
+            function (data) {
+              if (data.error) {
+                console.error(this._data.error.message);
+                fail(reject);
+              } else {
+                success(data, resolve);
+              }
+            }.bind(this)
+          );
+        }.bind(this)
+      );
+    }.bind(this)
+  );
 };
 
 /**
  * @private
  */
 I3SDataSource.prototype._binarizeGLTF = function (rawGLTF) {
-  let encoder = new TextEncoder();
-  let rawGLTFData = encoder.encode(JSON.stringify(rawGLTF));
-  let binaryGLTFData = new Uint8Array(rawGLTFData.byteLength + 20);
-  let binaryGLTF = {
+  var encoder = new TextEncoder();
+  var rawGLTFData = encoder.encode(JSON.stringify(rawGLTF));
+  var binaryGLTFData = new Uint8Array(rawGLTFData.byteLength + 20);
+  var binaryGLTF = {
     magic: new Uint8Array(binaryGLTFData.buffer, 0, 4),
     version: new Uint32Array(binaryGLTFData.buffer, 4, 1),
     length: new Uint32Array(binaryGLTFData.buffer, 8, 1),
@@ -640,31 +649,31 @@ I3SDataSource.prototype._binarizeB3DM = function (
   batchTabelJSON,
   binaryGLTFData
 ) {
-  let encoder = new TextEncoder();
+  var encoder = new TextEncoder();
 
   // Feature Table
-  let featureTableOffset = 28;
-  let featureTableJSONData = encoder.encode(featureTableJSON);
-  let featureTableLength = featureTableJSONData.byteLength;
+  var featureTableOffset = 28;
+  var featureTableJSONData = encoder.encode(featureTableJSON);
+  var featureTableLength = featureTableJSONData.byteLength;
 
   // Batch Table
-  let batchTableOffset = featureTableOffset + featureTableLength;
-  let batchTableJSONData = encoder.encode(batchTabelJSON);
+  var batchTableOffset = featureTableOffset + featureTableLength;
+  var batchTableJSONData = encoder.encode(batchTabelJSON);
 
   // Calculate alignment buffer by padding the remainder of the batch table
-  let paddingCount = (batchTableOffset + batchTableJSONData.byteLength) % 8;
-  let batchTableLength = batchTableJSONData.byteLength + paddingCount;
-  let paddingStart = batchTableJSONData.byteLength;
-  let paddingStop = batchTableLength;
+  var paddingCount = (batchTableOffset + batchTableJSONData.byteLength) % 8;
+  var batchTableLength = batchTableJSONData.byteLength + paddingCount;
+  var paddingStart = batchTableJSONData.byteLength;
+  var paddingStop = batchTableLength;
 
   // Binary GLTF
-  let binaryGLTFOffset = batchTableOffset + batchTableLength;
-  let binaryGLTFLength = binaryGLTFData.byteLength;
+  var binaryGLTFOffset = batchTableOffset + batchTableLength;
+  var binaryGLTFLength = binaryGLTFData.byteLength;
 
-  let dataSize = featureTableLength + batchTableLength + binaryGLTFLength;
-  let b3dmRawData = new Uint8Array(28 + dataSize);
+  var dataSize = featureTableLength + batchTableLength + binaryGLTFLength;
+  var b3dmRawData = new Uint8Array(28 + dataSize);
 
-  let b3dmData = {
+  var b3dmData = {
     magic: new Uint8Array(b3dmRawData.buffer, 0, 4),
     version: new Uint32Array(b3dmRawData.buffer, 4, 1),
     byteLength: new Uint32Array(b3dmRawData.buffer, 8, 1),
@@ -702,7 +711,7 @@ I3SDataSource.prototype._binarizeB3DM = function (
   b3dmData.featureTableBinaryByteLength[0] = 0;
 
   b3dmData.batchTable.set(batchTableJSONData);
-  for (let index = paddingStart; index < paddingStop; ++index) {
+  for (var index = paddingStart; index < paddingStop; ++index) {
     b3dmData.batchTable[index] = 0x20;
   }
   b3dmData.batchTableJSONByteLength[0] = batchTableLength;
@@ -748,8 +757,8 @@ function _WGS84ToCartesian(long, lat, height) {
  * @private
  */
 function _longLatsToMeter(longitude1, latitude1, longitude2, latitude2) {
-  let p1 = _WGS84ToCartesian(longitude1, latitude1, 0);
-  let p2 = _WGS84ToCartesian(longitude2, latitude2, 0);
+  var p1 = _WGS84ToCartesian(longitude1, latitude1, 0);
+  var p2 = _WGS84ToCartesian(longitude2, latitude2, 0);
 
   return Cartesian3.distance(p1, p2);
 }
@@ -758,7 +767,7 @@ function _longLatsToMeter(longitude1, latitude1, longitude2, latitude2) {
  * @private
  */
 function _computeExtent(minLongitude, minLatitude, maxLongitude, maxLatitude) {
-  let extent = {
+  var extent = {
     minLongitude: minLongitude,
     maxLongitude: maxLongitude,
     minLatitude: minLatitude,
@@ -865,12 +874,12 @@ I3SSceneServer.prototype.load = function (uri) {
 
   return this._dataSource._loadJson(
     uri,
-    (data, resolve) => {
+    function (data, resolve) {
       // Success
       this._data = data;
-      let layerPromises = [];
-      for (let layer of this._data.layers) {
-        let newLayer = new I3SLayer(
+      var layerPromises = [];
+      for (var layer of this._data.layers) {
+        var newLayer = new I3SLayer(
           this,
           layer,
           this._data.layers.indexOf(layer)
@@ -879,18 +888,20 @@ I3SSceneServer.prototype.load = function (uri) {
         layerPromises.push(newLayer.load());
       }
 
-      _Promise.all(layerPromises).then(() => {
-        this._computeExtent();
+      _Promise.all(layerPromises).then(
+        function () {
+          this._computeExtent();
 
-        if (this._dataSource._autoCenterCameraOnStart) {
-          this.centerCamera("topdown");
-        }
+          if (this._dataSource._autoCenterCameraOnStart) {
+            this.centerCamera("topdown");
+          }
 
-        resolve();
-        this._createVisualElements();
-      });
-    },
-    (reject) => {
+          resolve();
+          this._createVisualElements();
+        }.bind(this)
+      );
+    }.bind(this),
+    function (reject) {
       // Fail
       reject();
     }
@@ -931,15 +942,15 @@ I3SSceneServer.prototype.centerCamera = function (mode) {
  * @private
  */
 I3SSceneServer.prototype._computeExtent = function () {
-  let minLongitude = Number.MAX_VALUE;
-  let maxLongitude = -Number.MAX_VALUE;
-  let minLatitude = Number.MAX_VALUE;
-  let maxLatitude = -Number.MAX_VALUE;
+  var minLongitude = Number.MAX_VALUE;
+  var maxLongitude = -Number.MAX_VALUE;
+  var minLatitude = Number.MAX_VALUE;
+  var maxLatitude = -Number.MAX_VALUE;
 
   // Compute the extent from all layers
-  for (let layer of this._layerCollection) {
+  for (var layer of this._layerCollection) {
     if (layer._data.store && layer._data.store.extent) {
-      let layerExtent = layer._data.store.extent;
+      var layerExtent = layer._data.store.extent;
       minLongitude = Math.min(minLongitude, layerExtent[0]);
       minLatitude = Math.min(minLatitude, layerExtent[1]);
       maxLongitude = Math.max(maxLongitude, layerExtent[2]);
@@ -1013,7 +1024,7 @@ function I3SLayer(sceneServer, layerData, index) {
   }
 
   this._uri = layerData.href;
-  let query = "";
+  var query = "";
   if (this._dataSource._query && this._dataSource._query !== "") {
     query = "?" + this._dataSource._query;
   }
@@ -1105,33 +1116,33 @@ function GetCoveredTiles(terrainProvider, extents) {
 }
 
 function GetTiles(terrainProvider, extents) {
-  let tilingScheme = terrainProvider.tilingScheme;
+  var tilingScheme = terrainProvider.tilingScheme;
 
   // Sort points into a set of tiles
-  let tileRequests = []; // Result will be an Array as it's easier to work with
-  let tileRequestSet = {}; // A unique set
+  var tileRequests = []; // Result will be an Array as it's easier to work with
+  var tileRequestSet = {}; // A unique set
 
-  let maxLevel = terrainProvider._lodCount;
+  var maxLevel = terrainProvider._lodCount;
 
-  let minCorner = Cartographic.fromDegrees(
+  var minCorner = Cartographic.fromDegrees(
     extents.minLongitude,
     extents.minLatitude
   );
-  let maxCorner = Cartographic.fromDegrees(
+  var maxCorner = Cartographic.fromDegrees(
     extents.maxLongitude,
     extents.maxLatitude
   );
-  let minCornerXY = tilingScheme.positionToTileXY(minCorner, maxLevel);
-  let maxCornerXY = tilingScheme.positionToTileXY(maxCorner, maxLevel);
+  var minCornerXY = tilingScheme.positionToTileXY(minCorner, maxLevel);
+  var maxCornerXY = tilingScheme.positionToTileXY(maxCorner, maxLevel);
 
   //Get all the tiles in between
-  for (let x = minCornerXY.x; x <= maxCornerXY.x; x++) {
-    for (let y = minCornerXY.y; y <= maxCornerXY.y; y++) {
-      let xy = new Cartesian2(x, y);
-      let key = xy.toString();
+  for (var x = minCornerXY.x; x <= maxCornerXY.x; x++) {
+    for (var y = minCornerXY.y; y <= maxCornerXY.y; y++) {
+      var xy = new Cartesian2(x, y);
+      var key = xy.toString();
       if (!tileRequestSet.hasOwnProperty(key)) {
         // When tile is requested for the first time
-        let value = {
+        var value = {
           x: xy.x,
           y: xy.y,
           level: maxLevel,
@@ -1147,7 +1158,7 @@ function GetTiles(terrainProvider, extents) {
 
   // Send request for each required tile
   var tilePromises = [];
-  for (let i = 0; i < tileRequests.length; ++i) {
+  for (var i = 0; i < tileRequests.length; ++i) {
     var tileRequest = tileRequests[i];
     var requestPromise = tileRequest.terrainProvider.requestTileGeometry(
       tileRequest.x,
@@ -1158,24 +1169,24 @@ function GetTiles(terrainProvider, extents) {
     tilePromises.push(requestPromise);
   }
 
-  return when.all(tilePromises).then((heightMapBuffers) => {
-    let heightMaps = [];
-    let tilesAreReady = new Array();
-    for (let i in heightMapBuffers) {
-      let options = {
+  return when.all(tilePromises).then(function (heightMapBuffers) {
+    var heightMaps = [];
+    var tilesAreReady = new Array();
+    for (var i in heightMapBuffers) {
+      var options = {
         tilingScheme: tilingScheme,
         x: tileRequests[i].x,
         y: tileRequests[i].y,
         level: tileRequests[i].level,
       };
-      let heightMap = heightMapBuffers[i];
+      var heightMap = heightMapBuffers[i];
 
-      let projectionType = "Geographic";
+      var projectionType = "Geographic";
       if (tilingScheme._projection instanceof WebMercatorProjection) {
         projectionType = "WebMercator";
       }
 
-      let heightMapData = {
+      var heightMapData = {
         projectionType: projectionType,
         projection: tilingScheme._projection,
         nativeExtent: tilingScheme.tileXYToNativeRectangle(
@@ -1190,7 +1201,7 @@ function GetTiles(terrainProvider, extents) {
       };
 
       if (heightMap._encoding == HeightmapEncoding.LERC) {
-        let result = Lerc.decode(heightMap._buffer);
+        var result = Lerc.decode(heightMap._buffer);
         heightMapData.buffer = result.pixels[0];
       } else {
         heightMapData.buffer = heightMap._buffer;
@@ -1208,63 +1219,72 @@ function GetTiles(terrainProvider, extents) {
  * @returns {Promise} a promise that is resolved when the layer data is loaded
  */
 I3SLayer.prototype.load = function () {
-  return new _Promise((resolve, reject) => {
-    this._computeExtent();
+  return new _Promise(
+    function (resolve, reject) {
+      this._computeExtent();
 
-    //Load tiles from arcgis
+      //Load tiles from arcgis
 
-    var geoidTerrainProvider = this._dataSource._geoidTiledTerrainProvider;
+      var geoidTerrainProvider = this._dataSource._geoidTiledTerrainProvider;
 
-    let dataIsReady = new when.defer();
-    let geoidDataList = [];
-    if (defined(geoidTerrainProvider)) {
-      if (geoidTerrainProvider.ready) {
-        let tilesReadyPromise = GetCoveredTiles(
-          geoidTerrainProvider,
-          this._extent
-        );
-        when(tilesReadyPromise, function (heightMaps) {
-          geoidDataList = heightMaps;
+      var dataIsReady = new when.defer();
+      var geoidDataList = [];
+      if (defined(geoidTerrainProvider)) {
+        if (geoidTerrainProvider.ready) {
+          var tilesReadyPromise = GetCoveredTiles(
+            geoidTerrainProvider,
+            this._extent
+          );
+          when(tilesReadyPromise, function (heightMaps) {
+            geoidDataList = heightMaps;
+            dataIsReady.resolve();
+          });
+        } else {
+          console.log(
+            "Geoid Terrain service not available - no geoid conversion will be performed."
+          );
           dataIsReady.resolve();
-        });
+        }
       } else {
         console.log(
-          "Geoid Terrain service not available - no geoid conversion will be performed."
+          "No Geoid Terrain service provided - no geoid conversion will be performed."
         );
         dataIsReady.resolve();
       }
-    } else {
-      console.log(
-        "No Geoid Terrain service provided - no geoid conversion will be performed."
-      );
-      dataIsReady.resolve();
-    }
 
-    dataIsReady.then(() => {
-      this._dataSource._geoidDataList = geoidDataList;
-      console.log("Starting to load visual elements");
-      this._createVisualElements();
-      if (this._data.spatialReference.wkid === 4326) {
-        this._loadNodePage(0).then(() => {
-          this._loadRootNode().then(() => {
-            this._create3DTileSet();
-            if (this._data.store.version === "1.6") {
-              this._rootNode._loadChildren().then(() => {
-                resolve();
-              });
-            } else {
-              resolve();
-            }
-          });
-        });
-      } else {
-        console.log(
-          "Unsupported spatial reference: " + this._data.spatialReference.wkid
-        );
-        resolve();
-      }
-    });
-  });
+      dataIsReady.then(
+        function () {
+          this._dataSource._geoidDataList = geoidDataList;
+          console.log("Starting to load visual elements");
+          this._createVisualElements();
+          if (this._data.spatialReference.wkid === 4326) {
+            this._loadNodePage(0).then(
+              function () {
+                this._loadRootNode().then(
+                  function () {
+                    this._create3DTileSet();
+                    if (this._data.store.version === "1.6") {
+                      this._rootNode._loadChildren().then(function () {
+                        resolve();
+                      });
+                    } else {
+                      resolve();
+                    }
+                  }.bind(this)
+                );
+              }.bind(this)
+            );
+          } else {
+            console.log(
+              "Unsupported spatial reference: " +
+                this._data.spatialReference.wkid
+            );
+            resolve();
+          }
+        }.bind(this)
+      );
+    }.bind(this)
+  );
 };
 
 /**
@@ -1278,24 +1298,24 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
   this._geometryDefinitions = [];
 
   if (this._data.geometryDefinitions) {
-    for (let geometryDefinition of this._data.geometryDefinitions) {
-      let geometryBuffersInfo = [];
-      let geometryBuffers = geometryDefinition.geometryBuffers;
+    for (var geometryDefinition of this._data.geometryDefinitions) {
+      var geometryBuffersInfo = [];
+      var geometryBuffers = geometryDefinition.geometryBuffers;
 
-      for (let geometryBuffer of geometryBuffers) {
-        let collectedAttributes = [];
-        let compressed = false;
+      for (var geometryBuffer of geometryBuffers) {
+        var collectedAttributes = [];
+        var compressed = false;
 
         if (geometryBuffer.compressedAttributes && useCompression) {
           // check if compressed
           compressed = true;
-          let attributes = geometryBuffer.compressedAttributes.attributes;
-          for (let attribute of attributes) {
+          var attributes = geometryBuffer.compressedAttributes.attributes;
+          for (var attribute of attributes) {
             collectedAttributes.push(attribute);
           }
         } else {
           // uncompressed attributes
-          for (let attribute in geometryBuffer) {
+          for (var attribute in geometryBuffer) {
             if (attribute !== "offset") {
               collectedAttributes.push(attribute);
             }
@@ -1310,7 +1330,7 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
       }
 
       // rank the buffer info
-      geometryBuffersInfo.sort((a, b) => {
+      geometryBuffersInfo.sort(function (a, b) {
         if (a.compressed && !b.compressed) {
           return -1;
         } else if (!a.compressed && b.compressed) {
@@ -1334,14 +1354,14 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
   // based on the required attributes, and by favouring
   // compression to improve bandwidth requirements
 
-  let geometryDefinition = this._geometryDefinitions[definition];
+  var geometryDefinition = this._geometryDefinitions[definition];
 
   if (geometryDefinition) {
-    for (let index = 0; index < geometryDefinition.length; ++index) {
-      let geometryBufferInfo = geometryDefinition[index];
-      let missed = false;
-      let geometryAttributes = geometryBufferInfo.attributes;
-      for (let attribute of attributes) {
+    for (var index = 0; index < geometryDefinition.length; ++index) {
+      var geometryBufferInfo = geometryDefinition[index];
+      var missed = false;
+      var geometryAttributes = geometryBufferInfo.attributes;
+      for (var attribute of attributes) {
         if (!geometryAttributes.includes(attribute)) {
           missed = true;
           break;
@@ -1365,7 +1385,7 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
  */
 I3SLayer.prototype._loadRootNode = function () {
   if (this._data.nodePages) {
-    let rootIndex = 0;
+    var rootIndex = 0;
     if (this._data.nodePages.rootIndex !== undefined) {
       rootIndex = this._data.nodePages.rootIndex;
     }
@@ -1381,11 +1401,11 @@ I3SLayer.prototype._loadRootNode = function () {
  * @private
  */
 I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
-  let Index = Math.floor(nodeIndex / this._data.nodePages.nodesPerPage);
-  let offsetInPage = nodeIndex % this._data.nodePages.nodesPerPage;
-  let that = this;
-  return new _Promise((resolve, reject) => {
-    that._loadNodePage(Index).then(() => {
+  var Index = Math.floor(nodeIndex / this._data.nodePages.nodesPerPage);
+  var offsetInPage = nodeIndex % this._data.nodePages.nodesPerPage;
+  var that = this;
+  return new _Promise(function (resolve, reject) {
+    that._loadNodePage(Index).then(function () {
       resolve(that._nodePages[Index][offsetInPage]);
     });
   });
@@ -1395,65 +1415,70 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
  * @private
  */
 I3SLayer.prototype._loadNodePage = function (page) {
-  let that = this;
-  return new _Promise((resolve, reject) => {
-    if (that._nodePages[page] !== undefined) {
-      resolve();
-    } else if (that._nodePageFetches[page] !== undefined) {
-      that._nodePageFetches[page]._promise = that._nodePageFetches[
-        page
-      ]._promise.then(() => {
+  var that = this;
+  return new _Promise(
+    function (resolve, reject) {
+      if (that._nodePages[page] !== undefined) {
         resolve();
-      });
-    } else {
-      let query = "";
-      if (this._dataSource._query && this._dataSource._query !== "") {
-        query = "?" + this._dataSource._query;
-      }
-
-      let nodePageURI = this._completeUriWithoutQuery + "/nodepages/";
-      nodePageURI += page + query;
-
-      that._nodePageFetches[page] = {};
-      that._nodePageFetches[page]._promise = new _Promise((resolve, reject) => {
-        that._nodePageFetches[page]._resolve = resolve;
-      });
-
-      let _resolve = function () {
-        // resolve the chain of promises
-        that._nodePageFetches[page]._resolve();
-        delete that._nodePageFetches[page];
-        resolve();
-      };
-
-      fetch(nodePageURI)
-        .then((response) => {
-          response
-            .json()
-            .then((data) => {
-              if (data.error && data.error.code !== 200) {
-                _resolve();
-              } else {
-                that._nodePages[page] = data.nodes;
-                _resolve();
-              }
-            })
-            .catch(() => {
-              _resolve();
-            });
-        })
-        .catch(() => {
-          _resolve();
+      } else if (that._nodePageFetches[page] !== undefined) {
+        that._nodePageFetches[page]._promise = that._nodePageFetches[
+          page
+        ]._promise.then(function () {
+          resolve();
         });
-    }
-  });
+      } else {
+        var query = "";
+        if (this._dataSource._query && this._dataSource._query !== "") {
+          query = "?" + this._dataSource._query;
+        }
+
+        var nodePageURI = this._completeUriWithoutQuery + "/nodepages/";
+        nodePageURI += page + query;
+
+        that._nodePageFetches[page] = {};
+        that._nodePageFetches[page]._promise = new _Promise(function (
+          resolve,
+          reject
+        ) {
+          that._nodePageFetches[page]._resolve = resolve;
+        });
+
+        var _resolve = function () {
+          // resolve the chain of promises
+          that._nodePageFetches[page]._resolve();
+          delete that._nodePageFetches[page];
+          resolve();
+        };
+
+        fetch(nodePageURI)
+          .then(function (response) {
+            response
+              .json()
+              .then(function (data) {
+                if (data.error && data.error.code !== 200) {
+                  _resolve();
+                } else {
+                  that._nodePages[page] = data.nodes;
+                  _resolve();
+                }
+              })
+              .catch(function () {
+                _resolve();
+              });
+          })
+          .catch(function () {
+            _resolve();
+          });
+      }
+    }.bind(this)
+  );
 };
 
 /**
  * @private
  */
 I3SLayer.prototype._computeExtent = function () {
-  let layerExtent = this._data.store.extent;
+  var layerExtent = this._data.store.extent;
   this._extent = _computeExtent(
     layerExtent[0],
     layerExtent[1],
@@ -1494,7 +1519,7 @@ I3SLayer.prototype._createVisualElements = function () {
  * @private
  */
 I3SLayer.prototype._create3DTileSet = function () {
-  let inPlaceTileset = {
+  var inPlaceTileset = {
     asset: {
       version: "1.0",
     },
@@ -1502,11 +1527,11 @@ I3SLayer.prototype._create3DTileSet = function () {
     root: this._rootNode._create3DTileDefinition(),
   };
 
-  let tilesetBlob = new Blob([JSON.stringify(inPlaceTileset)], {
+  var tilesetBlob = new Blob([JSON.stringify(inPlaceTileset)], {
     type: "application/json",
   });
 
-  let inPlaceTilesetURL = URL.createObjectURL(tilesetBlob);
+  var inPlaceTilesetURL = URL.createObjectURL(tilesetBlob);
 
   this._tileset = this._dataSource._scene.primitives.add(
     new Cesium3DTileset({
@@ -1518,20 +1543,22 @@ I3SLayer.prototype._create3DTileSet = function () {
 
   this._tileset._isI3STileSet = true;
 
-  this._tileset.readyPromise.then(() => {
-    this._tileset.tileLoad.addEventListener((tile) => {});
+  this._tileset.readyPromise.then(
+    function () {
+      this._tileset.tileLoad.addEventListener(function (tile) {});
 
-    this._tileset.tileUnload.addEventListener((tile) => {
-      tile._i3sNode._clearGeometryData();
-      tile._contentResource._url = tile._i3sNode._completeUriWithoutQuery;
-    });
+      this._tileset.tileUnload.addEventListener(function (tile) {
+        tile._i3sNode._clearGeometryData();
+        tile._contentResource._url = tile._i3sNode._completeUriWithoutQuery;
+      });
 
-    this._tileset.tileVisible.addEventListener((tile) => {
-      if (tile._i3sNode) {
-        tile._i3sNode._loadChildren();
-      }
-    });
-  });
+      this._tileset.tileVisible.addEventListener(function (tile) {
+        if (tile._i3sNode) {
+          tile._i3sNode._loadChildren();
+        }
+      });
+    }.bind(this)
+  );
 };
 
 /*
@@ -1583,7 +1610,7 @@ function I3SNode(parent, ref) {
     this._uri = ref;
   }
 
-  let query = "";
+  var query = "";
   if (this._dataSource._query && this._dataSource._query !== "") {
     query = "?" + this._dataSource._query;
   }
@@ -1708,20 +1735,20 @@ Object.defineProperties(I3SNode.prototype, {
  * @returns {Promise} a promise that is resolved when the I3S Node data is loaded
  */
 I3SNode.prototype.load = function (isRoot) {
-  let that = this;
+  var that = this;
 
   function processData() {
     that._createVisualElements();
     if (!isRoot) {
       // Create a new tile
-      let tileDefinition = that._create3DTileDefinition();
+      var tileDefinition = that._create3DTileDefinition();
 
-      let tileBlob = new Blob([JSON.stringify(tileDefinition)], {
+      var tileBlob = new Blob([JSON.stringify(tileDefinition)], {
         type: "application/json",
       });
 
-      let inPlaceTileURL = URL.createObjectURL(tileBlob);
-      let resource = Resource.createIfNeeded(inPlaceTileURL);
+      var inPlaceTileURL = URL.createObjectURL(tileBlob);
+      var resource = Resource.createIfNeeded(inPlaceTileURL);
 
       that._tile = new Cesium3DTile(
         that._layer._tileset,
@@ -1736,26 +1763,28 @@ I3SNode.prototype.load = function (isRoot) {
   if (this._nodeIndex === undefined) {
     return this._dataSource._loadJson(
       this._completeUri,
-      (data, resolve) => {
+      function (data, resolve) {
         // Success
         that._data = data;
         processData();
         resolve();
       },
-      (reject) => {
+      function (reject) {
         // Fail
         reject();
       }
     );
   }
 
-  return new _Promise((resolve, reject) => {
-    this._layer._getNodeInNodePages(this._nodeIndex).then((data) => {
-      that._data = data;
-      processData();
-      resolve();
-    });
-  });
+  return new _Promise(
+    function (resolve, reject) {
+      this._layer._getNodeInNodePages(this._nodeIndex).then(function (data) {
+        that._data = data;
+        processData();
+        resolve();
+      });
+    }.bind(this)
+  );
 };
 
 /**
@@ -1764,18 +1793,18 @@ I3SNode.prototype.load = function (isRoot) {
  */
 I3SNode.prototype.loadFields = function () {
   // check if we must load fields
-  let fields = this._layer._data.attributeStorageInfo;
-  let fieldPromiseReady = when.defer();
+  var fields = this._layer._data.attributeStorageInfo;
+  var fieldPromiseReady = when.defer();
 
-  let that = this;
+  var that = this;
   function createAndLoadField(fields, index) {
     if (!fields || index >= fields.length) {
       return fieldPromiseReady.resolve();
     }
 
-    let newField = new I3SField(that, fields[index]);
+    var newField = new I3SField(that, fields[index]);
     that._fields[newField._storageInfo.name] = newField;
-    newField.load().then(() => {
+    newField.load().then(function () {
       createAndLoadField(fields, index + 1);
     });
   }
@@ -1788,60 +1817,64 @@ I3SNode.prototype.loadFields = function () {
  * @private
  */
 I3SNode.prototype._loadChildren = function (waitAllChildren) {
-  return new _Promise((resolve, reject) => {
-    if (!this._childrenAreLoaded) {
-      this._childrenAreLoaded = true;
-      let childPromises = [];
-      if (this._data.children) {
-        for (let child of this._data.children) {
-          let newChild = new I3SNode(this, child.href ? child.href : child);
-          this._children.push(newChild);
-          let childIsLoaded = newChild.load();
-          if (waitAllChildren) {
-            childPromises.push(childIsLoaded);
+  return new _Promise(
+    function (resolve, reject) {
+      if (!this._childrenAreLoaded) {
+        this._childrenAreLoaded = true;
+        var childPromises = [];
+        if (this._data.children) {
+          for (var child of this._data.children) {
+            var newChild = new I3SNode(this, child.href ? child.href : child);
+            this._children.push(newChild);
+            var childIsLoaded = newChild.load();
+            if (waitAllChildren) {
+              childPromises.push(childIsLoaded);
+            }
+            childIsLoaded.then(
+              function () {
+                this._tile.children.push(newChild._tile);
+              }.bind(this)
+            );
           }
-          childIsLoaded.then(() => {
-            this._tile.children.push(newChild._tile);
-          });
-        }
-        if (waitAllChildren) {
-          _Promise.all(childPromises).then(() => {
+          if (waitAllChildren) {
+            _Promise.all(childPromises).then(function () {
+              resolve();
+            });
+          } else {
             resolve();
-          });
+          }
         } else {
           resolve();
         }
       } else {
         resolve();
       }
-    } else {
-      resolve();
-    }
-  });
+    }.bind(this)
+  );
 };
 
 /**
  * @private
  */
 I3SNode.prototype._loadGeometryData = function () {
-  let geometryPromises = [];
+  var geometryPromises = [];
 
   // To debug decoding for a specific tile, add a condition
   // that wraps this if/else to match the tile uri
   if (this._data.geometryData) {
-    for (let geometry of this._data.geometryData) {
-      let newGeometryData = new I3SGeometry(this, geometry.href);
+    for (var geometry of this._data.geometryData) {
+      var newGeometryData = new I3SGeometry(this, geometry.href);
       this._geometryData.push(newGeometryData);
       geometryPromises.push(newGeometryData.load());
     }
   } else if (this._data.mesh) {
-    let geometryDefinition = this._layer._findBestGeometryBuffers(
+    var geometryDefinition = this._layer._findBestGeometryBuffers(
       this._data.mesh.geometry.definition,
       ["position", "uv0"]
     );
 
-    let geometryURI = "./geometries/" + geometryDefinition.bufferIndex;
-    let newGeometryData = new I3SGeometry(this, geometryURI);
+    var geometryURI = "./geometries/" + geometryDefinition.bufferIndex;
+    var newGeometryData = new I3SGeometry(this, geometryURI);
     newGeometryData._geometryDefinitions = geometryDefinition.definition;
     newGeometryData._geometryBufferInfo = geometryDefinition.geometryBufferInfo;
     this._geometryData.push(newGeometryData);
@@ -1855,13 +1888,13 @@ I3SNode.prototype._loadGeometryData = function () {
  * @private
  */
 I3SNode.prototype._loadFeatureData = function () {
-  let featurePromises = [];
+  var featurePromises = [];
 
   // To debug decoding for a specific tile, add a condition
   // that wraps this if/else to match the tile uri
   if (this._data.featureData) {
-    for (let feature of this._data.featureData) {
-      let newfeatureData = new I3SFeature(this, feature.href);
+    for (var feature of this._data.featureData) {
+      var newfeatureData = new I3SFeature(this, feature.href);
       this._featureData.push(newfeatureData);
       featurePromises.push(newfeatureData.load());
     }
@@ -1881,11 +1914,11 @@ I3SNode.prototype._clearGeometryData = function () {
  * @private
  */
 I3SNode.prototype._create3DTileDefinition = function () {
-  let obb = this._data.obb;
-  let mbs = this._data.mbs;
+  var obb = this._data.obb;
+  var mbs = this._data.mbs;
 
-  let boundingVolume = {};
-  let position;
+  var boundingVolume = {};
+  var position;
 
   if (obb) {
     boundingVolume = {
@@ -1915,9 +1948,9 @@ I3SNode.prototype._create3DTileDefinition = function () {
   }
 
   // compute the geometric error
-  let metersPerPixel = Infinity;
+  var metersPerPixel = Infinity;
 
-  let span = 0;
+  var span = 0;
   if (this._data.mbs) {
     span = this._data.mbs[3];
   } else if (this._data.obb) {
@@ -1933,14 +1966,14 @@ I3SNode.prototype._create3DTileDefinition = function () {
       this._layer._data.nodePages.lodSelectionMetricType ===
       "maxScreenThresholdSQ"
     ) {
-      let maxScreenThreshold =
+      var maxScreenThreshold =
         Math.sqrt(this._data.lodThreshold) / (Math.PI * 0.25);
       metersPerPixel = span / maxScreenThreshold;
     } else {
       console.error("Unsupported lodSelectionMetricType in Layer");
     }
   } else if (this._data.lodSelection !== undefined) {
-    for (let lodSelection of this._data.lodSelection) {
+    for (var lodSelection of this._data.lodSelection) {
       if (lodSelection.metricType === "maxScreenThreshold") {
         metersPerPixel = span / lodSelection.maxError;
       }
@@ -1952,11 +1985,11 @@ I3SNode.prototype._create3DTileDefinition = function () {
   }
 
   // calculate the length of 16 pixels in order to trigger the screen space error
-  let geometricError = metersPerPixel * 16;
+  var geometricError = metersPerPixel * 16;
 
   // transformations
-  let hpr = new HeadingPitchRoll(0, 0, 0);
-  let orientation = Transforms.headingPitchRollQuaternion(position, hpr);
+  var hpr = new HeadingPitchRoll(0, 0, 0);
+  var orientation = Transforms.headingPitchRollQuaternion(position, hpr);
 
   if (this._data.obb) {
     orientation = new Quaternion(
@@ -1993,7 +2026,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
   this.inverseGlobalTransform = new Matrix4();
   Matrix4.inverse(this._globalTransforms, this.inverseGlobalTransform);
 
-  let localTransforms = this._globalTransforms.clone();
+  var localTransforms = this._globalTransforms.clone();
 
   if (this._parent._globalTransforms) {
     Matrix4.multiply(
@@ -2004,13 +2037,13 @@ I3SNode.prototype._create3DTileDefinition = function () {
   }
 
   // get children definition
-  let childrenDefinition = [];
-  for (let child of this._children) {
+  var childrenDefinition = [];
+  for (var child of this._children) {
     childrenDefinition.push(child._create3DTileDefinition());
   }
 
   // Create a tile set
-  let inPlaceTileDefinition = {
+  var inPlaceTileDefinition = {
     children: childrenDefinition,
     refine: "REPLACE",
     boundingVolume: boundingVolume,
@@ -2050,8 +2083,8 @@ I3SNode.prototype._create3DTileDefinition = function () {
  * @private
  */
 I3SNode.prototype._scheduleCreateContentURL = function () {
-  let that = this;
-  return new _Promise((resolve, reject) => {
+  var that = this;
+  return new _Promise(function (resolve, reject) {
     that._createContentURL(resolve, that._tile);
   });
 };
@@ -2060,7 +2093,7 @@ I3SNode.prototype._scheduleCreateContentURL = function () {
  * @private
  */
 I3SNode.prototype._createContentURL = function (resolve, tile) {
-  let rawGLTF = {
+  var rawGLTF = {
     scene: 0,
     scenes: [
       {
@@ -2086,49 +2119,58 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
   };
 
   // Feature Table
-  let featureTableJSON = JSON.stringify({ BATCH_LENGTH: 0 });
+  var featureTableJSON = JSON.stringify({ BATCH_LENGTH: 0 });
 
   // Batch Table
-  let batchTableJSON = JSON.stringify({});
+  var batchTableJSON = JSON.stringify({});
 
   // Load the geometry data
-  let dataPromises = [this._loadFeatureData(), this._loadGeometryData()];
+  var dataPromises = [this._loadFeatureData(), this._loadGeometryData()];
 
-  _Promise.all(dataPromises).then(() => {
-    // Binary GLTF
-    let generateGLTF = new _Promise((resolve, reject) => {
-      if (this._geometryData && this._geometryData.length > 0) {
-        let task = this._dataSource._GLTFProcessingQueue.addTask({
-          geometryData: this._geometryData[0],
-          featureData: this._featureData,
-          defaultGeometrySchema: this._layer._data.store.defaultGeometrySchema,
-          url: this._geometryData[0]._completeUri,
-          tile: this._tile,
-        });
-        task.then((data) => {
-          rawGLTF = data.gltfData;
-          this._geometryData[0].customAttributes = data.customAttributes;
-          resolve();
-        });
-      } else {
-        resolve();
-      }
-    });
-
-    generateGLTF.then(() => {
-      let binaryGLTFData = this._dataSource._binarizeGLTF(rawGLTF);
-      let b3dmRawData = this._dataSource._binarizeB3DM(
-        featureTableJSON,
-        batchTableJSON,
-        binaryGLTFData
+  _Promise.all(dataPromises).then(
+    function () {
+      // Binary GLTF
+      var generateGLTF = new _Promise(
+        function (resolve, reject) {
+          if (this._geometryData && this._geometryData.length > 0) {
+            var task = this._dataSource._GLTFProcessingQueue.addTask({
+              geometryData: this._geometryData[0],
+              featureData: this._featureData,
+              defaultGeometrySchema: this._layer._data.store
+                .defaultGeometrySchema,
+              url: this._geometryData[0]._completeUri,
+              tile: this._tile,
+            });
+            task.then(
+              function (data) {
+                rawGLTF = data.gltfData;
+                this._geometryData[0].customAttributes = data.customAttributes;
+                resolve();
+              }.bind(this)
+            );
+          } else {
+            resolve();
+          }
+        }.bind(this)
       );
-      let b3dmDataBlob = new Blob([b3dmRawData], {
-        type: "application/binary",
-      });
-      this._b3dmURL = URL.createObjectURL(b3dmDataBlob);
-      resolve();
-    });
-  });
+
+      generateGLTF.then(
+        function () {
+          var binaryGLTFData = this._dataSource._binarizeGLTF(rawGLTF);
+          var b3dmRawData = this._dataSource._binarizeB3DM(
+            featureTableJSON,
+            batchTableJSON,
+            binaryGLTFData
+          );
+          var b3dmDataBlob = new Blob([b3dmRawData], {
+            type: "application/binary",
+          });
+          this._b3dmURL = URL.createObjectURL(b3dmDataBlob);
+          resolve();
+        }.bind(this)
+      );
+    }.bind(this)
+  );
 };
 
 /**
@@ -2138,19 +2180,19 @@ I3SNode.prototype._createVisualElements = function () {
   if (!this._dataSource._traceVisuals) {
     return;
   }
-  let obb = this._data.obb;
-  let mbs = this._data.mbs;
+  var obb = this._data.obb;
+  var mbs = this._data.mbs;
 
   if (obb) {
     // Add an entity for display
-    let orientation = new Quaternion(
+    var orientation = new Quaternion(
       obb.quaternion[0],
       obb.quaternion[1],
       obb.quaternion[2],
       obb.quaternion[3]
     );
 
-    let position = _WGS84ToCartesian(
+    var position = _WGS84ToCartesian(
       obb.center[0],
       obb.center[1],
       obb.center[2]
@@ -2172,7 +2214,7 @@ I3SNode.prototype._createVisualElements = function () {
       },
     });
   } else if (mbs) {
-    let position = _WGS84ToCartesian(mbs[0], mbs[1], mbs[2]);
+    var position = _WGS84ToCartesian(mbs[0], mbs[1], mbs[2]);
 
     // Add an entity for display
     this._entities.locator = this._dataSource.entities.add({
@@ -2211,7 +2253,7 @@ function I3SFeature(parent, uri) {
   this._dataSource = parent._dataSource;
   this._layer = parent._layer;
   this._uri = uri;
-  let query = "";
+  var query = "";
   if (this._dataSource._query && this._dataSource._query !== "") {
     query = "?" + this._dataSource._query;
   }
@@ -2261,11 +2303,11 @@ Object.defineProperties(I3SFeature.prototype, {
 I3SFeature.prototype.load = function () {
   return this._dataSource._loadJson(
     this._completeUri,
-    (data, resolve) => {
+    function (data, resolve) {
       this._data = data;
       resolve();
-    },
-    (reject) => {
+    }.bind(this),
+    function (reject) {
       reject();
     }
   );
@@ -2293,7 +2335,7 @@ function I3SField(parent, storageInfo) {
   this._parent = parent;
   this._dataSource = parent._dataSource;
   this._uri = "/attributes/" + storageInfo.key + "/0";
-  let query = "";
+  var query = "";
   if (this._dataSource._query && this._dataSource._query !== "") {
     query = "?" + this._dataSource._query;
   }
@@ -2365,13 +2407,13 @@ Object.defineProperties(I3SField.prototype, {
 I3SField.prototype.load = function () {
   return this._dataSource._loadBinary(
     this._completeUri,
-    (data, resolve) => {
+    function (data, resolve) {
       // check if we have a 404
-      let dataView = new DataView(data);
-      let success = true;
+      var dataView = new DataView(data);
+      var success = true;
       if (dataView.getUint8(0) === "{".charCodeAt(0)) {
-        let textContent = new TextDecoder();
-        let str = textContent.decode(data);
+        var textContent = new TextDecoder();
+        var str = textContent.decode(data);
         if (str.includes("404")) {
           success = false;
           console.error("Failed to load:", this._completeUri);
@@ -2380,7 +2422,7 @@ I3SField.prototype.load = function () {
 
       if (success) {
         this._data = data;
-        let offset = this._parseHeader(dataView);
+        var offset = this._parseHeader(dataView);
 
         // @TODO: find out why we must skip 4 bytes when the value type is float 64
         if (
@@ -2395,8 +2437,8 @@ I3SField.prototype.load = function () {
       }
 
       resolve();
-    },
-    (reject) => {
+    }.bind(this),
+    function (reject) {
       reject();
     }
   );
@@ -2406,7 +2448,7 @@ I3SField.prototype.load = function () {
  * @private
  */
 I3SField.prototype._parseValue = function (dataView, type, offset) {
-  let value = null;
+  var value = null;
   if (type === "UInt8") {
     value = dataView.getUint8(offset);
     offset += 1;
@@ -2455,10 +2497,10 @@ I3SField.prototype._parseValue = function (dataView, type, offset) {
  * @private
  */
 I3SField.prototype._parseHeader = function (dataView) {
-  let offset = 0;
+  var offset = 0;
   this._header = {};
-  for (let item of this._storageInfo.header) {
-    let parsedValue = this._parseValue(dataView, item.valueType, offset);
+  for (var item of this._storageInfo.header) {
+    var parsedValue = this._parseValue(dataView, item.valueType, offset);
     this._header[item.property] = parsedValue.value;
     offset = parsedValue.offset;
   }
@@ -2470,20 +2512,20 @@ I3SField.prototype._parseHeader = function (dataView) {
  */
 I3SField.prototype._parseBody = function (dataView, offset) {
   this._values = {};
-  for (let item of this._storageInfo.ordering) {
-    let desc = this._storageInfo[item];
+  for (var item of this._storageInfo.ordering) {
+    var desc = this._storageInfo[item];
     if (desc) {
       this._values[item] = [];
-      for (let index = 0; index < this._header.count; ++index) {
+      for (var index = 0; index < this._header.count; ++index) {
         if (desc.valueType !== "String") {
-          let parsedValue = this._parseValue(dataView, desc.valueType, offset);
+          var parsedValue = this._parseValue(dataView, desc.valueType, offset);
           this._values[item].push(parsedValue.value);
           offset = parsedValue.offset;
         } else {
-          let stringLen = this._values.attributeByteCounts[index];
-          let stringContent = "";
-          for (let cIndex = 0; cIndex < stringLen; ++cIndex) {
-            let parsedValue = this._parseValue(
+          var stringLen = this._values.attributeByteCounts[index];
+          var stringContent = "";
+          for (var cIndex = 0; cIndex < stringLen; ++cIndex) {
+            var parsedValue = this._parseValue(
               dataView,
               desc.valueType,
               offset
@@ -2521,7 +2563,7 @@ function I3SGeometry(parent, uri) {
   this._dataSource = parent._dataSource;
   this._layer = parent._layer;
   this._uri = uri;
-  let query = "";
+  var query = "";
   if (this._dataSource._query && this._dataSource._query !== "") {
     query = "?" + this._dataSource._query;
   }
@@ -2581,11 +2623,11 @@ Object.defineProperties(I3SGeometry.prototype, {
 I3SGeometry.prototype.load = function () {
   return this._dataSource._loadBinary(
     this._completeUri,
-    (data, resolve) => {
+    function (data, resolve) {
       this._data = data;
       resolve();
-    },
-    (reject) => {
+    }.bind(this),
+    function (reject) {
       reject();
     }
   );
@@ -2604,24 +2646,24 @@ I3SGeometry.prototype.load = function () {
  */
 I3SGeometry.prototype.getClosestPointIndex = function (px, py, pz) {
   if (this.customAttributes && this.customAttributes.positions) {
-    let transformation = new Matrix4();
+    var transformation = new Matrix4();
     transformation = Matrix4.inverse(
       this._parent._tile.computedTransform,
       transformation
     );
 
     // convert queried position to local
-    let position = new Cartesian4(px, py, pz, 1);
+    var position = new Cartesian4(px, py, pz, 1);
     position = Matrix4.multiplyByVector(transformation, position, position);
 
     // Brute force lookup, @TODO: this can be improved with a spatial partitioning search system
-    let count = this.customAttributes.positions.length;
-    let bestIndex = -1;
-    let bestDistanceSquared = Number.MAX_VALUE;
-    let bestX, bestY, bestZ;
-    let x, y, z, distanceSquared;
-    let positions = this.customAttributes.positions;
-    for (let loop = 0; loop < count; loop += 3) {
+    var count = this.customAttributes.positions.length;
+    var bestIndex = -1;
+    var bestDistanceSquared = Number.MAX_VALUE;
+    var bestX, bestY, bestZ;
+    var x, y, z, distanceSquared;
+    var positions = this.customAttributes.positions;
+    for (var loop = 0; loop < count; loop += 3) {
       x = positions[loop] - position.x;
       y = positions[loop + 1] - position.y;
       z = positions[loop + 2] - position.z;
@@ -2670,18 +2712,18 @@ I3SGeometry.prototype._generateGLTF = function (
   bufferViews,
   accessors
 ) {
-  let query = "";
+  var query = "";
   if (this._dataSource._query && this._dataSource._query !== "") {
     query = "?" + this._dataSource._query;
   }
 
   // Get the material definition
-  let materialInfo = this._parent._data.mesh
+  var materialInfo = this._parent._data.mesh
     ? this._parent._data.mesh.material
     : null;
-  let materialIndex = 0;
-  let isTextured = false;
-  let gltfMaterial = {
+  var materialIndex = 0;
+  var isTextured = false;
+  var gltfMaterial = {
     pbrMetallicRoughness: {
       metallicFactor: 0.0,
     },
@@ -2693,7 +2735,7 @@ I3SGeometry.prototype._generateGLTF = function (
     materialIndex = materialInfo.definition;
   }
 
-  let materialDefinition;
+  var materialDefinition;
   if (this._layer._data.materialDefinitions) {
     materialDefinition = this._layer._data.materialDefinitions[materialIndex];
   }
@@ -2710,7 +2752,7 @@ I3SGeometry.prototype._generateGLTF = function (
     }
   }
 
-  let texturePath;
+  var texturePath;
 
   if (this._parent._data.textureData) {
     texturePath =
@@ -2720,12 +2762,12 @@ I3SGeometry.prototype._generateGLTF = function (
       query;
   } else {
     // Choose the JPG for the texture
-    let textureName = "0";
+    var textureName = "0";
 
     if (this._layer._data.textureSetDefinitions) {
-      for (let textureSetDefinition of this._layer._data
+      for (var textureSetDefinition of this._layer._data
         .textureSetDefinitions) {
-        for (let textureFormat of textureSetDefinition.formats) {
+        for (var textureFormat of textureSetDefinition.formats) {
           if (textureFormat.format === "jpg") {
             textureName = textureFormat.name;
             break;
@@ -2745,9 +2787,9 @@ I3SGeometry.prototype._generateGLTF = function (
     }
   }
 
-  let gltfTextures = [];
-  let gltfImages = [];
-  let gltfSamplers = [];
+  var gltfTextures = [];
+  var gltfImages = [];
+  var gltfSamplers = [];
 
   if (isTextured) {
     gltfTextures = [
@@ -2775,7 +2817,7 @@ I3SGeometry.prototype._generateGLTF = function (
     gltfMaterial.pbrMetallicRoughness.baseColorTexture.index = 0;
   }
 
-  let gltfData = {
+  var gltfData = {
     scene: 0,
     scenes: [
       {
@@ -2827,24 +2869,26 @@ Cesium3DTile.prototype._hookedRequestContent =
  */
 Cesium3DTile.prototype._resolveHookedObject = function () {
   // Keep a handle on the early promises
-  let _contentReadyToProcessPromise = this._contentReadyToProcessPromise;
-  let _contentReadyPromise = this._contentReadyPromise;
+  var _contentReadyToProcessPromise = this._contentReadyToProcessPromise;
+  var _contentReadyPromise = this._contentReadyPromise;
 
   // Call the real requestContent function
   this._hookedRequestContent();
 
   // Fulfill the promises
   if (_contentReadyToProcessPromise) {
-    this._contentReadyToProcessPromise.then(() => {
+    this._contentReadyToProcessPromise.then(function () {
       _contentReadyToProcessPromise.resolve();
     });
   }
 
   if (_contentReadyPromise) {
-    this._contentReadyPromise.then(() => {
-      this._isLoading = false;
-      this._content._contentReadyPromise.resolve();
-    });
+    this._contentReadyPromise.then(
+      function () {
+        this._isLoading = false;
+        this._content._contentReadyPromise.resolve();
+      }.bind(this)
+    );
   }
 };
 
@@ -2856,7 +2900,7 @@ Cesium3DTile.prototype.requestContent = function () {
   if (!this._isLoading) {
     this._isLoading = true;
 
-    let key = this._contentResource._url;
+    var key = this._contentResource._url;
     if (this._contentResource._originalUrl) {
       key = this._contentResource._originalUrl;
     }
@@ -2865,7 +2909,7 @@ Cesium3DTile.prototype.requestContent = function () {
       key = key.slice(5);
     }
 
-    let content = _i3sContentCache[key];
+    var content = _i3sContentCache[key];
     if (!content) {
       console.error("invalid key", key, _i3sContentCache);
       this._resolveHookedObject();
@@ -2878,14 +2922,16 @@ Cesium3DTile.prototype.requestContent = function () {
       this._contentReadyToProcessPromise = when.defer();
       this._contentReadyPromise = when.defer();
 
-      this._i3sNode._scheduleCreateContentURL().then(() => {
-        if (!this._contentResource._originalUrl) {
-          this._contentResource._originalUrl = this._contentResource._url;
-        }
+      this._i3sNode._scheduleCreateContentURL().then(
+        function () {
+          if (!this._contentResource._originalUrl) {
+            this._contentResource._originalUrl = this._contentResource._url;
+          }
 
-        this._contentResource._url = this._i3sNode._b3dmURL;
-        this._resolveHookedObject();
-      });
+          this._contentResource._url = this._i3sNode._b3dmURL;
+          this._resolveHookedObject();
+        }.bind(this)
+      );
     }
 
     // Returns the number of requests
@@ -2926,38 +2972,38 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 ..######...#######..########..########
 */
 function _workerCode() {
-  let _tracecode = false;
-  let traceCode = function () {};
+  var _tracecode = false;
+  var traceCode = function () {};
   if (_tracecode) {
     traceCode = console.log;
   }
 
   // adapted from Ellipsoid.prototype.geodeticSurfaceNormalCartographic in Ellipsoid.js
   function geodeticSurfaceNormalCartographic(cartographic, result) {
-    let longitude = cartographic.longitude;
-    let latitude = cartographic.latitude;
-    let cosLatitude = Math.cos(latitude);
+    var longitude = cartographic.longitude;
+    var latitude = cartographic.latitude;
+    var cosLatitude = Math.cos(latitude);
 
-    let x = cosLatitude * Math.cos(longitude);
-    let y = cosLatitude * Math.sin(longitude);
-    let z = Math.sin(latitude);
+    var x = cosLatitude * Math.cos(longitude);
+    var y = cosLatitude * Math.sin(longitude);
+    var z = Math.sin(latitude);
 
     // Normalize
-    let length = Math.sqrt(x * x + y * y + z * z);
+    var length = Math.sqrt(x * x + y * y + z * z);
     result.x = x / length;
     result.y = y / length;
     result.z = z / length;
   }
 
   // adapted from Ellipsoid.prototype.cartographicToCartesian in Ellipsoid.js
-  let n = { x: 0, y: 0, z: 0 };
-  let k = { x: 0, y: 0, z: 0 };
+  var n = { x: 0, y: 0, z: 0 };
+  var k = { x: 0, y: 0, z: 0 };
   function cartographicToCartesian(cartographic, ellipsoidRadiiSquare, result) {
     geodeticSurfaceNormalCartographic(cartographic, n);
     k.x = ellipsoidRadiiSquare.x * n.x;
     k.y = ellipsoidRadiiSquare.y * n.y;
     k.z = ellipsoidRadiiSquare.z * n.z;
-    let gamma = Math.sqrt(n.x * k.x + n.y * k.y + n.z * k.z);
+    var gamma = Math.sqrt(n.x * k.x + n.y * k.y + n.z * k.z);
     k.x /= gamma;
     k.y /= gamma;
     k.z /= gamma;
@@ -2973,9 +3019,9 @@ function _workerCode() {
 
   // adapted from Matrix3.multiplyByVector in Matrix3.js
   function multiplyByVector(matrix, cartesian, result) {
-    let vX = cartesian.x;
-    let vY = cartesian.y;
-    let vZ = cartesian.z;
+    var vX = cartesian.x;
+    var vY = cartesian.y;
+    var vZ = cartesian.z;
 
     result.x = matrix[0] * vX + matrix[3] * vY + matrix[6] * vZ;
     result.y = matrix[1] * vX + matrix[4] * vY + matrix[7] * vZ;
@@ -2983,31 +3029,31 @@ function _workerCode() {
   }
 
   const _degToRad = 0.017453292519943;
-  let cartographic = {
+  var cartographic = {
     longitude: 0,
     latitude: 0,
     height: 0,
   };
 
-  let position = {
+  var position = {
     x: 0,
     y: 0,
     z: 0,
   };
 
-  let normal = {
+  var normal = {
     x: 0,
     y: 0,
     z: 0,
   };
 
-  let rotatedPosition = {
+  var rotatedPosition = {
     x: 0,
     y: 0,
     z: 0,
   };
 
-  let rotatedNormal = {
+  var rotatedNormal = {
     x: 0,
     y: 0,
     z: 0,
@@ -3042,7 +3088,7 @@ function _workerCode() {
   }
 
   function geodeticLatitudeToMercatorAngle(latitude) {
-    let maximumLatitude = mercatorAngleToGeodeticLatitude(Math.PI);
+    var maximumLatitude = mercatorAngleToGeodeticLatitude(Math.PI);
 
     // Clamp the latitude coordinate to the valid Mercator bounds.
     if (latitude > maximumLatitude) {
@@ -3055,36 +3101,36 @@ function _workerCode() {
   }
 
   function geographicToWebMercator(lon, lat, ellipsoid) {
-    let semimajorAxis = ellipsoid._maximumRadius;
+    var semimajorAxis = ellipsoid._maximumRadius;
 
     var x = lon * semimajorAxis;
     var y = geodeticLatitudeToMercatorAngle(lat) * semimajorAxis;
 
-    let result = { x: x, y: y };
+    var result = { x: x, y: y };
     return { x: x, y: y };
   }
 
   function bilinearInterpolate(tx, ty, h00, h10, h01, h11) {
-    let a = h00 * (1 - tx) + h10 * tx;
-    let b = h01 * (1 - tx) + h11 * tx;
+    var a = h00 * (1 - tx) + h10 * tx;
+    var b = h01 * (1 - tx) + h11 * tx;
     return a * (1 - ty) + b * ty;
   }
 
   function sampleMap(u, v, width, data) {
-    let address = u + v * width;
+    var address = u + v * width;
     return data[address];
   }
 
   function sampleGeoid(sampleX, sampleY, geoidData) {
-    let extent = geoidData.nativeExtent;
-    let x =
+    var extent = geoidData.nativeExtent;
+    var x =
       ((sampleX - extent.west) / (extent.east - extent.west)) *
       (geoidData.width - 1);
-    let y =
+    var y =
       ((sampleY - extent.south) / (extent.north - extent.south)) *
       (geoidData.height - 1);
-    let xi = Math.floor(x);
-    let yi = Math.floor(y);
+    var xi = Math.floor(x);
+    var yi = Math.floor(y);
 
     x -= xi;
     y -= yi;
@@ -3095,29 +3141,29 @@ function _workerCode() {
     yi = geoidData.height - 1 - yi;
     yNext = geoidData.height - 1 - yNext;
 
-    let h00 = sampleMap(xi, yi, geoidData.width, geoidData.buffer);
-    let h10 = sampleMap(xNext, yi, geoidData.width, geoidData.buffer);
-    let h01 = sampleMap(xi, yNext, geoidData.width, geoidData.buffer);
-    let h11 = sampleMap(xNext, yNext, geoidData.width, geoidData.buffer);
+    var h00 = sampleMap(xi, yi, geoidData.width, geoidData.buffer);
+    var h10 = sampleMap(xNext, yi, geoidData.width, geoidData.buffer);
+    var h01 = sampleMap(xi, yNext, geoidData.width, geoidData.buffer);
+    var h11 = sampleMap(xNext, yNext, geoidData.width, geoidData.buffer);
 
-    let finalHeight = bilinearInterpolate(x, y, h00, h10, h01, h11);
+    var finalHeight = bilinearInterpolate(x, y, h00, h10, h01, h11);
     finalHeight = finalHeight * geoidData.scale + geoidData.offset;
     return finalHeight;
   }
 
   function sampleGeoidFromList(lon, lat, geoidDataList) {
-    for (let i in geoidDataList) {
-      let pt = {
+    for (var i in geoidDataList) {
+      var pt = {
         longitude: lon,
         latitude: lat,
         height: 0,
       };
 
-      let localExtent = geoidDataList[i].nativeExtent;
-      let lonRadian = (lon / 180) * Math.PI;
-      let latRadian = (lat / 180) * Math.PI;
+      var localExtent = geoidDataList[i].nativeExtent;
+      var lonRadian = (lon / 180) * Math.PI;
+      var latRadian = (lat / 180) * Math.PI;
 
-      let localPt = {};
+      var localPt = {};
       if (geoidDataList[i].projectionType === "WebMercator") {
         localPt = geographicToWebMercator(
           lonRadian,
@@ -3152,15 +3198,15 @@ function _workerCode() {
     fast
   ) {
     // Fast conversion (using the center of the tile)
-    let height = sampleGeoidFromList(center.long, center.lat, geoidDataList);
+    var height = sampleGeoidFromList(center.long, center.lat, geoidDataList);
 
     if (fast) {
-      for (let index = 0; index < vertexCount; ++index) {
+      for (var index = 0; index < vertexCount; ++index) {
         position[index * 3 + 2] += height;
       }
     } else {
-      for (let index = 0; index < vertexCount; ++index) {
-        let height = sampleGeoidFromList(
+      for (var index = 0; index < vertexCount; ++index) {
+        var height = sampleGeoidFromList(
           center.long + scale_x * position[index * 3],
           center.lat + scale_y * position[index * 3 + 1],
           geoidDataList
@@ -3178,7 +3224,7 @@ function _workerCode() {
   ....##....##...##...#########.##..####.......##.##.......##.....##.##...##...##.....##
   ....##....##....##..##.....##.##...###.##....##.##.......##.....##.##....##..##.....##
   ....##....##.....##.##.....##.##....##..######..##........#######..##.....##.##.....##
-  
+
   .##........#######...######.....###....##......
   .##.......##.....##.##....##...##.##...##......
   .##.......##.....##.##........##...##..##......
@@ -3208,10 +3254,10 @@ function _workerCode() {
     }
 
     traceCode("converting " + vertexCount + " vertices ");
-    for (let i = 0; i < vertexCount; ++i) {
-      let indexOffset = i * 3;
-      let indexOffset1 = indexOffset + 1;
-      let indexOffset2 = indexOffset + 2;
+    for (var i = 0; i < vertexCount; ++i) {
+      var indexOffset = i * 3;
+      var indexOffset1 = indexOffset + 1;
+      var indexOffset2 = indexOffset + 2;
 
       // Convert position from long, lat, height to Cartesian
       cartographic.longitude =
@@ -3260,12 +3306,12 @@ function _workerCode() {
   */
 
   function cropUVs(vertexCount, uv0s, uvRegions) {
-    for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
-      let minU = uvRegions[vertexIndex * 4] / 65535.0;
-      let minV = uvRegions[vertexIndex * 4 + 1] / 65535.0;
-      let scaleU =
+    for (var vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+      var minU = uvRegions[vertexIndex * 4] / 65535.0;
+      var minV = uvRegions[vertexIndex * 4 + 1] / 65535.0;
+      var scaleU =
         (uvRegions[vertexIndex * 4 + 2] - uvRegions[vertexIndex * 4]) / 65535.0;
-      let scaleV =
+      var scaleV =
         (uvRegions[vertexIndex * 4 + 3] - uvRegions[vertexIndex * 4 + 1]) /
         65535.0;
 
@@ -3285,7 +3331,7 @@ function _workerCode() {
   .##....##..##.......##..####.##.......##...##...#########....##....##......
   .##....##..##.......##...###.##.......##....##..##.....##....##....##......
   ..######...########.##....##.########.##.....##.##.....##....##....########
-  
+
   .####.##....##.########.########.########..##....##....###....##......
   ..##..###...##....##....##.......##.....##.###...##...##.##...##......
   ..##..####..##....##....##.......##.....##.####..##..##...##..##......
@@ -3293,7 +3339,7 @@ function _workerCode() {
   ..##..##..####....##....##.......##...##...##..####.#########.##......
   ..##..##...###....##....##.......##....##..##...###.##.....##.##......
   .####.##....##....##....########.##.....##.##....##.##.....##.########
-  
+
   .########..##.....##.########.########.########.########.
   .##.....##.##.....##.##.......##.......##.......##.....##
   .##.....##.##.....##.##.......##.......##.......##.....##
@@ -3326,12 +3372,12 @@ function _workerCode() {
       };
     }
 
-    let buffers = [];
-    let bufferViews = [];
-    let accessors = [];
-    let meshes = [];
-    let nodes = [];
-    let nodesInScene = [];
+    var buffers = [];
+    var bufferViews = [];
+    var accessors = [];
+    var meshes = [];
+    var nodes = [];
+    var nodesInScene = [];
 
     // if we provide indices, then the vertex count is the length
     // of that array, otherwise we assume non-indexed triangle
@@ -3340,77 +3386,77 @@ function _workerCode() {
     }
 
     // allocate array
-    let indexArray = new Uint32Array(vertexCount);
+    var indexArray = new Uint32Array(vertexCount);
 
     if (indices) {
       // set the indices
-      for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+      for (var vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
         indexArray[vertexIndex] = indices[vertexIndex];
       }
     } else {
       // generate indices
-      for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+      for (var vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
         indexArray[vertexIndex] = vertexIndex;
       }
     }
 
     // push to the buffers, bufferViews and accessors
-    let indicesBlob = new Blob([indexArray], { type: "application/binary" });
-    let indicesURL = URL.createObjectURL(indicesBlob);
+    var indicesBlob = new Blob([indexArray], { type: "application/binary" });
+    var indicesURL = URL.createObjectURL(indicesBlob);
 
-    let endIndex = vertexCount;
+    var endIndex = vertexCount;
 
     // POSITIONS
-    let meshPositions = positions.subarray(0, endIndex * 3);
-    let positionsBlob = new Blob([meshPositions], {
+    var meshPositions = positions.subarray(0, endIndex * 3);
+    var positionsBlob = new Blob([meshPositions], {
       type: "application/binary",
     });
-    let positionsURL = URL.createObjectURL(positionsBlob);
+    var positionsURL = URL.createObjectURL(positionsBlob);
 
     // NORMALS
-    let meshNormals = normals ? normals.subarray(0, endIndex * 3) : null;
-    let normalsURL = null;
+    var meshNormals = normals ? normals.subarray(0, endIndex * 3) : null;
+    var normalsURL = null;
     if (meshNormals) {
-      let normalsBlob = new Blob([meshNormals], {
+      var normalsBlob = new Blob([meshNormals], {
         type: "application/binary",
       });
       normalsURL = URL.createObjectURL(normalsBlob);
     }
 
     // UV0s
-    let meshUv0s = uv0s ? uv0s.subarray(0, endIndex * 2) : null;
-    let uv0URL = null;
+    var meshUv0s = uv0s ? uv0s.subarray(0, endIndex * 2) : null;
+    var uv0URL = null;
     if (meshUv0s) {
-      let uv0Blob = new Blob([meshUv0s], { type: "application/binary" });
+      var uv0Blob = new Blob([meshUv0s], { type: "application/binary" });
       uv0URL = URL.createObjectURL(uv0Blob);
     }
 
     // Colors
     // @TODO: check we can directly import vertex colors as bytes instead
     // of having to convert to float
-    let meshColorsInBytes = colors ? colors.subarray(0, endIndex * 4) : null;
-    let meshColors = null;
-    let colorsURL = null;
+    var meshColorsInBytes = colors ? colors.subarray(0, endIndex * 4) : null;
+    var meshColors = null;
+    var colorsURL = null;
     if (meshColorsInBytes) {
-      let colorCount = meshColorsInBytes.length;
+      var colorCount = meshColorsInBytes.length;
       meshColors = new Float32Array(colorCount);
-      for (let i = 0; i < colorCount; ++i) {
+      for (var i = 0; i < colorCount; ++i) {
         meshColors[i] = meshColorsInBytes[i] / 255.0;
       }
 
-      let colorsBlob = new Blob([meshColors], { type: "application/binary" });
+      var colorsBlob = new Blob([meshColors], { type: "application/binary" });
       colorsURL = URL.createObjectURL(colorsBlob);
     }
 
-    let posIndex = 0;
-    let normalIndex = 0;
-    let uv0Index = 0;
-    let colorIndex = 0;
-    let indicesIndex = 0;
+    var posIndex = 0;
+    var normalIndex = 0;
+    var uv0Index = 0;
+    var colorIndex = 0;
+    var indicesIndex = 0;
 
-    let currentIndex = posIndex;
+    var currentIndex = posIndex;
 
-    let attributes = {};
+    var attributes = {};
 
     // POSITIONS
     attributes.POSITION = posIndex;
@@ -3566,7 +3612,7 @@ function _workerCode() {
   .##....##..##.......##.....##.##.....##.##..........##....##...##......##...
   .##....##..##.......##.....##.##.....##.##..........##....##....##.....##...
   ..######...########..#######..##.....##.########....##....##.....##....##...
-  
+
   .########..########..######...#######..########..########.########.
   .##.....##.##.......##....##.##.....##.##.....##.##.......##.....##
   .##.....##.##.......##.......##.....##.##.....##.##.......##.....##
@@ -3577,7 +3623,7 @@ function _workerCode() {
   */
 
   function decode(data, schema, bufferInfo, featureData) {
-    let magicNumber = new Uint8Array(data, 0, 5);
+    var magicNumber = new Uint8Array(data, 0, 5);
     if (
       magicNumber[0] === "D".charCodeAt() &&
       magicNumber[1] === "R".charCodeAt() &&
@@ -3598,7 +3644,7 @@ function _workerCode() {
   .##.....##.##...##...#########.##.......##.....##
   .##.....##.##....##..##.....##.##....##.##.....##
   .########..##.....##.##.....##..######...#######.
-  
+
   .########..########..######...#######..########..########.########.
   .##.....##.##.......##....##.##.....##.##.....##.##.......##.....##
   .##.....##.##.......##.......##.....##.##.....##.##.......##.....##
@@ -3614,35 +3660,35 @@ function _workerCode() {
     const dracoDecoderModule = DracoDecoderModule();
     const buffer = new dracoDecoderModule.DecoderBuffer();
 
-    let byteArray = new Uint8Array(data);
+    var byteArray = new Uint8Array(data);
     buffer.Init(byteArray, byteArray.length);
 
     // Create a buffer to hold the encoded data.
     const dracoDecoder = new dracoDecoderModule.Decoder();
     const geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
-    let metadataQuerier = new dracoDecoderModule.MetadataQuerier();
+    var metadataQuerier = new dracoDecoderModule.MetadataQuerier();
 
     // Decode the encoded geometry.
     // See: https://github.com/google/draco/blob/master/src/draco/javascript/emscripten/draco_web_decoder.idl
-    let dracoGeometry;
-    let status;
+    var dracoGeometry;
+    var status;
     if (geometryType === dracoDecoderModule.TRIANGULAR_MESH) {
       dracoGeometry = new dracoDecoderModule.Mesh();
       status = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
     }
 
-    let decodedGeometry = {
+    var decodedGeometry = {
       vertexCount: [0],
       featureCount: 0,
     };
 
     // if all is OK
     if (status && status.ok() && dracoGeometry.ptr !== 0) {
-      let faceCount = dracoGeometry.num_faces();
-      let attributesCount = dracoGeometry.num_attributes();
-      let vertexCount = dracoGeometry.num_points();
+      var faceCount = dracoGeometry.num_faces();
+      var attributesCount = dracoGeometry.num_attributes();
+      var vertexCount = dracoGeometry.num_points();
       decodedGeometry.indices = new Uint32Array(faceCount * 3);
-      let faces = decodedGeometry.indices;
+      var faces = decodedGeometry.indices;
 
       decodedGeometry.vertexCount[0] = vertexCount;
       decodedGeometry.scale_x = 1;
@@ -3650,8 +3696,8 @@ function _workerCode() {
 
       // Decode faces
       // @TODO: Replace that code with GetTrianglesUInt32Array for better efficiency
-      let face = new dracoDecoderModule.DracoInt32Array(3);
-      for (let index = 0; index < faceCount; ++index) {
+      var face = new dracoDecoderModule.DracoInt32Array(3);
+      for (var index = 0; index < faceCount; ++index) {
         dracoDecoder.GetFaceFromMesh(dracoGeometry, index, face);
         faces[index * 3] = face.GetValue(0);
         faces[index * 3 + 1] = face.GetValue(1);
@@ -3660,10 +3706,10 @@ function _workerCode() {
 
       dracoDecoderModule.destroy(face);
 
-      for (let index = 0; index < attributesCount; ++index) {
-        let dracoAttribute = dracoDecoder.GetAttribute(dracoGeometry, index);
+      for (var index = 0; index < attributesCount; ++index) {
+        var dracoAttribute = dracoDecoder.GetAttribute(dracoGeometry, index);
 
-        let attributeData = decodeDracoAttribute(
+        var attributeData = decodeDracoAttribute(
           dracoDecoderModule,
           dracoDecoder,
           dracoGeometry,
@@ -3672,8 +3718,8 @@ function _workerCode() {
         );
 
         // initial mapping
-        let dracoAttributeType = dracoAttribute.attribute_type();
-        let attributei3sName = "unknown";
+        var dracoAttributeType = dracoAttribute.attribute_type();
+        var attributei3sName = "unknown";
 
         if (dracoAttributeType === dracoDecoderModule.POSITION) {
           attributei3sName = "positions";
@@ -3686,12 +3732,12 @@ function _workerCode() {
         }
 
         // get the metadata
-        let metadata = dracoDecoder.GetAttributeMetadata(dracoGeometry, index);
+        var metadata = dracoDecoder.GetAttributeMetadata(dracoGeometry, index);
 
         if (metadata.ptr) {
-          let numEntries = metadataQuerier.NumEntries(metadata);
-          for (let entry = 0; entry < numEntries; ++entry) {
-            let entryName = metadataQuerier.GetEntryName(metadata, entry);
+          var numEntries = metadataQuerier.NumEntries(metadata);
+          for (var entry = 0; entry < numEntries; ++entry) {
+            var entryName = metadataQuerier.GetEntryName(metadata, entry);
             if (entryName === "i3s-scale_x") {
               decodedGeometry.scale_x = metadataQuerier.GetDoubleEntry(
                 metadata,
@@ -3738,15 +3784,15 @@ function _workerCode() {
     dracoAttribute,
     vertexCount
   ) {
-    let bufferSize = dracoAttribute.num_components() * vertexCount;
-    let dracoAttributeData = null;
+    var bufferSize = dracoAttribute.num_components() * vertexCount;
+    var dracoAttributeData = null;
 
-    let handlers = [
+    var handlers = [
       function () {}, // DT_INVALID - 0
       function () {
         // DT_INT8 - 1
         dracoAttributeData = new dracoDecoderModule.DracoInt8Array(bufferSize);
-        let success = dracoDecoder.GetAttributeInt8ForAllPoints(
+        var success = dracoDecoder.GetAttributeInt8ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3755,8 +3801,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Int8Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Int8Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3764,7 +3810,7 @@ function _workerCode() {
       function () {
         // DT_UINT8 - 2
         dracoAttributeData = new dracoDecoderModule.DracoInt8Array(bufferSize);
-        let success = dracoDecoder.GetAttributeUInt8ForAllPoints(
+        var success = dracoDecoder.GetAttributeUInt8ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3773,8 +3819,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Uint8Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Uint8Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3782,7 +3828,7 @@ function _workerCode() {
       function () {
         // DT_INT16 - 3
         dracoAttributeData = new dracoDecoderModule.DracoInt16Array(bufferSize);
-        let success = dracoDecoder.GetAttributeInt16ForAllPoints(
+        var success = dracoDecoder.GetAttributeInt16ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3791,8 +3837,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Int16Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Int16Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3800,7 +3846,7 @@ function _workerCode() {
       function () {
         // DT_UINT16 - 4
         dracoAttributeData = new dracoDecoderModule.DracoInt16Array(bufferSize);
-        let success = dracoDecoder.GetAttributeUInt16ForAllPoints(
+        var success = dracoDecoder.GetAttributeUInt16ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3809,8 +3855,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Uint16Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Uint16Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3818,7 +3864,7 @@ function _workerCode() {
       function () {
         // DT_INT32 - 5
         dracoAttributeData = new dracoDecoderModule.DracoInt32Array(bufferSize);
-        let success = dracoDecoder.GetAttributeInt32ForAllPoints(
+        var success = dracoDecoder.GetAttributeInt32ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3827,8 +3873,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Int32Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Int32Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3836,7 +3882,7 @@ function _workerCode() {
       function () {
         // DT_UINT32 - 6
         dracoAttributeData = new dracoDecoderModule.DracoInt32Array(bufferSize);
-        let success = dracoDecoder.GetAttributeUInt32ForAllPoints(
+        var success = dracoDecoder.GetAttributeUInt32ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3845,8 +3891,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Uint32Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Uint32Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3862,7 +3908,7 @@ function _workerCode() {
         dracoAttributeData = new dracoDecoderModule.DracoFloat32Array(
           bufferSize
         );
-        let success = dracoDecoder.GetAttributeFloatForAllPoints(
+        var success = dracoDecoder.GetAttributeFloatForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3871,8 +3917,8 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Float32Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Float32Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
@@ -3883,7 +3929,7 @@ function _workerCode() {
       function () {
         // DT_FLOAT32 - 11
         dracoAttributeData = new dracoDecoderModule.DracoUInt8Array(bufferSize);
-        let success = dracoDecoder.GetAttributeUInt8ForAllPoints(
+        var success = dracoDecoder.GetAttributeUInt8ForAllPoints(
           dracoGeometry,
           dracoAttribute,
           dracoAttributeData
@@ -3892,15 +3938,15 @@ function _workerCode() {
         if (!success) {
           console.error("Bad stream");
         }
-        let attributeData = new Uint8Array(bufferSize);
-        for (let i = 0; i < bufferSize; ++i) {
+        var attributeData = new Uint8Array(bufferSize);
+        for (var i = 0; i < bufferSize; ++i) {
           attributeData[i] = dracoAttributeData.GetValue(i);
         }
         return attributeData;
       },
     ];
 
-    let attributeData = handlers[dracoAttribute.data_type()]();
+    var attributeData = handlers[dracoAttribute.data_type()]();
 
     if (dracoAttributeData) {
       dracoDecoderModule.destroy(dracoAttributeData);
@@ -3917,7 +3963,7 @@ function _workerCode() {
   .##.....##..##..##..####.#########.##...##......##...
   .##.....##..##..##...###.##.....##.##....##.....##...
   .########..####.##....##.##.....##.##.....##....##...
-  
+
   .########..########..######...#######..########..########.########.
   .##.....##.##.......##....##.##.....##.##.....##.##.......##.....##
   .##.....##.##.......##.......##.....##.##.....##.##.......##.....##
@@ -3927,35 +3973,35 @@ function _workerCode() {
   .########..########..######...#######..########..########.##.....##
   */
 
-  let binaryAttributeDecoders = {
+  var binaryAttributeDecoders = {
     position: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.vertexCount * 3;
+      var count = decodedGeometry.vertexCount * 3;
       decodedGeometry.positions = new Float32Array(data, offset, count);
       offset += count * 4;
       return offset;
     },
     normal: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.vertexCount * 3;
+      var count = decodedGeometry.vertexCount * 3;
       decodedGeometry.normals = new Float32Array(data, offset, count);
       offset += count * 4;
       return offset;
     },
     uv0: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.vertexCount * 2;
+      var count = decodedGeometry.vertexCount * 2;
       decodedGeometry.uv0s = new Float32Array(data, offset, count);
       offset += count * 4;
       return offset;
     },
     color: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.vertexCount * 4;
+      var count = decodedGeometry.vertexCount * 4;
       decodedGeometry.colors = new Uint8Array(data, offset, count);
       offset += count;
       return offset;
     },
     featureId: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.featureCount;
-      let decodedGeometryBytes = new Uint8Array(data, offset, 8);
-      let id = decodedGeometryBytes[7];
+      var count = decodedGeometry.featureCount;
+      var decodedGeometryBytes = new Uint8Array(data, offset, 8);
+      var id = decodedGeometryBytes[7];
       id <<= 8;
       id = decodedGeometryBytes[6];
       id <<= 8;
@@ -3975,9 +4021,9 @@ function _workerCode() {
       return offset;
     },
     id: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.featureCount;
-      let decodedGeometryBytes = new Uint8Array(data, offset, 8);
-      let id = decodedGeometryBytes[7];
+      var count = decodedGeometry.featureCount;
+      var decodedGeometryBytes = new Uint8Array(data, offset, 8);
+      var id = decodedGeometryBytes[7];
       id <<= 8;
       id = decodedGeometryBytes[6];
       id <<= 8;
@@ -3997,19 +4043,19 @@ function _workerCode() {
       return offset;
     },
     faceRange: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.featureCount * 2;
+      var count = decodedGeometry.featureCount * 2;
       decodedGeometry.faceRange = new Uint32Array(data, offset, count);
       offset += count * 4;
       return offset;
     },
     uvRegion: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.vertexCount * 4;
+      var count = decodedGeometry.vertexCount * 4;
       decodedGeometry["uv-region"] = new Uint16Array(data, offset, count);
       offset += count * 2;
       return offset;
     },
     region: function (decodedGeometry, data, offset) {
-      let count = decodedGeometry.vertexCount * 4;
+      var count = decodedGeometry.vertexCount * 4;
       decodedGeometry["uv-region"] = new Uint16Array(data, offset, count);
       offset += count * 2;
       return offset;
@@ -4019,14 +4065,14 @@ function _workerCode() {
   function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
     // From this spec:
     // https://github.com/Esri/i3s-spec/blob/master/docs/1.7/defaultGeometrySchema.cmn.md
-    let decodedGeometry = {
+    var decodedGeometry = {
       vertexCount: 0,
     };
 
-    let dataView = new DataView(data);
+    var dataView = new DataView(data);
 
     try {
-      let offset = 0;
+      var offset = 0;
       decodedGeometry.vertexCount = dataView.getUint32(offset, 1);
       offset += 4;
 
@@ -4034,7 +4080,7 @@ function _workerCode() {
       offset += 4;
 
       if (bufferInfo) {
-        for (let item of bufferInfo.attributes) {
+        for (var item of bufferInfo.attributes) {
           if (binaryAttributeDecoders[item]) {
             offset = binaryAttributeDecoders[item](
               decodedGeometry,
@@ -4046,8 +4092,8 @@ function _workerCode() {
           }
         }
       } else {
-        let ordering = schema.ordering;
-        let featureAttributeOrder = schema.featureAttributeOrder;
+        var ordering = schema.ordering;
+        var featureAttributeOrder = schema.featureAttributeOrder;
 
         if (
           featureData &&
@@ -4064,16 +4110,16 @@ function _workerCode() {
         }
 
         // use default geometry schema
-        for (let item of ordering) {
-          let decoder = binaryAttributeDecoders[item];
+        for (var item of ordering) {
+          var decoder = binaryAttributeDecoders[item];
           if (!decoder) {
             console.log(item);
           }
           offset = decoder(decodedGeometry, data, offset);
         }
 
-        for (let item of featureAttributeOrder) {
-          let decoder = binaryAttributeDecoders[item];
+        for (var item of featureAttributeOrder) {
+          var decoder = binaryAttributeDecoders[item];
           if (!decoder) {
             console.log(item);
           }
@@ -4103,7 +4149,7 @@ function _workerCode() {
     traceCode(e.data.url);
 
     // Decode the data into geometry
-    let geometryData = decode(
+    var geometryData = decode(
       e.data.binaryData,
       e.data.schema,
       e.data.bufferInfo,
@@ -4146,7 +4192,7 @@ function _workerCode() {
     }
 
     // Create the final buffer
-    let meshData = generateGLTFBuffer(
+    var meshData = generateGLTFBuffer(
       geometryData.vertexCount,
       geometryData.indices,
       geometryData.positions,
@@ -4155,7 +4201,7 @@ function _workerCode() {
       geometryData.colors
     );
 
-    let customAttributes = {};
+    var customAttributes = {};
     if (geometryData["feature-index"]) {
       customAttributes.positions = geometryData.positions;
       customAttributes["feature-index"] = geometryData["feature-index"];
@@ -4191,66 +4237,71 @@ function _workerCode() {
 function I3SGLTFProcessingQueue() {
   this._queue = [];
   this._processing = false;
-  this._createWorkers(() => {
-    this._process();
-  });
+  this._createWorkers(
+    function () {
+      this._process();
+    }.bind(this)
+  );
 }
 
 I3SGLTFProcessingQueue.prototype._process = function () {
-  for (let worker of this._workers) {
+  for (var worker of this._workers) {
     if (worker.isReadyToWork) {
       if (this._queue.length > 0) {
-        let task = this._queue.shift();
+        var task = this._queue.shift();
         task.execute(worker);
         traceCode("Process Queue:" + this._queue.length);
       }
     }
   }
-  setTimeout(() => {
-    this._process();
-  }, 100);
+  setTimeout(
+    function () {
+      this._process();
+    }.bind(this),
+    100
+  );
 };
 
 I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
-  let workerCode = String(_workerCode);
+  var workerCode = String(_workerCode);
 
-  let externalModules = ["/Source/ThirdParty/Workers/draco_decoder.js"];
+  var externalModules = ["/Source/ThirdParty/Workers/draco_decoder.js"];
 
-  let externalModuleCode = "";
-  let fetchPromises = [];
+  var externalModuleCode = "";
+  var fetchPromises = [];
 
-  for (let index = 0; index < externalModules.length; ++index) {
-    let moduleLoadedResolve;
-    let moduleLoaded = new _Promise((resolve, reject) => {
+  for (var index = 0; index < externalModules.length; ++index) {
+    var moduleLoadedResolve;
+    var moduleLoaded = new _Promise(function (resolve, reject) {
       moduleLoadedResolve = resolve;
     });
     fetchPromises.push(moduleLoaded);
 
     // eslint-disable-next-line no-loop-func
-    fetch(externalModules[index]).then((response) => {
-      response.text().then((data) => {
+    fetch(externalModules[index]).then(function (response) {
+      response.text().then(function (data) {
         externalModuleCode += data;
         moduleLoadedResolve();
       });
     });
   }
 
-  let externalModulesLoaded = _Promise.all(fetchPromises);
-  let that = this;
-  externalModulesLoaded.then(() => {
+  var externalModulesLoaded = _Promise.all(fetchPromises);
+  var that = this;
+  externalModulesLoaded.then(function () {
     workerCode = workerCode.replace("function _workerCode() {", "");
     workerCode = workerCode.slice(0, -1);
-    let blob = new Blob([externalModuleCode + workerCode], {
+    var blob = new Blob([externalModuleCode + workerCode], {
       type: "test/javascript",
     });
 
     // Create the workers
-    let workerCount = FeatureDetection.hardwareConcurrency - 1;
+    var workerCount = FeatureDetection.hardwareConcurrency - 1;
     traceCode("Using " + workerCount + " workers");
     that._workers = [];
 
-    for (let loop = 0; loop < workerCount; ++loop) {
-      let worker = new Worker(window.URL.createObjectURL(blob));
+    for (var loop = 0; loop < workerCount; ++loop) {
+      var worker = new Worker(window.URL.createObjectURL(blob));
 
       worker.setTask = function (task) {
         worker._task = task;
@@ -4259,9 +4310,9 @@ I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
       };
 
       worker.onmessage = function (e) {
-        let task = worker._task;
+        var task = worker._task;
 
-        let gltfData = task._geometry._generateGLTF(
+        var gltfData = task._geometry._generateGLTF(
           e.data.nodesInScene,
           e.data.nodes,
           e.data.meshes,
@@ -4287,7 +4338,7 @@ I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
 };
 
 I3SGLTFProcessingQueue.prototype.addTask = function (data) {
-  let newTask = {
+  var newTask = {
     _geometry: data.geometryData,
     _featureData:
       data.featureData && data.featureData[0] ? data.featureData[0] : null,
@@ -4296,12 +4347,12 @@ I3SGLTFProcessingQueue.prototype.addTask = function (data) {
     _geoidDataList: data.geometryData._dataSource._geoidDataList,
     execute: function (worker) {
       // Prepare the data to send to the worker
-      //let geometryData = this._geometry._data;
-      let parentData = this._geometry._parent._data;
-      let parentRotationInverseMatrix = this._geometry._parent
+      //var geometryData = this._geometry._data;
+      var parentData = this._geometry._parent._data;
+      var parentRotationInverseMatrix = this._geometry._parent
         ._inverseRotationMatrix;
 
-      let payload = {
+      var payload = {
         binaryData: this._geometry._data,
         featureData: this._featureData ? this._featureData._data : null,
         schema: this._schema,
@@ -4311,7 +4362,7 @@ I3SGLTFProcessingQueue.prototype.addTask = function (data) {
         geoidDataList: this._geoidDataList,
       };
 
-      let center = {
+      var center = {
         long: 0,
         lat: 0,
         alt: 0,
@@ -4334,8 +4385,8 @@ I3SGLTFProcessingQueue.prototype.addTask = function (data) {
         center.alt
       );
 
-      let axisFlipRotation = Matrix3.fromRotationX(-Math.PI / 2);
-      let parentRotation = new Matrix3();
+      var axisFlipRotation = Matrix3.fromRotationX(-Math.PI / 2);
+      var parentRotation = new Matrix3();
 
       Matrix3.multiply(
         axisFlipRotation,
@@ -4362,11 +4413,13 @@ I3SGLTFProcessingQueue.prototype.addTask = function (data) {
     },
   };
 
-  return new _Promise((resolve, reject) => {
-    newTask.resolve = resolve;
-    newTask.reject = reject;
-    this._queue.push(newTask);
-  });
+  return new _Promise(
+    function (resolve, reject) {
+      newTask.resolve = resolve;
+      newTask.reject = reject;
+      this._queue.push(newTask);
+    }.bind(this)
+  );
 };
 
 /*
