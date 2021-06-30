@@ -23,7 +23,8 @@ describe(
       scene.postProcessStages.fxaa.enabled = false;
       scene.postProcessStages.bloom.enabled = false;
       scene.postProcessStages.ambientOcclusion.enabled = false;
-      scene.postProcessStages.tonemapping = undefined;
+      scene.highDynamicRange = false;
+      scene.primitives.removeAll();
     });
 
     it("constructs", function () {
