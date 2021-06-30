@@ -326,6 +326,116 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
 var applicableRectangleScratch = new Rectangle();
 
 /**
+ * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
+ * location on the screen, use {@link Camera.getPickRay}.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {ImageryLayerCollection|undefined} An `ImageryLayerCollection` that includes all of
+ *                                 the layers that are intersected by a given pick ray. Undefined if
+ *                                 no layers are selected.
+ *
+ */
+ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
+  // Find the picked location on the globe.
+  var pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return undefined;
+  }
+
+  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
+
+  // Find the terrain tile containing the picked location.
+  var tilesToRender = scene.globe._surface._tilesToRender;
+  var pickedTile;
+
+  for (
+    var textureIndex = 0;
+    !defined(pickedTile) && textureIndex < tilesToRender.length;
+    ++textureIndex
+  ) {
+    var tile = tilesToRender[textureIndex];
+    if (Rectangle.contains(tile.rectangle, pickedLocation)) {
+      pickedTile = tile;
+    }
+  }
+
+  if (!defined(pickedTile)) {
+    return undefined;
+  }
+
+  // Pick against all attached imagery tiles containing the pickedLocation.
+  var imageryTiles = pickedTile.data.imagery;
+
+  var imageryLayers = new ImageryLayerCollection();
+  for (var i = imageryTiles.length - 1; i >= 0; --i) {
+    var terrainImagery = imageryTiles[i];
+    var imagery = terrainImagery.readyImagery;
+    if (!defined(imagery)) {
+      continue;
+    }
+    var provider = imagery.imageryLayer.imageryProvider;
+    if (!defined(provider.pickFeatures)) {
+      continue;
+    }
+
+    if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
+      continue;
+    }
+
+    // If this imagery came from a parent, it may not be applicable to its entire rectangle.
+    // Check the textureCoordinateRectangle.
+    var applicableRectangle = applicableRectangleScratch;
+
+    var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
+    applicableRectangle.west = CesiumMath.lerp(
+      pickedTile.rectangle.west,
+      pickedTile.rectangle.east,
+      terrainImagery.textureCoordinateRectangle.x - epsilon
+    );
+    applicableRectangle.east = CesiumMath.lerp(
+      pickedTile.rectangle.west,
+      pickedTile.rectangle.east,
+      terrainImagery.textureCoordinateRectangle.z + epsilon
+    );
+    applicableRectangle.south = CesiumMath.lerp(
+      pickedTile.rectangle.south,
+      pickedTile.rectangle.north,
+      terrainImagery.textureCoordinateRectangle.y - epsilon
+    );
+    applicableRectangle.north = CesiumMath.lerp(
+      pickedTile.rectangle.south,
+      pickedTile.rectangle.north,
+      terrainImagery.textureCoordinateRectangle.w + epsilon
+    );
+    if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
+      continue;
+    }
+
+    var promise = provider.pickFeatures(
+      imagery.x,
+      imagery.y,
+      imagery.level,
+      pickedLocation.longitude,
+      pickedLocation.latitude
+    );
+    if (!defined(promise)) {
+      continue;
+    }
+
+    imageryLayers.add(imagery.imageryLayer);
+  }
+
+  if (imageryLayers.length === 0) {
+    return undefined;
+  }
+
+  return imageryLayers;
+};
+
+/**
  * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
  * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
  * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
