@@ -685,7 +685,7 @@ CustomShader.fromShaderString = function (options) {
   var content = options.content;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.shaderString", shaderString);
+  Check.typeOf.string("options.shaderString", shaderString);
   Check.typeOf.object("options.primitive", primitive);
   //>>includeEnd('debug');
 
