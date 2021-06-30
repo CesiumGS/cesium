@@ -47,7 +47,7 @@ import ShaderSource from "./ShaderSource.js";
  *  "    #endif",
  *  "}"
  * ]);
- * var shaderProgram = shaderBuilder.build();
+ * var shaderProgram = shaderBuilder.build(context);
  *
  * @private
  */
@@ -59,12 +59,12 @@ export default function ShaderBuilder() {
   this._attributeLocations = {};
   this._attributeLines = [];
 
-  this._vertex = {
+  this._vertexShaderParts = {
     defineLines: [],
     uniformLines: [],
     shaderLines: [],
   };
-  this._fragment = {
+  this._fragmentShaderParts = {
     defineLines: [],
     uniformLines: [],
     shaderLines: [],
@@ -99,11 +99,11 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   }
 
   if (ShaderDestination.includesVertexShader(destination)) {
-    this._vertex.defineLines.push(line);
+    this._vertexShaderParts.defineLines.push(line);
   }
 
   if (ShaderDestination.includesFragmentShader(destination)) {
-    this._fragment.defineLines.push(line);
+    this._fragmentShaderParts.defineLines.push(line);
   }
 };
 
@@ -131,24 +131,24 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   var line = "uniform " + type + " " + identifier + ";";
 
   if (ShaderDestination.includesVertexShader(destination)) {
-    this._vertex.uniformLines.push(line);
+    this._vertexShaderParts.uniformLines.push(line);
   }
 
   if (ShaderDestination.includesFragmentShader(destination)) {
-    this._fragment.uniformLines.push(line);
+    this._fragmentShaderParts.uniformLines.push(line);
   }
 };
 
 /**
  * Add a position attribute declaration to the vertex shader. These lines
  * will appear grouped near the top of the final shader source.
- * <code>
+ * <p>
  * Some WebGL implementations require attribute 0 to be enabled, so this is
  * reserved for the position attribute. For all other attributes, see
  * {@link ShaderBuilder#addAttribute}
- * </code>
+ * </p>
  *
- * @param {String} type the GLSL type of the attribute
+ * @param {String} type The GLSL type of the attribute
  * @param {String} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
  * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}. This will always be 0.
  *
@@ -179,12 +179,12 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
 /**
  * Add an attribute declaration to the vertex shader. These lines
  * will appear grouped near the top of the final shader source.
- * <code>
+ * <p>
  * Some WebGL implementations require attribute 0 to be enabled, so this is
  * reserved for the position attribute. See {@link ShaderBuilder#setPositionAttribute}
- * </code>
+ * </p>
  *
- * @param {String} type the GLSL type of the attribute
+ * @param {String} type The GLSL type of the attribute
  * @param {String} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
  * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
  *
@@ -210,26 +210,26 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
 /**
  * Appends lines of GLSL code to the vertex shader
  *
- * @param {String[]} lines the lines to add to the end of the vertex shader source
+ * @param {String[]} lines The lines to add to the end of the vertex shader source
  */
 ShaderBuilder.prototype.addVertexLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("lines", lines);
   //>>includeEnd('debug');
 
-  Array.prototype.push.apply(this._vertex.shaderLines, lines);
+  Array.prototype.push.apply(this._vertexShaderParts.shaderLines, lines);
 };
 
 /**
  * Appends lines of GLSL code to the fragment shader
  *
- * @param {String[]} lines the lines to add to the end of the fragment shader source
+ * @param {String[]} lines The lines to add to the end of the fragment shader source
  */
 ShaderBuilder.prototype.addFragmentLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("lines", lines);
   //>>includeEnd('debug');
-  Array.prototype.push.apply(this._fragment.shaderLines, lines);
+  Array.prototype.push.apply(this._fragmentShaderParts.shaderLines, lines);
 };
 
 /**
@@ -237,7 +237,7 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  * Call this once at the end of building.
  *
  * @param {Context} context The context to use for creating the shader.
- * @param {String[]} lines the lines to add to the end of the fragment shader source
+ * @param {String[]} lines The lines to add to the end of the fragment shader source
  * @return {ShaderProgram} A shader program to use for rendering.
  */
 ShaderBuilder.prototype.build = function (context) {
@@ -254,20 +254,20 @@ ShaderBuilder.prototype.build = function (context) {
   var vertexLines = positionAttribute
     .concat(
       this._attributeLines,
-      this._vertex.uniformLines,
-      this._vertex.shaderLines
+      this._vertexShaderParts.uniformLines,
+      this._vertexShaderParts.shaderLines
     )
     .join("\n");
   var vertexShaderSource = new ShaderSource({
-    defines: this._vertex.defineLines,
+    defines: this._vertexShaderParts.defineLines,
     sources: [vertexLines],
   });
 
-  var fragmentLines = this._fragment.uniformLines
-    .concat(this._fragment.shaderLines)
+  var fragmentLines = this._fragmentShaderParts.uniformLines
+    .concat(this._fragmentShaderParts.shaderLines)
     .join("\n");
   var fragmentShaderSource = new ShaderSource({
-    defines: this._fragment.defineLines,
+    defines: this._fragmentShaderParts.defineLines,
     sources: [fragmentLines],
   });
 
