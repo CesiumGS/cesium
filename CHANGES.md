@@ -1,5 +1,49 @@
 # Change Log
 
+### 1.83 - 2021-07-01
+
+##### Breaking Changes :mega:
+
+- Dropped support for KTX1 and Crunch textures; use the [`ktx2ktx2`](https://github.com/KhronosGroup/KTX-Software) converter tool to update existing KTX1 files.
+
+##### Additions :tada:
+
+- Added support for KTX2 and Basis Universal compressed textures. [#9513](https://github.com/CesiumGS/cesium/issues/9513)
+  - Added support for glTF models with the [`KHR_texture_basisu`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md) extension.
+  - Added support for 8-bit, 16-bit float, and 32-bit float KTX2 specular environment maps.
+  - Added support for KTX2 images in `Material`.
+  - Added new `PixelFormat` and `WebGLConstants` enums from WebGL extensions `WEBGL_compressed_texture_etc`, `WEBGL_compressed_texture_astc`, and `EXT_texture_compression_bptc`.
+- Added dynamic terrain exaggeration with `Globe.terrainExaggeration` and `Globe.terrainExaggerationRelativeHeight`. [#9603](https://github.com/CesiumGS/cesium/pull/9603)
+- Added `CustomHeightmapTerrainProvider`, a simple `TerrainProvider` that gets height values from a callback function. [#9604](https://github.com/CesiumGS/cesium/pull/9604)
+- Added the ability to hide outlines on OSM Buildings and other tilesets and glTF models using the CESIUM_primitive_outline extension. [#8959](https://github.com/CesiumGS/cesium/issues/8959)
+- Added checks for supported 3D Tiles extensions. [#9552](https://github.com/CesiumGS/cesium/issues/9552)
+- Added option to ignore extraneous colorspace information in glTF textures and `ImageBitmap`. [#9624](https://github.com/CesiumGS/cesium/pull/9624)
+- Added `options.fadingEnabled` parameter to `ShadowMap` to control whether shadows fade out when the light source is close to the horizon. [#9565](https://github.com/CesiumGS/cesium/pull/9565)
+- Added documentation clarifying that the `outlineWidth` property will be ignored on all major browsers on Windows platforms. [#9600](https://github.com/CesiumGS/cesium/pull/9600)
+- Added documentation for `KmlTour`, `KmlTourFlyTo`, and `KmlTourWait`. Added documentation and a `kmlTours` getter to `KmlDataSource`. Removed references to `KmlTourSoundCues`. [#8073](https://github.com/CesiumGS/cesium/issues/8073)
+
+##### Fixes :wrench:
+
+- Fixed a regression where older tilesets without a top-level `geometricError` would fail to load. [#9618](https://github.com/CesiumGS/cesium/pull/9618)
+- Fixed an issue in `WebMapTileServiceImageryProvider` where using URL subdomains caused query parameters to be dropped from requests. [#9606](https://github.com/CesiumGS/cesium/pull/9606)
+- Fixed an issue in `ScreenSpaceCameraController.tilt3DOnTerrain` that caused unexpected camera behavior when tilting terrain diagonally along the screen. [#9562](https://github.com/CesiumGS/cesium/pull/9562)
+- Fixed error handling in `GlobeSurfaceTile` to print terrain tile request errors to console. [#9570](https://github.com/CesiumGS/cesium/pull/9570)
+- Fixed broken image URL in the KML Sandcastle. [#9579](https://github.com/CesiumGS/cesium/pull/9579)
+- Fixed an error where the `positionToEyeEC` and `tangentToEyeMatrix` properties for custom materials were not set in `GlobeFS`. [#9597](https://github.com/CesiumGS/cesium/pull/9597)
+- Fixed misleading documentation in `Matrix4.inverse` and `Matrix4.inverseTransformation` that used "affine transformation" instead of "rotation and translation" specifically. [#9608](https://github.com/CesiumGS/cesium/pull/9608)
+- Fixed a regression where external images in glTF models were not being loaded with `preferImageBitmap`, which caused them to decode on the main thread and cause frame rate stuttering. [#9627](https://github.com/CesiumGS/cesium/pull/9627)
+- Fixed misleading "else" case condition for `color` and `show` in `Cesium3DTileStyle`. A default `color` value is used if no `color` conditions are given. The default value for `show`, `true`, is used if no `show` conditions are given. [#9633](https://github.com/CesiumGS/cesium/pull/9633)
+- Fixed a crash that occurred after disabling and re-enabling a post-processing stage. This also prevents the screen from randomly flashing when enabling stages for the first time. [#9649](https://github.com/CesiumGS/cesium/pull/9649)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene` have been deprecated and will be removed in CesiumJS 1.85. They will be replaced with `Globe.terrainExaggeration`.
+- Support for Internet Explorer has been deprecated and will end in CesiumJS 1.84.
+
+### 1.82.1 - 2021-06-01
+
+- This is an npm only release to fix the improperly published 1.82.0.
+
 ### 1.82 - 2021-06-01
 
 ##### Additions :tada:

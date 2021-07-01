@@ -143,15 +143,27 @@ function Texture(options) {
 
     if (PixelFormat.isDXTFormat(internalFormat) && !context.s3tc) {
       throw new DeveloperError(
-        "When options.pixelFormat is S3TC compressed, this WebGL implementation must support the WEBGL_texture_compression_s3tc extension. Check context.s3tc."
+        "When options.pixelFormat is S3TC compressed, this WebGL implementation must support the WEBGL_compressed_texture_s3tc extension. Check context.s3tc."
       );
     } else if (PixelFormat.isPVRTCFormat(internalFormat) && !context.pvrtc) {
       throw new DeveloperError(
-        "When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_texture_compression_pvrtc extension. Check context.pvrtc."
+        "When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_compressed_texture_pvrtc extension. Check context.pvrtc."
+      );
+    } else if (PixelFormat.isASTCFormat(internalFormat) && !context.astc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ASTC compressed, this WebGL implementation must support the WEBGL_compressed_texture_astc extension. Check context.astc."
+      );
+    } else if (PixelFormat.isETC2Format(internalFormat) && !context.etc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ETC2 compressed, this WebGL implementation must support the WEBGL_compressed_texture_etc extension. Check context.etc."
       );
     } else if (PixelFormat.isETC1Format(internalFormat) && !context.etc1) {
       throw new DeveloperError(
-        "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1."
+        "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_compressed_texture_etc1 extension. Check context.etc1."
+      );
+    } else if (PixelFormat.isBC7Format(internalFormat) && !context.bc7) {
+      throw new DeveloperError(
+        "When options.pixelFormat is BC7 compressed, this WebGL implementation must support the EXT_texture_compression_bptc extension. Check context.bc7."
       );
     }
 
@@ -176,6 +188,10 @@ function Texture(options) {
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.LUMINANCE;
   var flipY = defaultValue(options.flipY, true);
+  var skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
   var initialized = true;
 
@@ -197,6 +213,15 @@ function Texture(options) {
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
+
   if (defined(source)) {
     if (defined(source.arrayBufferView)) {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -204,6 +229,7 @@ function Texture(options) {
 
       // Source: typed array
       var arrayBufferView = source.arrayBufferView;
+      var i, mipWidth, mipHeight;
       if (isCompressed) {
         gl.compressedTexImage2D(
           textureTarget,
@@ -214,6 +240,29 @@ function Texture(options) {
           0,
           arrayBufferView
         );
+        if (defined(source.mipLevels)) {
+          mipWidth = width;
+          mipHeight = height;
+          for (i = 0; i < source.mipLevels.length; ++i) {
+            mipWidth = Math.floor(mipWidth / 2) | 0;
+            if (mipWidth < 1) {
+              mipWidth = 1;
+            }
+            mipHeight = Math.floor(mipHeight / 2) | 0;
+            if (mipHeight < 1) {
+              mipHeight = 1;
+            }
+            gl.compressedTexImage2D(
+              textureTarget,
+              i + 1,
+              internalFormat,
+              mipWidth,
+              mipHeight,
+              0,
+              source.mipLevels[i]
+            );
+          }
+        }
       } else {
         if (flipY) {
           arrayBufferView = PixelFormat.flipY(
@@ -237,9 +286,9 @@ function Texture(options) {
         );
 
         if (defined(source.mipLevels)) {
-          var mipWidth = width;
-          var mipHeight = height;
-          for (var i = 0; i < source.mipLevels.length; ++i) {
+          mipWidth = width;
+          mipHeight = height;
+          for (i = 0; i < source.mipLevels.length; ++i) {
             mipWidth = Math.floor(mipWidth / 2) | 0;
             if (mipWidth < 1) {
               mipWidth = 1;
@@ -603,11 +652,12 @@ Object.defineProperties(Texture.prototype, {
 /**
  * Copy new image data into this texture, from a source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement}.
  * or an object with width, height, and arrayBufferView properties.
- *
- * @param {Object} source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
  *                        or an object with width, height, and arrayBufferView properties.
- * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
- * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
+ * @param {Number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
+ * @param {Number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
+ * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
  *
  * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
@@ -619,17 +669,23 @@ Object.defineProperties(Texture.prototype, {
  *
  * @example
  * texture.copyFrom({
+ *  source: {
  *   width : 1,
  *   height : 1,
  *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
+ *  }
  * });
  */
-Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
+Texture.prototype.copyFrom = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options", options);
+  //>>includeEnd('debug');
+
+  var xOffset = defaultValue(options.xOffset, 0);
+  var yOffset = defaultValue(options.yOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("source", source);
+  Check.defined("options.source", options.source);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {
     throw new DeveloperError(
       "Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL."
@@ -643,16 +699,18 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
   Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
   Check.typeOf.number.lessThanOrEquals(
-    "xOffset + source.width",
-    xOffset + source.width,
+    "xOffset + options.source.width",
+    xOffset + options.source.width,
     this._width
   );
   Check.typeOf.number.lessThanOrEquals(
-    "yOffset + source.height",
-    yOffset + source.height,
+    "yOffset + options.source.height",
+    yOffset + options.source.height,
     this._height
   );
   //>>includeEnd('debug');
+
+  var source = options.source;
 
   var context = this._context;
   var gl = context._gl;
@@ -673,6 +731,10 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
   var flipY = this._flipY;
+  var skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
   var unpackAlignment = 4;
   if (defined(arrayBufferView)) {
@@ -684,6 +746,15 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   }
 
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
 
   var uploaded = false;
   if (!this._initialized) {

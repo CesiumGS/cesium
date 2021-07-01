@@ -3,7 +3,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -11,6 +11,7 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CubeMap from "../Renderer/CubeMap.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
+import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import OctahedralProjectionAtlasFS from "../Shaders/OctahedralProjectionAtlasFS.js";
@@ -47,7 +48,7 @@ function OctahedralProjectedCubeMap(url) {
 
 Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   /**
-   * The url to the KTX file containing the specular environment map and convoluted mipmaps.
+   * The url to the KTX2 file containing the specular environment map and convoluted mipmaps.
    * @memberof OctahedralProjectedCubeMap.prototype
    * @type {String}
    * @readonly
@@ -290,7 +291,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   var cubeMapBuffers = this._cubeMapBuffers;
   if (!defined(cubeMapBuffers) && !this._loading) {
     var that = this;
-    loadKTX(this._url)
+    loadKTX2(this._url)
       .then(function (buffers) {
         that._cubeMapBuffers = buffers;
         that._loading = false;
@@ -302,11 +303,28 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     return;
   }
 
+  var defines = [];
+  // Datatype is defined if it is a normalized type (i.e. ..._UNORM, ..._SFLOAT)
+  var pixelDatatype = cubeMapBuffers[0].positiveX.pixelDatatype;
+  if (!defined(pixelDatatype)) {
+    pixelDatatype = context.halfFloatingPointTexture
+      ? PixelDatatype.HALF_FLOAT
+      : PixelDatatype.FLOAT;
+  } else {
+    defines.push("RGBA_NORMALIZED");
+  }
+  var pixelFormat = PixelFormat.RGBA;
+
+  var fs = new ShaderSource({
+    defines: defines,
+    sources: [OctahedralProjectionFS],
+  });
+
   this._va = createVertexArray(context);
   this._sp = ShaderProgram.fromCache({
     context: context,
     vertexShaderSource: OctahedralProjectionVS,
-    fragmentShaderSource: OctahedralProjectionFS,
+    fragmentShaderSource: fs,
     attributeLocations: {
       position: 0,
       cubeMapCoordinates: 1,
@@ -325,11 +343,6 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     },
   };
 
-  var pixelDatatype = context.halfFloatingPointTexture
-    ? PixelDatatype.HALF_FLOAT
-    : PixelDatatype.FLOAT;
-  var pixelFormat = PixelFormat.RGBA;
-
   // First we project each cubemap onto a flat octahedron, and write that to a texture.
   for (var i = 0; i < length; ++i) {
     // Swap +Y/-Y faces since the octahedral projection expects this order.
@@ -340,6 +353,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     var cubeMap = (cubeMaps[i] = new CubeMap({
       context: context,
       source: cubeMapBuffers[i],
+      pixelDatatype: pixelDatatype,
     }));
     var size = cubeMaps[i].width * 2;
 

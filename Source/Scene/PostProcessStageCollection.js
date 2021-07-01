@@ -88,12 +88,12 @@ function PostProcessStageCollection() {
   this._bloom = bloom;
   this._fxaa = fxaa;
 
-  this._lastLength = undefined;
   this._aoEnabled = undefined;
   this._bloomEnabled = undefined;
   this._tonemappingEnabled = undefined;
   this._fxaaEnabled = undefined;
 
+  this._activeStagesChanged = false;
   this._stagesRemoved = false;
   this._textureCacheDirty = false;
 
@@ -312,6 +312,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       return false;
     },
   },
+
   /**
    * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
    *
@@ -573,6 +574,7 @@ PostProcessStageCollection.prototype.update = function (
       activeStages[count++] = stage;
     }
   }
+
   activeStages.length = count;
 
   var activeStagesChanged = count !== previousActiveStages.length;
@@ -602,7 +604,6 @@ PostProcessStageCollection.prototype.update = function (
   if (
     activeStagesChanged ||
     this._textureCacheDirty ||
-    count !== this._lastLength ||
     aoEnabled !== this._aoEnabled ||
     bloomEnabled !== this._bloomEnabled ||
     tonemappingEnabled !== this._tonemappingEnabled ||
@@ -612,7 +613,6 @@ PostProcessStageCollection.prototype.update = function (
     // Update dependencies and recreate framebuffers.
     this._textureCache.updateDependencies();
 
-    this._lastLength = count;
     this._aoEnabled = aoEnabled;
     this._bloomEnabled = bloomEnabled;
     this._tonemappingEnabled = tonemappingEnabled;
@@ -664,6 +664,19 @@ PostProcessStageCollection.prototype.update = function (
   length = stages.length;
   for (i = 0; i < length; ++i) {
     stages[i].update(context, useLogDepth);
+  }
+
+  count = 0;
+  for (i = 0; i < length; ++i) {
+    stage = stages[i];
+    if (stage.ready && stage.enabled && stage._isSupported(context)) {
+      count++;
+    }
+  }
+
+  activeStagesChanged = count !== activeStages.length;
+  if (activeStagesChanged) {
+    this.update(context, useLogDepth, useHdr);
   }
 };
 
@@ -750,7 +763,6 @@ PostProcessStageCollection.prototype.execute = function (
 ) {
   var activeStages = this._activeStages;
   var length = activeStages.length;
-
   var fxaa = this._fxaa;
   var ao = this._ao;
   var bloom = this._bloom;

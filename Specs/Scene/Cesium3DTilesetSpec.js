@@ -372,6 +372,28 @@ describe(
         });
     });
 
+    it("rejects readyPromise with unsupported extension", function () {
+      var tilesetJson = {
+        asset: {
+          version: 1.0,
+        },
+        extensionsUsed: ["unsupported_extension"],
+        extensionsRequired: ["unsupported_extension"],
+      };
+
+      var uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+
+      options.url = uri;
+      var tileset = scene.primitives.add(new Cesium3DTileset(options));
+      return tileset.readyPromise
+        .then(function () {
+          fail("should not resolve");
+        })
+        .otherwise(function (error) {
+          expect(tileset.ready).toEqual(false);
+        });
+    });
+
     it("url and tilesetUrl set up correctly given tileset JSON filepath", function () {
       var path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
       var tileset = new Cesium3DTileset({
@@ -2879,6 +2901,45 @@ describe(
       );
     });
 
+    it("handle else case when applying conditional color style to a tileset", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${id} > 0", 'color("black")']],
+            },
+          });
+          scene.renderForSpecs();
+          expect(tileset.root.content.getFeature(0).color).toEqual(Color.WHITE);
+          expect(tileset.root.content.getFeature(1).color).toEqual(Color.BLACK);
+        }
+      );
+    });
+
+    it("handle else case when applying conditional show to a tileset", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${id} > 0", "true"]],
+            },
+          });
+          scene.renderForSpecs();
+          expect(tileset.root.content.getFeature(0).show).toBe(true);
+          expect(tileset.root.content.getFeature(1).show).toBe(true);
+
+          tileset.style = new Cesium3DTileStyle({
+            show: {
+              conditions: [["${id} > 0", "false"]],
+            },
+          });
+          scene.renderForSpecs();
+          expect(tileset.root.content.getFeature(0).show).toBe(true);
+          expect(tileset.root.content.getFeature(1).show).toBe(false);
+        }
+      );
+    });
+
     it("loads style from uri", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
@@ -5080,7 +5141,7 @@ describe(
             asset: {
               version: "1.0",
             },
-            geometricError: 100.0,
+            root: {},
           };
           var buffer = generateJsonBuffer(externalTileset).buffer;
           return when.resolve(buffer);

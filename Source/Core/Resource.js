@@ -379,6 +379,7 @@ Resource.supportsImageBitmapOptions = function () {
       return createImageBitmap(blob, {
         imageOrientation: "flipY",
         premultiplyAlpha: "none",
+        colorSpaceConversion: "none",
       });
     })
     .then(function (imageBitmap) {
@@ -856,6 +857,7 @@ Resource.fetchBlob = function (options) {
  * @param {Boolean} [options.preferBlob=false] If true, we will load the image via a blob.
  * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {Boolean} [options.flipY=false] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
+ * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
  * @returns {Promise.<ImageBitmap>|Promise.<HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
@@ -880,9 +882,12 @@ Resource.prototype.fetchImage = function (options) {
   var preferImageBitmap = defaultValue(options.preferImageBitmap, false);
   var preferBlob = defaultValue(options.preferBlob, false);
   var flipY = defaultValue(options.flipY, false);
+  var skipColorSpaceConversion = defaultValue(
+    options.skipColorSpaceConversion,
+    false
+  );
 
   checkAndResetRequest(this.request);
-
   // We try to load the image normally if
   // 1. Blobs aren't supported
   // 2. It's a data URI
@@ -897,6 +902,7 @@ Resource.prototype.fetchImage = function (options) {
     return fetchImage({
       resource: this,
       flipY: flipY,
+      skipColorSpaceConversion: skipColorSpaceConversion,
       preferImageBitmap: preferImageBitmap,
     });
   }
@@ -925,6 +931,7 @@ Resource.prototype.fetchImage = function (options) {
         return Resource.createImageBitmapFromBlob(blob, {
           flipY: flipY,
           premultiplyAlpha: false,
+          skipColorSpaceConversion: skipColorSpaceConversion,
         });
       }
       var blobUrl = window.URL.createObjectURL(blob);
@@ -935,6 +942,7 @@ Resource.prototype.fetchImage = function (options) {
       return fetchImage({
         resource: generatedBlobResource,
         flipY: flipY,
+        skipColorSpaceConversion: skipColorSpaceConversion,
         preferImageBitmap: false,
       });
     })
@@ -976,12 +984,13 @@ Resource.prototype.fetchImage = function (options) {
  * @param {Resource} [options.resource] Resource object that points to an image to fetch.
  * @param {Boolean} [options.preferImageBitmap] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {Boolean} [options.flipY] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
- *
+ * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
  * @private
  */
 function fetchImage(options) {
   var resource = options.resource;
   var flipY = options.flipY;
+  var skipColorSpaceConversion = options.skipColorSpaceConversion;
   var preferImageBitmap = options.preferImageBitmap;
 
   var request = resource.request;
@@ -1000,6 +1009,7 @@ function fetchImage(options) {
       crossOrigin,
       deferred,
       flipY,
+      skipColorSpaceConversion,
       preferImageBitmap
     );
 
@@ -1026,6 +1036,7 @@ function fetchImage(options) {
         return fetchImage({
           resource: resource,
           flipY: flipY,
+          skipColorSpaceConversion: skipColorSpaceConversion,
           preferImageBitmap: preferImageBitmap,
         });
       }
@@ -1050,12 +1061,14 @@ function fetchImage(options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {Boolean} [options.preferBlob=false]  If true, we will load the image via a blob.
  * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+ * @param {Boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies when requesting an image and the browser supports <code>createImageBitmap</code>.
  * @returns {Promise.<ImageBitmap>|Promise.<HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchImage = function (options) {
   var resource = new Resource(options);
   return resource.fetchImage({
     flipY: options.flipY,
+    skipColorSpaceConversion: options.skipColorSpaceConversion,
     preferBlob: options.preferBlob,
     preferImageBitmap: options.preferImageBitmap,
   });
@@ -1888,6 +1901,7 @@ Resource._Implementations.createImage = function (
   crossOrigin,
   deferred,
   flipY,
+  skipColorSpaceConversion,
   preferImageBitmap
 ) {
   var url = request.url;
@@ -1940,6 +1954,7 @@ Resource._Implementations.createImage = function (
           return Resource.createImageBitmapFromBlob(blob, {
             flipY: flipY,
             premultiplyAlpha: false,
+            skipColorSpaceConversion: skipColorSpaceConversion,
           });
         })
         .then(deferred.resolve);
@@ -1956,10 +1971,15 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.defined("options", options);
   Check.typeOf.bool("options.flipY", options.flipY);
   Check.typeOf.bool("options.premultiplyAlpha", options.premultiplyAlpha);
+  Check.typeOf.bool(
+    "options.skipColorSpaceConversion",
+    options.skipColorSpaceConversion
+  );
 
   return createImageBitmap(blob, {
     imageOrientation: options.flipY ? "flipY" : "none",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
+    colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
   });
 };
 

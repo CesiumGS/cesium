@@ -108,6 +108,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else {

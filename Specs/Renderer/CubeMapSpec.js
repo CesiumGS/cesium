@@ -69,9 +69,14 @@ describe(
     var blueAlphaImage;
     var blueOverRedImage;
     var red16x16Image;
+    var gammaImage;
+    var customColorProfileImage;
+
+    var supportsImageBitmapOptions;
 
     beforeAll(function () {
       context = createContext();
+      supportsImageBitmapOptions = Resource.supportsImageBitmapOptions();
 
       var promises = [];
       promises.push(
@@ -104,6 +109,18 @@ describe(
         ) {
           red16x16Image = result;
         })
+      );
+      promises.push(
+        Resource.fetchImage("./Data/Images/Gamma.png").then(function (result) {
+          gammaImage = result;
+        })
+      );
+      promises.push(
+        Resource.fetchImage("./Data/Images/CustomColorProfile.png").then(
+          function (result) {
+            customColorProfileImage = result;
+          }
+        )
       );
 
       return when.all(promises);
@@ -266,6 +283,70 @@ describe(
           [0, 0, 127, 255], // -Y
           [0, 0, 127, 255], // +Z
           [0, 0, 127, 255], // -Z
+        ],
+      });
+    });
+
+    it("draws with a cube map while ignoring color profiles", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      cubeMap = new CubeMap({
+        context: context,
+        source: {
+          positiveX: gammaImage,
+          negativeX: customColorProfileImage,
+          positiveY: gammaImage,
+          negativeY: customColorProfileImage,
+          positiveZ: gammaImage,
+          negativeZ: customColorProfileImage,
+        },
+        skipColorSpaceConversion: true,
+      });
+
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        epsilon: 1,
+        expectedColors: [
+          [0, 136, 0, 255], // +X
+          [0, 136, 0, 255], // -X
+          [0, 136, 0, 255], // +Y
+          [0, 136, 0, 255], // -Y
+          [0, 136, 0, 255], // +Z
+          [0, 136, 0, 255], // -Z
+        ],
+      });
+    });
+
+    it("draws with a cube map while allowing color profiles", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      cubeMap = new CubeMap({
+        context: context,
+        source: {
+          positiveX: gammaImage,
+          negativeX: customColorProfileImage,
+          positiveY: gammaImage,
+          negativeY: customColorProfileImage,
+          positiveZ: gammaImage,
+          negativeZ: customColorProfileImage,
+        },
+        skipColorSpaceConversion: false,
+      });
+
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        epsilon: 1,
+        expectedColors: [
+          [0, 59, 0, 255], // +X
+          [193, 0, 0, 255], // -X
+          [0, 59, 0, 255], // +Y
+          [193, 0, 0, 255], // -Y
+          [0, 59, 0, 255], // +Z
+          [193, 0, 0, 255], // -Z
         ],
       });
     });
@@ -746,12 +827,12 @@ describe(
         width: 1,
         height: 1,
       });
-      cubeMap.positiveX.copyFrom(blueImage);
-      cubeMap.negativeX.copyFrom(greenImage);
-      cubeMap.positiveY.copyFrom(blueImage);
-      cubeMap.negativeY.copyFrom(greenImage);
-      cubeMap.positiveZ.copyFrom(blueImage);
-      cubeMap.negativeZ.copyFrom(greenImage);
+      cubeMap.positiveX.copyFrom({ source: blueImage });
+      cubeMap.negativeX.copyFrom({ source: greenImage });
+      cubeMap.positiveY.copyFrom({ source: blueImage });
+      cubeMap.negativeY.copyFrom({ source: greenImage });
+      cubeMap.positiveZ.copyFrom({ source: blueImage });
+      cubeMap.negativeZ.copyFrom({ source: greenImage });
 
       expectCubeMapFaces({
         cubeMap: cubeMap,
@@ -773,34 +854,46 @@ describe(
         height: 1,
       });
       cubeMap.positiveX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        },
       });
       cubeMap.negativeX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        },
       });
       cubeMap.positiveY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 0, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 0, 255]),
+        },
       });
       cubeMap.negativeY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 0, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 0, 255]),
+        },
       });
       cubeMap.positiveZ.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 255, 255]),
+        },
       });
       cubeMap.negativeZ.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 255, 0, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 255, 0, 255]),
+        },
       });
 
       expectCubeMapFaces({
@@ -823,39 +916,49 @@ describe(
         height: 2,
       });
       cubeMap.positiveX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 255, 255]),
+        },
       });
       cubeMap.negativeX.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 0, 255, 255]),
+        },
       });
       cubeMap.positiveY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([0, 255, 0, 255]),
-      });
-      cubeMap.negativeY.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 0, 255]),
-      });
-      cubeMap.positiveZ.copyFrom({
-        width: 1,
-        height: 1,
-        arrayBufferView: new Uint8Array([255, 0, 255, 255]),
-      });
-      cubeMap.negativeZ.copyFrom(
-        {
+        source: {
           width: 1,
           height: 1,
           arrayBufferView: new Uint8Array([0, 255, 0, 255]),
         },
-        1,
-        0
-      );
+      });
+      cubeMap.negativeY.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 0, 255]),
+        },
+      });
+      cubeMap.positiveZ.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 0, 255, 255]),
+        },
+      });
+      cubeMap.negativeZ.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 255, 0, 255]),
+        },
+        xOffset: 1,
+        yOffset: 0,
+      });
 
       var negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
       Cartesian3.normalize(negativeZDirection, negativeZDirection);
@@ -887,12 +990,26 @@ describe(
         width: 2,
         height: 2,
       });
-      cubeMap.positiveX.copyFrom(blueImage);
-      cubeMap.negativeX.copyFrom(greenImage);
-      cubeMap.positiveY.copyFrom(blueImage);
-      cubeMap.negativeY.copyFrom(greenImage);
-      cubeMap.positiveZ.copyFrom(blueImage);
-      cubeMap.negativeZ.copyFrom(greenImage, 1, 0);
+      cubeMap.positiveX.copyFrom({
+        source: blueImage,
+      });
+      cubeMap.negativeX.copyFrom({
+        source: greenImage,
+      });
+      cubeMap.positiveY.copyFrom({
+        source: blueImage,
+      });
+      cubeMap.negativeY.copyFrom({
+        source: greenImage,
+      });
+      cubeMap.positiveZ.copyFrom({
+        source: blueImage,
+      });
+      cubeMap.negativeZ.copyFrom({
+        source: greenImage,
+        xOffset: 1,
+        yOffset: 0,
+      });
 
       var negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
       Cartesian3.normalize(negativeZDirection, negativeZDirection);
@@ -930,7 +1047,7 @@ describe(
         width: 1,
         height: 1,
       });
-      cubeMap.positiveX.copyFrom(blueImage);
+      cubeMap.positiveX.copyFrom({ source: blueImage });
 
       var fs =
         "uniform samplerCube u_cubeMap;" +
@@ -1218,7 +1335,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("fails to copy from an image (source)", function () {
+    it("fails to copy from no options", function () {
       cubeMap = new CubeMap({
         context: context,
         width: 16,
@@ -1227,6 +1344,21 @@ describe(
 
       expect(function () {
         cubeMap.positiveX.copyFrom();
+      }).toThrowDeveloperError();
+    });
+
+    it("fails to copy from no image (source)", function () {
+      cubeMap = new CubeMap({
+        context: context,
+        width: 16,
+        height: 16,
+      });
+
+      expect(function () {
+        cubeMap.positiveX.copyFrom({
+          xOffset: 0,
+          yOffset: 0,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1239,7 +1371,10 @@ describe(
       var image = new Image();
 
       expect(function () {
-        cubeMap.positiveY.copyFrom(image, -1);
+        cubeMap.positiveY.copyFrom({
+          source: image,
+          xOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1252,7 +1387,11 @@ describe(
       var image = new Image();
 
       expect(function () {
-        cubeMap.positiveZ.copyFrom(image, 0, -1);
+        cubeMap.positiveZ.copyFrom({
+          source: image,
+          xOffset: 0,
+          yOffset: -1,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1266,7 +1405,9 @@ describe(
       image.width = 16 + 1;
 
       expect(function () {
-        cubeMap.negativeX.copyFrom(image);
+        cubeMap.negativeX.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -1280,7 +1421,9 @@ describe(
       image.height = 16 + 1;
 
       expect(function () {
-        cubeMap.negativeY.copyFrom(image);
+        cubeMap.negativeY.copyFrom({
+          source: image,
+        });
       }).toThrowDeveloperError();
     });
 

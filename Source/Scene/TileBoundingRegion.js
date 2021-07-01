@@ -101,18 +101,11 @@ function TileBoundingRegion(options) {
   var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
   computeBox(this, options.rectangle, ellipsoid);
 
-  if (defaultValue(options.computeBoundingVolumes, true)) {
-    // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-    this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-      this.rectangle,
-      this.minimumHeight,
-      this.maximumHeight,
-      ellipsoid
-    );
+  this._orientedBoundingBox = undefined;
+  this._boundingSphere = undefined;
 
-    this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-      this._orientedBoundingBox
-    );
+  if (defaultValue(options.computeBoundingVolumes, true)) {
+    this.computeBoundingVolumes(ellipsoid);
   }
 }
 
@@ -144,6 +137,20 @@ Object.defineProperties(TileBoundingRegion.prototype, {
     },
   },
 });
+
+TileBoundingRegion.prototype.computeBoundingVolumes = function (ellipsoid) {
+  // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+  this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+    this.rectangle,
+    this.minimumHeight,
+    this.maximumHeight,
+    ellipsoid
+  );
+
+  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+    this._orientedBoundingBox
+  );
+};
 
 var cartesian3Scratch = new Cartesian3();
 var cartesian3Scratch2 = new Cartesian3();

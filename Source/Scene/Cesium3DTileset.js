@@ -36,7 +36,7 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
@@ -94,8 +94,9 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -777,6 +778,18 @@ function Cesium3DTileset(options) {
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @default true
+   */
+  this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
    * This property is for debugging only; it is not optimized for production use.
    * <p>
    * Determines if only the tiles from last frame should be used for rendering.  This
@@ -1253,6 +1266,13 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * event is raised, so code in <code>tileVisible</code> can manually set a feature's
    * properties (e.g. color and show) after the style is applied. When
    * a new style is assigned any manually set properties are overwritten.
+   * </p>
+   * <p>
+   * Use an always "true" condition to specify the Color for all objects that are not
+   * overridden by pre-existing conditions. Otherwise, the default color Cesium.Color.White
+   * will be used. Similarly, use an always "true" condition to specify the show property
+   * for all objects that are not overridden by pre-existing conditions. Otherwise, the
+   * default show value true will be used.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype
@@ -1751,6 +1771,10 @@ Cesium3DTileset.prototype.loadTileset = function (
     throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
   }
 
+  if (defined(tilesetJson.extensionsRequired)) {
+    Cesium3DTileset.checkSupportedExtensions(tilesetJson.extensionsRequired);
+  }
+
   var statistics = this._statistics;
 
   var tilesetVersion = asset.tilesetVersion;
@@ -1814,7 +1838,7 @@ Cesium3DTileset.prototype.loadTileset = function (
  * @private
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
-  if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+  if (hasExtension(tileHeader, "3DTILES_implicit_tiling")) {
     var metadataSchema = defined(tileset.metadata)
       ? tileset.metadata.schema
       : undefined;
@@ -1873,7 +1897,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {
-  if (!has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
+  if (!hasExtension(tilesetJson, "3DTILES_metadata")) {
     return when.resolve(tilesetJson);
   }
 
@@ -2802,6 +2826,34 @@ Cesium3DTileset.prototype.destroy = function () {
 
   this._root = undefined;
   return destroyObject(this);
+};
+
+Cesium3DTileset.supportedExtensions = {
+  "3DTILES_metadata": true,
+  "3DTILES_implicit_tiling": true,
+  "3DTILES_content_gltf": true,
+  "3DTILES_multiple_contents": true,
+  "3DTILES_bounding_volume_S2": true,
+  "3DTILES_batch_table_hierarchy": true,
+  "3DTILES_draco_point_compression": true,
+};
+
+/**
+ * Checks to see if a given extension is supported by Cesium3DTileset. If
+ * the extension is not supported by Cesium3DTileset, it throws a RuntimeError.
+ *
+ * @param {Object} extensionsRequired The extensions we wish to check
+ *
+ * @private
+ */
+Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
+  for (var i = 0; i < extensionsRequired.length; i++) {
+    if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
+      throw new RuntimeError(
+        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+      );
+    }
+  }
 };
 
 /**

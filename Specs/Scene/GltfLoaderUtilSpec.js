@@ -1,10 +1,15 @@
 import {
   GltfLoaderUtil,
+  Matrix3,
+  PixelDatatype,
+  PixelFormat,
   SupportedImageFormats,
+  Texture,
   TextureWrap,
   TextureMagnificationFilter,
   TextureMinificationFilter,
 } from "../../Source/Cesium.js";
+import createContext from "../createContext.js";
 
 describe("Scene/GltfLoaderUtil", function () {
   var gltfWithTextures = {
@@ -19,6 +24,9 @@ describe("Scene/GltfLoaderUtil", function () {
       {
         uri: "image.webp",
       },
+      {
+        uri: "image.ktx2",
+      },
     ],
     textures: [
       {
@@ -29,6 +37,14 @@ describe("Scene/GltfLoaderUtil", function () {
         extensions: {
           EXT_texture_webp: {
             source: 2,
+          },
+        },
+      },
+      {
+        source: 0,
+        extensions: {
+          KHR_texture_basisu: {
+            source: 3,
           },
         },
       },
@@ -96,6 +112,28 @@ describe("Scene/GltfLoaderUtil", function () {
     expect(imageId).toBe(0);
   });
 
+  it("getImageIdFromTexture gets KTX2 image when KHR_texture_basisu extension is supported", function () {
+    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+      gltf: gltfWithTextures,
+      textureId: 2,
+      supportedImageFormats: new SupportedImageFormats({
+        basis: true,
+      }),
+    });
+    expect(imageId).toBe(3);
+  });
+
+  it("getImageIdFromTexture gets default image when KHR_texture_basisu extension is not supported", function () {
+    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+      gltf: gltfWithTextures,
+      textureId: 2,
+      supportedImageFormats: new SupportedImageFormats({
+        basis: false,
+      }),
+    });
+    expect(imageId).toBe(0);
+  });
+
   it("createSampler throws if gltf is undefined", function () {
     expect(function () {
       GltfLoaderUtil.getImageIdFromTexture({
@@ -107,7 +145,7 @@ describe("Scene/GltfLoaderUtil", function () {
     }).toThrowDeveloperError();
   });
 
-  it("createSampler throws if gltf is undefined", function () {
+  it("createSampler throws if textureInfo is undefined", function () {
     expect(function () {
       GltfLoaderUtil.getImageIdFromTexture({
         gltf: gltfWithTextures,
@@ -128,6 +166,64 @@ describe("Scene/GltfLoaderUtil", function () {
       textureInfo: {
         index: 0,
       },
+    });
+    expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+    expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+    expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
+    expect(sampler.magnificationFilter).toBe(TextureMagnificationFilter.LINEAR);
+  });
+
+  it("createSampler uses NEAREST when compressedTextureNoMipmap is true and the minFilter uses nearest mipmap filtering", function () {
+    var sampler = GltfLoaderUtil.createSampler({
+      gltf: {
+        textures: [
+          {
+            source: 0,
+            sampler: 0,
+          },
+        ],
+        samplers: [
+          {
+            magFilter: 9729,
+            minFilter: 9986,
+            wrapS: 10497,
+            wrapT: 10497,
+          },
+        ],
+      },
+      textureInfo: {
+        index: 0,
+      },
+      compressedTextureNoMipmap: true,
+    });
+    expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+    expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+    expect(sampler.minificationFilter).toBe(TextureMinificationFilter.NEAREST);
+    expect(sampler.magnificationFilter).toBe(TextureMagnificationFilter.LINEAR);
+  });
+
+  it("createSampler uses LINEAR when compressedTextureNoMipmap is true and the minFilter uses linear mipmap filtering", function () {
+    var sampler = GltfLoaderUtil.createSampler({
+      gltf: {
+        textures: [
+          {
+            source: 0,
+            sampler: 0,
+          },
+        ],
+        samplers: [
+          {
+            magFilter: 9729,
+            minFilter: 9987,
+            wrapS: 10497,
+            wrapT: 10497,
+          },
+        ],
+      },
+      textureInfo: {
+        index: 0,
+      },
+      compressedTextureNoMipmap: true,
     });
     expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
     expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
@@ -204,5 +300,88 @@ describe("Scene/GltfLoaderUtil", function () {
       useTextureTransform: true,
     });
     expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
+  });
+
+  it("createModelTextureReader creates texture with default values", function () {
+    var textureInfo = {
+      index: 0,
+    };
+
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+      textureInfo: textureInfo,
+    });
+
+    expect(modelTexture.texture).toBeUndefined();
+    expect(modelTexture.texCoord).toBe(0);
+    expect(modelTexture.transform).toBeUndefined();
+    expect(modelTexture.channels).toBeUndefined();
+  });
+
+  it("createModelTextureReader creates texture with KHR_texture_transform extension", function () {
+    var textureInfo = {
+      index: 0,
+      texCoord: 0,
+      extensions: {
+        KHR_texture_transform: {
+          offset: [0.5, 0.5],
+          scale: [0.1, 0.2],
+          texCoord: 1,
+        },
+      },
+    };
+
+    // prettier-ignore
+    var expectedTransform = new Matrix3(
+      0.1, 0.0, 0.5,
+      0.0, 0.2, 0.5,
+      0.0, 0.0, 1.0
+    );
+
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+      textureInfo: textureInfo,
+    });
+
+    expect(modelTexture.texCoord).toBe(1);
+    expect(modelTexture.transform).toEqual(expectedTransform);
+  });
+
+  it("createModelTextureReader creates texture", function () {
+    var context = createContext();
+
+    var texture = new Texture({
+      context: context,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      source: {
+        arrayBufferView: new Uint8Array([1, 2, 3, 4]),
+        width: 1,
+        height: 1,
+      },
+    });
+
+    var textureInfo = {
+      index: 0,
+      texCoord: 1,
+    };
+
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+      textureInfo: textureInfo,
+      channels: "r",
+      texture: texture,
+    });
+
+    expect(modelTexture.texture).toBe(texture);
+    expect(modelTexture.texCoord).toBe(1);
+    expect(modelTexture.transform).toBeUndefined();
+    expect(modelTexture.channels).toBe("r");
+
+    texture.destroy();
+    context.destroyForSpecs();
+  });
+
+  it("createModelTextureReader throws if textureInfo is undefined", function () {
+    expect(function () {
+      GltfLoaderUtil.createModelTextureReader();
+    }).toThrowDeveloperError();
   });
 });

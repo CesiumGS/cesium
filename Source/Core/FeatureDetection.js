@@ -319,6 +319,16 @@ var FeatureDetection = {
 };
 
 /**
+ * Detects whether the current browser supports Basis Universal textures and the web assembly modules needed to transcode them.
+ *
+ * @param {Scene} scene
+ * @returns {Boolean} true if the browser supports web assembly modules and the scene supports Basis Universal textures, false if not.
+ */
+FeatureDetection.supportsBasis = function (scene) {
+  return FeatureDetection.supportsWebAssembly() && scene.context.supportsBasis;
+};
+
+/**
  * Detects whether the current browser supports the full screen standard.
  *
  * @returns {Boolean} true if the browser supports the full screen standard, false if not.
