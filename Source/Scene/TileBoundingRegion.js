@@ -409,19 +409,19 @@ function distanceToCameraRegion(tileBB, frameState) {
 TileBoundingRegion.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("frameState", frameState);
-  //>>includeEnd('debug');(
+  //>>includeEnd('debug');
+
   var regionResult = distanceToCameraRegion(this, frameState);
   if (
-    frameState.mode == SceneMode.SCENE3D &&
+    frameState.mode === SceneMode.SCENE3D &&
     defined(this._orientedBoundingBox)
   ) {
     var obbResult = Math.sqrt(
       this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC)
     );
     return Math.max(regionResult, obbResult);
-  } else {
-    return regionResult;
   }
+  return regionResult;
 };
 
 /**
