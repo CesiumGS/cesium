@@ -817,6 +817,44 @@ describe(
         });
     });
 
+    it("handles when material image is changed from some image to invalid image", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+      var greenTextureId;
+
+      return pollToPromise(
+        function () {
+          renderMaterial(material, true);
+          return material._textures["image"] !== material._defaultTexture;
+        },
+        { timeout: 10000 }
+      )
+        .then(function () {
+          greenTextureId = material._textures["image"].id;
+          renderMaterial(material, true, function (rgba) {
+            expect(rgba).toEqual([0, 255, 0, 255]);
+          });
+        })
+        .then(function () {
+          material.uniforms.image = "i_dont_exist.png";
+        })
+        .then(function () {
+          return pollToPromise(
+            function () {
+              renderMaterial(material, true);
+              return material._textures["image"].id !== greenTextureId;
+            },
+            { timeout: 10000 }
+          ).then(function () {
+            renderMaterial(material, true, function (rgba) {
+              expect(rgba).toEqual([255, 255, 255, 255]);
+            });
+          });
+        });
+    });
+
     it("throws with source and components in same template", function () {
       expect(function () {
         return new Material({

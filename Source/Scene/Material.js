@@ -469,6 +469,15 @@ Material.prototype.update = function (context) {
       });
     }
 
+    var oldTexture = this._textures[uniformId];
+    if (
+      defined(oldTexture) &&
+      oldTexture !== this.defaultTexture &&
+      oldTexture !== context.defaultTexture
+    ) {
+      oldTexture.destroy();
+    }
+
     this._textures[uniformId] = texture;
 
     var uniformDimensionsName = uniformId + "Dimensions";
@@ -794,15 +803,10 @@ function createTexture2DUpdateFunction(uniformId) {
     var uniforms = material.uniforms;
     var uniformValue = uniforms[uniformId];
     var uniformChanged = oldUniformValue !== uniformValue;
-
     var uniformValueIsDefaultImage = uniformValue === Material.DefaultImageId;
-    var oldUniformValueDefined = defined(oldUniformValue);
-    var oldUniformValueIsDefaultImage =
-      oldUniformValue === Material.DefaultImageId;
 
-    oldUniformValue = uniformValue;
     var texture = material._textures[uniformId];
-
+    oldUniformValue = uniformValue;
     var uniformDimensionsName;
     var uniformDimensions;
 
@@ -860,9 +864,6 @@ function createTexture2DUpdateFunction(uniformId) {
 
     if (uniformChanged && defined(texture)) {
       if (!defined(uniformValue) || uniformValueIsDefaultImage) {
-        if (oldUniformValueDefined && !oldUniformValueIsDefaultImage) {
-          texture.destroy();
-        }
         texture = undefined;
       }
     }
@@ -912,12 +913,18 @@ function createTexture2DUpdateFunction(uniformId) {
           promise = resource.fetchImage();
         }
 
-        when(promise, function (image) {
-          material._loadedImages.push({
-            id: uniformId,
-            image: image,
-          });
-        });
+        when(
+          promise,
+          function (image) {
+            material._loadedImages.push({
+              id: uniformId,
+              image: image,
+            });
+          },
+          function () {
+            material._textures[uniformId] = material._defaultTexture;
+          }
+        );
       } else if (
         uniformValue instanceof HTMLCanvasElement ||
         uniformValue instanceof HTMLImageElement
