@@ -870,10 +870,14 @@ function createTexture2DUpdateFunction(uniformId) {
 
     if (!defined(texture)) {
       material._texturePaths[uniformId] = undefined;
-      if (uniformValueIsDefaultImage || !defined(material._defaultTexture)) {
+      if (!defined(material._defaultTexture)) {
         material._defaultTexture = context.defaultTexture;
       }
-      texture = material._textures[uniformId] = material._defaultTexture;
+      if (uniformValueIsDefaultImage) {
+        texture = material._textures[uniformId] = context.defaultTexture;
+      } else {
+        texture = material._textures[uniformId] = material._defaultTexture;
+      }
 
       uniformDimensionsName = uniformId + "Dimensions";
       if (uniforms.hasOwnProperty(uniformDimensionsName)) {
