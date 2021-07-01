@@ -414,17 +414,6 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
       continue;
     }
 
-    var promise = provider.pickFeatures(
-      imagery.x,
-      imagery.y,
-      imagery.level,
-      pickedLocation.longitude,
-      pickedLocation.latitude
-    );
-    if (!defined(promise)) {
-      continue;
-    }
-
     imageryLayers.add(imagery.imageryLayer);
   }
 
