@@ -54,7 +54,7 @@
           this.drawCommand = undefined;
 
           // number of faces wide. There are resolution + 1 vertices.
-          this.resolution = 100;
+          this.faceResolution = 200;
 
           // Compute a model matrix that puts the surface at a specific point on
           // the globe.
@@ -92,8 +92,8 @@
           var vertices = new Float32Array(vertexCount * componentsPerVertex);
           for (var i = 0; i < vertexResolution; i++) {
             for (var j = 0; j < vertexResolution; j++) {
-              var u = i / (vertexResolution + 1);
-              var v = j / (vertexResolution + 1);
+              var u = i / (vertexResolution - 1);
+              var v = j / (vertexResolution - 1);
               var index = i * vertexResolution + j;
               var x = halfWidthMeters * (2 * u - 1);
               var y = halfWidthMeters * (2 * v - 1);
@@ -117,6 +117,7 @@
 
           var vertexResolution = faceResolution + 1;
 
+          var quadIndex = 0;
           for (var i = 0; i < faceResolution; i++) {
             for (var j = 0; j < faceResolution; j++) {
               var a = i * vertexResolution + j;
@@ -124,12 +125,13 @@
               var c = (i + 1) * vertexResolution + (j + 1);
               var d = (i + 1) * vertexResolution + j;
 
-              indices[a * indicesPerQuad] = a;
-              indices[a * indicesPerQuad + 1] = b;
-              indices[a * indicesPerQuad + 2] = c;
-              indices[a * indicesPerQuad + 3] = c;
-              indices[a * indicesPerQuad + 4] = d;
-              indices[a * indicesPerQuad + 5] = a;
+              indices[quadIndex * indicesPerQuad] = a;
+              indices[quadIndex * indicesPerQuad + 1] = b;
+              indices[quadIndex * indicesPerQuad + 2] = c;
+              indices[quadIndex * indicesPerQuad + 3] = c;
+              indices[quadIndex * indicesPerQuad + 4] = d;
+              indices[quadIndex * indicesPerQuad + 5] = a;
+              quadIndex++;
             }
           }
 
@@ -207,8 +209,11 @@
             "    float z = 0.0;\n" +
             "    z += sin(2.0 * czm_pi * dot(v_position.xy, k) - 0.002 * u_time);\n" +
             "    z += sin(2.0 * czm_pi * dot(v_position.xy, k2) - 0.002 * u_time);\n" +
-            "    z /= 2.0;\n" +
-            "    gl_FragColor = texture2D(u_texture, 0.5 + 0.5 * vec2(z, 0.5));\n" +
+            // divide by 2 to keep in the range [-1, 1]
+            "    z *= 0.5;\n" +
+            // signed -> unsigned
+            "    z = 0.5 + 0.5 * z;\n" +
+            "    gl_FragColor = texture2D(u_texture, vec2(z, 0.5));\n" +
             "}\n";
 
           var positionLocation = 0;
@@ -230,7 +235,7 @@
           });
 
           var positionTypedArray = generateQuad(
-            primitive.resolution,
+            primitive.faceResolution,
             primitive.halfWidthMeters
           );
           var positionVertexBuffer = Cesium.Buffer.createVertexBuffer({
@@ -248,8 +253,9 @@
             ),
           };
 
-          var indexCount = primitive.resolution * primitive.resolution * 6;
-          var indexTypedArray = tesellate(primitive.resolution);
+          var indexCount =
+            primitive.faceResolution * primitive.faceResolution * 6;
+          var indexTypedArray = tesellate(primitive.faceResolution);
           var indexBuffer = Cesium.Buffer.createIndexBuffer({
             context: context,
             typedArray: indexTypedArray,
