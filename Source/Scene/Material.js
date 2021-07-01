@@ -427,7 +427,6 @@ Material.prototype.update = function (context) {
 
   var loadedImages = this._loadedImages;
   var length = loadedImages.length;
-
   for (i = 0; i < length; ++i) {
     var loadedImage = loadedImages[i];
     uniformId = loadedImage.id;
@@ -878,7 +877,6 @@ function createTexture2DUpdateFunction(uniformId) {
       } else {
         texture = material._textures[uniformId] = material._defaultTexture;
       }
-
       uniformDimensionsName = uniformId + "Dimensions";
       if (uniforms.hasOwnProperty(uniformDimensionsName)) {
         uniformDimensions = uniforms[uniformDimensionsName];
