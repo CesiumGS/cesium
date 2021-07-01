@@ -137,6 +137,9 @@
         }
 
         var scratchColor = new Cesium.Color();
+        /**
+         * Generate a 1D texture for the color palette
+         */
         function generateTexture(context) {
           var width = 256;
           var textureTypedArray = new Uint8Array(width * 4);
@@ -176,6 +179,8 @@
         }
 
         function initialize(primitive, context) {
+          // Inteference patterns made by two plane waves crossing each
+          // other at an angle. The color is based on the height.
           var vertexShader =
             "attribute vec3 a_position;\n" +
             "varying vec3 v_position;\n" +
@@ -183,7 +188,10 @@
             "void main()\n" +
             "{\n" +
             "    vec2 k = vec2(0.0004, 0.0001);\n" +
-            "    float z = 1000.0 * sin(2.0 * czm_pi * dot(a_position.xy, k) - 0.002 * u_time);\n" +
+            "    vec2 k2 = vec2(0.0001, 0.0004);\n" +
+            "    float z = 0.0;\n" +
+            "    z += 1000.0 * sin(2.0 * czm_pi * dot(a_position.xy, k) - 0.002 * u_time);\n" +
+            "    z += 1000.0 * sin(2.0 * czm_pi * dot(a_position.xy, k2) - 0.002 * u_time);\n" +
             "    v_position = a_position;\n" +
             "    gl_Position = czm_modelViewProjection * vec4(a_position.xy, z, 1.0);\n" +
             "}\n";
@@ -195,8 +203,12 @@
             "void main()\n" +
             "{\n" +
             "    vec2 k = vec2(0.0004, 0.0001);\n" +
-            "    float z = 0.5 + 0.5 * sin(2.0 * czm_pi * dot(v_position.xy, k) - 0.002 * u_time);\n" +
-            "    gl_FragColor = texture2D(u_texture, vec2(z, 0.5));\n" +
+            "    vec2 k2 = vec2(0.0001, 0.0004);\n" +
+            "    float z = 0.0;\n" +
+            "    z += sin(2.0 * czm_pi * dot(v_position.xy, k) - 0.002 * u_time);\n" +
+            "    z += sin(2.0 * czm_pi * dot(v_position.xy, k2) - 0.002 * u_time);\n" +
+            "    z /= 2.0;\n" +
+            "    gl_FragColor = texture2D(u_texture, 0.5 + 0.5 * vec2(z, 0.5));\n" +
             "}\n";
 
           var positionLocation = 0;
