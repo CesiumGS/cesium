@@ -275,7 +275,7 @@
   - If you’re using your own custom definitions and you’re not yet ready to switch, you can delete `Source/Cesium.d.ts` after install.
   - See our [blog post](https://cesium.com/blog/2020/06/01/cesiumjs-tsd/) for more information and a technical overview of how it all works.
 - CesiumJS now supports underground rendering with globe translucency! [#8726](https://github.com/CesiumGS/cesium/pull/8726)
-  - Added options for controlling globe translucency through the new [`GlobeTranslucency`](https://cesium.com/docs/cesiumjs-ref-doc/GlobeTranslucency.html) object including front face alpha, back face alpha, and a translucency rectangle.
+  - Added options for controlling globe translucency through the new [`GlobeTranslucency`](https://cesium.com/learn/cesiumjs/ref-doc/GlobeTranslucency.html) object including front face alpha, back face alpha, and a translucency rectangle.
   - Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
   - Improved camera controls when the camera is underground. [#8811](https://github.com/CesiumGS/cesium/pull/8811)
   - Sandcastle examples: [Globe Translucency](https://sandcastle.cesium.com/?src=Globe%20Translucency.html), [Globe Interior](https://sandcastle.cesium.com/?src=Globe%20Interior.html), and [Underground Color](https://sandcastle.cesium.com/?src=Underground%20Color.html&label=All)
@@ -470,7 +470,7 @@ var viewer = new Viewer("cesiumContainer", {
 - Cesium has migrated to ES6 modules. This may or may not be a breaking change for your application depending on how you use Cesium. See our [blog post](https://cesium.com/blog/2019/10/31/cesiumjs-es6/) for the full details.
 - We’ve consolidated all of our website content from cesiumjs.org and cesium.com into one home on cesium.com. Here’s where you can now find:
   - [Sandcastle](https://sandcastle.cesium.com) - `https://sandcastle.cesium.com`
-  - [API Docs](https://cesium.com/docs/cesiumjs-ref-doc/) - `https://cesium.com/docs/cesiumjs-ref-doc/`
+  - [API Docs](https://cesium.com/learn/cesiumjs/ref-doc/) - `https://cesium.com/learn/cesiumjs/ref-doc/`
   - [Downloads](https://cesium.com/downloads/) - `https://cesium.com/downloads/`
   - Hosted releases can be found at `https://cesium.com/downloads/cesiumjs/releases/<CesiumJS Version Number>/Build/Cesium/Cesium.js`
   - See our [blog post](https://cesium.com/blog/2019/10/15/cesiumjs-migration/) for more information.
