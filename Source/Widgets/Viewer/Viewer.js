@@ -1970,7 +1970,6 @@ Viewer.prototype._onDataSourceAdded = function (
     this
   );
   this._dataSourceChangedListeners[id] = removalFunc;
-  console.log("Viewer.prototype._onDataSourceAdded #1");
   if (this._automaticallyTrackDataSourceClocks) {
     this.clockTrackedDataSource = dataSource;
   }
