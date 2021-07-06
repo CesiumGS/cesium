@@ -331,7 +331,7 @@ var applicableRectangleScratch = new Rectangle();
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {ImageryLayerCollection|undefined} An `ImageryLayerCollection` that includes all of
+ * @return {ImageryLayer[]|undefined} An `ImageryLayerCollection` that includes all of
  *                                 the layers that are intersected by a given pick ray. Undefined if
  *                                 no layers are selected.
  *
@@ -369,7 +369,7 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
   // Pick against all attached imagery tiles containing the pickedLocation.
   var imageryTiles = pickedTile.data.imagery;
 
-  var imageryLayers = new ImageryLayerCollection();
+  var imageryLayers = [];
   for (var i = imageryTiles.length - 1; i >= 0; --i) {
     var terrainImagery = imageryTiles[i];
     var imagery = terrainImagery.readyImagery;
@@ -414,7 +414,7 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
       continue;
     }
 
-    imageryLayers.add(imagery.imageryLayer);
+    imageryLayers.push(imagery.imageryLayer);
   }
 
   if (imageryLayers.length === 0) {
