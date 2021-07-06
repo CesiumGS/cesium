@@ -63,11 +63,13 @@ export default function ShaderBuilder() {
     defineLines: [],
     uniformLines: [],
     shaderLines: [],
+    varyingLines: [],
   };
   this._fragmentShaderParts = {
     defineLines: [],
     uniformLines: [],
     shaderLines: [],
+    varyingLines: [],
   };
 }
 
@@ -225,6 +227,23 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
 };
 
 /**
+ * Add a varying declaration to both the vertex and fragment shaders.
+ *
+ * @param {String} type The GLSL type of the varying
+ * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
+ */
+ShaderBuilder.prototype.addVarying = function (type, identifier) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
+
+  var line = "varying " + type + " " + identifier + ";";
+  this._vertexShaderParts.varyingLines.push(line);
+  this._fragmentShaderParts.varyingLines.push(line);
+};
+
+/**
  * Appends lines of GLSL code to the vertex shader
  *
  * @param {String[]} lines The lines to add to the end of the vertex shader source
@@ -255,7 +274,6 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  * methods in this class.
  *
  * @param {Context} context The context to use for creating the shader.
- * @param {String[]} lines The lines to add to the end of the fragment shader source
  * @return {ShaderProgram} A shader program to use for rendering.
  */
 ShaderBuilder.prototype.buildShaderProgram = function (context) {
@@ -273,6 +291,7 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
     .concat(
       this._attributeLines,
       this._vertexShaderParts.uniformLines,
+      this._vertexShaderParts.varyingLines,
       this._vertexShaderParts.shaderLines
     )
     .join("\n");
@@ -282,7 +301,10 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
   });
 
   var fragmentLines = this._fragmentShaderParts.uniformLines
-    .concat(this._fragmentShaderParts.shaderLines)
+    .concat(
+      this._fragmentShaderParts.varyingLines,
+      this._fragmentShaderParts.shaderLines
+    )
     .join("\n");
   var fragmentShaderSource = new ShaderSource({
     defines: this._fragmentShaderParts.defineLines,
