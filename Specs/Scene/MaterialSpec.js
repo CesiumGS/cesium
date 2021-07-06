@@ -686,13 +686,10 @@ describe(
       });
 
       material.uniforms.image = "./Data/Images/Green.png";
-      return pollToPromise(
-        function () {
-          renderMaterial(material, true);
-          return material._textures["image"] !== material._defaultTexture;
-        },
-        { timeout: 10000 }
-      ).then(function () {
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
         renderMaterial(material, true, function (rgba) {
           expect(rgba).toEqual([0, 255, 0, 255]);
         });
@@ -710,13 +707,10 @@ describe(
       });
 
       material.uniforms.image = "./Data/Images/Green.png";
-      return pollToPromise(
-        function () {
-          renderMaterial(material, true);
-          return material._textures["image"] !== material._defaultTexture;
-        },
-        { timeout: 10000 }
-      ).then(function () {
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
         renderMaterial(material, true, function (rgba) {
           expect(rgba).toEqual([0, 255, 0, 255]);
         });
@@ -729,26 +723,18 @@ describe(
         color: Color.WHITE,
       });
 
-      return pollToPromise(
-        function () {
-          renderMaterial(material, true);
-          return material._textures["image"] !== material._defaultTexture;
-        },
-        { timeout: 10000 }
-      )
-        .then(function () {
-          renderMaterial(material, true, function (rgba) {
-            expect(rgba).toEqual([0, 255, 0, 255]);
-          });
-        })
-        .then(function () {
-          material.uniforms.image = undefined;
-        })
-        .then(function () {
-          renderMaterial(material, true, function (rgba) {
-            expect(rgba).toEqual([255, 255, 255, 255]);
-          });
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
         });
+        material.uniforms.image = undefined;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([255, 255, 255, 255]);
+        });
+      });
     });
 
     it("handles when material image is changed from some image to default", function () {
@@ -757,26 +743,18 @@ describe(
         color: Color.WHITE,
       });
 
-      return pollToPromise(
-        function () {
-          renderMaterial(material, true);
-          return material._textures["image"] !== material._defaultTexture;
-        },
-        { timeout: 10000 }
-      )
-        .then(function () {
-          renderMaterial(material, true, function (rgba) {
-            expect(rgba).toEqual([0, 255, 0, 255]);
-          });
-        })
-        .then(function () {
-          material.uniforms.image = Material.DefaultImageId;
-        })
-        .then(function () {
-          renderMaterial(material, true, function (rgba) {
-            expect(rgba).toEqual([255, 255, 255, 255]);
-          });
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
         });
+        material.uniforms.image = Material.DefaultImageId;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([255, 255, 255, 255]);
+        });
+      });
     });
 
     it("handles when material image is changed from some image to another", function () {
@@ -786,35 +764,24 @@ describe(
       });
       var greenTextureId;
 
-      return pollToPromise(
-        function () {
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        greenTextureId = material._textures["image"].id;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = "./Data/Images/Blue.png";
+        return pollToPromise(function () {
           renderMaterial(material, true);
-          return material._textures["image"] !== material._defaultTexture;
-        },
-        { timeout: 10000 }
-      )
-        .then(function () {
-          greenTextureId = material._textures["image"].id;
+          return material._textures["image"].id !== greenTextureId;
+        }).then(function () {
           renderMaterial(material, true, function (rgba) {
-            expect(rgba).toEqual([0, 255, 0, 255]);
-          });
-        })
-        .then(function () {
-          material.uniforms.image = "./Data/Images/Blue.png";
-        })
-        .then(function () {
-          return pollToPromise(
-            function () {
-              renderMaterial(material, true);
-              return material._textures["image"].id !== greenTextureId;
-            },
-            { timeout: 10000 }
-          ).then(function () {
-            renderMaterial(material, true, function (rgba) {
-              expect(rgba).toEqual([0, 0, 255, 255]);
-            });
+            expect(rgba).toEqual([0, 0, 255, 255]);
           });
         });
+      });
     });
 
     it("handles when material image is changed from some image to invalid image", function () {
@@ -824,35 +791,24 @@ describe(
       });
       var greenTextureId;
 
-      return pollToPromise(
-        function () {
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        greenTextureId = material._textures["image"].id;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = "i_dont_exist.png";
+        return pollToPromise(function () {
           renderMaterial(material, true);
-          return material._textures["image"] !== material._defaultTexture;
-        },
-        { timeout: 10000 }
-      )
-        .then(function () {
-          greenTextureId = material._textures["image"].id;
+          return material._textures["image"].id !== greenTextureId;
+        }).then(function () {
           renderMaterial(material, true, function (rgba) {
-            expect(rgba).toEqual([0, 255, 0, 255]);
-          });
-        })
-        .then(function () {
-          material.uniforms.image = "i_dont_exist.png";
-        })
-        .then(function () {
-          return pollToPromise(
-            function () {
-              renderMaterial(material, true);
-              return material._textures["image"].id !== greenTextureId;
-            },
-            { timeout: 10000 }
-          ).then(function () {
-            renderMaterial(material, true, function (rgba) {
-              expect(rgba).toEqual([255, 255, 255, 255]);
-            });
+            expect(rgba).toEqual([255, 255, 255, 255]);
           });
         });
+      });
     });
 
     it("throws with source and components in same template", function () {

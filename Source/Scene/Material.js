@@ -469,15 +469,6 @@ Material.prototype.update = function (context) {
       });
     }
 
-    var oldTexture = this._textures[uniformId];
-    if (
-      defined(oldTexture) &&
-      oldTexture !== this.defaultTexture &&
-      oldTexture !== context.defaultTexture
-    ) {
-      oldTexture.destroy();
-    }
-
     this._textures[uniformId] = texture;
 
     var uniformDimensionsName = uniformId + "Dimensions";
@@ -803,10 +794,11 @@ function createTexture2DUpdateFunction(uniformId) {
     var uniforms = material.uniforms;
     var uniformValue = uniforms[uniformId];
     var uniformChanged = oldUniformValue !== uniformValue;
-    var uniformValueIsDefaultImage = uniformValue === Material.DefaultImageId;
+    var uniformValueIsDefaultImage =
+      !defined(uniformValue) || uniformValue === Material.DefaultImageId;
+    oldUniformValue = uniformValue;
 
     var texture = material._textures[uniformId];
-    oldUniformValue = uniformValue;
     var uniformDimensionsName;
     var uniformDimensions;
 
@@ -863,7 +855,14 @@ function createTexture2DUpdateFunction(uniformId) {
     }
 
     if (uniformChanged && defined(texture)) {
-      if (!defined(uniformValue) || uniformValueIsDefaultImage) {
+      if (
+        texture !== this.defaultTexture &&
+        texture !== context.defaultTexture
+      ) {
+        texture.destroy();
+      }
+
+      if (uniformValueIsDefaultImage) {
         texture = undefined;
       }
     }
@@ -886,7 +885,7 @@ function createTexture2DUpdateFunction(uniformId) {
       }
     }
 
-    if (!defined(uniformValue) || uniformValueIsDefaultImage) {
+    if (uniformValueIsDefaultImage) {
       return;
     }
 
