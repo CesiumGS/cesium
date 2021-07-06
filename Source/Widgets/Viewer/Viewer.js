@@ -1963,6 +1963,9 @@ Viewer.prototype._onDataSourceAdded = function (
   dataSourceCollection,
   dataSource
 ) {
+  if (this._automaticallyTrackDataSourceClocks) {
+    this.clockTrackedDataSource = dataSource;
+  }
   var id = dataSource.entities.id;
   var removalFunc = this._eventHelper.add(
     dataSource.changedEvent,
@@ -1970,9 +1973,6 @@ Viewer.prototype._onDataSourceAdded = function (
     this
   );
   this._dataSourceChangedListeners[id] = removalFunc;
-  if (this._automaticallyTrackDataSourceClocks) {
-    this.clockTrackedDataSource = dataSource;
-  }
 };
 
 /**

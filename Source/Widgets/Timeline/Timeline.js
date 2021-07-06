@@ -276,7 +276,7 @@ Timeline.prototype.zoomTo = function (startTime, stopTime) {
   if (!defined(stopTime)) {
     throw new DeveloperError("stopTime is required");
   }
-  if (JulianDate.lessThanOrEquals(stopTime, startTime)) {
+  if (JulianDate.lessThan(stopTime, startTime)) {
     throw new DeveloperError("Start time must come before end time.");
   }
   //>>includeEnd('debug');
