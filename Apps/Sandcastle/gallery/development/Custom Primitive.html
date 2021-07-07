@@ -85,7 +85,7 @@
          * generate a quad that's subdivided into faceResolution x faceResolution quads.
          * The vertices will be adjusted in the vertex shader.
          */
-        function generateQuad(faceResolution, halfWidthMeters) {
+        function generateVertices(faceResolution, halfWidthMeters) {
           var vertexResolution = faceResolution + 1;
           var vertexCount = vertexResolution * vertexResolution;
           var componentsPerVertex = 3;
@@ -108,9 +108,9 @@
         }
 
         /**
-         * tesellate a big square region into faceResolution x faceResolution quads
+         * Tessellate a big square region into faceResolution x faceResolution quads
          */
-        function tesellate(faceResolution) {
+        function generateIndices(faceResolution) {
           var indicesPerQuad = 6;
           var indexCount = faceResolution * faceResolution * indicesPerQuad;
           var indices = new Uint16Array(indexCount);
@@ -234,7 +234,7 @@
             attributeLocations: attributeLocations,
           });
 
-          var positionTypedArray = generateQuad(
+          var positionTypedArray = generateVertices(
             primitive.faceResolution,
             primitive.halfWidthMeters
           );
@@ -255,7 +255,7 @@
 
           var indexCount =
             primitive.faceResolution * primitive.faceResolution * 6;
-          var indexTypedArray = tesellate(primitive.faceResolution);
+          var indexTypedArray = generateIndices(primitive.faceResolution);
           var indexBuffer = Cesium.Buffer.createIndexBuffer({
             context: context,
             typedArray: indexTypedArray,
