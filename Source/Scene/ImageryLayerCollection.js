@@ -326,18 +326,20 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
 var applicableRectangleScratch = new Rectangle();
 
 /**
- * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
- * location on the screen, use {@link Camera.getPickRay}.
+ * Helper function for `pickImageryLayers` and `pickImageryLayerFeatures`. Returns an array containing
+ * pickedTile, imageryTiles, and the pickedLocation.
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {ImageryLayer[]|undefined} An `ImageryLayerCollection` that includes all of
- *                                 the layers that are intersected by a given pick ray. Undefined if
- *                                 no layers are selected.
+ * @return {[QuadtreeTile,TileImagery[],Cartographic]|undefined}
+ *
+ * @private
  *
  */
-ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
-  // Find the picked location on the globe.
+ImageryLayerCollection.prototype.pickImageryLayersHelper = function (
+  ray,
+  scene
+) {
   var pickedPosition = scene.globe.pick(ray, scene);
   if (!defined(pickedPosition)) {
     return undefined;
@@ -368,6 +370,41 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
 
   // Pick against all attached imagery tiles containing the pickedLocation.
   var imageryTiles = pickedTile.data.imagery;
+
+  //need pickedTile, imageryTiles, pickedLocation
+  return [pickedTile, imageryTiles, pickedLocation];
+};
+
+/**
+ * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
+ * location on the screen, use {@link Camera.getPickRay}. This function uses a rectangular partition
+ * approach which is not pixel perfect. Thus, it will pick imagery in several situations where it
+ * should not (transparent imagery, imagery cutout, etc.).
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {ImageryLayer[]|undefined} An `ImageryLayerCollection` that includes all of
+ *                                 the layers that are intersected by a given pick ray. Undefined if
+ *                                 no layers are selected.
+ *
+ */
+ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
+  var locationData = ImageryLayerCollection.prototype.pickImageryLayersHelper(
+    ray,
+    scene
+  );
+  var pickedTile, imageryTiles, pickedLocation;
+  if (!defined(locationData)) {
+    return undefined;
+  }
+
+  pickedTile = locationData[0];
+  imageryTiles = locationData[1];
+  pickedLocation = locationData[2];
+  console.log(pickedTile.constructor.name);
+  console.log(imageryTiles.constructor.name);
+  console.log(imageryTiles[0].constructor.name);
+  console.log(pickedLocation.constructor.name);
 
   var imageryLayers = [];
   for (var i = imageryTiles.length - 1; i >= 0; --i) {
@@ -456,37 +493,18 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   ray,
   scene
 ) {
-  // Find the picked location on the globe.
-  var pickedPosition = scene.globe.pick(ray, scene);
-  if (!defined(pickedPosition)) {
-    return undefined;
-  }
-
-  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
-    pickedPosition
+  var locationData = ImageryLayerCollection.prototype.pickImageryLayersHelper(
+    ray,
+    scene
   );
-
-  // Find the terrain tile containing the picked location.
-  var tilesToRender = scene.globe._surface._tilesToRender;
-  var pickedTile;
-
-  for (
-    var textureIndex = 0;
-    !defined(pickedTile) && textureIndex < tilesToRender.length;
-    ++textureIndex
-  ) {
-    var tile = tilesToRender[textureIndex];
-    if (Rectangle.contains(tile.rectangle, pickedLocation)) {
-      pickedTile = tile;
-    }
-  }
-
-  if (!defined(pickedTile)) {
+  var pickedTile, imageryTiles, pickedLocation;
+  if (!defined(locationData)) {
     return undefined;
   }
 
-  // Pick against all attached imagery tiles containing the pickedLocation.
-  var imageryTiles = pickedTile.data.imagery;
+  pickedTile = locationData[0];
+  imageryTiles = locationData[1];
+  pickedLocation = locationData[2];
 
   var promises = [];
   var imageryLayers = [];
