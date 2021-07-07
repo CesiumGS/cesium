@@ -48,9 +48,11 @@
          * primitive displays a procedurally-generated surface at a given
          * position on the globe.
          */
-        function CustomPrimitive(cartographicPosition, context) {
+        function CustomPrimitive(cartographicPosition) {
           this.show = true;
 
+          // This is initialized in the first call of update()
+          // so we don't need a context
           this.drawCommand = undefined;
 
           // number of faces wide. There are resolution + 1 vertices.
@@ -77,8 +79,6 @@
           );
 
           this.time = undefined;
-
-          initialize(this, context);
         }
 
         /**
@@ -299,8 +299,14 @@
         }
 
         CustomPrimitive.prototype.update = function (frameState) {
-          if (!this.show || !Cesium.defined(this.drawCommand)) {
+          if (!this.show) {
             return;
+          }
+
+          // Rendering resources are initialized in the first update() call
+          // so we have access to the rendering context
+          if (!Cesium.defined(this.drawCommand)) {
+            initialize(this, frameState.context);
           }
 
           frameState.commandList.push(this.drawCommand);
@@ -308,7 +314,7 @@
 
         var position = new Cesium.Cartographic(0, 0, 1000.0);
         var primitive = viewer.scene.primitives.add(
-          new CustomPrimitive(position, viewer.scene.context)
+          new CustomPrimitive(position)
         );
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(0, 0, 50000),
