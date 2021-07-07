@@ -4062,6 +4062,74 @@ describe("Scene/Camera", function () {
     expect(rect).not.toBeDefined();
   });
 
+  it("computeViewRectangle when horizon is visible", function () {
+    scene.mode = SceneMode.SCENE3D;
+
+    // Camera positioned north of Florida and pointing SE
+    camera.position = new Cartesian3(396409.117, -5733080.706, 4249759.836);
+    camera.direction = new Cartesian3(0.319, 0.151, -0.935);
+    camera.up = new Cartesian3(0.344, -0.938, -0.034);
+
+    var correctResult = new Rectangle(
+      -1.9327844753122365,
+      0.1530967218084174,
+      -1.0707395864236942,
+      0.6150065867104637
+    );
+
+    var rect = camera.computeViewRectangle();
+
+    expect(rect).toEqual(correctResult);
+  });
+
+  it("computeViewRectangle with horizon left of camera", function () {
+    scene.mode = SceneMode.SCENE3D;
+
+    // Camera positioned north of Florida and pointing SE
+    camera.position = new Cartesian3(396409.117, -5733080.706, 4249759.836);
+    camera.direction = new Cartesian3(0.319, 0.151, -0.935);
+    camera.up = new Cartesian3(0.344, -0.938, -0.034);
+
+    // Point camera toward the east with both upper left and lower left corners showing horizon
+    camera.lookLeft(0.8);
+    camera.lookUp(0.5);
+
+    var correctResult = new Rectangle(
+      -1.4618444272105489,
+      0.15309672180841744,
+      -0.7077030979225825,
+      0.9546065932752243
+    );
+
+    var rect = camera.computeViewRectangle();
+
+    expect(rect).toEqual(correctResult);
+  });
+
+  it("computeViewRectangle with horizon visible in lower right corner", function () {
+    scene.mode = SceneMode.SCENE3D;
+
+    // Camera positioned north of Florida and pointing SE
+    camera.position = new Cartesian3(396409.117, -5733080.706, 4249759.836);
+    camera.direction = new Cartesian3(0.319, 0.151, -0.935);
+    camera.up = new Cartesian3(0.344, -0.938, -0.034);
+
+    // Point camera toward alaska with lower right corner showing horizon
+    camera.lookUp(1.5);
+    camera.lookRight(1);
+
+    var correctResult = new Rectangle(
+      -1.9327844753122365,
+      0.1530967218084174,
+      -1.4905184542560885,
+      0.8149300322299694
+    );
+
+    var rect = camera.computeViewRectangle();
+
+    expect(rect).toEqual(correctResult);
+  });
+
   it("flyTo rectangle in 2D", function () {
     var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
