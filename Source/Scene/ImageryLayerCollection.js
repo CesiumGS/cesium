@@ -326,12 +326,12 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
 var applicableRectangleScratch = new Rectangle();
 
 /**
- * Helper function for `pickImageryLayers` and `pickImageryLayerFeatures`. Returns an array containing
- * pickedTile, imageryTiles, and the pickedLocation.
+ * Helper function for `pickImageryLayers` and `pickImageryLayerFeatures`.
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {[QuadtreeTile,TileImagery[],Cartographic]|undefined}
+ * @return {[QuadtreeTile,TileImagery[],Cartographic]|undefined}  Returns an array containing
+ *                                        pickedTile, imageryTiles, and the pickedLocation.
  *
  * @private
  *
@@ -371,7 +371,6 @@ ImageryLayerCollection.prototype.pickImageryLayersHelper = function (
   // Pick against all attached imagery tiles containing the pickedLocation.
   var imageryTiles = pickedTile.data.imagery;
 
-  //need pickedTile, imageryTiles, pickedLocation
   return [pickedTile, imageryTiles, pickedLocation];
 };
 
@@ -401,10 +400,6 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
   pickedTile = locationData[0];
   imageryTiles = locationData[1];
   pickedLocation = locationData[2];
-  console.log(pickedTile.constructor.name);
-  console.log(imageryTiles.constructor.name);
-  console.log(imageryTiles[0].constructor.name);
-  console.log(pickedLocation.constructor.name);
 
   var imageryLayers = [];
   for (var i = imageryTiles.length - 1; i >= 0; --i) {
