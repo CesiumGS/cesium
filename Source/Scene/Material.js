@@ -422,6 +422,10 @@ Material.prototype.isTranslucent = function () {
  * @private
  */
 Material.prototype.update = function (context) {
+  if (!defined(this._defaultTexture)) {
+    this._defaultTexture = context.defaultTexture;
+  }
+
   var i;
   var uniformId;
 
@@ -855,10 +859,7 @@ function createTexture2DUpdateFunction(uniformId) {
     }
 
     if (uniformChanged && defined(texture)) {
-      if (
-        texture !== this.defaultTexture &&
-        texture !== context.defaultTexture
-      ) {
+      if (texture !== material._defaultTexture) {
         texture.destroy();
       }
 
@@ -869,14 +870,8 @@ function createTexture2DUpdateFunction(uniformId) {
 
     if (!defined(texture)) {
       material._texturePaths[uniformId] = undefined;
-      if (!defined(material._defaultTexture)) {
-        material._defaultTexture = context.defaultTexture;
-      }
-      if (uniformValueIsDefaultImage) {
-        texture = material._textures[uniformId] = context.defaultTexture;
-      } else {
-        texture = material._textures[uniformId] = material._defaultTexture;
-      }
+      texture = material._textures[uniformId] = material._defaultTexture;
+
       uniformDimensionsName = uniformId + "Dimensions";
       if (uniforms.hasOwnProperty(uniformDimensionsName)) {
         uniformDimensions = uniforms[uniformDimensionsName];
@@ -912,18 +907,16 @@ function createTexture2DUpdateFunction(uniformId) {
           promise = resource.fetchImage();
         }
 
-        when(
-          promise,
-          function (image) {
+        promise
+          .then(function (image) {
             material._loadedImages.push({
               id: uniformId,
               image: image,
             });
-          },
-          function () {
+          })
+          .otherwise(function () {
             material._textures[uniformId] = material._defaultTexture;
-          }
-        );
+          });
       } else if (
         uniformValue instanceof HTMLCanvasElement ||
         uniformValue instanceof HTMLImageElement
