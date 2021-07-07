@@ -212,6 +212,10 @@ function Context(canvas, options) {
   this._webgl2 = webgl2;
   this._id = createGuid();
 
+  function getGl() {
+    return _gl;
+  }
+
   // Validation and logging disabled by default for speed.
   this.validateFramebuffer = false;
   this.validateShaderProgram = false;
