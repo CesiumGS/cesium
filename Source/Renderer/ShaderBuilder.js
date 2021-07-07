@@ -25,11 +25,11 @@ import ShaderSource from "./ShaderSource.js";
  * var shaderBuilder = new ShaderBuilder();
  * shaderBuilder.addDefine("SOLID_COLOR", undefined, ShaderDestination.FRAGMENT);
  * shaderBuilder.addUniform("vec3", "u_color", ShaderDestination.FRAGMENT);
+ * shaderBuilder.addVarying("vec3", v_color");
  * // These locations can be used when creating the VertexArray
  * var positionLocation = shaderBuilder.addPositionAttribute("vec3", "a_position");
  * var colorLocation = shaderBuilder.addAttribute("vec3", "a_color");
  * shaderBuilder.addVertexLines([
- *  "varying vec3 v_color;",
  *  "void main()",
  *  "{",
  *  "    v_color = a_color;",
@@ -37,7 +37,6 @@ import ShaderSource from "./ShaderSource.js";
  *  "}"
  * ]);
  * shaderBuilder.addFragmentLines([
- *  "varying vec3 v_color;",
  *  "void main()",
  *  "{",
  *  "    #ifdef SOLID_COLOR",
@@ -208,7 +207,7 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
  * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
  *
  * @example
- * // creates the line "attribute vec2 a_texCoord0;"
+ * // creates the line "attribute vec2 a_texCoord0;" in the vertex shader
  * shaderBuilder.addAttribute("vec2", "a_texCoord0");
  */
 ShaderBuilder.prototype.addAttribute = function (type, identifier) {
@@ -231,6 +230,10 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  *
  * @param {String} type The GLSL type of the varying
  * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
+ *
+ * @example
+ * // creates the line "varying vec3 v_color;" in both shaders
+ * shaderBuilder.addVarying("vec3", "v_color");
  */
 ShaderBuilder.prototype.addVarying = function (type, identifier) {
   //>>includeStart('debug', pragmas.debug);
@@ -247,6 +250,14 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
  * Appends lines of GLSL code to the vertex shader
  *
  * @param {String[]} lines The lines to add to the end of the vertex shader source
+ * @example
+ * shaderBuilder.addVertexLines([
+ *  "void main()",
+ *  "{",
+ *  "    v_color = a_color;",
+ *  "    gl_Position = vec4(a_position, 1.0);",
+ *  "}"
+ * ]);
  */
 ShaderBuilder.prototype.addVertexLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
@@ -260,6 +271,17 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  * Appends lines of GLSL code to the fragment shader
  *
  * @param {String[]} lines The lines to add to the end of the fragment shader source
+ * @example
+ * shaderBuilder.addFragmentLines([
+ *  "void main()",
+ *  "{",
+ *  "    #ifdef SOLID_COLOR",
+ *  "    gl_FragColor = vec4(u_color, 1.0);",
+ *  "    #else",
+ *  "    gl_FragColor = vec4(v_color, 1.0);",
+ *  "    #endif",
+ *  "}"
+ * ]);
  */
 ShaderBuilder.prototype.addFragmentLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
@@ -275,6 +297,9 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  *
  * @param {Context} context The context to use for creating the shader.
  * @return {ShaderProgram} A shader program to use for rendering.
+ *
+ * @example
+ * var shaderProgram = shaderBuilder.buildShaderProgram(context);
  */
 ShaderBuilder.prototype.buildShaderProgram = function (context) {
   //>>includeStart('debug', pragmas.debug);
