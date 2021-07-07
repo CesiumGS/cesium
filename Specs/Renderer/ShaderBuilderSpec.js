@@ -294,6 +294,43 @@ describe(
       expect(shaderProgram._attributeLocations).toEqual(expectedLocations);
     });
 
+    it("addVarying throws for undefined type", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addVarying(undefined, "v_uv");
+      }).toThrowDeveloperError();
+    });
+
+    it("addVarying throws for invalid type", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addVarying(0, "v_uv");
+      }).toThrowDeveloperError();
+    });
+
+    it("addVarying throws for undefined identifier", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addVarying("vec2", undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("addVarying throws for invalid identifier", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addVarying("vec2", 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("addVarying adds varyings to both shaders", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addVarying("vec2", "v_uv");
+      var expectedLines = ["varying vec2 v_uv;"];
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(shaderProgram, [], expectedLines);
+      checkFragmentShader(shaderProgram, [], expectedLines);
+    });
+
     it("addVertexLines throws for undefined lines", function () {
       var shaderBuilder = new ShaderBuilder();
       expect(function () {
@@ -359,6 +396,7 @@ describe(
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.setPositionAttribute("vec3", "a_position");
       shaderBuilder.addAttribute("vec3", "a_uv");
+      shaderBuilder.addVarying("vec2", "v_uv");
       shaderBuilder.addDefine("BLUE_TINT", 0.5, ShaderDestination.FRAGMENT);
       var vertexLines = [
         "void main()",
@@ -382,13 +420,19 @@ describe(
         "attribute vec3 a_uv;",
       ];
 
+      var expectedVaryings = ["varying vec2 v_uv;"];
+
       var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        expectedAttributes.concat(vertexLines)
+        expectedAttributes.concat(expectedVaryings, vertexLines)
       );
-      checkFragmentShader(shaderProgram, ["BLUE_TINT 0.5"], fragmentLines);
+      checkFragmentShader(
+        shaderProgram,
+        ["BLUE_TINT 0.5"],
+        expectedVaryings.concat(fragmentLines)
+      );
     });
   },
   "WebGL"
