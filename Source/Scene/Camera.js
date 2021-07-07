@@ -3681,7 +3681,64 @@ var cartoArray = [
   new Cartographic(),
   new Cartographic(),
 ];
+<<<<<<< HEAD
 function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
+=======
+
+function rotateQuad(quad, numRotations) {
+  var newQuad = new Array(4);
+  for (var i = 0, j = numRotations; i < 4; i++, j = (j + 1) % 4) {
+    newQuad[j] = quad[i];
+  }
+  return newQuad;
+}
+
+function generalHeading(heading) {
+  if (heading > 45 && heading <= 135) {
+    return "east";
+  }
+  if (heading > 135 && heading <= 225) {
+    return "south";
+  }
+  if (heading > 225 && heading <= 315) {
+    return "west";
+  }
+
+  return "north";
+}
+
+var rotationsFromUp = {
+  up: 0,
+  left: 1,
+  down: 2,
+  right: 3,
+};
+
+var headingQuadrant = {
+  north: 0,
+  east: 1,
+  south: 2,
+  west: 3,
+};
+
+// Takes heading and camera direction (starting from direct view of earth from space)
+// and adjusts the quad array so that its corners roughly match where the camera is pointing.
+//
+// Ex.
+//    - direction is 'left' (looking toward the west with the horizon showing on the upper and lower left corners)
+//    - heading is 80 - camera is rotated clockwise toward the east (still showing horizon on upper and lower left corners).
+//                      At this point, the camera is upside down (up -> south).
+//
+// Given that the corner indeces of the quad are [UL, LL, LR, UR],
+// the quad elements would be 'rotated' like so - [NW, SW, SE, NE] => [SE, NE, NW, SW]
+function changeQuadHeading(heading, direction, quad) {
+  var numRotations =
+    rotationsFromUp[direction] + headingQuadrant[generalHeading(heading)];
+  return rotateQuad(quad, numRotations % 4);
+}
+
+function addToResult(x, y, index, camera, ellipsoid) {
+>>>>>>> eslint
   scratchPickCartesian2.x = x;
   scratchPickCartesian2.y = y;
   var r = camera.pickEllipsoid(
@@ -3693,11 +3750,59 @@ function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
     cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
     return 1;
   }
+<<<<<<< HEAD
   cartoArray[index] = ellipsoid.cartesianToCartographic(
     computedHorizonQuad[index],
     cartoArray[index]
   );
   return 0;
+=======
+  return false;
+}
+
+// Indeces in a quad array that represents a rectangle
+var UL = 0;
+var LL = 1;
+var LR = 2;
+var UR = 3;
+
+function generalCameraDirection(cornersShowingHorizon) {
+  if (cornersShowingHorizon.length === 1) {
+    if (cornersShowingHorizon[0] === UL || cornersShowingHorizon[0] === UR) {
+      return "up";
+    }
+    return "down";
+  }
+
+  if (cornersShowingHorizon.length === 2) {
+    if (cornersShowingHorizon[0] === UL) {
+      if (cornersShowingHorizon[1] === LL) {
+        return "left";
+      }
+      return "up";
+    } else if (cornersShowingHorizon[0] === LL) {
+      return "down";
+    }
+    return "right";
+  }
+}
+
+function adjustViewForHorizon(camera, cornersShowingHorizon, ellipsoid) {
+  var horizonQuad = computeHorizonQuad(camera, ellipsoid);
+
+  horizonQuad = changeQuadHeading(
+    CesiumMath.toDegrees(camera.heading),
+    generalCameraDirection(cornersShowingHorizon),
+    horizonQuad
+  );
+
+  cornersShowingHorizon.fromEach(function (corner) {
+    cartoArray[corner] = ellipsoid.cartesianToCartographic(
+      horizonQuad[corner],
+      cartoArray[corner]
+    );
+  });
+>>>>>>> eslint
 }
 /**
  * Computes the approximate visible rectangle on the ellipsoid.
@@ -3727,7 +3832,11 @@ Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
   var width = canvas.clientWidth;
   var height = canvas.clientHeight;
 
+<<<<<<< HEAD
   var successfulPickCount = 0;
+=======
+  var unsuccessfulPicks = [];
+>>>>>>> eslint
 
   var computedHorizonQuad = computeHorizonQuad(this, ellipsoid);
 
