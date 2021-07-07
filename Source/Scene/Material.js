@@ -843,7 +843,7 @@ function createTexture2DUpdateFunction(uniformId) {
     if (uniformValue instanceof Texture && uniformValue !== texture) {
       material._texturePaths[uniformId] = undefined;
       var tmp = material._textures[uniformId];
-      if (tmp !== material._defaultTexture) {
+      if (defined(tmp) && tmp !== material._defaultTexture) {
         tmp.destroy();
       }
       material._textures[uniformId] = uniformValue;
