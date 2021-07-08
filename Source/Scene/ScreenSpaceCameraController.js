@@ -450,12 +450,20 @@ function reactToInput(
   }
 
   var aggregator = controller._aggregator;
+  var scene = controller._scene;
+  var camera = scene.camera;
+  var canvas = scene.canvas;
+  
+  if(aggregator.showPivot){
+    camera._showCameraPivot(camera.pivotOnCenter? new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2) : aggregator.pivotPoint);
+  }else{
+    camera._hideCameraPivot();
+  }
 
   if (!Array.isArray(eventTypes)) {
     scratchEventTypeArray[0] = eventTypes;
     eventTypes = scratchEventTypeArray;
   }
-
   var length = eventTypes.length;
   for (var i = 0; i < length; ++i) {
     var eventType = eventTypes[i];
@@ -466,7 +474,6 @@ function reactToInput(
       aggregator.isMoving(type, modifier) &&
       aggregator.getMovement(type, modifier);
     var startPosition = aggregator.getStartMousePosition(type, modifier);
-
     if (controller.enableInputs && enabled) {
       if (movement) {
         action(controller, startPosition, movement);
@@ -629,7 +636,13 @@ function handleZoom(
     object._zoomingUnderground = object._cameraUnderground;
   }
 
-  if (!object._useZoomWorldPosition) {
+  if (mode === SceneMode.SCENE3D && !object._useZoomWorldPosition) {
+    if(distance < 0){
+      zoomPitchDown();
+    }
+    camera.zoomIn(distance);
+    return;
+  }else if(!object._useZoomWorldPosition){
     camera.zoomIn(distance);
     return;
   }
@@ -864,6 +877,10 @@ function handleZoom(
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.cross(camera.right, camera.direction, camera.up);
 
+            //Rotation operation here
+            if(distance < 0){
+              zoomPitchDown();
+            }
             camera.setView(scratchZoomViewOptions);
             return;
           }
@@ -934,8 +951,31 @@ function handleZoom(
     camera.zoomIn(distance);
   }
 
+  // Negative numbers for zooming out, positive for zooming in
+  if(mode === SceneMode.SCENE3D && distance < 0){
+    zoomPitchDown();
+  }
   if (!object._cameraUnderground) {
     camera.setView(scratchZoomViewOptions);
+  }
+  
+  // Pitch down during zoom operation
+  function zoomPitchDown(){
+    var ratio = Math.max(distance, 0.1);
+    var normalPos = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
+    var adjustDot = Cartesian3.dot(normalPos, camera.directionWC);
+    
+    // This is the angle the camera is from the center of the globe
+    var adjustAngle = CesiumMath.acosClamped(adjustDot);
+    if(adjustAngle > .05){
+      adjustAngle = adjustAngle * ratio;
+    }
+
+    // Rotation operation here
+    camera.rotateAroundPoint(object._zoomWorldPosition, camera.right, adjustAngle);
+    
+    // Pitch operation
+    scratchZoomViewOptions.orientation.pitch -= adjustAngle;
   }
 }
 
@@ -2291,7 +2331,17 @@ function tilt3DOnEllipsoid(controller, startPosition, movement) {
   var windowPosition = tilt3DWindowPos;
   windowPosition.x = canvas.clientWidth / 2;
   windowPosition.y = canvas.clientHeight / 2;
-  var ray = camera.getPickRay(windowPosition, tilt3DRay);
+  var ray;
+  // Sets the rotational pivot point to the window center
+  //   Else, the rotational pivot point to the drag start
+  if(camera.pivotOnCenter){
+    ray = camera.getPickRay(windowPosition, tilt3DRay);
+  } else if(startPosition){
+    ray = camera.getPickRay(startPosition, tilt3DRay);
+  } else{
+    var normalPos = Cartesian3.normalize(Cartesian3.negate(camera.positionWC,new Cartesian3()),new Cartesian3());
+    ray = new Ray(camera.position, normalPos);
+  }
 
   var center;
   var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);

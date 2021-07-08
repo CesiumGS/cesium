@@ -184,20 +184,30 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
 
   var down;
   var up;
+  var showPivot = false;
   if (type === CameraEventType.LEFT_DRAG) {
     down = ScreenSpaceEventType.LEFT_DOWN;
     up = ScreenSpaceEventType.LEFT_UP;
+    if(modifier === KeyboardEventModifier.CTRL){
+      showPivot = true;
+    }
   } else if (type === CameraEventType.RIGHT_DRAG) {
     down = ScreenSpaceEventType.RIGHT_DOWN;
     up = ScreenSpaceEventType.RIGHT_UP;
+    if(modifier === KeyboardEventModifier.CTRL){
+      showPivot = true;
+    }
   } else if (type === CameraEventType.MIDDLE_DRAG) {
     down = ScreenSpaceEventType.MIDDLE_DOWN;
     up = ScreenSpaceEventType.MIDDLE_UP;
+    showPivot = true;
   }
 
   aggregator._eventHandler.setInputAction(
     function (event) {
       aggregator._buttonsDown++;
+      aggregator.showPivot = showPivot;
+      aggregator.pivotPoint = event.position;
       lastMovement.valid = false;
       isDown[key] = true;
       pressTime[key] = new Date();
@@ -210,6 +220,8 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   aggregator._eventHandler.setInputAction(
     function () {
       aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
+      aggregator.showPivot = false;
+      aggregator.pivotPoint = new Cartesian2(0, 0);
       isDown[key] = false;
       releaseTime[key] = new Date();
     },
