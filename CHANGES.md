@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.84 - 2021-08-01
+
+##### Fixes :wrench:
+
+- Fixed the ability to set a material's image to `undefined` and `Material.DefaultImageId`. [#9644](https://github.com/CesiumGS/cesium/pull/9644)
+
 ### 1.83 - 2021-07-01
 
 ##### Breaking Changes :mega:
