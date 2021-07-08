@@ -6,8 +6,9 @@ import Pass from "../Renderer/Pass.js";
 import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 //import GltfLoader from "./GltfLoader.js";
-import Model from "./Model.js";
-import ModelAnimationLoop from "./ModelAnimationLoop.js";
+//import Model from "./Model.js";
+import Model2 from "./Model/Model2.js";
+//import ModelAnimationLoop from "./ModelAnimationLoop.js";
 //import NewModel from "./NewModel.js";
 
 /**
@@ -164,7 +165,7 @@ function initialize(content, gltf) {
     primitive: tileset,
   };
 
-  content._model = new Model({
+  content._model = new Model2({
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
@@ -187,11 +188,15 @@ function initialize(content, gltf) {
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
   });
+
+  /*
+  TODO: Stub this out
   content._model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
   });
+  */
 }
 
 Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {

@@ -1,6 +1,7 @@
-import when from "../ThirdParty/when.js";
-import GltfLoader from "./GltfLoader.js";
+import when from "../../ThirdParty/when.js";
+import GltfLoader from "../GltfLoader.js";
 import ModelSceneGraph from "./ModelSceneGraph.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 
 export default function Model2(options) {
   this._gltfLoader = undefined;
@@ -8,42 +9,61 @@ export default function Model2(options) {
   this._resourcesLoaded = false;
   this._drawCommandsCreated = false;
   this._sceneGraph = undefined;
-  initialize(this, options.basePath, options.gltf, options.releaseGltfJson, options.incrementallyLoadTextures);
+  initialize(
+    this,
+    options.basePath,
+    options.gltf,
+    options.releaseGltfJson,
+    options.incrementallyLoadTextures
+  );
 }
 
 Object.defineProperties(Model2.prototype, {
   readyPromise: {
-    get: function() {
+    get: function () {
       return this._readyPromise.promise;
-    }
-  }
+    },
+  },
 });
 
-function initialize(model, gltfResource, gltfTypedArray, releaseGltfJson, incrementallyLoadTextures) {
-  var loader = new GltfLoader({
+function initialize(
+  model,
+  gltfResource,
+  gltf,
+  releaseGltfJson,
+  incrementallyLoadTextures
+) {
+  var loaderOptions = {
     gltfResource: gltfResource,
-    typedArray: gltfTypedArray,
     releaseGltfJson: releaseGltfJson,
-    incrementallyLoadTextures: incrementallyLoadTextures
-  });
+    incrementallyLoadTextures: incrementallyLoadTextures,
+  };
+
+  if (gltf instanceof Uint8Array) {
+    loaderOptions.typedArray = gltf;
+  } else {
+    // TODO
+    throw new DeveloperError("GltfLoader does not support glTF yet, only GLB");
+  }
+  var loader = new GltfLoader(loaderOptions);
 
   model._gltfLoader = loader;
   loader.load();
 
   loader.promise
-    .then(function(loader) {
-      this._readyPromise.resolve();
-      this._resourcesLoaded = true;
+    .then(function (loader) {
+      model._readyPromise.resolve();
+      model._resourcesLoaded = true;
 
       model._sceneGraph = new ModelSceneGraph({
-        modelComponents: loader.components
+        modelComponents: loader.components,
       });
     })
     // TODO: Handle this properly
     .otherwise(console.error);
 }
 
-Model2.prototype.update = function(frameState) {
+Model2.prototype.update = function (frameState) {
   // TODO: morphing
   // TODO: webp
 

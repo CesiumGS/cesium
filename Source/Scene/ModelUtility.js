@@ -562,6 +562,7 @@ ModelUtility.supportedExtensions = {
   AGI_articulations: true,
   CESIUM_RTC: true,
   EXT_texture_webp: true,
+  EXT_mesh_gpu_instancing: true,
   KHR_blend: true,
   KHR_binary_glTF: true,
   KHR_texture_basisu: true,

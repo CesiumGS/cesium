@@ -71,7 +71,7 @@ import ModelMesh from "./ModelMesh.js";
 import ModelNode from "./ModelNode.js";
 import ModelOutlineLoader from "./ModelOutlineLoader.js";
 import ModelUtility from "./ModelUtility.js";
-import Model2 from "./Model2.js";
+import Model2 from "./Model/Model2.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
