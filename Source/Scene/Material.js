@@ -473,6 +473,14 @@ Material.prototype.update = function (context) {
       });
     }
 
+    // The material destroys its old texture only after the new one has been loaded.
+    // This will ensure a smooth swap of textures and prevent the default texture
+    // from appearing for a few frames.
+    var oldTexture = this._textures[uniformId];
+    if (defined(oldTexture) && oldTexture !== this._defaultTexture) {
+      oldTexture.destroy();
+    }
+
     this._textures[uniformId] = texture;
 
     var uniformDimensionsName = uniformId + "Dimensions";
@@ -858,14 +866,14 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
-    if (uniformChanged && defined(texture)) {
+    if (uniformChanged && defined(texture) && uniformValueIsDefaultImage) {
+      // If the newly-assigned texture is the default texture,
+      // we don't need to wait for a new image to load before destroying
+      // the old texture.
       if (texture !== material._defaultTexture) {
         texture.destroy();
       }
-
-      if (uniformValueIsDefaultImage) {
-        texture = undefined;
-      }
+      texture = undefined;
     }
 
     if (!defined(texture)) {
