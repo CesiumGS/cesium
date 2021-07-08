@@ -346,32 +346,35 @@ function updateCameraDeltas(camera) {
 /**
  * Initialize the camera pivot point in the DOM
  */
-Camera.prototype._initPivotElement = function(){
+Camera.prototype._initPivotElement = function () {
   var camera = this;
 
   // Initialize the camera pivot element, if needed
-  if(document.getElementById("cesium_camera_pivot") === null){
+  if (document.getElementById("cesium_camera_pivot") === null) {
     camera._domPivot = document.createElement("div");
-    camera._domPivot.setAttribute("style", "position:absolute;width:16px;height:16px;margin-left:-8px;margin-top:-8px;border:2px dashed #BBB;border-radius:50%;");
+    camera._domPivot.setAttribute(
+      "style",
+      "position:absolute;width:16px;height:16px;margin-left:-8px;margin-top:-8px;border:2px dashed #BBB;border-radius:50%;"
+    );
     camera._domPivot.id = "cesium_camera_pivot";
     document.body.appendChild(camera._domPivot);
-  }else{
+  } else {
     // Bind to existing pivot
     camera._domPivot = document.getElementById("cesium_camera_pivot");
   }
-}
+};
 
 /**
  * Show the pivot and updates the location
- * 
+ *
  * @param {Cartesian2} position - The event positional element
  * @see Camera#initPivotElement
  */
-Camera.prototype._showCameraPivot = function(position){
+Camera.prototype._showCameraPivot = function (position) {
   var camera = this;
   var scene = camera._scene;
   // If the dom pivot is not initialized, initialize it
-  if(camera._domPivot === undefined){ 
+  if (camera._domPivot === undefined) {
     camera._initPivotElement();
   }
 
@@ -379,27 +382,27 @@ Camera.prototype._showCameraPivot = function(position){
   var ray = camera.getPickRay(startPosition);
   var intersection = IntersectionTests.rayEllipsoid(ray, scene.globe.ellipsoid);
   // Ensure the pivot is actually on the globe
-  if (intersection !== undefined){
+  if (intersection !== undefined) {
     camera._domPivot.style.display = "block";
     camera._domPivot.style.left = position.x + "px";
     camera._domPivot.style.top = position.y + "px";
   }
-}
+};
 
 /**
  * Hides the Camera's pivot point indicator
- * 
+ *
  * @see Camera#initPivotElement
  */
-Camera.prototype._hideCameraPivot = function(){
+Camera.prototype._hideCameraPivot = function () {
   var camera = this;
   // If the dom pivot is not initialized, initialize it
-  if(camera._domPivot === undefined){ 
+  if (camera._domPivot === undefined) {
     camera._initPivotElement();
   }
 
   camera._domPivot.style.display = "none";
-}
+};
 
 /**
  * Checks if there's a camera flight with preload for this camera.
@@ -2134,30 +2137,34 @@ function rotateHorizontal(camera, angle) {
 
 /**
  * Rotates the Camera slightly around a given point
- * 
+ *
  * @param {Cartesian3} point - The point for the camera to rotate around
  * @param {Cartesian3} axis - The rotational axis
  * @param {Number} angle - Amount to rotate, angular differential
- * 
+ *
  * @see Camera#handleZoom
  */
-Camera.prototype.rotateAroundPoint = function(point, axis, angle){
+Camera.prototype.rotateAroundPoint = function (point, axis, angle) {
   // Shift to origin
-  var camera_temp = new Cartesian3;
+  var camera_temp = new Cartesian3();
   Cartesian3.subtract(this.position, point, camera_temp);
-  
+
   // Rotate around origin
   var turnAngle = defaultValue(angle, this.defaultRotateAmount);
-  var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
+  var quaternion = Quaternion.fromAxisAngle(
+    axis,
+    -turnAngle,
+    rotateScratchQuaternion
+  );
   var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
   Matrix3.multiplyByVector(rotation, camera_temp, camera_temp);
   Matrix3.multiplyByVector(rotation, this.direction, this.direction);
   Matrix3.multiplyByVector(rotation, this.up, this.up);
   Matrix3.multiplyByVector(rotation, this.right, this.right);
-  
+
   // Shift back
   Cartesian3.add(camera_temp, point, this.position);
-}
+};
 
 function zoom2D(camera, amount) {
   var frustum = camera.frustum;

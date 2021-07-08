@@ -188,13 +188,13 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   if (type === CameraEventType.LEFT_DRAG) {
     down = ScreenSpaceEventType.LEFT_DOWN;
     up = ScreenSpaceEventType.LEFT_UP;
-    if(modifier === KeyboardEventModifier.CTRL){
+    if (modifier === KeyboardEventModifier.CTRL) {
       showPivot = true;
     }
   } else if (type === CameraEventType.RIGHT_DRAG) {
     down = ScreenSpaceEventType.RIGHT_DOWN;
     up = ScreenSpaceEventType.RIGHT_UP;
-    if(modifier === KeyboardEventModifier.CTRL){
+    if (modifier === KeyboardEventModifier.CTRL) {
       showPivot = true;
     }
   } else if (type === CameraEventType.MIDDLE_DRAG) {
