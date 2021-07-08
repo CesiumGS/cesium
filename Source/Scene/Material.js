@@ -422,9 +422,7 @@ Material.prototype.isTranslucent = function () {
  * @private
  */
 Material.prototype.update = function (context) {
-  if (!defined(this._defaultTexture)) {
-    this._defaultTexture = context.defaultTexture;
-  }
+  this._defaultTexture = context.defaultTexture;
 
   var i;
   var uniformId;
@@ -923,6 +921,9 @@ function createTexture2DUpdateFunction(uniformId) {
             });
           })
           .otherwise(function () {
+            if (defined(texture) && texture !== material._defaultTexture) {
+              texture.destroy();
+            }
             material._textures[uniformId] = material._defaultTexture;
           });
       } else if (
