@@ -294,3 +294,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Ethan Wong](https://github.com/GetToSet)
 - [Calogero Mauceri](https://github.com/kalosma)
 - [Ren Jianqiang](https://github.com/renjianqiang)
+- [Benjamin Zeigler](https://github.com/sololegends)

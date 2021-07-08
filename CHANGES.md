@@ -1,5 +1,14 @@
 # Change Log
 
+### 1.84 - 2021-07-07
+
+##### Additions :tada:
+- Added switch, `Camera.pivotOnCenter`, to alter tilt behaviour
+  - TRUE[default]: The typical, expected behaviour. 
+		Rotate origin is screen space center ray cast to globe
+  - FALSE: Rotate origin is mouse point of tilt operation start
+
+
 ### 1.83 - 2021-07-01
 
 ##### Breaking Changes :mega:
