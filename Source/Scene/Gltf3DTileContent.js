@@ -1,14 +1,14 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-//import RequestType from "../Core/RequestType.js";
-//import Pass from "../Renderer/Pass.js";
+import RequestType from "../Core/RequestType.js";
+import Pass from "../Renderer/Pass.js";
 import when from "../ThirdParty/when.js";
-//import Axis from "./Axis.js";
-import GltfLoader from "./GltfLoader.js";
-//import Model from "./Model.js";
-//import ModelAnimationLoop from "./ModelAnimationLoop.js";
-import NewModel from "./NewModel.js";
+import Axis from "./Axis.js";
+//import GltfLoader from "./GltfLoader.js";
+import Model from "./Model.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
+//import NewModel from "./NewModel.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
@@ -126,7 +126,7 @@ function initialize(content, gltf) {
   // TODO: This isn't quite right:
   // 1. NewModel.fromglTF should be the entry point
   // 2. NewModel listens on the readyPromise
-  var loader = new GltfLoader({
+  /*var loader = new GltfLoader({
     gltfResource: content._resource,
     typedArray: gltf,
     // In 3D Tiles, each glTF is typically unique, so no sense caching them
@@ -147,16 +147,14 @@ function initialize(content, gltf) {
       model._readyPromise.then(function () {
         content._readyPromise.resolve();
       });
-      /*
     model.activeAnimations.addAll({
       loop: ModelAnimationLoop.REPEAT,
     });
-    */
       content._model = model;
     })
     .otherwise(console.error);
+    */
 
-  /*
   var tileset = content._tileset;
   var tile = content._tile;
   var resource = content._resource;
@@ -193,7 +191,6 @@ function initialize(content, gltf) {
       loop: ModelAnimationLoop.REPEAT,
     });
   });
-  */
 }
 
 Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {

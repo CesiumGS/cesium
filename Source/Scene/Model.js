@@ -14,6 +14,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
@@ -71,6 +72,7 @@ import ModelMesh from "./ModelMesh.js";
 import ModelNode from "./ModelNode.js";
 import ModelOutlineLoader from "./ModelOutlineLoader.js";
 import ModelUtility from "./ModelUtility.js";
+import Model2 from "./Model2.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
@@ -5886,4 +5888,9 @@ Model.prototype.destroy = function () {
 // exposed for testing
 Model._getClippingFunction = getClippingFunction;
 Model._modifyShaderForColor = modifyShaderForColor;
-export default Model;
+
+var model = Model;
+if (ExperimentalFeatures.enableModel2) {
+  model = Model2;
+}
+export default model;
