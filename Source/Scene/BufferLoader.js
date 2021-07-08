@@ -108,8 +108,7 @@ BufferLoader.prototype.load = function () {
 function loadExternalBuffer(bufferLoader) {
   var resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
-  resource
-    .fetchArrayBuffer()
+  BufferLoader._fetchArrayBuffer(resource)
     .then(function (arrayBuffer) {
       if (bufferLoader.isDestroyed()) {
         return;
@@ -127,6 +126,14 @@ function loadExternalBuffer(bufferLoader) {
       bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }
+
+/**
+ * Exposed for testing
+ * @private
+ */
+BufferLoader._fetchArrayBuffer = function (resource) {
+  return resource.fetchArrayBuffer();
+};
 
 /**
  * Unloads the resource.

@@ -36,6 +36,7 @@ import { DepthFunction } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
+import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
 
 describe(
   "Scene/Model",
@@ -49,18 +50,10 @@ describe(
       "./Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf";
     var texturedBoxBasePathUrl =
       "./Data/Models/Box-Textured-BasePath/CesiumTexturedBoxTest.gltf";
-    var texturedBoxKTXUrl =
-      "./Data/Models/Box-Textured-KTX/CesiumTexturedBoxTest.gltf";
-    var texturedBoxKTXBinaryUrl =
-      "./Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb";
-    var texturedBoxKTXEmbeddedUrl =
-      "./Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf";
-    var texturedBoxCRNUrl =
-      "./Data/Models/Box-Textured-CRN/CesiumTexturedBoxTest.gltf";
-    var texturedBoxCRNBinaryUrl =
-      "./Data/Models/Box-Textured-CRN-Binary/CesiumTexturedBoxTest.glb";
-    var texturedBoxCRNEmbeddedUrl =
-      "./Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf";
+    var texturedBoxKTX2Url =
+      "./Data/Models/Box-Textured-KTX2-Basis/CesiumTexturedBoxTest.gltf";
+    var texturedBoxKTX2MipmapUrl =
+      "./Data/Models/Box-Textured-KTX2-Mipmap/CheckerboardTexturedBoxTest.gltf";
     var texturedBoxCustomUrl =
       "./Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf";
     var texturedBoxKhrBinaryUrl =
@@ -806,7 +799,7 @@ describe(
       return loadModel(boomBoxUrl).then(function (m) {
         m.scale = 20.0; // Source model is very small, so scale up a bit
         m.specularEnvironmentMaps =
-          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx";
+          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
 
         return pollToPromise(function () {
           scene.highDynamicRange = true;
@@ -1206,6 +1199,16 @@ describe(
       });
     });
 
+    it("loads a glTF 2.0 model with showOutline set as false", function () {
+      spyOn(ModelOutlineLoader, "outlinePrimitives");
+      return loadModel(boxGltf2Url, {
+        showOutline: false,
+      }).then(function (m) {
+        expect(ModelOutlineLoader.outlinePrimitives).not.toHaveBeenCalled();
+        primitives.remove(m);
+      });
+    });
+
     it("loads a glTF 2.0 model with techniques_webgl extension", function () {
       return loadModel(boxGltf2WithTechniquesUrl).then(function (m) {
         verifyRender(m);
@@ -1369,41 +1372,11 @@ describe(
       });
     });
 
-    it("renders textured box with external KTX texture", function () {
-      return loadModel(texturedBoxKTXUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded binary KTX texture", function () {
-      return loadModel(texturedBoxKTXBinaryUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded base64 encoded KTX texture", function () {
-      return loadModel(texturedBoxKTXEmbeddedUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with external CRN texture", function () {
-      if (!scene.context.s3tc) {
+    it("renders textured box with embedded KTX2 texture", function () {
+      if (!scene.context.supportsBasis) {
         return;
       }
-      return loadModel(texturedBoxCRNUrl, {
+      return loadModel(texturedBoxKTX2Url, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
         verifyRender(m);
@@ -1412,27 +1385,17 @@ describe(
       });
     });
 
-    it("renders textured box with embedded binary CRN texture", function () {
-      if (!scene.context.s3tc) {
+    it("renders textured box with embedded KTX2 texture with mipmap", function () {
+      if (!scene.context.supportsBasis) {
         return;
       }
-      return loadModel(texturedBoxCRNBinaryUrl, {
+      var gl = scene.context._gl;
+      spyOn(gl, "compressedTexImage2D").and.callThrough();
+      return loadModel(texturedBoxKTX2MipmapUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
         verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded base64 encoded CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNEmbeddedUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
+        expect(gl.compressedTexImage2D.calls.count()).toEqual(9);
         expect(Object.keys(m._rendererResources.textures).length).toBe(1);
         primitives.remove(m);
       });

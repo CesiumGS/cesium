@@ -143,15 +143,27 @@ function Texture(options) {
 
     if (PixelFormat.isDXTFormat(internalFormat) && !context.s3tc) {
       throw new DeveloperError(
-        "When options.pixelFormat is S3TC compressed, this WebGL implementation must support the WEBGL_texture_compression_s3tc extension. Check context.s3tc."
+        "When options.pixelFormat is S3TC compressed, this WebGL implementation must support the WEBGL_compressed_texture_s3tc extension. Check context.s3tc."
       );
     } else if (PixelFormat.isPVRTCFormat(internalFormat) && !context.pvrtc) {
       throw new DeveloperError(
-        "When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_texture_compression_pvrtc extension. Check context.pvrtc."
+        "When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_compressed_texture_pvrtc extension. Check context.pvrtc."
+      );
+    } else if (PixelFormat.isASTCFormat(internalFormat) && !context.astc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ASTC compressed, this WebGL implementation must support the WEBGL_compressed_texture_astc extension. Check context.astc."
+      );
+    } else if (PixelFormat.isETC2Format(internalFormat) && !context.etc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ETC2 compressed, this WebGL implementation must support the WEBGL_compressed_texture_etc extension. Check context.etc."
       );
     } else if (PixelFormat.isETC1Format(internalFormat) && !context.etc1) {
       throw new DeveloperError(
-        "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1."
+        "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_compressed_texture_etc1 extension. Check context.etc1."
+      );
+    } else if (PixelFormat.isBC7Format(internalFormat) && !context.bc7) {
+      throw new DeveloperError(
+        "When options.pixelFormat is BC7 compressed, this WebGL implementation must support the EXT_texture_compression_bptc extension. Check context.bc7."
       );
     }
 
@@ -217,6 +229,7 @@ function Texture(options) {
 
       // Source: typed array
       var arrayBufferView = source.arrayBufferView;
+      var i, mipWidth, mipHeight;
       if (isCompressed) {
         gl.compressedTexImage2D(
           textureTarget,
@@ -227,6 +240,29 @@ function Texture(options) {
           0,
           arrayBufferView
         );
+        if (defined(source.mipLevels)) {
+          mipWidth = width;
+          mipHeight = height;
+          for (i = 0; i < source.mipLevels.length; ++i) {
+            mipWidth = Math.floor(mipWidth / 2) | 0;
+            if (mipWidth < 1) {
+              mipWidth = 1;
+            }
+            mipHeight = Math.floor(mipHeight / 2) | 0;
+            if (mipHeight < 1) {
+              mipHeight = 1;
+            }
+            gl.compressedTexImage2D(
+              textureTarget,
+              i + 1,
+              internalFormat,
+              mipWidth,
+              mipHeight,
+              0,
+              source.mipLevels[i]
+            );
+          }
+        }
       } else {
         if (flipY) {
           arrayBufferView = PixelFormat.flipY(
@@ -250,9 +286,9 @@ function Texture(options) {
         );
 
         if (defined(source.mipLevels)) {
-          var mipWidth = width;
-          var mipHeight = height;
-          for (var i = 0; i < source.mipLevels.length; ++i) {
+          mipWidth = width;
+          mipHeight = height;
+          for (i = 0; i < source.mipLevels.length; ++i) {
             mipWidth = Math.floor(mipWidth / 2) | 0;
             if (mipWidth < 1) {
               mipWidth = 1;

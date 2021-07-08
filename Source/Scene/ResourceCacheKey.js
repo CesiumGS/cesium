@@ -70,21 +70,10 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
   return bufferCacheKey + "-range-" + bufferViewCacheKey;
 }
 
-function getImageCacheKey(
-  gltf,
-  imageId,
-  gltfResource,
-  baseResource,
-  supportedImageFormats
-) {
-  var results = GltfLoaderUtil.getImageUriOrBufferView({
-    gltf: gltf,
-    imageId: imageId,
-    supportedImageFormats: supportedImageFormats,
-  });
-
-  var bufferViewId = results.bufferViewId;
-  var uri = results.uri;
+function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
+  var image = gltf.images[imageId];
+  var bufferViewId = image.bufferView;
+  var uri = image.uri;
 
   if (defined(uri)) {
     var resource = baseResource.getDerivedResource({
@@ -441,7 +430,6 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @param {Number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {String} The image cache key.
  * @private
@@ -452,22 +440,19 @@ ResourceCacheKey.getImageCacheKey = function (options) {
   var imageId = options.imageId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
-  var supportedImageFormats = options.supportedImageFormats;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
   //>>includeEnd('debug');
 
   var imageCacheKey = getImageCacheKey(
     gltf,
     imageId,
     gltfResource,
-    baseResource,
-    supportedImageFormats
+    baseResource
   );
 
   return "image:" + imageCacheKey;
@@ -514,8 +499,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
     gltf,
     imageId,
     gltfResource,
-    baseResource,
-    supportedImageFormats
+    baseResource
   );
 
   // Include the sampler cache key in the texture cache key since textures and
