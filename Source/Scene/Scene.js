@@ -15,6 +15,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import Event from "../Core/Event.js";
+import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
@@ -176,6 +177,12 @@ function Scene(options) {
   //>>includeEnd('debug');
   var hasCreditContainer = defined(creditContainer);
   var context = new Context(canvas, contextOptions);
+  if (FeatureDetection.isInternetExplorer()) {
+    deprecationWarning(
+      "Internet Explorer",
+      "Support for Internet Explorer was deprecated in Cesium 1.83 and will end in 1.84."
+    );
+  }
   if (!hasCreditContainer) {
     creditContainer = document.createElement("div");
     creditContainer.style.position = "absolute";
@@ -750,7 +757,7 @@ function Scene(options) {
   this.sphericalHarmonicCoefficients = undefined;
 
   /**
-   * The url to the KTX file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
+   * The url to the KTX2 file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
    * @type {String}
    */
   this.specularEnvironmentMaps = undefined;
@@ -1695,8 +1702,14 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
       context.s3tc) ||
     ((format === "WEBGL_compressed_texture_pvrtc" || format === "pvrtc") &&
       context.pvrtc) ||
+    ((format === "WEBGL_compressed_texture_etc" || format === "etc") &&
+      context.etc) ||
     ((format === "WEBGL_compressed_texture_etc1" || format === "etc1") &&
-      context.etc1)
+      context.etc1) ||
+    ((format === "WEBGL_compressed_texture_astc" || format === "astc") &&
+      context.astc) ||
+    ((format === "EXT_texture_compression_bptc" || format === "bc7") &&
+      context.bc7)
   );
 };
 

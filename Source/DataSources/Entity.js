@@ -103,7 +103,7 @@ function createPropertyTypeDescriptor(name, Type) {
  *
  * @param {Entity.ConstructorOptions} [options] Object describing initialization options
  *
- * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
+ * @see {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-creating-entities/|Creating Entities}
  */
 function Entity(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
