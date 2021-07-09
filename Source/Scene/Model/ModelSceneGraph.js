@@ -11,6 +11,7 @@ export default function ModelSceneGraph(options) {
   this._pipelineStages = [];
 
   this._sceneNodes = [];
+  this._drawCommands = [];
 
   initialize(this);
 }
@@ -77,7 +78,9 @@ ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
   for (var i = 0; i < this._sceneNodes.length; i++) {
     var node = this._sceneNodes[i];
 
-    var nodeResources = new RenderResources.NodeRenderResources();
+    var nodeResources = new RenderResources.NodeRenderResources(
+      node._modelMatrix
+    );
 
     for (var j = 0; j < node._primitives.length; i++) {
       var nodePipelineStage = node._pipelineStages[j];
@@ -93,14 +96,16 @@ ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
         pipelineStage.process(primitive, primitiveResources, frameState);
 
         finalizeShaders(primitiveResources);
-        primitiveResources.buildDrawCommand(frameState);
+        this._drawCommands.push(
+          primitiveResources.buildDrawCommand(frameState)
+        );
       }
     }
   }
 };
 
 ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
-  // TODO
+  frames.commandList = frameState.commandList.concat(this._drawCommands);
 };
 
 function finalizeShaders(primitiveResources) {
@@ -132,12 +137,7 @@ function finalizeShaders(primitiveResources) {
 // 1. Propagate model matrices
 // 2. Build the pipeline stages as we go
 // 3. Build internal representation of nodes
-function traverseModelComponents(
-  sceneGraph,
-  modelComponents,
-  node,
-  modelMatrix
-) {
+function traverseModelComponents(sceneGraph, node, modelMatrix) {
   if (!defined(node.children) && !defined(node.primitives)) {
     return;
   }
@@ -153,12 +153,7 @@ function traverseModelComponents(
         new Matrix4()
       );
 
-      traverseModelComponents(
-        sceneGraph,
-        modelComponents,
-        childNode,
-        childMatrix
-      );
+      traverseModelComponents(sceneGraph, childNode, childMatrix);
     }
   }
 
@@ -169,7 +164,7 @@ function traverseModelComponents(
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      sceneNode.primitives.push(
+      node.primitives.push(
         new ModelSceneMeshPrimitive({
           primitive: node.primitives[i],
         })
