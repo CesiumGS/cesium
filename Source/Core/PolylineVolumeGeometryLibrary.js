@@ -426,13 +426,13 @@ PolylineVolumeGeometryLibrary.computePositions = function (
   for (var i = 1; i < length - 1; i++) {
     var repeat = duplicatePoints ? 2 : 1;
     nextPosition = positions[i + 1];
-    forward = Cartesian3.subtract(nextPosition, position, forward);
     if (position.equals(nextPosition)) {
       oneTimeWarning(
         "Positions are too close and are considered equivalent with rounding error."
       );
       continue;
     }
+    forward = Cartesian3.subtract(nextPosition, position, forward);
     forward = Cartesian3.normalize(forward, forward);
     cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
     cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
