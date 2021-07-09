@@ -22,7 +22,7 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
 
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
   this.uniformMap = {};
-  this.indices = undefined;
+  this.indices = primitive.indices;
   this.indexCount = 0;
   this.instanceCount = nodeRenderResources.instanceCount;
   this.attributes = nodeRenderResources.attributes.slice();

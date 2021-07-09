@@ -144,7 +144,7 @@ function buildDrawCommand(primitiveResources, frameState) {
 
   var vertexArray = new VertexArray({
     context: frameState.context,
-    indices: primitiveResources.indices,
+    indexBuffer: primitiveResources.indices.buffer,
     attributes: primitiveResources.attributes,
   });
 
