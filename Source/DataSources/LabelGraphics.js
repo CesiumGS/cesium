@@ -167,7 +167,7 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the background {@link Color}.
    * @memberof LabelGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default new Color(0.165, 0.165, 0.165, 0.8)
    */
   backgroundColor: createPropertyDescriptor("backgroundColor"),
@@ -251,14 +251,14 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the fill {@link Color}.
    * @memberof LabelGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    */
   fillColor: createPropertyDescriptor("fillColor"),
 
   /**
    * Gets or sets the Property specifying the outline {@link Color}.
    * @memberof LabelGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
 

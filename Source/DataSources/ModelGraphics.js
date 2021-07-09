@@ -229,7 +229,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} that blends with the model's rendered color.
    * @memberof ModelGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),

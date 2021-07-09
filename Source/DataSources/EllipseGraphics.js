@@ -210,7 +210,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof EllipseGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),

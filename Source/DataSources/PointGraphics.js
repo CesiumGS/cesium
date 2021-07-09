@@ -96,7 +96,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the point.
    * @memberof PointGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
@@ -104,7 +104,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof PointGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),

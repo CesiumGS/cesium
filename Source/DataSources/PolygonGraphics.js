@@ -213,7 +213,7 @@ Object.defineProperties(PolygonGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof PolygonGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),

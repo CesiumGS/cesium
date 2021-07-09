@@ -221,7 +221,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property|undefined}
+   * @type {Color|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
