@@ -46,6 +46,7 @@ import Timeline from "../Timeline/Timeline.js";
 import VRButton from "../VRButton/VRButton.js";
 import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
 import JulianDate from "../../Core/JulianDate.js";
+import CesiumMath from "../../Core/Math.js";
 
 var boundingSphereScratch = new BoundingSphere();
 
@@ -136,23 +137,27 @@ function pickEntity(viewer, e) {
   }
 }
 
+var scratchStopTime = new JulianDate();
+
 function trackDataSourceClock(timeline, clock, dataSource) {
   if (defined(dataSource)) {
     var dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock)) {
       dataSourceClock.getValue(clock);
       if (defined(timeline)) {
-        if (
-          JulianDate.equals(dataSourceClock.startTime, dataSourceClock.stopTime)
-        ) {
-          JulianDate.addSeconds(
+        var startTime = dataSourceClock.startTime;
+        var stopTime = dataSourceClock.stopTime;
+        //When the start and stop times are equal, set the timeline to the shortest interval
+        //starting at the start time. This prevents an invalid timeline configuration.
+        if (JulianDate.equals(startTime, stopTime)) {
+          stopTime = JulianDate.addSeconds(
             dataSourceClock.startTime,
-            5,
-            dataSourceClock.stopTime
+            CesiumMath.EPSILON2,
+            scratchStopTime
           );
         }
         timeline.updateFromClock();
-        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+        timeline.zoomTo(startTime, stopTime);
       }
     }
   }
