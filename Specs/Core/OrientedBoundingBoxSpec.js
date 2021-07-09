@@ -1531,6 +1531,721 @@ describe("Core/OrientedBoundingBox", function () {
     );
   });
 
+  it("distanceSquaredTo handles one degenerate axis - X", function () {
+    var rotation = Matrix3.fromRotationX(CesiumMath.toRadians(45.0));
+
+    var scale = new Cartesian3(0.0, 4.0, 3.0);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+
+    var obb = new OrientedBoundingBox(center, rotationScale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(xAxis).toEqual(Cartesian3.ZERO);
+
+    // Since x-axis is degenerate, we define what direction it really would have been
+    xAxis = new Cartesian3(1.0, 0.0, 0.0);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center);
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.y;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.y;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.z;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.z;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from corner point
+    Cartesian3.add(yAxis, zAxis, cartesian);
+
+    var cornerDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - cornerDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("distanceSquaredTo handles one degenerate axis - Y", function () {
+    var rotation = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
+
+    var scale = new Cartesian3(2.0, 0.0, 3.0);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+
+    var obb = new OrientedBoundingBox(center, rotationScale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(yAxis).toEqual(Cartesian3.ZERO);
+
+    // Since y-axis is degenerate, we define what direction it really would have been
+    yAxis = new Cartesian3(0.0, 1.0, 0.0);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center) - scale.x;
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.x;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.z;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.z;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from corner point
+    Cartesian3.add(xAxis, zAxis, cartesian);
+
+    var cornerDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - cornerDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("distanceSquaredTo handles one degenerate axis - Z", function () {
+    var rotation = Matrix3.fromRotationZ(CesiumMath.toRadians(45.0));
+
+    var scale = new Cartesian3(2.0, 4.0, 0.0);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+
+    var obb = new OrientedBoundingBox(center, rotationScale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(zAxis).toEqual(Cartesian3.ZERO);
+
+    // Since z-axis is degenerate, we define what direction it really would have been
+    zAxis = new Cartesian3(0.0, 0.0, 1.0);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center) - scale.x;
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.x;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.y;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.y;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from corner point
+    Cartesian3.add(xAxis, yAxis, cartesian);
+
+    var cornerDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - cornerDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("distanceSquaredTo handles two degenerate axes - XY", function () {
+    var r0 = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
+    var r1 = Matrix3.fromRotationX(CesiumMath.toRadians(-45.0));
+
+    var rotation = Matrix3.multiply(r1, r0, r0);
+    var scale = new Cartesian3(0.0, 0.0, 3.0);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+
+    var obb = new OrientedBoundingBox(center, rotationScale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(xAxis).toEqual(Cartesian3.ZERO);
+    expect(yAxis).toEqual(Cartesian3.ZERO);
+
+    // Since x-, y-axes are degenerate, we define what directions they could be
+    // (there are infinite possibilities in this case)
+    xAxis = new Cartesian3(1.0, 0.0, 0.0);
+    yAxis = new Cartesian3(0.0, 1.0, 0.0);
+    Matrix3.multiplyByVector(rotation, xAxis, xAxis);
+    Matrix3.multiplyByVector(rotation, yAxis, yAxis);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center);
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.z;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.z;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from endpoint
+    cartesian = zAxis;
+    var endpointDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - endpointDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("distanceSquaredTo handles two degenerate axes - XZ", function () {
+    var r0 = Matrix3.fromRotationZ(CesiumMath.toRadians(45.0));
+    var r1 = Matrix3.fromRotationX(CesiumMath.toRadians(-45.0));
+
+    var rotation = Matrix3.multiply(r1, r0, r0);
+    var scale = new Cartesian3(0.0, 4.0, 0.0);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+
+    var obb = new OrientedBoundingBox(center, rotationScale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(xAxis).toEqual(Cartesian3.ZERO);
+    expect(zAxis).toEqual(Cartesian3.ZERO);
+
+    // Since x-, z-axes are degenerate, we define what directions they could be
+    // (there are infinite possibilities in this case)
+    xAxis = new Cartesian3(1.0, 0.0, 0.0);
+    zAxis = new Cartesian3(0.0, 0.0, 1.0);
+    Matrix3.multiplyByVector(rotation, xAxis, xAxis);
+    Matrix3.multiplyByVector(rotation, zAxis, zAxis);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center);
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.y;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.y;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from endpoint
+    cartesian = yAxis;
+    var endpointDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - endpointDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("distanceSquaredTo handles two degenerate axes - YZ", function () {
+    var r0 = Matrix3.fromRotationZ(CesiumMath.toRadians(45.0));
+    var r1 = Matrix3.fromRotationY(CesiumMath.toRadians(-45.0));
+
+    var rotation = Matrix3.multiply(r1, r0, r0);
+    var scale = new Cartesian3(2.0, 0.0, 0.0);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+
+    var obb = new OrientedBoundingBox(center, rotationScale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(yAxis).toEqual(Cartesian3.ZERO);
+    expect(zAxis).toEqual(Cartesian3.ZERO);
+
+    // Since y-, z-axes are degenerate, we define what directions they could be
+    // (there are infinite possibilities in this case)
+    yAxis = new Cartesian3(0.0, 1.0, 0.0);
+    zAxis = new Cartesian3(0.0, 0.0, 1.0);
+    Matrix3.multiplyByVector(rotation, yAxis, yAxis);
+    Matrix3.multiplyByVector(rotation, zAxis, zAxis);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center) - scale.x;
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - scale.x;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from endpoint
+    cartesian = xAxis;
+    var endpointDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - endpointDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("distanceSquaredTo handles three degenerate axes", function () {
+    var scale = new Cartesian3(0.0, 0.0, 0.0);
+    var center = new Cartesian3(4.0, 3.0, 2.0);
+    var obb = new OrientedBoundingBox(center, scale);
+
+    var halfAxes = obb.halfAxes;
+    var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+    var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+    var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+    expect(xAxis).toEqual(Cartesian3.ZERO);
+    expect(yAxis).toEqual(Cartesian3.ZERO);
+    expect(zAxis).toEqual(Cartesian3.ZERO);
+
+    // Since all axes are degenerate, we define an arbitrary coordinate system
+    xAxis = new Cartesian3(1.0, 0.0, 0.0);
+    yAxis = new Cartesian3(0.0, 1.0, 0.0);
+    zAxis = new Cartesian3(0.0, 0.0, 1.0);
+
+    // from positive x direction
+    var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+    Cartesian3.add(cartesian, center, cartesian);
+
+    var d = Cartesian3.distance(cartesian, center);
+    var expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative x direction
+    Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive y direction
+    Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative y direction
+    Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from positive z direction
+    Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from negative z direction
+    Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from arbitrary point
+    cartesian = new Cartesian3(5.0, 10.0, 15.0);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center);
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+  });
+
   it("distanceSquaredTo throws without box", function () {
     expect(function () {
       OrientedBoundingBox.distanceSquaredTo(undefined, new Cartesian3());
