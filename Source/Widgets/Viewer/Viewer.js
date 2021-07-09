@@ -45,6 +45,7 @@ import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import Timeline from "../Timeline/Timeline.js";
 import VRButton from "../VRButton/VRButton.js";
 import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
+import JulianDate from "../../Core/JulianDate.js";
 
 var boundingSphereScratch = new BoundingSphere();
 
@@ -141,6 +142,15 @@ function trackDataSourceClock(timeline, clock, dataSource) {
     if (defined(dataSourceClock)) {
       dataSourceClock.getValue(clock);
       if (defined(timeline)) {
+        if (
+          JulianDate.equals(dataSourceClock.startTime, dataSourceClock.stopTime)
+        ) {
+          JulianDate.addSeconds(
+            dataSourceClock.startTime,
+            5,
+            dataSourceClock.stopTime
+          );
+        }
         timeline.updateFromClock();
         timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
       }
