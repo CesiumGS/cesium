@@ -427,16 +427,6 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     var repeat = duplicatePoints ? 2 : 1;
     nextPosition = positions[i + 1];
     forward = Cartesian3.subtract(nextPosition, position, forward);
-    console.log("position: " + position);
-    console.log("nextPosition: " + nextPosition);
-    console.log(
-      "Magnitude in PolylineVolumeGeometryLibrary.js " +
-        Cartesian3.magnitude(forward) +
-        " " +
-        "Value of forward: " +
-        forward
-    );
-    //If positions are too close, throw a warning specifying the rounding issue
     if (position.equals(nextPosition)) {
       oneTimeWarning(
         "Positions are too close and are considered equivalent with rounding error."
