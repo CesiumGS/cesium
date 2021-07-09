@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.84 - 2021-08-01
+
+##### Fixes :wrench:
+
+- Fixed the calculation of `OrientedBoundingBox.distancedSquaredTo` such that they handle `halfAxes` with magnitudes near zero.
+
 ### 1.83 - 2021-07-01
 
 ##### Breaking Changes :mega:

@@ -1439,7 +1439,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     var rotation = Matrix3.multiply(r1, r0, r0);
     var scale = new Cartesian3(2.0, 3.0, 4.0);
-    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, new Matrix3());
 
     var center = new Cartesian3(4.0, 3.0, 2.0);
 
@@ -1529,13 +1529,22 @@ describe("Core/OrientedBoundingBox", function () {
       expected,
       CesiumMath.EPSILON10
     );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Matrix3.multiplyByVector(rotation, offset, offset);
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
+      CesiumMath.EPSILON10
+    );
   });
 
   it("distanceSquaredTo handles one degenerate axis - X", function () {
     var rotation = Matrix3.fromRotationX(CesiumMath.toRadians(45.0));
 
     var scale = new Cartesian3(0.0, 4.0, 3.0);
-    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, new Matrix3());
 
     var center = new Cartesian3(4.0, 3.0, 2.0);
 
@@ -1629,13 +1638,22 @@ describe("Core/OrientedBoundingBox", function () {
       expected,
       CesiumMath.EPSILON10
     );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Matrix3.multiplyByVector(rotation, offset, offset);
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
+      CesiumMath.EPSILON10
+    );
   });
 
   it("distanceSquaredTo handles one degenerate axis - Y", function () {
     var rotation = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
 
     var scale = new Cartesian3(2.0, 0.0, 3.0);
-    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, new Matrix3());
 
     var center = new Cartesian3(4.0, 3.0, 2.0);
 
@@ -1727,6 +1745,15 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
+      CesiumMath.EPSILON10
+    );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Matrix3.multiplyByVector(rotation, offset, offset);
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
       CesiumMath.EPSILON10
     );
   });
@@ -1829,6 +1856,14 @@ describe("Core/OrientedBoundingBox", function () {
       expected,
       CesiumMath.EPSILON10
     );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
+      CesiumMath.EPSILON10
+    );
   });
 
   it("distanceSquaredTo handles two degenerate axes - XY", function () {
@@ -1837,7 +1872,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     var rotation = Matrix3.multiply(r1, r0, r0);
     var scale = new Cartesian3(0.0, 0.0, 3.0);
-    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, new Matrix3());
 
     var center = new Cartesian3(4.0, 3.0, 2.0);
 
@@ -1924,8 +1959,8 @@ describe("Core/OrientedBoundingBox", function () {
       CesiumMath.EPSILON10
     );
 
-    // from endpoint
-    cartesian = zAxis;
+    // from endpoint in posiive direction
+    Cartesian3.clone(zAxis, cartesian);
     var endpointDistance = Cartesian3.magnitude(cartesian);
     Cartesian3.add(cartesian, center, cartesian);
 
@@ -1933,6 +1968,28 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from endpoint in negative direction
+    Cartesian3.clone(zAxis, cartesian);
+    Cartesian3.multiplyByScalar(cartesian, -1.0, cartesian);
+    endpointDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - endpointDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Matrix3.multiplyByVector(rotation, offset, offset);
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
       CesiumMath.EPSILON10
     );
   });
@@ -1943,7 +2000,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     var rotation = Matrix3.multiply(r1, r0, r0);
     var scale = new Cartesian3(0.0, 4.0, 0.0);
-    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, new Matrix3());
 
     var center = new Cartesian3(4.0, 3.0, 2.0);
 
@@ -2030,8 +2087,8 @@ describe("Core/OrientedBoundingBox", function () {
       CesiumMath.EPSILON10
     );
 
-    // from endpoint
-    cartesian = yAxis;
+    // from endpoint in positive direction
+    Cartesian3.clone(yAxis, cartesian);
     var endpointDistance = Cartesian3.magnitude(cartesian);
     Cartesian3.add(cartesian, center, cartesian);
 
@@ -2039,6 +2096,28 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from endpoint in negative direction
+    Cartesian3.clone(yAxis, cartesian);
+    Cartesian3.multiplyByScalar(cartesian, -1.0, cartesian);
+    endpointDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - endpointDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Matrix3.multiplyByVector(rotation, offset, offset);
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
       CesiumMath.EPSILON10
     );
   });
@@ -2049,7 +2128,7 @@ describe("Core/OrientedBoundingBox", function () {
 
     var rotation = Matrix3.multiply(r1, r0, r0);
     var scale = new Cartesian3(2.0, 0.0, 0.0);
-    var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+    var rotationScale = Matrix3.multiplyByScale(rotation, scale, new Matrix3());
 
     var center = new Cartesian3(4.0, 3.0, 2.0);
 
@@ -2136,8 +2215,8 @@ describe("Core/OrientedBoundingBox", function () {
       CesiumMath.EPSILON10
     );
 
-    // from endpoint
-    cartesian = xAxis;
+    // from endpoint in positive direction
+    Cartesian3.clone(xAxis, cartesian);
     var endpointDistance = Cartesian3.magnitude(cartesian);
     Cartesian3.add(cartesian, center, cartesian);
 
@@ -2145,6 +2224,28 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
+      CesiumMath.EPSILON10
+    );
+
+    // from endpoint in negative direction   // from endpoint in negative direction
+    Cartesian3.clone(xAxis, cartesian);
+    Cartesian3.multiplyByScalar(cartesian, -1.0, cartesian);
+    endpointDistance = Cartesian3.magnitude(cartesian);
+    Cartesian3.add(cartesian, center, cartesian);
+
+    d = Cartesian3.distance(cartesian, center) - endpointDistance;
+    expected = d * d;
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON10
+    );
+
+    // inside box
+    var offset = Cartesian3.multiplyByScalar(scale, 0.25, new Cartesian3());
+    Matrix3.multiplyByVector(rotation, offset, offset);
+    Cartesian3.add(center, offset, cartesian);
+    expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
+      0.0,
       CesiumMath.EPSILON10
     );
   });
@@ -2242,6 +2343,13 @@ describe("Core/OrientedBoundingBox", function () {
     expected = d * d;
     expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(
       expected,
+      CesiumMath.EPSILON10
+    );
+
+    // inside box
+    cartesian = center;
+    expect(obb.distanceSquaredTo(center)).toEqualEpsilon(
+      0.0,
       CesiumMath.EPSILON10
     );
   });

@@ -1,3 +1,5 @@
+import epsilon3 from "../Shaders/Builtin/Constants/epsilon3.js";
+import epsilon7 from "../Shaders/Builtin/Constants/epsilon7.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -722,9 +724,108 @@ OrientedBoundingBox.distanceSquaredTo = function (box, cartesian) {
   var vHalf = Cartesian3.magnitude(v);
   var wHalf = Cartesian3.magnitude(w);
 
-  Cartesian3.normalize(u, u);
-  Cartesian3.normalize(v, v);
-  Cartesian3.normalize(w, w);
+  var uValid = true;
+  var vValid = true;
+  var wValid = true;
+
+  if (uHalf > 0) {
+    Cartesian3.normalize(u, u);
+  } else {
+    uValid = false;
+  }
+
+  if (vHalf > 0) {
+    Cartesian3.normalize(v, v);
+  } else {
+    vValid = false;
+  }
+
+  if (wHalf > 0) {
+    Cartesian3.normalize(w, w);
+  } else {
+    wValid = false;
+  }
+
+  var oneDegenerateAxis =
+    (!uValid && vValid && wValid) ||
+    (uValid && !vValid && wValid) ||
+    (uValid && vValid && !wValid);
+  var twoDegenerateAxes =
+    (!uValid && !vValid && wValid) ||
+    (!uValid && vValid && !wValid) ||
+    (uValid && !vValid && !wValid);
+  var threeDegenerateAxes = !uValid && !vValid && !wValid;
+
+  var validAxis1;
+  var validAxis2;
+  var validAxis3;
+
+  if (oneDegenerateAxis) {
+    var degenerateAxis = u;
+    validAxis1 = v;
+    validAxis2 = w;
+    if (!vValid) {
+      degenerateAxis = v;
+      validAxis1 = u;
+    }
+    if (!wValid) {
+      degenerateAxis = w;
+      validAxis2 = u;
+    }
+
+    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, new Cartesian3());
+
+    if (degenerateAxis === u) {
+      u = validAxis3;
+    }
+    if (degenerateAxis === v) {
+      v = validAxis3;
+    }
+    if (degenerateAxis === w) {
+      w = validAxis3;
+    }
+  }
+
+  if (twoDegenerateAxes) {
+    validAxis1 = u;
+    if (vValid) {
+      validAxis1 = v;
+    }
+    if (wValid) {
+      validAxis1 = w;
+    }
+
+    var crossVector = new Cartesian3(0.0, 1.0, 0.0);
+    if (crossVector.equalsEpsilon(validAxis1, epsilon3)) {
+      crossVector = new Cartesian3(1.0, 0.0, 0.0);
+    }
+
+    validAxis2 = Cartesian3.cross(validAxis1, crossVector, new Cartesian3());
+    Cartesian3.normalize(validAxis2, validAxis2);
+    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, new Cartesian3());
+    Cartesian3.normalize(validAxis3, validAxis3);
+
+    if (validAxis1 === u) {
+      v = validAxis2;
+      w = validAxis3;
+    }
+
+    if (validAxis1 === v) {
+      w = validAxis2;
+      u = validAxis3;
+    }
+
+    if (validAxis1 === w) {
+      u = validAxis2;
+      v = validAxis3;
+    }
+  }
+
+  if (threeDegenerateAxes) {
+    u = new Cartesian3(1.0, 0.0, 0.0);
+    v = new Cartesian3(0.0, 1.0, 0.0);
+    w = new Cartesian3(0.0, 0.0, 1.0);
+  }
 
   var pPrime = scratchPPrime;
   pPrime.x = Cartesian3.dot(offset, u);
