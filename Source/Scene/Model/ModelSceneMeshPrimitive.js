@@ -1,7 +1,8 @@
 import defined from "../../Core/defined.js";
 import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
 import PointGeometryPipelineStage from "./PointGeometryPipelineStage.js";
-import SolidColorPipelineStage from "./SolidColorPipelineStage.js";
+import CustomShaderStage from "./CustomShaderStage.js";
+//import SolidColorPipelineStage from "./SolidColorPipelineStage.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 
 export default function ModelSceneMeshPrimitive(options) {
@@ -49,6 +50,8 @@ function initializeMeshPrimitive(scenePrimitive) {
     throw new Error("only PBR materials and techniques are supported");
   }
 
+  pipelineStages.push(CustomShaderStage.After);
+
   /*
   if (customShader.insertAfterMaterial) {
     primitive._pipelineStages.push(CustomShaderStage.After);
@@ -58,5 +61,5 @@ function initializeMeshPrimitive(scenePrimitive) {
   pipelineStages.push(LightingPipelineStage);
 
   // TODO: remove this when done
-  pipelineStages.push(SolidColorPipelineStage);
+  //pipelineStages.push(SolidColorPipelineStage);
 }
