@@ -1,9 +1,12 @@
 # Change Log
 
-### 1.84 - 2021-08-01
+### 1.84 - 2021-08-02
+
+##### Additions :tada:
 
 ##### Fixes :wrench:
 
+- Fixes an error with removing a CZML datasource when the clock interval has a duration of zero. [#9637](https://github.com/CesiumGS/cesium/pull/9637)
 - Fixed the ability to set a material's image to `undefined` and `Material.DefaultImageId`. [#9644](https://github.com/CesiumGS/cesium/pull/9644)
 - Fixed render crash when creating a `polylineVolume` with very close points. [#9669](https://github.com/CesiumGS/cesium/pull/9669)
 
