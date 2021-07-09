@@ -1,0 +1,234 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "EXT_feature_metadata"
+  ],
+  "extensions": {
+    "EXT_feature_metadata": {
+      "schema": {
+        "classes": {
+          "weather": {
+            "name": "Weather Data",
+            "properties": {
+              "airTemperature": {
+                "name": "Air Temperature",
+                "type": "FLOAT32"
+              },
+              "airPressure": {
+                "name": "Air Pressure",
+                "type": "FLOAT32"
+              },
+              "windVelocity": {
+                "name": "Wind Velocity",
+                "type": "ARRAY",
+                "componentType": "FLOAT32",
+                "componentCount": 3
+              }
+            }
+          },
+          "town": {
+            "name": "Town Data",
+            "properties": {
+              "name": {
+                "name": "Name",
+                "type": "STRING"
+              },
+              "population": {
+                "name": "Population",
+                "type": "UINT16"
+              }
+            }
+          }
+        }
+      },
+      "featureTables": {
+        "weatherTable": {
+          "class": "weather",
+          "count": 1000,
+          "properties": {
+            "airTemperature": {
+              "bufferView": 2
+            },
+            "airPressure": {
+              "bufferView": 3
+            },
+            "windVelocity": {
+              "bufferView": 4
+            }
+          }
+        },
+        "townTable": {
+          "class": "town",
+          "count": 3,
+          "properties": {
+            "name": {
+              "bufferView": 5,
+              "stringOffsetBufferView": 6
+            },
+            "population": {
+              "bufferView": 7
+            }
+          }
+        }
+      }
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Point Cloud",
+      "mesh": 0,
+      "matrix": [
+        0.968635634376879,
+        0.24848542777253735,
+        0,
+        0,
+        -0.15986460794399626,
+        0.6231776137472074,
+        0.7655670897127491,
+        0,
+        0.190232265775849,
+        -0.7415555636019701,
+        0.6433560687121489,
+        0,
+        1215012.8828876738,
+        -4736313.051199594,
+        4081605.22126042,
+        1
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Point Cloud Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "_FEATURE_ID_0": 1
+          },
+          "mode": 0,
+          "extensions": {
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
+                {
+                  "featureTable": "weatherTable",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 1
+                  }
+                },
+                {
+                  "featureTable": "townTable",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "name": "Positions",
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 1000,
+      "max": [
+        0.9996171514503658,
+        0.9997076676227152,
+        0.9985559755004942
+      ],
+      "min": [
+        -0.9986715689301491,
+        -0.9998892992734909,
+        -0.9992652996443212
+      ],
+      "type": "VEC3"
+    },
+    {
+      "name": "Town Feature ID",
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 1000,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "name": "Positions",
+      "buffer": 0,
+      "byteLength": 12000,
+      "byteOffset": 0
+    },
+    {
+      "name": "Town Feature ID",
+      "buffer": 1,
+      "byteLength": 4000,
+      "byteOffset": 0
+    },
+    {
+      "name": "Air Temperature",
+      "buffer": 1,
+      "byteLength": 4000,
+      "byteOffset": 4000
+    },
+    {
+      "name": "Air Pressure",
+      "buffer": 1,
+      "byteLength": 4000,
+      "byteOffset": 8000
+    },
+    {
+      "name": "Wind Velocity",
+      "buffer": 1,
+      "byteLength": 12000,
+      "byteOffset": 12000
+    },
+    {
+      "name": "Town Name",
+      "buffer": 1,
+      "byteLength": 26,
+      "byteOffset": 24000
+    },
+    {
+      "name": "Town Name Offsets",
+      "buffer": 1,
+      "byteLength": 16,
+      "byteOffset": 24032
+    },
+    {
+      "name": "Town Population",
+      "buffer": 1,
+      "byteLength": 6,
+      "byteOffset": 24048
+    }
+  ],
+  "buffers": [
+    {
+      "name": "Geometry Buffer",
+      "byteLength": 12000,
+      "uri": "weather.bin"
+    },
+    {
+      "name": "Metadata Buffer",
+      "byteLength": 24056,
+      "uri": "weather-metadata.bin"
+    }
+  ]
+}

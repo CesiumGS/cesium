@@ -73,6 +73,7 @@ attribute vec3 a_position;
 
 void main() {
   vec3 position = a_position;
+  gl_PointSize = 12;
   gl_Position = czm_modelViewProjection * vec4(position, 1.0); 
 }
 */
@@ -125,6 +126,10 @@ function buildDrawCommand(primitiveResources, frameState) {
     "    #ifdef USE_INSTANCING",
     "    position = instancing(position);",
     "    #endif",
+    "",
+    "    #ifdef USE_POINTS",
+    "    gl_PointSize = 2.0;",
+    "    #endif",
     // TODO: custom vertex shader
     "    gl_Position = czm_modelViewProjection * vec4(position, 1.0);",
     "}",
@@ -142,9 +147,13 @@ function buildDrawCommand(primitiveResources, frameState) {
     "}",
   ]);
 
+  var indexBuffer = defined(primitiveResources.indices)
+    ? primitiveResources.indices.buffer
+    : undefined;
+
   var vertexArray = new VertexArray({
     context: frameState.context,
-    indexBuffer: primitiveResources.indices.buffer,
+    indexBuffer: indexBuffer,
     attributes: primitiveResources.attributes,
   });
 
@@ -165,7 +174,7 @@ function buildDrawCommand(primitiveResources, frameState) {
     instanceCount: primitiveResources.instanceCount,
     primitiveType: primitiveResources.primitiveType,
     // TODO: Remove this when done
-    //debugShowBoundingVolume: true
+    debugShowBoundingVolume: true,
   });
 
   // var command = new DrawCommand({
