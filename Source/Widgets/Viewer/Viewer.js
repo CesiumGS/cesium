@@ -151,7 +151,7 @@ function trackDataSourceClock(timeline, clock, dataSource) {
         // starting at the start time. This prevents an invalid timeline configuration.
         if (JulianDate.equals(startTime, stopTime)) {
           stopTime = JulianDate.addSeconds(
-            dataSourceClock.startTime,
+            startTime,
             CesiumMath.EPSILON2,
             scratchStopTime
           );
