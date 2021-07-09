@@ -422,12 +422,13 @@ Material.prototype.isTranslucent = function () {
  * @private
  */
 Material.prototype.update = function (context) {
+  this._defaultTexture = context.defaultTexture;
+
   var i;
   var uniformId;
 
   var loadedImages = this._loadedImages;
   var length = loadedImages.length;
-
   for (i = 0; i < length; ++i) {
     var loadedImage = loadedImages[i];
     uniformId = loadedImage.id;
@@ -468,6 +469,14 @@ Material.prototype.update = function (context) {
         source: image,
         sampler: sampler,
       });
+    }
+
+    // The material destroys its old texture only after the new one has been loaded.
+    // This will ensure a smooth swap of textures and prevent the default texture
+    // from appearing for a few frames.
+    var oldTexture = this._textures[uniformId];
+    if (defined(oldTexture) && oldTexture !== this._defaultTexture) {
+      oldTexture.destroy();
     }
 
     this._textures[uniformId] = texture;
@@ -795,9 +804,11 @@ function createTexture2DUpdateFunction(uniformId) {
     var uniforms = material.uniforms;
     var uniformValue = uniforms[uniformId];
     var uniformChanged = oldUniformValue !== uniformValue;
+    var uniformValueIsDefaultImage =
+      !defined(uniformValue) || uniformValue === Material.DefaultImageId;
     oldUniformValue = uniformValue;
-    var texture = material._textures[uniformId];
 
+    var texture = material._textures[uniformId];
     var uniformDimensionsName;
     var uniformDimensions;
 
@@ -838,7 +849,7 @@ function createTexture2DUpdateFunction(uniformId) {
     if (uniformValue instanceof Texture && uniformValue !== texture) {
       material._texturePaths[uniformId] = undefined;
       var tmp = material._textures[uniformId];
-      if (tmp !== material._defaultTexture) {
+      if (defined(tmp) && tmp !== material._defaultTexture) {
         tmp.destroy();
       }
       material._textures[uniformId] = uniformValue;
@@ -853,11 +864,18 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
+    if (uniformChanged && defined(texture) && uniformValueIsDefaultImage) {
+      // If the newly-assigned texture is the default texture,
+      // we don't need to wait for a new image to load before destroying
+      // the old texture.
+      if (texture !== material._defaultTexture) {
+        texture.destroy();
+      }
+      texture = undefined;
+    }
+
     if (!defined(texture)) {
       material._texturePaths[uniformId] = undefined;
-      if (!defined(material._defaultTexture)) {
-        material._defaultTexture = context.defaultTexture;
-      }
       texture = material._textures[uniformId] = material._defaultTexture;
 
       uniformDimensionsName = uniformId + "Dimensions";
@@ -868,7 +886,7 @@ function createTexture2DUpdateFunction(uniformId) {
       }
     }
 
-    if (uniformValue === Material.DefaultImageId) {
+    if (uniformValueIsDefaultImage) {
       return;
     }
 
@@ -895,12 +913,19 @@ function createTexture2DUpdateFunction(uniformId) {
           promise = resource.fetchImage();
         }
 
-        when(promise, function (image) {
-          material._loadedImages.push({
-            id: uniformId,
-            image: image,
+        promise
+          .then(function (image) {
+            material._loadedImages.push({
+              id: uniformId,
+              image: image,
+            });
+          })
+          .otherwise(function () {
+            if (defined(texture) && texture !== material._defaultTexture) {
+              texture.destroy();
+            }
+            material._textures[uniformId] = material._defaultTexture;
           });
-        });
       } else if (
         uniformValue instanceof HTMLCanvasElement ||
         uniformValue instanceof HTMLImageElement
