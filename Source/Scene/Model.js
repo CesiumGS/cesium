@@ -20,9 +20,8 @@ import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -175,8 +174,15 @@ var uriToGuid = {};
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
  * </li>
  * </ul>
+ * </p>
+ * <p>
+ * Note: for models with compressed textures using the KHR_texture_basisu extension, we recommend power of 2 textures in both dimensions
+ * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
+ * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
  * </p>
  * <p>
  * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
@@ -217,9 +223,10 @@ var uriToGuid = {};
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  *
  * @see Model.fromGltf
  *
@@ -509,6 +516,18 @@ function Model(options) {
    * @default true
    */
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
+
+  /**
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @default true
+   */
+  this.showOutline = defaultValue(options.showOutline, true);
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1269,7 +1288,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+   * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
    *
    * @memberof Model.prototype
    * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
@@ -1365,6 +1384,8 @@ function containsGltfMagic(uint8Array) {
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md|KHR_texture_basisu}
  * </li>
  * </ul>
  * </p>
@@ -1402,7 +1423,7 @@ function containsGltfMagic(uint8Array) {
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
- *
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @returns {Model} The newly created model.
  *
  * @example
@@ -1937,6 +1958,18 @@ function imageLoad(model, textureId) {
   return function (image) {
     var loadResources = model._loadResources;
     --loadResources.pendingTextureLoads;
+
+    // Images transcoded from KTX2 can contain multiple mip levels:
+    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+    var mipLevels;
+    if (Array.isArray(image)) {
+      // highest detail mip should be level 0
+      mipLevels = image.slice(1, image.length).map(function (mipLevel) {
+        return mipLevel.bufferView;
+      });
+      image = image[0];
+    }
+
     loadResources.texturesToCreate.enqueue({
       id: textureId,
       image: image,
@@ -1944,12 +1977,12 @@ function imageLoad(model, textureId) {
       width: image.width,
       height: image.height,
       internalFormat: image.internalFormat,
+      mipLevels: mipLevels,
     });
   };
 }
 
-var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
-var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
+var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function parseTextures(model, context, supportsWebP) {
   var gltf = model.gltf;
@@ -1964,52 +1997,19 @@ function parseTextures(model, context, supportsWebP) {
       supportsWebP
     ) {
       imageId = texture.extensions.EXT_texture_webp.source;
+    } else if (
+      defined(texture.extensions) &&
+      defined(texture.extensions.KHR_texture_basisu) &&
+      context.supportsBasis
+    ) {
+      imageId = texture.extensions.KHR_texture_basisu.source;
     }
 
     var gltfImage = images[imageId];
-    var extras = gltfImage.extras;
 
     var bufferViewId = gltfImage.bufferView;
     var mimeType = gltfImage.mimeType;
     uri = gltfImage.uri;
-
-    // First check for a compressed texture
-    if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-      var crunch = extras.compressedImage3DTiles.crunch;
-      var s3tc = extras.compressedImage3DTiles.s3tc;
-      var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-      var etc1 = extras.compressedImage3DTiles.etc1;
-
-      if (context.s3tc && defined(crunch)) {
-        mimeType = crunch.mimeType;
-        if (defined(crunch.bufferView)) {
-          bufferViewId = crunch.bufferView;
-        } else {
-          uri = crunch.uri;
-        }
-      } else if (context.s3tc && defined(s3tc)) {
-        mimeType = s3tc.mimeType;
-        if (defined(s3tc.bufferView)) {
-          bufferViewId = s3tc.bufferView;
-        } else {
-          uri = s3tc.uri;
-        }
-      } else if (context.pvrtc && defined(pvrtc)) {
-        mimeType = pvrtc.mimeType;
-        if (defined(pvrtc.bufferView)) {
-          bufferViewId = pvrtc.bufferView;
-        } else {
-          uri = pvrtc.uri;
-        }
-      } else if (context.etc1 && defined(etc1)) {
-        mimeType = etc1.mimeType;
-        if (defined(etc1.bufferView)) {
-          bufferViewId = etc1.bufferView;
-        } else {
-          uri = etc1.uri;
-        }
-      }
-    }
 
     // Image references either uri (external or base64-encoded) or bufferView
     if (defined(bufferViewId)) {
@@ -2027,12 +2027,11 @@ function parseTextures(model, context, supportsWebP) {
       });
 
       var promise;
-      if (ktxRegex.test(uri)) {
-        promise = loadKTX(imageResource);
-      } else if (crnRegex.test(uri)) {
-        promise = loadCRN(imageResource);
+      if (ktx2Regex.test(uri)) {
+        promise = loadKTX2(imageResource);
       } else {
         promise = imageResource.fetchImage({
+          skipColorSpaceConversion: true,
           preferImageBitmap: true,
         });
       }
@@ -2765,13 +2764,13 @@ function loadTexturesFromBufferViews(model) {
       "id: " + gltfTexture.id + ", bufferView: " + gltfTexture.bufferView
     );
 
-    if (gltfTexture.mimeType === "image/ktx") {
-      loadKTX(loadResources.getBuffer(bufferView))
-        .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
-      ++model._loadResources.pendingTextureLoads;
-    } else if (gltfTexture.mimeType === "image/crn") {
-      loadCRN(loadResources.getBuffer(bufferView))
+    if (gltfTexture.mimeType === "image/ktx2") {
+      // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
+      // ArrayBuffer may be accessed on both the worker and the main thread and
+      // throw an error like "Cannot perform Construct on a detached ArrayBuffer".
+      // Look into SharedArrayBuffer at some point to get around this.
+      var ktxBuffer = new Uint8Array(loadResources.getBuffer(bufferView));
+      loadKTX2(ktxBuffer)
         .then(imageLoad(model, gltfTexture.id, imageId))
         .otherwise(onerror);
       ++model._loadResources.pendingTextureLoads;
@@ -2781,6 +2780,7 @@ function loadTexturesFromBufferViews(model) {
         uint8Array: loadResources.getBuffer(bufferView),
         format: gltfTexture.mimeType,
         flipY: false,
+        skipColorSpaceConversion: true,
       })
         .then(onload)
         .otherwise(onerror);
@@ -2892,8 +2892,8 @@ function createTexture(gltfTexture, model, context) {
     sampler = new Sampler({
       wrapS: sampler.wrapS,
       wrapT: sampler.wrapT,
-      textureMinificationFilter: minFilter,
-      textureMagnificationFilter: sampler.magnificationFilter,
+      minificationFilter: minFilter,
+      magnificationFilter: sampler.magnificationFilter,
     });
   }
 
@@ -2913,15 +2913,53 @@ function createTexture(gltfTexture, model, context) {
     wrapS === TextureWrap.MIRRORED_REPEAT ||
     wrapT === TextureWrap.REPEAT ||
     wrapT === TextureWrap.MIRRORED_REPEAT;
-
+  var npot;
   var tx;
   var source = gltfTexture.image;
 
   if (defined(internalFormat)) {
+    npot =
+      !CesiumMath.isPowerOfTwo(gltfTexture.width) ||
+      !CesiumMath.isPowerOfTwo(gltfTexture.height);
+
+    // Warning to encourage power of 2 texture dimensions with KHR_texture_basisu
+    if (
+      !context.webgl2 &&
+      PixelFormat.isCompressedFormat(internalFormat) &&
+      npot &&
+      requiresNpot
+    ) {
+      console.warn(
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly. See the Model.js constructor documentation for more information."
+      );
+    }
+
+    var minificationFilter;
+    if (
+      !defined(gltfTexture.mipLevels) &&
+      (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
+        minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR)
+    ) {
+      minificationFilter = TextureMinificationFilter.NEAREST;
+    } else if (
+      !defined(gltfTexture.mipLevels) &&
+      (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
+        minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)
+    ) {
+      minificationFilter = TextureMinificationFilter.LINEAR;
+    }
+    sampler = new Sampler({
+      wrapS: sampler.wrapS,
+      wrapT: sampler.wrapT,
+      minificationFilter: minificationFilter,
+      magnificationFilter: sampler.magnificationFilter,
+    });
+
     tx = new Texture({
       context: context,
       source: {
         arrayBufferView: gltfTexture.bufferView,
+        mipLevels: gltfTexture.mipLevels,
       },
       width: gltfTexture.width,
       height: gltfTexture.height,
@@ -2929,10 +2967,9 @@ function createTexture(gltfTexture, model, context) {
       sampler: sampler,
     });
   } else if (defined(source)) {
-    var npot =
+    npot =
       !CesiumMath.isPowerOfTwo(source.width) ||
       !CesiumMath.isPowerOfTwo(source.height);
-
     if (requiresNpot && npot) {
       // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
       var canvas = document.createElement("canvas");
@@ -2960,6 +2997,7 @@ function createTexture(gltfTexture, model, context) {
       pixelDatatype: texture.type,
       sampler: sampler,
       flipY: false,
+      skipColorSpaceConversion: true,
     });
     // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
     if (mipmap) {
@@ -5151,10 +5189,11 @@ Model.prototype.update = function (frameState) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
-  var supportsWebP = FeatureDetection.supportsWebP();
 
   var context = frameState.context;
   this._defaultTexture = context.defaultTexture;
+
+  var supportsWebP = FeatureDetection.supportsWebP();
 
   if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
     // Use renderer resources from cache instead of loading/creating them?
@@ -5317,7 +5356,9 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
-        ModelOutlineLoader.outlinePrimitives(this);
+        if (this.showOutline) {
+          ModelOutlineLoader.outlinePrimitives(this);
+        }
         createResources(this, frameState);
       }
     }

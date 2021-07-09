@@ -263,9 +263,7 @@ GltfLoader.prototype.process = function (frameState) {
 
     var supportedImageFormats = new SupportedImageFormats({
       webp: FeatureDetection.supportsWebP(),
-      s3tc: frameState.context.s3tc,
-      pvrtc: frameState.context.pvrtc,
-      etc1: frameState.context.etc1,
+      basis: frameState.context.supportsBasis,
     });
 
     var gltf = this._gltfJsonLoader.gltf;

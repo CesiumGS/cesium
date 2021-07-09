@@ -7,8 +7,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import loadCRN from "../Core/loadCRN.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -423,16 +422,28 @@ Material.prototype.isTranslucent = function () {
  * @private
  */
 Material.prototype.update = function (context) {
+  this._defaultTexture = context.defaultTexture;
+
   var i;
   var uniformId;
 
   var loadedImages = this._loadedImages;
   var length = loadedImages.length;
-
   for (i = 0; i < length; ++i) {
     var loadedImage = loadedImages[i];
     uniformId = loadedImage.id;
     var image = loadedImage.image;
+
+    // Images transcoded from KTX2 can contain multiple mip levels:
+    // https://github.khronos.org/KTX-Specification/#_mip_level_array
+    var mipLevels;
+    if (Array.isArray(image)) {
+      // highest detail mip should be level 0
+      mipLevels = image.slice(1, image.length).map(function (mipLevel) {
+        return mipLevel.bufferView;
+      });
+      image = image[0];
+    }
 
     var sampler = new Sampler({
       minificationFilter: this._minificationFilter,
@@ -448,6 +459,7 @@ Material.prototype.update = function (context) {
         height: image.height,
         source: {
           arrayBufferView: image.bufferView,
+          mipLevels: mipLevels,
         },
         sampler: sampler,
       });
@@ -457,6 +469,14 @@ Material.prototype.update = function (context) {
         source: image,
         sampler: sampler,
       });
+    }
+
+    // The material destroys its old texture only after the new one has been loaded.
+    // This will ensure a smooth swap of textures and prevent the default texture
+    // from appearing for a few frames.
+    var oldTexture = this._textures[uniformId];
+    if (defined(oldTexture) && oldTexture !== this._defaultTexture) {
+      oldTexture.destroy();
     }
 
     this._textures[uniformId] = texture;
@@ -776,8 +796,7 @@ var matrixMap = {
   mat4: Matrix4,
 };
 
-var ktxRegex = /\.ktx$/i;
-var crnRegex = /\.crn$/i;
+var ktx2Regex = /\.ktx2$/i;
 
 function createTexture2DUpdateFunction(uniformId) {
   var oldUniformValue;
@@ -785,9 +804,11 @@ function createTexture2DUpdateFunction(uniformId) {
     var uniforms = material.uniforms;
     var uniformValue = uniforms[uniformId];
     var uniformChanged = oldUniformValue !== uniformValue;
+    var uniformValueIsDefaultImage =
+      !defined(uniformValue) || uniformValue === Material.DefaultImageId;
     oldUniformValue = uniformValue;
-    var texture = material._textures[uniformId];
 
+    var texture = material._textures[uniformId];
     var uniformDimensionsName;
     var uniformDimensions;
 
@@ -816,7 +837,9 @@ function createTexture2DUpdateFunction(uniformId) {
           return;
         }
 
-        texture.copyFrom(uniformValue);
+        texture.copyFrom({
+          source: uniformValue,
+        });
       } else if (!defined(texture)) {
         material._textures[uniformId] = context.defaultTexture;
       }
@@ -826,7 +849,7 @@ function createTexture2DUpdateFunction(uniformId) {
     if (uniformValue instanceof Texture && uniformValue !== texture) {
       material._texturePaths[uniformId] = undefined;
       var tmp = material._textures[uniformId];
-      if (tmp !== material._defaultTexture) {
+      if (defined(tmp) && tmp !== material._defaultTexture) {
         tmp.destroy();
       }
       material._textures[uniformId] = uniformValue;
@@ -841,11 +864,18 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
+    if (uniformChanged && defined(texture) && uniformValueIsDefaultImage) {
+      // If the newly-assigned texture is the default texture,
+      // we don't need to wait for a new image to load before destroying
+      // the old texture.
+      if (texture !== material._defaultTexture) {
+        texture.destroy();
+      }
+      texture = undefined;
+    }
+
     if (!defined(texture)) {
       material._texturePaths[uniformId] = undefined;
-      if (!defined(material._defaultTexture)) {
-        material._defaultTexture = context.defaultTexture;
-      }
       texture = material._textures[uniformId] = material._defaultTexture;
 
       uniformDimensionsName = uniformId + "Dimensions";
@@ -856,7 +886,7 @@ function createTexture2DUpdateFunction(uniformId) {
       }
     }
 
-    if (uniformValue === Material.DefaultImageId) {
+    if (uniformValueIsDefaultImage) {
       return;
     }
 
@@ -877,19 +907,25 @@ function createTexture2DUpdateFunction(uniformId) {
           : Resource.createIfNeeded(uniformValue);
 
         var promise;
-        if (ktxRegex.test(resource.url)) {
-          promise = loadKTX(resource);
-        } else if (crnRegex.test(resource.url)) {
-          promise = loadCRN(resource);
+        if (ktx2Regex.test(resource.url)) {
+          promise = loadKTX2(resource.url);
         } else {
           promise = resource.fetchImage();
         }
-        when(promise, function (image) {
-          material._loadedImages.push({
-            id: uniformId,
-            image: image,
+
+        promise
+          .then(function (image) {
+            material._loadedImages.push({
+              id: uniformId,
+              image: image,
+            });
+          })
+          .otherwise(function () {
+            if (defined(texture) && texture !== material._defaultTexture) {
+              texture.destroy();
+            }
+            material._textures[uniformId] = material._defaultTexture;
           });
-        });
       } else if (
         uniformValue instanceof HTMLCanvasElement ||
         uniformValue instanceof HTMLImageElement
