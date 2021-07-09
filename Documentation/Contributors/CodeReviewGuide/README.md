@@ -124,6 +124,8 @@ git push -f origin mybranch # Requires force push as it is changing existing his
 
 ### You want to checkout a pull-request for review
 
+#### Using hub
+
 GitHub's [hub](https://hub.github.com) makes checking-out PR's simple. For example, run:
 
 `hub checkout https://github.com/CesiumGS/cesium/pull/3941`
@@ -135,6 +137,26 @@ forks with:
 
 which will automatically add these repos as remotes and fetch them. See the hub [open-source maintainer section](https://hub.github.com/#maintainer)
 for more info.
+
+#### Using Github CLI
+
+[GitHub CLI](https://cli.github.com/) allows you to checkout a PR using either its ID number, its URL, or its branch name. For instance,
+
+`gh pr checkout 3941`
+
+will checkout pull request [#3941](https://github.com/CesiumGS/cesium/pull/3941).
+
+More details can be found [here](https://cli.github.com/manual/gh_pr_checkout).
+
+#### Using git
+
+You can also use regular git commands to checkout a PR. First, fetch the pull request using its ID number and create a new branch for it.
+
+`git fetch origin pull/ID/head:BRANCHNAME`
+
+Then, you can switch to the newly created branch.
+
+`git checkout BRANCHNAME`
 
 ## Resources
 
