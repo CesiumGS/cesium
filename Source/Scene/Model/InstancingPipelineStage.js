@@ -1,9 +1,12 @@
 import Model2Utility from "./Model2Utility.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
+//import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 function InstancingPipelineStage() {}
 
+// * add instancing function to vertex shader
+// * set instance count
+// * set instancing attributes
 InstancingPipelineStage.process = function (node, renderResources, frameState) {
   // Create attributes for transforms
   var translationAttribute = Model2Utility.getAttributeBySemantic(
@@ -11,15 +14,16 @@ InstancingPipelineStage.process = function (node, renderResources, frameState) {
     "TRANSLATION"
   );
   var translationVertexAttribute = {
-    index: -1, // TODO: Update this later,
+    index: 1, // TODO: Update this later,
     vertexBuffer: translationAttribute.buffer,
     componentsPerAttribute: 3,
-    componentDatatype: ComponentDatatype.FLOAT,
+    componentDatatype: translationAttribute.componentDatatype,
     offsetInBytes: 0,
     strideInBytes: 0,
     instanceDivisor: 1,
   };
 
+  renderResources.instanceCount = translationAttribute.count;
   renderResources.attributes.push(translationVertexAttribute);
 
   renderResources.shaderBuilder.addDefine(
@@ -29,7 +33,7 @@ InstancingPipelineStage.process = function (node, renderResources, frameState) {
   );
   renderResources.shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
   renderResources.shaderBuilder.addVertexLines([
-    "vec3 instancing(position)",
+    "vec3 instancing(vec3 position)",
     "{",
     " return position + a_instanceTranslation;",
     "}",

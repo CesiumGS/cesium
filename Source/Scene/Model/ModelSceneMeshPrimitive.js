@@ -1,5 +1,6 @@
 import defined from "../../Core/defined.js";
 import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
+import SolidColorPipelineStage from "./SolidColorPipelineStage.js";
 
 export default function ModelSceneMeshPrimitive(options) {
   this._primitive = options.primitive;
@@ -9,18 +10,14 @@ export default function ModelSceneMeshPrimitive(options) {
   initializeMeshPrimitive(this);
 }
 
-function PBRPipelineStage() {
-  this.process = function () {};
-}
-function IBLPipelineStage() {
-  this.process = function () {};
-}
-function TechniquePipelineStage() {
-  this.process = function () {};
-}
-function LightingPipelineStage() {
-  this.process = function () {};
-}
+function PBRPipelineStage() {}
+PBRPipelineStage.process = function () {};
+function IBLPipelineStage() {}
+IBLPipelineStage.process = function () {};
+function TechniquePipelineStage() {}
+TechniquePipelineStage.process = function () {};
+function LightingPipelineStage() {}
+LightingPipelineStage.process = function () {};
 
 function hasPbrMaterials(primitive) {
   return defined(primitive.material);
@@ -53,4 +50,7 @@ function initializeMeshPrimitive(scenePrimitive) {
   */
 
   scenePrimitive._pipelineStages.push(LightingPipelineStage);
+
+  // TODO: remove this when done
+  scenePrimitive._pipelineStages.push(SolidColorPipelineStage);
 }

@@ -85,7 +85,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   readyPromise: {
     get: function () {
-      return this._readyPromise;
+      return this._model.readyPromise;
     },
   },
 
@@ -124,38 +124,6 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 });
 
 function initialize(content, gltf) {
-  // TODO: This isn't quite right:
-  // 1. NewModel.fromglTF should be the entry point
-  // 2. NewModel listens on the readyPromise
-  /*var loader = new GltfLoader({
-    gltfResource: content._resource,
-    typedArray: gltf,
-    // In 3D Tiles, each glTF is typically unique, so no sense caching them
-    releaseGltfJson: true,
-    // TODO: Should baseResource be different than gltfResource?
-    // TODO: Should asynchronous ever be false?
-    // TODO: if incrementallyLoadTextures is hard-coded to false, where would it be set to true?
-    incrementallyLoadTextures: false,
-  });
-  content._gltfLoader = loader;
-  loader.load();
-  loader.promise
-    .then(function (loader) {
-      console.log(loader);
-      var model = new NewModel({
-        loader: loader,
-      });
-      model._readyPromise.then(function () {
-        content._readyPromise.resolve();
-      });
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-      content._model = model;
-    })
-    .otherwise(console.error);
-    */
-
   var tileset = content._tileset;
   var tile = content._tile;
   var resource = content._resource;

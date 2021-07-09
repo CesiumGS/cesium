@@ -4,6 +4,10 @@ import Model2Utility from "./Model2Utility.js";
 import ModelSceneNode from "./ModelSceneNode.js";
 import ModelSceneMeshPrimitive from "./ModelSceneMeshPrimitive.js";
 
+import VertexArray from "../../Renderer/VertexArray.js";
+import DrawCommand from "../../Renderer/DrawCommand.js";
+import Pass from "../../Renderer/Pass.js";
+import RenderState from "../../Renderer/RenderState.js";
 import RenderResources from "./RenderResources.js";
 
 export default function ModelSceneGraph(options) {
@@ -78,40 +82,43 @@ ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
   for (var i = 0; i < this._sceneNodes.length; i++) {
     var node = this._sceneNodes[i];
 
-    var nodeResources = new RenderResources.NodeRenderResources(
-      node._modelMatrix
-    );
+    var nodeResources = new RenderResources.NodeRenderResources(node);
 
-    for (var j = 0; j < node._primitives.length; i++) {
+    for (var j = 0; j < node._pipelineStages.length; j++) {
       var nodePipelineStage = node._pipelineStages[j];
-      nodePipelineStage.process(node, nodeResources, frameState);
+      nodePipelineStage.process(node._node, nodeResources, frameState);
+    }
 
+    for (var k = 0; k < node.primitives.length; k++) {
+      var primitive = node.primitives[k];
       var primitiveResources = new RenderResources.PrimitiveRenderResources(
-        nodeResources
+        nodeResources,
+        primitive._primitive
       );
 
-      var primitive = node._primitives[j];
-      for (var k = 0; k < primitive._pipelineStages.length; k++) {
-        var pipelineStage = primitive._pipelineStages[k];
-        pipelineStage.process(primitive, primitiveResources, frameState);
-
-        finalizeShaders(primitiveResources);
-        this._drawCommands.push(
-          primitiveResources.buildDrawCommand(frameState)
+      for (var l = 0; l < primitive._pipelineStages.length; l++) {
+        var pipelineStage = primitive._pipelineStages[l];
+        pipelineStage.process(
+          primitive._primitive,
+          primitiveResources,
+          frameState
         );
       }
+
+      var drawCommand = buildDrawCommand(primitiveResources, frameState);
+      this._drawCommands.push(drawCommand);
     }
   }
 };
 
 ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
-  frames.commandList = frameState.commandList.concat(this._drawCommands);
+  var commandList = frameState.commandList;
+  commandList.push.apply(commandList, this._drawCommands);
 };
 
-function finalizeShaders(primitiveResources) {
-  // TODO: Compile struct definitions... when to insert them into shader?
-
-  primitiveResources.addVertexLines([
+function buildDrawCommand(primitiveResources, frameState) {
+  var shaderBuilder = primitiveResources.shaderBuilder;
+  shaderBuilder.addVertexLines([
     "void main()",
     "{",
     "    vec3 position = a_position;",
@@ -119,19 +126,63 @@ function finalizeShaders(primitiveResources) {
     "    position = instancing(position);",
     "    #endif",
     // TODO: custom vertex shader
-    "    gl_Position = czm_modelProjectionMatrix * vec4(position, 1.0);",
+    "    gl_Position = czm_modelViewProjection * vec4(position, 1.0);",
     "}",
   ]);
 
   // TODO: Compile struct definitions... when to insert them into shader?
-  primitiveResources.shaderBuilder.addFragmentLines([
+  shaderBuilder.addFragmentLines([
     "void main()",
     "{",
     "    vec4 color = vec4(0.0);",
+    "    #ifdef USE_SOLID_COLOR",
     "    color = solidColor(color);",
+    "    #endif",
     "    gl_FragColor = color;",
     "}",
   ]);
+
+  var vertexArray = new VertexArray({
+    context: frameState.context,
+    indices: primitiveResources.indices,
+    attributes: primitiveResources.attributes,
+  });
+
+  var renderState = RenderState.fromCache(
+    primitiveResources.renderStateOptions
+  );
+  var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+
+  return new DrawCommand({
+    boundingVolume: primitiveResources.boundingSphere,
+    modelMatrix: primitiveResources.modelMatrix,
+    uniformMap: primitiveResources.uniformMap,
+    renderState: renderState,
+    vertexArray: vertexArray,
+    shaderProgram: shaderProgram,
+    pass: Pass.OPAQUE,
+    count: primitiveResources.indexCount,
+    instanceCount: primitiveResources.instanceCount,
+    primitiveType: primitiveResources.primitiveType,
+    // TODO: Remove this when done
+    //debugShowBoundingVolume: true
+  });
+
+  // var command = new DrawCommand({
+  //   cull: model.cull, // TODO
+  //   primitiveType: primitive.mode,
+  //   vertexArray: vertexArray,
+  //   count: count,
+  //   offset: offset,
+  //   shaderProgram: rendererPrograms[programId],
+  //   castShadows: castShadows,
+  //   receiveShadows: receiveShadows,
+  //   uniformMap: uniformMap,
+  //   renderState: renderState,
+  //   owner: owner,
+  //   pass: isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
+  //   pickId: pickId,
+  // });
 }
 
 // 1. Propagate model matrices
@@ -164,7 +215,7 @@ function traverseModelComponents(sceneGraph, node, modelMatrix) {
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      node.primitives.push(
+      sceneNode.primitives.push(
         new ModelSceneMeshPrimitive({
           primitive: node.primitives[i],
         })

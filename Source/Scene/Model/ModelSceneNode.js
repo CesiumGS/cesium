@@ -7,13 +7,13 @@ export default function ModelSceneNode(options) {
   // TODO: Dynamic model matrix should be stored separately
   this._pipelineStages = [];
 
-  this.scenePrimitives = [];
+  this.primitives = [];
 
   initializeNode(this);
 }
 
 function initializeNode(node) {
-  if (defined(node.instances)) {
+  if (defined(node._node.instances)) {
     node._pipelineStages.push(InstancingPipelineStage);
   }
 }

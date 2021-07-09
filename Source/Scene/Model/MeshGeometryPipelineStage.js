@@ -7,7 +7,7 @@ MeshGeometryPipelineStage.process = function (
   renderResources,
   frameState
 ) {
-  // position, indices
+  // position
   var positionAttribute = Model2Utility.getAttributeBySemantic(
     primitive,
     "POSITION"
@@ -18,7 +18,10 @@ MeshGeometryPipelineStage.process = function (
     componentsPerAttribute: 3,
     componentDatatype: positionAttribute.componentDatatype,
   };
+  renderResources.shaderBuilder.setPositionAttribute("vec3", "a_position");
 
+  // indices
+  renderResources.indexCount = primitive.indices.count;
   renderResources.attributes.push(positionVertexAttribute);
 };
 
