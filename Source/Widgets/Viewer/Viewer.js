@@ -147,8 +147,8 @@ function trackDataSourceClock(timeline, clock, dataSource) {
       if (defined(timeline)) {
         var startTime = dataSourceClock.startTime;
         var stopTime = dataSourceClock.stopTime;
-        //When the start and stop times are equal, set the timeline to the shortest interval
-        //starting at the start time. This prevents an invalid timeline configuration.
+        // When the start and stop times are equal, set the timeline to the shortest interval
+        // starting at the start time. This prevents an invalid timeline configuration.
         if (JulianDate.equals(startTime, stopTime)) {
           stopTime = JulianDate.addSeconds(
             dataSourceClock.startTime,
