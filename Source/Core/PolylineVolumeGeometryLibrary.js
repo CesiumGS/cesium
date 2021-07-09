@@ -10,6 +10,7 @@ import Matrix4 from "./Matrix4.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import Quaternion from "./Quaternion.js";
 import Transforms from "./Transforms.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 var scratch2Array = [new Cartesian3(), new Cartesian3()];
 var scratchCartesian1 = new Cartesian3();
@@ -426,6 +427,22 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     var repeat = duplicatePoints ? 2 : 1;
     nextPosition = positions[i + 1];
     forward = Cartesian3.subtract(nextPosition, position, forward);
+    console.log("position: " + position);
+    console.log("nextPosition: " + nextPosition);
+    console.log(
+      "Magnitude in PolylineVolumeGeometryLibrary.js " +
+        Cartesian3.magnitude(forward) +
+        " " +
+        "Value of forward: " +
+        forward
+    );
+    //If positions are too close, throw a warning specifying the rounding issue
+    if (position.equals(nextPosition)) {
+      oneTimeWarning(
+        "Positions are too close and are considered equivalent with rounding error."
+      );
+      continue;
+    }
     forward = Cartesian3.normalize(forward, forward);
     cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
     cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
