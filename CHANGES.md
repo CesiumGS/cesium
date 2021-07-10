@@ -1,6 +1,7 @@
 # Change Log
 
 ##### Changes PR https://github.com/CesiumGS/cesium/pull/9673
+
 - Changes type annotations for several color properties from Property|undifined to Color|undefined
 
 ### 1.84 - 2021-08-02
@@ -14,6 +15,7 @@
 - Fixed render crash when creating a `polylineVolume` with very close points. [#9669](https://github.com/CesiumGS/cesium/pull/9669)
 
 =======
+
 ### 1.83 - 2021-07-01
 
 ##### Breaking Changes :mega:
