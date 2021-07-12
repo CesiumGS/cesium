@@ -336,16 +336,7 @@ var applicableRectangleScratch = new Rectangle();
  * @private
  *
  */
-function pickImageryLayersHelper(ray, scene) {
-  var pickedPosition = scene.globe.pick(ray, scene);
-  if (!defined(pickedPosition)) {
-    return undefined;
-  }
-
-  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
-
+function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   // Find the terrain tile containing the picked location.
   var tilesToRender = scene.globe._surface._tilesToRender;
   var pickedTile;
@@ -362,44 +353,20 @@ function pickImageryLayersHelper(ray, scene) {
   }
 
   if (!defined(pickedTile)) {
-    return undefined;
+    return;
   }
 
   // Pick against all attached imagery tiles containing the pickedLocation.
   var imageryTiles = pickedTile.data.imagery;
 
-  return [pickedTile, imageryTiles, pickedLocation];
-}
-
-/**
- * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
- * location on the screen, use {@link Camera.getPickRay}. This function uses a rectangular partition
- * approach which is not pixel perfect. Thus, it will pick imagery in several situations where it
- * should not (transparent imagery, imagery cutout, etc.).
- *
- * @param {Ray} ray The ray to test for intersection.
- * @param {Scene} scene The scene.
- * @return {ImageryLayer[]|undefined} An array that includes all of
- *                                 the layers that are intersected by a given pick ray. Undefined if
- *                                 no layers are selected.
- *
- */
-ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
-  var locationData = pickImageryLayersHelper(ray, scene);
-  var pickedTile, imageryTiles, pickedLocation;
-  if (!defined(locationData)) {
-    return undefined;
-  }
-
-  pickedTile = locationData[0];
-  imageryTiles = locationData[1];
-  pickedLocation = locationData[2];
-
-  var imageryLayers = [];
   for (var i = imageryTiles.length - 1; i >= 0; --i) {
     var terrainImagery = imageryTiles[i];
     var imagery = terrainImagery.readyImagery;
     if (!defined(imagery)) {
+      continue;
+    }
+    var provider = imagery.imageryLayer.imageryProvider;
+    if (pickFeatures && !defined(provider.pickFeatures)) {
       continue;
     }
 
@@ -436,8 +403,37 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
       continue;
     }
 
-    imageryLayers.push(imagery.imageryLayer);
+    callback(imagery);
   }
+}
+
+/**
+ * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
+ * location on the screen, use {@link Camera.getPickRay}.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {ImageryLayer[]|undefined} An array that includes all of
+ *                                 the layers that are intersected by a given pick ray. Undefined if
+ *                                 no layers are selected.
+ *
+ */
+ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
+  // Find the picked location on the globe.
+  var pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return;
+  }
+
+  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
+
+  var imageryLayers = [];
+
+  pickImageryHelper(scene, pickedLocation, false, function (imagery) {
+    imageryLayers.push(imagery.imageryLayer);
+  });
 
   if (imageryLayers.length === 0) {
     return undefined;
@@ -478,62 +474,21 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   ray,
   scene
 ) {
-  var locationData = pickImageryLayersHelper(ray, scene);
-  var pickedTile, imageryTiles, pickedLocation;
-  if (!defined(locationData)) {
-    return undefined;
+  // Find the picked location on the globe.
+  var pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return;
   }
 
-  pickedTile = locationData[0];
-  imageryTiles = locationData[1];
-  pickedLocation = locationData[2];
+  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
 
   var promises = [];
   var imageryLayers = [];
-  for (var i = imageryTiles.length - 1; i >= 0; --i) {
-    var terrainImagery = imageryTiles[i];
-    var imagery = terrainImagery.readyImagery;
-    if (!defined(imagery)) {
-      continue;
-    }
+
+  pickImageryHelper(scene, pickedLocation, true, function (imagery) {
     var provider = imagery.imageryLayer.imageryProvider;
-    if (!defined(provider.pickFeatures)) {
-      continue;
-    }
-
-    if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
-      continue;
-    }
-
-    // If this imagery came from a parent, it may not be applicable to its entire rectangle.
-    // Check the textureCoordinateRectangle.
-    var applicableRectangle = applicableRectangleScratch;
-
-    var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
-    applicableRectangle.west = CesiumMath.lerp(
-      pickedTile.rectangle.west,
-      pickedTile.rectangle.east,
-      terrainImagery.textureCoordinateRectangle.x - epsilon
-    );
-    applicableRectangle.east = CesiumMath.lerp(
-      pickedTile.rectangle.west,
-      pickedTile.rectangle.east,
-      terrainImagery.textureCoordinateRectangle.z + epsilon
-    );
-    applicableRectangle.south = CesiumMath.lerp(
-      pickedTile.rectangle.south,
-      pickedTile.rectangle.north,
-      terrainImagery.textureCoordinateRectangle.y - epsilon
-    );
-    applicableRectangle.north = CesiumMath.lerp(
-      pickedTile.rectangle.south,
-      pickedTile.rectangle.north,
-      terrainImagery.textureCoordinateRectangle.w + epsilon
-    );
-    if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
-      continue;
-    }
-
     var promise = provider.pickFeatures(
       imagery.x,
       imagery.y,
@@ -541,25 +496,20 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       pickedLocation.longitude,
       pickedLocation.latitude
     );
-    if (!defined(promise)) {
-      continue;
+    if (defined(promise)) {
+      promises.push(promise);
+      imageryLayers.push(imagery.imageryLayer);
     }
-
-    promises.push(promise);
-    imageryLayers.push(imagery.imageryLayer);
-  }
+  });
 
   if (promises.length === 0) {
     return undefined;
   }
-
   return when.all(promises, function (results) {
     var features = [];
-
     for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
       var result = results[resultIndex];
       var image = imageryLayers[resultIndex];
-
       if (defined(result) && result.length > 0) {
         for (
           var featureIndex = 0;
@@ -568,17 +518,14 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
         ) {
           var feature = result[featureIndex];
           feature.imageryLayer = image;
-
           // For features without a position, use the picked location.
           if (!defined(feature.position)) {
             feature.position = pickedLocation;
           }
-
           features.push(feature);
         }
       }
     }
-
     return features;
   });
 };
