@@ -408,10 +408,6 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
     if (!defined(imagery)) {
       continue;
     }
-    var provider = imagery.imageryLayer.imageryProvider;
-    if (!defined(provider.pickFeatures)) {
-      continue;
-    }
 
     if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
       continue;
