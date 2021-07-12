@@ -382,7 +382,7 @@ ImageryLayerCollection.prototype.pickImageryLayersHelper = function (
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {ImageryLayer[]|undefined} An `ImageryLayerCollection` that includes all of
+ * @return {ImageryLayer[]|undefined} An array that includes all of
  *                                 the layers that are intersected by a given pick ray. Undefined if
  *                                 no layers are selected.
  *
