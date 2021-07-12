@@ -1,5 +1,3 @@
-import epsilon3 from "../Shaders/Builtin/Constants/epsilon3.js";
-import epsilon7 from "../Shaders/Builtin/Constants/epsilon7.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -686,6 +684,8 @@ OrientedBoundingBox.intersectPlane = function (box, plane) {
 var scratchCartesianU = new Cartesian3();
 var scratchCartesianV = new Cartesian3();
 var scratchCartesianW = new Cartesian3();
+var scratchValidAxis2 = new Cartesian3();
+var scratchValidAxis3 = new Cartesian3();
 var scratchPPrime = new Cartesian3();
 
 /**
@@ -729,102 +729,81 @@ OrientedBoundingBox.distanceSquaredTo = function (box, cartesian) {
   var wValid = true;
 
   if (uHalf > 0) {
-    Cartesian3.normalize(u, u);
+    Cartesian3.divideByScalar(u, uHalf, u);
   } else {
     uValid = false;
   }
 
   if (vHalf > 0) {
-    Cartesian3.normalize(v, v);
+    Cartesian3.divideByScalar(v, vHalf, v);
   } else {
     vValid = false;
   }
 
   if (wHalf > 0) {
-    Cartesian3.normalize(w, w);
+    Cartesian3.divideByScalar(w, wHalf, w);
   } else {
     wValid = false;
   }
 
-  var oneDegenerateAxis =
-    (!uValid && vValid && wValid) ||
-    (uValid && !vValid && wValid) ||
-    (uValid && vValid && !wValid);
-  var twoDegenerateAxes =
-    (!uValid && !vValid && wValid) ||
-    (!uValid && vValid && !wValid) ||
-    (uValid && !vValid && !wValid);
-  var threeDegenerateAxes = !uValid && !vValid && !wValid;
-
+  var numberOfDegenerateAxes = !uValid + !vValid + !wValid;
   var validAxis1;
   var validAxis2;
   var validAxis3;
 
-  if (oneDegenerateAxis) {
+  if (numberOfDegenerateAxes === 1) {
     var degenerateAxis = u;
     validAxis1 = v;
     validAxis2 = w;
     if (!vValid) {
       degenerateAxis = v;
       validAxis1 = u;
-    }
-    if (!wValid) {
+    } else if (!wValid) {
       degenerateAxis = w;
       validAxis2 = u;
     }
 
-    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, new Cartesian3());
+    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, scratchValidAxis3);
 
     if (degenerateAxis === u) {
       u = validAxis3;
-    }
-    if (degenerateAxis === v) {
+    } else if (degenerateAxis === v) {
       v = validAxis3;
-    }
-    if (degenerateAxis === w) {
+    } else if (degenerateAxis === w) {
       w = validAxis3;
     }
-  }
-
-  if (twoDegenerateAxes) {
+  } else if (numberOfDegenerateAxes === 2) {
     validAxis1 = u;
     if (vValid) {
       validAxis1 = v;
-    }
-    if (wValid) {
+    } else if (wValid) {
       validAxis1 = w;
     }
 
-    var crossVector = new Cartesian3(0.0, 1.0, 0.0);
-    if (crossVector.equalsEpsilon(validAxis1, epsilon3)) {
-      crossVector = new Cartesian3(1.0, 0.0, 0.0);
+    var crossVector = Cartesian3.UNIT_Y;
+    if (crossVector.equalsEpsilon(validAxis1, CesiumMath.EPSILON3)) {
+      crossVector = Cartesian3.UNIT_X;
     }
 
-    validAxis2 = Cartesian3.cross(validAxis1, crossVector, new Cartesian3());
+    validAxis2 = Cartesian3.cross(validAxis1, crossVector, scratchValidAxis2);
     Cartesian3.normalize(validAxis2, validAxis2);
-    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, new Cartesian3());
+    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, scratchValidAxis3);
     Cartesian3.normalize(validAxis3, validAxis3);
 
     if (validAxis1 === u) {
       v = validAxis2;
       w = validAxis3;
-    }
-
-    if (validAxis1 === v) {
+    } else if (validAxis1 === v) {
       w = validAxis2;
       u = validAxis3;
-    }
-
-    if (validAxis1 === w) {
+    } else if (validAxis1 === w) {
       u = validAxis2;
       v = validAxis3;
     }
-  }
-
-  if (threeDegenerateAxes) {
-    u = new Cartesian3(1.0, 0.0, 0.0);
-    v = new Cartesian3(0.0, 1.0, 0.0);
-    w = new Cartesian3(0.0, 0.0, 1.0);
+  } else if (numberOfDegenerateAxes === 3) {
+    u = Cartesian3.UNIT_X;
+    v = Cartesian3.UNIT_Y;
+    w = Cartesian3.UNIT_Z;
   }
 
   var pPrime = scratchPPrime;
