@@ -336,10 +336,7 @@ var applicableRectangleScratch = new Rectangle();
  * @private
  *
  */
-ImageryLayerCollection.prototype.pickImageryLayersHelper = function (
-  ray,
-  scene
-) {
+function pickImageryLayersHelper(ray, scene) {
   var pickedPosition = scene.globe.pick(ray, scene);
   if (!defined(pickedPosition)) {
     return undefined;
@@ -372,7 +369,7 @@ ImageryLayerCollection.prototype.pickImageryLayersHelper = function (
   var imageryTiles = pickedTile.data.imagery;
 
   return [pickedTile, imageryTiles, pickedLocation];
-};
+}
 
 /**
  * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
@@ -388,10 +385,7 @@ ImageryLayerCollection.prototype.pickImageryLayersHelper = function (
  *
  */
 ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
-  var locationData = ImageryLayerCollection.prototype.pickImageryLayersHelper(
-    ray,
-    scene
-  );
+  var locationData = pickImageryLayersHelper(ray, scene);
   var pickedTile, imageryTiles, pickedLocation;
   if (!defined(locationData)) {
     return undefined;
@@ -484,10 +478,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   ray,
   scene
 ) {
-  var locationData = ImageryLayerCollection.prototype.pickImageryLayersHelper(
-    ray,
-    scene
-  );
+  var locationData = pickImageryLayersHelper(ray, scene);
   var pickedTile, imageryTiles, pickedLocation;
   if (!defined(locationData)) {
     return undefined;
