@@ -243,6 +243,41 @@ describe("Core/PolylineGeometry", function () {
     ).toBe(true);
   });
 
+  it("createGeometry removes duplicate positions", function () {
+    var positions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+    ];
+
+    var line = PolylineGeometry.createGeometry(
+      new PolylineGeometry({
+        positions: positions,
+        width: 10.0,
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        arcType: ArcType.NONE,
+      })
+    );
+
+    var numVertices = expectedPositions.length * 4 - 4;
+    expect(line.attributes.position.values.length).toEqual(numVertices * 3);
+    expect(line.attributes.prevPosition.values.length).toEqual(numVertices * 3);
+    expect(line.attributes.nextPosition.values.length).toEqual(numVertices * 3);
+  });
+
   var positions = [
     new Cartesian3(1, 2, 3),
     new Cartesian3(4, 5, 6),

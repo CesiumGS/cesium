@@ -309,10 +309,45 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
   var j;
   var k;
 
+  var removedIndices = [];
   var positions = arrayRemoveDuplicates(
     polylineGeometry._positions,
-    Cartesian3.equalsEpsilon
+    Cartesian3.equalsEpsilon,
+    false,
+    removedIndices
   );
+
+  if (defined(colors) && removedIndices.length > 0) {
+    var removedArrayIndex = 0;
+    var length = colors.length;
+    var nextRemovedIndex = removedIndices[0];
+    var colorsScratch = [];
+    var ii;
+    if (colorsPerVertex) {
+      for (ii = 0; ii < length; ii++) {
+        if (ii === nextRemovedIndex) {
+          removedArrayIndex++;
+          nextRemovedIndex = removedIndices[removedArrayIndex];
+        } else {
+          colorsScratch.push(colors[ii]);
+        }
+      }
+    } else {
+      // If polyline is colored in segments, the color is counted
+      // if the endpoint hasn't been removed.
+      for (ii = 0; ii < length; ii++) {
+        if (ii + 1 === nextRemovedIndex) {
+          removedArrayIndex++;
+          nextRemovedIndex = removedIndices[removedArrayIndex];
+        } else {
+          colorsScratch.push(colors[ii]);
+        }
+      }
+    }
+
+    colors = colorsScratch;
+  }
+
   var positionsLength = positions.length;
 
   // A width of a pixel or less is not a valid geometry, but in order to support external data

@@ -10,7 +10,7 @@ var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  *
  * @param {Array.<*>} [values] The array of values.
  * @param {Function} equalsEpsilon Function to compare values with an epsilon. Boolean equalsEpsilon(left, right, epsilon).
- * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value.
+ * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value. If they are equal, the last value is removed.
  * @param {Array.<number>} [removedIndices=undefined] Store the indices that correspond to the duplicate items removed from the array, if there were any.
  * @returns {Array.<*>|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
  *
@@ -34,6 +34,17 @@ var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
  * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  *
+ * @example
+ * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0)]
+ * // removedIndices will be equal to [1, 3, 5]
+ * var values = [
+ *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+ *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+ *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
+ *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
+ *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
+ *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
+ * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  * @private
  */
 function arrayRemoveDuplicates(
@@ -96,9 +107,10 @@ function arrayRemoveDuplicates(
       )
     ) {
       if (storeRemovedIndices) {
-        removedIndices.push(0);
+        removedIndices.push(values.length - 1);
       }
-      return values.slice(1);
+      values.length -= 1;
+      return values;
     }
     return values;
   }
@@ -113,9 +125,9 @@ function arrayRemoveDuplicates(
     )
   ) {
     if (storeRemovedIndices) {
-      removedIndices.unshift(0);
+      removedIndices.push(values.length - 1);
     }
-    cleanedValues.shift();
+    cleanedValues.length -= 1;
   }
 
   return cleanedValues;

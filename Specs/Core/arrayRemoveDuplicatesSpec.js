@@ -64,6 +64,30 @@ describe("Core/arrayRemoveDuplicates", function () {
     expect(noDuplicates).toEqual(expectedPositions);
   });
 
+  it("removeDuplicates doesn't remove duplicates that are nonadjacent", function () {
+    var positions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+    ];
+    var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+    ];
+    var noDuplicates = arrayRemoveDuplicates(
+      positions,
+      Cartesian3.equalsEpsilon
+    );
+    expect(noDuplicates).toEqual(expectedPositions);
+  });
+
   it("removeDuplicates to remove duplicates with anonymous types", function () {
     var positions = [
       { x: 1.0, y: 1.0, z: 1.0 },
@@ -203,9 +227,9 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
 
     var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
       new Cartesian3(2.0, 2.0, 2.0),
       new Cartesian3(3.0, 3.0, 3.0),
-      new Cartesian3(1.0, 1.0, 1.0),
     ];
 
     var noDuplicates = arrayRemoveDuplicates(
@@ -225,12 +249,38 @@ describe("Core/arrayRemoveDuplicates", function () {
       new Cartesian3(2.0, 2.0, 2.0),
       new Cartesian3(3.0, 3.0, 3.0),
       new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
     ];
 
     var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
       new Cartesian3(2.0, 2.0, 2.0),
       new Cartesian3(3.0, 3.0, 3.0),
+    ];
+
+    var noDuplicates = arrayRemoveDuplicates(
+      positions,
+      Cartesian3.equalsEpsilon,
+      true
+    );
+
+    expect(noDuplicates).toEqual(expectedPositions);
+  });
+
+  it("removeDuplicates wrapping doesn't remove nonadjacent duplicates", function () {
+    var positions = [
       new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(3.0, 3.0, 3.0),
     ];
 
     var noDuplicates = arrayRemoveDuplicates(
@@ -340,10 +390,10 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
 
     var expectedPositions = [
+      Cartesian3.ZERO,
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_Z,
-      Cartesian3.ZERO,
     ];
 
     var removedIndices = [];
@@ -356,7 +406,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
-    expect(removedIndices).toEqual([0]);
+    expect(removedIndices).toEqual([4]);
   });
 
   it("removeDuplicates modifies removedIndices when there are duplicates including wrapped around", function () {
@@ -372,10 +422,10 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
 
     var expectedPositions = [
+      Cartesian3.ZERO,
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_Z,
-      Cartesian3.ZERO,
     ];
 
     var removedIndices = [];
@@ -387,6 +437,6 @@ describe("Core/arrayRemoveDuplicates", function () {
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
-    expect(removedIndices).toEqual([0, 1, 4, 6]);
+    expect(removedIndices).toEqual([1, 4, 6, 7]);
   });
 });
