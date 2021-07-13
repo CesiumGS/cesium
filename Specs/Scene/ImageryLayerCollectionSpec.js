@@ -409,8 +409,6 @@ describe(
             var deferred = when.defer();
             setTimeout(function () {
               var featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "Foo";
-              featureInfo.description = "<strong>Foo!</strong>";
               deferred.resolve([featureInfo]);
             }, 1);
             return deferred.promise;
@@ -456,8 +454,6 @@ describe(
             var deferred = when.defer();
             setTimeout(function () {
               var featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "Foo";
-              featureInfo.description = "<strong>Foo!</strong>";
               deferred.resolve([featureInfo]);
             }, 1);
             return deferred.promise;
@@ -485,8 +481,6 @@ describe(
             var deferred = when.defer();
             setTimeout(function () {
               var featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "Bar";
-              featureInfo.description = "<strong>Bar!</strong>";
               deferred.resolve([featureInfo]);
             }, 1);
             return deferred.promise;
