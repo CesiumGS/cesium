@@ -258,6 +258,278 @@ describe(
       expect(collection.isDestroyed()).toEqual(true);
     });
 
+    describe("pickImageryLayers", function () {
+      var scene;
+      var globe;
+      var camera;
+
+      beforeAll(function () {
+        scene = createScene();
+        globe = scene.globe = new Globe();
+        camera = scene.camera;
+
+        scene.frameState.passes.render = true;
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      beforeEach(function () {
+        globe.imageryLayers.removeAll();
+      });
+
+      /**
+       * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
+       * once the load queue is empty.
+       */
+      function updateUntilDone(globe) {
+        // update until the load queue is empty.
+        return pollToPromise(function () {
+          globe._surface._debug.enableDebugOutput = true;
+          scene.render();
+          return (
+            globe._surface.tileProvider.ready &&
+            globe._surface._tileLoadQueueHigh.length === 0 &&
+            globe._surface._tileLoadQueueMedium.length === 0 &&
+            globe._surface._tileLoadQueueLow.length === 0 &&
+            globe._surface._debug.tilesWaitingForChildren === 0
+          );
+        });
+      }
+
+      it("returns undefined when pick ray does not intersect surface", function () {
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+
+        var ray = new Ray(
+          camera.position,
+          Cartesian3.negate(camera.direction, new Cartesian3())
+        );
+        var featuresPromise = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(featuresPromise).toBeUndefined();
+      });
+
+      it("returns undefined when globe has no pickable layers", function () {
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+
+        var ray = new Ray(camera.position, camera.direction);
+        var featuresPromise = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(featuresPromise).toBeUndefined();
+      });
+
+      it("returns undefined when ImageryProvider does not implement pickFeatures", function () {
+        var provider = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        globe.imageryLayers.addImageryProvider(provider);
+
+        return updateUntilDone(globe).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          camera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+            new Cartesian3(0.0, 0.0, 100.0)
+          );
+
+          var ray = new Ray(camera.position, camera.direction);
+          var featuresPromise = scene.imageryLayers.pickImageryLayers(
+            ray,
+            scene
+          );
+          expect(featuresPromise).toBeUndefined();
+        });
+      });
+
+      it("returns undefined when ImageryProvider.pickFeatures returns undefined", function () {
+        var provider = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+
+          pickFeatures: function (x, y, level, longitude, latitude) {
+            return undefined;
+          },
+
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        globe.imageryLayers.addImageryProvider(provider);
+
+        return updateUntilDone(globe).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          camera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+            new Cartesian3(0.0, 0.0, 100.0)
+          );
+
+          var ray = new Ray(camera.position, camera.direction);
+          var featuresPromise = scene.imageryLayers.pickImageryLayers(
+            ray,
+            scene
+          );
+          expect(featuresPromise).toBeUndefined();
+        });
+      });
+
+      it("returns imagery from one layer", function () {
+        var provider = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+
+          pickFeatures: function (x, y, level, longitude, latitude) {
+            var deferred = when.defer();
+            setTimeout(function () {
+              var featureInfo = new ImageryLayerFeatureInfo();
+              featureInfo.name = "Foo";
+              featureInfo.description = "<strong>Foo!</strong>";
+              deferred.resolve([featureInfo]);
+            }, 1);
+            return deferred.promise;
+          },
+
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        var currentLayer = globe.imageryLayers.addImageryProvider(provider);
+
+        return updateUntilDone(globe).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          camera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+            new Cartesian3(0.0, 0.0, 100.0)
+          );
+          camera.lookAtTransform(Matrix4.IDENTITY);
+
+          var ray = new Ray(camera.position, camera.direction);
+          var featuresPromise = scene.imageryLayers.pickImageryLayers(
+            ray,
+            scene
+          );
+
+          expect(featuresPromise).toBeDefined();
+          expect(featuresPromise.length).toBe(1);
+          expect(featuresPromise[0]).toBe(currentLayer);
+        });
+      });
+
+      it("returns imagery from two layers", function () {
+        var provider1 = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+
+          pickFeatures: function (x, y, level, longitude, latitude) {
+            var deferred = when.defer();
+            setTimeout(function () {
+              var featureInfo = new ImageryLayerFeatureInfo();
+              featureInfo.name = "Foo";
+              featureInfo.description = "<strong>Foo!</strong>";
+              deferred.resolve([featureInfo]);
+            }, 1);
+            return deferred.promise;
+          },
+
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        var currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
+
+        var provider2 = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+
+          pickFeatures: function (x, y, level, longitude, latitude) {
+            var deferred = when.defer();
+            setTimeout(function () {
+              var featureInfo = new ImageryLayerFeatureInfo();
+              featureInfo.name = "Bar";
+              featureInfo.description = "<strong>Bar!</strong>";
+              deferred.resolve([featureInfo]);
+            }, 1);
+            return deferred.promise;
+          },
+
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Green.png");
+          },
+        };
+
+        var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
+
+        return updateUntilDone(globe).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          camera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+            new Cartesian3(0.0, 0.0, 100.0)
+          );
+          camera.lookAtTransform(Matrix4.IDENTITY);
+
+          var ray = new Ray(camera.position, camera.direction);
+          var featuresPromise = scene.imageryLayers.pickImageryLayers(
+            ray,
+            scene
+          );
+
+          expect(featuresPromise).toBeDefined();
+          expect(featuresPromise.length).toBe(2);
+          expect(featuresPromise[0]).toBe(currentLayer2);
+          expect(featuresPromise[1]).toBe(currentLayer1);
+        });
+      });
+    });
+
     describe("pickImageryLayerFeatures", function () {
       var scene;
       var globe;
