@@ -147,6 +147,7 @@ function buildDrawCommand(primitiveResources, frameState) {
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
     pass: Pass.OPAQUE,
+    pickId: "czm_pickColor",
     count: primitiveResources.indexCount,
     instanceCount: primitiveResources.instanceCount,
     primitiveType: primitiveResources.primitiveType,
