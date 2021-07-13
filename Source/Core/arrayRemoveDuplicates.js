@@ -11,6 +11,7 @@ var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  * @param {Array.<*>} [values] The array of values.
  * @param {Function} equalsEpsilon Function to compare values with an epsilon. Boolean equalsEpsilon(left, right, epsilon).
  * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value.
+ * @param {Array.<number>} [removedIndices=undefined] Store the indices that correspond to the duplicate items removed from the array, if there were any.
  * @returns {Array.<*>|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
  *
  * @example
@@ -35,7 +36,12 @@ var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  *
  * @private
  */
-function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
+function arrayRemoveDuplicates(
+  values,
+  equalsEpsilon,
+  wrapAround,
+  removedIndices
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("equalsEpsilon", equalsEpsilon);
   //>>includeEnd('debug');
@@ -46,24 +52,41 @@ function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
 
   wrapAround = defaultValue(wrapAround, false);
 
+  var storeRemovedIndices = defined(removedIndices);
+
   var length = values.length;
   if (length < 2) {
     return values;
   }
 
   var i;
-  var v0;
+  var v0 = values[0];
   var v1;
 
+  // We only want to create a new array if there are duplicates in the array (without considering wrapAround).
+  // As such, cleanedValues is undefined until it encounters the first duplicate, if it exists.
+  var cleanedValues;
+  var cleanedValuesDefined = false;
+
   for (i = 1; i < length; ++i) {
-    v0 = values[i - 1];
     v1 = values[i];
     if (equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
-      break;
+      if (!cleanedValuesDefined) {
+        cleanedValues = values.slice(0, i);
+        cleanedValuesDefined = true;
+      }
+      if (storeRemovedIndices) {
+        removedIndices.push(i);
+      }
+    } else {
+      if (cleanedValuesDefined) {
+        cleanedValues.push(v1);
+      }
+      v0 = v1;
     }
   }
 
-  if (i === length) {
+  if (!cleanedValuesDefined) {
     if (
       wrapAround &&
       equalsEpsilon(
@@ -72,33 +95,29 @@ function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
         removeDuplicatesEpsilon
       )
     ) {
+      if (storeRemovedIndices) {
+        removedIndices.push(0);
+      }
       return values.slice(1);
     }
     return values;
   }
 
-  var cleanedvalues = values.slice(0, i);
-  for (; i < length; ++i) {
-    // v0 is set by either the previous loop, or the previous clean point.
-    v1 = values[i];
-    if (!equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
-      cleanedvalues.push(v1);
-      v0 = v1;
-    }
-  }
-
   if (
     wrapAround &&
-    cleanedvalues.length > 1 &&
+    cleanedValues.length > 1 &&
     equalsEpsilon(
-      cleanedvalues[0],
-      cleanedvalues[cleanedvalues.length - 1],
+      cleanedValues[0],
+      cleanedValues[cleanedValues.length - 1],
       removeDuplicatesEpsilon
     )
   ) {
-    cleanedvalues.shift();
+    if (storeRemovedIndices) {
+      removedIndices.unshift(0);
+    }
+    cleanedValues.shift();
   }
 
-  return cleanedvalues;
+  return cleanedValues;
 }
 export default arrayRemoveDuplicates;
