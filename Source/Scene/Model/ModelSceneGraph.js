@@ -11,11 +11,14 @@ import RenderState from "../../Renderer/RenderState.js";
 import RenderResources from "./RenderResources.js";
 
 export default function ModelSceneGraph(options) {
+  this._model = options.model;
   this._modelComponents = options.modelComponents;
   this._pipelineStages = [];
 
   this._sceneNodes = [];
   this._drawCommands = [];
+  this._allowPicking = options.allowPicking;
+  this._pickObject = options.pickObject;
 
   initialize(this);
 }
@@ -28,62 +31,17 @@ function initialize(sceneGraph) {
     rootNode,
     Model2Utility.getNodeTransform(rootNode)
   );
-
-  // Instancing
-  // Picking
-  // Geometry
-  // Metadata Layout
-  // Metadata Packing
-  // Custom Shaders (Configurable)
-  // PBR
-  // IBL
-  // OR KHR Techniques
 }
-
-/*
-
-attribute vec3 a_position;
-attribute vec3 a_instanceTranslation;
-
-shaderBuilder.addDefine("USE_INSTANCING")
-vec3 instancing(vec3 position) {
-  return position + a_instanceTranslation;
-}
-
-void main() {
-  vec3 position = a_position;
-
-  #ifdef USE_INSTANCING
-  position = instancing(position);
-  #endif
-  
-  VertexOutput vertexOutput;
-  customShaderCallback(vertexInput, vertexOutput);
-  gl_Position = 
-
-  // other steps here if needed, incl. custom shader
-
-  gl_Position = czm_modelViewProjection * vec4(position, 1.0); 
-}
-
-----
-
-attribute vec3 a_position;
-
-
-void main() {
-  vec3 position = a_position;
-  gl_PointSize = 12;
-  gl_Position = czm_modelViewProjection * vec4(position, 1.0); 
-}
-*/
 
 ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
   // Traverse scene graph
   for (var i = 0; i < this._sceneNodes.length; i++) {
     var node = this._sceneNodes[i];
 
-    var nodeResources = new RenderResources.NodeRenderResources(node);
+    var nodeResources = new RenderResources.NodeRenderResources(
+      node,
+      this._model
+    );
 
     for (var j = 0; j < node._pipelineStages.length; j++) {
       var nodePipelineStage = node._pipelineStages[j];
@@ -246,6 +204,7 @@ function traverseModelComponents(sceneGraph, node, modelMatrix) {
       sceneNode.primitives.push(
         new ModelSceneMeshPrimitive({
           primitive: node.primitives[i],
+          allowPicking: sceneGraph._allowPicking,
         })
       );
     }

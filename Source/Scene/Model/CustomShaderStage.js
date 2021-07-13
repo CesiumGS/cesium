@@ -30,7 +30,7 @@ After.process = function (primitive, primitiveResources, frameState) {
       "};",
       "void fragmentMain(/*FragmentInput input,*/ out FragmentOutput fragmentOutput) {",
       "    //var wave = 0.5 + 0.5 * sin(u_time);",
-      "    fragmentOutput.material.baseColor = vec3(0.0, 0.5 * u_time, u_time);",
+      "    fragmentOutput.material.baseColor = czm_pickColor.rgb; /*vec3(0.0, 0.5 * u_time, u_time);*/",
       "}",
     ].join("\n"),
   });

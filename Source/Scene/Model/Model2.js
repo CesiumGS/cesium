@@ -2,6 +2,7 @@ import when from "../../ThirdParty/when.js";
 import GltfLoader from "../GltfLoader.js";
 import ModelSceneGraph from "./ModelSceneGraph.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import defaultValue from "../../Core/defaultValue.js";
 
 export default function Model2(options) {
   this._gltfLoader = undefined;
@@ -9,12 +10,16 @@ export default function Model2(options) {
   this._resourcesLoaded = false;
   this._drawCommandsCreated = false;
   this._sceneGraph = undefined;
+  this._allowPicking = defaultValue(options.allowPicking, true);
+  this._pickIds = [];
+  this._id = options.id;
   initialize(
     this,
     options.basePath,
     options.gltf,
     options.releaseGltfJson,
-    options.incrementallyLoadTextures
+    options.incrementallyLoadTextures,
+    options.pickObject
   );
 }
 
@@ -24,6 +29,21 @@ Object.defineProperties(Model2.prototype, {
       return this._readyPromise.promise;
     },
   },
+
+  /**
+   * @private
+   */
+  pickIds: {
+    get: function () {
+      return this._pickIds;
+    },
+  },
+
+  id: {
+    get: function () {
+      return this._id;
+    },
+  },
 });
 
 function initialize(
@@ -31,7 +51,8 @@ function initialize(
   gltfResource,
   gltf,
   releaseGltfJson,
-  incrementallyLoadTextures
+  incrementallyLoadTextures,
+  pickObject
 ) {
   var loaderOptions = {
     gltfResource: gltfResource,
@@ -57,6 +78,9 @@ function initialize(
 
       model._sceneGraph = new ModelSceneGraph({
         modelComponents: loader.components,
+        model: model,
+        allowPicking: model._allowPicking,
+        pickObject: pickObject,
       });
     })
     // TODO: Handle this properly
