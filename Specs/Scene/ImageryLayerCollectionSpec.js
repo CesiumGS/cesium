@@ -309,8 +309,8 @@ describe(
           camera.position,
           Cartesian3.negate(camera.direction, new Cartesian3())
         );
-        var featuresPromise = scene.imageryLayers.pickImageryLayers(ray, scene);
-        expect(featuresPromise).toBeUndefined();
+        var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(imagery).toBeUndefined();
       });
 
       it("returns undefined when globe has no pickable layers", function () {
@@ -321,8 +321,8 @@ describe(
         );
 
         var ray = new Ray(camera.position, camera.direction);
-        var featuresPromise = scene.imageryLayers.pickImageryLayers(ray, scene);
-        expect(featuresPromise).toBeUndefined();
+        var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(imagery).toBeUndefined();
       });
 
       it("returns undefined when ImageryProvider does not implement pickFeatures", function () {
@@ -352,11 +352,8 @@ describe(
           );
 
           var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayers(
-            ray,
-            scene
-          );
-          expect(featuresPromise).toBeUndefined();
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+          expect(imagery).toBeUndefined();
         });
       });
 
@@ -391,11 +388,8 @@ describe(
           );
 
           var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayers(
-            ray,
-            scene
-          );
-          expect(featuresPromise).toBeUndefined();
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+          expect(imagery).toBeUndefined();
         });
       });
 
@@ -438,14 +432,11 @@ describe(
           camera.lookAtTransform(Matrix4.IDENTITY);
 
           var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayers(
-            ray,
-            scene
-          );
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
 
-          expect(featuresPromise).toBeDefined();
-          expect(featuresPromise.length).toBe(1);
-          expect(featuresPromise[0]).toBe(currentLayer);
+          expect(imagery).toBeDefined();
+          expect(imagery.length).toBe(1);
+          expect(imagery[0]).toBe(currentLayer);
         });
       });
 
@@ -517,15 +508,12 @@ describe(
           camera.lookAtTransform(Matrix4.IDENTITY);
 
           var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayers(
-            ray,
-            scene
-          );
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
 
-          expect(featuresPromise).toBeDefined();
-          expect(featuresPromise.length).toBe(2);
-          expect(featuresPromise[0]).toBe(currentLayer2);
-          expect(featuresPromise[1]).toBe(currentLayer1);
+          expect(imagery).toBeDefined();
+          expect(imagery.length).toBe(2);
+          expect(imagery[0]).toBe(currentLayer2);
+          expect(imagery[1]).toBe(currentLayer1);
         });
       });
     });
