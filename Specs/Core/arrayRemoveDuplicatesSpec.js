@@ -267,6 +267,34 @@ describe("Core/arrayRemoveDuplicates", function () {
     expect(noDuplicates).toEqual(expectedPositions);
   });
 
+  it("removeDuplicates wrapping removes string of duplicates at end", function () {
+    var positions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+    ];
+
+    var noDuplicates = arrayRemoveDuplicates(
+      positions,
+      Cartesian3.equalsEpsilon,
+      true
+    );
+
+    expect(noDuplicates).toEqual(expectedPositions);
+  });
+
   it("removeDuplicates wrapping doesn't remove nonadjacent duplicates", function () {
     var positions = [
       new Cartesian3(1.0, 1.0, 1.0),
@@ -438,5 +466,72 @@ describe("Core/arrayRemoveDuplicates", function () {
 
     expect(noDuplicates).toEqual(expectedPositions);
     expect(removedIndices).toEqual([1, 4, 6, 7]);
+  });
+
+  it("removeDuplicates wrapping modifies indicesRemoved with string of duplicates", function () {
+    var positions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+    ];
+
+    var removedIndices = [];
+    var noDuplicates = arrayRemoveDuplicates(
+      positions,
+      Cartesian3.equalsEpsilon,
+      true,
+      removedIndices
+    );
+
+    expect(noDuplicates).toEqual(expectedPositions);
+    expect(removedIndices).toEqual([1, 4, 5, 6, 7, 8]);
+  });
+
+  it("removeDuplicates wrapping modifies indicesRemoved with multiple strings of duplicates", function () {
+    var positions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(2.0, 2.0, 2.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+      new Cartesian3(1.0, 1.0, 1.0),
+      new Cartesian3(3.0, 3.0, 3.0),
+    ];
+
+    var removedIndices = [];
+    var noDuplicates = arrayRemoveDuplicates(
+      positions,
+      Cartesian3.equalsEpsilon,
+      true,
+      removedIndices
+    );
+
+    expect(noDuplicates).toEqual(expectedPositions);
+    expect(removedIndices).toEqual([1, 4, 6, 7, 9, 10, 11]);
   });
 });

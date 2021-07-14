@@ -62,7 +62,6 @@ function arrayRemoveDuplicates(
   }
 
   wrapAround = defaultValue(wrapAround, false);
-
   var storeRemovedIndices = defined(removedIndices);
 
   var length = values.length;
@@ -74,62 +73,65 @@ function arrayRemoveDuplicates(
   var v0 = values[0];
   var v1;
 
-  // We only want to create a new array if there are duplicates in the array (without considering wrapAround).
+  // We only want to create a new array if there are duplicates in the array.
   // As such, cleanedValues is undefined until it encounters the first duplicate, if it exists.
   var cleanedValues;
-  var cleanedValuesDefined = false;
+  var lastCleanIndex = 0;
+
+  // removedIndexLCI keeps track of where lastCleanIndex would be if it were sorted into the removedIndices array.
+  // In case of arrays such as [A, B, C, ..., A, A, A], removedIndices will not be sorted properly without this.
+  var removedIndexLCI = -1;
 
   for (i = 1; i < length; ++i) {
     v1 = values[i];
     if (equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
-      if (!cleanedValuesDefined) {
+      if (!defined(cleanedValues)) {
         cleanedValues = values.slice(0, i);
-        cleanedValuesDefined = true;
+        lastCleanIndex = i - 1;
+        removedIndexLCI = 0;
       }
       if (storeRemovedIndices) {
         removedIndices.push(i);
       }
     } else {
-      if (cleanedValuesDefined) {
+      if (defined(cleanedValues)) {
         cleanedValues.push(v1);
+        lastCleanIndex = i;
+        if (
+          storeRemovedIndices &&
+          lastCleanIndex > removedIndices[removedIndices.length - 1]
+        ) {
+          removedIndexLCI = removedIndices.length;
+        }
       }
       v0 = v1;
     }
   }
 
-  if (!cleanedValuesDefined) {
-    if (
-      wrapAround &&
-      equalsEpsilon(
-        values[0],
-        values[values.length - 1],
-        removeDuplicatesEpsilon
-      )
-    ) {
-      if (storeRemovedIndices) {
-        removedIndices.push(values.length - 1);
-      }
-      values.length -= 1;
-      return values;
-    }
-    return values;
-  }
-
   if (
     wrapAround &&
-    cleanedValues.length > 1 &&
-    equalsEpsilon(
-      cleanedValues[0],
-      cleanedValues[cleanedValues.length - 1],
-      removeDuplicatesEpsilon
-    )
+    equalsEpsilon(values[0], values[length - 1], removeDuplicatesEpsilon)
   ) {
     if (storeRemovedIndices) {
-      removedIndices.push(values.length - 1);
+      if (defined(cleanedValues)) {
+        removedIndices = removedIndices.splice(
+          removedIndexLCI,
+          0,
+          lastCleanIndex
+        );
+      } else {
+        removedIndices.push(length - 1);
+      }
     }
-    cleanedValues.length -= 1;
+
+    if (defined(cleanedValues)) {
+      cleanedValues.length -= 1;
+    } else {
+      cleanedValues = values.slice(0, -1);
+    }
   }
 
-  return cleanedValues;
+  return defined(cleanedValues) ? cleanedValues : values;
 }
+
 export default arrayRemoveDuplicates;
