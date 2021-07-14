@@ -326,7 +326,7 @@ describe(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
           new Cartesian3(0.0, 0.0, 100.0)
         );
-        //console.log("hi")
+
         var ray = new Ray(camera.position, camera.direction);
         var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
         expect(imagery).toBeUndefined();
