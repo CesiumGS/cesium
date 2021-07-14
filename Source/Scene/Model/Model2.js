@@ -3,6 +3,10 @@ import GltfLoader from "../GltfLoader.js";
 import ModelSceneGraph from "./ModelSceneGraph.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import defaultValue from "../../Core/defaultValue.js";
+import RuntimeError from "../../Core/RuntimeError.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
+import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
+import defined from "../../Core/defined.js";
 
 export default function Model2(options) {
   this._gltfLoader = undefined;
@@ -12,7 +16,10 @@ export default function Model2(options) {
   this._sceneGraph = undefined;
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._pickIds = [];
+  this._features = undefined;
   this._id = options.id;
+  // TODO: Rename this to something with featureTable?
+  this._batchTable = undefined;
   initialize(
     this,
     options.basePath,
@@ -42,6 +49,21 @@ Object.defineProperties(Model2.prototype, {
   id: {
     get: function () {
       return this._id;
+    },
+  },
+
+  batchTable: {
+    get: function () {
+      return this._batchTable;
+    },
+  },
+
+  /**
+   * @private
+   */
+  components: {
+    get: function () {
+      return this._gltfLoader.components;
     },
   },
 });
@@ -82,9 +104,53 @@ function initialize(
         allowPicking: model._allowPicking,
         pickObject: pickObject,
       });
+      createBatchTable(model);
     })
     // TODO: Handle this properly
     .otherwise(console.error);
+}
+
+function createBatchTable(model) {
+  var featureMetadata = model.components.featureMetadata;
+  var featureTableCount = featureMetadata.featureTableCount;
+  if (featureTableCount === 0) {
+    return undefined;
+  }
+
+  if (featureTableCount > 1) {
+    throw new RuntimeError(
+      "Only one feature table supported for glTF EXT_feature_metadata"
+    );
+  }
+
+  var featureTable = featureMetadata.getFirstFeatureTable();
+  model._batchTable = new ModelFeatureTable(model, featureTable);
+}
+
+Model2.prototype.hasProperty = function (batchId, name) {
+  return false;
+};
+
+Model2.prototype.getFeature = function (batchId) {
+  // TODO: bounds checking
+
+  if (!defined(this._features)) {
+    createFeatures(this);
+  }
+  return this._features[batchId];
+};
+
+function createFeatures(model) {
+  var featuresLength = model._batchTable.featuresLength;
+  var features = new Array(featuresLength);
+  if (featuresLength > 0) {
+    for (var i = 0; i < featuresLength; ++i) {
+      // TODO: This isn't quite correct, Cesium3DTileFeature really expects a content
+      // so it can access the tile & tileset for 3DTILES_metadata.
+      features[i] = new Cesium3DTileFeature(model, i);
+    }
+  }
+  model._features = features;
 }
 
 Model2.prototype.update = function (frameState) {
@@ -103,6 +169,8 @@ Model2.prototype.update = function (frameState) {
     this._sceneGraph.createDrawCommands(frameState);
     this._drawCommandsCreated = true;
   }
+
+  this._batchTable.update(frameState);
 
   // push the draw commands
   this._sceneGraph.pushDrawCommands(frameState);

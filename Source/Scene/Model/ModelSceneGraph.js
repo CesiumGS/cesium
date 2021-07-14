@@ -75,6 +75,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   commandList.push.apply(commandList, this._drawCommands);
 };
 
+// TODO: Move to a ModelDrawCommand class
 function buildDrawCommand(primitiveResources, frameState) {
   var shaderBuilder = primitiveResources.shaderBuilder;
   shaderBuilder.addVertexLines([
@@ -83,6 +84,10 @@ function buildDrawCommand(primitiveResources, frameState) {
     "    vec3 position = a_position;",
     "    #ifdef USE_INSTANCING",
     "    position = instancing(position);",
+    "    #endif",
+    "",
+    "    #ifdef USE_FEATURE_PICKING",
+    "    position = featurePicking(position);",
     "    #endif",
     "",
     "    #ifdef USE_POINTS",
@@ -117,6 +122,10 @@ function buildDrawCommand(primitiveResources, frameState) {
     "    color = vec4(material.baseColor, 1.0);",
     "    #endif",
     "",
+    "    #ifdef USE_FEATURE_PICKING",
+    "    color = featurePicking(color);",
+    "    #endif",
+    "",
     "    #ifdef USE_SOLID_COLOR",
     "    color = solidColor(color);",
     "    #endif",
@@ -147,12 +156,12 @@ function buildDrawCommand(primitiveResources, frameState) {
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
     pass: Pass.OPAQUE,
-    pickId: "czm_pickColor",
+    pickId: primitiveResources.pickId,
     count: primitiveResources.indexCount,
     instanceCount: primitiveResources.instanceCount,
     primitiveType: primitiveResources.primitiveType,
     // TODO: Remove this when done
-    debugShowBoundingVolume: true,
+    //debugShowBoundingVolume: true,
   });
 
   // var command = new DrawCommand({

@@ -31,6 +31,7 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
   this.instanceCount = nodeRenderResources.instanceCount;
   this.attributes = nodeRenderResources.attributes.slice();
 
+  this.pickId = undefined;
   this.uniformMap = {};
   this.indices = primitive.indices;
   this.indexCount = 0;

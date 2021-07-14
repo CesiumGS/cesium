@@ -12,6 +12,7 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 
+// TODO: Update this to use Model
 /**
  * An object that manages color, show/hide and picking textures for a batch
  * table or feature table.
@@ -473,8 +474,8 @@ function createPickTexture(batchTexture, context) {
     }
 
     batchTexture._pickTexture = createTexture(batchTexture, context, bytes);
-    content.tileset._statistics.batchTableByteLength +=
-      batchTexture._pickTexture.sizeInBytes;
+    //content.tileset._statistics.batchTableByteLength +=
+    //  batchTexture._pickTexture.sizeInBytes;
   }
 }
 
@@ -507,7 +508,7 @@ BatchTexture.prototype.update = function (tileset, frameState) {
     // Create batch texture on-demand
     if (!defined(this._batchTexture)) {
       this._batchTexture = createTexture(this, context, this._batchValues);
-      tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
+      //tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
     }
 
     updateBatchTexture(this); // Apply per-feature show/color updates

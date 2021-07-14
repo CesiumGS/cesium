@@ -30,6 +30,7 @@ function FeatureMetadata(options) {
 
   this._schema = options.schema;
   this._featureTables = options.featureTables;
+  this._featureTableCount = Object.keys(options.featureTables).length;
   this._featureTextures = options.featureTextures;
   this._statistics = options.statistics;
   this._extras = options.extras;
@@ -95,7 +96,24 @@ Object.defineProperties(FeatureMetadata.prototype, {
       return this._extensions;
     },
   },
+
+  featureTableCount: {
+    get: function () {
+      return this._featureTableCount;
+    },
+  },
 });
+
+// TODO: Clean this up
+FeatureMetadata.prototype.getFirstFeatureTable = function () {
+  for (var featureTableId in this._featureTables) {
+    if (this._featureTables.hasOwnProperty(featureTableId)) {
+      return this._featureTables[featureTableId];
+    }
+  }
+
+  return undefined;
+};
 
 /**
  * Gets the feature table with the given ID.

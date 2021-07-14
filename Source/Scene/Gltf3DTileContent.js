@@ -2,6 +2,7 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import RequestType from "../Core/RequestType.js";
+//import RuntimeError from "../Core/RuntimeError.js";
 import Pass from "../Renderer/Pass.js";
 import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
@@ -33,6 +34,7 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this._readyPromise = when.defer();
   this._gltfLoader = undefined;
   this._model = undefined;
+  this._batchTable = undefined;
 
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
@@ -109,7 +111,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return undefined;
+      return this._model._batchTable;
     },
   },
 
@@ -156,6 +158,7 @@ function initialize(content, gltf) {
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
   });
+  // TODO: Change _batch table property name.
 
   /*
   TODO: Stub this out
@@ -168,10 +171,12 @@ function initialize(content, gltf) {
 }
 
 Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
+  console.error("hasProperty called externally!");
   return false;
 };
 
 Gltf3DTileContent.prototype.getFeature = function (batchId) {
+  console.error("getFeature called externally!");
   return undefined;
 };
 
