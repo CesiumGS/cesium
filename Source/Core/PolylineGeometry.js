@@ -319,33 +319,21 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
 
   if (defined(colors) && removedIndices.length > 0) {
     var removedArrayIndex = 0;
-    var length = colors.length;
+    var offset = colorsPerVertex ? 0 : 1;
     var nextRemovedIndex = removedIndices[0];
-    var colorsScratch = [];
-    var ii;
-    if (colorsPerVertex) {
-      for (ii = 0; ii < length; ii++) {
-        if (ii === nextRemovedIndex) {
-          removedArrayIndex++;
-          nextRemovedIndex = removedIndices[removedArrayIndex];
-        } else {
-          colorsScratch.push(colors[ii]);
-        }
+    var perVertexAndEndpointCollapsed =
+      colorsPerVertex && nextRemovedIndex === 1;
+    colors = colors.filter(function (color, index) {
+      if (
+        index + offset === nextRemovedIndex ||
+        (index === 0 && perVertexAndEndpointCollapsed)
+      ) {
+        removedArrayIndex++;
+        nextRemovedIndex = removedIndices[removedArrayIndex];
+        return false;
       }
-    } else {
-      // If polyline is colored in segments, the color is counted
-      // if the endpoint hasn't been removed.
-      for (ii = 0; ii < length; ii++) {
-        if (ii + 1 === nextRemovedIndex) {
-          removedArrayIndex++;
-          nextRemovedIndex = removedIndices[removedArrayIndex];
-        } else {
-          colorsScratch.push(colors[ii]);
-        }
-      }
-    }
-
-    colors = colorsScratch;
+      return true;
+    });
   }
 
   var positionsLength = positions.length;
