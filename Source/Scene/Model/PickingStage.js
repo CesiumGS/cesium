@@ -51,6 +51,12 @@ PickingStage.process = function (primitive, renderResources, frameState) {
   }
 };
 
+function createPickColorFunction(color) {
+  return function () {
+    return color;
+  };
+}
+
 function processBatchTable(renderResources, batchTable) {
   var shaderBuilder = renderResources.shaderBuilder;
   if (ContextLimits.maximumVertexTextureImageUnits > 0) {
@@ -67,10 +73,16 @@ function processBatchTable(renderResources, batchTable) {
   // TODO: HANDLE_TRANSLUCENT (both shaders) is related to content's classification type
   // HAS_PREMULTIPLIED_ALPHA (frag only) is false so don't do anything.
 
-  shaderBuilder.addVertexLines([FeaturePickingCommon, FeaturePickingVS]);
-  shaderBuilder.addFragmentLines([FeaturePickingCommon, FeaturePickingFS]);
+  // If there are many features, the batch texture wraps onto multiple
+  // rows.
+  if (batchTable._batchTexture.textureDimensions.y > 1) {
+    shaderBuilder.addDefine("MULTILINE_BATCH_TEXTURE");
+  }
 
   shaderBuilder.addDefine("USE_FEATURE_PICKING");
+
+  shaderBuilder.addVertexLines([FeaturePickingCommon, FeaturePickingVS]);
+  shaderBuilder.addFragmentLines([FeaturePickingCommon, FeaturePickingFS]);
 
   var pickingUniforms = {
     model_pickTexture: function () {
@@ -96,10 +108,4 @@ function processBatchTable(renderResources, batchTable) {
     renderResources.uniformMap
   );
   renderResources.pickId = "texture2D(model_pickTexture, model_featureSt);";
-}
-
-function createPickColorFunction(color) {
-  return function () {
-    return color;
-  };
 }
