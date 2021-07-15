@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";

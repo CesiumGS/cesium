@@ -6,7 +6,7 @@ import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";

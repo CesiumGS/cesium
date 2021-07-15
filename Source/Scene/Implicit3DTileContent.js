@@ -9,7 +9,7 @@ import HilbertOrder from "../Core/HilbertOrder.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import hasExtension from "./hasExtension.js";

@@ -1,7 +1,7 @@
 import Check from "./Check.js";
 import Resource from "./Resource.js";
 import KTX2Transcoder from "./KTX2Transcoder.js";
-import when from "../ThirdParty/when.js";
+import when from "../ThirdPartyNpm/when.js";
 
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
