@@ -996,7 +996,8 @@ function getStyleablePropertyIds(source, propertyIds) {
 }
 
 function getBuiltinPropertyNames(source, propertyNames) {
-  // Get all the builtin property names used by this style
+  // Get all the builtin property names used by this style, ignoring the function signature
+  source = source.slice(source.indexOf("\n"));
   var regex = /czm_3dtiles_builtin_property_(\w+)/g;
   var matches = regex.exec(source);
   while (matches !== null) {
@@ -1018,25 +1019,12 @@ function getVertexAttribute(vertexArray, index) {
   }
 }
 
-var builtinPropertyNameMap = {
+var builtinVariableSubstitutionMap = {
   POSITION: "czm_3dtiles_builtin_property_POSITION",
   POSITION_ABSOLUTE: "czm_3dtiles_builtin_property_POSITION_ABSOLUTE",
   COLOR: "czm_3dtiles_builtin_property_COLOR",
   NORMAL: "czm_3dtiles_builtin_property_NORMAL",
 };
-
-function modifyStyleFunction(source) {
-  // Edit the function header to accept the point position, color, and normal
-  var functionHeader =
-    "(" +
-    "vec3 czm_3dtiles_builtin_property_POSITION, " +
-    "vec3 czm_3dtiles_builtin_property_POSITION_ABSOLUTE, " +
-    "vec4 czm_3dtiles_builtin_property_COLOR, " +
-    "vec3 czm_3dtiles_builtin_property_NORMAL" +
-    ")";
-
-  return source.replace("()", functionHeader);
-}
 
 function createShaders(pointCloud, frameState, style) {
   var i;
@@ -1065,13 +1053,14 @@ function createShaders(pointCloud, frameState, style) {
   var pointSizeStyleFunction;
   var styleTranslucent = isTranslucent;
 
-  var propertyNameMap = clone(builtinPropertyNameMap);
+  var variableSubstitutionMap = clone(builtinVariableSubstitutionMap);
   var propertyIdToAttributeMap = {};
   var styleableShaderAttributes = pointCloud._styleableShaderAttributes;
   for (name in styleableShaderAttributes) {
     if (styleableShaderAttributes.hasOwnProperty(name)) {
       attribute = styleableShaderAttributes[name];
-      propertyNameMap[name] = "czm_3dtiles_property_" + attribute.location;
+      variableSubstitutionMap[name] =
+        "czm_3dtiles_property_" + attribute.location;
       propertyIdToAttributeMap[attribute.location] = attribute;
     }
   }
@@ -1080,19 +1069,26 @@ function createShaders(pointCloud, frameState, style) {
     var shaderState = {
       translucent: false,
     };
+    var parameterList =
+      "(" +
+      "vec3 czm_3dtiles_builtin_property_POSITION, " +
+      "vec3 czm_3dtiles_builtin_property_POSITION_ABSOLUTE, " +
+      "vec4 czm_3dtiles_builtin_property_COLOR, " +
+      "vec3 czm_3dtiles_builtin_property_NORMAL" +
+      ")";
     colorStyleFunction = style.getColorShaderFunction(
-      "getColorFromStyle",
-      propertyNameMap,
+      "getColorFromStyle" + parameterList,
+      variableSubstitutionMap,
       shaderState
     );
     showStyleFunction = style.getShowShaderFunction(
-      "getShowFromStyle",
-      propertyNameMap,
+      "getShowFromStyle" + parameterList,
+      variableSubstitutionMap,
       shaderState
     );
     pointSizeStyleFunction = style.getPointSizeShaderFunction(
-      "getPointSizeFromStyle",
-      propertyNameMap,
+      "getPointSizeFromStyle" + parameterList,
+      variableSubstitutionMap,
       shaderState
     );
     if (defined(colorStyleFunction) && shaderState.translucent) {
@@ -1114,17 +1110,14 @@ function createShaders(pointCloud, frameState, style) {
   if (hasColorStyle) {
     getStyleablePropertyIds(colorStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(colorStyleFunction, builtinPropertyNames);
-    colorStyleFunction = modifyStyleFunction(colorStyleFunction);
   }
   if (hasShowStyle) {
     getStyleablePropertyIds(showStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(showStyleFunction, builtinPropertyNames);
-    showStyleFunction = modifyStyleFunction(showStyleFunction);
   }
   if (hasPointSizeStyle) {
     getStyleablePropertyIds(pointSizeStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(pointSizeStyleFunction, builtinPropertyNames);
-    pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
   }
 
   var usesColorSemantic = builtinPropertyNames.indexOf("COLOR") >= 0;

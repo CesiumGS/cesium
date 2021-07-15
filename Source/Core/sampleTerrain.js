@@ -157,14 +157,13 @@ function createInterpolateFunction(tileRequest) {
     }
 
     // create the mesh - and interpolate all the positions again
+    // note: terrain exaggeration is not passed in - we are only interested in the raw data
     return terrainData
       .createMesh({
         tilingScheme: tileRequest.tilingScheme,
         x: tileRequest.x,
         y: tileRequest.y,
         level: tileRequest.level,
-        // interpolateHeight will divide away the exaggeration - so passing in 1 is fine; it doesn't really matter
-        exaggeration: 1,
         // don't throttle this mesh creation because we've asked to sample these points;
         //  so sample them! We don't care how many tiles that is!
         throttle: false,

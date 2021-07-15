@@ -10,6 +10,7 @@ import { Resource } from "../../Source/Cesium.js";
 import { Material } from "../../Source/Cesium.js";
 import { MaterialAppearance } from "../../Source/Cesium.js";
 import { PolylineCollection } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
 import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
@@ -367,38 +368,14 @@ describe(
       renderMaterial(material);
     });
 
-    it("creates a material with an ktx compressed image uniform", function () {
+    it("creates a material with an KTX2 compressed image uniform", function () {
       var compressedUrl;
-      var context = scene.context;
-      if (context.s3tc) {
-        compressedUrl = "./Data/Images/Green4x4DXT1.ktx";
-      } else if (context.etc1) {
-        compressedUrl = "./Data/Images/Green4x4ETC1.ktx";
-      } else if (context.pvrtc) {
-        compressedUrl = "./Data/Images/Green4x4PVR.ktx";
+      if (FeatureDetection.supportsBasis(scene)) {
+        compressedUrl = "./Data/Images/Green4x4.ktx2";
       } else {
         return;
       }
 
-      var material = new Material({
-        strict: true,
-        fabric: {
-          type: "DiffuseMap",
-          uniforms: {
-            image: compressedUrl,
-          },
-        },
-      });
-      renderMaterial(material);
-    });
-
-    it("creates a material with an crn compressed image uniform", function () {
-      var context = scene.context;
-      if (!context.s3tc) {
-        return;
-      }
-
-      var compressedUrl = "./Data/Images/Green4x4.crn";
       var material = new Material({
         strict: true,
         fabric: {
@@ -676,6 +653,162 @@ describe(
             });
           });
         });
+    });
+
+    it("handles when material image is undefined", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: undefined,
+        color: Color.RED,
+      });
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 0, 0, 255]);
+      });
+    });
+
+    it("handles when material image is set to default image", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: Material.DefaultImageId,
+        color: Color.RED,
+      });
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 0, 0, 255]);
+      });
+    });
+
+    it("handles when material image is changed from undefined to some image", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: undefined,
+        color: Color.WHITE,
+      });
+
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 255, 255, 255]);
+      });
+
+      material.uniforms.image = "./Data/Images/Green.png";
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from default to some image", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: Material.DefaultImageId,
+        color: Color.WHITE,
+      });
+
+      renderMaterial(material, false, function (rgba) {
+        expect(rgba).toEqual([255, 255, 255, 255]);
+      });
+
+      material.uniforms.image = "./Data/Images/Green.png";
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to undefined", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = undefined;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([255, 255, 255, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to default", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = Material.DefaultImageId;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([255, 255, 255, 255]);
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to another", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+      var greenTextureId;
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        greenTextureId = material._textures["image"].id;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = "./Data/Images/Blue.png";
+        return pollToPromise(function () {
+          renderMaterial(material, true);
+          return material._textures["image"].id !== greenTextureId;
+        }).then(function () {
+          renderMaterial(material, true, function (rgba) {
+            expect(rgba).toEqual([0, 0, 255, 255]);
+          });
+        });
+      });
+    });
+
+    it("handles when material image is changed from some image to invalid image", function () {
+      var material = Material.fromType(Material.ImageType, {
+        image: "./Data/Images/Green.png",
+        color: Color.WHITE,
+      });
+      var greenTextureId;
+
+      return pollToPromise(function () {
+        renderMaterial(material, true);
+        return material._textures["image"] !== material._defaultTexture;
+      }).then(function () {
+        greenTextureId = material._textures["image"].id;
+        renderMaterial(material, true, function (rgba) {
+          expect(rgba).toEqual([0, 255, 0, 255]);
+        });
+        material.uniforms.image = "i_dont_exist.png";
+        return pollToPromise(function () {
+          renderMaterial(material, true);
+          return material._textures["image"].id !== greenTextureId;
+        }).then(function () {
+          renderMaterial(material, true, function (rgba) {
+            expect(rgba).toEqual([255, 255, 255, 255]);
+          });
+        });
+      });
     });
 
     it("throws with source and components in same template", function () {

@@ -339,6 +339,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
             crossOrigin,
             deferred,
             true,
+            false,
             true
           );
         } else {
@@ -579,6 +580,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
             crossOrigin,
             deferred,
             true,
+            false,
             true
           );
         } else {

@@ -2,7 +2,7 @@ import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 
 describe("Core/getJsonFromTypedArray", function () {
   it("converts a typed array to string", function () {
-    if (TextEncoder === undefined) {
+    if (typeof TextEncoder === "undefined") {
       return;
     }
 
@@ -23,7 +23,7 @@ describe("Core/getJsonFromTypedArray", function () {
   });
 
   it("converts a sub-region of a typed array to json", function () {
-    if (TextEncoder === undefined) {
+    if (typeof TextEncoder === "undefined") {
       return;
     }
 

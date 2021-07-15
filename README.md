@@ -2,9 +2,9 @@
 <img src="https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="50%" />
 </p>
 
-[![Build Status](https://travis-ci.org/CesiumGS/cesium.svg?branch=master)](https://travis-ci.org/CesiumGS/cesium)
+[![Build Status](https://travis-ci.com/CesiumGS/cesium.svg?branch=master)](https://travis-ci.com/CesiumGS/cesium)
 [![npm](https://img.shields.io/npm/v/cesium)](https://www.npmjs.com/package/cesium)
-[![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/docs/)
+[![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/learn/)
 
 CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 

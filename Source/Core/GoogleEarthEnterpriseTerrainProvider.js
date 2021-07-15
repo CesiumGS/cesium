@@ -280,6 +280,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasWaterMask: {
     get: function () {
@@ -292,6 +293,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasVertexNormals: {
     get: function () {
@@ -306,6 +308,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * information is not available.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {TileAvailability}
+   * @readonly
    */
   availability: {
     get: function () {
@@ -559,7 +562,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = f
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean} Undefined if not supported, otherwise true or false.
+ * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   x,

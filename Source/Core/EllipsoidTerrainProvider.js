@@ -53,6 +53,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * are passed an instance of {@link TileProviderError}.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Event}
+   * @readonly
    */
   errorEvent: {
     get: function () {
@@ -65,6 +66,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * the source of the terrain.  This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Credit}
+   * @readonly
    */
   credit: {
     get: function () {
@@ -77,6 +79,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {GeographicTilingScheme}
+   * @readonly
    */
   tilingScheme: {
     get: function () {
@@ -88,6 +91,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   ready: {
     get: function () {
@@ -114,6 +118,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasWaterMask: {
     get: function () {
@@ -126,6 +131,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Boolean}
+   * @readonly
    */
   hasVertexNormals: {
     get: function () {
@@ -139,6 +145,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * information is not available.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {TileAvailability}
+   * @readonly
    */
   availability: {
     get: function () {
@@ -196,7 +203,7 @@ EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean} Undefined if not supported, otherwise true or false.
+ * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
   x,

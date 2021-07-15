@@ -53,6 +53,7 @@ function Instanced3DModel3DTileContent(
   this._features = undefined;
 
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -142,6 +143,15 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });
@@ -304,6 +314,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
+    showOutline: tileset.showOutline,
   };
 
   if (gltfFormat === 0) {

@@ -50,7 +50,7 @@ npm start
 
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
-- **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/docs/tutorials/quick-start//)
+- **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/)
 - **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
 - **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
 - **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
@@ -124,7 +124,7 @@ Here's the full set of scripts and what they do.
 
 ## Travis and Continuous Integration
 
-Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
+Cesium uses [Travis](https://travis-ci.com/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
 
 Travis triggers a build whenever someone opens a pull request or pushes code to the Cesium repository. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
 
@@ -159,7 +159,7 @@ var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 
 To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the S3 bucket.
 
-- Go to [travis-ci.org](https://travis-ci.org/) and select your fork of Cesium
+- Go to [travis-ci.com](https://travis-ci.com/) and select your fork of Cesium
 - Go to "More Options">"Settings"
 - Under the "Environment Variables" section, add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
 
@@ -177,6 +177,6 @@ To configure the additional commit statuses on GitHub for your fork of Cesium, y
 ![Token Access](token.jpg)
 
 - Copy the token to your clipboard
-- Go to [travis-ci.org](https://travis-ci.org/) and select your fork of Cesium
+- Go to [travis-ci.com](https://travis-ci.com/) and select your fork of Cesium
 - Go to "More Options">"Settings"
 - Under the "Environment Variables" section, add the environment variable `TOKEN` and paste your token for the value

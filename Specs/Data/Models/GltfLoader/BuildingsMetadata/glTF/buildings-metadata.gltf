@@ -1,0 +1,255 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 240,
+      "type": "VEC3",
+      "min": [
+        -103.97583675780334,
+        -114.61250572279096,
+        -102.50925003085285
+      ],
+      "max": [
+        118.4458890708629,
+        106.54341480974108,
+        93.78807587129995
+      ]
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 240,
+      "type": "VEC3",
+      "min": [
+        -0.9686356343768793,
+        -0.7415555652213446,
+        -0.765567091384559
+      ],
+      "max": [
+        0.9686356343768793,
+        0.7415555652213446,
+        0.765567091384559
+      ]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 240,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        9
+      ]
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 360,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        239
+      ]
+    }
+  ],
+  "asset": {
+    "generator": "3d-tiles-samples-generator",
+    "version": "2.0"
+  },
+  "buffers": [
+    {
+      "name": "buffer",
+      "byteLength": 7520,
+      "uri": "buffer.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 2880,
+      "byteOffset": 0,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2880,
+      "byteOffset": 2880,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteLength": 960,
+      "byteOffset": 5760,
+      "target": 34962,
+      "byteStride": 4
+    },
+    {
+      "buffer": 0,
+      "byteLength": 720,
+      "byteOffset": 6720,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 40,
+      "byteOffset": 7440
+    },
+    {
+      "buffer": 0,
+      "byteLength": 40,
+      "byteOffset": 7480
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "roughnessFactor": 1,
+        "metallicFactor": 0
+      },
+      "alphaMode": "OPAQUE",
+      "doubleSided": false,
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "_FEATURE_ID_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4,
+          "extensions": {
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
+                {
+                  "featureTable": "buildings",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "name": "rootNode",
+      "children": [
+        1
+      ]
+    },
+    {
+      "name": "RTC_CENTER",
+      "mesh": 0,
+      "translation": [
+        1215019.2111447915,
+        -4736339.477299974,
+        4081627.9570209784
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "extensionsUsed": [
+    "EXT_feature_metadata"
+  ],
+  "extensionsRequired": [
+    "EXT_feature_metadata"
+  ],
+  "extensions": {
+    "EXT_feature_metadata": {
+      "schema": {
+        "classes": {
+          "building": {
+            "properties": {
+              "height": {
+                "type": "FLOAT32"
+              },
+              "id": {
+                "type": "INT32"
+              }
+            }
+          }
+        }
+      },
+      "featureTables": {
+        "buildings": {
+          "class": "building",
+          "count": 10,
+          "properties": {
+            "height": {
+              "bufferView": 4
+            },
+            "id": {
+              "bufferView": 5
+            }
+          }
+        }
+      }
+    }
+  }
+}

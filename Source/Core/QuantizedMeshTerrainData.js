@@ -282,6 +282,7 @@ var createMeshTaskProcessorThrottle = new TaskProcessor(
  * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
  * @param {Number} options.level The level of the tile for which to create the terrain data.
  * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
  * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
@@ -302,6 +303,10 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
   var y = options.y;
   var level = options.level;
   var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var exaggerationRelativeHeight = defaultValue(
+    options.exaggerationRelativeHeight,
+    0.0
+  );
   var throttle = defaultValue(options.throttle, true);
 
   var ellipsoid = tilingScheme.ellipsoid;
@@ -330,6 +335,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     relativeToCenter: this._boundingSphere.center,
     ellipsoid: ellipsoid,
     exaggeration: exaggeration,
+    exaggerationRelativeHeight: exaggerationRelativeHeight,
   });
 
   if (!defined(verticesPromise)) {
@@ -355,14 +361,8 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     var rtc = result.center;
     var minimumHeight = result.minimumHeight;
     var maximumHeight = result.maximumHeight;
-    var boundingSphere = defaultValue(
-      BoundingSphere.clone(result.boundingSphere),
-      that._boundingSphere
-    );
-    var obb = defaultValue(
-      OrientedBoundingBox.clone(result.orientedBoundingBox),
-      that._orientedBoundingBox
-    );
+    var boundingSphere = that._boundingSphere;
+    var obb = that._orientedBoundingBox;
     var occludeePointInScaledSpace = defaultValue(
       Cartesian3.clone(result.occludeePointInScaledSpace),
       that._horizonOcclusionPoint
@@ -385,7 +385,6 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       stride,
       obb,
       terrainEncoding,
-      exaggeration,
       result.westIndicesSouthToNorth,
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
@@ -496,7 +495,6 @@ QuantizedMeshTerrainData.prototype.upsample = function (
     isNorthChild: isNorthChild,
     childRectangle: childRectangle,
     ellipsoid: ellipsoid,
-    exaggeration: mesh.exaggeration,
   });
 
   if (!defined(upsamplePromise)) {
