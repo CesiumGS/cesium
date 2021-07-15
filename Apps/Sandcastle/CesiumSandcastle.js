@@ -205,7 +205,7 @@ require({
 
   xhr
     .get({
-      url: "https://cesium.com/docs/cesiumjs-ref-doc/types.txt",
+      url: "https://cesium.com/learn/cesiumjs/ref-doc/types.txt",
       handleAs: "json",
       headers: {
         "X-Requested-With": null, // Set by default, unsetting it is required to ensure simple CORS request.
@@ -297,7 +297,7 @@ require({
           .replace("module-", "")
           .replace("#.", ".")
           .replace("#", ".");
-        ele.href = "https://cesium.com/docs/cesiumjs-ref-doc/" + member;
+        ele.href = "https://cesium.com/learn/cesiumjs/ref-doc/" + member;
         ele.onclick = onDocClick;
         docMessage.appendChild(ele);
       }

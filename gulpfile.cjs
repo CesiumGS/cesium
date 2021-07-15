@@ -1759,7 +1759,7 @@ function buildSandcastle() {
     .pipe(gulpReplace("../ThirdParty", "./ThirdParty"))
     .pipe(gulpReplace("../Apps/Sandcastle", "."))
     .pipe(gulpReplace("../../SampleData", "../SampleData"))
-    .pipe(gulpReplace("../../Build/Documentation", "/docs/cesiumjs-ref-doc"))
+    .pipe(gulpReplace("../../Build/Documentation", "/learn/cesiumjs/ref-doc/"))
     .pipe(gulp.dest("Build/Sandcastle"));
 
   const imageStream = gulp
