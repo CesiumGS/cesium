@@ -66,6 +66,18 @@ Object.defineProperties(Model2.prototype, {
       return this._gltfLoader.components;
     },
   },
+
+  /**
+   * @private
+   */
+  hasStyle: {
+    get: function () {
+      return this._sceneGraph._hasStyle;
+    },
+    set: function (hasStyle) {
+      this._sceneGraph._hasStyle = hasStyle;
+    },
+  },
 });
 
 function initialize(

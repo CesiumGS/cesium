@@ -3,7 +3,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Model2Utility from "./Model2Utility.js";
 import ModelSceneNode from "./ModelSceneNode.js";
 import ModelSceneMeshPrimitive from "./ModelSceneMeshPrimitive.js";
-
+import CPUStylingStage from "./CPUStylingStage.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
@@ -19,6 +19,7 @@ export default function ModelSceneGraph(options) {
   this._drawCommands = [];
   this._allowPicking = options.allowPicking;
   this._pickObject = options.pickObject;
+  this._hasStyle = false;
 
   initialize(this);
 }
@@ -58,6 +59,16 @@ ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
       for (var l = 0; l < primitive._pipelineStages.length; l++) {
         var pipelineStage = primitive._pipelineStages[l];
         pipelineStage.process(
+          primitive._primitive,
+          primitiveResources,
+          frameState
+        );
+      }
+
+      // OPTION 2: Apply style
+      // Maybe model needs to have pipelineStages? (GeoPose, Styling etc.)
+      if (this._hasStyle) {
+        CPUStylingStage.process(
           primitive._primitive,
           primitiveResources,
           frameState
@@ -124,6 +135,10 @@ function buildDrawCommand(primitiveResources, frameState) {
     "",
     "    #ifdef USE_FEATURE_PICKING",
     "    color = featurePicking(color);",
+    "    #endif",
+    "",
+    "    #ifdef USE_STYLE",
+    "    color = applyStyling();",
     "    #endif",
     "",
     "    #ifdef USE_SOLID_COLOR",
@@ -215,6 +230,8 @@ function traverseModelComponents(sceneGraph, node, modelMatrix) {
         new ModelSceneMeshPrimitive({
           primitive: node.primitives[i],
           allowPicking: sceneGraph._allowPicking,
+          // OPTION 1
+          // hasStyle: true
         })
       );
     }

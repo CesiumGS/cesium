@@ -64,6 +64,12 @@ function initializeMeshPrimitive(scenePrimitive, allowPicking) {
   */
 
   pipelineStages.push(LightingPipelineStage);
+  // OPTION 2
+  /*
+  if (hasStyle) {
+    pipelineStages.push(CPUStylingStage);
+  }
+  */
 
   // TODO: remove this when done
   //pipelineStages.push(SolidColorPipelineStage);
