@@ -5,5 +5,5 @@ vec4 lighting(vec4 color) {
 #else // unlit
 vec4 lighting(vec4 color) {
   return color;
-};
+}
 #endif

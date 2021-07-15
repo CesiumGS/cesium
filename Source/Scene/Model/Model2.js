@@ -125,6 +125,10 @@ function initialize(
 
 function createBatchTable(model) {
   var featureMetadata = model.components.featureMetadata;
+  if (!defined(featureMetadata)) {
+    return undefined;
+  }
+
   var featureTableCount = featureMetadata.featureTableCount;
   if (featureTableCount === 0) {
     return undefined;
@@ -183,7 +187,9 @@ Model2.prototype.update = function (frameState) {
     this._drawCommandsCreated = true;
   }
 
-  this._batchTable.update(frameState);
+  if (defined(this._batchTable)) {
+    this._batchTable.update(frameState);
+  }
 
   // push the draw commands
   this._sceneGraph.pushDrawCommands(frameState);

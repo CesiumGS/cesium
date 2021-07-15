@@ -50,21 +50,21 @@ MeshGeometryPipelineStage.process = function (
     "TEXCOORD"
   );
 
-
   if (defined(texCoordAttribute)) {
     var texCoordVertexAttribute = {
       index: attributeIndex++,
-      vertexBuffer: texCoordAttribute,
-      componentsPerAttribute: 2,
-      componentDatatype: texCoordAttribute.componentDatatype
+      vertexBuffer: texCoordAttribute.buffer,
+      componentsPerAttribute: 2, // TODO: Don't hardcode
+      componentDatatype: texCoordAttribute.componentDatatype,
     };
-      
-  renderResources.attributes.push(texCoordVertexAttribute);
+
+    renderResources.shaderBuilder.addAttribute(
+      AttributeType.getGlslType(texCoordAttribute.type),
+      "a_texCoord0"
+    );
+
+    renderResources.attributes.push(texCoordVertexAttribute);
   }
-  
-
-
-
 
   // indices
   renderResources.indexCount = primitive.indices.count;

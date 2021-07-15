@@ -8,6 +8,7 @@ import DepthFunction from "../../Scene/DepthFunction.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Model2Utility from "./Model2Utility.js";
+import ModelLightingOptions from "./ModelLightingOptions.js";
 
 var RenderResources = {};
 
@@ -49,6 +50,7 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
   };
   this.boundingSphere = createBoundingSphere(primitive, modelMatrix);
   this.primitiveType = primitive.primitiveType;
+  this.lightingOptions = new ModelLightingOptions();
 }
 
 function createBoundingSphere(primitive, modelMatrix) {
@@ -60,6 +62,9 @@ function createBoundingSphere(primitive, modelMatrix) {
     positionGltfAttribute.min,
     positionGltfAttribute.max
   );
+
+  //BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
+
   boundingSphere.center = Matrix4.getTranslation(modelMatrix, new Cartesian3());
   return boundingSphere;
 }

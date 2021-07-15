@@ -4,7 +4,11 @@ import CustomShader from "./CustomShader.js";
 
 export default function CustomShaderStage() {}
 
-CustomShaderStage.process = function (primitive, primitiveResources, frameState) {
+CustomShaderStage.process = function (
+  primitive,
+  primitiveResources,
+  frameState
+) {
   // TODO: this would be passed in via the primitive resources
   var customShader = new CustomShader({
     uniforms: {
@@ -23,7 +27,7 @@ CustomShaderStage.process = function (primitive, primitiveResources, frameState)
     ].join("\n"),
     fragmentShaderText: [
       "struct Material {",
-      "    vec3 baseColor;",Pi
+      "    vec3 baseColor;",
       "};",
       "struct FragmentOutput {",
       "    Material material;",
@@ -37,10 +41,7 @@ CustomShaderStage.process = function (primitive, primitiveResources, frameState)
 
   var shaderBuilder = primitiveResources.shaderBuilder;
 
-  if (defined)
-
-  shaderBuilder.addDefine("USE_CUSTOM_SHADER_BEFORE");
-
+  if (defined) shaderBuilder.addDefine("USE_CUSTOM_SHADER_BEFORE");
 
   shaderBuilder.addVertexLines([
     customShader.vertexShaderText,
@@ -57,8 +58,6 @@ CustomShaderStage.process = function (primitive, primitiveResources, frameState)
     "    return fragmentOutput.material;",
     "}",
   ]);
-
-  
 
   var uniforms = customShader.uniforms;
   for (var uniformName in uniforms) {

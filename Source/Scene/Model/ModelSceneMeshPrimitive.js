@@ -3,6 +3,7 @@ import CustomShaderStage from "./CustomShaderStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
 import PointGeometryPipelineStage from "./PointGeometryPipelineStage.js";
+import PBRPipelineStage from "./PBRPipelineStage.js";
 import PickingStage from "./PickingStage.js";
 import BatchTextureStage from "./BatchTextureStage.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
@@ -14,7 +15,6 @@ export default function ModelSceneMeshPrimitive(options) {
   // LOOP through primitives
   initializeMeshPrimitive(this, options.allowPicking, options.hasFeatures);
 }
-
 
 function TechniquePipelineStage() {}
 TechniquePipelineStage.process = function () {};
@@ -47,6 +47,8 @@ function initializeMeshPrimitive(scenePrimitive, allowPicking, hasFeatures) {
   }
   */
 
+  pipelineStages.push(CustomShaderStage);
+
   if (hasPbrMaterials(scenePrimitive._primitive)) {
     pipelineStages.push(PBRPipelineStage);
   } else if (hasTechniques(scenePrimitive._primitive)) {
@@ -55,7 +57,7 @@ function initializeMeshPrimitive(scenePrimitive, allowPicking, hasFeatures) {
     throw new Error("only PBR materials and techniques are supported");
   }
 
-  pipelineStages.push(CustomShaderStage.After);
+  //pipelineStages.push(CustomShaderStage);
 
   /*
   if (customShader.insertAfterMaterial) {

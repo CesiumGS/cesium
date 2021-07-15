@@ -40,11 +40,14 @@ Object.defineProperties(ModelSceneGraph.prototype, {
 function initialize(sceneGraph) {
   // Build the scene nodes and scene primitives.
   var rootNode = sceneGraph._modelComponents.scene.nodes[0];
-  traverseModelComponents(
-    sceneGraph,
-    rootNode,
-    Model2Utility.getNodeTransform(rootNode)
+
+  var modelMatrix = Matrix4.multiply(
+    sceneGraph._model.modelMatrix,
+    Model2Utility.getNodeTransform(rootNode),
+    new Matrix4()
   );
+
+  traverseModelComponents(sceneGraph, rootNode, modelMatrix);
 }
 
 function buildModelPipeline(sceneGraph, renderResources) {
@@ -116,6 +119,10 @@ function buildDrawCommand(primitiveResources, frameState) {
     "    vec3 position = a_position;",
     "    #ifdef USE_INSTANCING",
     "    position = instancing(position);",
+    "    #endif",
+    "",
+    "    #ifdef USE_PBR_MATERIALS",
+    "    pbrStage();",
     "    #endif",
     "",
     "    #ifdef USE_FEATURE_PICKING",
