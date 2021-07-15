@@ -24,6 +24,17 @@ export default function ModelSceneGraph(options) {
   initialize(this);
 }
 
+Object.defineProperties(ModelSceneGraph.prototype, {
+  hasStyle: {
+    get: function () {
+      return this._hasStyle;
+    },
+    set: function (hasStyle) {
+      this._hasStyle = hasStyle;
+    },
+  },
+});
+
 function initialize(sceneGraph) {
   // Build the scene nodes and scene primitives.
   var rootNode = sceneGraph._modelComponents.scene.nodes[0];
@@ -34,14 +45,32 @@ function initialize(sceneGraph) {
   );
 }
 
+function buildModelPipeline(sceneGraph, renderResources) {
+  sceneGraph._pipelineStages = [];
+
+  if (sceneGraph._hasStyle) {
+    sceneGraph._pipelineStages.push(CPUStylingStage);
+  }
+}
+
 ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
   // Traverse scene graph
-  for (var i = 0; i < this._sceneNodes.length; i++) {
+
+  var modelResources = new RenderResources.ModelRenderResources(this._model);
+  buildModelPipeline(this, modelResources);
+
+  var i;
+  for (i = 0; i < this._pipelineStages.length; i++) {
+    var modelPipelineStage = this._pipelineStages[i];
+    modelPipelineStage.process(modelResources, frameState);
+  }
+
+  for (i = 0; i < this._sceneNodes.length; i++) {
     var node = this._sceneNodes[i];
 
     var nodeResources = new RenderResources.NodeRenderResources(
-      node,
-      this._model
+      modelResources,
+      node
     );
 
     for (var j = 0; j < node._pipelineStages.length; j++) {
@@ -59,16 +88,6 @@ ModelSceneGraph.prototype.createDrawCommands = function (frameState) {
       for (var l = 0; l < primitive._pipelineStages.length; l++) {
         var pipelineStage = primitive._pipelineStages[l];
         pipelineStage.process(
-          primitive._primitive,
-          primitiveResources,
-          frameState
-        );
-      }
-
-      // OPTION 2: Apply style
-      // Maybe model needs to have pipelineStages? (GeoPose, Styling etc.)
-      if (this._hasStyle) {
-        CPUStylingStage.process(
           primitive._primitive,
           primitiveResources,
           frameState
@@ -138,7 +157,7 @@ function buildDrawCommand(primitiveResources, frameState) {
     "    #endif",
     "",
     "    #ifdef USE_STYLE",
-    "    color = applyStyling();",
+    "    color = applyStyling(color);",
     "    #endif",
     "",
     "    #ifdef USE_SOLID_COLOR",

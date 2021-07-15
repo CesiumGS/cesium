@@ -10,14 +10,19 @@ import Model2Utility from "./Model2Utility.js";
 
 var RenderResources = {};
 
-function NodeRenderResources(sceneNode, model) {
+function ModelRenderResources(model) {
+  this.shaderBuilder = new ShaderBuilder();
+  this.model = model;
+}
+
+function NodeRenderResources(modelRenderResources, sceneNode) {
+  this.model = modelRenderResources.model;
+  this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
+
   this.sceneNode = sceneNode;
   this.attributes = [];
-  this.shaderBuilder = new ShaderBuilder();
   this.modelMatrix = sceneNode._modelMatrix;
   this.instanceCount = 0;
-  this.model = model;
-
   // TOOD: Might need to add uniformMap to node.
 }
 
@@ -53,6 +58,7 @@ function createBoundingSphere(primitive, modelMatrix) {
   return boundingSphere;
 }
 
+RenderResources.ModelRenderResources = ModelRenderResources;
 RenderResources.NodeRenderResources = NodeRenderResources;
 RenderResources.PrimitiveRenderResources = PrimitiveRenderResources;
 export default RenderResources;

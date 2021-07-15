@@ -59,7 +59,10 @@ function createPickColorFunction(color) {
 
 function processBatchTable(renderResources, batchTable) {
   var shaderBuilder = renderResources.shaderBuilder;
+
+  var vertexTextureFetch = false;
   if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+    vertexTextureFetch = true;
     shaderBuilder.addDefine("VTF_SUPPORTED");
   }
 
@@ -78,6 +81,22 @@ function processBatchTable(renderResources, batchTable) {
   if (batchTable._batchTexture.textureDimensions.y > 1) {
     shaderBuilder.addDefine("MULTILINE_BATCH_TEXTURE");
   }
+
+  // Regenerate batch texture
+
+  shaderBuilder.addUniform(
+    "sampler2D",
+    "model_pickTexture",
+    ShaderDestination.FRAGMENT
+  );
+  var batchTextureDestination = vertexTextureFetch
+    ? ShaderDestination.BOTH
+    : ShaderDestination.FRAGMENT;
+  shaderBuilder.addUniform(
+    "sampler2D",
+    "model_batchTexture",
+    batchTextureDestination
+  );
 
   shaderBuilder.addDefine("USE_FEATURE_PICKING");
 

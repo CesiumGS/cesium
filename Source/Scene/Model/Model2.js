@@ -72,10 +72,10 @@ Object.defineProperties(Model2.prototype, {
    */
   hasStyle: {
     get: function () {
-      return this._sceneGraph._hasStyle;
+      return this._sceneGraph.hasStyle;
     },
     set: function (hasStyle) {
-      this._sceneGraph._hasStyle = hasStyle;
+      this._sceneGraph.hasStyle = hasStyle;
     },
   },
 });

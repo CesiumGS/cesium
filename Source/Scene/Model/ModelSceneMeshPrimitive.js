@@ -3,7 +3,6 @@ import CustomShaderStage from "./CustomShaderStage.js";
 import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
 import PointGeometryPipelineStage from "./PointGeometryPipelineStage.js";
 import PickingStage from "./PickingStage.js";
-//import SolidColorPipelineStage from "./SolidColorPipelineStage.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 
 export default function ModelSceneMeshPrimitive(options) {
@@ -70,7 +69,4 @@ function initializeMeshPrimitive(scenePrimitive, allowPicking) {
     pipelineStages.push(CPUStylingStage);
   }
   */
-
-  // TODO: remove this when done
-  //pipelineStages.push(SolidColorPipelineStage);
 }
