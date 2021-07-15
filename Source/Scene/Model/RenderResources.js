@@ -4,6 +4,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 //import DrawCommand from "../../Renderer/DrawCommand.js";
 //import Pass from "../../Renderer/Pass.js";
 //import RenderState from "../../Renderer/RenderState.js";
+import DepthFunction from "../../Scene/DepthFunction.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Model2Utility from "./Model2Utility.js";
@@ -40,7 +41,12 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
   this.uniformMap = {};
   this.indices = primitive.indices;
   this.indexCount = 0;
-  this.renderStateOptions = {};
+  this.renderStateOptions = {
+    depthTest: {
+      enabled: true,
+      func: DepthFunction.LESS_OR_EQUAL,
+    },
+  };
   this.boundingSphere = createBoundingSphere(primitive, modelMatrix);
   this.primitiveType = primitive.primitiveType;
 }
