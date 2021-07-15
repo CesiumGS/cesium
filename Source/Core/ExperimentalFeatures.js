@@ -6,6 +6,6 @@ var ExperimentalFeatures = {
   /**
    * @type {Boolean}
    */
-  enableModel2: false
+  enableModelExperimental: false,
 };
 export default ExperimentalFeatures;

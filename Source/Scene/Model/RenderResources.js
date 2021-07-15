@@ -37,6 +37,7 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
   this.instanceCount = nodeRenderResources.instanceCount;
   this.attributes = nodeRenderResources.attributes.slice();
+  this.backFaceCulling = this.model.backFaceCulling;
 
   this.pickId = undefined;
   this.uniformMap = {};
@@ -62,8 +63,6 @@ function createBoundingSphere(primitive, modelMatrix) {
     positionGltfAttribute.min,
     positionGltfAttribute.max
   );
-
-  //BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
 
   boundingSphere.center = Matrix4.getTranslation(modelMatrix, new Cartesian3());
   return boundingSphere;

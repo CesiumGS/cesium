@@ -7,12 +7,13 @@ import PBRPipelineStage from "./PBRPipelineStage.js";
 import PickingStage from "./PickingStage.js";
 import BatchTextureStage from "./BatchTextureStage.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import CullingStage from "./CullingStage.js";
 
 export default function ModelSceneMeshPrimitive(options) {
   this._primitive = options.primitive;
   this._pipelineStages = [];
 
-  // LOOP through primitives
+  // Loop through primitives
   initializeMeshPrimitive(this, options.allowPicking, options.hasFeatures);
 }
 
@@ -32,6 +33,8 @@ function initializeMeshPrimitive(scenePrimitive, allowPicking, hasFeatures) {
   } else {
     pipelineStages.push(MeshGeometryPipelineStage);
   }
+
+  pipelineStages.push(CullingStage);
 
   if (hasFeatures) {
     pipelineStages.push(BatchTextureStage);

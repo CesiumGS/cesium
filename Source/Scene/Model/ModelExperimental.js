@@ -5,10 +5,10 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import defaultValue from "../../Core/defaultValue.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
-import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
+import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
 import defined from "../../Core/defined.js";
 
-export default function Model2(options) {
+export default function ModelExperimental(options) {
   this._gltfLoader = undefined;
   this._readyPromise = when.defer();
   this._resourcesLoaded = false;
@@ -18,6 +18,7 @@ export default function Model2(options) {
   this._pickIds = [];
   this._features = undefined;
   this._id = options.id;
+  this._backFaceCulling = options.backFaceCulling;
   // TODO: Rename this to something with featureTable?
   this._batchTable = undefined;
   initialize(
@@ -30,7 +31,7 @@ export default function Model2(options) {
   );
 }
 
-Object.defineProperties(Model2.prototype, {
+Object.defineProperties(ModelExperimental.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise.promise;
@@ -76,6 +77,15 @@ Object.defineProperties(Model2.prototype, {
     },
     set: function (hasStyle) {
       this._sceneGraph.hasStyle = hasStyle;
+    },
+  },
+
+  backFaceCulling: {
+    get: function () {
+      return this._backFaceCulling;
+    },
+    set: function (backFaceCulling) {
+      this._backFaceCulling = backFaceCulling;
     },
   },
 });
@@ -144,11 +154,11 @@ function createBatchTable(model) {
   model._batchTable = new ModelFeatureTable(model, featureTable);
 }
 
-Model2.prototype.hasProperty = function (batchId, name) {
+ModelExperimental.prototype.hasProperty = function (batchId, name) {
   return false;
 };
 
-Model2.prototype.getFeature = function (batchId) {
+ModelExperimental.prototype.getFeature = function (batchId) {
   // TODO: bounds checking
 
   if (!defined(this._features)) {
@@ -170,7 +180,7 @@ function createFeatures(model) {
   model._features = features;
 }
 
-Model2.prototype.update = function (frameState) {
+ModelExperimental.prototype.update = function (frameState) {
   // TODO: morphing
   // TODO: webp
 

@@ -2,16 +2,12 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import RequestType from "../Core/RequestType.js";
-//import RuntimeError from "../Core/RuntimeError.js";
 import Pass from "../Renderer/Pass.js";
 import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
-//import GltfLoader from "./GltfLoader.js";
-//import Model from "./Model.js";
-import Model2 from "./Model/Model2.js";
-//import ModelAnimationLoop from "./ModelAnimationLoop.js";
-//import NewModel from "./NewModel.js";
-
+import Model from "./Model.js";
+import ModelExperimental from "./Model/ModelExperimental.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
  * <p>
@@ -135,7 +131,12 @@ function initialize(content, gltf) {
     primitive: tileset,
   };
 
-  content._model = new Model2({
+  var ModelClass = Model;
+  if (ExperimentalFeatures.enableModelExperimental) {
+    ModelClass = ModelExperimental;
+  }
+
+  content._model = new ModelClass({
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
@@ -158,7 +159,6 @@ function initialize(content, gltf) {
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
   });
-  // TODO: Change _batch table property name.
 
   /*
   TODO: Stub this out
@@ -209,16 +209,16 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
   var tile = this._tile;
 
   model.modelMatrix = tile.computedTransform;
-  model.update(frameState);
+  model.backFaceCulling = tileset.backFaceCulling;
 
   /*
+  * TODO: everything
   model.shadows = tileset.shadows;
   model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
   model.lightColor = tileset.lightColor;
   model.luminanceAtZenith = tileset.luminanceAtZenith;
   model.sphericalHarmonicCoefficients = tileset.sphericalHarmonicCoefficients;
   model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
-  model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
 
   // Update clipping planes
@@ -243,9 +243,9 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
   ) {
     model._clippingPlanes = tilesetClippingPlanes;
   }
+  */
 
   model.update(frameState);
-  */
 };
 
 Gltf3DTileContent.prototype.isDestroyed = function () {
