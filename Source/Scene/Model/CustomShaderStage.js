@@ -1,10 +1,10 @@
 import combine from "../../Core/combine.js";
+import defined from "../../Core/defined.js";
 import CustomShader from "./CustomShader.js";
 
-var CustomShaderStage = {};
+export default function CustomShaderStage() {}
 
-function After() {}
-After.process = function (primitive, primitiveResources, frameState) {
+CustomShaderStage.process = function (primitive, primitiveResources, frameState) {
   // TODO: this would be passed in via the primitive resources
   var customShader = new CustomShader({
     uniforms: {
@@ -23,7 +23,7 @@ After.process = function (primitive, primitiveResources, frameState) {
     ].join("\n"),
     fragmentShaderText: [
       "struct Material {",
-      "    vec3 baseColor;",
+      "    vec3 baseColor;",Pi
       "};",
       "struct FragmentOutput {",
       "    Material material;",
@@ -36,6 +36,11 @@ After.process = function (primitive, primitiveResources, frameState) {
   });
 
   var shaderBuilder = primitiveResources.shaderBuilder;
+
+  if (defined)
+
+  shaderBuilder.addDefine("USE_CUSTOM_SHADER_BEFORE");
+
 
   shaderBuilder.addVertexLines([
     customShader.vertexShaderText,
@@ -53,7 +58,7 @@ After.process = function (primitive, primitiveResources, frameState) {
     "}",
   ]);
 
-  shaderBuilder.addDefine("USE_CUSTOM_SHADER_AFTER");
+  
 
   var uniforms = customShader.uniforms;
   for (var uniformName in uniforms) {
@@ -70,7 +75,3 @@ After.process = function (primitive, primitiveResources, frameState) {
     customShader.uniformMap
   );
 };
-
-CustomShaderStage.After = After;
-
-export default CustomShaderStage;

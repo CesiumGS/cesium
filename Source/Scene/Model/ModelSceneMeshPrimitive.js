@@ -1,5 +1,6 @@
 import defined from "../../Core/defined.js";
 import CustomShaderStage from "./CustomShaderStage.js";
+import LightingPipelineStage from "./LightingPipelineStage.js";
 import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
 import PointGeometryPipelineStage from "./PointGeometryPipelineStage.js";
 import PickingStage from "./PickingStage.js";
@@ -14,14 +15,9 @@ export default function ModelSceneMeshPrimitive(options) {
   initializeMeshPrimitive(this, options.allowPicking, options.hasFeatures);
 }
 
-function PBRPipelineStage() {}
-PBRPipelineStage.process = function () {};
-function IBLPipelineStage() {}
-IBLPipelineStage.process = function () {};
+
 function TechniquePipelineStage() {}
 TechniquePipelineStage.process = function () {};
-function LightingPipelineStage() {}
-LightingPipelineStage.process = function () {};
 
 function hasPbrMaterials(primitive) {
   return defined(primitive.material);
@@ -52,7 +48,7 @@ function initializeMeshPrimitive(scenePrimitive, allowPicking, hasFeatures) {
   */
 
   if (hasPbrMaterials(scenePrimitive._primitive)) {
-    pipelineStages.push(PBRPipelineStage, IBLPipelineStage);
+    pipelineStages.push(PBRPipelineStage);
   } else if (hasTechniques(scenePrimitive._primitive)) {
     pipelineStages.push(TechniquePipelineStage);
   } else {
