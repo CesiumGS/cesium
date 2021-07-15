@@ -1,11 +1,8 @@
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
-import ContextLimits from "../../Renderer/ContextLimits.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import FeaturePickingCommon from "../../Shaders/Model/FeaturePickingCommon.js";
 import FeaturePickingVS from "../../Shaders/Model/FeaturePickingVS.js";
 import FeaturePickingFS from "../../Shaders/Model/FeaturePickingFS.js";
-import defaultValue from "../../Core/defaultValue.js";
 
 export default function PickingStage() {}
 
@@ -59,66 +56,31 @@ function createPickColorFunction(color) {
 
 function processBatchTable(renderResources, batchTable) {
   var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("USE_FEATURE_PICKING");
 
-  var vertexTextureFetch = false;
-  if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-    vertexTextureFetch = true;
-    shaderBuilder.addDefine("VTF_SUPPORTED");
+  // TODO: HANDLE_TRANSLUCENT is related to content's classification type
+  /*
+  if (handleTranslucent) {
+    shaderBuilder.addDefine("HANDLE_TRANSLUCENT");
+    var isTranslucentDestination = (vertexTextureFetch) ? ShaderDestination.VERTEX : ShaderDestination.FRAGMENT;
+    shaderBuilder.addUniform("bool", "model_isTranslucent", isTranslucentDestination);
   }
+  */
 
-  // TODO: don't hard-code the feature ID
-  shaderBuilder.addDefine(
-    "BATCH_ID_ATTRIBUTE",
-    "a_featureId",
-    ShaderDestination.VERTEX
-  );
-
-  // TODO: HANDLE_TRANSLUCENT (both shaders) is related to content's classification type
   // HAS_PREMULTIPLIED_ALPHA (frag only) is false so don't do anything.
-
-  // If there are many features, the batch texture wraps onto multiple
-  // rows.
-  if (batchTable._batchTexture.textureDimensions.y > 1) {
-    shaderBuilder.addDefine("MULTILINE_BATCH_TEXTURE");
-  }
-
-  // Regenerate batch texture
 
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
     ShaderDestination.FRAGMENT
   );
-  var batchTextureDestination = vertexTextureFetch
-    ? ShaderDestination.BOTH
-    : ShaderDestination.FRAGMENT;
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "model_batchTexture",
-    batchTextureDestination
-  );
 
-  shaderBuilder.addDefine("USE_FEATURE_PICKING");
-
-  shaderBuilder.addVertexLines([FeaturePickingCommon, FeaturePickingVS]);
-  shaderBuilder.addFragmentLines([FeaturePickingCommon, FeaturePickingFS]);
+  shaderBuilder.addVertexLines([FeaturePickingVS]);
+  shaderBuilder.addFragmentLines([FeaturePickingFS]);
 
   var pickingUniforms = {
     model_pickTexture: function () {
       return batchTable._batchTexture.pickTexture;
-    },
-    model_batchTexture: function () {
-      return defaultValue(
-        // add the pick texture and batch texture
-        batchTable._batchTexture.batchTexture,
-        batchTable._batchTexture.defaultTexture
-      );
-    },
-    model_textureDimensions: function () {
-      return batchTable._batchTexture.textureDimensions;
-    },
-    model_textureStep: function () {
-      return batchTable._batchTexture.textureStep;
     },
   };
 

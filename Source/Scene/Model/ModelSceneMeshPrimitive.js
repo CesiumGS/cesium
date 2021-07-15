@@ -3,6 +3,7 @@ import CustomShaderStage from "./CustomShaderStage.js";
 import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
 import PointGeometryPipelineStage from "./PointGeometryPipelineStage.js";
 import PickingStage from "./PickingStage.js";
+import BatchTextureStage from "./BatchTextureStage.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 
 export default function ModelSceneMeshPrimitive(options) {
@@ -10,7 +11,7 @@ export default function ModelSceneMeshPrimitive(options) {
   this._pipelineStages = [];
 
   // LOOP through primitives
-  initializeMeshPrimitive(this, options.allowPicking);
+  initializeMeshPrimitive(this, options.allowPicking, options.hasFeatures);
 }
 
 function PBRPipelineStage() {}
@@ -28,12 +29,16 @@ function hasPbrMaterials(primitive) {
 
 function hasTechniques(primitive) {}
 
-function initializeMeshPrimitive(scenePrimitive, allowPicking) {
+function initializeMeshPrimitive(scenePrimitive, allowPicking, hasFeatures) {
   var pipelineStages = scenePrimitive._pipelineStages;
   if (scenePrimitive._primitive.primitiveType === PrimitiveType.POINTS) {
     pipelineStages.push(PointGeometryPipelineStage);
   } else {
     pipelineStages.push(MeshGeometryPipelineStage);
+  }
+
+  if (hasFeatures) {
+    pipelineStages.push(BatchTextureStage);
   }
 
   if (allowPicking) {

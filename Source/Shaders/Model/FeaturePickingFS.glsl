@@ -1,8 +1,5 @@
 #ifdef VTF_SUPPORTED
 // When VTF is supported, per-feature show/hide already happened in the fragment shader
-uniform sampler2D model_pickTexture;
-varying vec2 model_featureSt;
-varying vec4 model_featureColor;
 vec4 featurePicking(vec4 color)
 {
     // TODO: What is the old tile_color() doing really?
@@ -16,14 +13,6 @@ vec4 featurePicking(vec4 color)
 }
 #else
 // VTF not supported
-
-#ifdef HANDLE_TRANSLUCENT
-uniform bool model_translucentCommand;
-#endif
-
-uniform sampler2D model_pickTexture;
-uniform sampler2D model_batchTexture;
-varying vec2 model_featureSt;
 vec4 featurePicking(vec4 color)
 {
     vec4 featureProperties = texture2D(model_batchTexture, model_featureSt);
@@ -33,7 +22,7 @@ vec4 featurePicking(vec4 color)
     
     #ifdef HANDLE_TRANSLUCENT
     bool isStyleTranslucent = featureProperties.a != 1.0;
-    if (czm_pass == czm_passTranslucent && !isStyleTranslucent && !model_translucentCommand)
+    if (czm_pass == czm_passTranslucent && !isStyleTranslucent && !model_isTranslucent)
     {
         // Do not render opaque features in the translucent pass
         discard;   

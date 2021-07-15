@@ -21,6 +21,8 @@ export default function ModelSceneGraph(options) {
   this._pickObject = options.pickObject;
   this._hasStyle = false;
 
+  this._batchTable = options.batchTable;
+
   initialize(this);
 }
 
@@ -249,6 +251,7 @@ function traverseModelComponents(sceneGraph, node, modelMatrix) {
         new ModelSceneMeshPrimitive({
           primitive: node.primitives[i],
           allowPicking: sceneGraph._allowPicking,
+          hasFeatures: defined(sceneGraph._batchTable),
           // OPTION 1
           // hasStyle: true
         })

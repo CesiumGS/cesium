@@ -110,13 +110,14 @@ function initialize(
       model._readyPromise.resolve();
       model._resourcesLoaded = true;
 
+      createBatchTable(model);
       model._sceneGraph = new ModelSceneGraph({
         modelComponents: loader.components,
         model: model,
         allowPicking: model._allowPicking,
         pickObject: pickObject,
+        batchTable: model._batchTable,
       });
-      createBatchTable(model);
     })
     // TODO: Handle this properly
     .otherwise(console.error);

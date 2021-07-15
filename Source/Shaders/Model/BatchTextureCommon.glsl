@@ -1,7 +1,5 @@
 // GLSL batchId is zero-based: [0, featuresLength - 1]
 #ifdef MULTILINE_BATCH_TEXTURE
-uniform vec4 model_textureStep; 
-uniform vec2 model_textureDimensions; 
 vec2 computeSt(float batchId) 
 { 
     float stepX = model_textureStep.x; 
@@ -13,7 +11,6 @@ vec2 computeSt(float batchId)
     return vec2(centerX + (xId * stepX), centerY + (yId * stepY));
 }
 #else
-uniform vec4 model_textureStep;
 vec2 computeSt(float batchId)
 {
     float stepX = model_textureStep.x;
