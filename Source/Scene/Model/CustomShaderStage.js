@@ -1,6 +1,4 @@
 import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
-import CustomShader from "./CustomShader.js";
 
 export default function CustomShaderStage() {}
 
@@ -9,39 +7,10 @@ CustomShaderStage.process = function (
   primitiveResources,
   frameState
 ) {
-  // TODO: this would be passed in via the primitive resources
-  var customShader = new CustomShader({
-    uniforms: {
-      u_time: {
-        value: 0.8,
-        // TODO: Use enums
-        type: "float",
-        // TODO: Destination?
-      },
-    },
-    vertexShaderText: [
-      "void vertexMain(/*VertexInput input, out VertexOutput output*/) {",
-      // TODO: this won't work... how to make this simple?
-      "    //output = input;",
-      "}",
-    ].join("\n"),
-    fragmentShaderText: [
-      "struct Material {",
-      "    vec3 baseColor;",
-      "};",
-      "struct FragmentOutput {",
-      "    Material material;",
-      "};",
-      "void fragmentMain(/*FragmentInput input,*/ out FragmentOutput fragmentOutput) {",
-      "    //var wave = 0.5 + 0.5 * sin(u_time);",
-      "    fragmentOutput.material.baseColor = vec3(0.0, 0.5 * u_time, u_time);",
-      "}",
-    ].join("\n"),
-  });
-
   var shaderBuilder = primitiveResources.shaderBuilder;
+  var customShader = primitiveResources.model.customShader;
 
-  if (defined) shaderBuilder.addDefine("USE_CUSTOM_SHADER_BEFORE");
+  shaderBuilder.addDefine("USE_CUSTOM_SHADER_BEFORE");
 
   shaderBuilder.addVertexLines([
     customShader.vertexShaderText,

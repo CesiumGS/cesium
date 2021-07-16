@@ -945,6 +945,8 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
+  this._customShader = options.customShader;
+
   this._schemaLoader = undefined;
 
   var that = this;

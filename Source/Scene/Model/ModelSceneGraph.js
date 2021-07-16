@@ -260,8 +260,7 @@ function traverseModelComponents(sceneGraph, node, modelMatrix) {
           primitive: node.primitives[i],
           allowPicking: sceneGraph._allowPicking,
           hasFeatures: defined(sceneGraph._batchTable),
-          // OPTION 1
-          // hasStyle: true
+          hasCustomShader: defined(sceneGraph._model.customShader),
         })
       );
     }

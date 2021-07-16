@@ -19,6 +19,7 @@ export default function ModelExperimental(options) {
   this._features = undefined;
   this._id = options.id;
   this._backFaceCulling = options.backFaceCulling;
+  this._customShader = options.customShader;
   // TODO: Rename this to something with featureTable?
   this._batchTable = undefined;
   initialize(
@@ -56,6 +57,12 @@ Object.defineProperties(ModelExperimental.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  customShader: {
+    get: function () {
+      return this._customShader;
     },
   },
 

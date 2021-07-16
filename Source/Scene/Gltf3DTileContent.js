@@ -158,6 +158,9 @@ function initialize(content, gltf) {
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
+
+    // New options
+    customShader: tileset._customShader,
   });
 
   /*
