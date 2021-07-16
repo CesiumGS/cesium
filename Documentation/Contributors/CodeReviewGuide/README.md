@@ -26,7 +26,7 @@ This guide describes best practices for code reviewers.
 - Provide motivation when it isn't obvious. Suggest why a change should be made.
 - Point contributors to a relevant part of the [Coding Guide](../CodingGuide/README.md) when useful.
 - _Be concise_. Make every word tell.
-- _Be responsive_. The contributor should expect prompt feedback from reviewers, and reviewers should expect the same. If not, politely ask for it. We all want pull requests to get into master. Strive to respond to mentions and requests within 24 hours.
+- _Be responsive_. The contributor should expect prompt feedback from reviewers, and reviewers should expect the same. If not, politely ask for it. We all want pull requests to get into main. Strive to respond to mentions and requests within 24 hours.
 - _Limit the scope_. As a reviewer, it is easy to want to increase the scope, e.g., "why don't we do this everywhere?". These are often fair questions but can be better served by submitting a separate issue to allow more incremental pull requests.
 - Bring others into the conversation sparingly. If someone has expertise with a particular language feature or problem domain under review, invite them to comment with an `@mention`.
 - If an experienced contributor makes a occasional whitespace or trivial mistake, just fix it to save on noise and speedup the review.
