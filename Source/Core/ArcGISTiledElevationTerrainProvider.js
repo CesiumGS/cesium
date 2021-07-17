@@ -174,11 +174,17 @@ function ArcGISTiledElevationTerrainProvider(options) {
         );
       }
 
-      that._terrainDataStructure = {
-        elementMultiplier: 1.0,
-        lowestEncodedHeight: metadata.minValues[0],
-        highestEncodedHeight: metadata.maxValues[0],
-      };
+      if (metadata.minValues && metadata.maxValues) {
+        that._terrainDataStructure = {
+          elementMultiplier: 1.0,
+          lowestEncodedHeight: metadata.minValues[0],
+          highestEncodedHeight: metadata.maxValues[0],
+        };
+      } else {
+        that._terrainDataStructure = {
+          elementMultiplier: 1.0,
+        };
+      }
 
       that._ready = true;
 
@@ -201,7 +207,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * are passed an instance of {@link TileProviderError}.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Event}
-   * @readonly
    */
   errorEvent: {
     get: function () {
@@ -214,7 +219,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * the source of the terrain.  This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Credit}
-   * @readonly
    */
   credit: {
     get: function () {
@@ -234,7 +238,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {GeographicTilingScheme}
-   * @readonly
    */
   tilingScheme: {
     get: function () {
@@ -253,7 +256,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Boolean}
-   * @readonly
    */
   ready: {
     get: function () {
@@ -280,7 +282,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Boolean}
-   * @readonly
    */
   hasWaterMask: {
     get: function () {
@@ -293,7 +294,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Boolean}
-   * @readonly
    */
   hasVertexNormals: {
     get: function () {
@@ -307,7 +307,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * information is not available.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {TileAvailability}
-   * @readonly
    */
   availability: {
     get: function () {
@@ -459,7 +458,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = fu
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
+ * @returns {Boolean} Undefined if not supported, otherwise true or false.
  */
 ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
   x,
