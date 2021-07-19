@@ -11,7 +11,7 @@ var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  * @param {Array.<*>} [values] The array of values.
  * @param {Function} equalsEpsilon Function to compare values with an epsilon. Boolean equalsEpsilon(left, right, epsilon).
  * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value. If they are equal, the last value is removed.
- * @param {Array.<number>} [removedIndices=undefined] Store the indices that correspond to the duplicate items removed from the array, if there were any.
+ * @param {Array.<Number>} [removedIndices=undefined] Store the indices that correspond to the duplicate items removed from the array, if there were any.
  * @returns {Array.<*>|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
  *
  * @example
@@ -97,10 +97,7 @@ function arrayRemoveDuplicates(
       if (defined(cleanedValues)) {
         cleanedValues.push(v1);
         lastCleanIndex = i;
-        if (
-          storeRemovedIndices &&
-          lastCleanIndex > removedIndices[removedIndices.length - 1]
-        ) {
+        if (storeRemovedIndices) {
           removedIndexLCI = removedIndices.length;
         }
       }
@@ -114,11 +111,7 @@ function arrayRemoveDuplicates(
   ) {
     if (storeRemovedIndices) {
       if (defined(cleanedValues)) {
-        removedIndices = removedIndices.splice(
-          removedIndexLCI,
-          0,
-          lastCleanIndex
-        );
+        removedIndices.splice(removedIndexLCI, 0, lastCleanIndex);
       } else {
         removedIndices.push(length - 1);
       }

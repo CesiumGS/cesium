@@ -319,15 +319,17 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
 
   if (defined(colors) && removedIndices.length > 0) {
     var removedArrayIndex = 0;
-    var offset = colorsPerVertex ? 0 : 1;
     var nextRemovedIndex = removedIndices[0];
-    var perVertexAndEndpointCollapsed =
-      colorsPerVertex && nextRemovedIndex === 1;
     colors = colors.filter(function (color, index) {
-      if (
-        index + offset === nextRemovedIndex ||
-        (index === 0 && perVertexAndEndpointCollapsed)
-      ) {
+      var remove = false;
+      if (colorsPerVertex) {
+        remove =
+          index === nextRemovedIndex || (index === 0 && nextRemovedIndex === 1);
+      } else {
+        remove = index + 1 === nextRemovedIndex;
+      }
+
+      if (remove) {
         removedArrayIndex++;
         nextRemovedIndex = removedIndices[removedArrayIndex];
         return false;
