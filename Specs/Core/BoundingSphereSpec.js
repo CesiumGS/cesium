@@ -703,7 +703,7 @@ describe("Core/BoundingSphere", function () {
     ).toEqual(expected);
   });
 
-  it("distance squared to point", function () {
+  it("distance squared to point outside of sphere", function () {
     var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
     var position = new Cartesian3(-2.0, 1.0, 0.0);
     var expected = 1.52786405;
@@ -711,6 +711,12 @@ describe("Core/BoundingSphere", function () {
       expected,
       CesiumMath.EPSILON6
     );
+  });
+
+  it("distance squared to point inside sphere", function () {
+    var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+    var position = new Cartesian3(-0.5, 0.5, 0.0);
+    expect(BoundingSphere.distanceSquaredTo(bs, position)).toEqual(0.0);
   });
 
   it("projectTo2D", function () {
