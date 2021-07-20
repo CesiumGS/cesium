@@ -1132,7 +1132,10 @@ BoundingSphere.distanceSquaredTo = function (sphere, cartesian) {
     cartesian,
     distanceSquaredToScratch
   );
-  return Cartesian3.magnitudeSquared(diff) - sphere.radius * sphere.radius;
+
+  var distance = Cartesian3.magnitude(diff) - sphere.radius;
+
+  return distance * distance;
 };
 
 /**
