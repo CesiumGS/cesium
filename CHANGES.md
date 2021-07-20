@@ -2,7 +2,7 @@
 
 ##### Changes PR https://github.com/CesiumGS/cesium/pull/9673
 
-- Changes type annotations for several color properties from Property|undifined to Color|undefined
+- Changes type annotations for several color properties from `Property|undefined` to `Color|undefined`
 
 ### 1.84 - 2021-08-02
 
