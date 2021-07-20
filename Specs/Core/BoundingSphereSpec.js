@@ -706,9 +706,11 @@ describe("Core/BoundingSphere", function () {
   it("distance squared to point", function () {
     var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
     var position = new Cartesian3(-2.0, 1.0, 0.0);
-    var distance = Cartesian3.magnitude(position) - 1.0;
-    var expected = distance * distance;
-    expect(BoundingSphere.distanceSquaredTo(bs, position)).toEqual(expected);
+    var expected = 1.52786405;
+    expect(BoundingSphere.distanceSquaredTo(bs, position)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON6
+    );
   });
 
   it("projectTo2D", function () {
