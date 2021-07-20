@@ -21,7 +21,7 @@ If you can also contribute a fix, we'd absolutely appreciate it! Fixing a bug in
 
 Check out the contributor guide to get started:
 
-https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTING.md
+https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md
 
 Just let us know you're working on it and we'd be happy to provide advice and feedback.
 

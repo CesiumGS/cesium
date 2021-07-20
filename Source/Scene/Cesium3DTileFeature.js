@@ -146,7 +146,7 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
  * Returns whether the feature contains this property. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
  * @returns {Boolean} Whether the feature contains this property.
@@ -159,7 +159,7 @@ Cesium3DTileFeature.prototype.hasProperty = function (name) {
  * Returns an array of property names for the feature. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The names of the feature's properties.
@@ -172,7 +172,7 @@ Cesium3DTileFeature.prototype.getPropertyNames = function (results) {
  * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
