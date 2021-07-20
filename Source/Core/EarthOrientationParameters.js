@@ -136,7 +136,7 @@ EarthOrientationParameters.NONE = Object.freeze({
  * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
  * ready to use.
  *
- * @returns {Promise<void>} The promise.
+ * @returns {when.Promise<void>} The promise.
  */
 EarthOrientationParameters.prototype.getPromiseToLoad = function () {
   return when(this._downloadPromise);

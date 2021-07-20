@@ -248,7 +248,7 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
    *
    * @memberof TimeDynamicPointCloud.prototype
    *
-   * @type {Promise.<TimeDynamicPointCloud>}
+   * @type {when.Promise<TimeDynamicPointCloud>}
    * @readonly
    */
   readyPromise: {

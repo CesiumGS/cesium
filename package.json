@@ -41,6 +41,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "@types/when": "^2.4.33",
     "aws-sdk": "^2.932.0",
     "bluebird": "^3.7.2",
     "cloc": "^2.8.0",

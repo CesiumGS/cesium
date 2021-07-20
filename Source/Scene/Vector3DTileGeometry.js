@@ -139,7 +139,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Vector3DTileGeometry.prototype
-   * @type {Promise<void>}
+   * @type {when.Promise.<void>}
    * @readonly
    */
   readyPromise: {

@@ -102,7 +102,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {when.Promise<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -164,7 +164,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
  * @param {Number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {when.Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -219,7 +219,7 @@ EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

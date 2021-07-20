@@ -692,7 +692,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * The promise remains <code>undefined</code> until the tile's content is requested.
    * </p>
    *
-   * @type {Promise.<Cesium3DTileContent>}
+   * @type {When.Deferred.<Cesium3DTileContent>|undefined}
    * @readonly
    *
    * @private
@@ -712,7 +712,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * The promise remains <code>undefined</code> until the tile's content is requested.
    * </p>
    *
-   * @type {Promise.<Cesium3DTileContent>}
+   * @type {When.Deferred.<Cesium3DTileContent>|undefined}
    * @readonly
    *
    * @private

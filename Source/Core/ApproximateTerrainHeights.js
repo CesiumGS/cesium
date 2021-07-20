@@ -36,7 +36,7 @@ var ApproximateTerrainHeights = {};
 
 /**
  * Initializes the minimum and maximum terrain heights
- * @return {Promise<void>}
+ * @return {when.Promise.<void>}
  */
 ApproximateTerrainHeights.initialize = function () {
   var initPromise = ApproximateTerrainHeights._initPromise;

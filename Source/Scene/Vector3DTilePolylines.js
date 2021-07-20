@@ -121,7 +121,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Vector3DTilePolylines.prototype
-   * @type {Promise<void>}
+   * @type {when.Promise.<void>}
    * @readonly
    */
   readyPromise: {

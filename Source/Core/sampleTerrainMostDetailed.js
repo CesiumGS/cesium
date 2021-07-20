@@ -13,7 +13,7 @@ var scratchCartesian2 = new Cartesian2();
  *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
- * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.  This
+ * @returns {when.Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.  This
  *                                     promise will reject if the terrain provider's `availability` property is undefined.
  *
  * @example

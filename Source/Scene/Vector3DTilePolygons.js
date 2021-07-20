@@ -143,7 +143,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Vector3DTilePolygons.prototype
-   * @type {Promise<void>}
+   * @type {when.Promise.<void>}
    * @readonly
    */
   readyPromise: {

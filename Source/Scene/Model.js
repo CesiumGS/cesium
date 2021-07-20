@@ -857,7 +857,7 @@ Object.defineProperties(Model.prototype, {
    * </p>
    *
    * @memberof Model.prototype
-   * @type {Promise.<Model>}
+   * @type {when.Promise<Model>}
    * @readonly
    *
    * @example

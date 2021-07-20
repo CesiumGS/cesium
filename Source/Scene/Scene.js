@@ -4195,7 +4195,7 @@ Scene.prototype.drillPickFromRay = function (
  * @param {Ray} ray The ray.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {Number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise.<Object>} A promise that resolves to an object containing the object and position of the first intersection.
+ * @returns {when.Promise.<Object>} A promise that resolves to an object containing the object and position of the first intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
@@ -4222,7 +4222,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {Number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise.<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+ * @returns {when.Promise.<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
@@ -4323,7 +4323,7 @@ Scene.prototype.clampToHeight = function (
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {Number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
+ * @returns {when.Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
  * @example
  * var positions = [
@@ -4363,7 +4363,7 @@ Scene.prototype.sampleHeightMostDetailed = function (
  * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {Number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise.<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
+ * @returns {when.Promise.<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
  * @example
  * var cartesians = [

@@ -653,7 +653,7 @@ var j2000ttDays = 2451545.0;
  * indicates that the preload has completed.
  *
  * @param {TimeInterval} timeInterval The interval to preload.
- * @returns {Promise<void>} A promise that, when resolved, indicates that the preload has completed
+ * @returns {when.Promise<void>} A promise that, when resolved, indicates that the preload has completed
  *          and evaluation of the transformation between the fixed and ICRF axes will
  *          no longer return undefined for a time inside the interval.
  *

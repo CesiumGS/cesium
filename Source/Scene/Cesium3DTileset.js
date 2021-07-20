@@ -1181,7 +1181,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {Promise.<Cesium3DTileset>}
+   * @type {when.Promise<Cesium3DTileset>}
    * @readonly
    *
    * @example
@@ -1738,7 +1738,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * Provides a hook to override the method used to request the tileset json
  * useful when fetching tilesets from remote servers
  * @param {Resource|String} tilesetUrl The url of the json file to be fetched
- * @returns {Promise.<Object>} A promise that resolves with the fetched json data
+ * @returns {when.Promise.<Object>} A promise that resolves with the fetched json data
  */
 Cesium3DTileset.loadJson = function (tilesetUrl) {
   var resource = Resource.createIfNeeded(tilesetUrl);

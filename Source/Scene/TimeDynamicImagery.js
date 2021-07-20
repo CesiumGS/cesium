@@ -111,7 +111,7 @@ Object.defineProperties(TimeDynamicImagery.prototype, {
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<HTMLImageElement>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {when.Promise.<HTMLImageElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if the tile is not in the cache.
  */
 TimeDynamicImagery.prototype.getFromCache = function (x, y, level, request) {
