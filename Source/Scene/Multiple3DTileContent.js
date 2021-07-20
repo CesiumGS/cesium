@@ -11,6 +11,7 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A collection of contents for tiles that use the <code>3DTILES_multiple_contents</code> extension.
@@ -57,9 +58,21 @@ export default function Multiple3DTileContent(
   this._innerContentResources = new Array(contentCount);
   this._serverKeys = new Array(contentCount);
 
-  for (var i = 0; i < contentCount; i++) {
+  var i;
+  for (i = 0; i < contentCount; i++) {
+    var uri = contentHeaders[i].uri;
+    if (uri === "") {
+      oneTimeWarning(
+        "empty content uri",
+        "Warning: this tile has an empty content uri, which is disallowed by the 3D Tiles spec."
+      );
+      this._innerContentResources[i] = undefined;
+      this._serverKeys[i] = undefined;
+      continue;
+    }
+
     var contentResource = tilesetResource.getDerivedResource({
-      url: contentHeaders[i].uri,
+      url: uri,
     });
 
     var serverKey = RequestScheduler.getServerKey(
@@ -383,9 +396,14 @@ function requestInnerContent(
   originalCancelCount,
   originalContentState
 ) {
+  var cr = multipleContents._innerContentResources[index];
+  if (!defined(cr)) {
+    return undefined;
+  }
+
   // it is important to clone here. The fetchArrayBuffer() below here uses
   // throttling, but other uses of the resources do not.
-  var contentResource = multipleContents._innerContentResources[index].clone();
+  var contentResource = cr.clone();
   var tile = multipleContents.tile;
 
   // Always create a new request. If the tile gets canceled, this

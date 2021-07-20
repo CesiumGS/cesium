@@ -1,4 +1,4 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartesian3, Cesium3DTileContentState } from "../../Source/Cesium.js";
 import { clone } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -98,6 +98,45 @@ describe(
       },
       viewerRequestVolume: {
         box: [0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0],
+      },
+    };
+
+    var tileWithEmptyContentUri = {
+      geometricError: 1,
+      refine: "REPLACE",
+      children: [],
+      content: {
+        uri: "",
+        boundingVolume: {
+          box: [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0],
+        },
+      },
+      boundingVolume: {
+        box: [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0],
+      },
+    };
+
+    var tileWithMultipleContentsEmptyUri = {
+      geometricError: 1,
+      refine: "REPLACE",
+      children: [],
+      content: {
+        uri: "/someurl",
+      },
+      extensions: {
+        "3DTILES_multiple_contents": {
+          content: [
+            {
+              uri: "/someurl2",
+            },
+            {
+              uri: "",
+            },
+          ],
+        },
+      },
+      boundingVolume: {
+        box: [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0],
       },
     };
 
@@ -635,6 +674,35 @@ describe(
       var foveatedDeferralPenalty = 10000000.0;
       expect(tile2._priority).toBeGreaterThanOrEqualTo(foveatedDeferralPenalty);
       tile2._priorityDeferred = false;
+    });
+
+    it("treats tile with empty content uri as an empty tile", function () {
+      spyOn(console, "log");
+      var tile = new Cesium3DTile(
+        mockTileset,
+        "/some_url",
+        tileWithEmptyContentUri,
+        undefined
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        "Warning: this tile has an empty content uri, which is disallowed by the 3D Tiles spec."
+      );
+      expect(tile.hasEmptyContent).toEqual(true);
+      expect(tile._contentState).toEqual(Cesium3DTileContentState.READY);
+    });
+
+    it("handles empty content uri in multiple tiles extension", function () {
+      spyOn(console, "warn");
+      var tile = new Cesium3DTile(
+        mockTileset,
+        "/some_url",
+        tileWithMultipleContentsEmptyUri,
+        undefined
+      );
+      tile.requestContent();
+      expect(console.warn).toHaveBeenCalledWith(
+        "Warning: this tile has an empty content uri, which is disallowed by the 3D Tiles spec."
+      );
     });
   },
   "WebGL"

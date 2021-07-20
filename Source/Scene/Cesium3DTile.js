@@ -41,6 +41,7 @@ import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -220,13 +221,23 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
       );
       contentHeaderUri = contentHeader.url;
     }
-    contentState = Cesium3DTileContentState.UNLOADED;
-    contentResource = baseResource.getDerivedResource({
-      url: contentHeaderUri,
-    });
-    serverKey = RequestScheduler.getServerKey(
-      contentResource.getUrlComponent()
-    );
+
+    if (contentHeaderUri === "") {
+      console.log(
+        "Warning: this tile has an empty content uri, which is disallowed by the 3D Tiles spec."
+      );
+      content = new Empty3DTileContent(tileset, this);
+      hasEmptyContent = true;
+      contentState = Cesium3DTileContentState.READY;
+    } else {
+      contentState = Cesium3DTileContentState.UNLOADED;
+      contentResource = baseResource.getDerivedResource({
+        url: contentHeaderUri,
+      });
+      serverKey = RequestScheduler.getServerKey(
+        contentResource.getUrlComponent()
+      );
+    }
   } else {
     content = new Empty3DTileContent(tileset, this);
     hasEmptyContent = true;
