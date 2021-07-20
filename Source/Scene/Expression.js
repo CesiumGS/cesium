@@ -7,7 +7,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import jsep from "../ThirdParty/jsep.js";
+import jsep from "../ThirdPartyNpm/jsep.js";
 import ExpressionNodeType from "./ExpressionNodeType.js";
 
 /**

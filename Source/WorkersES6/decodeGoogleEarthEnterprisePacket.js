@@ -1,7 +1,7 @@
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import GoogleEarthEnterpriseTileInformation from "../Core/GoogleEarthEnterpriseTileInformation.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import pako from "../ThirdParty/pako_inflate.js";
+import pako from "../ThirdPartyNpm/pako.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 // Datatype sizes
