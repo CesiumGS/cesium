@@ -937,6 +937,122 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   });
 }
 
+CesiumTerrainProvider.prototype.requestTileGeometry1 = function (
+  x,
+  y,
+  level,
+  request
+) {
+  //>>includeStart('debug', pragmas.debug)
+  if (!this._ready) {
+    throw new DeveloperError(
+      "requestTileGeometry must not be called before the terrain provider is ready."
+    );
+  }
+  //>>includeEnd('debug');
+
+  var layers = this._layers;
+  var layerToUse;
+  var layerCount = layers.length;
+
+  if (layerCount === 1) {
+    // Optimized path for single layers
+    layerToUse = layers[0];
+  } else {
+    for (var i = 0; i < layerCount; ++i) {
+      var layer = layers[i];
+      if (
+        !defined(layer.availability) ||
+        layer.availability.isTileAvailable(level, x, y)
+      ) {
+        layerToUse = layer;
+        break;
+      }
+    }
+  }
+
+  return requestTileGeometry1(this, x, y, level, layerToUse, request);
+};
+
+function requestTileGeometry1(provider, x, y, level, layerToUse, request) {
+  if (!defined(layerToUse)) {
+    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+  }
+
+  var urlTemplates = layerToUse.tileUrlTemplates;
+  if (urlTemplates.length === 0) {
+    return undefined;
+  }
+
+  // The TileMapService scheme counts from the bottom left
+  var terrainY;
+  if (!provider._scheme || provider._scheme === "tms") {
+    var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
+    terrainY = yTiles - y - 1;
+  } else {
+    terrainY = y;
+  }
+
+  var extensionList = [];
+  if (provider._requestVertexNormals && layerToUse.hasVertexNormals) {
+    extensionList.push(
+      layerToUse.littleEndianExtensionSize
+        ? "octvertexnormals"
+        : "vertexnormals"
+    );
+  }
+  if (provider._requestWaterMask && layerToUse.hasWaterMask) {
+    extensionList.push("watermask");
+  }
+  if (provider._requestMetadata && layerToUse.hasMetadata) {
+    extensionList.push("metadata");
+  }
+
+  var headers;
+  var query;
+  var url = urlTemplates[(x + terrainY + level) % urlTemplates.length];
+
+  var resource = layerToUse.resource;
+  if (
+    defined(resource._ionEndpoint) &&
+    !defined(resource._ionEndpoint.externalType)
+  ) {
+    // ion uses query paremeters to request extensions
+    if (extensionList.length !== 0) {
+      query = { extensions: extensionList.join("-") };
+    }
+    headers = getRequestHeader(undefined);
+  } else {
+    //All other terrain servers
+    headers = getRequestHeader(extensionList);
+  }
+
+  var promise = resource
+    .getDerivedResource({
+      url: url,
+      templateValues: {
+        version: layerToUse.version,
+        z: level,
+        x: x,
+        y: terrainY,
+      },
+      queryParameters: query,
+      headers: headers,
+      request: request,
+    })
+    .fetchArrayBuffer();
+
+  if (!defined(promise)) {
+    return undefined;
+  }
+
+  //convert from ArrayBuffer to Array[Byte]
+  return promise.then(function (buffer) {
+    var a = Array.from(new Uint8Array(buffer));
+    return a;
+  });
+}
+
 Object.defineProperties(CesiumTerrainProvider.prototype, {
   /**
    * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
