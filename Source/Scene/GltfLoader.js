@@ -164,7 +164,7 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @memberof GltfLoader.prototype
    *
-   * @type {Promise}
+   * @type {when.Promise.<void>}
    * @readonly
    * @private
    */

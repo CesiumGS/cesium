@@ -222,7 +222,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    *
    * @memberof Cesium3DTileStyle.prototype
    *
-   * @type {when.Promise<Cesium3DTileStyle>}
+   * @type {when.Promise.<Cesium3DTileStyle>}
    * @readonly
    */
   readyPromise: {

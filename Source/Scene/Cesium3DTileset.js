@@ -1181,7 +1181,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {when.Promise<Cesium3DTileset>}
+   * @type {when.Promise.<Cesium3DTileset>}
    * @readonly
    *
    * @example
@@ -1893,7 +1893,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  *
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Object} tilesetJson The tileset JSON
- * @return {Promise<Object>} A promise that resolves to tilesetJson for chaining.
+ * @return {Promise.<Object>} A promise that resolves to tilesetJson for chaining.
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {

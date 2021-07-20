@@ -94,7 +94,7 @@ function getDaysSinceEpoch(xys, dayTT, secondTT) {
  *                 the Terrestrial Time (TT) time standard.
  * @param {Number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
  *                 the Terrestrial Time (TT) time standard.
- * @returns {when.Promise<void>} A promise that, when resolved, indicates that the requested interval has been
+ * @returns {when.Promise.<void>} A promise that, when resolved, indicates that the requested interval has been
  *                    preloaded.
  */
 Iau2006XysData.prototype.preload = function (

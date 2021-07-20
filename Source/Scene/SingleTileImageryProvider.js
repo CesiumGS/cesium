@@ -391,7 +391,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof SingleTileImageryProvider.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {

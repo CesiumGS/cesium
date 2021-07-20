@@ -1566,6 +1566,9 @@ function createTypeScriptDefinitions() {
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
   source = `declare module "cesium" {
+
+import * as when from "when";
+
 ${source}
 }
 

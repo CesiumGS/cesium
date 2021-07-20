@@ -589,7 +589,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -649,7 +649,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
  * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
  * recommended because existing tiles provided by the imagery provider will not be updated.
  *
- * @param {Promise<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
+ * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
  */
 UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
   var that = this;
@@ -786,7 +786,7 @@ UrlTemplateImageryProvider.prototype.requestImage = function (
  * @param {Number} level The tile level.
  * @param {Number} longitude The longitude at which to pick features.
  * @param {Number} latitude  The latitude at which to pick features.
- * @return {when.Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @return {when.Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.

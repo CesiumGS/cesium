@@ -318,7 +318,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof ClassificationPrimitive.prototype
-   * @type {when.Promise<ClassificationPrimitive>}
+   * @type {when.Promise.<ClassificationPrimitive>}
    * @readonly
    */
   readyPromise: {

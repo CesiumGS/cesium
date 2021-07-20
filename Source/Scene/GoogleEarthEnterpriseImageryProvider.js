@@ -465,7 +465,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {

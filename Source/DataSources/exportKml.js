@@ -256,7 +256,7 @@ IdManager.prototype.get = function (id) {
  * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
  * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
  *
- * @returns {when.Promise<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
+ * @returns {when.Promise.<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
  * @example
  * Cesium.exportKml({

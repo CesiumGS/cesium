@@ -51,7 +51,7 @@ Object.defineProperties(PeliasGeocoderService.prototype, {
  *
  * @param {String} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
- * @returns {when.Promise<GeocoderService.Result[]>}
+ * @returns {when.Promise.<GeocoderService.Result[]>}
  */
 PeliasGeocoderService.prototype.geocode = function (query, type) {
   //>>includeStart('debug', pragmas.debug);

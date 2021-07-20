@@ -64,7 +64,7 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
  * @function
  *
  * @param {String} query The query to be sent to the geocoder service
- * @returns {when.Promise<GeocoderService.Result[]>}
+ * @returns {when.Promise.<GeocoderService.Result[]>}
  */
 BingMapsGeocoderService.prototype.geocode = function (query) {
   //>>includeStart('debug', pragmas.debug);

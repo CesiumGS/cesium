@@ -1007,7 +1007,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -1210,7 +1210,7 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {when.Promise.<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

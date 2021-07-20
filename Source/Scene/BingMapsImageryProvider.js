@@ -556,7 +556,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {

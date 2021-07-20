@@ -30,7 +30,7 @@ var ALL_CHILDREN = 15;
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the ArcGIS ImageServer service.
+ * @param {Resource|String|Promise.<Resource>|Promise.<String>} options.url The URL of the ArcGIS ImageServer service.
  * @param {String} [options.token] The authorization token to use to connect to the service.
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
@@ -264,7 +264,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {

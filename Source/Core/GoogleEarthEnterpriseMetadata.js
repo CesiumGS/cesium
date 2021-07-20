@@ -172,7 +172,7 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
   /**
    * Gets a promise that resolves to true when the metadata is ready for use.
    * @memberof GoogleEarthEnterpriseMetadata.prototype
-   * @type {when.Promise<Boolean>}
+   * @type {when.Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -380,7 +380,7 @@ GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function (
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {when.Promise<GoogleEarthEnterpriseTileInformation>} A promise that resolves to the tile info for the requested quad key
+ * @returns {when.Promise.<GoogleEarthEnterpriseTileInformation>} A promise that resolves to the tile info for the requested quad key
  *
  * @private
  */

@@ -359,7 +359,7 @@ var supportsImageBitmapOptionsPromise;
 /**
  * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
  *
- * @returns {when.Promise<Boolean>} A promise that resolves to true if this browser supports creating an ImageBitmap with options.
+ * @returns {when.Promise.<Boolean>} A promise that resolves to true if this browser supports creating an ImageBitmap with options.
  *
  * @private
  */
@@ -701,7 +701,7 @@ Resource.prototype.getDerivedResource = function (options) {
  *
  * @param {Error} [error] The error that was encountered.
  *
- * @returns {when.Promise<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
+ * @returns {when.Promise.<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
  *
  * @private
  */
