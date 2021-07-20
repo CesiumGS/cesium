@@ -717,6 +717,15 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
   }
 };
 
+Vector3DTileContent.prototype.getPolylinePositions = function (batchId) {
+  var polylines = this._polylines;
+  if (!defined(polylines)) {
+    return undefined;
+  }
+
+  return polylines.getPositions(batchId);
+};
+
 Vector3DTileContent.prototype.isDestroyed = function () {
   return false;
 };
