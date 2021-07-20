@@ -571,7 +571,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @type {*}
    * @readonly
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
    */
   extras: {
     get: function () {
