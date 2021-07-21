@@ -353,6 +353,7 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   }
 
   if (!defined(pickedTile)) {
+    console.log("(remove this) need to check here");
     return;
   }
 

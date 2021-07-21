@@ -382,6 +382,9 @@ describe(
         });
       });
 
+      //TODO: start here
+      it("returns if undefined tile picked", function () {});
+
       it("returns imagery from two layers", function () {
         var provider1 = {
           ready: true,
