@@ -448,13 +448,12 @@ describe(
           },
         };
 
-        var currentLayer = globe.imageryLayers.addImageryProvider(provider);
-        console.log(currentLayer.rectangle);
+        globe.imageryLayers.addImageryProvider(provider);
         return updateUntilDone(globe, scene).then(function () {
           var ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 1.0, 1.0),
-            new Cartesian3(1.0, 1.0, 100.0) //changes the pickedLocation
+            new Cartesian3(1.0, 1.0, 100.0)
           );
           camera.lookAtTransform(Matrix4.IDENTITY);
           var ray = new Ray(camera.position, camera.direction);
