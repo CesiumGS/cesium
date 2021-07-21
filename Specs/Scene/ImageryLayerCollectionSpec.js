@@ -288,6 +288,9 @@ describe(
       var scene;
       var globe;
       var camera;
+      var customScene;
+      var customGlobe;
+      var customCamera;
 
       beforeAll(function () {
         scene = createScene();
@@ -295,6 +298,12 @@ describe(
         camera = scene.camera;
 
         scene.frameState.passes.render = true;
+        //NEW:
+        customScene = createScene();
+        customGlobe = customScene.globe = new Globe();
+        customCamera = customScene.camera;
+
+        customScene.frameState.passes.render = true;
       });
 
       afterAll(function () {
@@ -383,7 +392,31 @@ describe(
       });
 
       //TODO: start here
-      it("returns if undefined tile picked", function () {});
+      it("pickImageryHelper returns if undefined tile picked", function () {
+        return updateUntilDone(customGlobe, customScene).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          for (var i = 0; i < customGlobe._surface._tilesToRender.length; i++) {
+            customGlobe._surface._tilesToRender[i]._rectangle = new Rectangle();
+          }
+          customCamera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 1.0, 1.0),
+            new Cartesian3(1.0, 1.0, 100.0)
+          );
+          customCamera.lookAtTransform(Matrix4.IDENTITY);
+          var ray = new Ray(customCamera.position, customCamera.direction);
+          var imagery = customScene.imageryLayers.pickImageryLayers(
+            ray,
+            customScene
+          );
+
+          expect(imagery).toBeUndefined();
+        });
+      });
+
+      //TODO: !Rectangle.contains(imagery.rectangle, pickedLocation)
+      // it("returns if undefined tile picked", function () {
+
+      // });
 
       it("returns imagery from two layers", function () {
         var provider1 = {
