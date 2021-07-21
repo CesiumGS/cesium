@@ -371,7 +371,6 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
     }
 
     if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
-      console.log("(remove this) need to check here");
       continue;
     }
 

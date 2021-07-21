@@ -701,61 +701,41 @@ describe(
         });
       });
 
-      //TODO:
-      // it("helper continues if provider.pickFeatures is undefined", function () {
-      //   var provider = {
-      //     ready: true,
-      //     rectangle: Rectangle.MAX_VALUE,
-      //     tileWidth: 256,
-      //     tileHeight: 256,
-      //     maximumLevel: 0,
-      //     minimumLevel: 0,
-      //     tilingScheme: new GeographicTilingScheme(),
-      //     errorEvent: new Event(),
-      //     hasAlphaChannel: true,
+      it("helper continues if provider.pickFeatures is undefined", function () {
+        var provider = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
 
-      //     pickFeatures: function (x, y, level, longitude, latitude) {
-      //       var deferred = when.defer();
-      //       setTimeout(function () {
-      //         var featureInfo = new ImageryLayerFeatureInfo();
-      //         featureInfo.name = "Foo";
-      //         featureInfo.description = "<strong>Foo!</strong>";
-      //         deferred.resolve([featureInfo]);
-      //       }, 1);
-      //       return deferred.promise;
-      //     },
+        globe.imageryLayers.addImageryProvider(provider);
 
-      //     requestImage: function (x, y, level) {
-      //       return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
-      //     },
-      //   };
+        return updateUntilDone(globe, scene).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          camera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+            new Cartesian3(0.0, 0.0, 100.0)
+          );
+          camera.lookAtTransform(Matrix4.IDENTITY);
 
-      //   var currentLayer = globe.imageryLayers.addImageryProvider(provider);
+          var ray = new Ray(camera.position, camera.direction);
+          var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+            ray,
+            scene
+          );
 
-      //   return updateUntilDone(globe, scene).then(function () {
-      //     var ellipsoid = Ellipsoid.WGS84;
-      //     camera.lookAt(
-      //       new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
-      //       new Cartesian3(0.0, 0.0, 100.0)
-      //     );
-      //     camera.lookAtTransform(Matrix4.IDENTITY);
-
-      //     var ray = new Ray(camera.position, camera.direction);
-      //     var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
-      //       ray,
-      //       scene
-      //     );
-
-      //     expect(featuresPromise).toBeDefined();
-
-      //     return featuresPromise.then(function (features) {
-      //       expect(features.length).toBe(1);
-      //       expect(features[0].name).toEqual("Foo");
-      //       expect(features[0].description).toContain("Foo!");
-      //       expect(features[0].imageryLayer).toBe(currentLayer);
-      //     });
-      //   });
-      // });
+          expect(featuresPromise).toBeUndefined();
+        });
+      });
 
       it("returns features from two layers", function () {
         var provider1 = {
