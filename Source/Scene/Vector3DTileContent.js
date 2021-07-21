@@ -589,7 +589,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       rectangle: rectangle,
       boundingVolume: content.tile.boundingVolume.boundingVolume,
       batchTable: batchTable,
-      tileset: tileset,
+      classificationType: tileset.classificationType,
+      keepDecodedPositions: tileset.vectorKeepDecodedPositions,
     });
   }
 

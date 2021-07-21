@@ -51,7 +51,8 @@ import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
  * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
- * @param {Cesium3DTileset} options.tileset The tileset.
+ * @param {ClassificationType} options.classificationType The classification type.
+ * @param {Boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
  *
  * @private
  */
@@ -79,7 +80,6 @@ function Vector3DTileClampedPolylines(options) {
 
   this._transferrableBatchIds = undefined;
   this._packedBuffer = undefined;
-  this._tileset = options.tileset;
   this._minimumMaximumVectorHeights = new Cartesian2(
     ApproximateTerrainHeights._defaultMinTerrainHeight,
     ApproximateTerrainHeights._defaultMaxTerrainHeight
@@ -90,8 +90,9 @@ function Vector3DTileClampedPolylines(options) {
     ApproximateTerrainHeights._defaultMaxTerrainHeight,
     this._ellipsoid
   );
+  this._classificationType = options.classificationType;
 
-  this._keepDecodedPositions = options.tileset.vectorKeepDecodedPositions;
+  this._keepDecodedPositions = options.keepDecodedPositions;
   this._decodedPositions = undefined;
   this._decodedPositionOffsets = undefined;
 
@@ -606,7 +607,7 @@ function queueCommands(primitive, frameState) {
     command.derivedCommands.tileset = derivedTilesetCommand;
   }
 
-  var classificationType = primitive._tileset.classificationType;
+  var classificationType = primitive._classificationType;
   if (
     classificationType === ClassificationType.TERRAIN ||
     classificationType === ClassificationType.BOTH

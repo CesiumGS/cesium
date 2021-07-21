@@ -42,7 +42,7 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
  * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
- * @param {Cesium3DTileset} options.tileset The tileset.
+ * @param {Boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
  *
  * @private
  */
@@ -71,7 +71,7 @@ function Vector3DTilePolylines(options) {
   this._transferrableBatchIds = undefined;
   this._packedBuffer = undefined;
 
-  this._keepDecodedPositions = options.tileset.vectorKeepDecodedPositions;
+  this._keepDecodedPositions = options.keepDecodedPositions;
   this._decodedPositions = undefined;
   this._decodedPositionOffsets = undefined;
 
@@ -493,7 +493,7 @@ function queueCommands(primitive, frameState) {
   frameState.commandList.push(primitive._command);
 }
 
-Vector3DTilePolylines.getPolylinePositions = function(polylines, batchId) {
+Vector3DTilePolylines.getPolylinePositions = function (polylines, batchId) {
   var batchIds = polylines._batchIds;
   var positions = polylines._decodedPositions;
   var offsets = polylines._decodedPositionOffsets;
@@ -512,6 +512,10 @@ Vector3DTilePolylines.getPolylinePositions = function(polylines, batchId) {
     if (batchIds[i] === batchId) {
       positionsLength += offsets[i + 1] - offsets[i];
     }
+  }
+
+  if (positionsLength === 0) {
+    return undefined;
   }
 
   var results = new Float64Array(positionsLength * 3);
@@ -537,7 +541,7 @@ Vector3DTilePolylines.getPolylinePositions = function(polylines, batchId) {
  *
  * @param {Number} batchId The batch ID of the feature.
  */
- Vector3DTilePolylines.prototype.getPositions = function (batchId) {
+Vector3DTilePolylines.prototype.getPositions = function (batchId) {
   return Vector3DTilePolylines.getPolylinePositions(this, batchId);
 };
 
