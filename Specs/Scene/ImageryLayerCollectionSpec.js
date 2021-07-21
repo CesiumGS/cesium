@@ -700,7 +700,7 @@ describe(
         });
       });
 
-      it("helper continues if provider.pickFeatures is undefined", function () {
+      it("pickImageryHelper continues if provider.pickFeatures is undefined", function () {
         var provider = {
           ready: true,
           rectangle: Rectangle.MAX_VALUE,
