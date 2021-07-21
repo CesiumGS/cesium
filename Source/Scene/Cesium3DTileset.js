@@ -51,7 +51,7 @@ import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 
 /**
- * A {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles tileset},
+ * A {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
  * used for streaming massive heterogeneous 3D geospatial datasets.
  *
  * @alias Cesium3DTileset
@@ -140,7 +140,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  *      dynamicScreenSpaceErrorHeightFalloff : 0.25
  * }));
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles specification}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles specification}
  */
 function Cesium3DTileset(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1056,7 +1056,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * Gets the tileset's asset object property, which contains metadata about the tileset.
    * <p>
-   * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-asset|asset schema reference}
+   * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#reference-asset|asset schema reference}
    * in the 3D Tiles spec for the full set of properties.
    * </p>
    *
@@ -1124,7 +1124,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
    * <p>
-   * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-properties|properties schema reference}
+   * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#reference-properties|properties schema reference}
    * in the 3D Tiles spec for the full set of properties.
    * </p>
    *
@@ -1255,7 +1255,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * The style, defined using the
-   * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+   * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language},
    * applied to each feature in the tileset.
    * <p>
    * Assign <code>undefined</code> to remove the style, which will restore the visual
@@ -1296,7 +1296,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *    }
    * });
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
    */
   style: {
     get: function () {
@@ -1660,7 +1660,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {*}
    * @readonly
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
    */
   extras: {
     get: function () {
