@@ -363,17 +363,14 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
     var terrainImagery = imageryTiles[i];
     var imagery = terrainImagery.readyImagery;
     if (!defined(imagery)) {
-      console.log("!defined(imagery)");
       continue;
     }
     var provider = imagery.imageryLayer.imageryProvider;
     if (pickFeatures && !defined(provider.pickFeatures)) {
-      console.log("pickFeatures && !defined(provider.pickFeatures)");
       continue;
     }
 
     if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
-      console.log("!Rectangle.contains(imagery.rectangle, pickedLocation)");
       continue;
     }
 
