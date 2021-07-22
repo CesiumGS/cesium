@@ -382,24 +382,6 @@ describe(
         });
       });
 
-      it("pickImageryLayers returns undefined if no tiles are picked", function () {
-        return updateUntilDone(globe, scene).then(function () {
-          var ellipsoid = Ellipsoid.WGS84;
-          for (var i = 0; i < globe._surface._tilesToRender.length; i++) {
-            globe._surface._tilesToRender[i]._rectangle = new Rectangle();
-          }
-          camera.lookAt(
-            new Cartesian3(ellipsoid.maximumRadius, 1.0, 1.0),
-            new Cartesian3(1.0, 1.0, 100.0)
-          );
-          camera.lookAtTransform(Matrix4.IDENTITY);
-          var ray = new Ray(camera.position, camera.direction);
-          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
-
-          expect(imagery).toBeUndefined();
-        });
-      });
-
       it("pickImageryLayers skips imagery layers that don't overlap the picked location", function () {
         var provider = {
           ready: true,
@@ -501,6 +483,24 @@ describe(
           expect(imagery.length).toBe(2);
           expect(imagery[0]).toBe(currentLayer2);
           expect(imagery[1]).toBe(currentLayer1);
+        });
+      });
+
+      it("pickImageryLayers returns undefined if no tiles are picked", function () {
+        return updateUntilDone(globe, scene).then(function () {
+          var ellipsoid = Ellipsoid.WGS84;
+          for (var i = 0; i < globe._surface._tilesToRender.length; i++) {
+            globe._surface._tilesToRender[i]._rectangle = new Rectangle();
+          }
+          camera.lookAt(
+            new Cartesian3(ellipsoid.maximumRadius, 1.0, 1.0),
+            new Cartesian3(1.0, 1.0, 100.0)
+          );
+          camera.lookAtTransform(Matrix4.IDENTITY);
+          var ray = new Ray(camera.position, camera.direction);
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeUndefined();
         });
       });
     });
