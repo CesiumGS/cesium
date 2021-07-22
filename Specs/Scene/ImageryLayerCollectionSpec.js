@@ -288,9 +288,6 @@ describe(
       var scene;
       var globe;
       var camera;
-      var customScene;
-      var customGlobe;
-      var customCamera;
 
       beforeAll(function () {
         scene = createScene();
@@ -298,12 +295,6 @@ describe(
         camera = scene.camera;
 
         scene.frameState.passes.render = true;
-        //NEW:
-        customScene = createScene();
-        customGlobe = customScene.globe = new Globe();
-        customCamera = customScene.camera;
-
-        customScene.frameState.passes.render = true;
       });
 
       afterAll(function () {
@@ -391,28 +382,25 @@ describe(
         });
       });
 
-      it("pickImageryHelper returns if undefined tile picked", function () {
-        return updateUntilDone(customGlobe, customScene).then(function () {
+      it("pickImageryLayers returns undefined if no tiles are picked", function () {
+        return updateUntilDone(globe, scene).then(function () {
           var ellipsoid = Ellipsoid.WGS84;
-          for (var i = 0; i < customGlobe._surface._tilesToRender.length; i++) {
-            customGlobe._surface._tilesToRender[i]._rectangle = new Rectangle();
+          for (var i = 0; i < globe._surface._tilesToRender.length; i++) {
+            globe._surface._tilesToRender[i]._rectangle = new Rectangle();
           }
-          customCamera.lookAt(
+          camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 1.0, 1.0),
             new Cartesian3(1.0, 1.0, 100.0)
           );
-          customCamera.lookAtTransform(Matrix4.IDENTITY);
-          var ray = new Ray(customCamera.position, customCamera.direction);
-          var imagery = customScene.imageryLayers.pickImageryLayers(
-            ray,
-            customScene
-          );
+          camera.lookAtTransform(Matrix4.IDENTITY);
+          var ray = new Ray(camera.position, camera.direction);
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
 
           expect(imagery).toBeUndefined();
         });
       });
 
-      it("continues if imagery rectangle does not contain picked location", function () {
+      it("pickImageryLayers skips imagery layers that don't overlap the picked location", function () {
         var provider = {
           ready: true,
           rectangle: new Rectangle(
