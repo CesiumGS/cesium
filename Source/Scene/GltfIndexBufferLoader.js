@@ -281,6 +281,10 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     this._dracoLoader.process(frameState);
   }
 
+  if (this._bufferViewLoader._hasMeshopt) {
+    this._bufferViewLoader.process(frameState);
+  }
+
   if (defined(this._indexBuffer)) {
     // Already created index buffer
     return;

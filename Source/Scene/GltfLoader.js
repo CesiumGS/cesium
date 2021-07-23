@@ -16,6 +16,7 @@ import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import hasExtension from "./hasExtension.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceCache from "./ResourceCache.js";
@@ -308,7 +309,14 @@ GltfLoader.prototype.process = function (frameState) {
   }
 };
 
-function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
+function loadVertexBuffer(
+  loader,
+  gltf,
+  accessorId,
+  semantic,
+  draco,
+  dequantize
+) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
 
@@ -321,6 +329,7 @@ function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
     dracoAttributeSemantic: semantic,
     dracoAccessorId: accessorId,
     asynchronous: loader._asynchronous,
+    dequantize: dequantize,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -527,7 +536,8 @@ function loadInstancedAttribute(
       gltf,
       accessorId,
       gltfSemantic,
-      undefined
+      undefined,
+      true
     );
     vertexBufferLoader.promise.then(function (vertexBufferLoader) {
       if (loader.isDestroyed()) {

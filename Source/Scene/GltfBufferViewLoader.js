@@ -1,7 +1,9 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import hasExtension from "./hasExtension.js";
 import when from "../ThirdParty/when.js";
+import MeshoptDecoder from "../ThirdParty/meshopt_decode.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -44,6 +46,24 @@ export default function GltfBufferViewLoader(options) {
 
   var bufferView = gltf.bufferViews[bufferViewId];
   var bufferId = bufferView.buffer;
+  var byteOffset = bufferView.byteOffset;
+  var byteLength = bufferView.byteLength;
+
+  this._hasMeshopt = false;
+  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
+    this._hasMeshopt = true;
+
+    var meshopt = bufferView.extensions["EXT_meshopt_compression"];
+    bufferId = meshopt.buffer;
+    byteOffset = defaultValue(meshopt.byteOffset, 0);
+    byteLength = meshopt.byteLength;
+
+    this._byteStride = meshopt.byteStride;
+    this._count = meshopt.count;
+    this._mode = meshopt.mode;
+    this._filter = defaultValue(meshopt.filter, "NONE");
+  }
+
   var buffer = gltf.buffers[bufferId];
 
   this._resourceCache = resourceCache;
@@ -51,8 +71,8 @@ export default function GltfBufferViewLoader(options) {
   this._baseResource = baseResource;
   this._buffer = buffer;
   this._bufferId = bufferId;
-  this._byteOffset = bufferView.byteOffset;
-  this._byteLength = bufferView.byteLength;
+  this._byteOffset = byteOffset;
+  this._byteLength = byteLength;
   this._cacheKey = cacheKey;
   this._bufferLoader = undefined;
   this._typedArray = undefined;
@@ -111,6 +131,42 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
 });
 
 /**
+ * Processes the resources. For a BufferView that does not have the EXT_meshopt_compression extension, there
+ * is no processing that needs to happen, so this function returns immediately.
+ *
+ * @param {FrameState} frameState The frame state.
+ */
+GltfBufferViewLoader.prototype.process = function (frameState) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
+
+  if (!this._hasMeshopt) {
+    return;
+  }
+
+  if (!defined(this._typedArray)) {
+    return;
+  }
+
+  var count = this._count;
+  var byteStride = this._byteStride;
+  var result = new Uint8Array(new ArrayBuffer(count * byteStride));
+  MeshoptDecoder.MeshoptDecoder.decodeGltfBuffer(
+    result,
+    count,
+    byteStride,
+    this._typedArray,
+    this._mode,
+    this._filter
+  );
+
+  this._typedArray = result;
+  this._state = ResourceLoaderState.READY;
+  this._promise.resolve();
+};
+
+/**
  * Loads the resource.
  * @private
  */
@@ -137,8 +193,12 @@ GltfBufferViewLoader.prototype.load = function () {
       that.unload();
 
       that._typedArray = bufferViewTypedArray;
-      that._state = ResourceLoaderState.READY;
-      that._promise.resolve(that);
+      if (that._hasMeshopt) {
+        that._state = ResourceLoaderState.PROCESSING;
+      } else {
+        that._state = ResourceLoaderState.READY;
+        that._promise.resolve(that);
+      }
     })
     .otherwise(function (error) {
       if (that.isDestroyed()) {

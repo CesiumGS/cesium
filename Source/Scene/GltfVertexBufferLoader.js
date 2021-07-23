@@ -11,6 +11,7 @@ import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -33,6 +34,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {String} [options.dracoAccessorId] The Draco accessor id.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
@@ -52,6 +54,7 @@ export default function GltfVertexBufferLoader(options) {
   var dracoAccessorId = options.dracoAccessorId;
   var cacheKey = options.cacheKey;
   var asynchronous = defaultValue(options.asynchronous, true);
+  var dequantize = defaultValue(options.dequantize, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -92,6 +95,7 @@ export default function GltfVertexBufferLoader(options) {
   }
   //>>includeEnd('debug');
 
+  this._dequantize = dequantize;
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
@@ -313,16 +317,42 @@ function handleError(vertexBufferLoader, error) {
 function CreateVertexBufferJob() {
   this.typedArray = undefined;
   this.context = undefined;
+  this.semantic = undefined;
+  this.dequantize = undefined;
+  this.componentType = undefined;
+  this.type = undefined;
   this.vertexBuffer = undefined;
 }
 
-CreateVertexBufferJob.prototype.set = function (typedArray, context) {
+CreateVertexBufferJob.prototype.set = function (
+  typedArray,
+  context,
+  semantic,
+  dequantize,
+  componentType,
+  type,
+  count
+) {
   this.typedArray = typedArray;
+  this.semantic = semantic;
+  this.dequantize = dequantize;
+  this.componentType = componentType;
+  this.type = type;
+  this.count = count;
   this.context = context;
 };
 
 CreateVertexBufferJob.prototype.execute = function () {
-  this.vertexBuffer = createVertexBuffer(this.typedArray, this.context);
+  var result = this.typedArray;
+  if (this.dequantize) {
+    result = AttributeCompression.dequantize(
+      this.componentType,
+      this.type,
+      this.typedArray
+    );
+  }
+
+  this.vertexBuffer = createVertexBuffer(result, this.context);
 };
 
 function createVertexBuffer(typedArray, context) {
@@ -352,6 +382,10 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     this._dracoLoader.process(frameState);
   }
 
+  if (this._bufferViewLoader._hasMeshopt) {
+    this._bufferViewLoader.process(frameState);
+  }
+
   if (defined(this._vertexBuffer)) {
     // Already created vertex buffer
     return;
@@ -366,7 +400,16 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
 
   if (this._asynchronous) {
     var vertexBufferJob = scratchVertexBufferJob;
-    vertexBufferJob.set(this._typedArray, frameState.context);
+    var accessor = this._gltf.accessors[this._dracoAccessorId];
+    vertexBufferJob.set(
+      this._typedArray,
+      frameState.context,
+      this._dracoAttributeSemantic,
+      this._dequantize,
+      accessor.componentType,
+      accessor.type,
+      accessor.count
+    );
     var jobScheduler = frameState.jobScheduler;
     if (!jobScheduler.execute(vertexBufferJob, JobType.BUFFER)) {
       // Job scheduler is full. Try again next frame.

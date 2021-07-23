@@ -1,4 +1,8 @@
-import { AttributeCompression } from "../../Source/Cesium.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  ComponentDatatype,
+} from "../../Source/Cesium.js";
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
@@ -1123,6 +1127,50 @@ describe("Core/AttributeCompression", function () {
         new Uint16Array(10),
         new Uint16Array(10),
         new Uint16Array(11)
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws when dequantize has an undefined componentType", function () {
+    expect(function () {
+      AttributeCompression.dequantize(
+        undefined,
+        AttributeType.VEC3,
+        new Uint8Array([0, 0, 0, 0]),
+        1
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws when dequantize has an undefined type", function () {
+    expect(function () {
+      AttributeCompression.dequantize(
+        ComponentDatatype.UNSIGNED_SHORT,
+        undefined,
+        new Uint8Array([0, 0, 0, 0]),
+        1
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws when dequantize has an undefined typedArray", function () {
+    expect(function () {
+      AttributeCompression.dequantize(
+        ComponentDatatype.UNSIGNED_SHORT,
+        AttributeType.VEC3,
+        undefined,
+        1
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws when dequantize has an undefined count", function () {
+    expect(function () {
+      AttributeCompression.dequantize(
+        ComponentDatatype.UNSIGNED_SHORT,
+        AttributeType.VEC3,
+        new Uint8Array([0, 0, 0, 0]),
+        undefined
       );
     }).toThrowDeveloperError();
   });

@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -427,6 +428,7 @@ ResourceCache.loadDraco = function (options) {
  * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
  * @param {Number} [options.dracoAccessorId] The Draco accessor ID.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
@@ -444,7 +446,9 @@ ResourceCache.loadVertexBuffer = function (options) {
   var draco = options.draco;
   var dracoAttributeSemantic = options.dracoAttributeSemantic;
   var dracoAccessorId = options.dracoAccessorId;
+  var accessor = gltf.accessors[dracoAccessorId];
   var asynchronous = defaultValue(options.asynchronous, true);
+  var dequantize = defaultValue(options.dequantize, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -482,6 +486,10 @@ ResourceCache.loadVertexBuffer = function (options) {
     );
     Check.typeOf.number("options.dracoAccessorId", dracoAccessorId);
   }
+
+  if (accessor.componentType === ComponentDatatype.FLOAT && dequantize) {
+    throw new DeveloperError("Cannot dequantize FLOATs.");
+  }
   //>>includeEnd('debug');
 
   var cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -509,6 +517,7 @@ ResourceCache.loadVertexBuffer = function (options) {
     dracoAccessorId: dracoAccessorId,
     cacheKey: cacheKey,
     asynchronous: asynchronous,
+    dequantize: dequantize,
   });
 
   ResourceCache.load({

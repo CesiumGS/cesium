@@ -20,6 +20,28 @@ describe("ResourceCacheKey", function () {
   var bufferResource = new Resource({ url: bufferUri });
   var bufferId = 0;
 
+  var meshoptGltfEmbeddedBuffer = {
+    buffers: [
+      {
+        byteLength: 100,
+      },
+    ],
+    bufferViews: [
+      {
+        buffer: 0,
+        byteOffset: 0,
+        byteLength: 100,
+        extensions: {
+          EXT_meshopt_compression: {
+            buffer: 1,
+            byteOffset: 25,
+            byteLength: 50,
+          },
+        },
+      },
+    ],
+  };
+
   var gltfEmbeddedBuffer = {
     buffers: [
       {
@@ -344,6 +366,19 @@ describe("ResourceCacheKey", function () {
 
     expect(cacheKey).toBe(
       "buffer-view:https://example.com/resources/external.bin-range-0-100"
+    );
+  });
+
+  it("getBufferViewCacheKey works with meshopt", function () {
+    var cacheKey = ResourceCacheKey.getBufferViewCacheKey({
+      gltf: meshoptGltfEmbeddedBuffer,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    expect(cacheKey).toBe(
+      "buffer-view:" + gltfUri + "-buffer-id-1-range-25-75"
     );
   });
 
