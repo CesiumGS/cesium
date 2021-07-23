@@ -84,6 +84,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
     "kdbush": "^3.0.0",
+    "ktx-parse": "^0.2.1",
     "lerc": "^2.0.0",
     "merge-stream": "^2.0.0",
     "mersenne-twister": "^1.1.0",
