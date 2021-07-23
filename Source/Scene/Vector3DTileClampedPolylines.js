@@ -627,7 +627,7 @@ function queueCommands(primitive, frameState) {
  *
  * @param {Number} batchId The batch ID of the feature.
  */
- Vector3DTileClampedPolylines.prototype.getPositions = function (batchId) {
+Vector3DTileClampedPolylines.prototype.getPositions = function (batchId) {
   return Vector3DTilePolylines.getPolylinePositions(this, batchId);
 };
 
