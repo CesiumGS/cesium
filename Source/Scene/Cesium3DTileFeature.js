@@ -86,6 +86,27 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
   },
 
   /**
+   * Gets a typed array containing the ECEF positions of the polyline.
+   * Returns undefined if {@link Cesium3DTileset#vectorKeepDecodedPositions} is false
+   * or the feature is not a polyline in a vector tile.
+   *
+   * @memberof Cesium3DTileFeature.prototype
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {Float64Array}
+   */
+  polylinePositions: {
+    get: function () {
+      if (!defined(this._content.getPolylinePositions)) {
+        return undefined;
+      }
+
+      return this._content.getPolylinePositions(this._batchId);
+    },
+  },
+
+  /**
    * Gets the content of the tile containing the feature.
    *
    * @memberof Cesium3DTileFeature.prototype
