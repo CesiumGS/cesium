@@ -1,6 +1,6 @@
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import createCommand from "../createCommand.js";
 
 /**

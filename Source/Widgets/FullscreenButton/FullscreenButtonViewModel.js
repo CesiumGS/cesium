@@ -3,7 +3,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Fullscreen from "../../Core/Fullscreen.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 

@@ -4,7 +4,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import EventHelper from "../../Core/EventHelper.js";
 import SceneMode from "../../Scene/SceneMode.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import createCommand from "../createCommand.js";
 
 /**

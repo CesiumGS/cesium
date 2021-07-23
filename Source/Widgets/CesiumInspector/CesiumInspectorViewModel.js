@@ -9,7 +9,7 @@ import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
 import DebugModelMatrixPrimitive from "../../Scene/DebugModelMatrixPrimitive.js";
 import PerformanceDisplay from "../../Scene/PerformanceDisplay.js";
 import TileCoordinatesImageryProvider from "../../Scene/TileCoordinatesImageryProvider.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import createCommand from "../createCommand.js";
 
 function frustumStatisticsToString(statistics) {

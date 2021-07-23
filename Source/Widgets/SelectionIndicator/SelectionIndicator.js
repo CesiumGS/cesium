@@ -1,7 +1,7 @@
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import getElement from "../getElement.js";
 import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
 

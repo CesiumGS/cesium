@@ -10,7 +10,7 @@ import Cesium3DTilePass from "../../Scene/Cesium3DTilePass.js";
 import Cesium3DTileset from "../../Scene/Cesium3DTileset.js";
 import Cesium3DTileStyle from "../../Scene/Cesium3DTileStyle.js";
 import PerformanceDisplay from "../../Scene/PerformanceDisplay.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 
 function getPickTileset(viewModel) {
   return function (e) {

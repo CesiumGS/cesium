@@ -4,7 +4,7 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import EasingFunction from "../../Core/EasingFunction.js";
 import SceneTransforms from "../../Scene/SceneTransforms.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 
 var screenSpacePos = new Cartesian2();
 var offScreen = "-1000px";

@@ -3,7 +3,7 @@ import Check from "../../Core/Check.js";
 import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import getElement from "../getElement.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import InfoBoxViewModel from "./InfoBoxViewModel.js";

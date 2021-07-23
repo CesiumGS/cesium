@@ -1,7 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import knockout from "../ThirdParty/knockout.js";
+import knockout from "./knockout.js";
 
 /**
  * A view model which exposes the properties of a toggle button.

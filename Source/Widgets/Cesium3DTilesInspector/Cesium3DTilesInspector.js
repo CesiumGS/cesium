@@ -2,7 +2,7 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import getElement from "../getElement.js";
 import InspectorShared from "../InspectorShared.js";
 import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.js";

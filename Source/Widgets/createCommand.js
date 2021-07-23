@@ -2,7 +2,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
-import knockout from "../ThirdParty/knockout.js";
+import knockout from "./knockout.js";
 
 /**
  * Create a Command from a given function, for use with ViewModels.

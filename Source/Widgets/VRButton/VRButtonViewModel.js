@@ -5,7 +5,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import EventHelper from "../../Core/EventHelper.js";
 import Fullscreen from "../../Core/Fullscreen.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
-import knockout from "../../ThirdParty/knockout.js";
+import knockout from "../knockout.js";
 import NoSleep from "../../ThirdPartyNpm/nosleep.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
