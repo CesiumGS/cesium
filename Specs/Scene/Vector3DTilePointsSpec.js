@@ -1,6 +1,7 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
+import { clone } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { DistanceDisplayCondition } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -45,6 +46,7 @@ describe(
         colorBlendMode: ColorBlendMode.HIGHLIGHT,
         ellipsoid: Ellipsoid.WGS84,
       },
+      tile: {},
       getFeature: function (id) {
         return { batchId: id };
       },
@@ -272,8 +274,14 @@ describe(
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
-      batchTable.update(mockTileset, scene.frameState);
+      var mockTilesetClone = clone(mockTileset);
+      var batchTable = new Cesium3DTileBatchTable(mockTilesetClone, 5);
+      mockTilesetClone.batchTable = batchTable;
+
+      for (var i = 0; i < 5; ++i) {
+        batchTable.setProperty(i, "temperature", i);
+      }
+      batchTable.update(mockTilesetClone, scene.frameState);
 
       points = scene.primitives.add(
         new Vector3DTilePoints({
@@ -291,7 +299,7 @@ describe(
         pointSize: "10.0",
         color: "rgba(255, 255, 0, 0.5)",
         pointOutlineColor: "rgba(255, 255, 0, 1.0)",
-        pointOutlineWidth: "11.0",
+        pointOutlineWidth: "11.0 * ${temperature}",
         labelColor: "rgba(255, 255, 0, 1.0)",
         labelOutlineColor: "rgba(255, 255, 0, 0.5)",
         labelOutlineWidth: "1.0",
@@ -316,7 +324,7 @@ describe(
 
       return loadPoints(points).then(function () {
         var features = [];
-        points.createFeatures(mockTileset, features);
+        points.createFeatures(mockTilesetClone, features);
         points.applyStyle(style, features);
 
         var i;
@@ -328,7 +336,7 @@ describe(
           expect(feature.pointOutlineColor).toEqual(
             new Color(1.0, 1.0, 0.0, 1.0)
           );
-          expect(feature.pointOutlineWidth).toEqual(11.0);
+          expect(feature.pointOutlineWidth).toEqual(11.0 * i);
           expect(feature.labelColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
           expect(feature.labelOutlineColor).toEqual(
             new Color(1.0, 1.0, 0.0, 0.5)
