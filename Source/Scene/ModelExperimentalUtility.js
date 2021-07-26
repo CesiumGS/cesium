@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Axis from "./Axis.js";
 /**
  * @private
  */
@@ -61,4 +62,21 @@ ModelExperimentalUtility.createBoundingSphere = function (
 
   boundingSphere.center = Matrix4.getTranslation(modelMatrix, new Cartesian3());
   return boundingSphere;
+};
+
+ModelExperimentalUtility.correctModelMatrix = function (
+  modelMatrix,
+  upAxis,
+  forwardAxis
+) {
+  if (upAxis === Axis.Y) {
+    Matrix4.multiplyTransformation(modelMatrix, Axis.Y_UP_TO_Z_UP, modelMatrix);
+  } else if (upAxis === Axis.X) {
+    Matrix4.multiplyTransformation(modelMatrix, Axis.X_UP_TO_Z_UP);
+  }
+
+  if (forwardAxis === Axis.Z) {
+    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+    Matrix4.multiplyTransformation(modelMatrix, Axis.Z_UP_TO_X_UP, modelMatrix);
+  }
 };

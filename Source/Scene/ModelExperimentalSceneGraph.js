@@ -1,10 +1,11 @@
 import defined from "../Core/defined.js";
-import Matrix4 from "../Core/Matrix4";
+import Matrix4 from "../Core/Matrix4.js";
 import ModelExperimentalSceneMeshPrimitive from "./ModelExperimentalSceneMeshPrimitive.js";
 import ModelExperimentalSceneNode from "./ModelExperimentalSceneNode.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
+import defaultValue from "../Core/defaultValue.js";
 import Pass from "../Renderer/Pass.js";
 import RenderResources from "./RenderResources.js";
 import Axis from "../Scene/Axis.js";
@@ -36,22 +37,23 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._drawCommands = [];
 
-  initialize(this);
+  this._upAxis = defaultValue(options.upAxis, Axis.Y);
+  this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
   initialize(this);
 }
 
 function initialize(sceneGraph) {
+  var modelMatrix = sceneGraph._model.modelMatrix;
+
   var rootNode = sceneGraph._modelComponents.scene.nodes[0];
-  var modelMatrix = Matrix4.multiply(
-    sceneGraph._model.modelMatrix,
+  var rootNodeModelMatrix = Matrix4.multiply(
+    modelMatrix,
     ModelExperimentalUtility.getNodeTransform(rootNode),
     new Matrix4()
   );
 
-  Matrix4.multiplyTransformation(modelMatrix, Axis.Y_UP_TO_Z_UP, modelMatrix);
-
-  traverseSceneGraph(sceneGraph, rootNode, modelMatrix);
+  traverseSceneGraph(sceneGraph, rootNode, rootNodeModelMatrix);
 }
 
 /**
@@ -85,17 +87,22 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   }
 
   // Process node and mesh primtives.
-  var sceneNode = new ModelExperimentalSceneNode();
+  var sceneNode = new ModelExperimentalSceneNode({
+    node: node,
+    modelMatrix: modelMatrix,
+  });
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      sceneNode.scenePrimitives.push(
+      sceneNode._sceneMeshPrimitives.push(
         new ModelExperimentalSceneMeshPrimitive({
           primitive: node.primitives[i],
         })
       );
     }
   }
+
+  sceneGraph._sceneNodes.push(sceneNode);
 }
 
 /**
@@ -103,7 +110,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
  *
  * @param {FrameState} frameState
  */
-ModelExperimentalSceneGraph.prototype.generateDrawCommands = function (
+ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
 ) {
   var modelRenderResources = new RenderResources.ModelRenderResources(

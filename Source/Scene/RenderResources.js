@@ -1,6 +1,7 @@
-import ShaderBuilder from "../Renderer/ShaderBuilder";
-import DepthFunction from "./DepthFunction";
-import ModelExperimentalUtility from "./ModelExperimentalUtility";
+import defined from "../Core/defined.js";
+import ShaderBuilder from "../Renderer/ShaderBuilder.js";
+import DepthFunction from "./DepthFunction.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * Resources assigned at each level of a glTF (model, node, primitive)
@@ -36,7 +37,7 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
 /**
  * @private
  */
-function PrimitiveRenderResources(nodeRenderResources, primitive) {
+function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
   // Properties inherited from NodeRenderResources.
   this.model = nodeRenderResources.model;
   this.sceneNode = nodeRenderResources.sceneNode;
@@ -45,7 +46,11 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
   // Properties inherited from the mesh primitive.
-  this.count = primitive.indices.count;
+  var primitive = sceneMeshPrimitive._primitive;
+  this.count = defined(primitive.indices)
+    ? primitive.indices.count
+    : ModelExperimentalUtility.getAttributeBySemantic(primitive, "POSITION")
+        .count;
   this.indices = primitive.indices;
   this.primitiveType = primitive.primitiveType;
   this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
@@ -64,5 +69,5 @@ function PrimitiveRenderResources(nodeRenderResources, primitive) {
 
 RenderResources.ModelRenderResources = ModelRenderResources;
 RenderResources.NodeRenderResources = NodeRenderResources;
-RenderResources.PrimitiveRenderResources = PrimitiveRenderResources;
+RenderResources.MeshPrimitiveRenderResources = MeshPrimitiveRenderResources;
 export default RenderResources;

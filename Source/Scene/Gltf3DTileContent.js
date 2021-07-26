@@ -4,7 +4,7 @@ import destroyObject from "../Core/destroyObject.js";
 import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
 import Axis from "./Axis.js";
-import Model from "./Model.js";
+import getModelClass from "./getModelClass.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
@@ -127,6 +127,7 @@ function initialize(content, gltf) {
     primitive: tileset,
   };
 
+  var Model = getModelClass();
   content._model = new Model({
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
@@ -136,7 +137,7 @@ function initialize(content, gltf) {
     requestType: RequestType.TILES3D,
     modelMatrix: tile.computedTransform,
     upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
+    forwardAxis: Axis.Z,
     shadows: tileset.shadows,
     debugWireframe: tileset.debugWireframe,
     incrementallyLoadTextures: false,
@@ -151,9 +152,11 @@ function initialize(content, gltf) {
     showOutline: tileset.showOutline,
   });
   content._model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
+    if (defined(model.activeAnimations)) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
+    }
   });
 }
 

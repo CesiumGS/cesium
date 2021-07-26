@@ -1,12 +1,9 @@
-import AttributeType from "./AttributeType";
-import ModelExperimentalUtility from "./ModelExperimentalUtility";
+import AttributeType from "./AttributeType.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 export default function MeshGeometryPipelineStage() {}
 
-MeshGeometryPipelineStage.prototype.process = function (
-  primitive,
-  renderResources
-) {
+MeshGeometryPipelineStage.process = function (renderResources, primitive) {
   var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     "POSITION"

@@ -1,4 +1,4 @@
-import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage";
+import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
 
 export default function ModelExperimentalSceneMeshPrimitive(options) {
   /**
