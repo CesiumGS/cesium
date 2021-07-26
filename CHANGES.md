@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added the ability to select imagery layers. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
+- Added ImageryLayerCollection.pickImageryLayers which determines the imagery layers that are intersected by a pick ray. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
 
 ##### Fixes :wrench:
 
