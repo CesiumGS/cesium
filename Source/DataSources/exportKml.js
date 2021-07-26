@@ -20,7 +20,6 @@ import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import when from "../ThirdPartyNpm/when.js";
-import zip from "../ThirdParty/zip.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ModelGraphics from "./ModelGraphics.js";
@@ -28,6 +27,24 @@ import RectangleGraphics from "./RectangleGraphics.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 import SampledProperty from "./SampledProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
+import zip from "../ThirdPartyNpm/zip.js";
+import pako from "../ThirdPartyNpm/pako.js";
+
+var DeflateInflate = zip.initShimAsyncCodec(
+  pako,
+  { deflate: { raw: true }, inflate: { raw: true } },
+  function (codec, onData) {
+    codec.onData = onData;
+  }
+);
+var deflate = DeflateInflate.Deflate;
+var inflate = DeflateInflate.Inflate;
+
+zip.configure({
+  useWebWorkers: false,
+  Deflate: deflate,
+  Inflate: inflate,
+});
 
 var BILLBOARD_SIZE = 32;
 var kmlNamespace = "http://www.opengis.net/kml/2.2";
@@ -323,54 +340,34 @@ function exportKml(options) {
 }
 
 function createKmz(kmlString, externalFiles) {
-  var deferred = when.defer();
-  zip.createWriter(new zip.BlobWriter(), function (writer) {
-    // We need to only write one file at a time so the zip doesn't get corrupted
-    addKmlToZip(writer, kmlString)
-      .then(function () {
-        var keys = Object.keys(externalFiles);
-        return addExternalFilesToZip(writer, keys, externalFiles, 0);
-      })
-      .then(function () {
-        writer.close(function (blob) {
-          deferred.resolve({
-            kmz: blob,
-          });
-        });
+  var blobWriter = new zip.BlobWriter();
+  var writer = new zip.ZipWriter(blobWriter);
+  // We need to only write one file at a time so the zip doesn't get corrupted
+  return when
+    .resolve(writer.add("doc.kml", new zip.TextReader(kmlString)))
+    .then(function () {
+      var keys = Object.keys(externalFiles);
+      return addExternalFilesToZip(writer, keys, externalFiles, 0);
+    })
+    .then(function () {
+      return when(writer.close()).then(function (blob) {
+        return {
+          kmz: blob,
+        };
       });
-  });
-
-  return deferred.promise;
-}
-
-function addKmlToZip(writer, kmlString) {
-  var deferred = when.defer();
-  writer.add("doc.kml", new zip.TextReader(kmlString), function () {
-    deferred.resolve();
-  });
-
-  return deferred.promise;
+    });
 }
 
 function addExternalFilesToZip(writer, keys, externalFiles, index) {
   if (keys.length === index) {
     return;
   }
-
   var filename = keys[index];
-
-  var deferred = when.defer();
-  writer.add(
-    filename,
-    new zip.BlobReader(externalFiles[filename]),
+  when(writer.add(filename, new zip.BlobReader(externalFiles[filename]))).then(
     function () {
-      deferred.resolve();
+      return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
     }
   );
-
-  return deferred.promise.then(function () {
-    return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
-  });
 }
 
 exportKml._createState = function (options) {

@@ -108,7 +108,8 @@
     "tween.js": "^16.6.0",
     "typescript": "^4.3.4",
     "when": "1.7.1",
-    "yargs": "^17.0.1"
+    "yargs": "^17.0.1",
+    "@zip.js/zip.js": "^2.3.8"
   },
   "husky": {
     "hooks": {
