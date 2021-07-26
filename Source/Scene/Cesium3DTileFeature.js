@@ -212,27 +212,13 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 };
 
 /**
- * Returns a copy of the value of the feature's property with the given name.
- * If the feature is contained within a tileset that uses the
- * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
- * inherited.
- * <p>
- * To resolve name conflicts, this method resolves names from most specific to
- * least specific by metadata granularity in the order: feature, tile, group,
- * tileset. Within each granularity, semantics are resolved first, then other
- * properties.
- * </p>
- * @param {String} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
+Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
   var value;
-  var content = this._content;
-  var batchTable = this._content.batchTable;
+  var batchTable = content.batchTable;
   if (defined(batchTable)) {
-    value = batchTable.getProperty(this._batchId, name);
+    value = batchTable.getProperty(batchId, name);
     if (defined(value)) {
       return value;
     }
@@ -279,6 +265,29 @@ Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
   }
 
   return undefined;
+};
+
+/**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * inherited.
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @private
+ */
+Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
+  return Cesium3DTileFeature.getPropertyInherited(
+    this._content,
+    this._batchId,
+    name
+  );
 };
 
 /**

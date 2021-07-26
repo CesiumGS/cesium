@@ -2,6 +2,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import createBillboardPointCallback from "./createBillboardPointCallback.js";
 
 /**
@@ -761,6 +762,30 @@ Cesium3DTilePointFeature.prototype.getProperty = function (name) {
 };
 
 /**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * inherited.
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Cesium3DTilePointFeature.prototype.getPropertyInherited = function (name) {
+  return Cesium3DTileFeature.getPropertyInherited(
+    this._content,
+    this._batchId,
+    name
+  );
+};
+
+/**
  * Sets the value of the feature's property with the given name.
  * <p>
  * If a property with the given name doesn't exist, it is created.
@@ -793,7 +818,7 @@ Cesium3DTilePointFeature.prototype.setProperty = function (name, value) {
 };
 
 /**
- * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTileFeature#isClass}
+ * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTilePointFeature#isClass}
  * this function only checks the feature's exact class and not inherited classes.
  * <p>
  * This function returns <code>false</code> if no batch table hierarchy is present.

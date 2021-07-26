@@ -8,6 +8,7 @@
 
 ##### Fixes :wrench:
 
+- Fixed an issue where styling vector points based on their batch table properties would crash. [#9692](https://github.com/CesiumGS/cesium/pull/9692)
 - Fixed an issue in `TileBoundingRegion.distanceToCamera` that caused incorrect results when the camera was on the opposite site of the globe. [#9678](https://github.com/CesiumGS/cesium/pull/9678)
 - Fixes an error with removing a CZML datasource when the clock interval has a duration of zero. [#9637](https://github.com/CesiumGS/cesium/pull/9637)
 - Fixed the ability to set a material's image to `undefined` and `Material.DefaultImageId`. [#9644](https://github.com/CesiumGS/cesium/pull/9644)
