@@ -1,6 +1,7 @@
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import combine from "../Core/combine.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import CesiumMath from "../Core/Math.js";
@@ -13,18 +14,17 @@ var MITER_BREAK = Math.cos(CesiumMath.toRadians(150.0));
 var scratchBVCartographic = new Cartographic();
 var scratchEncodedPosition = new Cartesian3();
 
-function decodePositionsToRtc(
+function decodePositions(
   uBuffer,
   vBuffer,
   heightBuffer,
   rectangle,
   minimumHeight,
   maximumHeight,
-  ellipsoid,
-  center
+  ellipsoid
 ) {
   var positionsLength = uBuffer.length;
-  var decodedPositions = new Float32Array(positionsLength * 3);
+  var decodedPositions = new Float64Array(positionsLength * 3);
   for (var i = 0; i < positionsLength; ++i) {
     var u = uBuffer[i];
     var v = vBuffer[i];
@@ -44,14 +44,21 @@ function decodePositionsToRtc(
       cartographic,
       scratchEncodedPosition
     );
-    var rtc = Cartesian3.subtract(
-      decodedPosition,
-      center,
-      scratchEncodedPosition
-    );
-    Cartesian3.pack(rtc, decodedPositions, i * 3);
+    Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
   }
   return decodedPositions;
+}
+
+function getPositionOffsets(counts) {
+  var countsLength = counts.length;
+  var positionOffsets = new Uint32Array(countsLength + 1);
+  var offset = 0;
+  for (var i = 0; i < countsLength; ++i) {
+    positionOffsets[i] = offset;
+    offset += counts[i];
+  }
+  positionOffsets[countsLength] = offset;
+  return positionOffsets;
 }
 
 var previousCompressedCartographicScratch = new Cartographic();
@@ -361,7 +368,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
 
   var attribsAndIndices = new VertexAttributesAndIndices(volumesCount);
 
-  var positionsRTC = decodePositionsToRtc(
+  var positions = decodePositions(
     uBuffer,
     vBuffer,
     heightBuffer,
@@ -371,6 +378,14 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
     ellipsoid,
     center
   );
+
+  positionsLength = uBuffer.length;
+  var positionsRTC = new Float32Array(positionsLength * 3);
+  for (i = 0; i < positionsLength; ++i) {
+    positionsRTC[i * 3] = positions[i * 3] - center.x;
+    positionsRTC[i * 3 + 1] = positions[i * 3 + 1] - center.y;
+    positionsRTC[i * 3 + 2] = positions[i * 3 + 2] - center.z;
+  }
 
   var currentPositionIndex = 0;
   var currentHeightIndex = 0;
@@ -488,7 +503,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   transferableObjects.push(attribsAndIndices.vertexBatchIds.buffer);
   transferableObjects.push(indices.buffer);
 
-  return {
+  var results = {
     indexDatatype:
       indices.BYTES_PER_ELEMENT === 2
         ? IndexDatatype.UNSIGNED_SHORT
@@ -504,5 +519,16 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
     vertexBatchIds: attribsAndIndices.vertexBatchIds.buffer,
     indices: indices.buffer,
   };
+
+  if (parameters.keepDecodedPositions) {
+    var positionOffsets = getPositionOffsets(counts);
+    transferableObjects.push(positions.buffer, positionOffsets.buffer);
+    results = combine(results, {
+      decodedPositions: positions.buffer,
+      decodedPositionOffsets: positionOffsets.buffer,
+    });
+  }
+
+  return results;
 }
 export default createTaskProcessorWorker(createVectorTileClampedPolylines);

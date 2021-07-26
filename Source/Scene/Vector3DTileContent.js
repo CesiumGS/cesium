@@ -589,7 +589,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       rectangle: rectangle,
       boundingVolume: content.tile.boundingVolume.boundingVolume,
       batchTable: batchTable,
-      tileset: tileset,
+      classificationType: tileset.classificationType,
+      keepDecodedPositions: tileset.vectorKeepDecodedPositions,
     });
   }
 
@@ -715,6 +716,15 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
         that._readyPromise.reject(error);
       });
   }
+};
+
+Vector3DTileContent.prototype.getPolylinePositions = function (batchId) {
+  var polylines = this._polylines;
+  if (!defined(polylines)) {
+    return undefined;
+  }
+
+  return polylines.getPositions(batchId);
 };
 
 Vector3DTileContent.prototype.isDestroyed = function () {
