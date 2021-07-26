@@ -1747,7 +1747,11 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (!defined(asset)) {
     throw new RuntimeError("Tileset must have an asset property.");
   }
-  if (asset.version !== "0.0" && asset.version !== "1.0") {
+  if (
+    asset.version !== "0.0" &&
+    asset.version !== "1.0" &&
+    asset.version !== "2.0.0-alpha.0"
+  ) {
     throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
   }
 
