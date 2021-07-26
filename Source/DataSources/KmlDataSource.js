@@ -41,7 +41,7 @@ import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "../ThirdPartyNpm/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdPartyNpm/when.js";
-import zip from "../ThirdParty/zip.js";
+import zip from "../ThirdPartyNpm/zip.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import DataSource from "./DataSource.js";
