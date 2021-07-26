@@ -6,7 +6,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import { read } from "../ThirdParty/Workers/ktx-parse.modern.js";
+import ktx_parse from "../ThirdPartyNpm/ktx-parse.js";
 
 var faceOrder = [
   "positiveX",
@@ -31,7 +31,7 @@ function transcode(parameters, transferableObjects) {
   var supportedTargetFormats = parameters.supportedTargetFormats;
   var header;
   try {
-    header = read(data);
+    header = ktx_parse(data);
   } catch (e) {
     throw new RuntimeError("Invalid KTX2 file.");
   }
