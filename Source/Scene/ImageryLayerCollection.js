@@ -325,17 +325,6 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
 
 var applicableRectangleScratch = new Rectangle();
 
-/**
- * Helper function for `pickImageryLayers` and `pickImageryLayerFeatures`.
- *
- * @param {Ray} ray The ray to test for intersection.
- * @param {Scene} scene The scene.
- * @return {[QuadtreeTile,TileImagery[],Cartographic]|undefined}  Returns an array containing
- *                                        pickedTile, imageryTiles, and the pickedLocation.
- *
- * @private
- *
- */
 function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   // Find the terrain tile containing the picked location.
   var tilesToRender = scene.globe._surface._tilesToRender;
