@@ -4,6 +4,8 @@
 
 ##### Additions :tada:
 
+- Added the ability to select imagery layers from the Cesium viewer. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
+
 ##### Fixes :wrench:
 
 - Fixed an issue in `TileBoundingRegion.distanceToCamera` that caused incorrect results when the camera was on the opposite site of the globe. [#9678](https://github.com/CesiumGS/cesium/pull/9678)
