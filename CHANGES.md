@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added the ability to select imagery layers from the Cesium viewer. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
+- Added the ability to select imagery layers. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
 
 ##### Fixes :wrench:
 
