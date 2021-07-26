@@ -283,7 +283,11 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
  * @private
  */
 Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
-  return Cesium3DTileFeature.getPropertyInherited(this._content, this._batchId, name);
+  return Cesium3DTileFeature.getPropertyInherited(
+    this._content,
+    this._batchId,
+    name
+  );
 };
 
 /**
