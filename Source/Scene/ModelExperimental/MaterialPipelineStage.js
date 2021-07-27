@@ -2,16 +2,17 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
+import MaterialPreprocessingFS from "../../Shaders/MaterialPreprocessingFS.js";
 
-export default function LightingPipelineStage() {}
+export default function MaterialPipelineStage() {}
 
 /**
  * TODO
  * @param {PrimitiveRenderResources} renderResources 
  * @param {ModelComponents.Primitive} primitive 
+ * @private
  */
-LightingPipelineStage.process = function (renderResources, primitive) {
-
+MaterialPipelineStage.process = function (renderResources, primitive) {
   var material = primitive.material;
 
   var uniformMap = renderResources.uniformMap;
@@ -32,12 +33,14 @@ LightingPipelineStage.process = function (renderResources, primitive) {
     lightingOptions.lightingModel = LightingModel.PBR;
   }
 
-  // back-face culling is determined by the material's doubleSided property
+  // Configure back-face culling
   renderResources.renderStateOptions.cull = {
     enabled: !material.doubleSided
   };
 
   addAlphaUniforms(material, uniformMap, shaderBuilder);
+
+  shaderBuilder.addFragmentLines([MaterialPreprocessingFS]);
 };
 
 function processMaterialUniforms(material, uniformMap, shaderBuilder) {
@@ -190,6 +193,7 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
       return metallicRoughness.metallicRoughnessTexture.texture;
     }
     texCoordIndex = metallicRoughnessTexture.texCoord;
+    shaderBuilder.addDefine("HAS_METALLIC_ROUGHNESS_TEXTURE", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addDefine(
       "TEXCOORD_METALLIC_ROUGHNESS",
       "v_texCoord_" + texCoordIndex,
