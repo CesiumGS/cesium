@@ -1,6 +1,5 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import CloudType from "./CloudType.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -29,7 +28,7 @@ function Cloud(options, cloudCollection) {
     defaultValue(options.scale, new Cartesian2(1.0, 1.0))
   );
 
-  this._type = defaultValue(options.type, CloudType.CUMULUS);
+  this._flat = defaultValue(options.flat, false);
 
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
@@ -108,22 +107,22 @@ Object.defineProperties(Cloud.prototype, {
   },
 
   /**
-   * Gets or sets the type of the cloud.
+   * Gets or sets whether the cloud is flat or cumulus.
    * @memberof Cloud.prototype
    * @type {CloudType}
    */
-  type: {
+  flat: {
     get: function () {
-      return this._type;
+      return this._flat;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
       if (!defined(value)) {
-        throw new DeveloperError("value is not a valid CloudType.");
+        throw new DeveloperError("value is required.");
       }
       //>>includeEnd('debug');
 
-      this._type = value;
+      this._flat = value;
     },
   },
 });

@@ -2,8 +2,6 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { CloudType } from "../../Source/Cesium.js";
-import { Cloud } from "../../Source/Cesium.js";
 import { CloudCollection } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 
@@ -11,13 +9,11 @@ describe(
   "Scene/CloudCollection",
   function () {
     var scene;
-    var context;
     var camera;
     var clouds;
 
     beforeAll(function () {
       scene = createScene();
-      context = scene.context;
       camera = scene.camera;
     });
 
@@ -51,7 +47,7 @@ describe(
       expect(c.show).toEqual(true);
       expect(c.position).toEqual(Cartesian3.ZERO);
       expect(c.scale).toEqual(new Cartesian2(1.0, 1.0));
-      expect(c.type).toEqual(CloudType.CUMULUS);
+      expect(c.flat).toEqual(false);
     });
 
     it("explicitly constructs a cloud", function () {
@@ -59,12 +55,12 @@ describe(
         show: false,
         position: new Cartesian3(1.0, 2.0, 3.0),
         scale: new Cartesian2(2.0, 3.0),
-        type: CloudType.CIRRUS,
+        flat: true,
       });
       expect(c.show).toEqual(false);
       expect(c.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
       expect(c.scale).toEqual(new Cartesian2(2.0, 3.0));
-      expect(c.type).toEqual(CloudType.CIRRUS);
+      expect(c.flat).toEqual(true);
     });
 
     it("sets cloud properties", function () {
@@ -72,12 +68,12 @@ describe(
       c.show = false;
       c.position = new Cartesian3(1.0, 2.0, 3.0);
       c.scale = new Cartesian2(2.0, 3.0);
-      c.type = CloudType.CIRRUS;
+      c.flat = true;
 
       expect(c.show).toEqual(false);
       expect(c.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
       expect(c.scale).toEqual(new Cartesian2(2.0, 3.0));
-      expect(c.type).toEqual(CloudType.CIRRUS);
+      expect(c.flat).toEqual(true);
     });
 
     it("is not destroyed", function () {
