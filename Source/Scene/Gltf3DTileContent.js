@@ -137,7 +137,7 @@ function initialize(content, gltf) {
     requestType: RequestType.TILES3D,
     modelMatrix: tile.computedTransform,
     upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.Z,
+    forwardAxis: Axis.X,
     shadows: tileset.shadows,
     debugWireframe: tileset.debugWireframe,
     incrementallyLoadTextures: false,
