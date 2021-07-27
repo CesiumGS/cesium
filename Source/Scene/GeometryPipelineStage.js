@@ -3,8 +3,20 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import AttributeType from "./AttributeType.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
+/**
+ * @private
+ */
 export default function GeometryPipelineStage() {}
 
+/**
+ * This pipeline stage processes the vertex attributes of a mesh primitive, adding the attribute declarations to the shaders,
+ * the attribute objects to the render resources and setting the flags as needed.
+ *
+ * @param {MeshPrimitiveRenderResources} renderResources The render resources for this mesh primitive.
+ * @param {ModelComponents.Primitive} primitive The mesh primitive.
+ *
+ * @private
+ */
 GeometryPipelineStage.process = function (renderResources, primitive) {
   var attributeIndex = 0;
   for (var i = 0; i < primitive.attributes.length; i++) {
