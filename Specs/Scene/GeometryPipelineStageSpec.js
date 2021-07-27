@@ -50,6 +50,9 @@ describe(
     var boxVertexColors =
       "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
     var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+    var buildingsMetadata =
+      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
     var scene;
     var gltfLoaders = [];
@@ -444,6 +447,117 @@ describe(
       expect(shaderBuilder._attributeLines[0]).toEqual(
         "attribute vec2 a_temperature;"
       );
+    });
+
+    it("processes POSITION, NORMAL and FEATURE_ID attributes from primitive", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+      };
+
+      return loadGltf(buildingsMetadata).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[1].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(3);
+
+        var positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDataype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(shaderBuilder._positionAttributeLine).toEqual(
+          "attribute vec3 a_position;"
+        );
+
+        var normalAttribute = attributes[1];
+        expect(normalAttribute.index).toEqual(1);
+        expect(normalAttribute.vertexBuffer).toBeDefined();
+        expect(normalAttribute.componentsPerAttribute).toEqual(3);
+        expect(normalAttribute.componentDataype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(shaderBuilder._attributeLines[0]).toEqual(
+          "attribute vec3 a_normal;"
+        );
+        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
+          "HAS_NORMALS"
+        );
+        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
+          "HAS_NORMALS"
+        );
+
+        var featureId0Attribute = attributes[2];
+        expect(featureId0Attribute.index).toEqual(2);
+        expect(featureId0Attribute.vertexBuffer).toBeDefined();
+        expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
+        expect(featureId0Attribute.componentDataype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(shaderBuilder._attributeLines[1]).toEqual(
+          "attribute float a_featureId0;"
+        );
+        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
+          "HAS_FEATURE_ID"
+        );
+        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
+          "HAS_FEATURE_ID"
+        );
+      });
+    });
+
+    it("sets PRIMITIVE_TYPE_POINTS for point primitive types", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+      };
+
+      return loadGltf(weather).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(2);
+
+        var positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDataype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(shaderBuilder._positionAttributeLine).toEqual(
+          "attribute vec3 a_position;"
+        );
+
+        var featureId0Attribute = attributes[1];
+        expect(featureId0Attribute.index).toEqual(1);
+        expect(featureId0Attribute.vertexBuffer).toBeDefined();
+        expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
+        expect(featureId0Attribute.componentDataype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(shaderBuilder._attributeLines[0]).toEqual(
+          "attribute float a_featureId0;"
+        );
+        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
+          "HAS_FEATURE_ID"
+        );
+        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
+          "HAS_FEATURE_ID"
+        );
+      });
     });
   },
   "WebGL"
