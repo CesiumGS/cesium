@@ -1,4 +1,4 @@
-import MeshGeometryPipelineStage from "./MeshGeometryPipelineStage.js";
+import GeometryPipelineStage from "./GeometryPipelineStage.js";
 
 export default function ModelExperimentalSceneMeshPrimitive(options) {
   /**
@@ -13,6 +13,6 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
 
 function initialize(sceneMeshPrimitive) {
   var pipelineStages = sceneMeshPrimitive._pipelineStages;
-  pipelineStages.push(MeshGeometryPipelineStage);
+  pipelineStages.push(GeometryPipelineStage);
   return;
 }
