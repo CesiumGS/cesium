@@ -2,6 +2,8 @@ import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import RenderState from "../Renderer/RenderState.js";
+import ModelExperimentalFS from "../Shaders/ModelExperimentalFS.js";
+import ModelExperimentalVS from "../Shaders/ModelExperimentalVS.js";
 
 /**
  * Builds a DrawCommand for a glTF mesh primitive using its render resources.
@@ -15,20 +17,8 @@ export default function buildDrawCommand(
   frameState
 ) {
   var shaderBuilder = meshPrimitiveRenderResources.shaderBuilder;
-  shaderBuilder.addVertexLines([
-    "void main()",
-    "{",
-    "    vec3 position = a_position;",
-    "    gl_Position = czm_modelViewProjection * vec4(position, 1.0);",
-    "}",
-  ]);
-  shaderBuilder.addFragmentLines([
-    "void main()",
-    "{",
-    "    vec4 color = vec4(0.0, 0.0, 1.0, 1.0);",
-    "    gl_FragColor = color;",
-    "}",
-  ]);
+  shaderBuilder.addVertexLines([ModelExperimentalVS]);
+  shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
   var vertexArray = new VertexArray({
     context: frameState.context,
