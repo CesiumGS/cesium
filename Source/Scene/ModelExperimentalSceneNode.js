@@ -1,3 +1,6 @@
+import defined from "../Core/defined.js";
+import InstancingPiplineStage from "./InstancingPipelineStage.js";
+
 export default function ModelSceneNode(options) {
   /**
    * @type {ModelComponents.Node}
@@ -23,5 +26,12 @@ export default function ModelSceneNode(options) {
 }
 
 function initialize(sceneNode) {
+  var node = sceneNode._node;
+  var pipelineStages = sceneNode._pipelineStages;
+
+  if (defined(node.instances)) {
+    pipelineStages.push(InstancingPiplineStage);
+  }
+
   return;
 }
