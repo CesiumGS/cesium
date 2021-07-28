@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import defined from "../../Core/defined.js";
 import InstancingPiplineStage from "./InstancingPipelineStage.js";
 
 export default function ModelSceneNode(options) {

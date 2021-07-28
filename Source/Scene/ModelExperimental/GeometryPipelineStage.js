@@ -19,7 +19,6 @@ export default function GeometryPipelineStage() {}
  * @private
  */
 GeometryPipelineStage.process = function (renderResources, primitive) {
-  var attributeIndex = 0;
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
     processAttribute(
@@ -27,7 +26,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
       attribute,
       attribute.semantic === VertexAttributeSemantic.POSITION
         ? 0
-        : ++attributeIndex
+        : renderResources.attributeIndex++
     );
   }
 

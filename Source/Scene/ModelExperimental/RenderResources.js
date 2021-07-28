@@ -32,6 +32,8 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
   this.modelMatrix = sceneNode._modelMatrix;
 
   this.attributes = [];
+  this.attributeIndex = 1; // 0 is reserved for POSITION.
+  this.instanceCount = 0;
 }
 
 /**
@@ -44,6 +46,8 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
   this.attributes = nodeRenderResources.attributes.slice();
   this.modelMatrix = nodeRenderResources.modelMatrix.clone();
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
+  this.instanceCount = nodeRenderResources.instanceCount;
+  this.attributeIndex = nodeRenderResources.attributeIndex;
 
   // Properties inherited from the mesh primitive.
   var primitive = sceneMeshPrimitive._primitive;

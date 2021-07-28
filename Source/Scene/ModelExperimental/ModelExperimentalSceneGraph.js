@@ -129,6 +129,16 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       sceneNode
     );
 
+    for (j = 0; j < sceneNode._pipelineStages.length; j++) {
+      var nodePipelineStage = sceneNode._pipelineStages[j];
+
+      nodePipelineStage.process(
+        nodeRenderResources,
+        sceneNode._node,
+        frameState
+      );
+    }
+
     for (j = 0; j < sceneNode._sceneMeshPrimitives.length; j++) {
       var sceneMeshPrimitive = sceneNode._sceneMeshPrimitives[j];
 
@@ -142,7 +152,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,
-          sceneMeshPrimitive._primitive
+          sceneMeshPrimitive._primitive,
+          frameState
         );
       }
 

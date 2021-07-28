@@ -43,7 +43,7 @@ export default function buildDrawCommand(
     pass: Pass.OPAQUE,
     count: meshPrimitiveRenderResources.count,
     pickId: undefined,
-    instanceCount: 0,
+    instanceCount: meshPrimitiveRenderResources.instanceCount,
     primitiveType: meshPrimitiveRenderResources.primitiveType,
   });
 }
