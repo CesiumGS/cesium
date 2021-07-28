@@ -1,8 +1,8 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Quaternion from "../Core/Quaternion.js";
-import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
+import defined from "../../Core/defined.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Quaternion from "../../Core/Quaternion.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 export default function InstancingPiplineStage() {}
@@ -11,10 +11,6 @@ InstancingPiplineStage.process = function (renderResources, node) {
   console.log(node);
 
   var attributes = node.instances.attributes;
-
-  if (defined(attributes.ROTATION)) {
-  } else {
-  }
 };
 
 var transformScratch = new Matrix4();
@@ -39,10 +35,12 @@ function buildInstancingMatrices(instances) {
     InstanceAttributeSemantic.SCALE
   );
 
+  // Translations get initialized to (0, 0, 0).
   var translationTypedArray = defined(translationAttribute)
     ? translationAttribute.typedArray
     : new Float32Array(count * 3);
   var rotationTypedArray = rotationAttribute.typedArray;
+  // Scales get initialized to (1, 1, 1).
   var scaleTypedArray = defined(scaleAttribute)
     ? rotationAttribute.typedArray
     : new Float32Array(count * 3);
