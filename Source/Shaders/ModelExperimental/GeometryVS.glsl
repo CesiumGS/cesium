@@ -5,7 +5,13 @@ void processPoints() {
 // TODO: declare varyings with the shader builder
 
 vec3 processGeometry(vec3 position) {
+  
   position = a_position;
+
+  #ifdef HAS_NORMALS
+    v_normal = a_normal;
+  #endif
+
   /*
 
   #ifdef HAS_NORMALS

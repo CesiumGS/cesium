@@ -138,7 +138,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
 
       for (k = 0; k < sceneMeshPrimitive._pipelineStages.length; k++) {
-        var primitivePipelineStage = sceneMeshPrimitive._pipelineStages[i];
+        var primitivePipelineStage = sceneMeshPrimitive._pipelineStages[k];
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,
