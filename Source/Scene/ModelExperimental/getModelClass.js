@@ -1,6 +1,6 @@
-import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
+import ExperimentalFeatures from "../../Core/ExperimentalFeatures.js";
 import ModelExperimental from "./ModelExperimental.js";
-import Model from "./Model.js";
+import Model from "../Model.js";
 /**
  * @private
  */

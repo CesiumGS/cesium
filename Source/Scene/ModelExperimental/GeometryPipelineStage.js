@@ -1,7 +1,8 @@
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import AttributeType from "./AttributeType.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import defined from "../../Core/defined.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import AttributeType from "../AttributeType.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
 
 /**
  * @private
@@ -33,6 +34,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   if (primitive.primitive === PrimitiveType.POINTS) {
     renderResources.shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
+
+  renderResources.shaderBuilder.addVertexLines([GeometryVS]);
 };
 
 function processAttribute(renderResources, attribute, attributeIndex) {
@@ -40,25 +43,33 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   var setIndex = attribute.setIndex;
   var type = attribute.type;
 
+  var shaderBuilder = renderResources.shaderBuilder;
+
   var variableName;
+  var varyingName;
+  var glslType = attributeTypeToGlslType(type);
+
   if (defined(semantic)) {
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
+    varyingName = "v_" + variableName;
+
+    shaderBuilder.addVarying(glslType, varyingName);
 
     switch (semantic) {
       case VertexAttributeSemantic.NORMAL:
-        renderResources.shaderBuilder.addDefine("HAS_NORMALS");
+        shaderBuilder.addDefine("HAS_NORMALS");
         break;
       case VertexAttributeSemantic.TANGENT:
-        renderResources.shaderBuilder.addDefine("HAS_TANGENTS");
+        shaderBuilder.addDefine("HAS_TANGENTS");
         break;
       case VertexAttributeSemantic.TEXCOORD:
-        renderResources.shaderBuilder.addDefine("HAS_TEXCOORD_" + setIndex);
+        shaderBuilder.addDefine("HAS_TEXCOORD_" + setIndex);
         break;
       case VertexAttributeSemantic.COLOR:
-        renderResources.shaderBuilder.addDefine("HAS_VERTEX_COLORS");
+        shaderBuilder.addDefine("HAS_VERTEX_COLORS");
         break;
       case VertexAttributeSemantic.FEATURE_ID:
-        renderResources.shaderBuilder.addDefine("HAS_FEATURE_ID");
+        shaderBuilder.addDefine("HAS_FEATURE_ID");
         break;
     }
   }
@@ -67,10 +78,8 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     index: attributeIndex,
     vertexBuffer: attribute.buffer,
     componentsPerAttribute: AttributeType.getComponentsPerAttribute(type),
-    componentDataype: attribute.componentDatatype,
+    componentDatatype: attribute.componentDatatype,
   };
-
-  var glslType = attributeTypeToGlslType(type);
 
   // Handle user defined vertex attributes.
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
@@ -85,9 +94,9 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   variableName = "a_" + variableName;
 
   if (semantic === VertexAttributeSemantic.POSITION) {
-    renderResources.shaderBuilder.setPositionAttribute(glslType, variableName);
+    shaderBuilder.setPositionAttribute(glslType, variableName);
   } else {
-    renderResources.shaderBuilder.addAttribute(glslType, variableName);
+    shaderBuilder.addAttribute(glslType, variableName);
   }
 
   renderResources.attributes.push(vertexAttribute);

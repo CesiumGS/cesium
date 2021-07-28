@@ -1,12 +1,12 @@
-import defined from "../Core/defined.js";
-import Matrix4 from "../Core/Matrix4.js";
+import Axis from "../../Scene/Axis.js";
+import buildDrawCommand from "./buildDrawCommand.js";
+import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import ModelExperimentalSceneMeshPrimitive from "./ModelExperimentalSceneMeshPrimitive.js";
 import ModelExperimentalSceneNode from "./ModelExperimentalSceneNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import buildDrawCommand from "./buildDrawCommand.js";
-import defaultValue from "../Core/defaultValue.js";
 import RenderResources from "./RenderResources.js";
-import Axis from "../Scene/Axis.js";
 
 export default function ModelExperimentalSceneGraph(options) {
   /**
@@ -138,7 +138,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
 
       for (k = 0; k < sceneMeshPrimitive._pipelineStages.length; k++) {
-        var primitivePipelineStage = sceneMeshPrimitive._pipelineStages[i];
+        var primitivePipelineStage = sceneMeshPrimitive._pipelineStages[k];
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,

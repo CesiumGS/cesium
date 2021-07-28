@@ -4,7 +4,7 @@ import destroyObject from "../Core/destroyObject.js";
 import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
 import Axis from "./Axis.js";
-import getModelClass from "./getModelClass.js";
+import getModelClass from "./ModelExperimental/getModelClass.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**

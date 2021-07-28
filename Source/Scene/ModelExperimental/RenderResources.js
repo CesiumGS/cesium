@@ -1,6 +1,6 @@
-import defined from "../Core/defined.js";
-import ShaderBuilder from "../Renderer/ShaderBuilder.js";
-import DepthFunction from "./DepthFunction.js";
+import defined from "../../Core/defined.js";
+import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
+import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
