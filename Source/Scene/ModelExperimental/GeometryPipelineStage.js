@@ -78,7 +78,7 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     index: attributeIndex,
     vertexBuffer: attribute.buffer,
     componentsPerAttribute: AttributeType.getComponentsPerAttribute(type),
-    componentDataype: attribute.componentDatatype,
+    componentDatatype: attribute.componentDatatype,
   };
 
   // Handle user defined vertex attributes.
