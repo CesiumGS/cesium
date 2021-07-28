@@ -13,5 +13,6 @@ void main() {
   // handle gl_PointSize
   #ifdef PRIMITIVE_TYPE_POINTS
   processPoints();
+  
   #endif
 }

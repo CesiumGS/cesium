@@ -1,9 +1,9 @@
-import DrawCommand from "../Renderer/DrawCommand.js";
-import Pass from "../Renderer/Pass.js";
-import VertexArray from "../Renderer/VertexArray.js";
-import RenderState from "../Renderer/RenderState.js";
-import ModelExperimentalFS from "../Shaders/ModelExperimentalFS.js";
-import ModelExperimentalVS from "../Shaders/ModelExperimentalVS.js";
+import DrawCommand from "../../Renderer/DrawCommand.js";
+import Pass from "../../Renderer/Pass.js";
+import VertexArray from "../../Renderer/VertexArray.js";
+import RenderState from "../../Renderer/RenderState.js";
+import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
+import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 
 /**
  * Builds a DrawCommand for a glTF mesh primitive using its render resources.

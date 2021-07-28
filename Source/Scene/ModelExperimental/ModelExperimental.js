@@ -1,10 +1,10 @@
-import GltfLoader from "./GltfLoader.js";
+import defaultValue from "../../Core/defaultValue.js";
+import GltfLoader from "../GltfLoader.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
-import defaultValue from "../Core/defaultValue.js";
-import Resource from "../Core/Resource.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import Resource from "../../Core/Resource.js";
+import RuntimeError from "../../Core/RuntimeError.js";
+import when from "../../ThirdParty/when.js";
 
 /**
  * A 3D Model based on glTF, the runtime asset format for WebGL.

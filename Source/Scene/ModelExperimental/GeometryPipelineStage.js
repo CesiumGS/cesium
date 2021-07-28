@@ -1,8 +1,8 @@
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import AttributeType from "./AttributeType.js";
-import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import GeometryVS from "../Shaders/ModelExperimental/GeometryVS.js";
+import defined from "../../Core/defined.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import AttributeType from "../AttributeType.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
 
 /**
  * @private

@@ -6,6 +6,7 @@ void processPoints() {
 
 vec3 processGeometry(vec3 position) {
   position = a_position;
+  /*
 
   #ifdef HAS_NORMALS
   // TODO: Check where these matrices come from
@@ -36,6 +37,7 @@ vec3 processGeometry(vec3 position) {
   // ----------------------------------------------------------
 
   // TODO: what does u_modelViewMatrix mean vs czm_modelViewMatrix?
+  */
 
   return position;
 }
