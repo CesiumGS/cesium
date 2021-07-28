@@ -22,4 +22,5 @@ void main() {
   material = lightingStage(material);
 
   gl_FragColor = handleAlpha(material.diffuse, material.alpha);
+  
 }

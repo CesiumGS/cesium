@@ -175,6 +175,7 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
       return metallicRoughness.baseColorTexture.texture;
     }
     texCoordIndex = baseColorTexture.texCoord;
+    shaderBuilder.addDefine("HAS_BASE_COLOR_TEXTURE", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addDefine(
       "TEXCOORD_BASE_COLOR",
       "v_texCoord_" + texCoordIndex,
@@ -203,6 +204,7 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
     uniformMap.u_baseColorFactor = function() {
       return metallicRoughness.baseColorFactor;
     }
+    shaderBuilder.addDefine("HAS_BASE_COLOR_FACTOR", undefined, ShaderDestination.FRAGMENT);
   }
 
   var roughnessFactor = metallicRoughness.roughnessFactor;
@@ -210,7 +212,8 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
     shaderBuilder.addUniform("float", "u_roughnessFactor", ShaderDestination.FRAGMENT);
     uniformMap.u_roughnessFactor = function() {
       return metallicRoughness.roughnessFactor;
-    }
+    };
+    shaderBuilder.addDefine("HAS_ROUGHNESS_FACTOR", undefined, ShaderDestination.FRAGMENT);
   }
 
   var metallicFactor = metallicRoughness.metallicFactor;
@@ -218,7 +221,8 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
     shaderBuilder.addUniform("float", "u_metallicFactor", ShaderDestination.FRAGMENT);
     uniformMap.u_metallicFactor = function() {
       return metallicRoughness.metallicFactor;
-    }
+    };
+    shaderBuilder.addDefine("HAS_METALLIC_FACTOR", undefined, ShaderDestination.FRAGMENT);
   }
 }
 
