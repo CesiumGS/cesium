@@ -41,48 +41,26 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   var type = attribute.type;
 
   var variableName;
-  switch (semantic) {
-    case VertexAttributeSemantic.POSITION:
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-      break;
-    case VertexAttributeSemantic.NORMAL:
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-      renderResources.shaderBuilder.addDefine("HAS_NORMALS");
-      break;
-    case VertexAttributeSemantic.TANGENT:
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-      renderResources.shaderBuilder.addDefine("HAS_TANGENTS");
-      break;
-    case VertexAttributeSemantic.TEXCOORD:
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-      renderResources.shaderBuilder.addDefine("HAS_TEXCOORD_" + setIndex);
-      break;
-    case VertexAttributeSemantic.COLOR:
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-      renderResources.shaderBuilder.addDefine("HAS_VERTEX_COLORS");
-      break;
-    case VertexAttributeSemantic.FEATURE_ID:
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-      renderResources.shaderBuilder.addDefine("HAS_FEATURE_ID");
-      break;
+  if (defined(semantic)) {
+    variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
+
+    switch (semantic) {
+      case VertexAttributeSemantic.NORMAL:
+        renderResources.shaderBuilder.addDefine("HAS_NORMALS");
+        break;
+      case VertexAttributeSemantic.TANGENT:
+        renderResources.shaderBuilder.addDefine("HAS_TANGENTS");
+        break;
+      case VertexAttributeSemantic.TEXCOORD:
+        renderResources.shaderBuilder.addDefine("HAS_TEXCOORD_" + setIndex);
+        break;
+      case VertexAttributeSemantic.COLOR:
+        renderResources.shaderBuilder.addDefine("HAS_VERTEX_COLORS");
+        break;
+      case VertexAttributeSemantic.FEATURE_ID:
+        renderResources.shaderBuilder.addDefine("HAS_FEATURE_ID");
+        break;
+    }
   }
 
   var vertexAttribute = {
