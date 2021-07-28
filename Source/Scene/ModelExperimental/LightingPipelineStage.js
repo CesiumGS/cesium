@@ -1,6 +1,6 @@
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import LightingModel from "./LightingModel.js";
-import LightingFS from "../../Shaders/ModelExperimental/LightingFS.js";
+import LightingStageFS from "../../Shaders/ModelExperimental/LightingStageFS.js";
 
 export default function LightingPipelineStage() {}
 
@@ -15,5 +15,5 @@ LightingPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine("LIGHTING_UNLIT", undefined, ShaderDestination.FRAGMENT);
   }
 
-  shaderBuilder.addFragmentLines([LightingFS]);
+  shaderBuilder.addFragmentLines([LightingStageFS]);
 };

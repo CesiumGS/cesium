@@ -2,7 +2,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
-import MaterialPreprocessingFS from "../../Shaders/MaterialPreprocessingFS.js";
+import MaterialStageFS from "../../Shaders/MaterialStageFS.js";
 
 export default function MaterialPipelineStage() {}
 
@@ -40,7 +40,7 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
 
   addAlphaUniforms(material, uniformMap, shaderBuilder);
 
-  shaderBuilder.addFragmentLines([MaterialPreprocessingFS]);
+  shaderBuilder.addFragmentLines([MaterialStageFS]);
 };
 
 function processMaterialUniforms(material, uniformMap, shaderBuilder) {

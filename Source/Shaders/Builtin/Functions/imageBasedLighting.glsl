@@ -1,6 +1,10 @@
-
-void proceduralIBL()
-{
+void proceduralIBL(
+  vec3 v,
+  vec3 n,
+  vec3 positionWC,
+  vec3 lightColorHdr,
+  czm_pbrParameters pbrParameters
+) {
     vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));
     
     // Figure out if the reflection vector hits the ellipsoid
@@ -11,6 +15,10 @@ void proceduralIBL()
     r.x = -r.x;
     r = -normalize(czm_temeToPseudoFixed * r);
     r.x = -r.x;
+
+    float diffuseColor = pbrParameters.diffuseColor;
+    float roughness = pbrParameters.roughness;
+    vec3 specularColor = pbrParameters.f0;
 
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
@@ -64,7 +72,13 @@ void proceduralIBL()
     return IBLColor;
 }
 
-void textureIBL() {
+void textureIBL(
+  czm_pbrParameters pbrParameters
+) {
+    float diffuseColor = pbrParameters.diffuseColor;
+    float roughness = pbrParameters.roughness;
+    vec3 specularColor = pbrParameters.f0;
+
     const mat3 yUpToZUp = mat3(
         -1.0, 0.0, 0.0,
         0.0, 0.0, -1.0, 
@@ -82,6 +96,7 @@ void textureIBL() {
     vec3 diffuseIrradiance = vec3(0.0); 
     #endif 
 
+    float roughness = pbrParameters.roughness;
     #ifdef SPECULAR_IBL 
     vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;
       #ifdef CUSTOM_SPECULAR_IBL 
@@ -97,13 +112,14 @@ void textureIBL() {
     return diffuseIrradiance * diffuseColor + specularColor * specularIBL;
 }
 
-void czm_imageBasedLighting()
-{
+void czm_imageBasedLighting(
+  czm_pbrParameters pbrParameters
+) {
   #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
   // Environment maps were provided, use them for IBL
-  return textureIBL();
+  return textureIBL(pbrParameters);
   #else
   // Use the procedural IBL if there are no environment maps
-  return proceduralIBL();
+  return proceduralIBL(pbrParameters);
   #endif
 }
