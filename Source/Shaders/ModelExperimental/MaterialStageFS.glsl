@@ -145,7 +145,7 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
     specular,
     glossiness
   );
-  material.baseColor = parameters.diffuseColor;
+  material.diffuse = parameters.diffuseColor;
   material.specular = parameters.f0;
   material.roughness = parameters.roughness;
   #else
@@ -173,12 +173,12 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
         float roughness = 1.0;
         #endif
       #endif
-  czm_pbrParameters parameters = czm_pbrSpecularGlossinessMaterial(
+  czm_pbrParameters parameters = czm_pbrMetallicRoughnessMaterial(
     material.diffuse,
-    metallic,
+    metalness,
     roughness
   );
-  material.baseColor = parameters.diffuseColor;
+  material.diffuse = parameters.diffuseColor;
   material.specular = parameters.f0;
   material.roughness = parameters.roughness;
   #endif

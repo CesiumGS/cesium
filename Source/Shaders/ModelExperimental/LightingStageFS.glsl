@@ -16,6 +16,7 @@ vec3 LINEARtoSRGB(vec3 linearIn)
     #endif 
 }
 
+#ifdef HAS_OUTLINES
 vec3 handleOutlines(vec3 color) 
 {
     float outlineness = max(
@@ -27,22 +28,10 @@ vec3 handleOutlines(vec3 color)
     );
     return mix(color, vec3(0.0, 0.0, 0.0), outlineness);
 }
+#endif
 
-vec4 handleAlpha(vec3 color, float alpha)
+vec3 computePbrLighting(ModelMaterial inputMaterial)
 {
-    #if defined(ALPHA_MODE_MASK)
-    if (alpha < u_alphaCutoff) {
-        discard;
-    }
-    return vec4(color, 1.0)
-    #elif defined(ALPHA_MODE_BLEND)
-    return vec4(color, alpha);
-    #else // OPAQUE
-    return vec4(color, 1.0);
-    #endif
-}
-
-vec3 computePbrLighting(ModelMaterial inputMaterial) {
     czm_pbrParameters pbrParameters;
     pbrParameters.diffuseColor = inputMaterial.diffuse;
     pbrParameters.f0 = inputMaterial.specular;
@@ -55,7 +44,7 @@ vec3 computePbrLighting(ModelMaterial inputMaterial) {
     #endif
 
     vec3 color = czm_pbrLighting(
-        v_positionEC
+        v_positionEC,
         inputMaterial.normal,
         czm_lightDirectionEC,
         lightColorHdr,
@@ -63,7 +52,7 @@ vec3 computePbrLighting(ModelMaterial inputMaterial) {
     );
 
     // TODO: what are the parameters for IBL?
-    color += czm_iblLighting(pbrParameters);
+    //color += czm_iblLighting(pbrParameters);
     color *= inputMaterial.occlusion;
     color += inputMaterial.emissive;
 
@@ -79,7 +68,7 @@ ModelMaterial lightingStage(ModelMaterial inputMaterial)
     vec3 color = vec3(0.0);
 
     #ifdef LIGHTING_PBR
-    color = computePbrLighting(inputMaterial)
+    color = computePbrLighting(inputMaterial);
     #else // unlit
     color = inputMaterial.diffuse;
     #endif
@@ -90,6 +79,6 @@ ModelMaterial lightingStage(ModelMaterial inputMaterial)
     color = handleOutlines(color);
     #endif
 
-    outputMaterial.diffuse = handleAlpha(color, inputMaterial.alpha);
+    outputMaterial.diffuse = color;
     return outputMaterial;
 }

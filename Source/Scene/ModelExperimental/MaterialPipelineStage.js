@@ -104,8 +104,6 @@ function processMaterialUniforms(material, uniformMap, shaderBuilder) {
 function processSpecularGlossinessUniforms(material, uniformMap, shaderBuilder) {
   var specularGlossiness = material.specularGlossiness;
   var texCoordIndex;
-
-  shaderBuilder.addDefine("USE_PBR", undefined, ShaderDestination.FRAGMENT);
   shaderBuilder.addDefine("USE_SPECULAR_GLOSSINESS", undefined, ShaderDestination.FRAGMENT);
 
   var diffuseTexture = specularGlossiness.diffuseTexture;
@@ -167,8 +165,6 @@ function processSpecularGlossinessUniforms(material, uniformMap, shaderBuilder) 
 
 function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
   var metallicRoughness = material.metallicRoughness;
-
-  shaderBuilder.addDefine("USE_PBR", undefined, ShaderDestination.FRAGMENT);
   shaderBuilder.addDefine("USE_METALLIC_ROUGHNESS", undefined, ShaderDestination.FRAGMENT);
 
   var texCoordIndex;
@@ -231,6 +227,9 @@ function addAlphaUniforms(material, uniformMap, shaderBuilder) {
   if (alphaMode === AlphaMode.MASK) {
     shaderBuilder.addDefine("ALPHA_MODE_MASK", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addUniform("float", "u_alphaCutoff", ShaderDestination.FRAGMENT);
+    uniformMap.u_alphaCutoff = function() {
+      return material.alphaCutoff
+    };
   } else if (alphaMode === AlphaMode.BLEND) {
     shaderBuilder.addDefine("ALPHA_MODE_BLEND", undefined, ShaderDestination.FRAGMENT);
   } else {
