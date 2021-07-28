@@ -10,9 +10,17 @@ LightingPipelineStage.process = function (renderResources, primitive) {
 
   var lightingModel = lightingOptions.lightingModel;
   if (lightingModel === LightingModel.PBR) {
-    shaderBuilder.addDefine("LIGHTING_PBR", undefined, ShaderDestination.FRAGMENT);
+    shaderBuilder.addDefine(
+      "LIGHTING_PBR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
   } else {
-    shaderBuilder.addDefine("LIGHTING_UNLIT", undefined, ShaderDestination.FRAGMENT);
+    shaderBuilder.addDefine(
+      "LIGHTING_UNLIT",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
   }
 
   shaderBuilder.addFragmentLines([LightingStageFS]);
