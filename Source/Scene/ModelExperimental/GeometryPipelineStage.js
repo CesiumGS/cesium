@@ -31,11 +31,13 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     );
   }
 
+  var shaderBuilder = renderResources.shaderBuilder;
   if (primitive.primitive === PrimitiveType.POINTS) {
-    renderResources.shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
+    shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  renderResources.shaderBuilder.addVertexLines([GeometryVS]);
+  shaderBuilder.addVertexLines([GeometryVS]);
+  shaderBuilder.addVarying("vec3", "v_positionEC");
 };
 
 function processAttribute(renderResources, attribute, attributeIndex) {
