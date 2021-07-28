@@ -2,7 +2,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
-import MaterialStageFS from "../../Shaders/MaterialStageFS.js";
+import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js";
 
 export default function MaterialPipelineStage() {}
 

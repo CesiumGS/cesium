@@ -2,6 +2,7 @@ import defined from "../../Core/defined.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelLightingOptions from "./ModelLightingOptions.js";
 
 /**
  * Resources assigned at each level of a glTF (model, node, primitive)
@@ -58,7 +59,9 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
     this.modelMatrix
   );
 
-  // Static properties.
+  // per-primitive properties
+  this.uniformMap = {};
+  this.lightingOptions = new ModelLightingOptions();
   this.renderStateOptions = {
     depthTest: {
       enabled: true,

@@ -44,7 +44,7 @@ vec4 handleAlpha(vec3 color, float alpha)
 
 vec3 computePbrLighting(ModelMaterial inputMaterial) {
     czm_pbrParameters pbrParameters;
-    pbrParameters.diffuseColor = inputMaterial.baseColor.rgb;
+    pbrParameters.diffuseColor = inputMaterial.diffuse;
     pbrParameters.f0 = inputMaterial.specular;
     pbrParameters.roughness = inputMaterial.roughness;
 
@@ -90,6 +90,6 @@ ModelMaterial lightingStage(ModelMaterial inputMaterial)
     color = handleOutlines(color);
     #endif
 
-    outputMaterial.baseColor = handleAlpha(color, inputMaterial.alpha);
+    outputMaterial.diffuse = handleAlpha(color, inputMaterial.alpha);
     return outputMaterial;
 }
