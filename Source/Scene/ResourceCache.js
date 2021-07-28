@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -425,14 +424,14 @@ ResourceCache.loadDraco = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
- * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
- * @param {Number} [options.dracoAccessorId] The Draco accessor ID.
+ * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
+ * @param {Number} [options.accessorId] The accessor ID.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
- * @exception {DeveloperError} When options.draco is defined options.dracoAccessorId must also be defined.
+ * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
+ * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
  *
  * @returns {GltfVertexBufferLoader} The vertex buffer loader.
  * @private
@@ -444,9 +443,8 @@ ResourceCache.loadVertexBuffer = function (options) {
   var baseResource = options.baseResource;
   var bufferViewId = options.bufferViewId;
   var draco = options.draco;
-  var dracoAttributeSemantic = options.dracoAttributeSemantic;
-  var dracoAccessorId = options.dracoAccessorId;
-  var accessor = gltf.accessors[dracoAccessorId];
+  var attributeSemantic = options.attributeSemantic;
+  var accessorId = options.accessorId;
   var asynchronous = defaultValue(options.asynchronous, true);
   var dequantize = defaultValue(options.dequantize, false);
 
@@ -457,8 +455,8 @@ ResourceCache.loadVertexBuffer = function (options) {
 
   var hasBufferViewId = defined(bufferViewId);
   var hasDraco = defined(draco);
-  var hasDracoAttributeSemantic = defined(dracoAttributeSemantic);
-  var hasDracoAccessorId = defined(dracoAccessorId);
+  var hasAttributeSemantic = defined(attributeSemantic);
+  var hasAccessorId = defined(accessorId);
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
@@ -466,29 +464,25 @@ ResourceCache.loadVertexBuffer = function (options) {
     );
   }
 
-  if (hasDraco && !hasDracoAttributeSemantic) {
+  if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.dracoAttributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined."
     );
   }
 
-  if (hasDraco && !hasDracoAccessorId) {
+  if (hasDraco && !hasAccessorId) {
     throw new DeveloperError(
-      "When options.draco is defined options.hasDracoAccessorId must also be defined."
+      "When options.draco is defined options.haAccessorId must also be defined."
     );
   }
 
   if (hasDraco) {
     Check.typeOf.object("options.draco", draco);
     Check.typeOf.string(
-      "options.dracoAttributeSemantic",
-      dracoAttributeSemantic
+      "options.attributeSemantic",
+      attributeSemantic
     );
-    Check.typeOf.number("options.dracoAccessorId", dracoAccessorId);
-  }
-
-  if (accessor.componentType === ComponentDatatype.FLOAT && dequantize) {
-    throw new DeveloperError("Cannot dequantize FLOATs.");
+    Check.typeOf.number("options.accessorId", accessorId);
   }
   //>>includeEnd('debug');
 
@@ -498,7 +492,7 @@ ResourceCache.loadVertexBuffer = function (options) {
     baseResource: baseResource,
     bufferViewId: bufferViewId,
     draco: draco,
-    dracoAttributeSemantic: dracoAttributeSemantic,
+    attributeSemantic: attributeSemantic,
   });
 
   var vertexBufferLoader = ResourceCache.get(cacheKey);
@@ -513,8 +507,8 @@ ResourceCache.loadVertexBuffer = function (options) {
     baseResource: baseResource,
     bufferViewId: bufferViewId,
     draco: draco,
-    dracoAttributeSemantic: dracoAttributeSemantic,
-    dracoAccessorId: dracoAccessorId,
+    attributeSemantic: attributeSemantic,
+    accessorId: accessorId,
     cacheKey: cacheKey,
     asynchronous: asynchronous,
     dequantize: dequantize,

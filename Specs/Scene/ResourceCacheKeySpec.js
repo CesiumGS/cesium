@@ -517,7 +517,7 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       draco: draco,
-      dracoAttributeSemantic: "POSITION",
+      attributeSemantic: "POSITION",
     });
 
     expect(cacheKey).toBe(
@@ -579,12 +579,12 @@ describe("ResourceCacheKey", function () {
         baseResource: baseResource,
         bufferViewId: 0,
         draco: draco,
-        dracoAttributeSemantic: "POSITION",
+        attributeSemantic: "POSITION",
       });
     }).toThrowDeveloperError();
   });
 
-  it("getVertexBufferCacheKey throws if both draco is defined and dracoAttributeSemantic is undefined", function () {
+  it("getVertexBufferCacheKey throws if both draco is defined and attributeSemantic is undefined", function () {
     var draco =
       gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
 
@@ -594,7 +594,7 @@ describe("ResourceCacheKey", function () {
         gltfResource: gltfResource,
         baseResource: baseResource,
         draco: draco,
-        dracoAttributeSemantic: undefined,
+        attributeSemantic: undefined,
       });
     }).toThrowDeveloperError();
   });

@@ -49,22 +49,32 @@ export default function GltfBufferViewLoader(options) {
   var byteOffset = bufferView.byteOffset;
   var byteLength = bufferView.byteLength;
 
-  this._hasMeshopt = false;
-  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-    this._hasMeshopt = true;
+  var hasMeshopt = false;
+  var meshoptByteStride;
+  var meshoptCount;
+  var meshoptMode;
+  var meshoptFilter;
 
-    var meshopt = bufferView.extensions["EXT_meshopt_compression"];
+  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
+    var meshopt = bufferView.extensions.EXT_meshopt_compression;
     bufferId = meshopt.buffer;
     byteOffset = defaultValue(meshopt.byteOffset, 0);
     byteLength = meshopt.byteLength;
 
-    this._byteStride = meshopt.byteStride;
-    this._count = meshopt.count;
-    this._mode = meshopt.mode;
-    this._filter = defaultValue(meshopt.filter, "NONE");
+    hasMeshopt = true;
+    meshoptByteStride = meshopt.byteStride;
+    meshoptCount = meshopt.count;
+    meshoptMode = meshopt.mode;
+    meshoptFilter = defaultValue(meshopt.filter, "NONE");
   }
 
   var buffer = gltf.buffers[bufferId];
+
+  this._hasMeshopt = hasMeshopt;
+  this._meshoptByteStride = meshoptByteStride;
+  this._meshoptCount = meshoptCount;
+  this._meshoptMode = meshoptMode;
+  this._meshoptFilter = meshoptFilter;
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
@@ -131,42 +141,6 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
 });
 
 /**
- * Processes the resources. For a BufferView that does not have the EXT_meshopt_compression extension, there
- * is no processing that needs to happen, so this function returns immediately.
- *
- * @param {FrameState} frameState The frame state.
- */
-GltfBufferViewLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  if (!this._hasMeshopt) {
-    return;
-  }
-
-  if (!defined(this._typedArray)) {
-    return;
-  }
-
-  var count = this._count;
-  var byteStride = this._byteStride;
-  var result = new Uint8Array(new ArrayBuffer(count * byteStride));
-  MeshoptDecoder.MeshoptDecoder.decodeGltfBuffer(
-    result,
-    count,
-    byteStride,
-    this._typedArray,
-    this._mode,
-    this._filter
-  );
-
-  this._typedArray = result;
-  this._state = ResourceLoaderState.READY;
-  this._promise.resolve();
-};
-
-/**
  * Loads the resource.
  * @private
  */
@@ -228,6 +202,46 @@ function getBufferLoader(bufferViewLoader) {
     bufferId: bufferViewLoader._bufferId,
   });
 }
+
+/**
+ * Processes the resources. For a BufferView that does not have the EXT_meshopt_compression extension, there
+ * is no processing that needs to happen, so this function returns immediately.
+ *
+ * @param {FrameState} frameState The frame state.
+ */
+GltfBufferViewLoader.prototype.process = function (frameState) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
+
+  if (!this._hasMeshopt) {
+    return;
+  }
+
+  if (!defined(this._typedArray)) {
+    return;
+  }
+
+  if (this._state !== ResourceLoaderState.PROCESSING) {
+    return;
+  }
+
+  var count = this._meshoptCount;
+  var byteStride = this._meshoptByteStride;
+  var result = new Uint8Array(count * byteStride);
+  MeshoptDecoder.MeshoptDecoder.decodeGltfBuffer(
+    result,
+    count,
+    byteStride,
+    this._typedArray,
+    this._meshoptMode,
+    this._meshoptFilter
+  );
+
+  this._typedArray = result;
+  this._state = ResourceLoaderState.READY;
+  this._promise.resolve(this);
+};
 
 /**
  * Unloads the resource.

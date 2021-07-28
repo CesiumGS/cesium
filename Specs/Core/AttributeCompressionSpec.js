@@ -1131,12 +1131,25 @@ describe("Core/AttributeCompression", function () {
     }).toThrowDeveloperError();
   });
 
-  it("throws when dequantize has an undefined componentType", function () {
+  // TODO: need tests for dequantize functionality
+
+  it("throws when dequantize has an undefined typedArray", function () {
     expect(function () {
       AttributeCompression.dequantize(
         undefined,
+        ComponentDatatype.UNSIGNED_SHORT,
         AttributeType.VEC3,
+        1
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("throws when dequantize has an undefined componentType", function () {
+    expect(function () {
+      AttributeCompression.dequantize(
         new Uint8Array([0, 0, 0, 0]),
+        undefined,
+        AttributeType.VEC3,
         1
       );
     }).toThrowDeveloperError();
@@ -1145,19 +1158,8 @@ describe("Core/AttributeCompression", function () {
   it("throws when dequantize has an undefined type", function () {
     expect(function () {
       AttributeCompression.dequantize(
-        ComponentDatatype.UNSIGNED_SHORT,
-        undefined,
         new Uint8Array([0, 0, 0, 0]),
-        1
-      );
-    }).toThrowDeveloperError();
-  });
-
-  it("throws when dequantize has an undefined typedArray", function () {
-    expect(function () {
-      AttributeCompression.dequantize(
         ComponentDatatype.UNSIGNED_SHORT,
-        AttributeType.VEC3,
         undefined,
         1
       );
@@ -1167,9 +1169,9 @@ describe("Core/AttributeCompression", function () {
   it("throws when dequantize has an undefined count", function () {
     expect(function () {
       AttributeCompression.dequantize(
+        new Uint8Array([0, 0, 0, 0]),
         ComponentDatatype.UNSIGNED_SHORT,
         AttributeType.VEC3,
-        new Uint8Array([0, 0, 0, 0]),
         undefined
       );
     }).toThrowDeveloperError();
