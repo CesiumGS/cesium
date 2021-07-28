@@ -184,7 +184,7 @@ CloudCollection.prototype.add = function (options) {
  */
 CloudCollection.prototype.remove = function (cloud) {
   if (this.contains(cloud)) {
-    this._clouds[cloud._index] = null; // Removed later
+    this._clouds[cloud._index] = null; // Removed later in removeClouds()
     this._cloudsRemoved = true;
     this._createVertexArray = true;
     cloud._destroy();

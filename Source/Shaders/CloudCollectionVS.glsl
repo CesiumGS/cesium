@@ -5,7 +5,10 @@ attribute vec4 positionHighAndScaleX;
 attribute vec4 positionLowAndScaleY;
 attribute vec4 compressedAttribute;
 
-varying vec2 v_textureCoordinates;
+varying vec2 v_offset;
+varying vec3 v_positionHigh;
+varying vec3 v_positionLow;
+varying vec3 v_position;
 void main() {
     // Unpack attributes.
     vec3 positionHigh = positionHighAndScaleX.xyz;
@@ -26,6 +29,11 @@ void main() {
     vec4 positionEC = czm_modelViewRelativeToEye * p;
     positionEC.xy += scaledOffset;
     positionEC.xyz *= show;
+
     gl_Position = czm_projection * positionEC;
-    v_textureCoordinates = dir;
+
+    v_positionHigh = positionHigh;
+    v_positionLow = positionLow;
+    v_position = positionEC.xyz;
+    v_offset = offset;
 }

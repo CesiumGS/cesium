@@ -216,6 +216,30 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("adds and renders a cloud", function () {
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      clouds.add({
+        position: Cartesian3.ZERO,
+        scale: new Cartesian2(1.0, 1.0),
+      });
+
+      expect(scene).not.toRender([0, 0, 0, 255]);
+    });
+
+    it("modifies and removes a cloud, then renders", function () {
+      var c = clouds.add({
+        position: Cartesian3.ZERO,
+        scale: new Cartesian2(1.0, 1.0),
+      });
+
+      expect(scene).not.toRender([0, 0, 0, 255]);
+
+      c.scale.x = 3.0;
+      clouds.remove(c);
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("throws when accessing without an index", function () {
       expect(function () {
         clouds.get();
