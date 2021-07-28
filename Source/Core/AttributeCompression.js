@@ -3,7 +3,6 @@ import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
-import RuntimeError from "./RuntimeError.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import AttributeType from "../Scene/AttributeType.js";
@@ -412,48 +411,30 @@ AttributeCompression.zigZagDeltaDecode = function (
  *
  * @see {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data}
  *
- * @param {ComponentDatatype} componentType The component datatype of the quantized data.
+ * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} typedArray The typed array for the quantized data.
+ * @param {ComponentDatatype} componentDatatype The component datatype of the quantized data.
  * @param {AttributeType} type The attribute type of the quantized data.
- * @param {Int8Array|Uint8Array|Int16Array|Uint16Array} typedArray The typed array for the quantized data.
  * @param {Number} count The number of attributes referenced in the dequantized array.
  *
  * @returns {Float32Array} The dequantized array.
  */
 AttributeCompression.dequantize = function (
-  componentType,
-  type,
   typedArray,
+  componentDatatype,
+  type,
   count
 ) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("componentType", componentType);
+  Check.defined("typedArray", typedArray);
+  Check.defined("componentDatatype", componentDatatype);
   Check.defined("type", type);
   Check.defined("count", count);
-  if (!defined(typedArray)) {
-    throw new DeveloperError("typedArray must be defined.");
-  }
-  if (componentType === ComponentDatatype.FLOAT) {
-    throw new DeveloperError("Cannot dequantize FLOATs.");
-  }
   //>>includeEnd('debug');
 
-  var componentsPerAttribute;
-  switch (type) {
-    case AttributeType.VEC2:
-      componentsPerAttribute = 2;
-      break;
-    case AttributeType.VEC3:
-      componentsPerAttribute = 3;
-      break;
-    case AttributeType.VEC4:
-      componentsPerAttribute = 4;
-      break;
-    default:
-      throw new RuntimeError("Cannot handle " + type);
-  }
+  var componentsPerAttribute = AttributeType.getNumberOfComponents(type);
 
   var divider;
-  switch (componentType) {
+  switch (componentDatatype) {
     case ComponentDatatype.BYTE:
       divider = 127.0;
       break;
@@ -466,34 +447,30 @@ AttributeCompression.dequantize = function (
     case ComponentDatatype.UNSIGNED_SHORT:
       divider = 65535.0;
       break;
+    case ComponentDatatype.INT:
+      divider = 2147483647.0;
+      break;
+    case ComponentDatatype.UNSIGNED_INT:
+      divider = 4294967295.0;
+      break;
+    //>>includeStart('debug', pragmas.debug);
     default:
-      throw new RuntimeError("Cannot dequantize " + componentType);
+      throw new DeveloperError(
+        "Cannot dequantize component datatype: " + componentDatatype
+      );
+    //>>includeEnd('debug');
   }
 
   var dequantizedTypedArray = new Float32Array(count * componentsPerAttribute);
 
   for (var i = 0; i < count; i++) {
-    dequantizedTypedArray[i * componentsPerAttribute + 0] = Math.max(
-      typedArray[i * 4 + 0] / divider,
-      -1.0
-    );
-
-    dequantizedTypedArray[i * componentsPerAttribute + 1] = Math.max(
-      typedArray[i * 4 + 1] / divider,
-      -1.0
-    );
-
-    if (componentsPerAttribute === 2) continue;
-    dequantizedTypedArray[i * componentsPerAttribute + 2] = Math.max(
-      typedArray[i * 4 + 2] / divider,
-      -1.0
-    );
-
-    if (componentsPerAttribute === 3) continue;
-    dequantizedTypedArray[i * componentsPerAttribute + 3] = Math.max(
-      typedArray[i * 4 + 3] / divider,
-      -1.0
-    );
+    for (var j = 0; j < componentsPerAttribute; j++) {
+      var index = i * componentsPerAttribute + j;
+      dequantizedTypedArray[index] = Math.max(
+        typedArray[index] / divider,
+        -1.0
+      );
+    }
   }
 
   return dequantizedTypedArray;
