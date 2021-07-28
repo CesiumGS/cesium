@@ -4,8 +4,10 @@ import destroyObject from "../Core/destroyObject.js";
 import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
 import Axis from "./Axis.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import getModelClass from "./ModelExperimental/getModelClass.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
+import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
@@ -150,6 +152,7 @@ function initialize(content, gltf) {
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
+    content: content,
   });
   content._model.readyPromise.then(function (model) {
     if (defined(model.activeAnimations)) {
@@ -164,8 +167,24 @@ Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
 };
 
-Gltf3DTileContent.prototype.getFeature = function (batchId) {
-  return undefined;
+Gltf3DTileContent.prototype.getFeature = function (featureId) {
+  var featureTable = this._model._featureTable;
+  //>>includeStart('debug', pragmas.debug);
+  var featuresLength = featureTable.featuresLength;
+  if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
+    throw new DeveloperError(
+      "featureId is required and between zero and featuresLength - 1 (" +
+        (featuresLength - 1) +
+        ")."
+    );
+  }
+  //>>includeEnd('debug');
+
+  if (!defined(featureTable._features)) {
+    createFeatures(this);
+  }
+
+  return featureTable._features[featureId];
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
@@ -221,6 +240,18 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
 
   model.update(frameState);
 };
+
+function createFeatures(content) {
+  var featureTable = content._model._featureTable;
+  var featuresLength = featureTable.featuresLength;
+  if (featuresLength > 0) {
+    var features = new Array(featuresLength);
+    for (var i = 0; i < featuresLength; i++) {
+      features[i] = new Cesium3DTileFeature(content, i);
+    }
+    featureTable._features = features;
+  }
+}
 
 Gltf3DTileContent.prototype.isDestroyed = function () {
   return false;

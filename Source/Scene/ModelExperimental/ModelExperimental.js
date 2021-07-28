@@ -1,4 +1,6 @@
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
 import GltfLoader from "../GltfLoader.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
@@ -24,7 +26,9 @@ import when from "../../ThirdParty/when.js";
 export default function ModelExperimental(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  this._content = undefined;
   this._gltfLoader = undefined;
+  this._featureTable = undefined;
   this._readyPromise = when.defer();
 
   this._resourcesLoaded = false;
@@ -102,6 +106,10 @@ ModelExperimental.prototype.update = function (frameState) {
     this._drawCommandsBuilt = true;
   }
 
+  if (defined(this._featureTable)) {
+    this._featureTable.update(frameState);
+  }
+
   frameState.commandList.push.apply(
     frameState.commandList,
     this._sceneGraph._drawCommands
@@ -109,6 +117,8 @@ ModelExperimental.prototype.update = function (frameState) {
 };
 
 function initialize(model, options) {
+  model._content = options.content;
+
   var gltf = options.gltf;
   var gltfResource = Resource.createIfNeeded(
     defaultValue(options.basePath, "")
@@ -132,12 +142,18 @@ function initialize(model, options) {
 
   loader.promise
     .then(function (loader) {
+      var components = loader._components;
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
-        modelComponents: loader._components,
+        modelComponents: components,
         upAxis: options.upAxis,
         forwardAxis: options.forwardAxis,
       });
+
+      if (defined(components.featureMetadata)) {
+        createFeatureTable(model);
+      }
+
       model._resourcesLoaded = true;
       model._readyPromise.resolve(model);
     })
@@ -148,4 +164,29 @@ function initialize(model, options) {
         options.basePath
       );
     });
+}
+
+function createFeatureTable(model) {
+  var featureMetadata = model._sceneGraph._modelComponents.featureMetadata;
+  var featureTableCount = featureMetadata.featureTableCount;
+
+  if (featureTableCount === 0) {
+    return undefined;
+  }
+
+  if (featureTableCount > 1) {
+    throw new RuntimeError(
+      "Only one feature table supported for glTF EXT_feature_metadata"
+    );
+  }
+
+  var featureTables = featureMetadata._featureTables;
+  var featureTable;
+  for (var featureTableId in featureTables) {
+    if (featureTables.hasOwnProperty(featureTableId)) {
+      featureTable = featureTables[featureTableId];
+    }
+  }
+
+  model._featureTable = new ModelFeatureTable(model, featureTable);
 }
