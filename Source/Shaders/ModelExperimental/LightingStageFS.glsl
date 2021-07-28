@@ -71,7 +71,7 @@ ModelMaterial lightingStage(ModelMaterial inputMaterial)
     color = computePbrLighting(inputMaterial);
     #else // unlit
     color = inputMaterial.diffuse;
-    #endif
+    #endif    
 
     color = LINEARtoSRGB(color);
 
