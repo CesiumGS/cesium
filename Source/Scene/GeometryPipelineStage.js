@@ -2,6 +2,7 @@ import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import AttributeType from "./AttributeType.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import GeometryVS from "../Shaders/ModelExperimental/GeometryVS.js";
 
 /**
  * @private
@@ -33,6 +34,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   if (primitive.primitive === PrimitiveType.POINTS) {
     renderResources.shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
+
+  renderResources.shaderBuilder.addVertexLines([GeometryVS]);
 };
 
 function processAttribute(renderResources, attribute, attributeIndex) {
