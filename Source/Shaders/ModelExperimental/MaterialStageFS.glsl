@@ -37,24 +37,29 @@ vec3 computeNormal() {
 
   vec3 normal = ng;
   #ifdef HAS_NORMAL_TEXTURE
+    vec2 normalTexCoords = TEXCOORD_NORMAL; 
+        #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+        normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);
+        #endif
+
     #ifdef HAS_TANGENTS
     // read tangents from varying
     vec3 t = normalize(v_tangent.xyz);
     vec3 b = normalize(cross(ng, t) * v_tangent.w);
     mat3 tbn = mat3(t, b, ng);
-    vec3 n = texture2D(u_normalTexture, TEXCOORD_NORMAL).rgb;
+    vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
     normal = normalize(tbn * (2.0 * n - 1.0));
     #elif defined(GL_OES_standard_derivatives)
     // Compute tangents
     vec3 pos_dx = dFdx(v_positionEC);
     vec3 pos_dy = dFdy(v_positionEC);
-    vec3 tex_dx = dFdx(vec3(TEXCOORD_NORMAL,0.0));
-    vec3 tex_dy = dFdy(vec3(TEXCOORD_NORMAL,0.0));
+    vec3 tex_dx = dFdx(vec3(normalTexCoords,0.0));
+    vec3 tex_dy = dFdy(vec3(normalTexCoords,0.0));
     vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);
     t = normalize(t - ng * dot(ng, t));
     vec3 b = normalize(cross(ng, t));
     mat3 tbn = mat3(t, b, ng);
-    vec3 n = texture2D(u_normalTexture, TEXCOORD_NORMAL).rgb;
+    vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
     normal = normalize(tbn * (2.0 * n - 1.0));
     #endif
   #endif
@@ -62,6 +67,10 @@ vec3 computeNormal() {
   return normal;
 }
 #endif
+
+vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform) {
+  return vec2(textureTransform * vec3(texCoord, 1.0));
+}
 
 ModelMaterial materialStage(ModelMaterial inputMaterial) {
   ModelMaterial material = inputMaterial; 
@@ -73,8 +82,14 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
   vec4 baseColorWithAlpha = vec4(1.0);
   // Regardless of whether we use PBR, set a base color
   #if defined(HAS_BASE_COLOR_TEXTURE)
-  // Add base color to fragment shader
-  baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, TEXCOORD_BASE_COLOR));
+  vec2 baseColorTexCoords = TEXCOORD_BASE_COLOR; 
+
+    #ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
+    baseColorTexCoords = computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
+    #endif
+
+  baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, baseColorTexCoords));
+
     #ifdef HAS_BASE_COLOR_FACTOR
     baseColorWithAlpha *= u_baseColorFactor;
     #endif
@@ -90,11 +105,20 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
   material.alpha = baseColorWithAlpha.a;
 
   #ifdef HAS_OCCLUSION_TEXTURE
-  material.occlusion = texture2D(u_occlusionTexture, OCCLUSION_TEXCOORD).r;
+  vec2 occlusionTexCoords = TEXCOORD_OCCLUSION; 
+    #ifdef HAS_OCCLUSION_TEXTURE_TRANSFORM
+    occlusionTexCoords = computeTextureTransform(occlusionTexCoords, u_occlusionTextureTransform);
+    #endif
+  material.occlusion = texture2D(u_occlusionTexture, occlusionTexCoords).r;
   #endif
 
   #if defined(HAS_EMISSIVE_TEXTURE)
-  vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, EMISSIVE_TEXCOORD).rgb);
+  vec2 emissiveTexCoords = TEXCOORD_EMISSIVE; 
+      #ifdef HAS_EMISSIVE_TEXTURE_TRANSFORM
+      emissiveCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
+      #endif
+
+  vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, emissiveTexCoords).rgb);
       #ifdef HAS_EMISSIVE_FACTOR
       emissive *= u_emissiveFactor;
       #endif
@@ -105,7 +129,12 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
 
   #ifdef USE_SPECULAR_GLOSSINESS
       #if defined(HAS_SPECULAR_GLOSSINESS_TEXTURE)
-      vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, TEXCOORD_SPECULAR_GLOSSINESS));
+      vec2 specularGlossinessTexCoords = TEXCOORD_SPECULAR_GLOSSINESS; 
+        #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM
+        specularGlossinessCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
+        #endif
+
+      vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, specularGlossinessTexCoords));
       vec3 specular = specularGlossiness.rgb;
       float glossiness = specularGlossiness.a;
           #ifdef HAS_SPECULAR_FACTOR
@@ -130,7 +159,12 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
       #endif
 
       #if defined(HAS_DIFFUSE_TEXTURE)
-      vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, TEXCOORD_DIFFUSE));
+      vec2 diffuseTexCoords = TEXCOORD_DIFFUSE; 
+        #ifdef HAS_DIFFUSE_TEXTURE_TRANSFORM
+        diffuseTexCoords = computeTextureTransform(diffuseTexCoords, u_diffuseTextureTransform);
+        #endif
+
+      vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, diffuseTexCoords));
           #ifdef HAS_DIFFUSE_FACTOR
           diffuse *= u_diffuseFactor;
           #endif
@@ -150,7 +184,12 @@ ModelMaterial materialStage(ModelMaterial inputMaterial) {
   material.roughness = parameters.roughness;
   #else
       #if defined(HAS_METALLIC_ROUGHNESS_TEXTURE)
-      vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, TEXCOORD_METALLIC_ROUGHNESS).rgb;
+      vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS; 
+        #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM
+        metallicRoughnessCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
+        #endif
+
+      vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
       float metalness = clamp(metallicRoughness.b, 0.0, 1.0);
       float roughness = clamp(metallicRoughness.g, 0.04, 1.0);
         #ifdef HAS_METALLIC_FACTOR
