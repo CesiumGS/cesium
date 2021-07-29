@@ -31,7 +31,22 @@ function Cloud(options, cloudCollection) {
   this._flat = defaultValue(options.flat, false);
 
   this._cloudCollection = cloudCollection;
+  this._dirty = false;
   this._index = -1; // Used by CloudCollection
+}
+
+var SHOW_INDEX = (Cloud.SHOW_INDEX = 0);
+var POSITION_INDEX = (Cloud.POSITION_INDEX = 1);
+var SCALE_INDEX = (Cloud.SCALE_INDEX = 2);
+var TYPE_INDEX = (Cloud.TYPE_INDEX = 3);
+Cloud.NUMBER_OF_PROPERTIES = 4;
+
+function makeDirty(cloud, propertyChanged) {
+  var cloudCollection = cloud._cloudCollection;
+  if (defined(cloudCollection)) {
+    cloudCollection._updateCloud(cloud, propertyChanged);
+    cloud._dirty = true;
+  }
 }
 
 Object.defineProperties(Cloud.prototype, {
@@ -55,7 +70,7 @@ Object.defineProperties(Cloud.prototype, {
 
       if (this._show !== value) {
         this._show = value;
-        //makeDirty(this, SHOW_INDEX);
+        makeDirty(this, SHOW_INDEX);
       }
     },
   },
@@ -79,6 +94,7 @@ Object.defineProperties(Cloud.prototype, {
       var position = this._position;
       if (!Cartesian3.equals(position, value)) {
         Cartesian3.clone(value, position);
+        makeDirty(this, POSITION_INDEX);
       }
     },
   },
@@ -102,6 +118,7 @@ Object.defineProperties(Cloud.prototype, {
       var scale = this._scale;
       if (!Cartesian2.equals(scale, value)) {
         Cartesian2.clone(value, scale);
+        makeDirty(this, SCALE_INDEX);
       }
     },
   },
@@ -122,7 +139,10 @@ Object.defineProperties(Cloud.prototype, {
       }
       //>>includeEnd('debug');
 
-      this._flat = value;
+      if (this._flat !== value) {
+        this._flat = value;
+        makeDirty(this, TYPE_INDEX);
+      }
     },
   },
 });

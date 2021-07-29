@@ -35,6 +35,12 @@ var attributeLocationsInstanced = {
   compressedAttribute: 3,
 };
 
+var SHOW_INDEX = Cloud.SHOW_INDEX;
+var POSITION_INDEX = Cloud.POSITION_INDEX;
+var SCALE_INDEX = Cloud.SCALE_INDEX;
+var TYPE_INDEX = Cloud.TYPE_INDEX;
+var NUMBER_OF_PROPERTIES = Cloud.NUMBER_OF_PROPERTIES;
+
 /**
  * A collection of clouds in the sky.
  *
@@ -50,7 +56,12 @@ function CloudCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._clouds = [];
+  this._cloudsToUpdate = [];
+  this._cloudsToUpdateIndex = 0;
   this._cloudsRemoved = false;
+  this._createVertexArray = false;
+
+  this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
   this._show = defaultValue(options.show, true);
 
@@ -237,6 +248,14 @@ function removeClouds(cloudCollection) {
     cloudCollection._clouds = newClouds;
   }
 }
+
+CloudCollection.prototype._updateCloud = function (cloud, propertyChanged) {
+  if (!cloud._dirty) {
+    this._cloudsToUpdate[this._cloudsToUpdateIndex++] = cloud;
+  }
+
+  ++this._propertiesChanged[propertyChanged];
+};
 
 /**
  * Check whether this collection contains a given cloud.
@@ -452,6 +471,8 @@ function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
   writeCompressedAttribute(cloudCollection, frameState, vafWriters, cloud);
 }
 
+var scratchWriterArray = [];
+
 /**
  * @private
  */
@@ -472,13 +493,16 @@ CloudCollection.prototype.update = function (frameState) {
 
   var clouds = this._clouds;
   var cloudsLength = clouds.length;
+  var cloudsToUpdate = this._cloudsToUpdate;
+  var cloudsToUpdateLength = this._cloudsToUpdateIndex;
+
+  var properties = this._propertiesChanged;
 
   var vafWriters;
   var pass = frameState.passes;
 
   if (this._createVertexArray) {
     this._createVertexArray = false;
-    console.log("Creating");
     this._vaf = this._vaf && this._vaf.destroy();
     if (cloudsLength > 0) {
       this._vaf = createVAF(context, cloudsLength, this._instanced);
@@ -493,6 +517,61 @@ CloudCollection.prototype.update = function (frameState) {
       // Different cloud collections share the same index buffer.
       this._vaf.commit(getIndexBuffer(context));
     }
+  } else if (cloudsToUpdateLength > 0) {
+    // Clouds were modified, but none were added or removed.
+    var writers = scratchWriterArray;
+    writers.length = 0;
+
+    if (properties[POSITION_INDEX] || properties[SCALE_INDEX]) {
+      writers.push(writePositionAndScale);
+    }
+
+    if (properties[SHOW_INDEX] || properties[TYPE_INDEX]) {
+      writers.push(writeCompressedAttribute);
+    }
+
+    var numWriters = writers.length;
+    vafWriters = this._vaf.writers;
+
+    if (cloudsToUpdateLength / cloudsLength > 0.1) {
+      // Like BillboardCollection, if more than 10% of clouds change,
+      // rewrite the entire buffer.
+
+      for (var m = 0; m < cloudsToUpdateLength; ++m) {
+        var c = cloudsToUpdate[m];
+        c._dirty = false;
+
+        for (var n = 0; n < numWriters; ++n) {
+          writers[n](this, frameState, vafWriters, c);
+        }
+      }
+      this._vaf.commit(getIndexBuffer(context));
+    } else {
+      for (var h = 0; h < cloudsToUpdateLength; ++h) {
+        var cl = cloudsToUpdate[h];
+        cl._dirty = false;
+
+        for (var o = 0; o < numWriters; ++o) {
+          writers[o](this, frameState, vafWriters, cl);
+        }
+
+        if (this._instanced) {
+          this._vaf.subCommit(cl._index, 1);
+        } else {
+          this._vaf.subCommit(cl._index * 4, 4);
+        }
+      }
+      this._vaf.endSubCommits();
+    }
+
+    this._cloudsToUpdateIndex = 0;
+  }
+
+  // If the number of total billboards ever shrinks considerably
+  // Truncate billboardsToUpdate so that we free memory that we're
+  // not going to be using.
+  if (cloudsToUpdateLength > cloudsLength * 1.5) {
+    cloudsToUpdate.length = cloudsLength;
   }
 
   if (!defined(this._vaf) || !defined(this._vaf.va)) {
