@@ -20,7 +20,7 @@ import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
+import ForEach from "./GltfPipeline/ForEach.js";
 import when from "../ThirdPartyNpm/when.js";
 import Model from "./Model.js";
 import ModelInstance from "./ModelInstance.js";

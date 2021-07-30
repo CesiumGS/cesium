@@ -2,6 +2,7 @@ Apps/HelloWorld.html
 Apps/Sandcastle/ThirdParty/**
 Build/**
 Documentation/**
+Source/Scene/GltfPipeline/**
 Source/Shaders/**
 Source/ThirdParty/**
 Source/ThirdPartyNpm/**
