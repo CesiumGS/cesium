@@ -19,7 +19,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "parent.glb",
+      "uri": "parent_q.glb",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,

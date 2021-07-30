@@ -79,8 +79,9 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   var vertexAttribute = {
     index: attributeIndex,
     vertexBuffer: attribute.buffer,
-    componentsPerAttribute: AttributeType.getComponentsPerAttribute(type),
+    componentsPerAttribute: AttributeType.getNumberOfComponents(type),
     componentDatatype: attribute.componentDatatype,
+    strideInBytes: attribute.byteStride,
   };
 
   // Handle user defined vertex attributes.

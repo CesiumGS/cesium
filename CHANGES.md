@@ -4,6 +4,8 @@
 
 ##### Additions :tada:
 
+- Added a `polylinePositions` getter to `Cesium3DTileFeature` that gets the decoded positions of a polyline vector feature. [#9684](https://github.com/CesiumGS/cesium/pull/9684)
+
 ##### Fixes :wrench:
 
 - Fixed an issue in `TileBoundingRegion.distanceToCamera` that caused incorrect results when the camera was on the opposite site of the globe. [#9678](https://github.com/CesiumGS/cesium/pull/9678)
@@ -11,6 +13,9 @@
 - Fixed the ability to set a material's image to `undefined` and `Material.DefaultImageId`. [#9644](https://github.com/CesiumGS/cesium/pull/9644)
 - Fixed the calculation of `OrientedBoundingBox.distancedSquaredTo` such that they handle `halfAxes` with magnitudes near zero. [#9670](https://github.com/CesiumGS/cesium/pull/9670)
 - Fixed render crash when creating a `polylineVolume` with very close points. [#9669](https://github.com/CesiumGS/cesium/pull/9669)
+- Fixed a bug in `PolylineGeometry` that incorrectly shifted colors when duplicate positions were removed. [#9676](https://github.com/CesiumGS/cesium/pull/9676)
+- Fixed a crash that would hang the browser if a `Label` was created with a soft hyphen in its text. [#9682](https://github.com/CesiumGS/cesium/pull/9682)
+- Fixed the incorrect calculation of `distanceSquaredTo` in `BoundingSphere`. [#9686](https://github.com/CesiumGS/cesium/pull/9686)
 
 ### 1.83 - 2021-07-01
 

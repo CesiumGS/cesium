@@ -693,7 +693,7 @@ var scratchPPrime = new Cartesian3();
  *
  * @param {OrientedBoundingBox} box The box.
  * @param {Cartesian3} cartesian The point
- * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+ * @returns {Number} The distance squared from the oriented bounding box to the point. Returns 0 if the point is inside the box.
  *
  * @example
  * // Sort bounding boxes from back to front
