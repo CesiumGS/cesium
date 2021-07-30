@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js"
+import defined from "../../Core/defined.js";
 
 /**
  * Removes an extension from gltf.extensionsRequired if it is present.
@@ -9,16 +9,16 @@ import defined from "../../Core/defined.js"
  * @private
  */
 function removeExtensionsRequired(gltf, extension) {
-    var extensionsRequired = gltf.extensionsRequired;
-    if (defined(extensionsRequired)) {
-        var index = extensionsRequired.indexOf(extension);
-        if (index >= 0) {
-            extensionsRequired.splice(index, 1);
-        }
-        if (extensionsRequired.length === 0) {
-            delete gltf.extensionsRequired;
-        }
+  var extensionsRequired = gltf.extensionsRequired;
+  if (defined(extensionsRequired)) {
+    var index = extensionsRequired.indexOf(extension);
+    if (index >= 0) {
+      extensionsRequired.splice(index, 1);
     }
+    if (extensionsRequired.length === 0) {
+      delete gltf.extensionsRequired;
+    }
+  }
 }
 
 export default removeExtensionsRequired;
