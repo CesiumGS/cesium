@@ -1,5 +1,5 @@
-import ForEach from "./ForEach.js";
-import defined from "../../Core/defined.js";
+import ForEach from "./ForEach.js"
+import defined from "../../Core/defined.js"
 
 /**
  * Adds extras._pipeline to each object that can have extras in the glTF asset.
@@ -11,26 +11,24 @@ import defined from "../../Core/defined.js";
  * @private
  */
 function addPipelineExtras(gltf) {
-  ForEach.shader(gltf, function (shader) {
-    addExtras(shader);
-  });
-  ForEach.buffer(gltf, function (buffer) {
-    addExtras(buffer);
-  });
-  ForEach.image(gltf, function (image) {
-    addExtras(image);
-  });
+    ForEach.shader(gltf, function(shader) {
+        addExtras(shader);
+    });
+    ForEach.buffer(gltf, function(buffer) {
+        addExtras(buffer);
+    });
+    ForEach.image(gltf, function (image) {
+        addExtras(image);
+    });
 
-  addExtras(gltf);
+    addExtras(gltf);
 
-  return gltf;
+    return gltf;
 }
 
 function addExtras(object) {
-  object.extras = defined(object.extras) ? object.extras : {};
-  object.extras._pipeline = defined(object.extras._pipeline)
-    ? object.extras._pipeline
-    : {};
+    object.extras = defined(object.extras) ? object.extras : {};
+    object.extras._pipeline = defined(object.extras._pipeline) ? object.extras._pipeline : {};
 }
 
 export default addPipelineExtras;

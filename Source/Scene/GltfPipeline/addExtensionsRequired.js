@@ -1,6 +1,6 @@
-import addExtensionsUsed from "./addExtensionsUsed.js";
-import addToArray from "./addToArray.js";
-import defined from "../../Core/defined.js";
+import addExtensionsUsed from "./addExtensionsUsed.js"
+import addToArray from "./addToArray.js"
+import defined from "../../Core/defined.js"
 
 /**
  * Adds an extension to gltf.extensionsRequired if it does not already exist.
@@ -12,13 +12,13 @@ import defined from "../../Core/defined.js";
  * @private
  */
 function addExtensionsRequired(gltf, extension) {
-  var extensionsRequired = gltf.extensionsRequired;
-  if (!defined(extensionsRequired)) {
-    extensionsRequired = [];
-    gltf.extensionsRequired = extensionsRequired;
-  }
-  addToArray(extensionsRequired, extension, true);
-  addExtensionsUsed(gltf, extension);
+    var extensionsRequired = gltf.extensionsRequired;
+    if (!defined(extensionsRequired)) {
+        extensionsRequired = [];
+        gltf.extensionsRequired = extensionsRequired;
+    }
+    addToArray(extensionsRequired, extension, true);
+    addExtensionsUsed(gltf, extension);
 }
 
 export default addExtensionsRequired;

@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import defined from "../../Core/defined.js"
 
 /**
  * Checks whether the glTF uses the given extension.
@@ -10,9 +10,7 @@ import defined from "../../Core/defined.js";
  * @private
  */
 function usesExtension(gltf, extension) {
-  return (
-    defined(gltf.extensionsUsed) && gltf.extensionsUsed.indexOf(extension) >= 0
-  );
+    return defined(gltf.extensionsUsed) && (gltf.extensionsUsed.indexOf(extension) >= 0);
 }
 
 export default usesExtension;

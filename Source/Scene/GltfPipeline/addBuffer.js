@@ -1,4 +1,4 @@
-import addToArray from "./addToArray.js";
+import addToArray from "./addToArray.js"
 
 /**
  * Adds buffer to gltf.
@@ -10,21 +10,21 @@ import addToArray from "./addToArray.js";
  * @private
  */
 function addBuffer(gltf, buffer) {
-  var newBuffer = {
-    byteLength: buffer.length,
-    extras: {
-      _pipeline: {
-        source: buffer,
-      },
-    },
-  };
-  var bufferId = addToArray(gltf.buffers, newBuffer);
-  var bufferView = {
-    buffer: bufferId,
-    byteOffset: 0,
-    byteLength: buffer.length,
-  };
-  return addToArray(gltf.bufferViews, bufferView);
+    var newBuffer = {
+        byteLength: buffer.length,
+        extras: {
+            _pipeline: {
+                source: buffer
+            }
+        }
+    };
+    var bufferId = addToArray(gltf.buffers, newBuffer);
+    var bufferView = {
+        buffer: bufferId,
+        byteOffset: 0,
+        byteLength: buffer.length
+    };
+    return addToArray(gltf.bufferViews, bufferView);
 }
 
 export default addBuffer;
