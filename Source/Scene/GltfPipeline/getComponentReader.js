@@ -70,6 +70,8 @@ function getComponentReader(componentType) {
  * @param {Number} numberOfComponents The number of components to read.
  * @param {Number} componentTypeByteLength The byte length of each component.
  * @param {Number} result An array storing the components that are read.
+ *
+ * @private
  */
 
 export default getComponentReader;

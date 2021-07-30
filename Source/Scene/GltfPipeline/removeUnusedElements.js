@@ -120,6 +120,10 @@ Remove.buffer = function(gltf, bufferId) {
         if (defined(bufferView.buffer) && bufferView.buffer > bufferId) {
             bufferView.buffer--;
         }
+
+        if (defined(bufferView.extensions) && defined(bufferView.extensions.EXT_meshopt_compression)) {
+            bufferView.extensions.EXT_meshopt_compression.buffer--;
+        }
     });
 };
 
@@ -423,6 +427,9 @@ getListOfElementsIdsInUse.buffer = function(gltf) {
     ForEach.bufferView(gltf, function(bufferView) {
         if (defined(bufferView.buffer)) {
             usedBufferIds[bufferView.buffer] = true;
+        }
+        if (defined(bufferView.extensions) && defined(bufferView.extensions.EXT_meshopt_compression)) {
+            usedBufferIds[bufferView.extensions.EXT_meshopt_compression.buffer] = true;
         }
     });
 
