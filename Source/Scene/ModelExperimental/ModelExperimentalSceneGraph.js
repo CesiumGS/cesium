@@ -36,6 +36,7 @@ export default function ModelExperimentalSceneGraph(options) {
 
   this._upAxis = defaultValue(options.upAxis, Axis.Y);
   this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
+  this._allowPicking = defaultValue(options.allowPicking, true);
 
   initialize(this);
 }
@@ -100,6 +101,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
       sceneNode._sceneMeshPrimitives.push(
         new ModelExperimentalSceneMeshPrimitive({
           primitive: node.primitives[i],
+          allowPicking: sceneGraph._allowPicking,
         })
       );
     }
@@ -142,7 +144,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,
-          sceneMeshPrimitive._primitive
+          sceneMeshPrimitive._primitive,
+          frameState
         );
       }
 

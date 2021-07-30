@@ -18,6 +18,18 @@ export default function ModelFeatureTable(model, featureTable) {
   });
 }
 
+ModelFeatureTable.prototype.getPickColor = function (featureId) {
+  return this._batchTexture.setColor(featureId);
+};
+
+ModelFeatureTable.prototype.setColor = function (featureId, color) {
+  this._batchTexture.setColor(featureId, color);
+};
+
+ModelFeatureTable.prototype.getColor = function (featureId, result) {
+  return this._batchTexture.getColor(featureId, result);
+};
+
 ModelFeatureTable.prototype.update = function (frameState) {
   this._batchTexture.update(this.content._tileset, frameState);
 };

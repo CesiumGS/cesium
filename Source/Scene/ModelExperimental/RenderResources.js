@@ -57,6 +57,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
     primitive,
     this.modelMatrix
   );
+  this.uniformMap = {};
 
   // Static properties.
   this.renderStateOptions = {

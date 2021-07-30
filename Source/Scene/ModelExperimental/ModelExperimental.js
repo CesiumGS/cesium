@@ -29,6 +29,7 @@ export default function ModelExperimental(options) {
   this._content = undefined;
   this._gltfLoader = undefined;
   this._featureTable = undefined;
+  this._pickObject = undefined;
   this._readyPromise = when.defer();
 
   this._resourcesLoaded = false;
@@ -118,6 +119,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
 function initialize(model, options) {
   model._content = options.content;
+  model._pickObject = options.pickObject;
 
   var gltf = options.gltf;
   var gltfResource = Resource.createIfNeeded(
@@ -148,6 +150,7 @@ function initialize(model, options) {
         modelComponents: components,
         upAxis: options.upAxis,
         forwardAxis: options.forwardAxis,
+        allowPicking: options.allowPicking,
       });
 
       if (defined(components.featureMetadata)) {
