@@ -7,10 +7,10 @@ vec3 LINEARtoSRGB(vec3 linearIn)
     #endif 
 }
 
-ModelMaterial lightingStage(ModelMaterial inputMaterial)
+czm_modelMaterial lightingStage(czm_modelMaterial inputMaterial)
 {
     // copying so normal
-    ModelMaterial outputMaterial = inputMaterial;
+    czm_modelMaterial outputMaterial = inputMaterial;
     vec3 color = vec3(0.0);
 
     // Hard-coding the unlit behavior for now, PBR will come in a future

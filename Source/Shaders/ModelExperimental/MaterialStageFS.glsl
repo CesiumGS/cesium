@@ -1,17 +1,5 @@
-// TODO: Move this to czm_modelMaterial
-struct ModelMaterial {
-  // base color minus alpha
-  vec3 diffuse;
-  float alpha;
-  vec3 specular;
-  float roughness;
-  vec3 normal;
-  float occlusion;
-  vec3 emissive;
-};
-
-ModelMaterial defaultModelMaterial() {
-  ModelMaterial material;
+czm_modelMaterial defaultModelMaterial() {
+  czm_modelMaterial material;
   material.diffuse = vec3(1.0);
   material.specular = vec3(0.04); // dielectric (non-metal)
   material.roughness = 0.0;
@@ -73,8 +61,8 @@ vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform) {
   return vec2(textureTransform * vec3(texCoord, 1.0));
 }
 
-ModelMaterial materialStage(ModelMaterial inputMaterial) {
-  ModelMaterial material = inputMaterial; 
+czm_modelMaterial materialStage(czm_modelMaterial inputMaterial) {
+  czm_modelMaterial material = inputMaterial; 
 
   #ifdef HAS_NORMALS
   material.normal = computeNormal();

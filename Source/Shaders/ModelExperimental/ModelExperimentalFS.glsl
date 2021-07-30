@@ -14,9 +14,7 @@ vec4 handleAlpha(vec3 color, float alpha)
 }
 
 void main() {
-  // TODO: Where to put definition of ModelMaterial? 
-  // or should it be czm_ModelMaterial?
-  ModelMaterial material = defaultModelMaterial();
+  czm_modelMaterial material = defaultModelMaterial();
 
   material = materialStage(material);
   material = lightingStage(material);
