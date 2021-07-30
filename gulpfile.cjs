@@ -74,7 +74,7 @@ const sourceFiles = [
   "!Source/WorkersES6/**",
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/Core/google-earth-dbroot-parser.js",
   "!Source/ThirdPartyNpm/_*",
 ];
 
@@ -1305,7 +1305,7 @@ function minifyCSS(outputDirectory) {
 function minifyModules(outputDirectory) {
   return streamToPromise(
     gulp
-      .src("Source/ThirdParty/google-earth-dbroot-parser.js")
+      .src("Source/Core/google-earth-dbroot-parser.js")
       .pipe(gulpUglify())
       .pipe(gulp.dest(outputDirectory + "/ThirdParty/"))
   );

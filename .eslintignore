@@ -2,6 +2,7 @@ Apps/HelloWorld.html
 Apps/Sandcastle/ThirdParty/**
 Build/**
 Documentation/**
+Source/Core/google-earth-dbroot-parser.js
 Source/Shaders/**
 Source/ThirdParty/**
 Source/ThirdPartyNpm/**

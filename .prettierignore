@@ -22,6 +22,7 @@
 # Re-ignore a few things caught above
 **/*.min.js
 Source/Cesium.js
+Source/Core/google-earth-dbroot-parser.js
 Source/Shaders/**/*.js
 Source/ThirdParty/**
 Source/ThirdPartyNpm/**
