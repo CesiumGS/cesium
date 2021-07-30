@@ -7,6 +7,8 @@ import defined from "../../Core/defined.js"
  * Mimics the behavior of functions in gltf-pipeline ForEach.
  * @param {Object} material The glTF material.
  * @param {forEachTextureInMaterial~handler} handler Function that is called for each texture in the material.
+ *
+ * @private
  */
 function forEachTextureInMaterial(material, handler) {
     Check.typeOf.object('material', material);
@@ -129,6 +131,8 @@ function forEachTextureInMaterial(material, handler) {
  * @callback forEachTextureInMaterial~handler
  * @param {Number} The texture index.
  * @param {Object} The texture info object.
+ *
+ * @private
  */
 
 export default forEachTextureInMaterial;
