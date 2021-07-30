@@ -4,12 +4,30 @@ import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
 import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js";
 
+/**
+ * The material pipeline stage processes textures and other uniforms needed
+ * to render a primitive. This handles the following material types:
+ * <ul>
+ *   <li>Basic glTF materials (PBR metallic roughness model)</li>
+ *   <li>The `KHR_materials_pbrSpecularGlossiness` glTF extension</li>
+ *   <li>The `KHR_materials_unlit` glTF extension</li>
+ * </ul>
+ *
+ * @private
+ */
 export default function MaterialPipelineStage() {}
 
 /**
- * TODO
+ * Process a primitive. This modifies the following parts of the render
+ * resources:
+ * <ul>
+ *   <li>Modifies the shader to include the material processing stage</li>
+ *   <li>Modifies the shader to include additional uniforms for textures and other rendering details</li>
+ *   <li>Modifies the lighting options to set either PBR or unlit lighting</li>
+ *   <li>Sets the render state for back-face culling</li>
+ * </ul>
  * @param {PrimitiveRenderResources} renderResources
- * @param {ModelComponents.Primitive} primitive
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @private
  */
 MaterialPipelineStage.process = function (renderResources, primitive) {

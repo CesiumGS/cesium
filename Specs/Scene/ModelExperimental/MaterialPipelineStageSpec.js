@@ -1,4 +1,6 @@
 import {
+  _shadersMaterialStageFS,
+  AlphaMode,
   combine,
   GltfLoader,
   LightingModel,
@@ -213,23 +215,47 @@ describe("Scene/ModelExperimental/MaterialPipelineStage", function () {
   });
 
   it("enables PBR lighting for metallic roughness materials", function () {
-    fail();
+    return loadGltf(boomBox).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+      var lightingOptions = new ModelLightingOptions();
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: {},
+        lightingOptions: lightingOptions,
+        renderStateOptions: {},
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive);
+      expect(lightingOptions.lightingModel).toBe(LightingModel.PBR);
+    });
   });
 
   it("enables PBR lighting for specular glossiness materials", function () {
-    fail();
+    return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+      var lightingOptions = new ModelLightingOptions();
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: {},
+        lightingOptions: lightingOptions,
+        renderStateOptions: {},
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive);
+      expect(lightingOptions.lightingModel).toBe(LightingModel.PBR);
+    });
   });
 
   it("enables unlit lighting when KHR_materials_unlit is present", function () {
     return loadGltf(boxUnlit).then(function (gltfLoader) {
       var components = gltfLoader.components;
       var primitive = components.nodes[1].primitives[0];
-      var shaderBuilder = new ShaderBuilder();
       var lightingOptions = new ModelLightingOptions();
-      var uniformMap = {};
       var renderResources = {
-        shaderBuilder: shaderBuilder,
-        uniformMap: uniformMap,
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: {},
         lightingOptions: lightingOptions,
         renderStateOptions: {},
       };
@@ -239,19 +265,142 @@ describe("Scene/ModelExperimental/MaterialPipelineStage", function () {
     });
   });
 
-  it("configures alpha settings", function () {
-    fail();
+  it("handles alphaMode = OPAQUE", function () {
+    return loadGltf(boomBox).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+      var shaderBuilder = new ShaderBuilder();
+      var renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: {},
+        lightingOptions: new ModelLightingOptions(),
+        renderStateOptions: {},
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive);
+
+      expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        "ALPHA_MODE_OPAQUE",
+      ]);
+    });
   });
 
-  it("adds material stage functions to the fragment shader", function () {
-    fail();
+  it("handles alphaMode = MASK", function () {
+    return loadGltf(boomBox).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+      var shaderBuilder = new ShaderBuilder();
+      var uniformMap = {};
+      var renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        lightingOptions: new ModelLightingOptions(),
+        renderStateOptions: {},
+      };
+
+      var cutoff = 0.6;
+      primitive.material.alphaMode = AlphaMode.MASK;
+      primitive.material.alphaCutoff = cutoff;
+      MaterialPipelineStage.process(renderResources, primitive);
+
+      expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        "ALPHA_MODE_MASK",
+      ]);
+
+      expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+        "uniform float u_alphaCutoff;",
+      ]);
+
+      expectUniformMap(uniformMap, {
+        u_alphaCutoff: cutoff,
+      });
+    });
+  });
+
+  it("handles alphaMode = BLEND", function () {
+    return loadGltf(boomBox).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+      var shaderBuilder = new ShaderBuilder();
+      var renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: {},
+        lightingOptions: new ModelLightingOptions(),
+        renderStateOptions: {},
+      };
+
+      primitive.material.alphaMode = AlphaMode.BLEND;
+      MaterialPipelineStage.process(renderResources, primitive);
+
+      expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+        "ALPHA_MODE_BLEND",
+      ]);
+    });
   });
 
   it("enables culling if material is not double-sided", function () {
-    fail();
+    return loadGltf(boxUnlit).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[1].primitives[0];
+      var renderStateOptions = {};
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: {},
+        lightingOptions: new ModelLightingOptions(),
+        renderStateOptions: renderStateOptions,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive);
+      expect(renderStateOptions).toEqual({
+        cull: {
+          enabled: true,
+        },
+      });
+    });
   });
 
   it("disables culling if material is double-sided", function () {
-    fail();
+    return loadGltf(boxUnlit).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[1].primitives[0];
+      var renderStateOptions = {};
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: {},
+        lightingOptions: new ModelLightingOptions(),
+        renderStateOptions: renderStateOptions,
+      };
+
+      primitive.material.doubleSided = true;
+      MaterialPipelineStage.process(renderResources, primitive);
+
+      expect(renderStateOptions).toEqual({
+        cull: {
+          enabled: false,
+        },
+      });
+    });
+  });
+
+  it("adds material stage functions to the fragment shader", function () {
+    return loadGltf(boxUnlit).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[1].primitives[0];
+      var shaderBuilder = new ShaderBuilder();
+      var renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: {},
+        lightingOptions: new ModelLightingOptions(),
+        renderStateOptions: {},
+      };
+
+      primitive.material.doubleSided = true;
+      MaterialPipelineStage.process(renderResources, primitive);
+
+      expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
+      expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([
+        _shadersMaterialStageFS,
+      ]);
+    });
   });
 });

@@ -1,7 +1,7 @@
 import {
+  _shadersLightingStageFS,
   LightingModel,
   LightingPipelineStage,
-  _shadersLightingStageFS,
   ModelLightingOptions,
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
