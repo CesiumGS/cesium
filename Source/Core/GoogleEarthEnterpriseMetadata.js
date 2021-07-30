@@ -510,7 +510,7 @@ function requestDbRoot(that) {
   });
 
   if (!defined(dbrootParserPromise)) {
-    var url = buildModuleUrl("Core/google-earth-dbroot-parser.js");
+    var url = buildModuleUrl("ThirdParty/google-earth-dbroot-parser.js");
     var oldValue = window.cesiumGoogleEarthDbRootParser;
     dbrootParserPromise = loadAndExecuteScript(url).then(function () {
       dbrootParser = window.cesiumGoogleEarthDbRootParser(protobufMinimal);

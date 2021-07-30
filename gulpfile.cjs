@@ -74,7 +74,7 @@ const sourceFiles = [
   "!Source/WorkersES6/**",
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
-  "!Source/Core/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdPartyNpm/_*",
 ];
 
@@ -968,6 +968,7 @@ gulp.task("test", function (done) {
   let files = [
     { pattern: "Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Source/**", included: false, type: "module" },
+    { pattern: "Source/**"}
     { pattern: "Specs/*.js", included: true, type: "module" },
     { pattern: "Specs/Core/**", included: true, type: "module" },
     { pattern: "Specs/Data/**", included: false },
@@ -1305,7 +1306,7 @@ function minifyCSS(outputDirectory) {
 function minifyModules(outputDirectory) {
   return streamToPromise(
     gulp
-      .src("Source/Core/google-earth-dbroot-parser.js")
+      .src("Source/ThirdParty/google-earth-dbroot-parser.js")
       .pipe(gulpUglify())
       .pipe(gulp.dest(outputDirectory + "/ThirdParty/"))
   );
