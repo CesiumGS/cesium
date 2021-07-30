@@ -968,7 +968,7 @@ gulp.task("test", function (done) {
   let files = [
     { pattern: "Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Source/**", included: false, type: "module" },
-    { pattern: "Source/**"}
+    { pattern: "Source/**"},
     { pattern: "Specs/*.js", included: true, type: "module" },
     { pattern: "Specs/Core/**", included: true, type: "module" },
     { pattern: "Specs/Data/**", included: false },
