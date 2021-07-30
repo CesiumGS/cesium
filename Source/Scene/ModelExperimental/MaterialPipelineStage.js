@@ -258,11 +258,16 @@ function processSpecularGlossinessUniforms(
       ShaderDestination.FRAGMENT
     );
     uniformMap.u_specularGlossinessTexture = function () {
-      return specularGlossiness.diffuseTexture.texture;
+      return specularGlossiness.specularGlossinessTexture.texture;
     };
     texCoordIndex = specularGlossinessTexture.texCoord;
     shaderBuilder.addDefine(
-      "TEXCOORD_DIFFUSE",
+      "HAS_SPECULAR_GLOSSINESS_TEXTURE",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addDefine(
+      "TEXCOORD_SPECULAR_GLOSSINESS",
       "v_texCoord_" + texCoordIndex,
       ShaderDestination.FRAGMENT
     );
