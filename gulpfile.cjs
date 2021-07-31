@@ -67,6 +67,17 @@ if (!concurrency) {
   concurrency = os.cpus().length;
 }
 
+// Work-around until all third party libraries use npm
+const filesToLeaveInThirdParty = [
+  "!Source/ThirdParty/Workers/*",
+  "!Source/ThirdParty/*.wasm",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/knockout*.js",
+  "!Source/ThirdParty/measureText.js",
+  "!Source/ThirdParty/protobuf-minimal.js",
+  "!Source/ThirdParty/Uri.js",
+];
+
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
@@ -75,6 +86,24 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/_commonjsHelpers*",
+  "!Source/ThirdParty/Autolinker.js",
+  "!Source/ThirdParty/bitmap-sdf.js",
+  "!Source/ThirdParty/dompurify.js",
+  "!Source/ThirdParty/earcut.js",
+  "!Source/ThirdParty/grapheme-splitter.js",
+  "!Source/ThirdParty/jsep.js",
+  "!Source/ThirdParty/kdbush.js",
+  "!Source/ThirdParty/ktx-parse.js",
+  "!Source/ThirdParty/lerc.js",
+  "!Source/ThirdParty/mersenne-twister.js",
+  "!Source/ThirdParty/nosleep.js",
+  "!Source/ThirdParty/pako.js",
+  "!Source/ThirdParty/rbush.js",
+  "!Source/ThirdParty/topojson.js",
+  "!Source/ThirdParty/Tween.js",
+  "!Source/ThirdParty/when.js",
+  "!Source/ThirdParty/zip.js",
 ];
 
 const watchedFiles = [
@@ -120,17 +149,6 @@ const filesToConvertES6 = [
   "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
-];
-
-// Work-around until all third party libraries use npm
-const filesToLeaveInThirdParty = [
-  "!Source/ThirdParty/Workers/*",
-  "!Source/ThirdParty/*.wasm",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/knockout*.js",
-  "!Source/ThirdParty/measureText.js",
-  "!Source/ThirdParty/protobuf-minimal.js",
-  "!Source/ThirdParty/Uri.js",
 ];
 
 function rollupWarning(message) {
