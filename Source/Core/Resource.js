@@ -1,5 +1,5 @@
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
 import clone from "./clone.js";

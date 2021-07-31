@@ -1,7 +1,7 @@
 import defined from "../Core/defined.js";
 import Rectangle from "../Core/Rectangle.js";
 import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import SceneMode from "./SceneMode.js";
 
 /**

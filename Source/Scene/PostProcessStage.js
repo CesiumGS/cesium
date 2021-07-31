@@ -18,7 +18,7 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
 /**

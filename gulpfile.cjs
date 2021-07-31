@@ -75,7 +75,6 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdPartyNpm/_*",
 ];
 
 const watchedFiles = [
@@ -99,7 +98,6 @@ const filesToClean = [
   "!Source/Workers/cesiumWorkerBootstrapper.js",
   "!Source/Workers/transferTypedArrayTest.js",
   "Source/ThirdParty/Shaders/*.js",
-  "Source/ThirdPartyNpm/**",
   "Specs/SpecList.js",
   "Apps/Sandcastle/jsHintOptions.js",
   "Apps/Sandcastle/gallery/gallery-index.js",
@@ -122,6 +120,17 @@ const filesToConvertES6 = [
   "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
+];
+
+// Work-around until all third party libraries use npm
+const filesToLeaveInThirdParty = [
+  "!Source/ThirdParty/Workers/*",
+  "!Source/ThirdParty/*.wasm",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/knockout*.js",
+  "!Source/ThirdParty/measureText.js",
+  "!Source/ThirdParty/protobuf-minimal.js",
+  "!Source/ThirdParty/Uri.js",
 ];
 
 function rollupWarning(message) {
@@ -180,7 +189,9 @@ function createWorkers() {
 
 async function buildThirdParty() {
   rimraf.sync("Build/createWorkers");
-  rimraf.sync("Source/ThirdPartyNpm");
+  globby.sync(filesToLeaveInThirdParty).forEach(function (file) {
+    rimraf.sync(file);
+  });
 
   const workers = globby.sync(["ThirdParty/npm/**"]);
 
@@ -202,7 +213,7 @@ async function buildThirdParty() {
       return streamToPromise(
         gulp
           .src("Build/createThirdPartyNpm/**")
-          .pipe(gulp.dest("Source/ThirdPartyNpm"))
+          .pipe(gulp.dest("Source/ThirdParty"))
       );
     })
     .then(function () {

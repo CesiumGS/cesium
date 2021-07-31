@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 
 /**
  * @typedef {Object} TileCoordinatesImageryProvider.ConstructorOptions

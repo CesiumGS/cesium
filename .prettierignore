@@ -25,7 +25,6 @@ Source/Cesium.js
 Source/Scene/GltfPipeline/**
 Source/Shaders/**/*.js
 Source/ThirdParty/**
-Source/ThirdPartyNpm/**
 Source/Workers/**/*
 Apps/Sandcastle/ThirdParty
 

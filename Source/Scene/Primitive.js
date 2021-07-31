@@ -31,7 +31,7 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import BatchTable from "./BatchTable.js";
 import CullFace from "./CullFace.js";
 import DepthFunction from "./DepthFunction.js";

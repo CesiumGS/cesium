@@ -1,4 +1,4 @@
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";

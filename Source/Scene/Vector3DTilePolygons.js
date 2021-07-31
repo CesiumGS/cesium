@@ -9,7 +9,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import ClassificationType from "./ClassificationType.js";
 import Vector3DTileBatch from "./Vector3DTileBatch.js";
 import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";

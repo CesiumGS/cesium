@@ -11,7 +11,7 @@ import Rectangle from "../../Core/Rectangle.js";
 import sampleTerrainMostDetailed from "../../Core/sampleTerrainMostDetailed.js";
 import computeFlyToLocationForRectangle from "../../Scene/computeFlyToLocationForRectangle.js";
 import knockout from "../../ThirdParty/knockout.js";
-import when from "../../ThirdPartyNpm/when.js";
+import when from "../../ThirdParty/when.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 

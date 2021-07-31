@@ -10,7 +10,7 @@ import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import PointCloud from "./PointCloud.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";

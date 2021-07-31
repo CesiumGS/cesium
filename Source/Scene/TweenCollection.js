@@ -5,7 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import TimeConstants from "../Core/TimeConstants.js";
-import TweenJS from "../ThirdPartyNpm/Tween.js";
+import TweenJS from "../ThirdParty/Tween.js";
 
 /**
  * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create

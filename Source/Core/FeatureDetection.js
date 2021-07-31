@@ -1,4 +1,4 @@
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";

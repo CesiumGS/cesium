@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getMagic from "../Core/getMagic.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 
 /**
  * Represents the contents of a
