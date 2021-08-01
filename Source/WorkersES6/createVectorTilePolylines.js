@@ -1,4 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import combine from "../Core/combine.js";
 import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -27,6 +28,18 @@ function unpackBuffer(packedBuffer) {
   offset += Ellipsoid.packedLength;
 
   Cartesian3.unpack(packedBuffer, offset, scratchCenter);
+}
+
+function getPositionOffsets(counts) {
+  var countsLength = counts.length;
+  var positionOffsets = new Uint32Array(countsLength + 1);
+  var offset = 0;
+  for (var i = 0; i < countsLength; ++i) {
+    positionOffsets[i] = offset;
+    offset += counts[i];
+  }
+  positionOffsets[countsLength] = offset;
+  return positionOffsets;
 }
 
 var scratchP0 = new Cartesian3();
@@ -166,7 +179,7 @@ function createVectorTilePolylines(parameters, transferableObjects) {
     indices.buffer
   );
 
-  return {
+  var results = {
     indexDatatype:
       indices.BYTES_PER_ELEMENT === 2
         ? IndexDatatype.UNSIGNED_SHORT
@@ -178,5 +191,16 @@ function createVectorTilePolylines(parameters, transferableObjects) {
     batchIds: vertexBatchIds.buffer,
     indices: indices.buffer,
   };
+
+  if (parameters.keepDecodedPositions) {
+    var positionOffsets = getPositionOffsets(counts);
+    transferableObjects.push(positions.buffer, positionOffsets.buffer);
+    results = combine(results, {
+      decodedPositions: positions.buffer,
+      decodedPositionOffsets: positionOffsets.buffer,
+    });
+  }
+
+  return results;
 }
 export default createTaskProcessorWorker(createVectorTilePolylines);
