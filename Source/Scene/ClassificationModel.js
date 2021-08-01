@@ -22,7 +22,7 @@ import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import ModelLoadResources from "./ModelLoadResources.js";
 import ModelUtility from "./ModelUtility.js";

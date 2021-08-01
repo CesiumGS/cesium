@@ -12,7 +12,7 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShadowVolumeAppearanceVS from "../Shaders/ShadowVolumeAppearanceVS.js";
 import ShadowVolumeFS from "../Shaders/ShadowVolumeFS.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import ClassificationType from "./ClassificationType.js";
 import DepthFunction from "./DepthFunction.js";

@@ -5,7 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import ArcGisMapServerImageryProvider from "./ArcGisMapServerImageryProvider.js";
 import BingMapsImageryProvider from "./BingMapsImageryProvider.js";
 import TileMapServiceImageryProvider from "./TileMapServiceImageryProvider.js";

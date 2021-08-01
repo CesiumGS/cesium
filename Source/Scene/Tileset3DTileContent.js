@@ -1,5 +1,5 @@
 import destroyObject from "../Core/destroyObject.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 
 /**
  * Represents content for a tile in a

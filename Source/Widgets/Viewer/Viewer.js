@@ -24,7 +24,7 @@ import ImageryLayer from "../../Scene/ImageryLayer.js";
 import SceneMode from "../../Scene/SceneMode.js";
 import TimeDynamicPointCloud from "../../Scene/TimeDynamicPointCloud.js";
 import knockout from "../../ThirdParty/knockout.js";
-import when from "../../ThirdPartyNpm/when.js";
+import when from "../../ThirdParty/when.js";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
 import BaseLayerPicker from "../BaseLayerPicker/BaseLayerPicker.js";

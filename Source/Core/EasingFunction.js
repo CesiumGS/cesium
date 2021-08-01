@@ -1,4 +1,4 @@
-import Tween from "../ThirdPartyNpm/Tween.js";
+import Tween from "../ThirdParty/Tween.js";
 
 /**
  * Easing functions for use with TweenCollection.  These function are from

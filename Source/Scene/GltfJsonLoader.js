@@ -11,7 +11,7 @@ import ForEach from "./GltfPipeline/ForEach.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 

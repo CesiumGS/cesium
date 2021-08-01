@@ -1,5 +1,5 @@
 import protobufMinimal from "../ThirdParty/protobuf-minimal.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";

@@ -9,7 +9,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Rectangle from "../Core/Rectangle.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import BillboardCollection from "./BillboardCollection.js";
 import Cesium3DTilePointFeature from "./Cesium3DTilePointFeature.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";

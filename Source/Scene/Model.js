@@ -51,7 +51,7 @@ import usesExtension from "./GltfPipeline/usesExtension.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
