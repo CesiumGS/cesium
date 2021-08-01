@@ -725,6 +725,7 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
       source +=
         "uniform sampler2D tile_pickTexture; \n" +
         "uniform sampler2D tile_batchTexture; \n" +
+        "uniform float tile_featuresLength; \n" +
         "void main() \n" +
         "{ \n";
 
@@ -736,8 +737,12 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
           "    float batchId = " +
           batchIdExpression +
           "; \n" +
-          "    vec2 st = computeSt(batchId); \n" +
-          "    vec4 featureProperties = texture2D(tile_batchTexture, st); \n";
+          "    vec4 featureProperties = vec4(1.0); \n" +
+          "    if (batchId < tile_featuresLength) \n" +
+          "    { \n" +
+          "        vec2 st = computeSt(batchId); \n" +
+          "        featureProperties = texture2D(tile_batchTexture, st); \n" +
+          "    } \n";
       }
 
       source +=
@@ -862,6 +867,9 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
       tile_pickTexture: function () {
         return that._batchTexture.pickTexture;
       },
+      tile_featuresLength: function () {
+        return that.featuresLength;
+      },
     };
 
     return combine(uniformMap, batchUniformMap);
@@ -878,7 +886,13 @@ Cesium3DTileBatchTable.prototype.getPickId = function (
   );
 
   if (addFeatureIdTextureToGeneratedShaders) {
-    return "texture2D(tile_pickTexture, computeSt(" + batchIdExpression + "))";
+    return (
+      "((" +
+      batchIdExpression +
+      ") < tile_featuresLength ? texture2D(tile_pickTexture, computeSt(" +
+      batchIdExpression +
+      ")) : vec4(0.0))"
+    );
   }
 
   return "texture2D(tile_pickTexture, tile_featureSt)";
