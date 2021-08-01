@@ -325,48 +325,7 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
 
 var applicableRectangleScratch = new Rectangle();
 
-/**
- * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
- * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
- * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
- *
- * @param {Ray} ray The ray to test for intersection.
- * @param {Scene} scene The scene.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
- *                                             If it can be quickly determined that no features are intersected (for example,
- *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
- *                                             or because the pick ray does not intersect the surface), this function will
- *                                             return undefined.
- *
- * @example
- * var pickRay = viewer.camera.getPickRay(windowPosition);
- * var featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
- * if (!Cesium.defined(featuresPromise)) {
- *     console.log('No features picked.');
- * } else {
- *     Cesium.when(featuresPromise, function(features) {
- *         // This function is called asynchronously when the list if picked features is available.
- *         console.log('Number of features: ' + features.length);
- *         if (features.length > 0) {
- *             console.log('First feature name: ' + features[0].name);
- *         }
- *     });
- * }
- */
-ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
-  ray,
-  scene
-) {
-  // Find the picked location on the globe.
-  var pickedPosition = scene.globe.pick(ray, scene);
-  if (!defined(pickedPosition)) {
-    return undefined;
-  }
-
-  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
-    pickedPosition
-  );
-
+function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   // Find the terrain tile containing the picked location.
   var tilesToRender = scene.globe._surface._tilesToRender;
   var pickedTile;
@@ -383,14 +342,12 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   }
 
   if (!defined(pickedTile)) {
-    return undefined;
+    return;
   }
 
   // Pick against all attached imagery tiles containing the pickedLocation.
   var imageryTiles = pickedTile.data.imagery;
 
-  var promises = [];
-  var imageryLayers = [];
   for (var i = imageryTiles.length - 1; i >= 0; --i) {
     var terrainImagery = imageryTiles[i];
     var imagery = terrainImagery.readyImagery;
@@ -398,7 +355,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       continue;
     }
     var provider = imagery.imageryLayer.imageryProvider;
-    if (!defined(provider.pickFeatures)) {
+    if (pickFeatures && !defined(provider.pickFeatures)) {
       continue;
     }
 
@@ -435,6 +392,92 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       continue;
     }
 
+    callback(imagery);
+  }
+}
+
+/**
+ * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
+ * location on the screen, use {@link Camera.getPickRay}.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {ImageryLayer[]|undefined} An array that includes all of
+ *                                 the layers that are intersected by a given pick ray. Undefined if
+ *                                 no layers are selected.
+ *
+ */
+ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
+  // Find the picked location on the globe.
+  var pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return;
+  }
+
+  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
+
+  var imageryLayers = [];
+
+  pickImageryHelper(scene, pickedLocation, false, function (imagery) {
+    imageryLayers.push(imagery.imageryLayer);
+  });
+
+  if (imageryLayers.length === 0) {
+    return undefined;
+  }
+
+  return imageryLayers;
+};
+
+/**
+ * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
+ * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
+ * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {Scene} scene The scene.
+ * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
+ *                                             If it can be quickly determined that no features are intersected (for example,
+ *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
+ *                                             or because the pick ray does not intersect the surface), this function will
+ *                                             return undefined.
+ *
+ * @example
+ * var pickRay = viewer.camera.getPickRay(windowPosition);
+ * var featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+ * if (!Cesium.defined(featuresPromise)) {
+ *     console.log('No features picked.');
+ * } else {
+ *     Cesium.when(featuresPromise, function(features) {
+ *         // This function is called asynchronously when the list if picked features is available.
+ *         console.log('Number of features: ' + features.length);
+ *         if (features.length > 0) {
+ *             console.log('First feature name: ' + features[0].name);
+ *         }
+ *     });
+ * }
+ */
+ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
+  ray,
+  scene
+) {
+  // Find the picked location on the globe.
+  var pickedPosition = scene.globe.pick(ray, scene);
+  if (!defined(pickedPosition)) {
+    return;
+  }
+
+  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+    pickedPosition
+  );
+
+  var promises = [];
+  var imageryLayers = [];
+
+  pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+    var provider = imagery.imageryLayer.imageryProvider;
     var promise = provider.pickFeatures(
       imagery.x,
       imagery.y,
@@ -442,25 +485,20 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
       pickedLocation.longitude,
       pickedLocation.latitude
     );
-    if (!defined(promise)) {
-      continue;
+    if (defined(promise)) {
+      promises.push(promise);
+      imageryLayers.push(imagery.imageryLayer);
     }
-
-    promises.push(promise);
-    imageryLayers.push(imagery.imageryLayer);
-  }
+  });
 
   if (promises.length === 0) {
     return undefined;
   }
-
   return when.all(promises, function (results) {
     var features = [];
-
     for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
       var result = results[resultIndex];
       var image = imageryLayers[resultIndex];
-
       if (defined(result) && result.length > 0) {
         for (
           var featureIndex = 0;
@@ -469,17 +507,14 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
         ) {
           var feature = result[featureIndex];
           feature.imageryLayer = image;
-
           // For features without a position, use the picked location.
           if (!defined(feature.position)) {
             feature.position = pickedLocation;
           }
-
           features.push(feature);
         }
       }
     }
-
     return features;
   });
 };

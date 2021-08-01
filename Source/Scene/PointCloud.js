@@ -45,7 +45,7 @@ var DecodingState = {
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}
  * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
  *
  * @alias PointCloud

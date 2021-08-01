@@ -143,6 +143,7 @@ describe(
           center: center,
           boundingVolume: new BoundingSphere(center, 1000000.0),
           batchTable: batchTable,
+          keepDecodedPositions: false,
         })
       );
       return loadPolylines(polylines).then(function () {
@@ -193,6 +194,7 @@ describe(
           center: center,
           boundingVolume: new BoundingSphere(center, 1000000.0),
           batchTable: batchTable,
+          keepDecodedPositions: false,
         })
       );
       return loadPolylines(polylines).then(function () {
@@ -242,6 +244,7 @@ describe(
           center: center,
           boundingVolume: new BoundingSphere(center, 1000000.0),
           batchTable: batchTable,
+          keepDecodedPositions: false,
         })
       );
       return loadPolylines(polylines).then(function () {
