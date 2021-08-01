@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import FeatureTable from "./FeatureTable.js";
-import FeatureTexture from "./FeatureTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
