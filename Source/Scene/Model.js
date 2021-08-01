@@ -3616,7 +3616,7 @@ function createUniformMaps(model, context) {
     if (model._addFeatureIdTextureToGeneratedShaders) {
       var uv = ModelUtility.createUniformFunction(
         WebGLConstants.SAMPLER_2D,
-        model._featureIdTextureInfo,
+        model._featureIdTextureInfo[materialId],
         textures,
         defaultTexture
       );

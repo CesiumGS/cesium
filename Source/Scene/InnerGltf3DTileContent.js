@@ -29,7 +29,7 @@ import parseFeatureMetadata from "./parseFeatureMetadata.js";
  *    <li>Does not work with schemaUri</li>
  *    <li>Does not work with multiple feature tables</li>
  *    <li>Only works with _FEATURE_ID_0</li>
- *    <li>Only supports a single feature ID texture accessed from the red channel</li>
+ *    <li>Support multiple feature ID textures with the following caveats: all textures must use the same texCoord, must refer to the same feature table, and must be accessed from the red channel</li>
  *    <li>Does not support feature textures</li>
  * </ul>
  * <p>
@@ -140,7 +140,9 @@ Object.defineProperties(InnerGltf3DTileContent.prototype, {
 
 function getFeatureIdExpression(content, gltf) {
   if (content._addFeatureIdTextureToGeneratedShaders) {
-    var texCoord = defaultValue(content._featureIdTextureInfo.texCoord, 0);
+    var firstMaterialId = Object.keys(content._featureIdTextureInfo)[0];
+    var firstTextureInfo = content._featureIdTextureInfo[firstMaterialId];
+    var texCoord = defaultValue(firstTextureInfo.texCoord, 0);
     return (
       "floor(texture2D(u_featureIdTexture, v_texcoord_" +
       texCoord +
@@ -397,7 +399,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
 function getFeatureIdInfo(gltf) {
   var addFeatureIdTextureToGeneratedShaders = false;
   var addFeatureIdToGeneratedShaders = false;
-  var featureIdTextureInfo;
+  var featureIdTextureInfo = {};
 
   if (hasExtension(gltf, "EXT_feature_metadata")) {
     var meshes = gltf.meshes;
@@ -417,7 +419,8 @@ function getFeatureIdInfo(gltf) {
             } else if (defined(featureMetadata.featureIdTextures)) {
               addFeatureIdTextureToGeneratedShaders = true;
               var featureIdTexture = featureMetadata.featureIdTextures[0];
-              featureIdTextureInfo = featureIdTexture.featureIds.texture;
+              featureIdTextureInfo[primitive.material] =
+                featureIdTexture.featureIds.texture;
             }
           }
         }
