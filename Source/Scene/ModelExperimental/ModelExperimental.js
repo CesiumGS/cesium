@@ -7,11 +7,11 @@ import RuntimeError from "../../Core/RuntimeError.js";
 import when from "../../ThirdParty/when.js";
 
 /**
- * A 3D Model based on glTF, the runtime asset format for WebGL.
- * <p>
- * This experimental class includes support for geometry.
- * Materials, animation, skinning, cameras and lights are not currently supported.
- * </p>
+ * A 3D model based on glTF, the runtime asset format for WebGL. This is
+ * a new architecture that is more decoupled than the older {@link Model}.
+ *
+ * This class is still experimental. glTF features that are core to 3D Tiles
+ * are supported, but other features such as animation are not yet supported.
  *
  * @constructor
  *
@@ -20,6 +20,7 @@ import when from "../../ThirdParty/when.js";
  * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
