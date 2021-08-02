@@ -54,6 +54,7 @@ ModelExperimentalUtility.getNodeTransform = function (node) {
  *
  * @param {ModelComponents.Primitive} primitive The primitive components
  * @param {VertexAttributeSemantic} semantic The semantic to search for
+ * @param {Number} setIndex The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
  * @return {ModelComponents.Attribute} The selected. attribute, or undefined if not found.
  */
 ModelExperimentalUtility.getAttributeBySemantic = function (
