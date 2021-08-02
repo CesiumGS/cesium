@@ -3,7 +3,7 @@ import when from "../ThirdParty/when.js";
 
 /**
  * Represents content for a tile in a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset whose
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset whose
  * content points to another 3D Tiles tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.

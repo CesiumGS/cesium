@@ -2004,6 +2004,18 @@ describe(
 
           expect(label.text).toEqual(text);
         });
+
+        it("filters out soft hyphens from input strings", function () {
+          var softHyphen = String.fromCharCode(0xad);
+          var text = "test string" + softHyphen;
+          var label = labels.add({
+            text: text,
+          });
+          scene.renderForSpecs();
+
+          expect(label.text).toEqual(text);
+          expect(label._renderedText).toEqual("test string");
+        });
       },
       "WebGL"
     );
