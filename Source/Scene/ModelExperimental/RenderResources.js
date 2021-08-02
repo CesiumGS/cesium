@@ -1,3 +1,4 @@
+import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 import DepthFunction from "../DepthFunction.js";
@@ -24,6 +25,10 @@ var RenderResources = {};
  * @private
  */
 function ModelRenderResources(model) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("model", model);
+  //>>includeEnd('debug');
+
   /**
    * An object used to build a shader incrementally. Each pipeline stage
    * may add lines of shader code to this object.
@@ -59,6 +64,11 @@ function ModelRenderResources(model) {
  * @private
  */
 function NodeRenderResources(modelRenderResources, sceneNode) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("modelRenderResources", modelRenderResources);
+  Check.typeOf.object("sceneNode", sceneNode);
+  //>>includeEnd('debug');
+
   // Properties inherited from the ModelRenderResources.
   /**
    * A reference to the model Inherited from the model render resources.
@@ -97,7 +107,7 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
    *
    * @private
    */
-  this.modelMatrix = sceneNode._modelMatrix;
+  this.modelMatrix = sceneNode.modelMatrix;
   /**
    * An array of objects describing vertex attributes that will eventually
    * be used to create a {@link VertexArray} for the draw command.
@@ -120,6 +130,11 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
  * @private
  */
 function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("nodeRenderResources", nodeRenderResources);
+  Check.typeOf.object("sceneMeshPrimitive", sceneMeshPrimitive);
+  //>>includeEnd('debug');
+
   // Properties inherited from NodeRenderResources.
   /**
    * A reference to the model. Inherited from the node render resources.
@@ -168,7 +183,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
-  var primitive = sceneMeshPrimitive._primitive;
+  var primitive = sceneMeshPrimitive.primitive;
 
   // other properties
   /**

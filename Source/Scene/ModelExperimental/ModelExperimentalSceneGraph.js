@@ -97,7 +97,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      sceneNode._sceneMeshPrimitives.push(
+      sceneNode.sceneMeshPrimitives.push(
         new ModelExperimentalSceneMeshPrimitive({
           primitive: node.primitives[i],
         })
@@ -130,19 +130,19 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     );
 
     for (j = 0; j < sceneNode._sceneMeshPrimitives.length; j++) {
-      var sceneMeshPrimitive = sceneNode._sceneMeshPrimitives[j];
+      var sceneMeshPrimitive = sceneNode.sceneMeshPrimitives[j];
 
       var meshPrimitiveRenderResources = new RenderResources.MeshPrimitiveRenderResources(
         nodeRenderResources,
         sceneMeshPrimitive
       );
 
-      for (k = 0; k < sceneMeshPrimitive._pipelineStages.length; k++) {
-        var primitivePipelineStage = sceneMeshPrimitive._pipelineStages[k];
+      for (k = 0; k < sceneMeshPrimitive.pipelineStages.length; k++) {
+        var primitivePipelineStage = sceneMeshPrimitive.pipelineStages[k];
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,
-          sceneMeshPrimitive._primitive
+          sceneMeshPrimitive.primitive
         );
       }
 

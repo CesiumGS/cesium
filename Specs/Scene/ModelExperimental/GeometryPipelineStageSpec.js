@@ -8,9 +8,9 @@ import {
   ResourceCache,
   ShaderBuilder,
   VertexAttributeSemantic,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
-import waitForLoaderProcess from "../waitForLoaderProcess.js";
+} from "../../../Source/Cesium.js";
+import createScene from "../../createScene.js";
+import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe(
   "Scene/GeometryPipelineStage",
