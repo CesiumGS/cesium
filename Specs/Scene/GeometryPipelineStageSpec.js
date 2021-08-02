@@ -112,7 +112,7 @@ describe(
       expect(positionAttribute.index).toEqual(0);
       expect(positionAttribute.vertexBuffer).toBeDefined();
       expect(positionAttribute.componentsPerAttribute).toEqual(3);
-      expect(positionAttribute.componentDataype).toEqual(
+      expect(positionAttribute.componentDatatype).toEqual(
         ComponentDatatype.FLOAT
       );
 
@@ -142,7 +142,7 @@ describe(
         expect(normalAttribute.index).toEqual(1);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[0]).toEqual(
@@ -159,7 +159,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -170,11 +170,11 @@ describe(
         expect(texCoord0Attribute.index).toEqual(2);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
           "HAS_TEXCOORD_0"
@@ -206,11 +206,11 @@ describe(
         expect(texCoord0Attribute.index).toEqual(1);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_TEXCOORD_0"
@@ -223,7 +223,7 @@ describe(
         expect(normalAttribute.index).toEqual(2);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[1]).toEqual(
@@ -240,7 +240,7 @@ describe(
         expect(tangentAttribute.index).toEqual(3);
         expect(tangentAttribute.vertexBuffer).toBeDefined();
         expect(tangentAttribute.componentsPerAttribute).toEqual(4);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[2]).toEqual(
@@ -257,7 +257,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -287,7 +287,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -298,11 +298,11 @@ describe(
         expect(texCoord0Attribute.index).toEqual(1);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_TEXCOORD_0"
@@ -315,11 +315,11 @@ describe(
         expect(texCoord1Attribute.index).toEqual(2);
         expect(texCoord1Attribute.vertexBuffer).toBeDefined();
         expect(texCoord1Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord1Attribute.componentDataype).toEqual(
+        expect(texCoord1Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec2 a_texCoord1;"
+          "attribute vec2 a_texCoord_1;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
           "HAS_TEXCOORD_1"
@@ -351,11 +351,11 @@ describe(
         expect(color0Attribute.index).toEqual(1);
         expect(color0Attribute.vertexBuffer).toBeDefined();
         expect(color0Attribute.componentsPerAttribute).toEqual(4);
-        expect(color0Attribute.componentDataype).toEqual(
+        expect(color0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec4 a_color0;"
+          "attribute vec4 a_color_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_VERTEX_COLORS"
@@ -368,7 +368,7 @@ describe(
         expect(normalAttribute.index).toEqual(2);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[1]).toEqual(
@@ -385,7 +385,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -396,11 +396,11 @@ describe(
         expect(texCoord0Attribute.index).toEqual(3);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[2]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
           "HAS_TEXCOORD_0"
@@ -428,7 +428,7 @@ describe(
       expect(positionAttribute.index).toEqual(0);
       expect(positionAttribute.vertexBuffer).toBeDefined();
       expect(positionAttribute.componentsPerAttribute).toEqual(3);
-      expect(positionAttribute.componentDataype).toEqual(
+      expect(positionAttribute.componentDatatype).toEqual(
         ComponentDatatype.FLOAT
       );
 
@@ -440,7 +440,7 @@ describe(
       expect(customAttribute.index).toEqual(1);
       expect(customAttribute.vertexBuffer).toBeDefined();
       expect(customAttribute.componentsPerAttribute).toEqual(2);
-      expect(customAttribute.componentDataype).toEqual(
+      expect(customAttribute.componentDatatype).toEqual(
         ComponentDatatype.UNSIGNED_SHORT
       );
 
@@ -470,7 +470,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -481,7 +481,7 @@ describe(
         expect(normalAttribute.index).toEqual(1);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[0]).toEqual(
@@ -498,11 +498,11 @@ describe(
         expect(featureId0Attribute.index).toEqual(2);
         expect(featureId0Attribute.vertexBuffer).toBeDefined();
         expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
-        expect(featureId0Attribute.componentDataype).toEqual(
+        expect(featureId0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute float a_featureId0;"
+          "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
           "HAS_FEATURE_ID"
@@ -534,7 +534,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -545,11 +545,11 @@ describe(
         expect(featureId0Attribute.index).toEqual(1);
         expect(featureId0Attribute.vertexBuffer).toBeDefined();
         expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
-        expect(featureId0Attribute.componentDataype).toEqual(
+        expect(featureId0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute float a_featureId0;"
+          "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_FEATURE_ID"

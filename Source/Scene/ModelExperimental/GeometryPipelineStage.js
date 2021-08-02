@@ -5,6 +5,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
 
 /**
+ * The geometry pipeline stage processes the vertex attributes of a primitive.
+ *
  * @private
  */
 export default function GeometryPipelineStage() {}
@@ -12,6 +14,13 @@ export default function GeometryPipelineStage() {}
 /**
  * This pipeline stage processes the vertex attributes of a mesh primitive, adding the attribute declarations to the shaders,
  * the attribute objects to the render resources and setting the flags as needed.
+ *
+ * Processes a mesh primitive. This stage modifies the following parts of the render resources:
+ * <ul>
+ *  <li> adds attribute and varying declarations for the vertex attributes in the vertex and fragment shaders
+ *  <li> creates the objects required to create VertexArrays
+ *  <li> sets the flag for point primitive types
+ * </ul>
  *
  * @param {MeshPrimitiveRenderResources} renderResources The render resources for this mesh primitive.
  * @param {ModelComponents.Primitive} primitive The mesh primitive.
@@ -43,13 +52,13 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
 function processAttribute(renderResources, attribute, attributeIndex) {
   var semantic = attribute.semantic;
   var setIndex = attribute.setIndex;
-  var type = attribute.type;
+  var attributeType = attribute.type;
 
   var shaderBuilder = renderResources.shaderBuilder;
 
   var variableName;
   var varyingName;
-  var glslType = attributeTypeToGlslType(type);
+  var glslType = AttributeType.getGlslType(attributeType);
 
   if (defined(semantic)) {
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
@@ -79,7 +88,9 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   var vertexAttribute = {
     index: attributeIndex,
     vertexBuffer: attribute.buffer,
-    componentsPerAttribute: AttributeType.getComponentsPerAttribute(type),
+    componentsPerAttribute: AttributeType.getComponentsPerAttribute(
+      attributeType
+    ),
     componentDatatype: attribute.componentDatatype,
   };
 
@@ -102,23 +113,4 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   }
 
   renderResources.attributes.push(vertexAttribute);
-}
-
-function attributeTypeToGlslType(attributeType) {
-  switch (attributeType) {
-    case AttributeType.SCALAR:
-      return "float";
-    case AttributeType.VEC2:
-      return "vec2";
-    case AttributeType.VEC3:
-      return "vec3";
-    case AttributeType.VEC4:
-      return "vec4";
-    case AttributeType.MAT2:
-      return "mat2";
-    case AttributeType.MAT3:
-      return "mat3";
-    case AttributeType.MAT4:
-      return "mat4";
-  }
 }

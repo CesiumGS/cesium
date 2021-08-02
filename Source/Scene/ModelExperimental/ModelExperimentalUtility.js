@@ -22,7 +22,7 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
 
 ModelExperimentalUtility.getNodeTransform = function (node) {
   if (defined(node.matrix)) {
-    return Matrix4.fromColumnMajorArray(node.matrix);
+    return node.matrix;
   }
 
   return Matrix4.fromTranslationQuaternionRotationScale(
@@ -33,15 +33,19 @@ ModelExperimentalUtility.getNodeTransform = function (node) {
 };
 
 ModelExperimentalUtility.getAttributeBySemantic = function (
-  primitive,
-  semantic
+  object,
+  semantic,
+  setIndex
 ) {
   var i;
-  var attributes = primitive.attributes;
+  var attributes = object.attributes;
   var attributesLength = attributes.length;
   for (i = 0; i < attributesLength; ++i) {
     var attribute = attributes[i];
-    if (attribute.semantic === semantic) {
+    var matchesSetIndex = defined(setIndex)
+      ? attribute.setIndex === setIndex
+      : true;
+    if (attribute.semantic === semantic && matchesSetIndex) {
       return attribute;
     }
   }
