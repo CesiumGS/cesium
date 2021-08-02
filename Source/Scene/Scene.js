@@ -10,7 +10,6 @@ import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
@@ -177,12 +176,6 @@ function Scene(options) {
   //>>includeEnd('debug');
   var hasCreditContainer = defined(creditContainer);
   var context = new Context(canvas, contextOptions);
-  if (FeatureDetection.isInternetExplorer()) {
-    deprecationWarning(
-      "Internet Explorer",
-      "Support for Internet Explorer was deprecated in Cesium 1.83 and will end in 1.84."
-    );
-  }
   if (!hasCreditContainer) {
     creditContainer = document.createElement("div");
     creditContainer.style.position = "absolute";
