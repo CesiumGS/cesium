@@ -1,5 +1,8 @@
-import { GltfLoader, Resource } from "../../Source/Cesium.js";
-import { ModelExperimental } from "../../Source/Cesium.js";
+import {
+  GltfLoader,
+  Resource,
+  ModelExperimental,
+} from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental", function () {
   var boxTexturedGlbUrl =

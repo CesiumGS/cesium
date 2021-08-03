@@ -6,10 +6,10 @@ import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperiment
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 
 /**
- * Builds a DrawCommand for a glTF mesh primitive using its render resources.
+ * Builds a DrawCommand for a {@link ModelExperimentalSceneMeshPrimitive} using its render resources.
  *
- * @param {RenderResources.MeshRenderResources} meshPrimitiveRenderResources
- * @param {FrameState} frameState
+ * @param {RenderResources.MeshRenderResources} meshPrimitiveRenderResources The render resources for a primitive.
+ * @param {FrameState} frameState The frame state for creating GPU resources.
  * @returns {DrawCommand} The generated DrawCommand.
  */
 export default function buildDrawCommand(

@@ -24,4 +24,26 @@ describe("Scene/AttributeType", function () {
       AttributeType.getMathType("Invalid");
     }).toThrowDeveloperError();
   });
+
+  it("getGlslType throws for invalid attribute type", function () {
+    expect(function () {
+      AttributeType.getGlslType(undefined);
+    }).toThrowDeveloperError();
+    expect(function () {
+      AttributeType.getGlslType("");
+    }).toThrowDeveloperError();
+    expect(function () {
+      AttributeType.getGlslType("int");
+    }).toThrowDeveloperError();
+  });
+
+  it("getGlslType works", function () {
+    expect(AttributeType.getGlslType(AttributeType.SCALAR)).toEqual("float");
+    expect(AttributeType.getGlslType(AttributeType.VEC2)).toEqual("vec2");
+    expect(AttributeType.getGlslType(AttributeType.VEC3)).toEqual("vec3");
+    expect(AttributeType.getGlslType(AttributeType.VEC4)).toEqual("vec4");
+    expect(AttributeType.getGlslType(AttributeType.MAT2)).toEqual("mat2");
+    expect(AttributeType.getGlslType(AttributeType.MAT3)).toEqual("mat3");
+    expect(AttributeType.getGlslType(AttributeType.MAT4)).toEqual("mat4");
+  });
 });

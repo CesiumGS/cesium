@@ -1,5 +1,6 @@
 import Axis from "../../Scene/Axis.js";
 import buildDrawCommand from "./buildDrawCommand.js";
+import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -8,33 +9,94 @@ import ModelExperimentalSceneNode from "./ModelExperimentalSceneNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import RenderResources from "./RenderResources.js";
 
+/**
+ * An in memory representation of the scene graph for a {@link ModelExperimental}
+ *
+ * @param {Object} options An object containing the following options
+ * @param {ModelExperimental} options.model The model this scene graph belongs to
+ * @param {ModelComponents} options.modelComponents The model components describing the model
+ * @param {Axis} [options.upAxis=Axis.Y] The upwards direction of the 3D model
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forwards direction of the 3D model
+ *
+ * @private
+ */
 export default function ModelExperimentalSceneGraph(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.model", options.model);
+  Check.typeOf.object("options.modelComponents", options.modelComponents);
+  //>>includeEnd('debug');
+
   /**
+   * A reference to the {@link ModelExperimental} that owns this scene graph.
+   *
    * @type {ModelExperimental}
+   * @readonly
+   *
+   * @private
    */
   this._model = options.model;
 
   /**
+   * The model components that represent the contents of the 3D model file.
+   *
    * @type {ModelComponents}
+   * @readonly
+   *
+   * @private
    */
   this._modelComponents = options.modelComponents;
 
   /**
    * Pipeline stages to apply across the model.
+   *
+   * @type {Object[]}
+   * @readonly
+   *
+   * @private
    */
   this._pipelineStages = [];
 
   /**
+   * The scene nodes that make up the scene graph
+   *
    * @type {ModelExperimentalSceneNode[]}
+   * @readonly
+   *
+   * @private
    */
   this._sceneNodes = [];
 
   /**
+   * Once computed, the {@link DrawCommand}s that are used to render this
+   * scene graph are stored here.
+   *
    * @type {DrawCommand[]}
+   * @readonly
+   *
+   * @private
    */
   this._drawCommands = [];
 
+  /**
+   * The up direction of the model. It will be used to compute a matrix
+   * to orient models so Z is upwards
+   *
+   * @type {Axis}
+   * @readonly
+   *
+   * @private
+   */
   this._upAxis = defaultValue(options.upAxis, Axis.Y);
+  /**
+   * The forward direction of the model. It will be used to compute a matrix
+   * to orient models so X is forwards.
+   *
+   * @type {Axis}
+   * @readonly
+   *
+   * @private
+   */
   this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
   initialize(this);
@@ -63,17 +125,18 @@ function initialize(sceneGraph) {
 }
 
 /**
- * Recursively traverse through the nodes in the glTF scene graph, using depth-first
+ * Recursively traverse through the nodes in the scene graph, using depth-first
  * post-order traversal.
  *
- * @param {ModelSceneGraph} sceneGraph
- * @param {ModelComponents.Node} node
- * @param {Matrix4} modelMatrix
- * @returns
+ * @param {ModelSceneGraph} sceneGraph The scene graph
+ * @param {ModelComponents.Node} node The current node
+ * @param {Matrix4} modelMatrix The current computed model matrix for this node.
+ *
+ * @private
  */
 function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   // No processing needs to happen if node has no children and no mesh primitives.
-  if (!defined(node.children) && !defined(node.primitves)) {
+  if (!defined(node.children) && !defined(node.primitives)) {
     return;
   }
 
@@ -92,7 +155,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
     }
   }
 
-  // Process node and mesh primtives.
+  // Process node and mesh primitives.
   var sceneNode = new ModelExperimentalSceneNode({
     node: node,
     modelMatrix: modelMatrix,
@@ -100,7 +163,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      sceneNode._sceneMeshPrimitives.push(
+      sceneNode.sceneMeshPrimitives.push(
         new ModelExperimentalSceneMeshPrimitive({
           primitive: node.primitives[i],
         })
@@ -114,7 +177,10 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
 /**
  * Generates the draw commands for each primitive in the model.
  *
- * @param {FrameState} frameState
+ * @param {FrameState} frameState The current frame state. This is needed to
+ * allocate GPU resources as needed.
+ *
+ * @private
  */
 ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
@@ -133,19 +199,19 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     );
 
     for (j = 0; j < sceneNode._sceneMeshPrimitives.length; j++) {
-      var sceneMeshPrimitive = sceneNode._sceneMeshPrimitives[j];
+      var sceneMeshPrimitive = sceneNode.sceneMeshPrimitives[j];
 
       var meshPrimitiveRenderResources = new RenderResources.MeshPrimitiveRenderResources(
         nodeRenderResources,
         sceneMeshPrimitive
       );
 
-      for (k = 0; k < sceneMeshPrimitive._pipelineStages.length; k++) {
-        var primitivePipelineStage = sceneMeshPrimitive._pipelineStages[k];
+      for (k = 0; k < sceneMeshPrimitive.pipelineStages.length; k++) {
+        var primitivePipelineStage = sceneMeshPrimitive.pipelineStages[k];
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,
-          sceneMeshPrimitive._primitive
+          sceneMeshPrimitive.primitive
         );
       }
 
