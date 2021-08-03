@@ -71,6 +71,8 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {String} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {String} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ *
+ * @private
  */
 function processTextureTransform(
   shaderBuilder,
@@ -107,6 +109,8 @@ function processTextureTransform(
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {String} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {String} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ *
+ * @private
  */
 function processTexture(
   shaderBuilder,
