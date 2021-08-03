@@ -149,3 +149,5 @@ function initialize(model, options) {
       );
     });
 }
+
+ModelExperimental.prototype.destroy = function () {};
