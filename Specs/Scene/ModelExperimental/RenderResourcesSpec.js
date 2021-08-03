@@ -12,7 +12,6 @@ import {
   RenderResources,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
-import ModelLightingOptions from "../../../Source/Scene/ModelExperimental/ModelLightingOptions.js";
 
 describe("Scene/ModelExperimental/RenderResources", function () {
   var mockModel = {};
@@ -197,8 +196,8 @@ describe("Scene/ModelExperimental/RenderResources", function () {
         CesiumMath.EPSILON9
       );
       expect(primitiveResources.uniformMap).toEqual({});
-      expect(primitiveResources.lightingOptions).toEqual(
-        new ModelLightingOptions()
+      expect(primitiveResources.lightingOptions.lightingModel).toEqual(
+        LightingModel.UNLIT
       );
       expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
     });
