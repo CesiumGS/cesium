@@ -128,6 +128,8 @@ function initialize(sceneGraph) {
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} modelMatrix The current computed model matrix for this node.
+ *
+ * @private
  */
 function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   // No processing needs to happen if node has no children and no mesh primitives.
@@ -174,6 +176,8 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
  *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
+ *
+ * @private
  */
 ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
