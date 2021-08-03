@@ -542,7 +542,7 @@ CloudCollection.prototype.update = function (frameState) {
     var command;
     for (var j = 0; j < vaLength; j++) {
       command = colorList[j] = new DrawCommand();
-      command.pass = Pass.OPAQUE;
+      command.pass = Pass.TRANSLUCENT;
       command.owner = this;
 
       command.count = va[j].indicesCount;

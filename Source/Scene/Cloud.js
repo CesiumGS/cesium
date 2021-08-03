@@ -25,7 +25,7 @@ function Cloud(options, cloudCollection) {
     defaultValue(options.position, Cartesian3.ZERO)
   );
   this._scale = Cartesian2.clone(
-    defaultValue(options.scale, new Cartesian2(1.0, 1.0))
+    defaultValue(options.scale, new Cartesian2(10.0, 5.0))
   );
 
   this._flat = defaultValue(options.flat, false);

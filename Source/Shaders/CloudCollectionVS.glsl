@@ -5,7 +5,8 @@ attribute vec4 positionHighAndScaleX;
 attribute vec4 positionLowAndScaleY;
 attribute vec4 compressedAttribute;
 
-varying vec2 v_offset;
+varying vec2 v_textureCoordinates;
+varying vec2 v_scale;
 varying vec3 v_positionHigh;
 varying vec3 v_positionLow;
 varying vec3 v_position;
@@ -35,5 +36,6 @@ void main() {
     v_positionHigh = positionHigh;
     v_positionLow = positionLow;
     v_position = positionEC.xyz;
-    v_offset = offset;
+    v_textureCoordinates = offset;
+    v_scale = scale;
 }
