@@ -1,5 +1,5 @@
 /**
- * Flags to enable experimental features in CesiumJS.Stability and performance
+ * Flags to enable experimental features in CesiumJS. Stability and performance
  * may not be optimal when these are enabled. Experimental features are subject
  * to change without Cesium's standard deprecation policy.
  * <p>

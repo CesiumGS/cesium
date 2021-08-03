@@ -7,9 +7,11 @@ import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
  *
+ * @namespace
+ *
  * @private
  */
-export default function GeometryPipelineStage() {}
+var GeometryPipelineStage = {};
 
 /**
  * This pipeline stage processes the vertex attributes of a mesh primitive, adding the attribute declarations to the shaders,
@@ -114,3 +116,5 @@ function processAttribute(renderResources, attribute, attributeIndex) {
 
   renderResources.attributes.push(vertexAttribute);
 }
+
+export default GeometryPipelineStage;
