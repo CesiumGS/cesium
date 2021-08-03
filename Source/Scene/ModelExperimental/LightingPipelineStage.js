@@ -1,11 +1,14 @@
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import LightingStageFS from "../../Shaders/ModelExperimental/LightingStageFS.js";
+import LightingModel from "./LightingModel.js";
 
 /**
  * The lighting pipeline stage is responsible for taking a material and rendering
  * it with a lighting model such as physically based rendering (PBR) or unlit
  * shading
+ *
  * @namespace
+ *
  * @private
  */
 var LightingPipelineStage = {};
@@ -21,14 +24,23 @@ var LightingPipelineStage = {};
  * @private
  */
 LightingPipelineStage.process = function (renderResources, primitive) {
+  var lightingOptions = renderResources.lightingOptions;
   var shaderBuilder = renderResources.shaderBuilder;
 
-  // Hard-coding this for now, a future branch will enable PBR lighting
-  shaderBuilder.addDefine(
-    "LIGHTING_UNLIT",
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
+  var lightingModel = lightingOptions.lightingModel;
+  if (lightingModel === LightingModel.PBR) {
+    shaderBuilder.addDefine(
+      "LIGHTING_PBR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  } else {
+    shaderBuilder.addDefine(
+      "LIGHTING_UNLIT",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
 
   shaderBuilder.addFragmentLines([LightingStageFS]);
 };
