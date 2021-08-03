@@ -1,4 +1,4 @@
-import defaultValue from "../../Core/defaultValue.js"
+import defaultValue from "../../Core/defaultValue.js";
 
 /**
  * Adds an element to an array and returns the element's index.
@@ -10,16 +10,16 @@ import defaultValue from "../../Core/defaultValue.js"
  * @private
  */
 function addToArray(array, element, checkDuplicates) {
-    checkDuplicates = defaultValue(checkDuplicates, false);
-    if (checkDuplicates) {
-        var index = array.indexOf(element);
-        if (index > -1) {
-            return index;
-        }
+  checkDuplicates = defaultValue(checkDuplicates, false);
+  if (checkDuplicates) {
+    const index = array.indexOf(element);
+    if (index > -1) {
+      return index;
     }
+  }
 
-    array.push(element);
-    return array.length - 1;
+  array.push(element);
+  return array.length - 1;
 }
 
 export default addToArray;

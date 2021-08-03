@@ -1,6 +1,6 @@
-import ForEach from "./ForEach.js"
-import Check from "../../Core/Check.js"
-import defined from "../../Core/defined.js"
+import ForEach from "./ForEach.js";
+import Check from "../../Core/Check.js";
+import defined from "../../Core/defined.js";
 
 /**
  * Calls the provider handler function on each texture used by the material.
@@ -11,119 +11,120 @@ import defined from "../../Core/defined.js"
  * @private
  */
 function forEachTextureInMaterial(material, handler) {
-    Check.typeOf.object('material', material);
-    Check.defined('handler', handler);
+  Check.typeOf.object("material", material);
+  Check.defined("handler", handler);
 
-    // Metallic roughness
-    var pbrMetallicRoughness = material.pbrMetallicRoughness;
-    if (defined(pbrMetallicRoughness)) {
-        if (defined(pbrMetallicRoughness.baseColorTexture)) {
-            var textureInfo = pbrMetallicRoughness.baseColorTexture;
-            var value = handler(textureInfo.index, textureInfo);
-            if (defined(value)) {
-                return value;
-            }
-        }
-        if (defined(pbrMetallicRoughness.metallicRoughnessTexture)) {
-            var textureInfo = pbrMetallicRoughness.metallicRoughnessTexture;
-            var value = handler(textureInfo.index, textureInfo);
-            if (defined(value)) {
-                return value;
-            }
-        }
-    }
-
-    if (defined(material.extensions)) {
-        // Spec gloss extension
-        var pbrSpecularGlossiness = material.extensions.KHR_materials_pbrSpecularGlossiness;
-        if (defined(pbrSpecularGlossiness)) {
-            if (defined(pbrSpecularGlossiness.diffuseTexture)) {
-                var textureInfo = pbrSpecularGlossiness.diffuseTexture;
-                var value = handler(textureInfo.index, textureInfo);
-                if (defined(value)) {
-                    return value;
-                }
-            }
-            if (defined(pbrSpecularGlossiness.specularGlossinessTexture)) {
-                var textureInfo = pbrSpecularGlossiness.specularGlossinessTexture;
-                var value = handler(textureInfo.index, textureInfo);
-                if (defined(value)) {
-                    return value;
-                }
-            }
-        }
-
-        // Materials common extension (may be present in models converted from glTF 1.0)
-        var materialsCommon = material.extensions.KHR_materials_common;
-        if (defined(materialsCommon)) {
-            var diffuse = materialsCommon.values.diffuse;
-            var ambient = materialsCommon.values.ambient;
-            var emission = materialsCommon.values.emission;
-            var specular = materialsCommon.values.specular;
-            if (defined(diffuse) && defined(diffuse.index)) {
-                var value = handler(diffuse.index, diffuse);
-                if (defined(value)) {
-                    return value;
-                }
-            }
-            if (defined(ambient) && defined(ambient.index)) {
-                var value = handler(ambient.index, ambient);
-                if (defined(value)) {
-                    return value;
-                }
-            }
-            if (defined(emission) && defined(emission.index)) {
-                var value = handler(emission.index, emission);
-                if (defined(value)) {
-                    return value;
-                }
-            }
-            if (defined(specular) && defined(specular.index)) {
-                var value = handler(specular.index, specular);
-                if (defined(value)) {
-                    return value;
-                }
-            }
-        }
-    }
-
-    // KHR_techniques_webgl extension
-    var value = ForEach.materialValue(material, function (materialValue) {
-        if (defined(materialValue.index)) {
-            var value = handler(materialValue.index, materialValue);
-            if (defined(value)) {
-                return value;
-            }
-        }
-    });
-    if (defined(value)) {
+  // Metallic roughness
+  const pbrMetallicRoughness = material.pbrMetallicRoughness;
+  if (defined(pbrMetallicRoughness)) {
+    if (defined(pbrMetallicRoughness.baseColorTexture)) {
+      const textureInfo = pbrMetallicRoughness.baseColorTexture;
+      const value = handler(textureInfo.index, textureInfo);
+      if (defined(value)) {
         return value;
+      }
+    }
+    if (defined(pbrMetallicRoughness.metallicRoughnessTexture)) {
+      const textureInfo = pbrMetallicRoughness.metallicRoughnessTexture;
+      const value = handler(textureInfo.index, textureInfo);
+      if (defined(value)) {
+        return value;
+      }
+    }
+  }
+
+  if (defined(material.extensions)) {
+    // Spec gloss extension
+    const pbrSpecularGlossiness =
+      material.extensions.KHR_materials_pbrSpecularGlossiness;
+    if (defined(pbrSpecularGlossiness)) {
+      if (defined(pbrSpecularGlossiness.diffuseTexture)) {
+        const textureInfo = pbrSpecularGlossiness.diffuseTexture;
+        const value = handler(textureInfo.index, textureInfo);
+        if (defined(value)) {
+          return value;
+        }
+      }
+      if (defined(pbrSpecularGlossiness.specularGlossinessTexture)) {
+        const textureInfo = pbrSpecularGlossiness.specularGlossinessTexture;
+        const value = handler(textureInfo.index, textureInfo);
+        if (defined(value)) {
+          return value;
+        }
+      }
     }
 
-    // Top level textures
-    if (defined(material.emissiveTexture)) {
-        var textureInfo = material.emissiveTexture;
-        var value = handler(textureInfo.index, textureInfo);
+    // Materials common extension (may be present in models converted from glTF 1.0)
+    const materialsCommon = material.extensions.KHR_materials_common;
+    if (defined(materialsCommon)) {
+      const diffuse = materialsCommon.values.diffuse;
+      const ambient = materialsCommon.values.ambient;
+      const emission = materialsCommon.values.emission;
+      const specular = materialsCommon.values.specular;
+      if (defined(diffuse) && defined(diffuse.index)) {
+        const value = handler(diffuse.index, diffuse);
         if (defined(value)) {
-            return value;
+          return value;
         }
+      }
+      if (defined(ambient) && defined(ambient.index)) {
+        const value = handler(ambient.index, ambient);
+        if (defined(value)) {
+          return value;
+        }
+      }
+      if (defined(emission) && defined(emission.index)) {
+        const value = handler(emission.index, emission);
+        if (defined(value)) {
+          return value;
+        }
+      }
+      if (defined(specular) && defined(specular.index)) {
+        const value = handler(specular.index, specular);
+        if (defined(value)) {
+          return value;
+        }
+      }
     }
+  }
 
-    if (defined(material.normalTexture)) {
-        var textureInfo = material.normalTexture;
-        var value = handler(textureInfo.index, textureInfo);
-        if (defined(value)) {
-            return value;
-        }
+  // KHR_techniques_webgl extension
+  const value = ForEach.materialValue(material, function (materialValue) {
+    if (defined(materialValue.index)) {
+      const value = handler(materialValue.index, materialValue);
+      if (defined(value)) {
+        return value;
+      }
     }
+  });
+  if (defined(value)) {
+    return value;
+  }
 
-    if (defined(material.occlusionTexture)) {
-        var textureInfo = material.occlusionTexture;
-        var value = handler(textureInfo.index, textureInfo);
-        if (defined(value)) {
-            return value;
-        }
+  // Top level textures
+  if (defined(material.emissiveTexture)) {
+    const textureInfo = material.emissiveTexture;
+    const value = handler(textureInfo.index, textureInfo);
+    if (defined(value)) {
+      return value;
     }
+  }
+
+  if (defined(material.normalTexture)) {
+    const textureInfo = material.normalTexture;
+    const value = handler(textureInfo.index, textureInfo);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  if (defined(material.occlusionTexture)) {
+    const textureInfo = material.occlusionTexture;
+    const value = handler(textureInfo.index, textureInfo);
+    if (defined(value)) {
+      return value;
+    }
+  }
 }
 
 /**
