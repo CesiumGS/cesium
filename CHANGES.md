@@ -1,12 +1,21 @@
 # Change Log
 
-### 1.84 - 2021-08-02
+### 1.85 - 2021-09-01
 
 ##### Additions :tada:
 
-- Added `ImageryLayerCollection.pickImageryLayers` which determines the imagery layers that are intersected by a pick ray. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
-- Added a `polylinePositions` getter to `Cesium3DTileFeature` that gets the decoded positions of a polyline vector feature. [#9684](https://github.com/CesiumGS/cesium/pull/9684)
 - Started moving over third party libraries to use npm modules.
+
+### 1.84 - 2021-08-02
+
+##### Breaking Changes :mega:
+
+- Dropped support for Internet Explorer, which was deprecated in CesiumJS 1.83.
+
+##### Additions :tada:
+
+- Added a `polylinePositions` getter to `Cesium3DTileFeature` that gets the decoded positions of a polyline vector feature. [#9684](https://github.com/CesiumGS/cesium/pull/9684)
+- Added `ImageryLayerCollection.pickImageryLayers` which determines the imagery layers that are intersected by a pick ray. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
 
 ##### Fixes :wrench:
 
