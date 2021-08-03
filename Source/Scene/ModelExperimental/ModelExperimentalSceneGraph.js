@@ -195,7 +195,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       sceneNode
     );
 
-    for (j = 0; j < sceneNode._sceneMeshPrimitives.length; j++) {
+    for (j = 0; j < sceneNode.sceneMeshPrimitives.length; j++) {
       var sceneMeshPrimitive = sceneNode.sceneMeshPrimitives[j];
 
       var meshPrimitiveRenderResources = new RenderResources.MeshPrimitiveRenderResources(
