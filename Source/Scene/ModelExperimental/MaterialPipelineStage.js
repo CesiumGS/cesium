@@ -13,9 +13,11 @@ import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js"
  *   <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
  *
+ * @namespace
+ *
  * @private
  */
-export default function MaterialPipelineStage() {}
+var MaterialPipelineStage = {};
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -511,3 +513,5 @@ function addAlphaUniforms(material, uniformMap, shaderBuilder) {
     );
   }
 }
+
+export default MaterialPipelineStage;

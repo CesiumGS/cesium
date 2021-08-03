@@ -5,9 +5,10 @@ import LightingStageFS from "../../Shaders/ModelExperimental/LightingStageFS.js"
  * The lighting pipeline stage is responsible for taking a material and rendering
  * it with a lighting model such as physically based rendering (PBR) or unlit
  * shading
+ * @namespace
  * @private
  */
-export default function LightingPipelineStage() {}
+var LightingPipelineStage = {};
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -22,7 +23,7 @@ export default function LightingPipelineStage() {}
 LightingPipelineStage.process = function (renderResources, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
 
-  // Hardcoding this for now, a future branch will enable PBR lighting
+  // Hard-coding this for now, a future branch will enable PBR lighting
   shaderBuilder.addDefine(
     "LIGHTING_UNLIT",
     undefined,
@@ -31,3 +32,5 @@ LightingPipelineStage.process = function (renderResources, primitive) {
 
   shaderBuilder.addFragmentLines([LightingStageFS]);
 };
+
+export default LightingPipelineStage;
