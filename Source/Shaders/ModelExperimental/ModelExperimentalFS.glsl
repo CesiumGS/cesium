@@ -1,4 +1,3 @@
-// TODO: is there a better place for this?
 vec4 handleAlpha(vec3 color, float alpha)
 {
     #if defined(ALPHA_MODE_MASK)
@@ -13,7 +12,8 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 }
 
-void main() {
+void main() 
+{
   czm_modelMaterial material = defaultModelMaterial();
 
   material = materialStage(material);
