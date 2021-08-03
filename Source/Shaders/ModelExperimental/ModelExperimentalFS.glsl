@@ -14,10 +14,10 @@ vec4 handleAlpha(vec3 color, float alpha)
 
 void main() 
 {
-  czm_modelMaterial material = defaultModelMaterial();
+    czm_modelMaterial material = defaultModelMaterial();
 
-  material = materialStage(material);
-  material = lightingStage(material);
+    material = materialStage(material);
+    material = lightingStage(material);
 
-  gl_FragColor = handleAlpha(material.diffuse, material.alpha);
+    gl_FragColor = handleAlpha(material.diffuse, material.alpha);
 }
