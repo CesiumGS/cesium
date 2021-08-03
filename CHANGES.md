@@ -29,10 +29,6 @@
 - Fixed a crash that would hang the browser if a `Label` was created with a soft hyphen in its text. [#9682](https://github.com/CesiumGS/cesium/pull/9682)
 - Fixed the incorrect calculation of `distanceSquaredTo` in `BoundingSphere`. [#9686](https://github.com/CesiumGS/cesium/pull/9686)
 
-##### Deprecated :hourglass_flowing_sand:
-
-- Support for Internet Explorer has been dropped.
-
 ### 1.83 - 2021-07-01
 
 ##### Breaking Changes :mega:
