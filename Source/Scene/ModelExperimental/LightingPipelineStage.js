@@ -4,7 +4,7 @@ import LightingStageFS from "../../Shaders/ModelExperimental/LightingStageFS.js"
 /**
  * The lighting pipeline stage is responsible for taking a material and rendering
  * it with a lighting model such as physically based rendering (PBR) or unlit
- * shading (via the <code>KHR_materials_unlit</code> extension)
+ * shading
  * @private
  */
 export default function LightingPipelineStage() {}

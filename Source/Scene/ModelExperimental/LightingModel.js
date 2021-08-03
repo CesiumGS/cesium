@@ -17,11 +17,9 @@ var LightingModel = {
    */
   UNLIT: 0,
   /**
-   * Use physically-based rendering lighting calculations. glTF models support
-   * the metallic roughness model as well as the specular glossiness model
-   * (with KHR_materials_pbrSpecularGlossiness). Image-based lighting is also
-   * applied when possible. Ensure high dynamic range (See {@link Scene.highDynamicRange})
-   * is enabled for best quality results.
+   * Use physically-based rendering lighting calculations. This includes
+   * both PBR metallic roughness and PBR specular glossiness. Image-based
+   * lighting is also applied when possible.
    *
    * @type {Number}
    * @constant

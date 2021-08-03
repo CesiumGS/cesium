@@ -22,7 +22,6 @@ vec4 SRGBtoLINEAR4(vec4 srgbIn)
 #ifdef HAS_NORMALS
 vec3 computeNormal() {
   vec3 ng = normalize(v_normal);
-  vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));
 
   vec3 normal = ng;
   #ifdef HAS_NORMAL_TEXTURE
@@ -162,7 +161,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial) {
       #else
       vec4 diffuse = vec4(1.0);
       #endif
-  // TODO: Do we need this struct anymore?
+      
   czm_pbrParameters parameters = czm_pbrSpecularGlossinessMaterial(
     diffuse.rgb,
     specular,
