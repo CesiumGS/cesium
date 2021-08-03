@@ -63,46 +63,105 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
   shaderBuilder.addFragmentLines([MaterialStageFS]);
 };
 
-function processMaterialUniforms(material, uniformMap, shaderBuilder) {
-  var texCoordIndex;
+/**
+ * Process a single texture transformation and add it to the shader and uniform map.
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object.<String, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {String} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
+ * @param {String} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ */
+function processTextureTransform(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName
+) {
+  // Add a define to enable the texture transformation code in the shader.
+  var transformDefine = "HAS_" + defineName + "_TEXTURE_TRANSFORM";
+  shaderBuilder.addDefine(
+    transformDefine,
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
 
+  // Add a uniform for the transformation matrix
+  var transformUniformName = uniformName + "Transform";
+  shaderBuilder.addUniform(
+    "mat3",
+    transformUniformName,
+    ShaderDestination.FRAGMENT
+  );
+  uniformMap[transformUniformName] = function () {
+    return textureReader.transform;
+  };
+}
+
+/**
+ * Process a single texture and add it to the shader and uniform map.
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object.<String, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {String} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
+ * @param {String} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ */
+function processTexture(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName
+) {
+  // Add a uniform for the texture itself
+  shaderBuilder.addUniform(
+    "sampler2D",
+    uniformName,
+    ShaderDestination.FRAGMENT
+  );
+  uniformMap[uniformName] = function () {
+    return textureReader.texture;
+  };
+
+  // Add a #define directive to enable using the texture in the shader
+  var textureDefine = "HAS_" + defineName + "_TEXTURE";
+  shaderBuilder.addDefine(textureDefine, undefined, ShaderDestination.FRAGMENT);
+
+  // Add a #define to tell the shader which texture coordinates varying to use.
+  var texCoordIndex = textureReader.texCoord;
+  var texCoordVarying = "v_texCoord_" + texCoordIndex;
+  var texCoordDefine = "TEXCOORD_" + defineName;
+  shaderBuilder.addDefine(
+    texCoordDefine,
+    texCoordVarying,
+    ShaderDestination.FRAGMENT
+  );
+
+  // Some textures have matrix transforms (e.g. for texture atlases). Add those
+  // to the shader if present.
+  if (defined(textureReader.transform)) {
+    processTextureTransform(
+      shaderBuilder,
+      uniformMap,
+      textureReader,
+      uniformName,
+      defineName
+    );
+  }
+}
+
+function processMaterialUniforms(material, uniformMap, shaderBuilder) {
   var emissiveTexture = material.emissiveTexture;
   if (defined(emissiveTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      emissiveTexture,
       "u_emissiveTexture",
-      ShaderDestination.FRAGMENT
+      "EMISSIVE"
     );
-    uniformMap.u_emissiveTexture = function () {
-      return material.emissiveTexture.texture;
-    };
-    texCoordIndex = emissiveTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_EMISSIVE_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_EMISSIVE",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(emissiveTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_EMISSIVE_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_emissiveTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_emissiveTextureTransform = function () {
-        return material.emissiveTexture.transform;
-      };
-    }
   }
 
   var emissiveFactor = material.emissiveFactor;
@@ -124,80 +183,24 @@ function processMaterialUniforms(material, uniformMap, shaderBuilder) {
 
   var normalTexture = material.normalTexture;
   if (defined(normalTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      normalTexture,
       "u_normalTexture",
-      ShaderDestination.FRAGMENT
+      "NORMAL"
     );
-    uniformMap.u_normalTexture = function () {
-      return material.normalTexture.texture;
-    };
-    texCoordIndex = normalTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_NORMAL_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_NORMAL",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(normalTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_NORMAL_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_normalTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_normalTextureTransform = function () {
-        return material.normalTexture.transform;
-      };
-    }
   }
 
   var occlusionTexture = material.occlusionTexture;
   if (defined(occlusionTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      occlusionTexture,
       "u_occlusionTexture",
-      ShaderDestination.FRAGMENT
+      "OCCLUSION"
     );
-    uniformMap.u_occlusionTexture = function () {
-      return material.occlusionTexture.texture;
-    };
-    texCoordIndex = occlusionTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_OCCLUSION_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_OCCLUSION",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(occlusionTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_OCCLUSION_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_occlusionTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_occlusionTextureTransform = function () {
-        return material.occlusionTexture.transform;
-      };
-    }
   }
 }
 
@@ -207,7 +210,6 @@ function processSpecularGlossinessUniforms(
   shaderBuilder
 ) {
   var specularGlossiness = material.specularGlossiness;
-  var texCoordIndex;
   shaderBuilder.addDefine(
     "USE_SPECULAR_GLOSSINESS",
     undefined,
@@ -216,41 +218,13 @@ function processSpecularGlossinessUniforms(
 
   var diffuseTexture = specularGlossiness.diffuseTexture;
   if (defined(diffuseTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      diffuseTexture,
       "u_diffuseTexture",
-      ShaderDestination.FRAGMENT
+      "DIFFUSE"
     );
-    uniformMap.u_diffuseTexture = function () {
-      return specularGlossiness.diffuseTexture.texture;
-    };
-    texCoordIndex = diffuseTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_DIFFUSE_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_DIFFUSE",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(diffuseTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_DIFFUSE_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_diffuseTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_diffuseTextureTransform = function () {
-        return specularGlossiness.diffuseTexture.transform;
-      };
-    }
   }
 
   var diffuseFactor = specularGlossiness.diffuseFactor;
@@ -271,42 +245,14 @@ function processSpecularGlossinessUniforms(
   }
 
   var specularGlossinessTexture = specularGlossiness.specularGlossinessTexture;
-  if (defined(specularGlossiness.specularGlossinessTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+  if (defined(specularGlossinessTexture)) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      specularGlossinessTexture,
       "u_specularGlossinessTexture",
-      ShaderDestination.FRAGMENT
+      "SPECULAR_GLOSSINESS"
     );
-    uniformMap.u_specularGlossinessTexture = function () {
-      return specularGlossiness.specularGlossinessTexture.texture;
-    };
-    texCoordIndex = specularGlossinessTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_SPECULAR_GLOSSINESS_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_SPECULAR_GLOSSINESS",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(specularGlossinessTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_specularGlossinessTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_specularGlossinessTextureTransform = function () {
-        return specularGlossiness.specularGlossinessTexture.transform;
-      };
-    }
   }
 
   var specularFactor = specularGlossiness.specularFactor;
@@ -352,44 +298,15 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
     ShaderDestination.FRAGMENT
   );
 
-  var texCoordIndex;
   var baseColorTexture = metallicRoughness.baseColorTexture;
   if (defined(baseColorTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      baseColorTexture,
       "u_baseColorTexture",
-      ShaderDestination.FRAGMENT
+      "BASE_COLOR"
     );
-    uniformMap.u_baseColorTexture = function () {
-      return metallicRoughness.baseColorTexture.texture;
-    };
-    texCoordIndex = baseColorTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_BASE_COLOR_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_BASE_COLOR",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(baseColorTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_BASE_COLOR_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_baseColorTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_baseColorTextureTransform = function () {
-        return metallicRoughness.baseColorTexture.transform;
-      };
-    }
   }
 
   var baseColorFactor = metallicRoughness.baseColorFactor;
@@ -411,41 +328,13 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
 
   var metallicRoughnessTexture = metallicRoughness.metallicRoughnessTexture;
   if (defined(metallicRoughnessTexture)) {
-    shaderBuilder.addUniform(
-      "sampler2D",
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      metallicRoughnessTexture,
       "u_metallicRoughnessTexture",
-      ShaderDestination.FRAGMENT
+      "METALLIC_ROUGHNESS"
     );
-    uniformMap.u_metallicRoughnessTexture = function () {
-      return metallicRoughness.metallicRoughnessTexture.texture;
-    };
-    texCoordIndex = metallicRoughnessTexture.texCoord;
-    shaderBuilder.addDefine(
-      "HAS_METALLIC_ROUGHNESS_TEXTURE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "TEXCOORD_METALLIC_ROUGHNESS",
-      "v_texCoord_" + texCoordIndex,
-      ShaderDestination.FRAGMENT
-    );
-
-    if (defined(metallicRoughnessTexture.transform)) {
-      shaderBuilder.addDefine(
-        "HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "mat3",
-        "u_metallicRoughnessTextureTransform",
-        ShaderDestination.FRAGMENT
-      );
-      uniformMap.u_metallicRoughnessTextureTransform = function () {
-        return metallicRoughness.metallicRoughnessTexture.transform;
-      };
-    }
   }
 
   var metallicFactor = metallicRoughness.metallicFactor;
@@ -513,5 +402,9 @@ function addAlphaUniforms(material, uniformMap, shaderBuilder) {
     );
   }
 }
+
+// Exposed for testing
+MaterialPipelineStage._processTexture = processTexture;
+MaterialPipelineStage._processTextureTransform = processTextureTransform;
 
 export default MaterialPipelineStage;

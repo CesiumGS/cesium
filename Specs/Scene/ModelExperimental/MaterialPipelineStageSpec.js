@@ -4,6 +4,7 @@ import {
   combine,
   GltfLoader,
   LightingModel,
+  Matrix3,
   MaterialPipelineStage,
   Resource,
   ResourceCache,
@@ -401,6 +402,64 @@ describe("Scene/ModelExperimental/MaterialPipelineStage", function () {
       expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([
         _shadersMaterialStageFS,
       ]);
+    });
+  });
+
+  it("_processTextureTransform updates the shader and uniform map", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var uniformMap = {};
+    var matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
+    var textureReader = {
+      transform: matrix,
+    };
+    MaterialPipelineStage._processTextureTransform(
+      shaderBuilder,
+      uniformMap,
+      textureReader,
+      "u_testTexture",
+      "TEST"
+    );
+
+    expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+      "HAS_TEST_TEXTURE_TRANSFORM",
+    ]);
+    expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+      "uniform mat3 u_testTextureTransform;",
+    ]);
+    expectUniformMap(uniformMap, {
+      u_testTextureTransform: matrix,
+    });
+  });
+
+  it("_processTexture processes texture transforms if present", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var uniformMap = {};
+    var matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
+    var mockTexture = {};
+    var textureReader = {
+      transform: matrix,
+      texture: mockTexture,
+      texCoord: 1,
+    };
+    MaterialPipelineStage._processTexture(
+      shaderBuilder,
+      uniformMap,
+      textureReader,
+      "u_testTexture",
+      "TEST"
+    );
+
+    expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+      "HAS_TEST_TEXTURE",
+      "TEXCOORD_TEST v_texCoord_1",
+      "HAS_TEST_TEXTURE_TRANSFORM",
+    ]);
+    expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+      "uniform sampler2D u_testTexture;",
+      "uniform mat3 u_testTextureTransform;",
+    ]);
+    expectUniformMap(uniformMap, {
+      u_testTextureTransform: matrix,
     });
   });
 });
