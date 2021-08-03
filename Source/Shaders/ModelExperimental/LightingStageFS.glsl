@@ -9,7 +9,8 @@ vec3 LINEARtoSRGB(vec3 linearIn)
 
 czm_modelMaterial lightingStage(czm_modelMaterial inputMaterial)
 {
-    // copying so normal
+    // Even though the lighting will only set the diffuse color,
+    // pass all other properties too so further stages have access to them.
     czm_modelMaterial outputMaterial = inputMaterial;
     vec3 color = vec3(0.0);
 
