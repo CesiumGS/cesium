@@ -1,9 +1,11 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { InstanceAttributeSemantic } from "../../Source/Cesium.js";
-import { ModelExperimentalUtility } from "../../Source/Cesium.js";
-import { Quaternion } from "../../Source/Cesium.js";
-import { VertexAttributeSemantic } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  InstanceAttributeSemantic,
+  Matrix4,
+  ModelExperimentalUtility,
+  Quaternion,
+  VertexAttributeSemantic,
+} from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimentalUtility", function () {
   it("getNodeTransform works when node has a matrix", function () {
