@@ -197,7 +197,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
             float metalness = 1.0;
             #endif
 
-            #if defined(USE_ROUGHNESS_FACTOR)
+            #if defined(HAS_ROUGHNESS_FACTOR)
             float roughness = clamp(u_roughnessFactor, 0.04, 1.0);
             #else
             float roughness = 1.0;
