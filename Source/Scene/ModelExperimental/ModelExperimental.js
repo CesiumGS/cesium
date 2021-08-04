@@ -26,8 +26,15 @@ import destroyObject from "../../Core/destroyObject.js";
 export default function ModelExperimental(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  /**
+   * The glTF Loader used to load resources for this model.
+   *
+   * @type {GltfLoader}
+   * @readonly
+   *
+   * @private
+   */
   this._gltfLoader = undefined;
-  this._readyPromise = when.defer();
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -93,6 +100,16 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 });
 
+/**
+ * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+ * get the draw commands needed to render this primitive.
+ * <p>
+ * Do not call this function directly.  This is documented just to
+ * list the exceptions that may be propagated when the scene is rendered:
+ * </p>
+ *
+ * @exception {RuntimeError} Failed to load external reference.
+ */
 ModelExperimental.prototype.update = function (frameState) {
   if (!this._resourcesLoaded) {
     this._gltfLoader.process(frameState);
@@ -110,6 +127,36 @@ ModelExperimental.prototype.update = function (frameState) {
   );
 };
 
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see ModelExperimental#destroy
+ */
+ModelExperimental.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * model = model && model.destroy();
+ *
+ * @see ModelExperimental#isDestroyed
+ */
 ModelExperimental.prototype.destroy = function () {
   destroyObject(this);
 };
