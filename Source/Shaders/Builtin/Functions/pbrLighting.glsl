@@ -93,6 +93,6 @@ vec3 czm_pbrLighting(
     // F here represents the specular contribution
     vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);
 
-    // Lo = kD * albedo/pi + specular * Li * NdotL
-    return (diffuseContribution + specularContribution) + NdotL * lightColorHdr;
+    // Lo = (diffuse + specular) * Li * NdotL
+    return (diffuseContribution + specularContribution) * NdotL * lightColorHdr;
 }

@@ -31,7 +31,7 @@ vec3 applyTonemapping(vec3 linearIn)
     #endif 
 }
 
-vec3 computePbrLighting(ModelMaterial inputMaterial)
+vec3 computePbrLighting(czm_modelMaterial inputMaterial)
 {
     czm_pbrParameters pbrParameters;
     pbrParameters.diffuseColor = inputMaterial.diffuse;
