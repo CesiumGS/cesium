@@ -5,6 +5,7 @@ import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import when from "../../ThirdParty/when.js";
+import destroyObject from "../../Core/destroyObject.js";
 
 /**
  * A 3D model based on glTF, the runtime asset format for WebGL. This is
@@ -107,6 +108,10 @@ ModelExperimental.prototype.update = function (frameState) {
     frameState.commandList,
     this._sceneGraph._drawCommands
   );
+};
+
+ModelExperimental.prototype.destroy = function () {
+  destroyObject(this);
 };
 
 function initialize(model, options) {

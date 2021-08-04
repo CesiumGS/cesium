@@ -31,15 +31,16 @@ var GeometryPipelineStage = {};
  */
 GeometryPipelineStage.process = function (renderResources, primitive) {
   var attributeIndex = 0;
+  var index;
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
-    processAttribute(
-      renderResources,
-      attribute,
-      attribute.semantic === VertexAttributeSemantic.POSITION
-        ? 0
-        : ++attributeIndex
-    );
+    if (attribute.semantic !== VertexAttributeSemantic.POSITION) {
+      attributeIndex = attributeIndex + 1;
+      index = attributeIndex;
+    } else {
+      index = 0;
+    }
+    processAttribute(renderResources, attribute, index);
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
