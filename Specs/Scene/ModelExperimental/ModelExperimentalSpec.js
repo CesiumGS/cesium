@@ -25,4 +25,19 @@ describe("Scene/ModelExperimental", function () {
       });
     });
   });
+
+  it("destroy works", function () {
+    var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+    var loadPromise = resource.fetchArrayBuffer();
+    return loadPromise.then(function (buffer) {
+      var model = new ModelExperimental({
+        gltf: new Uint8Array(buffer),
+      });
+
+      model._readyPromise.then(function () {
+        model.destroy();
+        expect(model).toBeUndefined();
+      });
+    });
+  });
 });
