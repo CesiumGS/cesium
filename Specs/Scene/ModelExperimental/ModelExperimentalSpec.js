@@ -5,7 +5,7 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe(
-  "Scene/ModelExperimental",
+  "Scene/ModelExperimental/ModelExperimental",
   function () {
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
@@ -26,6 +26,18 @@ describe(
           expect(model._resourcesLoaded).toEqual(true);
         });
       });
+    });
+
+    it("fromGltf throws with undefined options", function () {
+      expect(function () {
+        ModelExperimental.fromGltf();
+      }).toThrowDeveloperError();
+    });
+
+    it("fromGltf throws with undefined url", function () {
+      expect(function () {
+        ModelExperimental.fromGltf({});
+      }).toThrowDeveloperError();
     });
 
     it("destroy works", function () {
