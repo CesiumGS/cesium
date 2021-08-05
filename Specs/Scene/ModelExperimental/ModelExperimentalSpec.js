@@ -22,6 +22,7 @@ describe(
 
         expect(GltfLoader.prototype.load).toHaveBeenCalled();
         model._readyPromise.then(function () {
+          expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
         });
@@ -47,6 +48,7 @@ describe(
         var model = new ModelExperimental({
           gltf: new Uint8Array(buffer),
         });
+        expect(model.isDestroyed()).toEqual(false);
 
         model._readyPromise.then(function () {
           model.destroy();

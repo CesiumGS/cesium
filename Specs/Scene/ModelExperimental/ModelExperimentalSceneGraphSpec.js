@@ -114,6 +114,9 @@ describe(
         var modelComponents = sceneGraph._modelComponents;
         var sceneNodes = sceneGraph._sceneNodes;
 
+        expect(model.upAxis).toEqual(Axis.Z);
+        expect(model.forwardAxis).toEqual(Axis.X);
+
         expect(sceneNodes[1].modelMatrix).toEqual(
           modelComponents.nodes[0].matrix
         );
