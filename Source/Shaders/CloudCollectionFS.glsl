@@ -8,7 +8,11 @@ vec3 quintic(vec3 t) {
     vec3 t3 = t * t * t;
     vec3 t4 = t * t3;
     vec3 t5 = t * t4;
-    return 6.0 * t5 + 15.0 * t4 - 10.0 * t3;
+    return 6.0 * t5 - 15.0 * t4 + 10.0 * t3;
+}
+
+float random(vec3 p) {
+    return fract(sin(p.x * p.y) * 2.0 + cos(p.z) + sin(p.z));
 }
 
 vec3 random3(vec3 p) {
@@ -17,18 +21,44 @@ vec3 random3(vec3 p) {
     return fract(vec3(sin(dot1 - dot2), cos(dot1 * dot2), dot1 * dot2));
 }
 
-vec3 random32(vec3 p) {
-    float dot1 = dot(p, vec3(127.1, 311.7, 932.8));
-    float dot2 = dot(p, vec3(269.5, 183.3, 421.4));
-    float dot3 = dot(p, vec3(99.5, 430.3, 764.4));
-    return fract(sin(vec3(dot1, dot2, dot3)));
+vec3 getPerlinDirection(vec3 p) {
+    int i = int(random(p) * 16.0);
+    if(i == 0) {
+        return vec3(1, 1, 0);
+    } else if(i == 1) {
+        return vec3(-1, 1, 0);
+    } else if(i == 2) {
+        return vec3(1, -1, 0);
+    } else if(i == 3) {
+        return vec3(-1, -1, 0);
+    } else if(i == 4) {
+        return vec3(1, 0, 1);
+    } else if(i == 5) {
+        return vec3(-1, 0, 1);
+    } else if(i == 6) {
+        return vec3(1, 0, -1);
+    } else if(i == 7) {
+        return vec3(-1, 0, -1);
+    } else if(i == 8) {
+        return vec3(0, 1, 1);
+    } else if(i == 9) {
+        return vec3(0, -1, 1);
+    } else if(i == 10) {
+        return vec3(0, 1, -1);
+    } else if(i == 11) {
+        return vec3(0, -1, -1);
+    } else if(i == 12) {
+        return vec3(1, 1, 0);
+    } else if(i == 13) {
+        return vec3(-1, 1, 0);
+    } else if(i == 14) {
+        return vec3(0, -1, 1);
+    } else {
+        return vec3(0, -1, -1);
+    } 
 }
 
-vec3 getRandomDirection(vec3 p) {
-    return (random32(p) * 2.0) - vec3(1.0);
-}
-
-float perlinNoise(vec3 p, float freq) {
+float perlinNoise(vec3 p) {
     float noise = 0.0;
     vec3 cell = floor(p);
     for(float z = 0.0; z <= 1.0; z++) {
@@ -36,7 +66,7 @@ float perlinNoise(vec3 p, float freq) {
             for(float x = 0.0; x <= 1.0; x++) {
                 vec3 corner = cell + vec3(x, y, z);
                 vec3 cornerToPoint = p - corner;
-                vec3 randomDir = normalize(getRandomDirection(corner));
+                vec3 randomDir = getPerlinDirection(corner);
                 vec3 falloff = vec3(1.0) - quintic(abs(cornerToPoint));
 
                 float value = dot(cornerToPoint, randomDir);
@@ -44,12 +74,11 @@ float perlinNoise(vec3 p, float freq) {
             } 
         }
     }
-
     return noise;
 }
 
 // "Frequency" corresponds to smaller cell sizes.
-vec3 getCellPoint(vec3 cell, float freq) {
+vec3 getWorleyCellPoint(vec3 cell, float freq) {
     vec3 p = cell + random3(cell);
     return p / freq;
 }
@@ -62,7 +91,7 @@ float worleyNoise(vec3 p, float freq) {
         for(float y = -1.0; y <= 1.0; y++) {
             for(float x = -1.0; x <= 1.0; x++) {
                 vec3 cell = centerCell + vec3(x, y, z);
-                vec3 point = getCellPoint(cell, freq);
+                vec3 point = getWorleyCellPoint(cell, freq);
 
                 // compare to previous distances
                 float distance = length(p - point);
@@ -73,20 +102,20 @@ float worleyNoise(vec3 p, float freq) {
         }
     }
 
-    return shortestDistance * freq;
+    return shortestDistance;
 }
 
 const float MAX_ITERATIONS = 10.0;
 float perlinFBMNoise(vec3 p, float octaves, float scale) {
     float noise = 0.0;
-    float freq = 1.0;
+    float freq = 1.0 * scale;
     float persistence = 1.0;
     for(float i = 0.0; i < MAX_ITERATIONS; i++) {
         if(i >= octaves) {
             break;
         }
         
-        noise += perlinNoise(p * scale, freq * scale) * persistence;
+        noise += perlinNoise(p * freq) * persistence;
         persistence *= 0.7;
         freq *= 2.0;
     }
@@ -199,41 +228,87 @@ const vec3 lightDir = normalize(vec3(0.2, -1.0, 0.5));
 
 //float TR = 1.0 - (It - T1) / It; // 2D translucency
 // 1.0 - (It - T1 - (T2 - T1) * (1.0 - nvDot) / It;
+vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale) {
+    vec3 cloudPoint, cloudNormal;
+    if(!intersectEllipsoid(rayOrigin, rayDir, cloudCenter, cloudScale,
+                            cloudPoint, cloudNormal)) {
+        return vec4(0.0);
+    }
 
-vec4 drawCloud(vec3 cloudPoint, vec3 cloudNormal, vec3 cloudCenter, vec3 cloudScale, vec3 viewDir) {
-    float nvDot = clamp(dot(cloudNormal, -viewDir), 0.0, 1.0);
+    float ndDot = clamp(dot(cloudNormal, -rayDir), 0.0, 1.0);
     float Id = clamp(dot(cloudNormal, -lightDir), 0.0, 1.0);  // diffuse reflection
-    float Is = max(pow(dot(-lightDir, -viewDir), 2.0), 0.0);  // specular reflection
+    float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
     float It = T(cloudPoint);                                 // texture function
     float intensity = I(Id, Is, It);
     vec3 color = intensity * vec3(1.0);
-    float W = clamp(worleyFBMNoise(cloudPoint, 3.0, 1.0), 0.1, 1.0);
-    float W2 = clamp(0.8 * worleyFBMNoise(cloudPoint, 3.0, 2.0), 0.0, 1.0);
-    float W3 = clamp(0.5 * worleyFBMNoise(  , 3.0, 4.0), 0.0, 1.0);
-    float TR = clamp(pow(nvDot, 3.0) - W, 0.0, 1.0);
-    TR = 2.2 * TR - (0.7 - nvDot) * W2 * W3;
+
+    float W = worleyFBMNoise(cloudPoint, 3.0, 1.0);
+    float W2 = worleyFBMNoise(cloudPoint, 3.0, 2.0);
+    float W3 = worleyFBMNoise(cloudPoint, 3.0, 3.0);
+    float TR = pow(ndDot, 3.0) - W;
+    float heightSignal = clamp((cloudPoint.y + cloudScale.y) / cloudScale.y, 0.0, 1.0);//(cloudPoint.y - cloudCenter.y) / cloudScale.y + 0.5;
+    TR *= heightSignal * heightSignal + 1.5;
+    TR -= 1.2 * W2 - ndDot * W3;
     return vec4(color, clamp(TR, 0.0, 1.0));
 }
 
-void main() {
-    vec2 offset = v_scale * v_textureCoordinates;
-    vec3 center = v_positionHigh + v_positionLow;
-    vec3 p = vec3(offset, 1.0);
-    vec3 rayOrigin = vec3(0.0, 0.0, -10.0);//czm_view[3].xyz;
-    vec3 rayDir = normalize(p - rayOrigin);
 
-    vec3 ellipsoidScale = 0.5 * vec3(v_scale, v_scale.x);
-    vec3 ellipsoidCenter = vec3(0);//center;
-    vec3 point, normal;
-    if(!intersectEllipsoid(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale,
-                            point, normal)) {
-        discard;
+const int MAX_STEPS = 40;
+vec4 drawCloud2(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale) {
+    vec3 cloudPoint, cloudNormal;
+    if(!intersectEllipsoid(rayOrigin, rayDir, cloudCenter, cloudScale,
+                            cloudPoint, cloudNormal)) {
+        return vec4(0.0);
     }
 
-    vec4 cloud = drawCloud(point, normal, ellipsoidCenter, ellipsoidScale, rayDir);
-    if(cloud.w < 0.05) {
-        discard;
+    float ndDot = clamp(dot(cloudNormal, -rayDir), 0.0, 1.0);
+    float Id = clamp(dot(cloudNormal, -lightDir), 0.0, 1.0);  // diffuse reflection
+    float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
+    float It = T(cloudPoint);                                 // texture function
+    float intensity = I(Id, Is, It);
+    vec3 color = intensity * vec3(1.0);
+
+    float stepSize = 2.0 * cloudScale.z / float(MAX_STEPS);
+    float t = -1.0;
+    float alpha = 0.0;
+    for(int i = 0; i < MAX_STEPS; i++) {
+        if(alpha > 0.95) {
+            break;
+        }
+        vec3 p = cloudPoint + t * rayDir;
+
+        float P = perlinFBMNoise(cloudPoint, 4.0, 0.5);
+        float W = worleyFBMNoise(cloudPoint, 3.0, 1.0);
+        float PW = (1.0 - W * 1.1) * (1.0 - P);
+        alpha += (1.0 - PW) * 0.05;
+        t += stepSize;
     }
-    gl_FragColor = cloud;
     
+    //float ndDotPow = pow(ndDot, 3.0);
+    //float W2 = worleyFBMNoise(cloudPoint, 3.0, 1.0);
+    //float W3 = worleyFBMNoise(cloudPoint, 3.0, 2.0);
+    //TR = ndDotPow - W;
+    //TR -= (1.0 - pow(ndDot, 0.5)) * W2;
+    //TR -= W + (0.5 - ndDotPow) * W2;
+    return vec4(color, clamp(alpha, 0.0, 1.0));
+}
+
+void main() {
+    // To avoid calculations with high values, we raycast from an artificially
+    // smaller space.
+    vec2 offset = v_scale * v_textureCoordinates;
+    vec3 position = v_positionHigh + v_positionLow;
+    vec3 eye = vec3(0, 0, -10);//czm_view[3].xyz;
+    vec3 rayDir = normalize(vec3(offset, 1.0) - eye);
+    vec3 rayOrigin = eye;
+
+    vec3 ellipsoidScale = 0.5 * vec3(v_scale, min(v_scale.x, v_scale.y));
+    vec3 ellipsoidCenter = vec3(0);//center;
+
+    vec4 cloud = drawCloud(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale);
+    if(cloud.w < 0.01) {
+        discard;
+    }
+
+    gl_FragColor = cloud;
 }
