@@ -195,7 +195,9 @@ function initialize(model, options) {
 
   if (gltf instanceof Uint8Array) {
     loaderOptions.typedArray = gltf;
-    loaderOptions.gltfResource = Resource.createIfNeeded(options.basePath, "");
+    loaderOptions.gltfResource = Resource.createIfNeeded(
+      defaultValue(options.basePath, "")
+    );
   } else {
     loaderOptions.gltfResource = gltf;
   }

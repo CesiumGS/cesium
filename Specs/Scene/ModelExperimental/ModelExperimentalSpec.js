@@ -9,7 +9,7 @@ describe("Scene/ModelExperimental", function () {
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
 
   it("initializes from Uint8Array", function () {
-    spyOn(GltfLoader.prototype, "load");
+    spyOn(GltfLoader.prototype, "load").and.callThrough();
 
     var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
     var loadPromise = resource.fetchArrayBuffer();
