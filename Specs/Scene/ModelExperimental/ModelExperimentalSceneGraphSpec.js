@@ -1,5 +1,6 @@
 import {
   Axis,
+  buildDrawCommand,
   Matrix4,
   ModelExperimentalSceneGraph,
   ResourceCache,
@@ -11,6 +12,8 @@ describe(
   "Scene/ModelExperimental/ModelExperimentalSceneGraph",
   function () {
     var parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
+    var vertexColorGltfUrl =
+      "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
 
     var scene;
 
@@ -27,15 +30,60 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("creates scene nodes from a model", function () {
+    it("creates scene nodes and scene primitives from a model", function () {
+      return loadAndZoomToModelExperimental(
+        { url: vertexColorGltfUrl },
+        scene
+      ).then(function (model) {
+        var sceneGraph = model._sceneGraph;
+        var modelComponents = sceneGraph._modelComponents;
+
+        expect(sceneGraph).toBeDefined();
+
+        var sceneNodes = sceneGraph._sceneNodes;
+        expect(sceneNodes.length).toEqual(modelComponents.nodes.length);
+
+        expect(sceneNodes[0].sceneMeshPrimitives.length).toEqual(1);
+        expect(sceneNodes[1].sceneMeshPrimitives.length).toEqual(1);
+      });
+    });
+
+    it("builds draw commands for each primitive", function () {
+      spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "buildDrawCommands"
+      ).and.callThrough();
       return loadAndZoomToModelExperimental({ url: parentGltfUrl }, scene).then(
         function (model) {
           var sceneGraph = model._sceneGraph;
-          var modelComponents = sceneGraph._modelComponents;
-          expect(sceneGraph).toBeDefined();
-          expect(sceneGraph._sceneNodes.length).toEqual(
-            modelComponents.nodes.length
-          );
+          var sceneNodes = sceneGraph._sceneNodes;
+
+          var primitivesCount = 0;
+          for (var i = 0; i < sceneNodes.length; i++) {
+            primitivesCount += sceneNodes[i].sceneMeshPrimitives.length;
+          }
+
+          var frameState = scene.frameState;
+
+          model.update(frameState);
+          expect(
+            ModelExperimentalSceneGraph.prototype.buildDrawCommands
+          ).toHaveBeenCalled();
+          expect(frameState.commandList.length).toEqual(primitivesCount);
+
+          expect(model._drawCommandsBuilt).toEqual(true);
+          expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
+
+          // Reset the draw command list to see if they're re-built.
+          model._drawCommandsBuilt = false;
+          sceneGraph._drawCommands = [];
+          frameState.commandList = [];
+
+          model.update(frameState);
+          expect(
+            ModelExperimentalSceneGraph.prototype.buildDrawCommands
+          ).toHaveBeenCalled();
+          expect(frameState.commandList.length).toBeGreaterThan(0);
         }
       );
     });
