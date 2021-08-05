@@ -76,7 +76,6 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   }
 };
 
-var translationScratch = new Cartesian3();
 /**
  * Create a bounding sphere from a primitive's POSITION attribute and model
  * matrix.
@@ -97,11 +96,7 @@ ModelExperimentalUtility.createBoundingSphere = function (
     positionGltfAttribute.max
   );
 
-  Cartesian3.add(
-    boundingSphere.center,
-    Matrix4.getTranslation(modelMatrix, translationScratch),
-    boundingSphere.center
-  );
+  BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
   return boundingSphere;
 };
 
