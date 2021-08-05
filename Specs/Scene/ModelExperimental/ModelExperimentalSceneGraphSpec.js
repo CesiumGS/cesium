@@ -6,6 +6,7 @@ import {
   Matrix4,
   ModelExperimental,
   ModelExperimentalSceneGraph,
+  ResourceCache,
   when,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -24,6 +25,10 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneGraph", function () {
 
   afterAll(function () {
     scene.destroyForSpecs();
+  });
+
+  afterEach(function () {
+    ResourceCache.clearForSpecs();
   });
 
   function loadModel(options) {
