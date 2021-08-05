@@ -6,7 +6,6 @@ import {
   Matrix4,
   ModelExperimental,
   ModelExperimentalSceneGraph,
-  ResourceCache,
   when,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";

@@ -6,7 +6,6 @@ import GltfLoader from "../GltfLoader.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import Resource from "../../Core/Resource.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 
