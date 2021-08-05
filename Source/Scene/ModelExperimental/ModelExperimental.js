@@ -18,6 +18,7 @@ import when from "../../ThirdParty/when.js";
  * @param {Object} options Object with the following properties:
  * @param {Uint8Array} [options.gltf] A binary glTF buffer.
  * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {CustomShader} [options.customShader] A custom shader. This will modify the vertex and fragment shaders with user-defined code.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -31,6 +32,7 @@ export default function ModelExperimental(options) {
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
   this._readyPromise = when.defer();
+  this._customShader = options.customShader;
 
   initialize(this, options);
 }
@@ -88,6 +90,21 @@ Object.defineProperties(ModelExperimental.prototype, {
   forwardAxis: {
     get: function () {
       return this._sceneGraph._forwardAxis;
+    },
+  },
+  /**
+   * The model's custom shader if it exists
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {CustomShader}
+   * @readonly
+   *
+   * @private
+   */
+  customShader: {
+    get: function () {
+      return this._customShader;
     },
   },
 });

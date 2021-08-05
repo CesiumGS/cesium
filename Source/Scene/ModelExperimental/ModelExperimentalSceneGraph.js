@@ -166,6 +166,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
       sceneNode.sceneMeshPrimitives.push(
         new ModelExperimentalSceneMeshPrimitive({
           primitive: node.primitives[i],
+          model: sceneGraph._model,
         })
       );
     }

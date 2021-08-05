@@ -1,5 +1,8 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
+import CustomShaderStage from "./CustomShaderStage.js";
+import CustomShaderMode from "./CustomShaderMode.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
@@ -29,6 +32,15 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
   this.primitive = options.primitive;
 
   /**
+   * A reference to the model
+   *
+   * @type {ModelExperimental}
+   *
+   * @private
+   */
+  this.model = options.model;
+
+  /**
    * Pipeline stages to apply to this mesh primitive. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -46,7 +58,20 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
 function initialize(sceneMeshPrimitive) {
   var pipelineStages = sceneMeshPrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
-  pipelineStages.push(MaterialPipelineStage);
+
+  var customShader = sceneMeshPrimitive.model.customShader;
+  var hasCustomShader = defined(customShader);
+  var materialsEnabled =
+    hasCustomShader && customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
+
+  if (materialsEnabled) {
+    pipelineStages.push(MaterialPipelineStage);
+  }
+
+  if (hasCustomShader) {
+    pipelineStages.push(CustomShaderStage);
+  }
+
   pipelineStages.push(LightingPipelineStage);
   return;
 }

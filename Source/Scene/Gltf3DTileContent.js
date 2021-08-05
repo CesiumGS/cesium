@@ -150,6 +150,7 @@ function initialize(content, gltf) {
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
+    customShader: tileset.customShader,
   });
   content._model.readyPromise.then(function (model) {
     if (defined(model.activeAnimations)) {
