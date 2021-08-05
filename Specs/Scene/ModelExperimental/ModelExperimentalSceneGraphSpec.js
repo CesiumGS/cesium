@@ -1,6 +1,5 @@
 import {
   Axis,
-  buildDrawCommand,
   Matrix4,
   ModelExperimentalSceneGraph,
   ResourceCache,
