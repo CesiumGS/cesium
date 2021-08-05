@@ -1,4 +1,5 @@
 import {
+  Axis,
   Cartesian3,
   defaultValue,
   HeadingPitchRange,
@@ -14,6 +15,7 @@ import pollToPromise from "../../pollToPromise.js";
 describe("Scene/ModelExperimental/ModelExperimentalSceneGraph", function () {
   var boxTexturedGlbUrl =
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+  var parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
 
   var scene;
 
@@ -25,13 +27,11 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneGraph", function () {
     scene.destroyForSpecs();
   });
 
-  afterEach(function () {
-    //ResourceCache.clearForSpecs();
-  });
-
   function loadModel(options) {
     var model = ModelExperimental.fromGltf({
       url: options.url,
+      upAxis: options.upAxis,
+      forwardAxis: options.forwardAxis,
     });
     scene.primitives.add(model);
     zoomTo(model);
@@ -66,9 +66,48 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneGraph", function () {
     };
   }
 
-  it("loads all scene nodes from a model", function () {
+  it("creates scene nodes from a model", function () {
     return loadModel({ url: boxTexturedGlbUrl }).then(function (model) {
-      expect();
+      var sceneGraph = model._sceneGraph;
+      var modelComponents = sceneGraph._modelComponents;
+      expect(sceneGraph).toBeDefined();
+      expect(sceneGraph._sceneNodes.length).toEqual(
+        modelComponents.nodes.length
+      );
+    });
+  });
+
+  it("traverses scene graph correctly", function () {
+    return loadModel({ url: boxTexturedGlbUrl }).then(function (model) {
+      var sceneGraph = model._sceneGraph;
+      var modelComponents = sceneGraph._modelComponents;
+      var sceneNodes = sceneGraph._sceneNodes;
+
+      expect(sceneNodes[1].node).toEqual(modelComponents.nodes[0]);
+      expect(sceneNodes[0].node).toEqual(modelComponents.nodes[1]);
+    });
+  });
+
+  it("propagates node transforms correctly", function () {
+    return loadModel({
+      url: parentGltfUrl,
+      upAxis: Axis.Z,
+      forwardAxis: Axis.X,
+    }).then(function (model) {
+      var sceneGraph = model._sceneGraph;
+      var modelComponents = sceneGraph._modelComponents;
+      var sceneNodes = sceneGraph._sceneNodes;
+
+      expect(sceneNodes[1].modelMatrix).toEqual(
+        modelComponents.nodes[0].matrix
+      );
+      expect(sceneNodes[0].modelMatrix).toEqual(
+        Matrix4.multiplyByTranslation(
+          sceneNodes[1].modelMatrix,
+          modelComponents.nodes[1].translation,
+          new Matrix4()
+        )
+      );
     });
   });
 

@@ -557,6 +557,12 @@ describe(
         expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
           "HAS_FEATURE_ID"
         );
+        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
+          "PRIMITIVE_TYPE_POINTS"
+        );
+        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
+          "PRIMITIVE_TYPE_POINTS"
+        );
       });
     });
   },

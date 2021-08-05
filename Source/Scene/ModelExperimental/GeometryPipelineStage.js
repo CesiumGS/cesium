@@ -44,7 +44,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
-  if (primitive.primitive === PrimitiveType.POINTS) {
+  if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
