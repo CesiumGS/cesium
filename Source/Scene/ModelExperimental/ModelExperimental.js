@@ -181,6 +181,10 @@ ModelExperimental.prototype.isDestroyed = function () {
  * @see ModelExperimental#isDestroyed
  */
 ModelExperimental.prototype.destroy = function () {
+  var gltfLoader = this._gltfLoader;
+  if (defined(gltfLoader)) {
+    gltfLoader.destroy();
+  }
   destroyObject(this);
 };
 
