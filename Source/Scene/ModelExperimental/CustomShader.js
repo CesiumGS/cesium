@@ -1,5 +1,6 @@
 export default function CustomShader(options) {
   this.mode = options.mode;
+  this.lightingModel = options.lightingModel;
   this.uniforms = options.uniforms;
   this.varyings = options.varyings;
   this.vertexShaderText = options.vertexShaderText;

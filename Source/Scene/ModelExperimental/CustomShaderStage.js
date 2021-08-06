@@ -43,7 +43,9 @@ CustomShaderStage.process = function (renderResources, primitive) {
 
   generateShaderLines(renderResources, customShader, primitive);
 
-  // TODO: Set the lighting settings to use UNLIT lighting
+  // if present, the lighting model overrides the material's lighting model.
+  renderResources.lightingOptions.customShaderLightingModel =
+    customShader.lightingModel;
 
   renderResources.uniformMap = combine(
     renderResources.uniformMap,
