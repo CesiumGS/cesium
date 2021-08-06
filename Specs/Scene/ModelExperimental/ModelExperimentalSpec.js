@@ -1,8 +1,10 @@
 import {
-  GltfLoader,
+  ResourceCache,
   Resource,
   ModelExperimental,
 } from "../../../Source/Cesium.js";
+import createScene from "../../createScene.js";
+import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
 
 describe(
   "Scene/ModelExperimental/ModelExperimental",
@@ -10,18 +12,29 @@ describe(
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
 
-    it("initializes from Uint8Array", function () {
-      spyOn(GltfLoader.prototype, "load").and.callThrough();
+    var scene;
 
+    beforeAll(function () {
+      scene = createScene();
+    });
+
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
+
+    afterEach(function () {
+      scene.primitives.removeAll();
+      ResourceCache.clearForSpecs();
+    });
+
+    it("initializes from Uint8Array", function () {
       var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       var loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
-        var model = new ModelExperimental({
-          gltf: new Uint8Array(buffer),
-        });
-
-        expect(GltfLoader.prototype.load).toHaveBeenCalled();
-        model._readyPromise.then(function () {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
           expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
@@ -45,14 +58,13 @@ describe(
       var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       var loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
-        var model = new ModelExperimental({
-          gltf: new Uint8Array(buffer),
-        });
-        expect(model.isDestroyed()).toEqual(false);
-
-        model._readyPromise.then(function () {
-          model.destroy();
-          expect(model).toBeUndefined();
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          expect(model.isDestroyed()).toEqual(false);
+          scene.primitives.remove(model);
+          expect(model.isDestroyed()).toEqual(true);
         });
       });
     });

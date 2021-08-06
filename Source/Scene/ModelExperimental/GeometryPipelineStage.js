@@ -2,7 +2,7 @@ import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
+import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -73,7 +73,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines([GeometryVS]);
+  shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addVarying("vec3", "v_positionEC");
 };
 
@@ -129,11 +129,10 @@ function processAttribute(
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
   if (!defined(variableName)) {
     variableName = attribute.name;
-    if (variableName[0] === "_") {
-      variableName = variableName.substring(1);
-      variableName = variableName.toLowerCase();
-    }
 
+    // Per the glTF 2.0 spec, custom vertex attributes must be prepended with an underscore.
+    variableName = variableName.substring(1);
+    variableName = variableName.toLowerCase();
     varyingName = "v_" + variableName;
 
     var initializationLine =
