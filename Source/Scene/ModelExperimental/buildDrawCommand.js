@@ -1,3 +1,4 @@
+import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import VertexArray from "../../Renderer/VertexArray.js";
@@ -11,6 +12,8 @@ import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperiment
  * @param {RenderResources.MeshRenderResources} meshPrimitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  * @returns {DrawCommand} The generated DrawCommand.
+ *
+ * @private
  */
 export default function buildDrawCommand(
   meshPrimitiveRenderResources,
@@ -20,9 +23,13 @@ export default function buildDrawCommand(
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
+  var indexBuffer = defined(meshPrimitiveRenderResources.indices)
+    ? meshPrimitiveRenderResources.indices.buffer
+    : undefined;
+
   var vertexArray = new VertexArray({
     context: frameState.context,
-    indexBuffer: meshPrimitiveRenderResources.indices.buffer,
+    indexBuffer: indexBuffer,
     attributes: meshPrimitiveRenderResources.attributes,
   });
 

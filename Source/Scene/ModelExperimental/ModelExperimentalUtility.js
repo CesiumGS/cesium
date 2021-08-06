@@ -20,6 +20,8 @@ export default function ModelExperimentalUtility() {}
  * @param {String} type The type of object to report about
  * @param {String} path The URI of the model file
  * @return {Function} An error function that
+ *
+ * @private
  */
 ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
   return function (error) {
@@ -36,6 +38,8 @@ ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
  *
  * @param {ModelComponents.Node} node The node components
  * @return {Matrix4} The computed transformation matrix. If no transformation matrix or parameters are specified, this will be the identity matrix.
+ *
+ * @private
  */
 ModelExperimentalUtility.getNodeTransform = function (node) {
   if (defined(node.matrix)) {
@@ -56,6 +60,8 @@ ModelExperimentalUtility.getNodeTransform = function (node) {
  * @param {VertexAttributeSemantic} semantic The semantic to search for
  * @param {Number} setIndex The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
  * @return {ModelComponents.Attribute} The selected. attribute, or undefined if not found.
+ *
+ * @private
  */
 ModelExperimentalUtility.getAttributeBySemantic = function (
   object,
@@ -82,6 +88,8 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Matrix4} modelMatrix The primitive's model matrix.
+ *
+ * @private
  */
 ModelExperimentalUtility.createBoundingSphere = function (
   primitive,
@@ -108,6 +116,8 @@ ModelExperimentalUtility.createBoundingSphere = function (
  * @param {Matrix4} modelMatrix The original model matrix. This will be updated in place
  * @param {Axis} upAxis The original up direction
  * @param {Axis} forwardAxis The original forward direction
+ *
+ * @private
  */
 ModelExperimentalUtility.correctModelMatrix = function (
   modelMatrix,

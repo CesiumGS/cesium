@@ -129,11 +129,10 @@ function processAttribute(
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
   if (!defined(variableName)) {
     variableName = attribute.name;
-    if (variableName[0] === "_") {
-      variableName = variableName.substring(1);
-      variableName = variableName.toLowerCase();
-    }
 
+    // Per the glTF 2.0 spec, custom vertex attributes must be prepended with an underscore.
+    variableName = variableName.substring(1);
+    variableName = variableName.toLowerCase();
     varyingName = "v_" + variableName;
 
     var initializationLine =
