@@ -31,19 +31,20 @@ var GeometryPipelineStage = {};
  */
 GeometryPipelineStage.process = function (renderResources, primitive) {
   var attributeIndex = 0;
+  var index;
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
-    processAttribute(
-      renderResources,
-      attribute,
-      attribute.semantic === VertexAttributeSemantic.POSITION
-        ? 0
-        : ++attributeIndex
-    );
+    if (attribute.semantic !== VertexAttributeSemantic.POSITION) {
+      attributeIndex = attributeIndex + 1;
+      index = attributeIndex;
+    } else {
+      index = 0;
+    }
+    processAttribute(renderResources, attribute, index);
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
-  if (primitive.primitive === PrimitiveType.POINTS) {
+  if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
@@ -65,8 +66,6 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   if (defined(semantic)) {
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
     varyingName = "v_" + variableName;
-
-    shaderBuilder.addVarying(glslType, varyingName);
 
     switch (semantic) {
       case VertexAttributeSemantic.NORMAL:
@@ -96,7 +95,7 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     componentDatatype: attribute.componentDatatype,
   };
 
-  // Handle user defined vertex attributes.
+  // Handle custom vertex attributes.
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
   if (!defined(variableName)) {
     variableName = attribute.name;
@@ -104,9 +103,14 @@ function processAttribute(renderResources, attribute, attributeIndex) {
       variableName = variableName.substring(1);
       variableName = variableName.toLowerCase();
     }
+
+    varyingName = "v_" + variableName;
+
+    shaderBuilder.addVertexLines([varyingName + " = a_" + variableName + ";"]);
   }
 
   variableName = "a_" + variableName;
+  shaderBuilder.addVarying(glslType, varyingName);
 
   if (semantic === VertexAttributeSemantic.POSITION) {
     shaderBuilder.setPositionAttribute(glslType, variableName);

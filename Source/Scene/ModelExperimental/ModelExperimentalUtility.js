@@ -96,7 +96,7 @@ ModelExperimentalUtility.createBoundingSphere = function (
     positionGltfAttribute.max
   );
 
-  boundingSphere.center = Matrix4.getTranslation(modelMatrix, new Cartesian3());
+  BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
   return boundingSphere;
 };
 
