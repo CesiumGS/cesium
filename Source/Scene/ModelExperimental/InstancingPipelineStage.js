@@ -10,8 +10,25 @@ import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
 
-export default function InstancingPiplineStage() {}
+/**
+ * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
+ * level.
+ *
+ * @namespace
+ * @private
+ */
+var InstancingPiplineStage = {};
 
+/**
+ * Process a node. This modifies the following parts of the render resources:
+ * <ul>
+ *  <li>adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
+ *  <li>adds an instancing translation min and max to compute an accurate bounding volume</li>
+ * </ul>
+ * @param {*} renderResources
+ * @param {*} node
+ * @param {*} frameState
+ */
 InstancingPiplineStage.process = function (renderResources, node, frameState) {
   var instances = node.instances;
   var instancingVertexAttributes = [];
@@ -24,8 +41,13 @@ InstancingPiplineStage.process = function (renderResources, node, frameState) {
     instances,
     InstanceAttributeSemantic.TRANSLATION
   );
-  var translationMax = translationAttribute.max;
-  var translationMin = translationAttribute.min;
+
+  var translationMax;
+  var translationMin;
+  if (defined(translationAttribute)) {
+    translationMax = translationAttribute.max;
+    translationMin = translationAttribute.min;
+  }
 
   var rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     instances,
