@@ -2,7 +2,7 @@ import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
+import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -73,7 +73,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines([GeometryVS]);
+  shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addVarying("vec3", "v_positionEC");
 };
 
