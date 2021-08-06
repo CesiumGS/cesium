@@ -62,7 +62,7 @@ function initialize(sceneMeshPrimitive) {
   var customShader = sceneMeshPrimitive.model.customShader;
   var hasCustomShader = defined(customShader);
   var materialsEnabled =
-    hasCustomShader && customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
+    !hasCustomShader || customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
 
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);
