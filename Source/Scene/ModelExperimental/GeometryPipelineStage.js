@@ -67,8 +67,6 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
     varyingName = "v_" + variableName;
 
-    shaderBuilder.addVarying(glslType, varyingName);
-
     switch (semantic) {
       case VertexAttributeSemantic.NORMAL:
         shaderBuilder.addDefine("HAS_NORMALS");
@@ -97,7 +95,7 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     componentDatatype: attribute.componentDatatype,
   };
 
-  // Handle user defined vertex attributes.
+  // Handle custom vertex attributes.
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
   if (!defined(variableName)) {
     variableName = attribute.name;
@@ -105,9 +103,14 @@ function processAttribute(renderResources, attribute, attributeIndex) {
       variableName = variableName.substring(1);
       variableName = variableName.toLowerCase();
     }
+
+    varyingName = "v_" + variableName;
+
+    shaderBuilder.addVertexLines([varyingName + " = a_" + variableName + ";"]);
   }
 
   variableName = "a_" + variableName;
+  shaderBuilder.addVarying(glslType, varyingName);
 
   if (semantic === VertexAttributeSemantic.POSITION) {
     shaderBuilder.setPositionAttribute(glslType, variableName);

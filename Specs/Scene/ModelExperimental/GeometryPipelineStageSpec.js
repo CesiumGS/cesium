@@ -444,6 +444,9 @@ describe(
         ComponentDatatype.UNSIGNED_SHORT
       );
 
+      expect(shaderBuilder._vertexShaderParts.shaderLines[0]).toEqual(
+        "v_temperature = a_temperature;"
+      );
       expect(shaderBuilder._attributeLines[0]).toEqual(
         "attribute vec2 a_temperature;"
       );
