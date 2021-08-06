@@ -29,5 +29,9 @@ vec3 processGeometry(vec3 position)
     v_color = a_color;
     #endif
 
+    #ifdef HAS_CUSTOM_ATTRIBUTES
+    initializeCustomAttributes();
+    #endif
+
     return position;
 }
