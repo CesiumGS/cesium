@@ -82,18 +82,31 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Matrix4} modelMatrix The primitive's model matrix.
+ * @param {Cartesian3} instancingTranslationMax The maximum value of the instancing translation attribute.
+ * @param {Cartesian3} instancingTranslationMin The minimum value of the instancing translation attribute.
  */
 ModelExperimentalUtility.createBoundingSphere = function (
   primitive,
-  modelMatrix
+  modelMatrix,
+  instancingTranslationMax,
+  instancingTranslationMin
 ) {
   var positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     "POSITION"
   );
+
+  var positionMax = positionGltfAttribute.max;
+  var positionMin = positionGltfAttribute.min;
+
+  if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
+    Cartesian3.add(positionMax, instancingTranslationMax, positionMax);
+    Cartesian3.add(positionMin, instancingTranslationMin, positionMin);
+  }
+
   var boundingSphere = BoundingSphere.fromCornerPoints(
-    positionGltfAttribute.min,
-    positionGltfAttribute.max
+    positionMax,
+    positionMin
   );
 
   BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);

@@ -20,12 +20,25 @@ InstancingPiplineStage.process = function (renderResources, node, frameState) {
   shaderBuilder.addDefine("HAS_INSTANCING");
   shaderBuilder.addVertexLines([InstancingStageVS]);
 
+  var translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.TRANSLATION
+  );
+  var translationMax = translationAttribute.max;
+  var translationMin = translationAttribute.min;
+
   var rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.ROTATION
   );
-  if (defined(rotationAttribute)) {
-    var transformsTypedArray = getInstanceTransformsTypedArray(instances);
+  if (
+    defined(rotationAttribute) ||
+    (!defined(translationMax) && !defined(translationMin))
+  ) {
+    var transformsTypedArray = getInstanceTransformsTypedArray(
+      instances,
+      renderResources
+    );
     var transformsVertexBuffer = Buffer.createVertexBuffer({
       context: frameState.context,
       typedArray: transformsTypedArray.buffer,
@@ -75,10 +88,6 @@ InstancingPiplineStage.process = function (renderResources, node, frameState) {
     shaderBuilder.addAttribute("vec4", "a_instancingTransformRow1");
     shaderBuilder.addAttribute("vec4", "a_instancingTransformRow2");
   } else {
-    var translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-      instances,
-      InstanceAttributeSemantic.TRANSLATION
-    );
     if (defined(translationAttribute)) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
@@ -92,6 +101,9 @@ InstancingPiplineStage.process = function (renderResources, node, frameState) {
         strideInBytes: 0,
         instanceDivisor: 1,
       });
+
+      renderResources.instancingTranslationMax = translationMax;
+      renderResources.instancingTranslationMin = translationMin;
 
       shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
       shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
@@ -130,7 +142,7 @@ InstancingPiplineStage.process = function (renderResources, node, frameState) {
 
 var transformScratch = new Matrix4();
 
-function getInstanceTransformsTypedArray(instances) {
+function getInstanceTransformsTypedArray(instances, renderResources) {
   var count = instances.attributes[0].count;
   var elements = 12;
   var transformsTypedArray = new Float32Array(count * elements);
@@ -148,6 +160,9 @@ function getInstanceTransformsTypedArray(instances) {
     InstanceAttributeSemantic.SCALE
   );
 
+  var instancingTranslationMax = new Cartesian3(0, 0, 0);
+  var instancingTranslationMin = new Cartesian3(0, 0, 0);
+
   // Translations get initialized to (0, 0, 0).
   var translationTypedArray = defined(translationAttribute)
     ? translationAttribute.typedArray
@@ -164,6 +179,17 @@ function getInstanceTransformsTypedArray(instances) {
       translationTypedArray[i * 3],
       translationTypedArray[i * 3 + 1],
       translationTypedArray[i * 3 + 2]
+    );
+
+    Cartesian3.maximumByComponent(
+      instancingTranslationMax,
+      translation,
+      instancingTranslationMax
+    );
+    Cartesian3.minimumByComponent(
+      instancingTranslationMin,
+      translation,
+      instancingTranslationMin
     );
 
     var rotation = new Quaternion(
@@ -200,6 +226,9 @@ function getInstanceTransformsTypedArray(instances) {
     transformsTypedArray[offset + 9] = transform[6];
     transformsTypedArray[offset + 10] = transform[10];
     transformsTypedArray[offset + 11] = transform[14];
+
+    renderResources.instancingTranslationMax = instancingTranslationMax;
+    renderResources.instancingTranslationMin = instancingTranslationMin;
   }
 
   return transformsTypedArray;

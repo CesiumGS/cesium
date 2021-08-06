@@ -30,7 +30,7 @@ var GeometryPipelineStage = {};
  * @private
  */
 GeometryPipelineStage.process = function (renderResources, primitive) {
-  var attributeIndex = 0;
+  var attributeIndex = renderResources.attributeIndex;
   var index;
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];

@@ -120,6 +120,9 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
   this.attributes = [];
   this.attributeIndex = 1; // 0 is reserved for POSITION.
   this.instanceCount = 0;
+
+  this.instancingTranslationMax = undefined;
+  this.instancingTranslationMin = undefined;
 }
 
 /**
@@ -184,6 +187,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    * @private
    */
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
+
   this.instanceCount = nodeRenderResources.instanceCount;
   this.attributeIndex = nodeRenderResources.attributeIndex;
 
@@ -228,7 +232,9 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
     primitive,
-    this.modelMatrix
+    this.modelMatrix,
+    nodeRenderResources.instancingTranslationMax,
+    nodeRenderResources.instancingTranslationMin
   );
   /**
    * An object storing options for creating a {@link RenderState}.

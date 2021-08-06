@@ -216,18 +216,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       sceneNode
     );
 
-    for (j = 0; j < sceneNode._pipelineStages.length; j++) {
-      var nodePipelineStage = sceneNode._pipelineStages[j];
+    for (j = 0; j < sceneNode.pipelineStages.length; j++) {
+      var nodePipelineStage = sceneNode.pipelineStages[j];
 
       nodePipelineStage.process(
         nodeRenderResources,
-        sceneNode._node,
+        sceneNode.node,
         frameState
       );
     }
 
-    for (j = 0; j < sceneNode._sceneMeshPrimitives.length; j++) {
-      var sceneMeshPrimitive = sceneNode._sceneMeshPrimitives[j];
+    for (j = 0; j < sceneNode.sceneMeshPrimitives.length; j++) {
+      var sceneMeshPrimitive = sceneNode.sceneMeshPrimitives[j];
 
       var meshPrimitiveRenderResources = new RenderResources.MeshPrimitiveRenderResources(
         nodeRenderResources,
@@ -239,7 +239,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
         primitivePipelineStage.process(
           meshPrimitiveRenderResources,
-          sceneMeshPrimitive._primitive,
+          sceneMeshPrimitive.primitive,
           frameState
         );
       }

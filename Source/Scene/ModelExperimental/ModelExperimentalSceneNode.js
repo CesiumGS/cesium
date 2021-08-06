@@ -67,8 +67,8 @@ export default function ModelExperimentalSceneNode(options) {
 }
 
 function initialize(sceneNode) {
-  var node = sceneNode._node;
-  var pipelineStages = sceneNode._pipelineStages;
+  var node = sceneNode.node;
+  var pipelineStages = sceneNode.pipelineStages;
 
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPiplineStage);
