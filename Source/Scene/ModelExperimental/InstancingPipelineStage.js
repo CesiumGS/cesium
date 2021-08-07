@@ -1,4 +1,3 @@
-import CesiumMath from "../../Core/Math.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
