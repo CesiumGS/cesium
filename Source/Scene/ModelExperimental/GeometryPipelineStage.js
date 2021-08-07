@@ -2,7 +2,8 @@ import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
+import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
@@ -32,6 +33,7 @@ var GeometryPipelineStage = {};
 GeometryPipelineStage.process = function (renderResources, primitive) {
   var attributeIndex = renderResources.attributeIndex;
   var index;
+  var customAttributeInitializationLines = [];
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
     if (attribute.semantic !== VertexAttributeSemantic.POSITION) {
@@ -40,19 +42,47 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     } else {
       index = 0;
     }
-    processAttribute(renderResources, attribute, index);
+    processAttribute(
+      renderResources,
+      attribute,
+      index,
+      customAttributeInitializationLines
+    );
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
+
+  // add a function to initialize varyings for custom attributes.
+  // for example "v_custom_attribute = a_custom_attribute;""
+  if (customAttributeInitializationLines.length > 0) {
+    shaderBuilder.addDefine(
+      "HAS_CUSTOM_ATTRIBUTES",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+    var varyingFunctionLines = [].concat(
+      "void initializeCustomAttributes()",
+      "{",
+      customAttributeInitializationLines,
+      "}"
+    );
+    shaderBuilder.addVertexLines(varyingFunctionLines);
+  }
+
   if (primitive.primitiveType === PrimitiveType.POINTS) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines([GeometryVS]);
+  shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addVarying("vec3", "v_positionEC");
 };
 
-function processAttribute(renderResources, attribute, attributeIndex) {
+function processAttribute(
+  renderResources,
+  attribute,
+  attributeIndex,
+  customAttributeInitializationLines
+) {
   var semantic = attribute.semantic;
   var setIndex = attribute.setIndex;
   var attributeType = attribute.type;
@@ -66,8 +96,6 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   if (defined(semantic)) {
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
     varyingName = "v_" + variableName;
-
-    shaderBuilder.addVarying(glslType, varyingName);
 
     switch (semantic) {
       case VertexAttributeSemantic.NORMAL:
@@ -97,17 +125,23 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     componentDatatype: attribute.componentDatatype,
   };
 
-  // Handle user defined vertex attributes.
+  // Handle custom vertex attributes.
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
   if (!defined(variableName)) {
     variableName = attribute.name;
-    if (variableName[0] === "_") {
-      variableName = variableName.substring(1);
-      variableName = variableName.toLowerCase();
-    }
+
+    // Per the glTF 2.0 spec, custom vertex attributes must be prepended with an underscore.
+    variableName = variableName.substring(1);
+    variableName = variableName.toLowerCase();
+    varyingName = "v_" + variableName;
+
+    var initializationLine =
+      "    " + varyingName + " = a_" + variableName + ";";
+    customAttributeInitializationLines.push(initializationLine);
   }
 
   variableName = "a_" + variableName;
+  shaderBuilder.addVarying(glslType, varyingName);
 
   if (semantic === VertexAttributeSemantic.POSITION) {
     shaderBuilder.setPositionAttribute(glslType, variableName);

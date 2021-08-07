@@ -1,3 +1,4 @@
+import CesiumMath from "../../Core/Math.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
@@ -182,8 +183,16 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
     InstanceAttributeSemantic.SCALE
   );
 
-  var instancingTranslationMax = new Cartesian3(0, 0, 0);
-  var instancingTranslationMin = new Cartesian3(0, 0, 0);
+  var instancingTranslationMax = new Cartesian3(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE
+  );
+  var instancingTranslationMin = new Cartesian3(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE
+  );
 
   // Translations get initialized to (0, 0, 0).
   var translationTypedArray = defined(translationAttribute)
@@ -255,3 +264,5 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
 
   return transformsTypedArray;
 }
+
+export default InstancingPiplineStage;

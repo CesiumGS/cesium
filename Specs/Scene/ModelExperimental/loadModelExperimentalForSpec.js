@@ -1,4 +1,4 @@
-import { Cartesian3 } from "../../../Source/Cesium.js";
+import { Cartesian3, defined } from "../../../Source/Cesium.js";
 import { defaultValue } from "../../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../../Source/Cesium.js";
 import { Matrix4 } from "../../../Source/Cesium.js";
@@ -7,11 +7,21 @@ import { when } from "../../../Source/Cesium.js";
 import pollToPromise from "../../pollToPromise.js";
 
 function loadAndZoomToModelExperimental(options, scene) {
-  var model = ModelExperimental.fromGltf({
-    url: options.url,
-    upAxis: options.upAxis,
-    forwardAxis: options.forwardAxis,
-  });
+  var model;
+  if (defined(options.url)) {
+    model = ModelExperimental.fromGltf({
+      url: options.url,
+      upAxis: options.upAxis,
+      forwardAxis: options.forwardAxis,
+    });
+  } else {
+    model = new ModelExperimental({
+      gltf: options.gltf,
+      upAxis: options.upAxis,
+      forwardAxis: options.forwardAxis,
+    });
+  }
+
   scene.primitives.add(model);
   zoomTo(model, scene);
 

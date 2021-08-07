@@ -22,6 +22,8 @@ import destroyObject from "../../Core/destroyObject.js";
  * @param {String|Resource|ArrayBuffer|Uint8Array} [options.gltf] A Resource/URL to a glTF/glb file or a binary glTF buffer.
  * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Boolean} [options.incrementallyLoadTextures=false] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -234,11 +236,12 @@ function initialize(model, options) {
 
 /**
  *
- * @param {Object}} options Object with the following properties:
+ * @param {Object} options Object with the following properties:
  * @param {Resource|String} options.url The url to the .gltf or .glb file.
  * @param {Object} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Boolean} [options.incrementallyLoadTextures] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.incrementallyLoadTextures=false] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  */
 ModelExperimental.fromGltf = function (options) {
   //>>includeStart('debug', pragmas.debug);
