@@ -38,7 +38,6 @@ export default function buildDrawCommand(
   );
 
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
-
   return new DrawCommand({
     boundingVolume: meshPrimitiveRenderResources.boundingSphere,
     modelMatrix: meshPrimitiveRenderResources.modelMatrix,

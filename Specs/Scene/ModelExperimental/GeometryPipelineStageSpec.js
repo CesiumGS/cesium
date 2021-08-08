@@ -13,7 +13,7 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe(
-  "Scene/GeometryPipelineStage",
+  "Scene/ModelExperimental/GeometryPipelineStage",
   function () {
     var positionOnlyPrimitive = {
       attributes: [
