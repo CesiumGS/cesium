@@ -47,6 +47,9 @@ export default function ModelExperimental(options) {
   this._ready = false;
   this._readyPromise = when.defer();
 
+  this._defaultTexture = undefined;
+  this._texturesLoaded = false;
+
   initialize(this, options);
 }
 
@@ -136,8 +139,19 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @exception {RuntimeError} Failed to load external reference.
  */
 ModelExperimental.prototype.update = function (frameState) {
-  if (!this._resourcesLoaded) {
+  if (!defined(this._defaultTexture)) {
+    this._defaultTexture = frameState.context.defaultTexture;
+  }
+
+  // Keep processing the glTF every frame until the main resources
+  // (buffer views) and textures (which may be loaded asynchronously)
+  // are processed.
+  if (!this._resourcesLoaded || !this._texturesLoaded) {
     this._gltfLoader.process(frameState);
+  }
+
+  // short-circuit if the glTF resources aren't ready.
+  if (!this._resourcesLoaded) {
     return;
   }
 
@@ -224,6 +238,18 @@ function initialize(model, options) {
       model._resourcesLoaded = true;
       model._ready = true;
       model._readyPromise.resolve(model);
+    })
+    .otherwise(function () {
+      ModelExperimentalUtility.getFailedLoadFunction(
+        this,
+        "model",
+        options.basePath
+      );
+    });
+
+  loader.texturesLoadedPromise
+    .then(function () {
+      model._texturesLoaded = true;
     })
     .otherwise(function () {
       ModelExperimentalUtility.getFailedLoadFunction(
