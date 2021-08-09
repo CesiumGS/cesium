@@ -3693,6 +3693,13 @@ function rotateQuad(quad, numRotations) {
   return newQuad;
 }
 
+var headingQuadrant = {
+  north: 0,
+  east: 1,
+  south: 2,
+  west: 3,
+};
+
 function generalHeading(heading) {
   if (heading > 45 && heading <= 135) {
     return headingQuadrant.east;
@@ -3712,13 +3719,6 @@ var rotationsFromUp = {
   left: 1,
   down: 2,
   right: 3,
-};
-
-var headingQuadrant = {
-  north: 0,
-  east: 1,
-  south: 2,
-  west: 3,
 };
 
 // Takes heading and camera direction (starting from direct view of earth from space)
