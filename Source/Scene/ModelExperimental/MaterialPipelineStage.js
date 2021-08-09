@@ -28,7 +28,7 @@ var MaterialPipelineStage = {};
  *   <li>Modifies the lighting options to set either PBR or unlit lighting</li>
  *   <li>Sets the render state for back-face culling</li>
  * </ul>
- * @param {RenderResources.PrimitiveRenderResources} renderResources
+ * @param {RenderResources.PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @private
  */
