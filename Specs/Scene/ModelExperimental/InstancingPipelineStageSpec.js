@@ -24,4 +24,13 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     gltfLoaders.length = 0;
     ResourceCache.clearForSpecs();
   });
+
+  it("correctly computes TRANSLATION min and max", function () {});
+  it("sets translation min and max from TRANSLATION accessor", function () {});
+
+  it("creates rotation vertex attribute when ROTATION is present", function () {});
+  it("creates translation vertex attribute when TRANSLATION is present", function () {});
+
+  it("creates instance matrix vertex attributes when ROTATION is present", function () {});
+  it("creates instance matrix vertex attributes when TRANSLATION min and max are not present", function () {});
 });
