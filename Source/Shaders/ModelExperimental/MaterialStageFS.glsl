@@ -20,6 +20,11 @@ vec4 SRGBtoLINEAR4(vec4 srgbIn)
     return vec4(linearOut, srgbIn.a);
 }
 
+vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
+{
+    return vec2(textureTransform * vec3(texCoord, 1.0));
+}
+
 #ifdef HAS_NORMALS
 vec3 computeNormal()
 {
@@ -57,11 +62,6 @@ vec3 computeNormal()
     return normal;
 }
 #endif
-
-vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
-{
-    return vec2(textureTransform * vec3(texCoord, 1.0));
-}
 
 czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
 {
@@ -107,7 +107,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     #if defined(HAS_EMISSIVE_TEXTURE)
     vec2 emissiveTexCoords = TEXCOORD_EMISSIVE;
         #ifdef HAS_EMISSIVE_TEXTURE_TRANSFORM
-        emissiveCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
+        emissiveTexCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
         #endif
 
     vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, emissiveTexCoords).rgb);
@@ -123,7 +123,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
         #if defined(HAS_SPECULAR_GLOSSINESS_TEXTURE)
         vec2 specularGlossinessTexCoords = TEXCOORD_SPECULAR_GLOSSINESS;
           #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM
-          specularGlossinessCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
+          specularGlossinessTexCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
           #endif
 
         vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, specularGlossinessTexCoords));
@@ -177,7 +177,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
         #if defined(HAS_METALLIC_ROUGHNESS_TEXTURE)
         vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS;
             #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM
-            metallicRoughnessCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
+            metallicRoughnessTexCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
             #endif
 
         vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
