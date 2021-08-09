@@ -5,7 +5,9 @@ import LightingStageFS from "../../Shaders/ModelExperimental/LightingStageFS.js"
  * The lighting pipeline stage is responsible for taking a material and rendering
  * it with a lighting model such as physically based rendering (PBR) or unlit
  * shading
- * @namespace
+ *
+ * @namespace LightingPipelineStage
+ *
  * @private
  */
 var LightingPipelineStage = {};
@@ -16,8 +18,9 @@ var LightingPipelineStage = {};
  * <ul>
  *   <li>modifies the shader to include the lighting stage</li>
  * </ul>
- * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {RenderResources.PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered. Not used, but present for consistency with other pipeline stages.
+ *
  * @private
  */
 LightingPipelineStage.process = function (renderResources, primitive) {

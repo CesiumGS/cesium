@@ -13,7 +13,7 @@ import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js"
  *   <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
  *
- * @namespace
+ * @namespace MaterialPipelineStage
  *
  * @private
  */
@@ -28,7 +28,7 @@ var MaterialPipelineStage = {};
  *   <li>Modifies the lighting options to set either PBR or unlit lighting</li>
  *   <li>Sets the render state for back-face culling</li>
  * </ul>
- * @param {PrimitiveRenderResources} renderResources
+ * @param {RenderResources.PrimitiveRenderResources} renderResources
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @private
  */

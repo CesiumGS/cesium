@@ -8,7 +8,7 @@
  * @glslStruct
  *
  * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
- * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
+ * @property {float} alpha Alpha of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  * @property {vec3} specular Color of reflected light at normal incidence in PBR materials. This is sometimes referred to as f0 in the literature.
  * @property {float} roughness A number from 0.0 to 1.0 representing how rough the surface is. Values near 0.0 produce glossy surfaces, while values near 1.0 produce rough surfaces.
  * @property {vec3} normal Surface's normal in eye coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.

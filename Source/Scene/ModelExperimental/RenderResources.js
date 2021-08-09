@@ -12,6 +12,8 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  * {@link GeometryPipelineStage}) and updated in place. Finally,
  * {@link buildDrawCommand} is called to construct the draw command.
  *
+ * @namespace RenderResources
+ *
  * @private
  */
 var RenderResources = {};

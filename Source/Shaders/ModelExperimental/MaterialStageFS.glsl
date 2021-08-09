@@ -27,10 +27,10 @@ vec3 computeNormal()
 
     vec3 normal = ng;
     #ifdef HAS_NORMAL_TEXTURE
-        vec2 normalTexCoords = TEXCOORD_NORMAL;
-            #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
-            normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);
-            #endif
+    vec2 normalTexCoords = TEXCOORD_NORMAL;
+        #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+        normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);
+        #endif
 
         #ifdef HAS_TANGENTS
         // read tangents from varying
