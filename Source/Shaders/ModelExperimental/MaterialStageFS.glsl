@@ -90,7 +90,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     #endif
 
     #ifdef HAS_VERTEX_COLORS
-    baseColorWithAlpha *= v_vertexColor;
+    baseColorWithAlpha *= v_color_0;
     #endif
 
     material.diffuse = baseColorWithAlpha.rgb;
