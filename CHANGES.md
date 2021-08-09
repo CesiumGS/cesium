@@ -1,5 +1,11 @@
 # Change Log
 
+### Next Release
+
+##### Fixes :wrench:
+
+- Fixed inaccurate view rectangle from `computeViewRectangle` with different camera directions when horizon is in view. [#9665](https://github.com/CesiumGS/cesium/pull/9665)
+
 ### 1.84 - 2021-08-02
 
 ##### Breaking Changes :mega:
