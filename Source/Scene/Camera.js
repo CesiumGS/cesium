@@ -3695,16 +3695,16 @@ function rotateQuad(quad, numRotations) {
 
 function generalHeading(heading) {
   if (heading > 45 && heading <= 135) {
-    return "east";
+    return headingQuadrant.east;
   }
   if (heading > 135 && heading <= 225) {
-    return "south";
+    return headingQuadrant.south;
   }
   if (heading > 225 && heading <= 315) {
-    return "west";
+    return headingQuadrant.west;
   }
 
-  return "north";
+  return headingQuadrant.north;
 }
 
 var rotationsFromUp = {
@@ -3732,8 +3732,7 @@ var headingQuadrant = {
 // Given that the corner indeces of the quad are [UL, LL, LR, UR],
 // the quad elements would be 'rotated' like so - [NW, SW, SE, NE] => [SE, NE, NW, SW]
 function changeQuadHeading(heading, direction, quad) {
-  var numRotations =
-    rotationsFromUp[direction] + headingQuadrant[generalHeading(heading)];
+  var numRotations = rotationsFromUp[direction] + generalHeading(heading);
   return rotateQuad(quad, numRotations % 4);
 }
 
