@@ -1,5 +1,11 @@
 # Change Log
 
+### Next release
+
+##### Fixes :wrench:
+
+- Fixed an issue where Cesium failed to load GeoJSON with null `stroke` or `fill` properties but with a valid opacity value.
+
 ### 1.84 - 2021-08-02
 
 ##### Breaking Changes :mega:
