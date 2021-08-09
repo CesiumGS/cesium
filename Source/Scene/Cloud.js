@@ -126,7 +126,7 @@ Object.defineProperties(Cloud.prototype, {
   /**
    * Gets or sets whether the cloud is flat or cumulus.
    * @memberof Cloud.prototype
-   * @type {CloudType}
+   * @type {Boolean}
    */
   flat: {
     get: function () {
