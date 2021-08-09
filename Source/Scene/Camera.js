@@ -3681,9 +3681,6 @@ var cartoArray = [
   new Cartographic(),
   new Cartographic(),
 ];
-<<<<<<< HEAD
-function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
-=======
 
 function rotateQuad(quad, numRotations) {
   var newQuad = new Array(4);
@@ -3737,7 +3734,6 @@ function changeQuadHeading(heading, direction, quad) {
 }
 
 function addToResult(x, y, index, camera, ellipsoid) {
->>>>>>> eslint
   scratchPickCartesian2.x = x;
   scratchPickCartesian2.y = y;
   var r = camera.pickEllipsoid(
@@ -3749,13 +3745,6 @@ function addToResult(x, y, index, camera, ellipsoid) {
     cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
     return 1;
   }
-<<<<<<< HEAD
-  cartoArray[index] = ellipsoid.cartesianToCartographic(
-    computedHorizonQuad[index],
-    cartoArray[index]
-  );
-  return 0;
-=======
   return false;
 }
 
@@ -3801,7 +3790,6 @@ function adjustViewForHorizon(camera, cornersShowingHorizon, ellipsoid) {
       cartoArray[corner]
     );
   });
->>>>>>> eslint
 }
 /**
  * Computes the approximate visible rectangle on the ellipsoid.
@@ -3831,11 +3819,7 @@ Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
   var width = canvas.clientWidth;
   var height = canvas.clientHeight;
 
-<<<<<<< HEAD
-  var successfulPickCount = 0;
-=======
   var unsuccessfulPicks = [];
->>>>>>> eslint
 
   var computedHorizonQuad = computeHorizonQuad(this, ellipsoid);
 
