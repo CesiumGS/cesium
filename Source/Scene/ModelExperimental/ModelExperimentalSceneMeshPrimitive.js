@@ -20,6 +20,7 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
+  Check.typeOf.object("options.model", options.model);
   //>>includeEnd('debug');
 
   /**
