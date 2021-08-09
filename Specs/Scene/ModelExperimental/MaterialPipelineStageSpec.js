@@ -28,6 +28,11 @@ describe(
       scene.destroyForSpecs();
     });
 
+    var mockDefaultTexture = {};
+    var mockModel = {
+      _defaultTexture: mockDefaultTexture,
+    };
+
     afterEach(function () {
       var gltfLoadersLength = gltfLoaders.length;
       for (var i = 0; i < gltfLoadersLength; ++i) {
@@ -92,6 +97,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -136,6 +142,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -182,6 +189,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -227,6 +235,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -244,6 +253,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -261,6 +271,7 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -278,6 +289,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -299,6 +311,7 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         var cutoff = 0.6;
@@ -330,6 +343,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         primitive.material.alphaMode = AlphaMode.BLEND;
@@ -351,6 +365,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
+          model: mockModel,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -372,6 +387,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
+          model: mockModel,
         };
 
         primitive.material.doubleSided = true;
@@ -395,6 +411,7 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
+          model: mockModel,
         };
 
         primitive.material.doubleSided = true;
@@ -448,7 +465,8 @@ describe(
         uniformMap,
         textureReader,
         "u_testTexture",
-        "TEST"
+        "TEST",
+        mockDefaultTexture
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -462,6 +480,30 @@ describe(
       ]);
       expectUniformMap(uniformMap, {
         u_testTextureTransform: matrix,
+      });
+    });
+
+    it("_processTexture creates texture uniforms with a default value", function () {
+      var shaderBuilder = new ShaderBuilder();
+      var uniformMap = {};
+      var matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
+      var mockTexture = {};
+      var textureReader = {
+        transform: matrix,
+        texture: mockTexture,
+        texCoord: 1,
+      };
+      MaterialPipelineStage._processTexture(
+        shaderBuilder,
+        uniformMap,
+        textureReader,
+        "u_testTexture",
+        "TEST",
+        mockDefaultTexture
+      );
+
+      expectUniformMap(uniformMap, {
+        u_testTexture: mockTexture,
       });
     });
   },
