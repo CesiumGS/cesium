@@ -124,7 +124,7 @@ function processAttribute(
     ),
     componentDatatype: attribute.componentDatatype,
     offsetInBytes: attribute.byteOffset,
-    strideInByte: attribute.byteStride,
+    strideInBytes: attribute.byteStride,
   };
 
   // Handle custom vertex attributes.
