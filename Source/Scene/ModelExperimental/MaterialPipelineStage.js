@@ -68,6 +68,8 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
   }
 
   // Configure back-face culling
+  var cull = !material.doubleSided;
+  renderResources.cull = cull;
   renderResources.renderStateOptions.cull = {
     enabled: !material.doubleSided,
   };

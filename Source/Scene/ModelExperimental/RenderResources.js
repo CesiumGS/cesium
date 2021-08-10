@@ -250,6 +250,15 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.lightingOptions = new ModelLightingOptions();
   /**
+   * True if back face culling is enabled
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.cull = true;
+  /**
    * An object storing options for creating a {@link RenderState}.
    * the pipeline stages simply set the options, the render state is created
    * when the {@link DrawCommand} is constructed.
