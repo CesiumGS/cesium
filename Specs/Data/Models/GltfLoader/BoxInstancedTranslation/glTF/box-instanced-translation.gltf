@@ -83,7 +83,17 @@
       "byteOffset": 0,
       "componentType": 5126,
       "count": 4,
-      "type": "VEC3"
+      "type": "VEC3",
+      "max": [
+        2,
+        2,
+        0
+      ],
+      "min": [
+        -2,
+        -2,
+        0
+      ]
     }
   ],
   "bufferViews": [
