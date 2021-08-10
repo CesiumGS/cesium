@@ -17,7 +17,7 @@ import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS
  * @namespace
  * @private
  */
-var InstancingPiplineStage = {};
+var InstancingPipelineStage = {};
 
 /**
  * Process a node. This modifies the following parts of the render resources:
@@ -29,7 +29,7 @@ var InstancingPiplineStage = {};
  * @param {*} node
  * @param {*} frameState
  */
-InstancingPiplineStage.process = function (renderResources, node, frameState) {
+InstancingPipelineStage.process = function (renderResources, node, frameState) {
   var instances = node.instances;
   var instancingVertexAttributes = [];
 
@@ -197,7 +197,10 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   var translationTypedArray = defined(translationAttribute)
     ? translationAttribute.typedArray
     : new Float32Array(count * 3);
-  var rotationTypedArray = rotationAttribute.typedArray;
+  // Rotations get initialized to (0, 0, 0, 0).
+  var rotationTypedArray = defined(rotationAttribute)
+    ? rotationAttribute.typedArray
+    : new Float32Array(count * 3);
   // Scales get initialized to (1, 1, 1).
   var scaleTypedArray = defined(scaleAttribute)
     ? scaleAttribute.typedArray
@@ -264,4 +267,4 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   return transformsTypedArray;
 }
 
-export default InstancingPiplineStage;
+export default InstancingPipelineStage;

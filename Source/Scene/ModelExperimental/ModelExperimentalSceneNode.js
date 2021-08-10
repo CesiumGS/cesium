@@ -1,7 +1,7 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import InstancingPiplineStage from "./InstancingPipelineStage.js";
+import InstancingPipelineStage from "./InstancingPipelineStage.js";
 /**
  * An in-memory representation of a scene node as part of
  * the {@link ModelExperimentalSceneGraph}
@@ -71,7 +71,7 @@ function initialize(sceneNode) {
   var pipelineStages = sceneNode.pipelineStages;
 
   if (defined(node.instances)) {
-    pipelineStages.push(InstancingPiplineStage);
+    pipelineStages.push(InstancingPipelineStage);
   }
 
   return;

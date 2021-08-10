@@ -51,5 +51,6 @@ export default function buildDrawCommand(
     pickId: undefined,
     instanceCount: meshPrimitiveRenderResources.instanceCount,
     primitiveType: meshPrimitiveRenderResources.primitiveType,
+    debugShowBoundingVolume: true,
   });
 }
