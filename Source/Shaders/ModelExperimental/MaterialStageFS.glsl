@@ -3,9 +3,11 @@ czm_modelMaterial defaultModelMaterial()
     czm_modelMaterial material;
     material.diffuse = vec3(1.0);
     material.specular = vec3(0.04); // dielectric (non-metal)
-    material.roughness = 0.0;
+    material.roughness = 0.001;
+    material.normal = vec3(0.0, 0.0, 1.0);
     material.occlusion = 1.0;
     material.emissive = vec3(0.0);
+    material.alpha = 1.0;
     return material;
 }
 
@@ -119,7 +121,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.emissive = u_emissiveFactor;
     #endif
 
-    #ifdef USE_SPECULAR_GLOSSINESS
+    #if defined(LIGHTING_PBR) && defined(USE_SPECULAR_GLOSSINESS)
         #if defined(HAS_SPECULAR_GLOSSINESS_TEXTURE)
         vec2 specularGlossinessTexCoords = TEXCOORD_SPECULAR_GLOSSINESS;
           #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM
@@ -173,7 +175,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.diffuse = parameters.diffuseColor;
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
-    #else
+    #elif defined(LIGHTING_PBR)
         #if defined(HAS_METALLIC_ROUGHNESS_TEXTURE)
         vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS;
             #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM

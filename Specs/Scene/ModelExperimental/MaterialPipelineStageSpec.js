@@ -366,9 +366,11 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
           model: mockModel,
+          cull: true,
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
+        expect(renderResources.cull).toBe(true);
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: true,
@@ -388,11 +390,13 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
           model: mockModel,
+          cull: true,
         };
 
         primitive.material.doubleSided = true;
         MaterialPipelineStage.process(renderResources, primitive);
 
+        expect(renderResources.cull).toBe(false);
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: false,
