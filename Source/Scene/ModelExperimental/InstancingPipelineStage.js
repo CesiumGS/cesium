@@ -119,8 +119,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         ),
         componentDatatype: translationAttribute.componentDatatype,
         normalize: false,
-        offsetInBytes: 0,
-        strideInBytes: 0,
+        offsetInBytes: translationAttribute.byteOffset,
+        strideInBytes: translationAttribute.byteStride,
         instanceDivisor: 1,
       });
 
@@ -145,8 +145,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         ),
         componentDatatype: scaleAttribute.componentDatatype,
         normalize: false,
-        offsetInBytes: 0,
-        strideInBytes: 0,
+        offsetInBytes: scaleAttribute.byteOffset,
+        strideInBytes: scaleAttribute.byteStride,
         instanceDivisor: 1,
       });
 
