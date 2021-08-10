@@ -59,7 +59,6 @@ function createArticulationStagePropertyBag(value) {
  *
  * @param {ModelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @see {@link https://cesium.com/docs/tutorials/3d-models/|3D Models Tutorial}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
  */
 function ModelGraphics(options) {

@@ -303,7 +303,8 @@ function createUpdate3D(
       var position = Cartesian3.fromRadians(
         CesiumMath.lerp(startLongitude, destLongitude, time),
         CesiumMath.lerp(startLatitude, destLatitude, time),
-        heightFunction(time)
+        heightFunction(time),
+        ellipsoid
       );
 
       camera.setView({

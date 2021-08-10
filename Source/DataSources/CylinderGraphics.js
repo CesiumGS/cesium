@@ -154,6 +154,9 @@ Object.defineProperties(CylinderGraphics.prototype, {
 
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
+   * <p>
+   * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+   * </p>
    * @memberof CylinderGraphics.prototype
    * @type {Property|undefined}
    * @default 1.0

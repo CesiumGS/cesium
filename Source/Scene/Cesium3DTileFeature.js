@@ -86,6 +86,27 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
   },
 
   /**
+   * Gets a typed array containing the ECEF positions of the polyline.
+   * Returns undefined if {@link Cesium3DTileset#vectorKeepDecodedPositions} is false
+   * or the feature is not a polyline in a vector tile.
+   *
+   * @memberof Cesium3DTileFeature.prototype
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {Float64Array}
+   */
+  polylinePositions: {
+    get: function () {
+      if (!defined(this._content.getPolylinePositions)) {
+        return undefined;
+      }
+
+      return this._content.getPolylinePositions(this._batchId);
+    },
+  },
+
+  /**
    * Gets the content of the tile containing the feature.
    *
    * @memberof Cesium3DTileFeature.prototype
@@ -146,7 +167,7 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
  * Returns whether the feature contains this property. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
  * @returns {Boolean} Whether the feature contains this property.
@@ -159,7 +180,7 @@ Cesium3DTileFeature.prototype.hasProperty = function (name) {
  * Returns an array of property names for the feature. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The names of the feature's properties.
@@ -172,10 +193,10 @@ Cesium3DTileFeature.prototype.getPropertyNames = function (results) {
  * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a feature in the console log.
@@ -188,6 +209,85 @@ Cesium3DTileFeature.prototype.getPropertyNames = function (results) {
  */
 Cesium3DTileFeature.prototype.getProperty = function (name) {
   return this._content.batchTable.getProperty(this._batchId, name);
+};
+
+/**
+ * @private
+ */
+Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
+  var value;
+  var batchTable = content.batchTable;
+  if (defined(batchTable)) {
+    value = batchTable.getProperty(batchId, name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var tileMetadata = content.tile.metadata;
+  if (defined(tileMetadata)) {
+    value = tileMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = tileMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var groupMetadata = content.groupMetadata;
+  if (defined(groupMetadata)) {
+    value = groupMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = groupMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  var tilesetMetadata = content.tileset.metadata;
+  if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
+    tilesetMetadata = tilesetMetadata.tileset;
+    value = tilesetMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = tilesetMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+/**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * inherited.
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @private
+ */
+Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
+  return Cesium3DTileFeature.getPropertyInherited(
+    this._content,
+    this._batchId,
+    name
+  );
 };
 
 /**

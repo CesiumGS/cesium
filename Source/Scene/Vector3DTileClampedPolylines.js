@@ -33,6 +33,7 @@ import CullFace from "./CullFace.js";
 import StencilConstants from "./StencilConstants.js";
 import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
+import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
 
 /**
  * Creates a batch of polylines as volumes with shader-adjustable width.
@@ -50,7 +51,8 @@ import StencilOperation from "./StencilOperation.js";
  * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
- * @param {Cesium3DTileset} options.tileset Tileset carrying minimum and maximum clamping heights.
+ * @param {ClassificationType} options.classificationType The classification type.
+ * @param {Boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
  *
  * @private
  */
@@ -78,7 +80,6 @@ function Vector3DTileClampedPolylines(options) {
 
   this._transferrableBatchIds = undefined;
   this._packedBuffer = undefined;
-  this._tileset = options.tileset;
   this._minimumMaximumVectorHeights = new Cartesian2(
     ApproximateTerrainHeights._defaultMinTerrainHeight,
     ApproximateTerrainHeights._defaultMaxTerrainHeight
@@ -89,6 +90,11 @@ function Vector3DTileClampedPolylines(options) {
     ApproximateTerrainHeights._defaultMaxTerrainHeight,
     this._ellipsoid
   );
+  this._classificationType = options.classificationType;
+
+  this._keepDecodedPositions = options.keepDecodedPositions;
+  this._decodedPositions = undefined;
+  this._decodedPositionOffsets = undefined;
 
   // Fat vertices - all information for each volume packed to a vec3 and 5 vec4s
   this._startEllipsoidNormals = undefined;
@@ -261,6 +267,7 @@ function createVertexArray(polylines, context) {
       counts: counts.buffer,
       batchIds: batchIds.buffer,
       packedBuffer: packedBuffer.buffer,
+      keepDecodedPositions: polylines._keepDecodedPositions,
     };
 
     var verticesPromise = (polylines._verticesPromise = createVerticesTaskProcessor.scheduleTask(
@@ -273,6 +280,13 @@ function createVertexArray(polylines, context) {
     }
 
     when(verticesPromise, function (result) {
+      if (polylines._keepDecodedPositions) {
+        polylines._decodedPositions = new Float64Array(result.decodedPositions);
+        polylines._decodedPositionOffsets = new Uint32Array(
+          result.decodedPositionOffsets
+        );
+      }
+
       polylines._startEllipsoidNormals = new Float32Array(
         result.startEllipsoidNormals
       );
@@ -593,7 +607,7 @@ function queueCommands(primitive, frameState) {
     command.derivedCommands.tileset = derivedTilesetCommand;
   }
 
-  var classificationType = primitive._tileset.classificationType;
+  var classificationType = primitive._classificationType;
   if (
     classificationType === ClassificationType.TERRAIN ||
     classificationType === ClassificationType.BOTH
@@ -607,6 +621,15 @@ function queueCommands(primitive, frameState) {
     frameState.commandList.push(command.derivedCommands.tileset);
   }
 }
+
+/**
+ * Get the polyline positions for the given feature.
+ *
+ * @param {Number} batchId The batch ID of the feature.
+ */
+Vector3DTileClampedPolylines.prototype.getPositions = function (batchId) {
+  return Vector3DTilePolylines.getPolylinePositions(this, batchId);
+};
 
 /**
  * Creates features for each polyline and places it at the batch id index of features.

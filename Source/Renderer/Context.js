@@ -9,6 +9,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
@@ -314,7 +315,21 @@ function Context(canvas, options) {
     "WEBGL_compressed_texture_pvrtc",
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
+  this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
+  this._etc = !!getExtension(gl, ["WEBG_compressed_texture_etc"]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+  this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
+
+  // It is necessary to pass supported formats to loadKTX2
+  // because imagery layers don't have access to the context.
+  loadKTX2.setKTX2SupportedFormats(
+    this._s3tc,
+    this._pvrtc,
+    this._astc,
+    this._etc,
+    this._etc1,
+    this._bc7
+  );
 
   var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
     ? getExtension(gl, [
@@ -665,7 +680,7 @@ Object.defineProperties(Context.prototype, {
    * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
    * @memberof Context.prototype
    * @type {Boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/}
    */
   halfFloatingPointTexture: {
     get: function () {
@@ -716,7 +731,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_s3tc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_s3tc is supported.  This extension provides
    * access to DXT compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -729,7 +744,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_pvrtc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_pvrtc is supported.  This extension provides
    * access to PVR compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -742,7 +757,33 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_etc1 is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_astc is supported.  This extension provides
+   * access to ASTC compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_astc/}
+   */
+  astc: {
+    get: function () {
+      return this._astc;
+    },
+  },
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc is supported.  This extension provides
+   * access to ETC compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc/}
+   */
+  etc: {
+    get: function () {
+      return this._etc;
+    },
+  },
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc1 is supported.  This extension provides
    * access to ETC1 compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -751,6 +792,37 @@ Object.defineProperties(Context.prototype, {
   etc1: {
     get: function () {
       return this._etc1;
+    },
+  },
+
+  /**
+   * <code>true</code> if EXT_texture_compression_bptc is supported.  This extension provides
+   * access to BC7 compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/}
+   */
+  bc7: {
+    get: function () {
+      return this._bc7;
+    },
+  },
+
+  /**
+   * <code>true</code> if S3TC, PVRTC, ASTC, ETC, ETC1, or BC7 compression is supported.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   */
+  supportsBasis: {
+    get: function () {
+      return (
+        this._s3tc ||
+        this._pvrtc ||
+        this._astc ||
+        this._etc ||
+        this._etc1 ||
+        this._bc7
+      );
     },
   },
 

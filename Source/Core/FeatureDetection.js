@@ -278,6 +278,16 @@ if (typeof ArrayBuffer !== "undefined") {
   if (typeof Uint8ClampedArray !== "undefined") {
     typedArrayTypes.push(Uint8ClampedArray);
   }
+
+  if (typeof BigInt64Array !== "undefined") {
+    // eslint-disable-next-line no-undef
+    typedArrayTypes.push(BigInt64Array);
+  }
+
+  if (typeof BigUint64Array !== "undefined") {
+    // eslint-disable-next-line no-undef
+    typedArrayTypes.push(BigUint64Array);
+  }
 }
 
 /**
@@ -309,6 +319,16 @@ var FeatureDetection = {
 };
 
 /**
+ * Detects whether the current browser supports Basis Universal textures and the web assembly modules needed to transcode them.
+ *
+ * @param {Scene} scene
+ * @returns {Boolean} true if the browser supports web assembly modules and the scene supports Basis Universal textures, false if not.
+ */
+FeatureDetection.supportsBasis = function (scene) {
+  return FeatureDetection.supportsWebAssembly() && scene.context.supportsBasis;
+};
+
+/**
  * Detects whether the current browser supports the full screen standard.
  *
  * @returns {Boolean} true if the browser supports the full screen standard, false if not.
@@ -325,10 +345,43 @@ FeatureDetection.supportsFullscreen = function () {
  *
  * @returns {Boolean} true if the browser supports typed arrays, false if not.
  *
- * @see {@link http://www.khronos.org/registry/typedarray/specs/latest/|Typed Array Specification}
+ * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
 FeatureDetection.supportsTypedArrays = function () {
   return typeof ArrayBuffer !== "undefined";
+};
+
+/**
+ * Detects whether the current browser supports BigInt64Array typed arrays.
+ *
+ * @returns {Boolean} true if the browser supports BigInt64Array typed arrays, false if not.
+ *
+ * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
+ */
+FeatureDetection.supportsBigInt64Array = function () {
+  return typeof BigInt64Array !== "undefined";
+};
+
+/**
+ * Detects whether the current browser supports BigUint64Array typed arrays.
+ *
+ * @returns {Boolean} true if the browser supports BigUint64Array typed arrays, false if not.
+ *
+ * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
+ */
+FeatureDetection.supportsBigUint64Array = function () {
+  return typeof BigUint64Array !== "undefined";
+};
+
+/**
+ * Detects whether the current browser supports BigInt.
+ *
+ * @returns {Boolean} true if the browser supports BigInt, false if not.
+ *
+ * @see {@link https://tc39.es/ecma262/#sec-bigint-objects|BigInt Specification}
+ */
+FeatureDetection.supportsBigInt = function () {
+  return typeof BigInt !== "undefined";
 };
 
 /**
