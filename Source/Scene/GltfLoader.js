@@ -625,7 +625,12 @@ function loadTexture(
         textureReader.texture.sampler = samplerOverride;
       }
     })
-    .otherwise(console.error);
+    .otherwise(function (error) {
+      if (loader.isDestroyed()) {
+        return;
+      }
+      handleError(loader, error);
+    });
 
   return textureReader;
 }
