@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import defaultValue from "../../Core/defaultValue.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
@@ -13,7 +14,7 @@ import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js"
  *   <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
  *
- * @namespace
+ * @namespace MaterialPipelineStage
  *
  * @private
  */
@@ -28,7 +29,7 @@ var MaterialPipelineStage = {};
  *   <li>Modifies the lighting options to set either PBR or unlit lighting</li>
  *   <li>Sets the render state for back-face culling</li>
  * </ul>
- * @param {PrimitiveRenderResources} renderResources
+ * @param {RenderResources.PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @private
  */
@@ -38,12 +39,25 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
   var uniformMap = renderResources.uniformMap;
   var shaderBuilder = renderResources.shaderBuilder;
 
-  processMaterialUniforms(material, uniformMap, shaderBuilder);
+  // When textures are loaded incrementally, fall back to a default 1x1 texture
+  var defaultTexture = renderResources.model._defaultTexture;
+
+  processMaterialUniforms(material, uniformMap, shaderBuilder, defaultTexture);
 
   if (defined(material.specularGlossiness)) {
-    processSpecularGlossinessUniforms(material, uniformMap, shaderBuilder);
+    processSpecularGlossinessUniforms(
+      material,
+      uniformMap,
+      shaderBuilder,
+      defaultTexture
+    );
   } else {
-    processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder);
+    processMetallicRoughnessUniforms(
+      material,
+      uniformMap,
+      shaderBuilder,
+      defaultTexture
+    );
   }
 
   var lightingOptions = renderResources.lightingOptions;
@@ -54,6 +68,8 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
   }
 
   // Configure back-face culling
+  var cull = !material.doubleSided;
+  renderResources.cull = cull;
   renderResources.renderStateOptions.cull = {
     enabled: !material.doubleSided,
   };
@@ -117,7 +133,8 @@ function processTexture(
   uniformMap,
   textureReader,
   uniformName,
-  defineName
+  defineName,
+  defaultTexture
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
@@ -126,7 +143,7 @@ function processTexture(
     ShaderDestination.FRAGMENT
   );
   uniformMap[uniformName] = function () {
-    return textureReader.texture;
+    return defaultValue(textureReader.texture, defaultTexture);
   };
 
   // Add a #define directive to enable using the texture in the shader
@@ -156,7 +173,12 @@ function processTexture(
   }
 }
 
-function processMaterialUniforms(material, uniformMap, shaderBuilder) {
+function processMaterialUniforms(
+  material,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture
+) {
   var emissiveTexture = material.emissiveTexture;
   if (defined(emissiveTexture)) {
     processTexture(
@@ -164,7 +186,8 @@ function processMaterialUniforms(material, uniformMap, shaderBuilder) {
       uniformMap,
       emissiveTexture,
       "u_emissiveTexture",
-      "EMISSIVE"
+      "EMISSIVE",
+      defaultTexture
     );
   }
 
@@ -192,7 +215,8 @@ function processMaterialUniforms(material, uniformMap, shaderBuilder) {
       uniformMap,
       normalTexture,
       "u_normalTexture",
-      "NORMAL"
+      "NORMAL",
+      defaultTexture
     );
   }
 
@@ -203,7 +227,8 @@ function processMaterialUniforms(material, uniformMap, shaderBuilder) {
       uniformMap,
       occlusionTexture,
       "u_occlusionTexture",
-      "OCCLUSION"
+      "OCCLUSION",
+      defaultTexture
     );
   }
 }
@@ -211,7 +236,8 @@ function processMaterialUniforms(material, uniformMap, shaderBuilder) {
 function processSpecularGlossinessUniforms(
   material,
   uniformMap,
-  shaderBuilder
+  shaderBuilder,
+  defaultTexture
 ) {
   var specularGlossiness = material.specularGlossiness;
   shaderBuilder.addDefine(
@@ -227,7 +253,8 @@ function processSpecularGlossinessUniforms(
       uniformMap,
       diffuseTexture,
       "u_diffuseTexture",
-      "DIFFUSE"
+      "DIFFUSE",
+      defaultTexture
     );
   }
 
@@ -255,7 +282,8 @@ function processSpecularGlossinessUniforms(
       uniformMap,
       specularGlossinessTexture,
       "u_specularGlossinessTexture",
-      "SPECULAR_GLOSSINESS"
+      "SPECULAR_GLOSSINESS",
+      defaultTexture
     );
   }
 
@@ -294,7 +322,12 @@ function processSpecularGlossinessUniforms(
   }
 }
 
-function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
+function processMetallicRoughnessUniforms(
+  material,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture
+) {
   var metallicRoughness = material.metallicRoughness;
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
@@ -309,7 +342,8 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
       uniformMap,
       baseColorTexture,
       "u_baseColorTexture",
-      "BASE_COLOR"
+      "BASE_COLOR",
+      defaultTexture
     );
   }
 
@@ -337,7 +371,8 @@ function processMetallicRoughnessUniforms(material, uniformMap, shaderBuilder) {
       uniformMap,
       metallicRoughnessTexture,
       "u_metallicRoughnessTexture",
-      "METALLIC_ROUGHNESS"
+      "METALLIC_ROUGHNESS",
+      defaultTexture
     );
   }
 

@@ -12,6 +12,8 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  * {@link GeometryPipelineStage}) and updated in place. Finally,
  * {@link buildDrawCommand} is called to construct the draw command.
  *
+ * @namespace RenderResources
+ *
  * @private
  */
 var RenderResources = {};
@@ -247,6 +249,15 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
+  /**
+   * True if back face culling is enabled
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.cull = true;
   /**
    * An object storing options for creating a {@link RenderState}.
    * the pipeline stages simply set the options, the render state is created

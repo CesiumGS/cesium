@@ -3,9 +3,11 @@ czm_modelMaterial defaultModelMaterial()
     czm_modelMaterial material;
     material.diffuse = vec3(1.0);
     material.specular = vec3(0.04); // dielectric (non-metal)
-    material.roughness = 0.0;
+    material.roughness = 0.001;
+    material.normal = vec3(0.0, 0.0, 1.0);
     material.occlusion = 1.0;
     material.emissive = vec3(0.0);
+    material.alpha = 1.0;
     return material;
 }
 
@@ -20,6 +22,11 @@ vec4 SRGBtoLINEAR4(vec4 srgbIn)
     return vec4(linearOut, srgbIn.a);
 }
 
+vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
+{
+    return vec2(textureTransform * vec3(texCoord, 1.0));
+}
+
 #ifdef HAS_NORMALS
 vec3 computeNormal()
 {
@@ -27,10 +34,10 @@ vec3 computeNormal()
 
     vec3 normal = ng;
     #ifdef HAS_NORMAL_TEXTURE
-        vec2 normalTexCoords = TEXCOORD_NORMAL;
-            #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
-            normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);
-            #endif
+    vec2 normalTexCoords = TEXCOORD_NORMAL;
+        #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+        normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);
+        #endif
 
         #ifdef HAS_TANGENTS
         // read tangents from varying
@@ -57,11 +64,6 @@ vec3 computeNormal()
     return normal;
 }
 #endif
-
-vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
-{
-    return vec2(textureTransform * vec3(texCoord, 1.0));
-}
 
 czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
 {
@@ -90,7 +92,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     #endif
 
     #ifdef HAS_VERTEX_COLORS
-    baseColorWithAlpha *= v_vertexColor;
+    baseColorWithAlpha *= v_color_0;
     #endif
 
     material.diffuse = baseColorWithAlpha.rgb;
@@ -107,7 +109,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     #if defined(HAS_EMISSIVE_TEXTURE)
     vec2 emissiveTexCoords = TEXCOORD_EMISSIVE;
         #ifdef HAS_EMISSIVE_TEXTURE_TRANSFORM
-        emissiveCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
+        emissiveTexCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
         #endif
 
     vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, emissiveTexCoords).rgb);
@@ -119,11 +121,11 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.emissive = u_emissiveFactor;
     #endif
 
-    #ifdef USE_SPECULAR_GLOSSINESS
+    #if defined(LIGHTING_PBR) && defined(USE_SPECULAR_GLOSSINESS)
         #if defined(HAS_SPECULAR_GLOSSINESS_TEXTURE)
         vec2 specularGlossinessTexCoords = TEXCOORD_SPECULAR_GLOSSINESS;
           #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM
-          specularGlossinessCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
+          specularGlossinessTexCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
           #endif
 
         vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, specularGlossinessTexCoords));
@@ -173,11 +175,11 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.diffuse = parameters.diffuseColor;
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
-    #else
+    #elif defined(LIGHTING_PBR)
         #if defined(HAS_METALLIC_ROUGHNESS_TEXTURE)
         vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS;
             #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM
-            metallicRoughnessCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
+            metallicRoughnessTexCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
             #endif
 
         vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;

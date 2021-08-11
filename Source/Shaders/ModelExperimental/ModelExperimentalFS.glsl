@@ -19,5 +19,6 @@ void main()
     material = materialStage(material);
     material = lightingStage(material);
 
-    gl_FragColor = handleAlpha(material.diffuse, material.alpha);
+    vec4 color = handleAlpha(material.diffuse, material.alpha);
+    gl_FragColor = color;
 }

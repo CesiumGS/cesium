@@ -1,6 +1,6 @@
 /**
- * Which lighting model to use for lighting a {@link ModelExperimental}. This
- * is applied in the {@link LightingPipelineStage}
+ * The lighting model to use for lighting a {@link ModelExperimental}. This
+ * is applied in the {@link LightingPipelineStage}.
  *
  * @enum {Number}
  * @private
