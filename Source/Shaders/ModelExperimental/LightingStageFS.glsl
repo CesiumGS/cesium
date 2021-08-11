@@ -7,20 +7,6 @@ vec3 LINEARtoSRGB(vec3 linearIn)
     #endif 
 }
 
-#ifdef HAS_OUTLINES
-vec3 handleOutlines(vec3 color) 
-{
-    float outlineness = max(
-        texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r,
-        max(
-            texture2D(u_outlineTexture, vec2(v_outlineCoordinates.y, 0.5)).r,
-            texture2D(u_outlineTexture, vec2(v_outlineCoordinates.z, 0.5)).r
-        )
-    );
-    return mix(color, vec3(0.0, 0.0, 0.0), outlineness);
-}
-#endif
-
 #ifdef LIGHTING_PBR
 vec3 applyTonemapping(vec3 linearIn) 
 {
@@ -52,8 +38,6 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
         pbrParameters
     );
 
-    // TODO: what are the parameters for IBL?
-    //color += czm_iblLighting(pbrParameters);
     color *= inputMaterial.occlusion;
     color += inputMaterial.emissive;
 
