@@ -26,7 +26,7 @@ vec3 processGeometry(vec3 position)
     #endif
 
     #ifdef HAS_VERTEX_COLORS
-    v_color = a_color;
+    v_color_0 = a_color_0;
     #endif
 
     #ifdef HAS_CUSTOM_ATTRIBUTES

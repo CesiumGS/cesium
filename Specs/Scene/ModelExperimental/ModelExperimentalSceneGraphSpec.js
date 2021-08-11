@@ -63,6 +63,7 @@ describe(
           }
 
           var frameState = scene.frameState;
+          frameState.commandList = [];
 
           model.update(frameState);
           expect(
@@ -82,7 +83,7 @@ describe(
           expect(
             ModelExperimentalSceneGraph.prototype.buildDrawCommands
           ).toHaveBeenCalled();
-          expect(frameState.commandList.length).toBeGreaterThan(0);
+          expect(frameState.commandList.length).toEqual(primitivesCount);
         }
       );
     });

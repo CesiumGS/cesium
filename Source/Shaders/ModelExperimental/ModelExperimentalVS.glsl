@@ -14,6 +14,5 @@ void main()
 
     #ifdef PRIMITIVE_TYPE_POINTS
     processPoints();
-    
     #endif
 }

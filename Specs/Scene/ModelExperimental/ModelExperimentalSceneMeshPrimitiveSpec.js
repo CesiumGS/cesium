@@ -1,5 +1,7 @@
 import {
   GeometryPipelineStage,
+  LightingPipelineStage,
+  MaterialPipelineStage,
   ModelExperimentalSceneMeshPrimitive,
 } from "../../../Source/Cesium.js";
 
@@ -27,6 +29,10 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
       primitive: mockPrimitive,
     });
 
-    expect(primitive.pipelineStages).toEqual([GeometryPipelineStage]);
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+    ]);
   });
 });
