@@ -120,14 +120,14 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
   this.attributes = [];
 
   /**
-   * The index of the next vertex attribute that will be added to the attributes array.
+   * The index of the last vertex attribute added to the attributes array.
    *
    * @type {Number}
    * @readonly
    *
    * @private
    */
-  this.attributeIndex = 1; // 0 is reserved for POSITION.
+  this.attributeIndex = 0;
 
   /**
    * The number of instances. Default is 0, if instancing is not used.
@@ -234,7 +234,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
-   * The index of the next vertex attribute that will be added to the attributes array.
+   * The index of the last vertex attribute added to the attributes array.
    *
    * @type {Number}
    * @readonly

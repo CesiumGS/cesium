@@ -25,9 +25,9 @@ var InstancingPipelineStage = {};
  *  <li>adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
  *  <li>adds an instancing translation min and max to compute an accurate bounding volume</li>
  * </ul>
- * @param {*} renderResources
- * @param {*} node
- * @param {*} frameState
+ * @param {RenderResources.NodeRenderResources} renderResources The render resources for this node.
+ * @param {ModelComponents.Node} node The node.
+ * @param {FrameState} frameState The frame state.
  */
 InstancingPipelineStage.process = function (renderResources, node, frameState) {
   var instances = node.instances;
@@ -74,7 +74,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
     instancingVertexAttributes = [
       {
-        index: renderResources.attributeIndex++,
+        index: ++renderResources.attributeIndex,
         vertexBuffer: transformsVertexBuffer,
         componentsPerAttribute: 4,
         componentDatatype: ComponentDatatype.FLOAT,
@@ -84,7 +84,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         instanceDivisor: 1,
       },
       {
-        index: renderResources.attributeIndex++,
+        index: ++renderResources.attributeIndex,
         vertexBuffer: transformsVertexBuffer,
         componentsPerAttribute: 4,
         componentDatatype: ComponentDatatype.FLOAT,
@@ -94,7 +94,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
         instanceDivisor: 1,
       },
       {
-        index: renderResources.attributeIndex++,
+        index: ++renderResources.attributeIndex,
         vertexBuffer: transformsVertexBuffer,
         componentsPerAttribute: 4,
         componentDatatype: ComponentDatatype.FLOAT,
@@ -112,7 +112,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   } else {
     if (defined(translationAttribute)) {
       instancingVertexAttributes.push({
-        index: renderResources.attributeIndex++,
+        index: ++renderResources.attributeIndex,
         vertexBuffer: translationAttribute.buffer,
         componentsPerAttribute: AttributeType.getComponentsPerAttribute(
           translationAttribute.type
@@ -138,7 +138,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
     if (defined(scaleAttribute)) {
       instancingVertexAttributes.push({
-        index: renderResources.attributeIndex++,
+        index: ++renderResources.attributeIndex,
         vertexBuffer: scaleAttribute.buffer,
         componentsPerAttribute: AttributeType.getComponentsPerAttribute(
           scaleAttribute.type

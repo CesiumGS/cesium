@@ -2,9 +2,7 @@ import {
   Cartesian3,
   combine,
   GltfLoader,
-  InstanceAttributeSemantic,
   InstancingPipelineStage,
-  ModelExperimentalUtility,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -64,7 +62,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("correctly computes instancing TRANSLATION min and max from typed arrays", function () {
     var renderResources = {
-      attributeIndex: 1,
+      attributeIndex: 0,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -90,7 +88,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("sets instancing TRANSLATION min and max from attributes", function () {
     var renderResources = {
-      attributeIndex: 1,
+      attributeIndex: 0,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -115,7 +113,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("creates instancing matrices vertex attributes when ROTATION is present", function () {
     var renderResources = {
-      attributeIndex: 1,
+      attributeIndex: 0,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -152,7 +150,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("creates instance matrices vertex attributes when TRANSLATION min and max are not present", function () {
     var renderResources = {
-      attributeIndex: 1,
+      attributeIndex: 0,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -199,7 +197,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("creates TRANSLATION vertex attributes", function () {
     var renderResources = {
-      attributeIndex: 1,
+      attributeIndex: 0,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,

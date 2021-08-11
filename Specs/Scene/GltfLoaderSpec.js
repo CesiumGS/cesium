@@ -69,6 +69,8 @@ describe(
       "./Data/Models/GltfLoader/BoxInstancedInterleaved/glTF/box-instanced-interleaved.gltf";
     var boxInstancedTranslation =
       "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
+    var boxInstancedTranslationMinMax =
+      "./Data/Models/GltfLoader/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
     var duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
     var boomBoxSpecularGlossiness =
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
@@ -1418,6 +1420,57 @@ describe(
       }
 
       return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var primitive = rootNode.primitives[0];
+        var attributes = primitive.attributes;
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var instances = rootNode.instances;
+        var instancedAttributes = instances.attributes;
+        var translationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.TRANSLATION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+
+        expect(translationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.TRANSLATION
+        );
+        expect(translationAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(translationAttribute.type).toBe(AttributeType.VEC3);
+        expect(translationAttribute.normalized).toBe(false);
+        expect(translationAttribute.count).toBe(4);
+        expect(translationAttribute.min).toBeUndefined();
+        expect(translationAttribute.max).toBeUndefined();
+        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+        expect(translationAttribute.quantization).toBeUndefined();
+        expect(translationAttribute.typedArray).toBeUndefined();
+        expect(translationAttribute.buffer).toBeDefined();
+        expect(translationAttribute.byteOffset).toBe(0);
+        expect(translationAttribute.byteStride).toBe(12);
+      });
+    });
+
+    it("loads BoxInstancedTranslationWithMinMax", function () {
+      if (!scene.context.instancedArrays) {
+        return;
+      }
+
+      return loadGltf(boxInstancedTranslationMinMax).then(function (
+        gltfLoader
+      ) {
         var components = gltfLoader.components;
         var scene = components.scene;
         var rootNode = scene.nodes[0];

@@ -100,6 +100,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       GeometryPipelineStage.process(renderResources, positionOnlyPrimitive);
@@ -125,6 +126,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       return loadGltf(boxTextured).then(function (gltfLoader) {
@@ -189,6 +191,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
@@ -270,6 +273,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       return loadGltf(microcosm).then(function (gltfLoader) {
@@ -334,6 +338,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
@@ -415,6 +420,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       GeometryPipelineStage.process(renderResources, customAttributePrimitive);
@@ -459,6 +465,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
@@ -523,6 +530,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 0,
       };
 
       return loadGltf(weather).then(function (gltfLoader) {
