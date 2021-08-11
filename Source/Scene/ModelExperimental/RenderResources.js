@@ -124,7 +124,7 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
 
   /**
    * The index to give to the next vertex attribute added to the attributes array. POSITION
-   * takes the 0 index.
+   * takes index 0.
    *
    * @type {Number}
    * @readonly
@@ -239,7 +239,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
 
   /**
    * The index to give to the next vertex attribute added to the attributes array. POSITION
-   * takes the 0 index. Inherited from the node render resources.
+   * takes index 0. Inherited from the node render resources.
    *
    * @type {Number}
    * @readonly
