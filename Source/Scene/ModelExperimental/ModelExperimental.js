@@ -22,7 +22,7 @@ import destroyObject from "../../Core/destroyObject.js";
  * @param {String|Resource|ArrayBuffer|Uint8Array} [options.gltf] A Resource/URL to a glTF/glb file or a binary glTF buffer.
  * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Boolean} [options.incrementallyLoadTextures=false] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  *
  * @private
@@ -46,6 +46,9 @@ export default function ModelExperimental(options) {
 
   this._ready = false;
   this._readyPromise = when.defer();
+
+  this._defaultTexture = undefined;
+  this._texturesLoaded = false;
 
   initialize(this, options);
 }
@@ -136,8 +139,19 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @exception {RuntimeError} Failed to load external reference.
  */
 ModelExperimental.prototype.update = function (frameState) {
-  if (!this._resourcesLoaded) {
+  if (!defined(this._defaultTexture)) {
+    this._defaultTexture = frameState.context.defaultTexture;
+  }
+
+  // Keep processing the glTF every frame until the main resources
+  // (buffer views) and textures (which may be loaded asynchronously)
+  // are processed.
+  if (!this._resourcesLoaded || !this._texturesLoaded) {
     this._gltfLoader.process(frameState);
+  }
+
+  // short-circuit if the glTF resources aren't ready.
+  if (!this._resourcesLoaded) {
     return;
   }
 
@@ -232,6 +246,18 @@ function initialize(model, options) {
         options.basePath
       );
     });
+
+  loader.texturesLoadedPromise
+    .then(function () {
+      model._texturesLoaded = true;
+    })
+    .otherwise(function () {
+      ModelExperimentalUtility.getFailedLoadFunction(
+        this,
+        "model",
+        options.basePath
+      );
+    });
 }
 
 /**
@@ -240,7 +266,7 @@ function initialize(model, options) {
  * @param {Resource|String} options.url The url to the .gltf or .glb file.
  * @param {Object} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Boolean} [options.incrementallyLoadTextures=false] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  */
 ModelExperimental.fromGltf = function (options) {

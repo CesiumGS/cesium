@@ -46,7 +46,7 @@ export default function buildDrawCommand(
     renderState: renderState,
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
-    cull: false,
+    cull: meshPrimitiveRenderResources.cull,
     pass: Pass.OPAQUE,
     count: meshPrimitiveRenderResources.count,
     pickId: undefined,

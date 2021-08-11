@@ -3,6 +3,7 @@ import defined from "../../Core/defined.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelLightingOptions from "./ModelLightingOptions.js";
 
 /**
  * Resources assigned at each level of a 3D model (model, node, mesh primitive)
@@ -10,6 +11,8 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
  * through the various model pipeline stages (see for example
  * {@link GeometryPipelineStage}) and updated in place. Finally,
  * {@link buildDrawCommand} is called to construct the draw command.
+ *
+ * @namespace RenderResources
  *
  * @private
  */
@@ -226,6 +229,35 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
     primitive,
     this.modelMatrix
   );
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = {};
+  /**
+   * Options for configuring the lighting stage such as selecting between
+   * unlit and PBR shading.
+   *
+   * @type {ModelLightingOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.lightingOptions = new ModelLightingOptions();
+  /**
+   * True if back face culling is enabled
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.cull = true;
   /**
    * An object storing options for creating a {@link RenderState}.
    * the pipeline stages simply set the options, the render state is created

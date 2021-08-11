@@ -345,6 +345,37 @@ describe("Scene/GltfLoaderUtil", function () {
     expect(modelTexture.transform).toEqual(expectedTransform);
   });
 
+  it("createModelTextureReader handles KHR_texture_transform rotation correctly", function () {
+    var angle = Math.PI / 2.0;
+    var textureInfo = {
+      index: 0,
+      texCoord: 0,
+      extensions: {
+        KHR_texture_transform: {
+          rotation: angle,
+          texCoord: 1,
+        },
+      },
+    };
+
+    // glTF requires texture coordinates to start in the top left corner.
+    // This reverses the orientation of the uv coordinate space, so the angle
+    // must be reversed.
+    // prettier-ignore
+    var expectedTransform = new Matrix3(
+      Math.cos(-angle), -Math.sin(-angle), 0.0,
+      Math.sin(-angle), Math.cos(-angle), 0.0,
+      0.0, 0.0, 1.0
+    );
+
+    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+      textureInfo: textureInfo,
+    });
+
+    expect(modelTexture.texCoord).toBe(1);
+    expect(modelTexture.transform).toEqual(expectedTransform);
+  });
+
   it("createModelTextureReader creates texture", function () {
     var context = createContext();
 

@@ -3,6 +3,7 @@ import {
   Cartesian3,
   ComponentDatatype,
   DepthFunction,
+  LightingModel,
   Math as CesiumMath,
   Matrix4,
   ModelExperimentalSceneNode,
@@ -194,6 +195,10 @@ describe("Scene/ModelExperimental/RenderResources", function () {
         Math.sqrt(3),
         CesiumMath.EPSILON9
       );
+      expect(primitiveResources.uniformMap).toEqual({});
+      expect(primitiveResources.lightingOptions.lightingModel).toEqual(
+        LightingModel.UNLIT
+      );
       expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
     });
 
@@ -221,6 +226,10 @@ describe("Scene/ModelExperimental/RenderResources", function () {
       expect(primitiveResources.boundingSphere.radius).toEqualEpsilon(
         2.0 * Math.sqrt(3),
         CesiumMath.EPSILON9
+      );
+      expect(primitiveResources.uniformMap).toEqual({});
+      expect(primitiveResources.lightingOptions.lightingModel).toEqual(
+        LightingModel.UNLIT
       );
       expect(primitiveResources.renderStateOptions).toEqual(expectedDepthTest);
     });

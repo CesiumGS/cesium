@@ -8,7 +8,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
  *
- * @namespace
+ * @namespace GeometryPipelineStage
  *
  * @private
  */
@@ -123,6 +123,8 @@ function processAttribute(
       attributeType
     ),
     componentDatatype: attribute.componentDatatype,
+    offsetInBytes: attribute.byteOffset,
+    strideInBytes: attribute.byteStride,
   };
 
   // Handle custom vertex attributes.

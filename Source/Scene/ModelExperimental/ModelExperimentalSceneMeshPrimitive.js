@@ -1,6 +1,8 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
+import LightingPipelineStage from "./LightingPipelineStage.js";
+import MaterialPipelineStage from "./MaterialPipelineStage.js";
 
 /**
  * In memory representation of a single mesh primitive, that is, a primitive
@@ -44,5 +46,7 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
 function initialize(sceneMeshPrimitive) {
   var pipelineStages = sceneMeshPrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
+  pipelineStages.push(MaterialPipelineStage);
+  pipelineStages.push(LightingPipelineStage);
   return;
 }
