@@ -1,0 +1,284 @@
+import Cartesian3 from "../../Core/Cartesian3.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defined from "../../Core/defined.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import AttributeType from "../AttributeType.js";
+import Quaternion from "../../Core/Quaternion.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
+
+/**
+ * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
+ * level.
+ *
+ * @namespace
+ * @private
+ */
+var InstancingPipelineStage = {};
+
+/**
+ * Process a node. This modifies the following parts of the render resources:
+ * <ul>
+ *  <li>adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
+ *  <li>adds an instancing translation min and max to compute an accurate bounding volume</li>
+ * </ul>
+ * @param {RenderResources.NodeRenderResources} renderResources The render resources for this node.
+ * @param {ModelComponents.Node} node The node.
+ * @param {FrameState} frameState The frame state.
+ */
+InstancingPipelineStage.process = function (renderResources, node, frameState) {
+  var instances = node.instances;
+  var instancingVertexAttributes = [];
+
+  var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("HAS_INSTANCING");
+  shaderBuilder.addVertexLines([InstancingStageVS]);
+
+  var translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.TRANSLATION
+  );
+
+  var translationMax;
+  var translationMin;
+  if (defined(translationAttribute)) {
+    translationMax = translationAttribute.max;
+    translationMin = translationAttribute.min;
+  }
+
+  var rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.ROTATION
+  );
+  if (
+    defined(rotationAttribute) ||
+    (!defined(translationMax) && !defined(translationMin))
+  ) {
+    instancingVertexAttributes = processMatrixAttributes(
+      node,
+      renderResources,
+      frameState
+    );
+  } else {
+    if (defined(translationAttribute)) {
+      instancingVertexAttributes.push({
+        index: renderResources.attributeIndex++,
+        vertexBuffer: translationAttribute.buffer,
+        componentsPerAttribute: AttributeType.getComponentsPerAttribute(
+          translationAttribute.type
+        ),
+        componentDatatype: translationAttribute.componentDatatype,
+        normalize: false,
+        offsetInBytes: translationAttribute.byteOffset,
+        strideInBytes: translationAttribute.byteStride,
+        instanceDivisor: 1,
+      });
+
+      renderResources.instancingTranslationMax = translationMax;
+      renderResources.instancingTranslationMin = translationMin;
+
+      shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
+      shaderBuilder.addAttribute("vec3", "a_instanceTranslation");
+    }
+
+    var scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      instances,
+      InstanceAttributeSemantic.SCALE
+    );
+
+    if (defined(scaleAttribute)) {
+      instancingVertexAttributes.push({
+        index: renderResources.attributeIndex++,
+        vertexBuffer: scaleAttribute.buffer,
+        componentsPerAttribute: AttributeType.getComponentsPerAttribute(
+          scaleAttribute.type
+        ),
+        componentDatatype: scaleAttribute.componentDatatype,
+        normalize: false,
+        offsetInBytes: scaleAttribute.byteOffset,
+        strideInBytes: scaleAttribute.byteStride,
+        instanceDivisor: 1,
+      });
+
+      shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
+      shaderBuilder.addAttribute("vec3", "a_instanceScale");
+    }
+  }
+
+  renderResources.instanceCount = node.instances.attributes[0].count;
+  renderResources.attributes.push.apply(
+    renderResources.attributes,
+    instancingVertexAttributes
+  );
+};
+
+var transformScratch = new Matrix4();
+
+function getInstanceTransformsTypedArray(instances, renderResources) {
+  var count = instances.attributes[0].count;
+  var elements = 12;
+  var transformsTypedArray = new Float32Array(count * elements);
+
+  var translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.TRANSLATION
+  );
+  var rotationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.ROTATION
+  );
+  var scaleAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.SCALE
+  );
+
+  var instancingTranslationMax = new Cartesian3(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE
+  );
+  var instancingTranslationMin = new Cartesian3(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE
+  );
+
+  // Translations get initialized to (0, 0, 0).
+  var translationTypedArray = defined(translationAttribute)
+    ? translationAttribute.typedArray
+    : new Float32Array(count * 3);
+  // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
+  var rotationTypedArray = defined(rotationAttribute)
+    ? rotationAttribute.typedArray
+    : new Float32Array(count * 3);
+  // Scales get initialized to (1, 1, 1).
+  var scaleTypedArray = defined(scaleAttribute)
+    ? scaleAttribute.typedArray
+    : new Float32Array(count * 3);
+  scaleTypedArray.fill(1);
+
+  var setRotationW = defined(rotationAttribute);
+
+  for (var i = 0; i < count; i++) {
+    var translation = new Cartesian3(
+      translationTypedArray[i * 3],
+      translationTypedArray[i * 3 + 1],
+      translationTypedArray[i * 3 + 2]
+    );
+
+    Cartesian3.maximumByComponent(
+      instancingTranslationMax,
+      translation,
+      instancingTranslationMax
+    );
+    Cartesian3.minimumByComponent(
+      instancingTranslationMin,
+      translation,
+      instancingTranslationMin
+    );
+
+    var rotation = new Quaternion(
+      rotationTypedArray[i * 4],
+      rotationTypedArray[i * 4 + 1],
+      rotationTypedArray[i * 4 + 2],
+      setRotationW ? rotationTypedArray[i * 4 + 3] : 1
+    );
+
+    var scale = new Cartesian3(
+      scaleTypedArray[i * 3],
+      scaleTypedArray[i * 3 + 1],
+      scaleTypedArray[i * 3 + 2]
+    );
+
+    var transform = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale,
+      transformScratch
+    );
+
+    var offset = elements * i;
+
+    transformsTypedArray[offset + 0] = transform[0];
+    transformsTypedArray[offset + 1] = transform[4];
+    transformsTypedArray[offset + 2] = transform[8];
+    transformsTypedArray[offset + 3] = transform[12];
+    transformsTypedArray[offset + 4] = transform[1];
+    transformsTypedArray[offset + 5] = transform[5];
+    transformsTypedArray[offset + 6] = transform[9];
+    transformsTypedArray[offset + 7] = transform[13];
+    transformsTypedArray[offset + 8] = transform[2];
+    transformsTypedArray[offset + 9] = transform[6];
+    transformsTypedArray[offset + 10] = transform[10];
+    transformsTypedArray[offset + 11] = transform[14];
+
+    renderResources.instancingTranslationMax = instancingTranslationMax;
+    renderResources.instancingTranslationMin = instancingTranslationMin;
+  }
+
+  return transformsTypedArray;
+}
+
+function processMatrixAttributes(node, renderResources, frameState) {
+  var transformsTypedArray = getInstanceTransformsTypedArray(
+    node.instances,
+    renderResources
+  );
+  var transformsVertexBuffer = Buffer.createVertexBuffer({
+    context: frameState.context,
+    typedArray: transformsTypedArray.buffer,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+  renderResources.model._resources.push(transformsVertexBuffer);
+
+  var vertexSizeInFloats = 12;
+  var componentByteSize = ComponentDatatype.getSizeInBytes(
+    ComponentDatatype.FLOAT
+  );
+
+  var instancingVertexAttributes = [
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsVertexBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: 0,
+      strideInBytes: componentByteSize * vertexSizeInFloats,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsVertexBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 4,
+      strideInBytes: componentByteSize * vertexSizeInFloats,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsVertexBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 8,
+      strideInBytes: componentByteSize * vertexSizeInFloats,
+      instanceDivisor: 1,
+    },
+  ];
+
+  var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
+  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow0");
+  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow1");
+  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow2");
+
+  return instancingVertexAttributes;
+}
+
+export default InstancingPipelineStage;

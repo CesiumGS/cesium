@@ -885,13 +885,20 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
   var attributes = instancingExtension.attributes;
   if (defined(attributes)) {
     var hasRotation = defined(attributes.ROTATION);
+    var hasTranslationMinMax =
+      defined(attributes.TRANSLATION) &&
+      defined(gltf.accessors[attributes.TRANSLATION].min) &&
+      defined(gltf.accessors[attributes.TRANSLATION].max);
     for (var semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
         // If the instances have rotations load the attributes as typed arrays
         // so that instance matrices are computed on the CPU. This avoids the
         // expensive quaternion -> rotation matrix conversion in the shader.
+        // If the translation accessor does not have a min and max, load the
+        // attributes as typed arrays, so the values can be used for computing
+        // an accurate bounding volume.
         var loadAsTypedArray =
-          hasRotation &&
+          (hasRotation || !hasTranslationMinMax) &&
           (semantic === InstanceAttributeSemantic.TRANSLATION ||
             semantic === InstanceAttributeSemantic.ROTATION ||
             semantic === InstanceAttributeSemantic.SCALE);

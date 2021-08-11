@@ -121,6 +121,47 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
    * @private
    */
   this.attributes = [];
+
+  /**
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes the 0 index.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.attributeIndex = 1;
+
+  /**
+   * The number of instances. Default is 0, if instancing is not used.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.instanceCount = 0;
+
+  /**
+   * The component-wise maximum value of the translations of the instances.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.instancingTranslationMax = undefined;
+
+  /**
+   * The component-wise minimum value of the translations of the instances.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.instancingTranslationMin = undefined;
 }
 
 /**
@@ -186,6 +227,35 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
+  /**
+   * The number of instances. Default is 0, if instancing is not used. Inherited from the node render resources.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.instanceCount = nodeRenderResources.instanceCount;
+
+  /**
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes the 0 index. Inherited from the node render resources.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.attributeIndex = nodeRenderResources.attributeIndex;
+
+  /**
+   * The mesh primitive associated with the render resources.
+   *
+   * @type {ModelComponents.Primitive}
+   * @readonly
+   *
+   * @private
+   */
   var primitive = sceneMeshPrimitive.primitive;
 
   // other properties
@@ -227,7 +297,9 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
     primitive,
-    this.modelMatrix
+    this.modelMatrix,
+    nodeRenderResources.instancingTranslationMax,
+    nodeRenderResources.instancingTranslationMin
   );
   /**
    * A dictionary mapping uniform name to functions that return the uniform

@@ -50,6 +50,9 @@ export default function ModelExperimental(options) {
   this._defaultTexture = undefined;
   this._texturesLoaded = false;
 
+  // Keeps track of resources that need to be destroyed when the Model is destroyed.
+  this._resources = [];
+
   initialize(this, options);
 }
 
@@ -201,6 +204,11 @@ ModelExperimental.prototype.destroy = function () {
   if (defined(gltfLoader)) {
     gltfLoader.destroy();
   }
+
+  for (var i = 0; i < this._resources.length; i++) {
+    this._resources[i].destroy();
+  }
+
   destroyObject(this);
 };
 
