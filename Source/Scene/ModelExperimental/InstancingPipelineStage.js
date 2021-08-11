@@ -269,7 +269,4 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   return transformsTypedArray;
 }
 
-// Exposed for testing.
-InstancingPipelineStage._getInstanceTransformsTypedArray = getInstanceTransformsTypedArray;
-
 export default InstancingPipelineStage;
