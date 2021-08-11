@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Math as CesiumMath,
   InstanceAttributeSemantic,
   Matrix4,
   ModelExperimentalUtility,
@@ -58,7 +59,10 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     );
 
     expect(boundingSphere.center).toEqual(translation);
-    expect(boundingSphere.radius).toEqual(0.8660254037844386);
+    expect(boundingSphere.radius).toEqualEpsilon(
+      0.8660254037844386,
+      CesiumMath.EPSILON8
+    );
   });
 
   it("createBoundingSphere works with instancing", function () {
@@ -88,7 +92,10 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     );
 
     expect(boundingSphere.center).toEqual(translation);
-    expect(boundingSphere.radius).toEqual(9.526279441628825);
+    expect(boundingSphere.radius).toEqualEpsilon(
+      9.526279441628825,
+      CesiumMath.EPSILON8
+    );
   });
 
   it("getAttributeBySemantic works", function () {

@@ -62,7 +62,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("correctly computes instancing TRANSLATION min and max from typed arrays", function () {
     var renderResources = {
-      attributeIndex: 0,
+      attributeIndex: 1,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -88,7 +88,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("sets instancing TRANSLATION min and max from attributes", function () {
     var renderResources = {
-      attributeIndex: 0,
+      attributeIndex: 1,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -113,7 +113,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("creates instancing matrices vertex attributes when ROTATION is present", function () {
     var renderResources = {
-      attributeIndex: 0,
+      attributeIndex: 1,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -136,6 +136,15 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(renderResources.attributes.length).toBe(3);
 
       var attributeLines = renderResources.shaderBuilder._attributeLines;
+      var vertexDefineLines =
+        renderResources.shaderBuilder._vertexShaderParts.defineLines;
+      var fragmentDefineLines =
+        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
+
+      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
+      expect(vertexDefineLines[0]).toEqual("HAS_INSTANCING");
+      expect(vertexDefineLines[1]).toEqual("HAS_INSTANCE_MATRICES");
+      expect(fragmentDefineLines[1]).toEqual("HAS_INSTANCE_MATRICES");
       expect(attributeLines[0]).toEqual(
         "attribute vec4 a_instancingTransformRow0;"
       );
@@ -150,7 +159,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("creates instance matrices vertex attributes when TRANSLATION min and max are not present", function () {
     var renderResources = {
-      attributeIndex: 0,
+      attributeIndex: 1,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
@@ -197,7 +206,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
   it("creates TRANSLATION vertex attributes", function () {
     var renderResources = {
-      attributeIndex: 0,
+      attributeIndex: 1,
       attributes: [],
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,

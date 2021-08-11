@@ -109,14 +109,17 @@ ModelExperimentalUtility.createBoundingSphere = function (
 
   var boundingSphere;
   if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
-    boundingSphere = BoundingSphere.fromCornerPoints(
-      Cartesian3.add(
-        positionMax,
-        instancingTranslationMax,
-        cartesianMaxScratch
-      ),
-      Cartesian3.add(positionMin, instancingTranslationMin, cartesianMinScratch)
+    var computedMin = Cartesian3.add(
+      positionMin,
+      instancingTranslationMin,
+      cartesianMinScratch
     );
+    var computedMax = Cartesian3.add(
+      positionMax,
+      instancingTranslationMax,
+      cartesianMaxScratch
+    );
+    boundingSphere = BoundingSphere.fromCornerPoints(computedMin, computedMax);
   } else {
     boundingSphere = BoundingSphere.fromCornerPoints(positionMin, positionMax);
   }

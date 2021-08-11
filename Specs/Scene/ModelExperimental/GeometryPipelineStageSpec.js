@@ -100,7 +100,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       GeometryPipelineStage.process(renderResources, positionOnlyPrimitive);
@@ -126,7 +126,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       return loadGltf(boxTextured).then(function (gltfLoader) {
@@ -191,7 +191,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
@@ -273,7 +273,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       return loadGltf(microcosm).then(function (gltfLoader) {
@@ -338,7 +338,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
@@ -420,7 +420,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       GeometryPipelineStage.process(renderResources, customAttributePrimitive);
@@ -465,7 +465,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
@@ -530,7 +530,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
-        attributeIndex: 0,
+        attributeIndex: 1,
       };
 
       return loadGltf(weather).then(function (gltfLoader) {

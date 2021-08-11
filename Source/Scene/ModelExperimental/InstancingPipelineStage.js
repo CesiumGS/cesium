@@ -57,62 +57,15 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     defined(rotationAttribute) ||
     (!defined(translationMax) && !defined(translationMin))
   ) {
-    var transformsTypedArray = getInstanceTransformsTypedArray(
-      instances,
-      renderResources
+    instancingVertexAttributes = processMatrixAttributes(
+      node,
+      renderResources,
+      frameState
     );
-    var transformsVertexBuffer = Buffer.createVertexBuffer({
-      context: frameState.context,
-      typedArray: transformsTypedArray.buffer,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    var vertexSizeInFloats = 12;
-    var componentByteSize = ComponentDatatype.getSizeInBytes(
-      ComponentDatatype.FLOAT
-    );
-
-    instancingVertexAttributes = [
-      {
-        index: ++renderResources.attributeIndex,
-        vertexBuffer: transformsVertexBuffer,
-        componentsPerAttribute: 4,
-        componentDatatype: ComponentDatatype.FLOAT,
-        normalize: false,
-        offsetInBytes: 0,
-        strideInBytes: componentByteSize * vertexSizeInFloats,
-        instanceDivisor: 1,
-      },
-      {
-        index: ++renderResources.attributeIndex,
-        vertexBuffer: transformsVertexBuffer,
-        componentsPerAttribute: 4,
-        componentDatatype: ComponentDatatype.FLOAT,
-        normalize: false,
-        offsetInBytes: componentByteSize * 4,
-        strideInBytes: componentByteSize * vertexSizeInFloats,
-        instanceDivisor: 1,
-      },
-      {
-        index: ++renderResources.attributeIndex,
-        vertexBuffer: transformsVertexBuffer,
-        componentsPerAttribute: 4,
-        componentDatatype: ComponentDatatype.FLOAT,
-        normalize: false,
-        offsetInBytes: componentByteSize * 8,
-        strideInBytes: componentByteSize * vertexSizeInFloats,
-        instanceDivisor: 1,
-      },
-    ];
-
-    shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
-    shaderBuilder.addAttribute("vec4", "a_instancingTransformRow0");
-    shaderBuilder.addAttribute("vec4", "a_instancingTransformRow1");
-    shaderBuilder.addAttribute("vec4", "a_instancingTransformRow2");
   } else {
     if (defined(translationAttribute)) {
       instancingVertexAttributes.push({
-        index: ++renderResources.attributeIndex,
+        index: renderResources.attributeIndex++,
         vertexBuffer: translationAttribute.buffer,
         componentsPerAttribute: AttributeType.getComponentsPerAttribute(
           translationAttribute.type
@@ -138,7 +91,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
     if (defined(scaleAttribute)) {
       instancingVertexAttributes.push({
-        index: ++renderResources.attributeIndex,
+        index: renderResources.attributeIndex++,
         vertexBuffer: scaleAttribute.buffer,
         componentsPerAttribute: AttributeType.getComponentsPerAttribute(
           scaleAttribute.type
@@ -267,6 +220,64 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   }
 
   return transformsTypedArray;
+}
+
+function processMatrixAttributes(node, renderResources, frameState) {
+  var transformsTypedArray = getInstanceTransformsTypedArray(
+    node.instances,
+    renderResources
+  );
+  var transformsVertexBuffer = Buffer.createVertexBuffer({
+    context: frameState.context,
+    typedArray: transformsTypedArray.buffer,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  var vertexSizeInFloats = 12;
+  var componentByteSize = ComponentDatatype.getSizeInBytes(
+    ComponentDatatype.FLOAT
+  );
+
+  var instancingVertexAttributes = [
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsVertexBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: 0,
+      strideInBytes: componentByteSize * vertexSizeInFloats,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsVertexBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 4,
+      strideInBytes: componentByteSize * vertexSizeInFloats,
+      instanceDivisor: 1,
+    },
+    {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: transformsVertexBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+      offsetInBytes: componentByteSize * 8,
+      strideInBytes: componentByteSize * vertexSizeInFloats,
+      instanceDivisor: 1,
+    },
+  ];
+
+  var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("HAS_INSTANCE_MATRICES");
+  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow0");
+  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow1");
+  shaderBuilder.addAttribute("vec4", "a_instancingTransformRow2");
+
+  return instancingVertexAttributes;
 }
 
 export default InstancingPipelineStage;

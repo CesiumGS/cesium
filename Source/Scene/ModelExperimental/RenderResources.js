@@ -120,14 +120,15 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
   this.attributes = [];
 
   /**
-   * The index of the last vertex attribute added to the attributes array.
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes the 0 index.
    *
    * @type {Number}
    * @readonly
    *
    * @private
    */
-  this.attributeIndex = 0;
+  this.attributeIndex = 1;
 
   /**
    * The number of instances. Default is 0, if instancing is not used.
@@ -224,7 +225,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
   /**
-   * The number of instances. Default is 0, if instancing is not used.
+   * The number of instances. Default is 0, if instancing is not used. Inherited from the node render resources.
    *
    * @type {Number}
    * @readonly
@@ -234,7 +235,8 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
-   * The index of the last vertex attribute added to the attributes array.
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes the 0 index. Inherited from the node render resources.
    *
    * @type {Number}
    * @readonly
