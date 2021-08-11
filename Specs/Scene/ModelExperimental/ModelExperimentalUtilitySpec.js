@@ -4,10 +4,11 @@ import {
   Matrix4,
   ModelExperimentalUtility,
   Quaternion,
+  TranslationRotationScale,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimentalUtility", function () {
+describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   it("getNodeTransform works when node has a matrix", function () {
     var nodeWithMatrix = {
       matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
@@ -30,6 +31,64 @@ describe("Scene/ModelExperimentalUtility", function () {
       nodeWithTRS
     );
     expect(Matrix4.equals(computedTransform, Matrix4.IDENTITY)).toEqual(true);
+  });
+
+  it("createBoundingSphere works", function () {
+    var mockPrimitive = {
+      attributes: [
+        {
+          semantic: "POSITION",
+          max: new Cartesian3(0.5, 0.5, 0.5),
+          min: new Cartesian3(-0.5, -0.5, -0.5),
+        },
+      ],
+    };
+    var translation = new Cartesian3(50, 50, 50);
+
+    var modelMatrix = Matrix4.fromTranslationRotationScale(
+      new TranslationRotationScale(
+        translation,
+        Quaternion.IDENTITY,
+        new Cartesian3(1, 1, 1)
+      )
+    );
+    var boundingSphere = ModelExperimentalUtility.createBoundingSphere(
+      mockPrimitive,
+      modelMatrix
+    );
+
+    expect(boundingSphere.center).toEqual(translation);
+    expect(boundingSphere.radius).toEqual(0.8660254037844386);
+  });
+
+  it("createBoundingSphere works with instancing", function () {
+    var mockPrimitive = {
+      attributes: [
+        {
+          semantic: "POSITION",
+          max: new Cartesian3(0.5, 0.5, 0.5),
+          min: new Cartesian3(-0.5, -0.5, -0.5),
+        },
+      ],
+    };
+    var translation = new Cartesian3(50, 50, 50);
+
+    var modelMatrix = Matrix4.fromTranslationRotationScale(
+      new TranslationRotationScale(
+        translation,
+        Quaternion.IDENTITY,
+        new Cartesian3(1, 1, 1)
+      )
+    );
+    var boundingSphere = ModelExperimentalUtility.createBoundingSphere(
+      mockPrimitive,
+      modelMatrix,
+      new Cartesian3(5, 5, 5),
+      new Cartesian3(-5, -5, -5)
+    );
+
+    expect(boundingSphere.center).toEqual(translation);
+    expect(boundingSphere.radius).toEqual(9.526279441628825);
   });
 
   it("getAttributeBySemantic works", function () {

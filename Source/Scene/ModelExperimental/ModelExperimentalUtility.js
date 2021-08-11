@@ -90,8 +90,8 @@ var cartesianMinScratch = new Cartesian3();
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Matrix4} modelMatrix The primitive's model matrix.
- * @param {Cartesian3} instancingTranslationMax The maximum value of the instancing translation attribute.
- * @param {Cartesian3} instancingTranslationMin The minimum value of the instancing translation attribute.
+ * @param {Cartesian3} instancingTranslationMax The component-wise maximum value of the instancing translation attribute.
+ * @param {Cartesian3} instancingTranslationMin The component-wise minimum value of the instancing translation attribute.
  */
 ModelExperimentalUtility.createBoundingSphere = function (
   primitive,
@@ -115,19 +115,10 @@ ModelExperimentalUtility.createBoundingSphere = function (
         instancingTranslationMax,
         cartesianMaxScratch
       ),
-      Cartesian3.add(
-        positionMin,
-        instancingTranslationMin,
-        cartesianMinScratch
-      ),
-      new BoundingSphere()
+      Cartesian3.add(positionMin, instancingTranslationMin, cartesianMinScratch)
     );
   } else {
-    boundingSphere = BoundingSphere.fromCornerPoints(
-      positionMin,
-      positionMax,
-      new BoundingSphere()
-    );
+    boundingSphere = BoundingSphere.fromCornerPoints(positionMin, positionMax);
   }
 
   BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
