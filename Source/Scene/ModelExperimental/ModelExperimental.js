@@ -205,8 +205,9 @@ ModelExperimental.prototype.destroy = function () {
     gltfLoader.destroy();
   }
 
-  for (var i = 0; i < this._resources.length; i++) {
-    this._resources[i].destroy();
+  var resources = this._resources;
+  for (var i = 0; i < resources.length; i++) {
+    resources[i].destroy();
   }
 
   destroyObject(this);
