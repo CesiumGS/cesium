@@ -67,6 +67,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+      },
     };
 
     return loadGltf(boxInstanced).then(function (gltfLoader) {
@@ -93,6 +96,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+      },
     };
 
     return loadGltf(boxInstancedTranslationMinMax).then(function (gltfLoader) {
@@ -118,6 +124,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+      },
     };
 
     return loadGltf(boxInstanced).then(function (gltfLoader) {
@@ -164,6 +173,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+      },
     };
 
     return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
@@ -201,6 +213,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(attributeLines[2]).toEqual(
         "attribute vec4 a_instancingTransformRow2;"
       );
+
+      expect(renderResources.model._resources.length).toEqual(1);
     });
   });
 
@@ -211,6 +225,9 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       instancingTranslationMax: undefined,
       instancingTranslationMin: undefined,
       shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+      },
     };
 
     return loadGltf(boxInstancedTranslationMinMax).then(function (gltfLoader) {

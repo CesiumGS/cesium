@@ -232,6 +232,7 @@ function processMatrixAttributes(node, renderResources, frameState) {
     typedArray: transformsTypedArray.buffer,
     usage: BufferUsage.STATIC_DRAW,
   });
+  renderResources.model._resources.push(transformsVertexBuffer);
 
   var vertexSizeInFloats = 12;
   var componentByteSize = ComponentDatatype.getSizeInBytes(

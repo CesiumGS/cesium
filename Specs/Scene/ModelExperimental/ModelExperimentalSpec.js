@@ -1,4 +1,6 @@
 import {
+  Buffer,
+  BufferUsage,
   ResourceCache,
   Resource,
   ModelExperimental,
@@ -62,8 +64,17 @@ describe(
           { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
+          var buffer = Buffer.createVertexBuffer({
+            context: scene.frameState.context,
+            sizeInBytes: 16,
+            usage: BufferUsage.STATIC_DRAW,
+          });
+          model._resources = [buffer];
+
+          expect(buffer.isDestroyed()).toEqual(false);
           expect(model.isDestroyed()).toEqual(false);
           scene.primitives.remove(model);
+          expect(buffer.isDestroyed()).toEqual(true);
           expect(model.isDestroyed()).toEqual(true);
         });
       });
