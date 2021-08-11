@@ -1456,10 +1456,12 @@ describe(
         expect(translationAttribute.max).toBeUndefined();
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
-        expect(translationAttribute.typedArray).toBeUndefined();
-        expect(translationAttribute.buffer).toBeDefined();
+        expect(translationAttribute.typedArray).toEqual(
+          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+        );
+        expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
-        expect(translationAttribute.byteStride).toBe(12);
+        expect(translationAttribute.byteStride).toBeUndefined();
       });
     });
 
