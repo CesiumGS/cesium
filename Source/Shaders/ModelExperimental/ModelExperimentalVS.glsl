@@ -1,6 +1,7 @@
 precision highp float;
 
-void main() {
+void main() 
+{
     vec3 position = vec3(0.0);  
 
     position = processGeometry(position);

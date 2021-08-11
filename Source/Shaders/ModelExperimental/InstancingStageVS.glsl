@@ -1,5 +1,5 @@
-vec3 instancingStage(vec3 position) {
-  
+vec3 instancingStage(vec3 position) 
+{
     mat4 instancingTransform;
 
     #ifdef HAS_INSTANCE_MATRICES
@@ -34,5 +34,4 @@ vec3 instancingStage(vec3 position) {
     #endif
 
     return (instancingTransform * vec4(position, 1.0)).xyz;
-
 }
