@@ -235,6 +235,9 @@ PointCloudEyeDomeLighting.prototype.update = function (
   var commandList = frameState.commandList;
   var commandEnd = commandList.length;
 
+  var derivedCommand;
+  var originalShaderProgram;
+
   for (i = commandStart; i < commandEnd; ++i) {
     var command = commandList[i];
     if (
@@ -243,8 +246,11 @@ PointCloudEyeDomeLighting.prototype.update = function (
     ) {
       continue;
     }
-    var derivedCommand;
-    var originalShaderProgram;
+
+    // These variables need to get reset for each iteration. It has to be
+    // done manually since var is function scope not block scope.
+    derivedCommand = undefined;
+    originalShaderProgram = undefined;
 
     var derivedCommandObject = command.derivedCommands.pointCloudProcessor;
     if (defined(derivedCommandObject)) {
@@ -259,13 +265,9 @@ PointCloudEyeDomeLighting.prototype.update = function (
       originalShaderProgram !== command.shaderProgram ||
       derivedCommand.framebuffer !== this._framebuffer
     ) {
-      // Prevent crash when tiles out-of-view come in-view during context size change
-      derivedCommand = DrawCommand.shallowClone(command);
-      command.derivedCommands.pointCloudProcessor = {
-        command: derivedCommand,
-        originalShaderProgram: command.shaderProgram,
-      };
-
+      // Prevent crash when tiles out-of-view come in-view during context size change or
+      // when the underlying shader changes while EDL is disabled
+      derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
       derivedCommand.framebuffer = this._framebuffer;
       derivedCommand.shaderProgram = getECShaderProgram(
         frameState.context,
@@ -273,6 +275,17 @@ PointCloudEyeDomeLighting.prototype.update = function (
       );
       derivedCommand.castShadows = false;
       derivedCommand.receiveShadows = false;
+
+      if (!defined(derivedCommandObject)) {
+        derivedCommandObject = {
+          command: undefined,
+          originalShaderProgram: undefined,
+        };
+        command.derivedCommands.pointCloudProcessor = derivedCommandObject;
+      }
+
+      derivedCommandObject.command = derivedCommand;
+      derivedCommandObject.originalShaderProgram = command.shaderProgram;
     }
 
     commandList[i] = derivedCommand;
