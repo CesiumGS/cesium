@@ -97,7 +97,9 @@ fdescribe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -142,7 +144,9 @@ fdescribe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -189,7 +193,9 @@ fdescribe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -235,7 +241,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -253,7 +261,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -271,7 +281,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -289,7 +301,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
@@ -311,7 +325,9 @@ fdescribe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         var cutoff = 0.6;
@@ -343,7 +359,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         primitive.material.alphaMode = AlphaMode.BLEND;
@@ -365,7 +383,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
           cull: true,
         };
 
@@ -389,7 +409,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
           cull: true,
         };
 
@@ -415,7 +437,9 @@ fdescribe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          model: {
+            _defaultTexture: scene.frameState.context._defaultTexture,
+          },
         };
 
         primitive.material.doubleSided = true;
