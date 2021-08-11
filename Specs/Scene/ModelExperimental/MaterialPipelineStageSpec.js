@@ -14,7 +14,7 @@ import ModelLightingOptions from "../../../Source/Scene/ModelExperimental/ModelL
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/MaterialPipelineStage",
   function () {
     var scene;
