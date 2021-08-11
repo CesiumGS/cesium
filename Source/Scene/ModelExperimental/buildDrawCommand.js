@@ -38,7 +38,6 @@ export default function buildDrawCommand(
   );
 
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
-
   return new DrawCommand({
     boundingVolume: meshPrimitiveRenderResources.boundingSphere,
     modelMatrix: meshPrimitiveRenderResources.modelMatrix,
@@ -50,7 +49,7 @@ export default function buildDrawCommand(
     pass: Pass.OPAQUE,
     count: meshPrimitiveRenderResources.count,
     pickId: undefined,
-    instanceCount: 0,
+    instanceCount: meshPrimitiveRenderResources.instanceCount,
     primitiveType: meshPrimitiveRenderResources.primitiveType,
   });
 }

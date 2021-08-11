@@ -82,27 +82,47 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   }
 };
 
+var cartesianMaxScratch = new Cartesian3();
+var cartesianMinScratch = new Cartesian3();
 /**
  * Create a bounding sphere from a primitive's POSITION attribute and model
  * matrix.
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Matrix4} modelMatrix The primitive's model matrix.
- *
- * @private
+ * @param {Cartesian3} instancingTranslationMax The component-wise maximum value of the instancing translation attribute.
+ * @param {Cartesian3} instancingTranslationMin The component-wise minimum value of the instancing translation attribute.
  */
 ModelExperimentalUtility.createBoundingSphere = function (
   primitive,
-  modelMatrix
+  modelMatrix,
+  instancingTranslationMax,
+  instancingTranslationMin
 ) {
   var positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     "POSITION"
   );
-  var boundingSphere = BoundingSphere.fromCornerPoints(
-    positionGltfAttribute.min,
-    positionGltfAttribute.max
-  );
+
+  var positionMax = positionGltfAttribute.max;
+  var positionMin = positionGltfAttribute.min;
+
+  var boundingSphere;
+  if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
+    var computedMin = Cartesian3.add(
+      positionMin,
+      instancingTranslationMin,
+      cartesianMinScratch
+    );
+    var computedMax = Cartesian3.add(
+      positionMax,
+      instancingTranslationMax,
+      cartesianMaxScratch
+    );
+    boundingSphere = BoundingSphere.fromCornerPoints(computedMin, computedMax);
+  } else {
+    boundingSphere = BoundingSphere.fromCornerPoints(positionMin, positionMax);
+  }
 
   BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
   return boundingSphere;
