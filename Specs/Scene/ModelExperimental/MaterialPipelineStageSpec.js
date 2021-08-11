@@ -14,7 +14,7 @@ import ModelLightingOptions from "../../../Source/Scene/ModelExperimental/ModelL
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
-xdescribe(
+describe(
   "Scene/ModelExperimental/MaterialPipelineStage",
   function () {
     var scene;
@@ -67,7 +67,7 @@ xdescribe(
     var boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
     var boomBoxSpecularGlossiness =
       "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
-    var boxUnlit = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
+    var boxUnlit = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
 
     function expectShaderLines(shaderLines, expected) {
       for (var i = 0; i < expected.length; i++) {
