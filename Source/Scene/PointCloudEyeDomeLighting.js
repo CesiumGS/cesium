@@ -276,16 +276,15 @@ PointCloudEyeDomeLighting.prototype.update = function (
       derivedCommand.castShadows = false;
       derivedCommand.receiveShadows = false;
 
-      if (!defined(derivedCommandObject)) {
-        derivedCommandObject = {
-          command: undefined,
-          originalShaderProgram: undefined,
+      if (defined(derivedCommandObject)) {
+        derivedCommandObject.command = derivedCommand;
+        derivedCommandObject.originalShaderProgram = command.shaderProgram;
+      } else {
+        command.derivedCommands.pointCloudProcessor = {
+          command: derivedCommand,
+          originalShaderProgram: command.shaderProgram,
         };
-        command.derivedCommands.pointCloudProcessor = derivedCommandObject;
       }
-
-      derivedCommandObject.command = derivedCommand;
-      derivedCommandObject.originalShaderProgram = command.shaderProgram;
     }
 
     commandList[i] = derivedCommand;
