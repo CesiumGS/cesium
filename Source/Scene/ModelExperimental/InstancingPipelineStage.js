@@ -197,7 +197,7 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   var translationTypedArray = defined(translationAttribute)
     ? translationAttribute.typedArray
     : new Float32Array(count * 3);
-  // Rotations get initialized to (0, 0, 0, 0).
+  // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   var rotationTypedArray = defined(rotationAttribute)
     ? rotationAttribute.typedArray
     : new Float32Array(count * 3);
@@ -206,6 +206,8 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
     ? scaleAttribute.typedArray
     : new Float32Array(count * 3);
   scaleTypedArray.fill(1);
+
+  var setRotationW = defined(rotationAttribute);
 
   for (var i = 0; i < count; i++) {
     var translation = new Cartesian3(
@@ -229,7 +231,7 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
       rotationTypedArray[i * 4],
       rotationTypedArray[i * 4 + 1],
       rotationTypedArray[i * 4 + 2],
-      rotationTypedArray[i * 4 + 3]
+      setRotationW ? rotationTypedArray[i * 4 + 3] : 1
     );
 
     var scale = new Cartesian3(
