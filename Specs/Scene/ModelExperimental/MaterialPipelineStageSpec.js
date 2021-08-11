@@ -87,7 +87,7 @@ fdescribe(
     }
 
     it("adds material uniforms", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var shaderBuilder = new ShaderBuilder();
@@ -134,7 +134,7 @@ fdescribe(
     });
 
     it("adds metallic roughness uniforms", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var shaderBuilder = new ShaderBuilder();
@@ -232,7 +232,7 @@ fdescribe(
     });
 
     it("enables PBR lighting for metallic roughness materials", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var lightingOptions = new ModelLightingOptions();
@@ -292,7 +292,7 @@ fdescribe(
     });
 
     it("handles alphaMode = OPAQUE", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var shaderBuilder = new ShaderBuilder();
@@ -315,7 +315,7 @@ fdescribe(
     });
 
     it("handles alphaMode = MASK", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var shaderBuilder = new ShaderBuilder();
@@ -350,7 +350,7 @@ fdescribe(
     });
 
     it("handles alphaMode = BLEND", function () {
-      return loadGltf(boomBox).then(function (gltfLoader) {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var shaderBuilder = new ShaderBuilder();
