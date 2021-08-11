@@ -71,7 +71,7 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
   var cull = !material.doubleSided;
   renderResources.cull = cull;
   renderResources.renderStateOptions.cull = {
-    enabled: !material.doubleSided,
+    enabled: cull,
   };
 
   addAlphaUniforms(material, uniformMap, shaderBuilder);

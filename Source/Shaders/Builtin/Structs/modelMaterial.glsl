@@ -16,11 +16,11 @@
  * @property {vec3} emissive Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
  */
 struct czm_modelMaterial {
-  vec3 diffuse;
-  float alpha;
-  vec3 specular;
-  float roughness;
-  vec3 normal;
-  float occlusion;
-  vec3 emissive;
+    vec3 diffuse;
+    float alpha;
+    vec3 specular;
+    float roughness;
+    vec3 normal;
+    float occlusion;
+    vec3 emissive;
 };

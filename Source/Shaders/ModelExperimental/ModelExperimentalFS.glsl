@@ -1,6 +1,6 @@
 vec4 handleAlpha(vec3 color, float alpha)
 {
-    #if defined(ALPHA_MODE_MASK)
+    #ifdef ALPHA_MODE_MASK
     if (alpha < u_alphaCutoff) {
         discard;
     }

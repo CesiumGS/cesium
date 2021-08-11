@@ -75,7 +75,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
 
     vec4 baseColorWithAlpha = vec4(1.0);
     // Regardless of whether we use PBR, set a base color
-    #if defined(HAS_BASE_COLOR_TEXTURE)
+    #ifdef HAS_BASE_COLOR_TEXTURE
     vec2 baseColorTexCoords = TEXCOORD_BASE_COLOR;
 
         #ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
@@ -106,7 +106,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.occlusion = texture2D(u_occlusionTexture, occlusionTexCoords).r;
     #endif
 
-    #if defined(HAS_EMISSIVE_TEXTURE)
+    #ifdef HAS_EMISSIVE_TEXTURE
     vec2 emissiveTexCoords = TEXCOORD_EMISSIVE;
         #ifdef HAS_EMISSIVE_TEXTURE_TRANSFORM
         emissiveTexCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
@@ -122,7 +122,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     #endif
 
     #if defined(LIGHTING_PBR) && defined(USE_SPECULAR_GLOSSINESS)
-        #if defined(HAS_SPECULAR_GLOSSINESS_TEXTURE)
+        #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE
         vec2 specularGlossinessTexCoords = TEXCOORD_SPECULAR_GLOSSINESS;
           #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM
           specularGlossinessTexCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
@@ -152,7 +152,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
             #endif
         #endif
 
-        #if defined(HAS_DIFFUSE_TEXTURE)
+        #ifdef HAS_DIFFUSE_TEXTURE
         vec2 diffuseTexCoords = TEXCOORD_DIFFUSE;
             #ifdef HAS_DIFFUSE_TEXTURE_TRANSFORM
             diffuseTexCoords = computeTextureTransform(diffuseTexCoords, u_diffuseTextureTransform);
@@ -176,7 +176,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
     #elif defined(LIGHTING_PBR)
-        #if defined(HAS_METALLIC_ROUGHNESS_TEXTURE)
+        #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
         vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS;
             #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM
             metallicRoughnessTexCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
@@ -193,13 +193,13 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
             roughness *= u_roughnessFactor;
             #endif
         #else
-            #if defined(HAS_METALLIC_FACTOR)
+            #ifdef HAS_METALLIC_FACTOR
             float metalness = clamp(u_metallicFactor, 0.0, 1.0);
             #else
             float metalness = 1.0;
             #endif
 
-            #if defined(HAS_ROUGHNESS_FACTOR)
+            #ifdef HAS_ROUGHNESS_FACTOR
             float roughness = clamp(u_roughnessFactor, 0.04, 1.0);
             #else
             float roughness = 1.0;

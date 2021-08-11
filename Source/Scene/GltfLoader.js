@@ -615,17 +615,15 @@ function loadTexture(
     textureInfo: textureInfo,
   });
 
-  textureLoader.promise
-    .then(function (textureLoader) {
-      if (loader.isDestroyed()) {
-        return;
-      }
-      textureReader.texture = textureLoader.texture;
-      if (defined(samplerOverride)) {
-        textureReader.texture.sampler = samplerOverride;
-      }
-    })
-    .otherwise(console.error);
+  textureLoader.promise.then(function (textureLoader) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+    textureReader.texture = textureLoader.texture;
+    if (defined(samplerOverride)) {
+      textureReader.texture.sampler = samplerOverride;
+    }
+  });
 
   return textureReader;
 }
