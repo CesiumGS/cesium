@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.85 - 2021-08-10
+
+##### Fixes :wrench:
+
+- Fixed several crashes related to point cloud eye dome lighting. [#9684](https://github.com/CesiumGS/cesium/pull/9684)
+
 ### 1.84 - 2021-08-02
 
 ##### Breaking Changes :mega:

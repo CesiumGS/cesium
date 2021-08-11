@@ -243,16 +243,28 @@ PointCloudEyeDomeLighting.prototype.update = function (
     ) {
       continue;
     }
-    var derivedCommand = command.derivedCommands.pointCloudProcessor;
+    var derivedCommand;
+    var originalShaderProgram;
+
+    var derivedCommandObject = command.derivedCommands.pointCloudProcessor;
+    if (defined(derivedCommandObject)) {
+      derivedCommand = derivedCommandObject.command;
+      originalShaderProgram = derivedCommandObject.originalShaderProgram;
+    }
+
     if (
       !defined(derivedCommand) ||
       command.dirty ||
       dirty ||
+      originalShaderProgram !== command.shaderProgram ||
       derivedCommand.framebuffer !== this._framebuffer
     ) {
       // Prevent crash when tiles out-of-view come in-view during context size change
       derivedCommand = DrawCommand.shallowClone(command);
-      command.derivedCommands.pointCloudProcessor = derivedCommand;
+      command.derivedCommands.pointCloudProcessor = {
+        command: derivedCommand,
+        originalShaderProgram: command.shaderProgram,
+      };
 
       derivedCommand.framebuffer = this._framebuffer;
       derivedCommand.shaderProgram = getECShaderProgram(
