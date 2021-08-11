@@ -3,11 +3,70 @@
     "version": "2.0"
   },
   "extensionsUsed": [
+    "EXT_feature_metadata",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
+  "extensions": {
+    "EXT_feature_metadata": {
+      "schema": {
+        "classes": {
+          "box": {
+            "properties": {
+              "name": {
+                "type": "STRING"
+              },
+              "volume": {
+                "type": "FLOAT32"
+              }
+            }
+          },
+          "section": {
+            "properties": {
+              "name": {
+                "type": "STRING"
+              },
+              "id": {
+                "type": "UINT16"
+              }
+            }
+          }
+        }
+      },
+      "featureTables": {
+        "boxTable": {
+          "class": "box",
+          "count": 4,
+          "properties": {
+            "name": {
+              "offsetType": "UINT16",
+              "bufferView": 7,
+              "stringOffsetBufferView": 8
+            },
+            "volume": {
+              "bufferView": 9
+            }
+          }
+        },
+        "sectionTable": {
+          "class": "section",
+          "count": 2,
+          "properties": {
+            "name": {
+              "offsetType": "UINT16",
+              "bufferView": 10,
+              "stringOffsetBufferView": 11
+            },
+            "id": {
+              "bufferView": 12
+            }
+          }
+        }
+      }
+    }
+  },
   "scene": 0,
   "scenes": [
     {
@@ -18,21 +77,6 @@
   ],
   "nodes": [
     {
-      "children": [1],
-      "matrix": [
-        1.0, 0.0,  0.0, 0.0,
-        0.0, 0.0, -1.0, 0.0,
-        0.0, 1.0,  0.0, 0.0,
-        0.0, 0.0,  0.0, 1.0
-        ]
-    },
-    {
-      "children": [2],
-      "translation": [
-        1215019.2111447915, -4736339.477299974, 4081627.957020979
-      ]
-    },
-    {
       "mesh": 0,
       "extensions": {
         "EXT_mesh_gpu_instancing": {
@@ -41,6 +85,25 @@
             "ROTATION": 4,
             "SCALE": 5,
             "_FEATURE_ID_0": 6
+          },
+          "extensions": {
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
+                {
+                  "featureTable": "boxTable",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 1
+                  }
+                },
+                {
+                  "featureTable": "sectionTable",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
+                }
+              ]
+            }
           }
         }
       }
@@ -170,6 +233,42 @@
       "buffer": 1,
       "byteLength": 16,
       "byteOffset": 160
+    },
+    {
+      "name": "Box Names",
+      "buffer": 2,
+      "byteLength": 40,
+      "byteOffset": 0
+    },
+    {
+      "name": "Box Name Offsets",
+      "buffer": 2,
+      "byteLength": 10,
+      "byteOffset": 40
+    },
+    {
+      "name": "Box Volumes",
+      "buffer": 2,
+      "byteLength": 16,
+      "byteOffset": 56
+    },
+    {
+      "name": "Section Name",
+      "buffer": 2,
+      "byteLength": 9,
+      "byteOffset": 72
+    },
+    {
+      "name": "Section Name Offsets",
+      "buffer": 2,
+      "byteLength": 6,
+      "byteOffset": 88
+    },
+    {
+      "name": "Section IDs",
+      "buffer": 2,
+      "byteLength": 4,
+      "byteOffset": 96
     }
   ],
   "buffers": [
@@ -182,6 +281,11 @@
       "name": "Instances Buffer",
       "byteLength": 176,
       "uri": "instances.bin"
+    },
+    {
+      "name": "Metadata Buffer",
+      "byteLength": 104,
+      "uri": "metadata.bin"
     }
   ]
 }

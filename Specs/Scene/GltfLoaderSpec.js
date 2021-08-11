@@ -1450,8 +1450,8 @@ describe(
         expect(translationAttribute.type).toBe(AttributeType.VEC3);
         expect(translationAttribute.normalized).toBe(false);
         expect(translationAttribute.count).toBe(4);
-        expect(translationAttribute.min).toBeUndefined();
-        expect(translationAttribute.max).toBeUndefined();
+        expect(translationAttribute.min).toEqual(new Cartesian3(-2, -2, 0));
+        expect(translationAttribute.max).toEqual(new Cartesian3(2, 2, 0));
         expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
         expect(translationAttribute.quantization).toBeUndefined();
         expect(translationAttribute.typedArray).toBeUndefined();

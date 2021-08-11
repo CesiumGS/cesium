@@ -118,10 +118,45 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
    * @private
    */
   this.attributes = [];
+
+  /**
+   * The index of the next vertex attribute that will be added to the attributes array.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
   this.attributeIndex = 1; // 0 is reserved for POSITION.
+
+  /**
+   * The number of instances. Default is 0, if instancing is not used.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
   this.instanceCount = 0;
 
+  /**
+   * The component-wise maximum value of the translations of the instances.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
   this.instancingTranslationMax = undefined;
+
+  /**
+   * The component-wise minimum value of the translations of the instances.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
   this.instancingTranslationMin = undefined;
 }
 
@@ -188,9 +223,34 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
+  /**
+   * The number of instances. Default is 0, if instancing is not used.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
   this.instanceCount = nodeRenderResources.instanceCount;
+
+  /**
+   * The index of the next vertex attribute that will be added to the attributes array.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
   this.attributeIndex = nodeRenderResources.attributeIndex;
 
+  /**
+   * The mesh primitive associated with the render resources.
+   *
+   * @type {ModelComponents.Primitive}
+   * @readonly
+   *
+   * @private
+   */
   var primitive = sceneMeshPrimitive.primitive;
 
   // other properties
