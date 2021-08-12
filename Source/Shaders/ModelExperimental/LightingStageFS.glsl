@@ -26,13 +26,16 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     
     vec3 lightColorHdr = czm_lightColorHdr;
 
-    vec3 color = czm_pbrLighting(
+    vec3 color = inputMaterial.diffuse;
+    #ifdef HAS_NORMALS
+    color = czm_pbrLighting(
         v_positionEC,
         inputMaterial.normal,
         czm_lightDirectionEC,
         lightColorHdr,
         pbrParameters
     );
+    #endif
 
     color *= inputMaterial.occlusion;
     color += inputMaterial.emissive;
