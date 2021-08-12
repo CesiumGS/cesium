@@ -4,7 +4,7 @@
 
 ##### Fixes :wrench:
 
-- Fixed an issue where Cesium failed to load GeoJSON with null `stroke` or `fill` properties but with a valid opacity value.
+- Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values.
 
 ### 1.84 - 2021-08-02
 
