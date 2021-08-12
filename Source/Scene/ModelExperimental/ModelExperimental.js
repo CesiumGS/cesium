@@ -230,8 +230,14 @@ ModelExperimental.prototype.update = function (frameState) {
   if (!this._drawCommandsBuilt) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
-    this._ready = true;
-    this._readyPromise.resolve(this);
+
+    var model = this;
+    // Set the model as ready after the first frame render since the user might set up events subscribed to
+    // the post render event, and the model may not be ready for those past the first frame.
+    frameState.afterRender.push(function () {
+      model._ready = true;
+      model._readyPromise.resolve(model);
+    });
   }
 
   if (this._debugShowBoundingVolumeDirty) {
