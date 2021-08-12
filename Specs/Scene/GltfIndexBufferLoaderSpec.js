@@ -12,6 +12,7 @@ import {
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
@@ -411,7 +412,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
         expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
@@ -512,7 +513,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        indexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
         expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
           decodedIndices.byteLength
         );
@@ -686,7 +687,7 @@ describe(
       expect(indexBufferLoader.indexBuffer).not.toBeDefined();
 
       indexBufferLoader.load();
-      indexBufferLoader.process(scene.frameState);
+      loaderProcess(indexBufferLoader, scene);
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
       indexBufferLoader.destroy();

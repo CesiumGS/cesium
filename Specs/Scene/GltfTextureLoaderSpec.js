@@ -12,6 +12,7 @@ import {
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
@@ -289,14 +290,14 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      textureLoader.process(scene.frameState); // Check that calling process before load doesn't break anything
+      loaderProcess(textureLoader, scene); // Check that calling process before load doesn't break anything
 
       textureLoader.load();
 
       return waitForLoaderProcess(textureLoader, scene).then(function (
         textureLoader
       ) {
-        textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(textureLoader, scene); // Check that calling process after load doesn't break anything
         expect(textureLoader.texture.width).toBe(1);
         expect(textureLoader.texture.height).toBe(1);
       });
@@ -322,7 +323,7 @@ describe(
       return waitForLoaderProcess(textureLoader, scene).then(function (
         textureLoader
       ) {
-        textureLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(textureLoader, scene); // Check that calling process after load doesn't break anything
         expect(textureLoader.texture.width).toBe(1);
         expect(textureLoader.texture.height).toBe(1);
       });
