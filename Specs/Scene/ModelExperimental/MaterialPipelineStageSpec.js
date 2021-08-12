@@ -134,7 +134,7 @@ fdescribe(
     });
 
     it("adds metallic roughness uniforms", function () {
-      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
+      return loadGltf(boomBox).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[0].primitives[0];
         var shaderBuilder = new ShaderBuilder();
