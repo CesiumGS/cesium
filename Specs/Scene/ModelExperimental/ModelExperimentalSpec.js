@@ -90,31 +90,6 @@ describe(
       });
     });
 
-    it("boundingSphereTransform is applied", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      var loadPromise = resource.fetchArrayBuffer();
-      var translation = new Cartesian3(1, 1, 1);
-      var transform = Matrix4.fromTranslation(new Cartesian3(1, 1, 1));
-      return loadPromise.then(function (buffer) {
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: new Uint8Array(buffer),
-            debugShowBoundingVolume: true,
-            boundingSphereTransform: transform,
-          },
-          scene
-        ).then(function (model) {
-          var boundingSphere = model.boundingSphere;
-          expect(boundingSphere).toBeDefined();
-          expect(boundingSphere.center).toEqual(translation);
-          expect(boundingSphere.radius).toEqualEpsilon(
-            0.8660254037844386,
-            CesiumMath.EPSILON8
-          );
-        });
-      });
-    });
-
     it("fromGltf throws with undefined options", function () {
       expect(function () {
         ModelExperimental.fromGltf();

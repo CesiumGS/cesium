@@ -14,7 +14,6 @@ function loadAndZoomToModelExperimental(options, scene) {
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
       debugShowBoundingVolume: options.debugShowBoundingVolume,
-      boundingSphereTransform: options.boundingSphereTransform,
     });
   } else {
     model = new ModelExperimental({
@@ -22,7 +21,6 @@ function loadAndZoomToModelExperimental(options, scene) {
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
       debugShowBoundingVolume: options.debugShowBoundingVolume,
-      boundingSphereTransform: options.boundingSphereTransform,
     });
   }
 

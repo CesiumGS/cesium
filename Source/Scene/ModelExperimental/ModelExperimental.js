@@ -8,7 +8,6 @@ import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
 
 /**
  * A 3D model based on glTF, the runtime asset format for WebGL. This is
@@ -26,7 +25,6 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Matrix4} [options.boundingSphereTransform=undefined] A 4x4 transformation matrix that transforms the bounding sphere for the model.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -57,7 +55,6 @@ export default function ModelExperimental(options) {
   this._resources = [];
 
   this._boundingSphere = undefined;
-  this._boundingSphereTransform = options.boundingSphereTransform;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
@@ -162,15 +159,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      var boundingSphere = this._sceneGraph._boundingSphere;
-      if (defined(this._boundingSphereTransform)) {
-        boundingSphere = BoundingSphere.transform(
-          boundingSphere,
-          this._boundingSphereTransform
-        );
-      }
-
-      return boundingSphere;
+      return this._sceneGraph._boundingSphere;
     },
   },
 
@@ -358,7 +347,6 @@ function initialize(model, options) {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Matrix4} [options.boundingSphereTransform=undefined] A 4x4 transformation matrix that transforms the bounding sphere for the model.
  */
 ModelExperimental.fromGltf = function (options) {
   //>>includeStart('debug', pragmas.debug);
