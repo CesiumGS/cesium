@@ -1,9 +1,12 @@
 import {
   Buffer,
   BufferUsage,
+  Math as CesiumMath,
   ResourceCache,
   Resource,
   ModelExperimental,
+  Cartesian3,
+  Matrix4,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
@@ -40,6 +43,74 @@ describe(
           expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
+        });
+      });
+    });
+
+    it("debugShowBoundingVolume works", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      var loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
+          scene
+        ).then(function (model) {
+          var i;
+          scene.renderForSpecs();
+          var commandList = scene.frameState;
+          for (i = 0; i < commandList.length; i++) {
+            expect(commandList[i].debugShowBoundingVolume).toBe(true);
+          }
+          model.debugShowBoundingVolume = false;
+          expect(model._debugShowBoundingVolumeDirty).toBe(true);
+          scene.renderForSpecs();
+          for (i = 0; i < commandList.length; i++) {
+            expect(commandList[i].debugShowBoundingVolume).toBe(false);
+          }
+        });
+      });
+    });
+
+    it("boundingSphere works", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      var loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
+          scene
+        ).then(function (model) {
+          var boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(new Cartesian3());
+          expect(boundingSphere.radius).toEqualEpsilon(
+            0.8660254037844386,
+            CesiumMath.EPSILON8
+          );
+        });
+      });
+    });
+
+    it("boundingSphereTransform is applied", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      var loadPromise = resource.fetchArrayBuffer();
+      var translation = new Cartesian3(1, 1, 1);
+      var transform = Matrix4.fromTranslation(new Cartesian3(1, 1, 1));
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            boundingSphereTransform: transform,
+          },
+          scene
+        ).then(function (model) {
+          var boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(translation);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            0.8660254037844386,
+            CesiumMath.EPSILON8
+          );
         });
       });
     });

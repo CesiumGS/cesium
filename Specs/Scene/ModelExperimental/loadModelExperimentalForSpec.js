@@ -13,12 +13,16 @@ function loadAndZoomToModelExperimental(options, scene) {
       url: options.url,
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
+      debugShowBoundingVolume: options.debugShowBoundingVolume,
+      boundingSphereTransform: options.boundingSphereTransform,
     });
   } else {
     model = new ModelExperimental({
       gltf: options.gltf,
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
+      debugShowBoundingVolume: options.debugShowBoundingVolume,
+      boundingSphereTransform: options.boundingSphereTransform,
     });
   }
 
