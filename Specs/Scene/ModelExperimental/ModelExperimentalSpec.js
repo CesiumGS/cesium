@@ -6,7 +6,6 @@ import {
   Resource,
   ModelExperimental,
   Cartesian3,
-  Matrix4,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
