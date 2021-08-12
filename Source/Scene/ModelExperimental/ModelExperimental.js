@@ -57,7 +57,7 @@ export default function ModelExperimental(options) {
   this._resources = [];
 
   this._boundingSphere = undefined;
-  this._boundingSphereTransform = options._boundingSphereTransform;
+  this._boundingSphereTransform = options.boundingSphereTransform;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
