@@ -8,6 +8,7 @@ import ModelExperimentalSceneMeshPrimitive from "./ModelExperimentalSceneMeshPri
 import ModelExperimentalSceneNode from "./ModelExperimentalSceneNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import RenderResources from "./RenderResources.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -98,6 +99,26 @@ export default function ModelExperimentalSceneGraph(options) {
    * @private
    */
   this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
+
+  /**
+   * The bounding sphere containing all the primitives in the scene graph.
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  this._boundingSphere = undefined;
+
+  /**
+   * The array of bounding spheres of all the primitives in the scene graph.
+   *
+   * @type {BoundingSphere[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._boundingSpheres = [];
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -244,6 +265,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         );
       }
 
+      this._boundingSpheres.push(meshPrimitiveRenderResources.boundingSphere);
+
       var drawCommand = buildDrawCommand(
         meshPrimitiveRenderResources,
         frameState
@@ -251,4 +274,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       this._drawCommands.push(drawCommand);
     }
   }
+  this._boundingSphere = BoundingSphere.fromBoundingSpheres(
+    this._boundingSpheres
+  );
 };

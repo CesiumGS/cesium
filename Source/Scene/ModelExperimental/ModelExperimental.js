@@ -8,6 +8,7 @@ import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 
 /**
  * A 3D model based on glTF, the runtime asset format for WebGL. This is
@@ -52,6 +53,15 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
+
+  this._boundingSphere = undefined;
+  this._boundingSphereTransform = options._boundingSphereTransform;
+
+  this._debugShowBoundingVolumeDirty = false;
+  this._debugShowBoundingVolume = defaultValue(
+    options.debugShowBoundingVolume,
+    false
+  );
 
   initialize(this, options);
 }
@@ -129,6 +139,63 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._sceneGraph._forwardAxis;
     },
   },
+
+  /**
+   * Gets the model's bounding sphere.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this._drawCommandsBuilt) {
+        throw new DeveloperError(
+          "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
+      var boundingSphere = this._sceneGraph._boundingSphere;
+      if (defined(this._boundingSphereTransform)) {
+        boundingSphere = BoundingSphere.transform(
+          boundingSphere,
+          this._boundingSphereTransform
+        );
+      }
+
+      return boundingSphere;
+    },
+  },
+
+  /**
+   * This property is for debugging only; it is not for production use nor is it optimized.
+   * <p>
+   * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
+   * to one draw command.  A glTF mesh has an array of primitives, often of length one.
+   * </p>
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  debugShowBoundingVolume: {
+    get: function () {
+      return this._debugShowBoundingVolume;
+    },
+    set: function (value) {
+      if (this._debugShowBoundingVolume !== value) {
+        this._debugShowBoundingVolumeDirty = true;
+      }
+      this._debugShowBoundingVolume = value;
+    },
+  },
 });
 
 /**
@@ -161,6 +228,13 @@ ModelExperimental.prototype.update = function (frameState) {
   if (!this._drawCommandsBuilt) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
+    this._ready = true;
+    this._readyPromise.resolve(this);
+  }
+
+  if (this._debugShowBoundingVolumeDirty) {
+    updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
+    this._debugShowBoundingVolumeDirty = false;
   }
 
   frameState.commandList.push.apply(
@@ -245,8 +319,6 @@ function initialize(model, options) {
         modelMatrix: options.modelMatrix,
       });
       model._resourcesLoaded = true;
-      model._ready = true;
-      model._readyPromise.resolve(model);
     })
     .otherwise(function () {
       ModelExperimentalUtility.getFailedLoadFunction(
@@ -290,3 +362,10 @@ ModelExperimental.fromGltf = function (options) {
   var model = new ModelExperimental(options);
   return model;
 };
+
+function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
+  var drawCommands = sceneGraph._drawCommands;
+  for (var i = 0; i < drawCommands.length; i++) {
+    drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
+  }
+}
