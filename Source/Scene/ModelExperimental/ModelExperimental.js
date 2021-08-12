@@ -24,6 +24,7 @@ import destroyObject from "../../Core/destroyObject.js";
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -52,6 +53,14 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
+
+  this._boundingSphere = undefined;
+
+  this._debugShowBoundingVolumeDirty = false;
+  this._debugShowBoundingVolume = defaultValue(
+    options.debugShowBoundingVolume,
+    false
+  );
 
   initialize(this, options);
 }
@@ -129,6 +138,55 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._sceneGraph._forwardAxis;
     },
   },
+
+  /**
+   * Gets the model's bounding sphere.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this._ready) {
+        throw new DeveloperError(
+          "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
+      return this._sceneGraph._boundingSphere;
+    },
+  },
+
+  /**
+   * This property is for debugging only; it is not for production use nor is it optimized.
+   * <p>
+   * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
+   * to one draw command.  A glTF mesh has an array of primitives, often of length one.
+   * </p>
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  debugShowBoundingVolume: {
+    get: function () {
+      return this._debugShowBoundingVolume;
+    },
+    set: function (value) {
+      if (this._debugShowBoundingVolume !== value) {
+        this._debugShowBoundingVolumeDirty = true;
+      }
+      this._debugShowBoundingVolume = value;
+    },
+  },
 });
 
 /**
@@ -161,6 +219,19 @@ ModelExperimental.prototype.update = function (frameState) {
   if (!this._drawCommandsBuilt) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
+
+    var model = this;
+    // Set the model as ready after the first frame render since the user might set up events subscribed to
+    // the post render event, and the model may not be ready for those past the first frame.
+    frameState.afterRender.push(function () {
+      model._ready = true;
+      model._readyPromise.resolve(model);
+    });
+  }
+
+  if (this._debugShowBoundingVolumeDirty) {
+    updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
+    this._debugShowBoundingVolumeDirty = false;
   }
 
   frameState.commandList.push.apply(
@@ -245,8 +316,6 @@ function initialize(model, options) {
         modelMatrix: options.modelMatrix,
       });
       model._resourcesLoaded = true;
-      model._ready = true;
-      model._readyPromise.resolve(model);
     })
     .otherwise(function () {
       ModelExperimentalUtility.getFailedLoadFunction(
@@ -277,6 +346,7 @@ function initialize(model, options) {
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  */
 ModelExperimental.fromGltf = function (options) {
   //>>includeStart('debug', pragmas.debug);
@@ -290,3 +360,10 @@ ModelExperimental.fromGltf = function (options) {
   var model = new ModelExperimental(options);
   return model;
 };
+
+function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
+  var drawCommands = sceneGraph._drawCommands;
+  for (var i = 0; i < drawCommands.length; i++) {
+    drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
+  }
+}
