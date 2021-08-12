@@ -155,7 +155,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   boundingSphere: {
     get: function () {
       //>>includeStart('debug', pragmas.debug);
-      if (!this._drawCommandsBuilt) {
+      if (!this._ready) {
         throw new DeveloperError(
           "The model is not loaded. Use ModelExperimental.readyPromise or wait for ModelExperimental.ready to be true."
         );
