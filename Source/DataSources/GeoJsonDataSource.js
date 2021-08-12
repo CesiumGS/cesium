@@ -469,7 +469,6 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
       outlineColorProperty = new ConstantProperty(color);
     }
 
-    // Override material with fill and opacity properites if they exist
     var fillColor;
     var fill = properties.fill;
     var materialColor = material.color.getValue();
