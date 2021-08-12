@@ -15,7 +15,8 @@ czm_pbrParameters czm_pbrSpecularGlossinessMaterial(
     vec3 diffuse,
     vec3 specular,
     float glossiness
-) {
+) 
+{
     czm_pbrParameters results;
 
     // glossiness is the opposite of roughness, but easier for artists to use.

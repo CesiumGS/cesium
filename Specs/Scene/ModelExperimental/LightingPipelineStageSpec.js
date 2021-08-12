@@ -26,6 +26,23 @@ describe("Scene/ModelExperimental/LightingPipelineStage", function () {
     ]);
   });
 
+  it("supports PBR lighting", function () {
+    var optionsPbr = new ModelLightingOptions();
+    optionsPbr.lightingModel = LightingModel.PBR;
+
+    var shaderBuilder = new ShaderBuilder();
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      lightingOptions: optionsPbr,
+    };
+    LightingPipelineStage.process(renderResources, mockPrimitive);
+
+    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
+    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+      "LIGHTING_PBR",
+    ]);
+  });
+
   it("adds the lighting shader function to the shader", function () {
     var shaderBuilder = new ShaderBuilder();
     var renderResources = {
