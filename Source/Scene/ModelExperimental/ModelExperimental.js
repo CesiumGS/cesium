@@ -26,7 +26,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Matrix4} [options.boundingSphereTransform=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the bounding sphere for the model.
+ * @param {Matrix4} [options.boundingSphereTransform=undefined] A 4x4 transformation matrix that transforms the bounding sphere for the model.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -358,7 +358,7 @@ function initialize(model, options) {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Matrix4} [options.boundingSphereTransform=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the bounding sphere for the model.
+ * @param {Matrix4} [options.boundingSphereTransform=undefined] A 4x4 transformation matrix that transforms the bounding sphere for the model.
  */
 ModelExperimental.fromGltf = function (options) {
   //>>includeStart('debug', pragmas.debug);
