@@ -46,4 +46,20 @@ describe("Scene/AttributeType", function () {
     expect(AttributeType.getGlslType(AttributeType.MAT3)).toEqual("mat3");
     expect(AttributeType.getGlslType(AttributeType.MAT4)).toEqual("mat4");
   });
+
+  it("getNumberOfComponents works", function () {
+    expect(AttributeType.getMathType(AttributeType.SCALAR)).toBe(1);
+    expect(AttributeType.getMathType(AttributeType.VEC2)).toBe(2);
+    expect(AttributeType.getMathType(AttributeType.VEC3)).toBe(3);
+    expect(AttributeType.getMathType(AttributeType.VEC4)).toBe(4);
+    expect(AttributeType.getMathType(AttributeType.MAT2)).toBe(4);
+    expect(AttributeType.getMathType(AttributeType.MAT3)).toBe(9);
+    expect(AttributeType.getMathType(AttributeType.MAT4)).toBe(16);
+  });
+
+  it("getNumberOfComponents throws with invalid type", function () {
+    expect(function () {
+      AttributeType.getNumberOfComponents("Invalid");
+    }).toThrowDeveloperError();
+  });
 });

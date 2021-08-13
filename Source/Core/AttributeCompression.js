@@ -1,9 +1,11 @@
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
+import ComponentDatatype from "./ComponentDatatype.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
+import AttributeType from "../Scene/AttributeType.js";
 
 var RIGHT_SHIFT = 1.0 / 256.0;
 var LEFT_SHIFT = 256.0;
@@ -403,4 +405,75 @@ AttributeCompression.zigZagDeltaDecode = function (
     }
   }
 };
+
+/**
+ * Dequantizes a quantized typed array into a floating point typed array.
+ *
+ * @see {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data}
+ *
+ * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} typedArray The typed array for the quantized data.
+ * @param {ComponentDatatype} componentDatatype The component datatype of the quantized data.
+ * @param {AttributeType} type The attribute type of the quantized data.
+ * @param {Number} count The number of attributes referenced in the dequantized array.
+ *
+ * @returns {Float32Array} The dequantized array.
+ */
+AttributeCompression.dequantize = function (
+  typedArray,
+  componentDatatype,
+  type,
+  count
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("typedArray", typedArray);
+  Check.defined("componentDatatype", componentDatatype);
+  Check.defined("type", type);
+  Check.defined("count", count);
+  //>>includeEnd('debug');
+
+  var componentsPerAttribute = AttributeType.getNumberOfComponents(type);
+
+  var divider;
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      divider = 127.0;
+      break;
+    case ComponentDatatype.UNSIGNED_BYTE:
+      divider = 255.0;
+      break;
+    case ComponentDatatype.SHORT:
+      divider = 32767.0;
+      break;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      divider = 65535.0;
+      break;
+    case ComponentDatatype.INT:
+      divider = 2147483647.0;
+      break;
+    case ComponentDatatype.UNSIGNED_INT:
+      divider = 4294967295.0;
+      break;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        "Cannot dequantize component datatype: " + componentDatatype
+      );
+    //>>includeEnd('debug');
+  }
+
+  var dequantizedTypedArray = new Float32Array(count * componentsPerAttribute);
+
+  for (var i = 0; i < count; i++) {
+    for (var j = 0; j < componentsPerAttribute; j++) {
+      var index = i * componentsPerAttribute + j;
+      dequantizedTypedArray[index] = Math.max(
+        typedArray[index] / divider,
+        -1.0
+      );
+    }
+  }
+
+  return dequantizedTypedArray;
+};
+
 export default AttributeCompression;
