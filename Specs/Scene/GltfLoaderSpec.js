@@ -30,6 +30,7 @@ import {
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
+import loaderProcess from "../loaderProcess.js";
 import pollToPromise from "../pollToPromise.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
@@ -1862,7 +1863,7 @@ describe(
 
         // Continue processing to load in textures
         return pollToPromise(function () {
-          gltfLoader.process(scene.frameState);
+          loaderProcess(gltfLoader, scene);
           return gltfLoader._textureLoaders.every(function (loader) {
             return (
               loader._state === ResourceLoaderState.READY ||
