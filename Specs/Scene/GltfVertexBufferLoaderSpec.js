@@ -13,6 +13,7 @@ import {
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
@@ -409,7 +410,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
         expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
           positions.byteLength
         );
@@ -471,7 +472,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
         expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
           decodedPositions.byteLength
         );
@@ -702,7 +703,7 @@ describe(
       expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
 
       vertexBufferLoader.load();
-      vertexBufferLoader.process(scene.frameState);
+      loaderProcess(vertexBufferLoader, scene);
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
       vertexBufferLoader.destroy();
