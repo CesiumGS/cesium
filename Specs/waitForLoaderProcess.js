@@ -1,3 +1,4 @@
+import loaderProcess from "./loaderProcess.js";
 import pollToPromise from "./pollToPromise.js";
 
 export default function waitForLoaderProcess(loader, scene) {
@@ -6,7 +7,7 @@ export default function waitForLoaderProcess(loader, scene) {
     loaderFinished = true;
   });
   return pollToPromise(function () {
-    loader.process(scene.frameState);
+    loaderProcess(loader, scene);
     return loaderFinished;
   }).then(function () {
     return loader.promise;

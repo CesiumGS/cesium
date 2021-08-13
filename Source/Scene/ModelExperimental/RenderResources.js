@@ -12,6 +12,8 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  * {@link GeometryPipelineStage}) and updated in place. Finally,
  * {@link buildDrawCommand} is called to construct the draw command.
  *
+ * @namespace RenderResources
+ *
  * @private
  */
 var RenderResources = {};
@@ -119,6 +121,47 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
    * @private
    */
   this.attributes = [];
+
+  /**
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes index 0.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.attributeIndex = 1;
+
+  /**
+   * The number of instances. Default is 0, if instancing is not used.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.instanceCount = 0;
+
+  /**
+   * The component-wise maximum value of the translations of the instances.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.instancingTranslationMax = undefined;
+
+  /**
+   * The component-wise minimum value of the translations of the instances.
+   *
+   * @type {Cartesian3}
+   * @readonly
+   *
+   * @private
+   */
+  this.instancingTranslationMin = undefined;
 }
 
 /**
@@ -184,6 +227,35 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.shaderBuilder = nodeRenderResources.shaderBuilder.clone();
 
+  /**
+   * The number of instances. Default is 0, if instancing is not used. Inherited from the node render resources.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.instanceCount = nodeRenderResources.instanceCount;
+
+  /**
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes index 0. Inherited from the node render resources.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.attributeIndex = nodeRenderResources.attributeIndex;
+
+  /**
+   * The mesh primitive associated with the render resources.
+   *
+   * @type {ModelComponents.Primitive}
+   * @readonly
+   *
+   * @private
+   */
   var primitive = sceneMeshPrimitive.primitive;
 
   // other properties
@@ -225,7 +297,9 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    */
   this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
     primitive,
-    this.modelMatrix
+    this.modelMatrix,
+    nodeRenderResources.instancingTranslationMax,
+    nodeRenderResources.instancingTranslationMin
   );
   /**
    * A dictionary mapping uniform name to functions that return the uniform
@@ -247,6 +321,15 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
+  /**
+   * True if back face culling is enabled
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.cull = true;
   /**
    * An object storing options for creating a {@link RenderState}.
    * the pipeline stages simply set the options, the render state is created

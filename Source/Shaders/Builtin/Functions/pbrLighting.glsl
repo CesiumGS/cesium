@@ -68,7 +68,8 @@ vec3 czm_pbrLighting(
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
     czm_pbrParameters pbrParameters
-) {
+)
+{
     vec3 v = -normalize(positionEC);
     vec3 l = normalize(lightDirectionEC);
     vec3 h = normalize(v + l);

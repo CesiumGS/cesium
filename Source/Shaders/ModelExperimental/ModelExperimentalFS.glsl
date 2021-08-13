@@ -12,7 +12,7 @@ czm_modelMaterial defaultModelMaterial()
 
 vec4 handleAlpha(vec3 color, float alpha)
 {
-    #if defined(ALPHA_MODE_MASK)
+    #ifdef ALPHA_MODE_MASK
     if (alpha < u_alphaCutoff) {
         discard;
     }
@@ -45,6 +45,6 @@ void main()
     material = customShaderStage(material);
     #endif
 
-
-    gl_FragColor = handleAlpha(material.diffuse, material.alpha);
+    vec4 color = handleAlpha(material.diffuse, material.alpha);
+    gl_FragColor = color;
 }

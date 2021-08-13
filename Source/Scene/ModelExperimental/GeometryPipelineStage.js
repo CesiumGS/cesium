@@ -2,13 +2,13 @@ import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import GeometryVS from "../../Shaders/ModelExperimental/GeometryVS.js";
+import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
  *
- * @namespace
+ * @namespace GeometryPipelineStage
  *
  * @private
  */
@@ -31,14 +31,14 @@ var GeometryPipelineStage = {};
  * @private
  */
 GeometryPipelineStage.process = function (renderResources, primitive) {
-  var attributeIndex = 0;
+  // The attribute index is taken from the node render resources, which may have added some attributes of its own.
+  var attributeIndex = renderResources.attributeIndex;
   var index;
   var customAttributeInitializationLines = [];
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
     if (attribute.semantic !== VertexAttributeSemantic.POSITION) {
-      attributeIndex = attributeIndex + 1;
-      index = attributeIndex;
+      index = attributeIndex++;
     } else {
       index = 0;
     }
@@ -73,7 +73,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 
-  shaderBuilder.addVertexLines([GeometryVS]);
+  shaderBuilder.addVertexLines([GeometryStageVS]);
   shaderBuilder.addVarying("vec3", "v_positionEC");
 };
 
@@ -123,17 +123,18 @@ function processAttribute(
       attributeType
     ),
     componentDatatype: attribute.componentDatatype,
+    offsetInBytes: attribute.byteOffset,
+    strideInBytes: attribute.byteStride,
   };
 
   // Handle custom vertex attributes.
   // For example, "_TEMPERATURE" will be converted to "a_temperature".
   if (!defined(variableName)) {
     variableName = attribute.name;
-    if (variableName[0] === "_") {
-      variableName = variableName.substring(1);
-      variableName = variableName.toLowerCase();
-    }
 
+    // Per the glTF 2.0 spec, custom vertex attributes must be prepended with an underscore.
+    variableName = variableName.substring(1);
+    variableName = variableName.toLowerCase();
     varyingName = "v_" + variableName;
 
     var initializationLine =
