@@ -119,9 +119,7 @@ function processAttribute(
   var vertexAttribute = {
     index: attributeIndex,
     vertexBuffer: attribute.buffer,
-    componentsPerAttribute: AttributeType.getComponentsPerAttribute(
-      attributeType
-    ),
+    componentsPerAttribute: AttributeType.getNumberOfComponents(attributeType),
     componentDatatype: attribute.componentDatatype,
     offsetInBytes: attribute.byteOffset,
     strideInBytes: attribute.byteStride,

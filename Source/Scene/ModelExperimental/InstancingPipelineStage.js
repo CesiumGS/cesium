@@ -67,7 +67,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
         vertexBuffer: translationAttribute.buffer,
-        componentsPerAttribute: AttributeType.getComponentsPerAttribute(
+        componentsPerAttribute: AttributeType.getNumberOfComponents(
           translationAttribute.type
         ),
         componentDatatype: translationAttribute.componentDatatype,
@@ -93,7 +93,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
         vertexBuffer: scaleAttribute.buffer,
-        componentsPerAttribute: AttributeType.getComponentsPerAttribute(
+        componentsPerAttribute: AttributeType.getNumberOfComponents(
           scaleAttribute.type
         ),
         componentDatatype: scaleAttribute.componentDatatype,
