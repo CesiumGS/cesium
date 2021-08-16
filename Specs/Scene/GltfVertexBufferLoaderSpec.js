@@ -402,6 +402,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -428,6 +429,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         asynchronous: false,
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -554,6 +556,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
