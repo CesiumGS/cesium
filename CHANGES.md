@@ -2,9 +2,9 @@
 
 ### 1.85 - 2021-09-01
 
-##### Additions :tada:
+##### Fixes :wrench:
 
-- Started moving over third party libraries to use npm modules.
+- Fixed several crashes related to point cloud eye dome lighting. [#9719](https://github.com/CesiumGS/cesium/pull/9719)
 
 ### 1.84 - 2021-08-02
 
