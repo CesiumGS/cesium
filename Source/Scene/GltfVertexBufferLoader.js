@@ -392,7 +392,9 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     this._dracoLoader.process(frameState);
   }
 
-  this._bufferViewLoader.process(frameState);
+  if (defined(this._bufferViewLoader)) {
+    this._bufferViewLoader.process(frameState);
+  }
 
   if (defined(this._vertexBuffer)) {
     // Already created vertex buffer
