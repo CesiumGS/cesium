@@ -1,5 +1,8 @@
+import defaultValue from "../../Core/defaultValue.js";
+import CustomShaderMode from "./CustomShaderMode.js";
+
 export default function CustomShader(options) {
-  this.mode = options.mode;
+  this.mode = defaultValue(options.model, CustomShaderMode.MODIFY_MATERIAL);
   this.lightingModel = options.lightingModel;
   this.uniforms = options.uniforms;
   this.varyings = options.varyings;

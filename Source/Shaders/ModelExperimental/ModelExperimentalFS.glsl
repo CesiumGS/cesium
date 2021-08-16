@@ -27,23 +27,16 @@ vec4 handleAlpha(vec3 color, float alpha)
 void main() 
 {
     czm_modelMaterial material = defaultModelMaterial();
-    #if defined(CUSTOM_SHADER_REPLACE_MATERIAL)
-    material = customShaderStage(material);
-    #elif defined(CUSTOM_SHADER_BEFORE_MATERIAL)
-    material = customShaderStage(material);
+
+    #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
     material = materialStage(material);
-    #elif defined(CUSTOM_SHADER_MODIFY_MATERIAL)
-    material = materialStage(material);
+    #endif
+
+    #ifdef CUSTOM_SHADER_MODIFY_MATERIAL
     material = customShaderStage(material);
-    #else
-    material = materialStage(material);
     #endif
 
     material = lightingStage(material);
-
-    #if defined(CUSTOM_SHADER_AFTER_LIGHTING)
-    material = customShaderStage(material);
-    #endif
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
     gl_FragColor = color;
