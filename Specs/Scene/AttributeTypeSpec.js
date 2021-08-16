@@ -26,13 +26,13 @@ describe("Scene/AttributeType", function () {
   });
 
   it("getNumberOfComponents works", function () {
-    expect(AttributeType.getMathType(AttributeType.SCALAR)).toBe(1);
-    expect(AttributeType.getMathType(AttributeType.VEC2)).toBe(2);
-    expect(AttributeType.getMathType(AttributeType.VEC3)).toBe(3);
-    expect(AttributeType.getMathType(AttributeType.VEC4)).toBe(4);
-    expect(AttributeType.getMathType(AttributeType.MAT2)).toBe(4);
-    expect(AttributeType.getMathType(AttributeType.MAT3)).toBe(9);
-    expect(AttributeType.getMathType(AttributeType.MAT4)).toBe(16);
+    expect(AttributeType.getNumberOfComponents(AttributeType.SCALAR)).toBe(1);
+    expect(AttributeType.getNumberOfComponents(AttributeType.VEC2)).toBe(2);
+    expect(AttributeType.getNumberOfComponents(AttributeType.VEC3)).toBe(3);
+    expect(AttributeType.getNumberOfComponents(AttributeType.VEC4)).toBe(4);
+    expect(AttributeType.getNumberOfComponents(AttributeType.MAT2)).toBe(4);
+    expect(AttributeType.getNumberOfComponents(AttributeType.MAT3)).toBe(9);
+    expect(AttributeType.getNumberOfComponents(AttributeType.MAT4)).toBe(16);
   });
 
   it("getNumberOfComponents throws with invalid type", function () {
