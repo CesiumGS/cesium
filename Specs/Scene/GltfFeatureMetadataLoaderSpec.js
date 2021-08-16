@@ -10,6 +10,7 @@ import {
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import MetadataTester from "../MetadataTester.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
@@ -342,7 +343,7 @@ describe(
       return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
         featureMetadataLoader
       ) {
-        featureMetadataLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(featureMetadataLoader, scene); // Check that calling process after load doesn't break anything
         var featureMetadata = featureMetadataLoader.featureMetadata;
         var buildingsTable = featureMetadata.getFeatureTable("buildings");
         var treesTable = featureMetadata.getFeatureTable("trees");
