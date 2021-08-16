@@ -1,4 +1,5 @@
 import arrayFill from "../Core/arrayFill.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
@@ -476,14 +477,13 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     return attribute;
   }
 
-  var dequantize = attribute.normalized;
   var vertexBufferLoader = loadVertexBuffer(
     loader,
     gltf,
     accessorId,
     gltfSemantic,
     draco,
-    dequantize
+    false
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -492,9 +492,24 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
 
     attribute.buffer = vertexBufferLoader.vertexBuffer;
 
-    if (dequantize) {
-      attribute.componentType = ComponentDatatype.FLOAT;
-      attribute.normalized = false;
+    if (
+      attribute.normalized &&
+      gltfSemantic === VertexAttributeSemantic.POSITION
+    ) {
+      var min = AttributeCompression.dequantize(
+        new Float32Array(accessor.min),
+        accessor.componentType,
+        accessor.type,
+        1
+      );
+      var max = AttributeCompression.dequantize(
+        new Float32Array(accessor.max),
+        accessor.componentType,
+        accessor.type,
+        1
+      );
+      attribute.min = Cartesian3.fromArray(min);
+      attribute.max = Cartesian3.fromArray(max);
     }
 
     if (

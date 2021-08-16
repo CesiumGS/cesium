@@ -1135,7 +1135,7 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       AttributeCompression.dequantize(
         undefined,
-        ComponentDatatype.UNSIGNED_SHORT,
+        ComponentDatatype.UNSIGNED_BYTE,
         AttributeType.VEC3,
         1
       );
@@ -1157,7 +1157,7 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       AttributeCompression.dequantize(
         new Uint8Array([0, 0, 0, 0]),
-        ComponentDatatype.UNSIGNED_SHORT,
+        ComponentDatatype.UNSIGNED_BYTE,
         undefined,
         1
       );
@@ -1168,10 +1168,114 @@ describe("Core/AttributeCompression", function () {
     expect(function () {
       AttributeCompression.dequantize(
         new Uint8Array([0, 0, 0, 0]),
-        ComponentDatatype.UNSIGNED_SHORT,
+        ComponentDatatype.UNSIGNED_BYTE,
         AttributeType.VEC3,
         undefined
       );
     }).toThrowDeveloperError();
+  });
+
+  it("dequantize works with BYTE", function () {
+    var input = [-127, -127, -127, 0, 0, 0, 127, 127, 127];
+    var expected = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
+    var result = AttributeCompression.dequantize(
+      new Int8Array(input),
+      ComponentDatatype.BYTE,
+      AttributeType.VEC3,
+      3
+    );
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON2);
+    }
+  });
+
+  it("dequantize works with UNSIGNED_BYTE", function () {
+    var input = [0, 0, 0, 127, 127, 127, 255, 255, 255];
+    var expected = [0, 0, 0, 0.5, 0.5, 0.5, 1, 1, 1];
+    var result = AttributeCompression.dequantize(
+      new Uint8Array(input),
+      ComponentDatatype.UNSIGNED_BYTE,
+      AttributeType.VEC3,
+      3
+    );
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON2);
+    }
+  });
+
+  it("dequantize works with SHORT", function () {
+    var input = [-32767, -32767, -32767, 0, 0, 0, 32767, 32767, 32767];
+    var expected = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
+    var result = AttributeCompression.dequantize(
+      new Int16Array(input),
+      ComponentDatatype.SHORT,
+      AttributeType.VEC3,
+      3
+    );
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON5);
+    }
+  });
+
+  it("dequantize works with UNSIGNED_SHORT", function () {
+    var input = [0, 0, 0, 32767, 32767, 32767, 65535, 65535, 65535];
+    var expected = [0, 0, 0, 0.5, 0.5, 0.5, 1, 1, 1];
+    var result = AttributeCompression.dequantize(
+      new Uint16Array(input),
+      ComponentDatatype.UNSIGNED_SHORT,
+      AttributeType.VEC3,
+      3
+    );
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON5);
+    }
+  });
+
+  it("dequantize works with INT", function () {
+    var input = [
+      -2147483647,
+      -2147483647,
+      -2147483647,
+      0,
+      0,
+      0,
+      2147483647,
+      2147483647,
+      2147483647,
+    ];
+    var expected = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
+    var result = AttributeCompression.dequantize(
+      new Int32Array(input),
+      ComponentDatatype.INT,
+      AttributeType.VEC3,
+      3
+    );
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqual(expected[i]);
+    }
+  });
+
+  it("dequantize works with UNSIGNED_INT", function () {
+    var input = [
+      0,
+      0,
+      0,
+      2147483647,
+      2147483647,
+      2147483647,
+      4294967295,
+      4294967295,
+      4294967295,
+    ];
+    var expected = [0, 0, 0, 0.5, 0.5, 0.5, 1, 1, 1];
+    var result = AttributeCompression.dequantize(
+      new Uint32Array(input),
+      ComponentDatatype.UNSIGNED_INT,
+      AttributeType.VEC3,
+      3
+    );
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqual(expected[i]);
+    }
   });
 });
