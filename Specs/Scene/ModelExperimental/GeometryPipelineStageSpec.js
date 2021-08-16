@@ -8,12 +8,12 @@ import {
   ResourceCache,
   ShaderBuilder,
   VertexAttributeSemantic,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
-import waitForLoaderProcess from "../waitForLoaderProcess.js";
+} from "../../../Source/Cesium.js";
+import createScene from "../../createScene.js";
+import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe(
-  "Scene/GeometryPipelineStage",
+  "Scene/ModelExperimental/GeometryPipelineStage",
   function () {
     var positionOnlyPrimitive = {
       attributes: [
@@ -22,6 +22,8 @@ describe(
           buffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
           type: AttributeType.VEC3,
           componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          byteStride: 12,
         },
       ],
     };
@@ -33,12 +35,16 @@ describe(
           buffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
           type: AttributeType.VEC3,
           componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          byteStride: 12,
         },
         {
           name: "_TEMPERATURE",
           buffer: new Uint32Array([0, 1, 2, 3, 4, 5]).buffer,
           type: AttributeType.VEC2,
           componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          byteOffset: 0,
+          byteStride: 4,
         },
       ],
     };
@@ -100,6 +106,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       GeometryPipelineStage.process(renderResources, positionOnlyPrimitive);
@@ -112,10 +119,11 @@ describe(
       expect(positionAttribute.index).toEqual(0);
       expect(positionAttribute.vertexBuffer).toBeDefined();
       expect(positionAttribute.componentsPerAttribute).toEqual(3);
-      expect(positionAttribute.componentDataype).toEqual(
+      expect(positionAttribute.componentDatatype).toEqual(
         ComponentDatatype.FLOAT
       );
-
+      expect(positionAttribute.offsetInBytes).toBe(0);
+      expect(positionAttribute.strideInBytes).toBe(12);
       expect(shaderBuilder._positionAttributeLine).toEqual(
         "attribute vec3 a_position;"
       );
@@ -125,6 +133,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       return loadGltf(boxTextured).then(function (gltfLoader) {
@@ -142,9 +151,11 @@ describe(
         expect(normalAttribute.index).toEqual(1);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._attributeLines[0]).toEqual(
           "attribute vec3 a_normal;"
         );
@@ -159,9 +170,11 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(positionAttribute.offsetInBytes).toBe(288);
+        expect(positionAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._positionAttributeLine).toEqual(
           "attribute vec3 a_position;"
         );
@@ -170,11 +183,13 @@ describe(
         expect(texCoord0Attribute.index).toEqual(2);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).toBe(8);
         expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
           "HAS_TEXCOORD_0"
@@ -189,6 +204,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
@@ -206,11 +222,13 @@ describe(
         expect(texCoord0Attribute.index).toEqual(1);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).toBe(8);
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_TEXCOORD_0"
@@ -223,9 +241,11 @@ describe(
         expect(normalAttribute.index).toEqual(2);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._attributeLines[1]).toEqual(
           "attribute vec3 a_normal;"
         );
@@ -240,9 +260,11 @@ describe(
         expect(tangentAttribute.index).toEqual(3);
         expect(tangentAttribute.vertexBuffer).toBeDefined();
         expect(tangentAttribute.componentsPerAttribute).toEqual(4);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(tangentAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(tangentAttribute.offsetInBytes).toBe(0);
+        expect(tangentAttribute.strideInBytes).toBe(16);
         expect(shaderBuilder._attributeLines[2]).toEqual(
           "attribute vec4 a_tangent;"
         );
@@ -257,9 +279,11 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._positionAttributeLine).toEqual(
           "attribute vec3 a_position;"
         );
@@ -270,6 +294,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       return loadGltf(microcosm).then(function (gltfLoader) {
@@ -287,7 +312,7 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
         expect(shaderBuilder._positionAttributeLine).toEqual(
@@ -298,11 +323,13 @@ describe(
         expect(texCoord0Attribute.index).toEqual(1);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).toBe(8);
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_TEXCOORD_0"
@@ -315,11 +342,13 @@ describe(
         expect(texCoord1Attribute.index).toEqual(2);
         expect(texCoord1Attribute.vertexBuffer).toBeDefined();
         expect(texCoord1Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord1Attribute.componentDataype).toEqual(
+        expect(texCoord1Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(texCoord1Attribute.offsetInBytes).toBe(0);
+        expect(texCoord1Attribute.strideInBytes).toBe(8);
         expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec2 a_texCoord1;"
+          "attribute vec2 a_texCoord_1;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
           "HAS_TEXCOORD_1"
@@ -334,6 +363,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
@@ -351,11 +381,13 @@ describe(
         expect(color0Attribute.index).toEqual(1);
         expect(color0Attribute.vertexBuffer).toBeDefined();
         expect(color0Attribute.componentsPerAttribute).toEqual(4);
-        expect(color0Attribute.componentDataype).toEqual(
+        expect(color0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(color0Attribute.offsetInBytes).toBe(0);
+        expect(color0Attribute.strideInBytes).toBe(16);
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec4 a_color0;"
+          "attribute vec4 a_color_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_VERTEX_COLORS"
@@ -368,9 +400,11 @@ describe(
         expect(normalAttribute.index).toEqual(2);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._attributeLines[1]).toEqual(
           "attribute vec3 a_normal;"
         );
@@ -385,9 +419,11 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._positionAttributeLine).toEqual(
           "attribute vec3 a_position;"
         );
@@ -396,11 +432,13 @@ describe(
         expect(texCoord0Attribute.index).toEqual(3);
         expect(texCoord0Attribute.vertexBuffer).toBeDefined();
         expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
-        expect(texCoord0Attribute.componentDataype).toEqual(
+        expect(texCoord0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).toBe(8);
         expect(shaderBuilder._attributeLines[2]).toEqual(
-          "attribute vec2 a_texCoord0;"
+          "attribute vec2 a_texCoord_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
           "HAS_TEXCOORD_0"
@@ -415,6 +453,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       GeometryPipelineStage.process(renderResources, customAttributePrimitive);
@@ -428,10 +467,11 @@ describe(
       expect(positionAttribute.index).toEqual(0);
       expect(positionAttribute.vertexBuffer).toBeDefined();
       expect(positionAttribute.componentsPerAttribute).toEqual(3);
-      expect(positionAttribute.componentDataype).toEqual(
+      expect(positionAttribute.componentDatatype).toEqual(
         ComponentDatatype.FLOAT
       );
-
+      expect(positionAttribute.offsetInBytes).toBe(0);
+      expect(positionAttribute.strideInBytes).toBe(12);
       expect(shaderBuilder._positionAttributeLine).toEqual(
         "attribute vec3 a_position;"
       );
@@ -440,10 +480,17 @@ describe(
       expect(customAttribute.index).toEqual(1);
       expect(customAttribute.vertexBuffer).toBeDefined();
       expect(customAttribute.componentsPerAttribute).toEqual(2);
-      expect(customAttribute.componentDataype).toEqual(
+      expect(customAttribute.componentDatatype).toEqual(
         ComponentDatatype.UNSIGNED_SHORT
       );
-
+      expect(customAttribute.offsetInBytes).toBe(0);
+      expect(customAttribute.strideInBytes).toBe(4);
+      expect(shaderBuilder._vertexShaderParts.shaderLines.slice(0, 4)).toEqual([
+        "void initializeCustomAttributes()",
+        "{",
+        "    v_temperature = a_temperature;",
+        "}",
+      ]);
       expect(shaderBuilder._attributeLines[0]).toEqual(
         "attribute vec2 a_temperature;"
       );
@@ -453,6 +500,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
@@ -470,9 +518,11 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._positionAttributeLine).toEqual(
           "attribute vec3 a_position;"
         );
@@ -481,9 +531,11 @@ describe(
         expect(normalAttribute.index).toEqual(1);
         expect(normalAttribute.vertexBuffer).toBeDefined();
         expect(normalAttribute.componentsPerAttribute).toEqual(3);
-        expect(normalAttribute.componentDataype).toEqual(
+        expect(normalAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._attributeLines[0]).toEqual(
           "attribute vec3 a_normal;"
         );
@@ -498,11 +550,13 @@ describe(
         expect(featureId0Attribute.index).toEqual(2);
         expect(featureId0Attribute.vertexBuffer).toBeDefined();
         expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
-        expect(featureId0Attribute.componentDataype).toEqual(
+        expect(featureId0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(featureId0Attribute.offsetInBytes).toBe(0);
+        expect(featureId0Attribute.strideInBytes).toBe(4);
         expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute float a_featureId0;"
+          "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
           "HAS_FEATURE_ID"
@@ -517,6 +571,7 @@ describe(
       var renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
       };
 
       return loadGltf(weather).then(function (gltfLoader) {
@@ -534,9 +589,11 @@ describe(
         expect(positionAttribute.index).toEqual(0);
         expect(positionAttribute.vertexBuffer).toBeDefined();
         expect(positionAttribute.componentsPerAttribute).toEqual(3);
-        expect(positionAttribute.componentDataype).toEqual(
+        expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(12);
         expect(shaderBuilder._positionAttributeLine).toEqual(
           "attribute vec3 a_position;"
         );
@@ -545,17 +602,25 @@ describe(
         expect(featureId0Attribute.index).toEqual(1);
         expect(featureId0Attribute.vertexBuffer).toBeDefined();
         expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
-        expect(featureId0Attribute.componentDataype).toEqual(
+        expect(featureId0Attribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
+        expect(featureId0Attribute.offsetInBytes).toBe(0);
+        expect(featureId0Attribute.strideInBytes).toBe(4);
         expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute float a_featureId0;"
+          "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
           "HAS_FEATURE_ID"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
           "HAS_FEATURE_ID"
+        );
+        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
+          "PRIMITIVE_TYPE_POINTS"
+        );
+        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
+          "PRIMITIVE_TYPE_POINTS"
         );
       });
     });

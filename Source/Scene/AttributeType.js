@@ -138,4 +138,37 @@ AttributeType.getComponentsPerAttribute = function (attributeType) {
   }
 };
 
+/**
+ * Gets the GLSL type for the attribute type.
+ *
+ * @param {AttributeType} attributeType The attribute type.
+ * @returns {String} The GLSL type for the attribute type.
+ */
+AttributeType.getGlslType = function (attributeType) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("attributeType", attributeType);
+  //>>includeEnd('debug');
+
+  switch (attributeType) {
+    case AttributeType.SCALAR:
+      return "float";
+    case AttributeType.VEC2:
+      return "vec2";
+    case AttributeType.VEC3:
+      return "vec3";
+    case AttributeType.VEC4:
+      return "vec4";
+    case AttributeType.MAT2:
+      return "mat2";
+    case AttributeType.MAT3:
+      return "mat3";
+    case AttributeType.MAT4:
+      return "mat4";
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
+  }
+};
+
 export default Object.freeze(AttributeType);
