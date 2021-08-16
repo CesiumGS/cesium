@@ -433,25 +433,25 @@ AttributeCompression.dequantize = function (
 
   var componentsPerAttribute = AttributeType.getNumberOfComponents(type);
 
-  var divider;
+  var divisor;
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:
-      divider = 127.0;
+      divisor = 127.0;
       break;
     case ComponentDatatype.UNSIGNED_BYTE:
-      divider = 255.0;
+      divisor = 255.0;
       break;
     case ComponentDatatype.SHORT:
-      divider = 32767.0;
+      divisor = 32767.0;
       break;
     case ComponentDatatype.UNSIGNED_SHORT:
-      divider = 65535.0;
+      divisor = 65535.0;
       break;
     case ComponentDatatype.INT:
-      divider = 2147483647.0;
+      divisor = 2147483647.0;
       break;
     case ComponentDatatype.UNSIGNED_INT:
-      divider = 4294967295.0;
+      divisor = 4294967295.0;
       break;
     //>>includeStart('debug', pragmas.debug);
     default:
@@ -467,7 +467,7 @@ AttributeCompression.dequantize = function (
     for (var j = 0; j < componentsPerAttribute; j++) {
       var index = i * componentsPerAttribute + j;
       dequantizedTypedArray[index] = Math.max(
-        typedArray[index] / divider,
+        typedArray[index] / divisor,
         -1.0
       );
     }
