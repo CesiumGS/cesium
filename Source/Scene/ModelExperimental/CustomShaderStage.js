@@ -41,6 +41,9 @@ CustomShaderStage.process = function (renderResources, primitive) {
     }
   }
 
+  // the input to the fragment shader includes a low-precision ECEF position
+  shaderBuilder.addVarying("vec3", "v_positionWC");
+
   generateShaderLines(renderResources, customShader, primitive);
 
   // if present, the lighting model overrides the material's lighting model.
@@ -93,10 +96,16 @@ function generateShaderLines(renderResources, customShader, primitive) {
       "struct FragmentInput",
       "{",
       "    Attributes attributes;",
+      "    vec3 positionMC;", // model space
+      "    vec3 positionWC;", // World coords (ECEF). Low precision.
+      "    vec3 positionEC;", // Eye coordinates
       "};",
       "",
       "void initializeInputStruct(out FragmentInput fsInput)",
       "{",
+      "   fsInput.positionMC = v_position;",
+      "   fsInput.positionWC = v_positionWC;",
+      "   fsInput.positionEC = v_positionEC;",
       inputLines.fragmentInitializationLines,
       "}"
     )
