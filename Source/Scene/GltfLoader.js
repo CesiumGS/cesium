@@ -476,13 +476,14 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     return attribute;
   }
 
+  var dequantize = attribute.normalized;
   var vertexBufferLoader = loadVertexBuffer(
     loader,
     gltf,
     accessorId,
     gltfSemantic,
     draco,
-    false
+    dequantize
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -490,6 +491,11 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     }
 
     attribute.buffer = vertexBufferLoader.vertexBuffer;
+
+    if (dequantize) {
+      attribute.componentType = ComponentDatatype.FLOAT;
+      attribute.normalized = false;
+    }
 
     if (
       defined(draco) &&

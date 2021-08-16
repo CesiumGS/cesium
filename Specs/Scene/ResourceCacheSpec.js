@@ -849,6 +849,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
