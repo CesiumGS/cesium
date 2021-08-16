@@ -29,7 +29,7 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
    */
   this.primitive = options.primitive;
 
-  this._allowPicking = options.allowPicking;
+  this.allowPicking = options.allowPicking;
 
   /**
    * Pipeline stages to apply to this mesh primitive. This
