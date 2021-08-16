@@ -16,7 +16,6 @@ import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import hasExtension from "./hasExtension.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceCache from "./ResourceCache.js";
