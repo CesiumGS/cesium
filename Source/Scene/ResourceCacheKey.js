@@ -343,10 +343,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   if (hasDraco) {
     Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string(
-      "options.attributeSemantic",
-      attributeSemantic
-    );
+    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
   }
   //>>includeEnd('debug');
 
@@ -357,9 +354,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       gltfResource,
       baseResource
     );
-    return (
-      "vertex-buffer:" + dracoCacheKey + "-draco-" + attributeSemantic
-    );
+    return "vertex-buffer:" + dracoCacheKey + "-draco-" + attributeSemantic;
   }
 
   var bufferView = gltf.bufferViews[bufferViewId];

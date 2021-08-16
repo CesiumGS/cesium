@@ -478,10 +478,7 @@ ResourceCache.loadVertexBuffer = function (options) {
 
   if (hasDraco) {
     Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string(
-      "options.attributeSemantic",
-      attributeSemantic
-    );
+    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
     Check.typeOf.number("options.accessorId", accessorId);
   }
   //>>includeEnd('debug');
