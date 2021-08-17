@@ -425,6 +425,18 @@ function fromArray(MathType, values) {
   return MathType.unpack(values);
 }
 
+function toArray(MathType, values) {
+  if (!defined(values)) {
+    return undefined;
+  }
+
+  if (MathType === Number) {
+    return [values];
+  }
+
+  return MathType.pack(values, new Array(MathType.packedLength));
+}
+
 function getDefault(MathType) {
   if (MathType === Number) {
     return 0.0;
@@ -463,6 +475,32 @@ function getSetIndex(gltfSemantic) {
   return undefined;
 }
 
+function getDequantizedValues(attribute, minOrMax) {
+  var MathType = AttributeType.getMathType(attribute.type);
+  var array = toArray(MathType, minOrMax);
+  var dequantized = AttributeCompression.dequantize(
+    array,
+    attribute.componentDatatype,
+    attribute.type,
+    1
+  );
+  return fromArray(MathType, dequantized);
+}
+
+function updateDequantizedAttribute(attribute) {
+  if (attribute.normalized) {
+    if (defined(attribute.min)) {
+      attribute.min = getDequantizedValues(attribute, attribute.min);
+    }
+    if (defined(attribute.max)) {
+      attribute.max = getDequantizedValues(attribute, attribute.max);
+    }
+    attribute.componentType = ComponentDatatype.FLOAT;
+    attribute.normalized = false;
+  }
+  attribute.quantization = undefined;
+}
+
 function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
@@ -491,26 +529,6 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     }
 
     attribute.buffer = vertexBufferLoader.vertexBuffer;
-
-    if (
-      attribute.normalized &&
-      gltfSemantic === VertexAttributeSemantic.POSITION
-    ) {
-      var min = AttributeCompression.dequantize(
-        new Float32Array(accessor.min),
-        accessor.componentType,
-        accessor.type,
-        1
-      );
-      var max = AttributeCompression.dequantize(
-        new Float32Array(accessor.max),
-        accessor.componentType,
-        accessor.type,
-        1
-      );
-      attribute.min = Cartesian3.fromArray(min);
-      attribute.max = Cartesian3.fromArray(max);
-    }
 
     if (
       defined(draco) &&
@@ -548,6 +566,8 @@ function loadInstancedAttribute(
   if (!defined(bufferViewId)) {
     return attribute;
   }
+
+  updateDequantizedAttribute(attribute);
 
   if (!loadAsTypedArray && frameState.context.instancedArrays) {
     // Only create a GPU buffer if the browser supports WebGL instancing

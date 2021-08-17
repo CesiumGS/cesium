@@ -12,7 +12,6 @@ import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -315,6 +314,7 @@ function handleError(vertexBufferLoader, error) {
 function CreateVertexBufferJob() {
   this.typedArray = undefined;
   this.dequantize = undefined;
+  this.normalized = undefined;
   this.componentType = undefined;
   this.type = undefined;
   this.count = undefined;
@@ -325,6 +325,7 @@ function CreateVertexBufferJob() {
 CreateVertexBufferJob.prototype.set = function (
   typedArray,
   dequantize,
+  normalized,
   componentType,
   type,
   count,
@@ -332,6 +333,7 @@ CreateVertexBufferJob.prototype.set = function (
 ) {
   this.typedArray = typedArray;
   this.dequantize = dequantize;
+  this.normalized = normalized;
   this.componentType = componentType;
   this.type = type;
   this.count = count;
@@ -342,6 +344,7 @@ CreateVertexBufferJob.prototype.execute = function () {
   this.vertexBuffer = createVertexBuffer(
     this.typedArray,
     this.dequantize,
+    this.normalized,
     this.componentType,
     this.type,
     this.count,
@@ -352,12 +355,13 @@ CreateVertexBufferJob.prototype.execute = function () {
 function createVertexBuffer(
   typedArray,
   dequantize,
+  normalized,
   componentType,
   type,
   count,
   context
 ) {
-  if (dequantize && componentType !== ComponentDatatype.FLOAT) {
+  if (dequantize && normalized) {
     typedArray = AttributeCompression.dequantize(
       typedArray,
       componentType,
@@ -415,6 +419,7 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     vertexBufferJob.set(
       this._typedArray,
       this._dequantize,
+      accessor.normalized,
       accessor.componentType,
       accessor.type,
       accessor.count,
@@ -430,6 +435,7 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     vertexBuffer = createVertexBuffer(
       this._typedArray,
       this._dequantize,
+      accessor.normalized,
       accessor.componentType,
       accessor.type,
       accessor.count,
