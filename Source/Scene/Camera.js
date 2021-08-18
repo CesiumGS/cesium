@@ -3743,7 +3743,7 @@ function addToResult(x, y, index, camera, ellipsoid) {
   );
   if (defined(r)) {
     cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
-    return 1;
+    return true;
   }
   return false;
 }
@@ -3821,44 +3821,19 @@ Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
 
   var unsuccessfulPicks = [];
 
-  var computedHorizonQuad = computeHorizonQuad(this, ellipsoid);
+  if (!addToResult(0, 0, UL, this, ellipsoid)) unsuccessfulPicks.push(UL);
+  if (!addToResult(0, height, LL, this, ellipsoid)) unsuccessfulPicks.push(LL);
+  if (!addToResult(width, height, LR, this, ellipsoid))
+    unsuccessfulPicks.push(LR);
+  if (!addToResult(width, 0, UR, this, ellipsoid)) unsuccessfulPicks.push(UR);
 
-  successfulPickCount += addToResult(
-    0,
-    0,
-    0,
-    this,
-    ellipsoid,
-    computedHorizonQuad
-  );
-  successfulPickCount += addToResult(
-    0,
-    height,
-    1,
-    this,
-    ellipsoid,
-    computedHorizonQuad
-  );
-  successfulPickCount += addToResult(
-    width,
-    height,
-    2,
-    this,
-    ellipsoid,
-    computedHorizonQuad
-  );
-  successfulPickCount += addToResult(
-    width,
-    0,
-    3,
-    this,
-    ellipsoid,
-    computedHorizonQuad
-  );
-
-  if (successfulPickCount < 2) {
+  if (unsuccessfulPicks.length > 2) {
     // If we have space non-globe in 3 or 4 corners then return the whole globe
     return Rectangle.MAX_VALUE;
+  }
+
+  if (unsuccessfulPicks.length > 0) {
+    adjustViewForHorizon(this, unsuccessfulPicks, ellipsoid);
   }
 
   result = Rectangle.fromCartographicArray(cartoArray, result);
