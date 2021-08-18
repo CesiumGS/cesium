@@ -49,6 +49,7 @@ import StencilConstants from "./StencilConstants.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles tileset},
@@ -2835,11 +2836,17 @@ Cesium3DTileset.supportedExtensions = {
  * @private
  */
 Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
+  var extension;
   for (var i = 0; i < extensionsRequired.length; i++) {
-    if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
-      throw new RuntimeError(
-        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+    extension = extensionsRequired[i];
+    if (extension === "MAXAR_content_3tz") {
+      oneTimeWarning(
+        "MAXAR_content_3tz detected",
+        "Tilesets with the MAXAR_content_3tz extension cannot be directly loaded. Please unzip them first and modify the tileset.json."
       );
+    }
+    if (!Cesium3DTileset.supportedExtensions[extension]) {
+      throw new RuntimeError("Unsupported 3D Tiles Extension: " + extension);
     }
   }
 };
