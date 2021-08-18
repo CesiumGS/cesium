@@ -1,9 +1,14 @@
 # Change Log
 
-### Next Release
+### 1.85 - 2021-09-01
+
+##### Additions :tada:
+
+- `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results.
 
 ##### Fixes :wrench:
 
+- Fixed several crashes related to point cloud eye dome lighting. [#9719](https://github.com/CesiumGS/cesium/pull/9719)
 - Fixed inaccurate view rectangle from `computeViewRectangle` with different camera directions when horizon is in view. [#9665](https://github.com/CesiumGS/cesium/pull/9665)
 
 ### 1.84 - 2021-08-02
