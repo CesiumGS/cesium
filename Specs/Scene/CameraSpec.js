@@ -4062,7 +4062,7 @@ describe("Scene/Camera", function () {
     expect(rect).not.toBeDefined();
   });
 
-  fit("computeViewRectangle when horizon is visible", function () {
+  it("computeViewRectangle when horizon is visible", function () {
     scene.mode = SceneMode.SCENE3D;
 
     // Camera positioned north of Florida and pointing SE
@@ -4082,7 +4082,7 @@ describe("Scene/Camera", function () {
     expect(rect).toEqual(correctResult);
   });
 
-  fit("computeViewRectangle with horizon left of camera", function () {
+  it("computeViewRectangle with horizon left of camera", function () {
     scene.mode = SceneMode.SCENE3D;
 
     // Camera positioned north of Florida and pointing SE
@@ -4106,7 +4106,7 @@ describe("Scene/Camera", function () {
     expect(rect).toEqual(correctResult);
   });
 
-  fit("computeViewRectangle with horizon visible in lower right corner", function () {
+  it("computeViewRectangle with horizon visible in lower right corner", function () {
     scene.mode = SceneMode.SCENE3D;
 
     // Camera positioned north of Florida and pointing SE
