@@ -34,7 +34,9 @@ describe(
         scene.drawingBufferWidth / scene.drawingBufferHeight;
       camera.frustum.fov = CesiumMath.toRadians(60.0);
 
-      clouds = new CloudCollection();
+      clouds = new CloudCollection({
+        debugBillboards: true,
+      });
       scene.primitives.add(clouds);
     });
 
@@ -49,7 +51,7 @@ describe(
       expect(c.position).toEqual(Cartesian3.ZERO);
       expect(c.scale).toEqual(new Cartesian2(20.0, 12.0));
       expect(c.maximumSize).toEqual(new Cartesian3(20.0, 12.0, 8.0));
-      expect(c.slice).toEqual(0.0);
+      expect(c.slice).toEqual(-1.0);
     });
 
     it("explicitly constructs a cloud", function () {
@@ -354,22 +356,28 @@ describe(
     });
 
     it("renders using cloud maximum size property", function () {
+      clouds.debugBillboards = false;
+      clouds.debugEllipsoids = true;
+
       var c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
         maximumSize: new Cartesian3(20.0, 10.0, 8.0),
       });
-
       expect(scene).not.toRender([0, 0, 0, 255]);
 
       c.maximumSize = Cartesian3.ZERO;
       expect(scene).toRender([0, 0, 0, 255]);
 
+      clouds.debugClouds = true;
       c.maximumSize = new Cartesian3(10.0, 5.0, 5.0);
       expect(scene).not.toRender([0, 0, 0, 255]);
     });
 
     it("renders using cloud slice property", function () {
+      clouds.debugBillboards = false;
+      clouds.debugEllipsoids = true;
+
       var c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),

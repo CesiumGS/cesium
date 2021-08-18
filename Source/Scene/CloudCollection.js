@@ -1,5 +1,6 @@
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CloudType from "./CloudType.js";
 import CloudCollectionFS from "../Shaders/CloudCollectionFS.js";
@@ -47,11 +48,11 @@ var attributeLocationsInstanced = {
   compressedAttribute1: 4, // cloudSize, slice
 };
 
-var SHOW_INDEX = (CumulusCloud.SHOW_INDEX = 0);
-var POSITION_INDEX = (CumulusCloud.POSITION_INDEX = 1);
-var SCALE_INDEX = (CumulusCloud.SCALE_INDEX = 2);
-var MAXIMUM_SIZE_INDEX = (CumulusCloud.SIZE_INDEX = 3);
-var SLICE_INDEX = (CumulusCloud.SLICE_INDEX = 4);
+var SHOW_INDEX = CumulusCloud.SHOW_INDEX;
+var POSITION_INDEX = CumulusCloud.POSITION_INDEX;
+var SCALE_INDEX = CumulusCloud.SCALE_INDEX;
+var MAXIMUM_SIZE_INDEX = CumulusCloud.MAXIMUM_SIZE_INDEX;
+var SLICE_INDEX = CumulusCloud.SLICE_INDEX;
 var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
 
 /**
@@ -62,6 +63,24 @@ var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.show=true] Whether to display the clouds.
+ * @param {Boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
+ * @param {Boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
+ * @see CloudCollection#add
+ * @see CloudCollection#remove
+ * @see CumulusCloud
+ *
+ * @example
+ * // Create a billboard collection with two cumulus clouds
+ * var clouds = scene.primitives.add(new Cesium.CloudCollection());
+ * clouds.add({
+ *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
+ *   maximumSize: new Cesium.Cartesian3(20.0, 12.0, 8.0)
+ * });
+ * clouds.add({
+ *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
+ *   maximumSize: new Cesium.Cartesian3(15.0, 9.0, 9.0),
+ *   slice: 0.5
+ * });
  *
  */
 function CloudCollection(options) {
@@ -77,8 +96,8 @@ function CloudCollection(options) {
 
   this._noiseTexture = undefined;
   this._noiseTextureLength = 128;
-  this._noiseDetail = 16.0;
-  this._debugTime = 0;
+  this._noiseDetail = 16.0; // must be a power of two
+  this._noiseOffset = Cartesian3.ZERO;
   this._loading = false;
   this._ready = true;
 
@@ -93,9 +112,6 @@ function CloudCollection(options) {
     u_noiseDetail: function () {
       return that._noiseDetail;
     },
-    u_time: function () {
-      return that._debugTime;
-    },
   };
 
   this._vaNoise = undefined;
@@ -106,6 +122,31 @@ function CloudCollection(options) {
 
   this._show = defaultValue(options.show, true);
   this._colorCommands = [];
+
+  /**
+   * This property is for debugging only; it is not for production use nor is it optimized.
+   * <p>
+   * Renders the billboards with one opaque color for the sake of debugging.
+   * </p>
+   *
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  this.debugBillboards = defaultValue(options.debugBillboards, false);
+
+  /**
+   * This property is for debugging only; it is not for production use nor is it optimized.
+   * <p>
+   * Draws the clouds as opaque, monochrome ellipsoids for the sake of debugging.
+   * If <code>debugBillboards</code> is also true, then the ellipsoids will draw on top of the billboards.
+   * </p>
+   *
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
 }
 
 Object.defineProperties(CloudCollection.prototype, {
@@ -585,8 +626,8 @@ CloudCollection.prototype.update = function (frameState) {
   }
 
   var context = frameState.context;
-
-  if (!defined(this._texture) && !this._loading) {
+  var debugging = this.debugBillboards || this.debugEllipsoids;
+  if (!defined(this._texture) && !this._loading && !debugging) {
     this._vaNoise = createTextureVA(context);
     this._spNoise = ShaderProgram.fromCache({
       context: context,
@@ -599,6 +640,7 @@ CloudCollection.prototype.update = function (frameState) {
 
     var noiseTextureLength = this._noiseTextureLength;
     var noiseDetail = this._noiseDetail;
+    var noiseOffset = this._noiseOffset;
 
     this._noiseTexture = new Texture({
       context: context,
@@ -624,6 +666,9 @@ CloudCollection.prototype.update = function (frameState) {
         },
         u_noiseDetail: function () {
           return noiseDetail;
+        },
+        u_noiseOffset: function () {
+          return noiseOffset;
         },
       },
       persists: false,
@@ -736,12 +781,15 @@ CloudCollection.prototype.update = function (frameState) {
     cloudsToUpdate.length = cloudsLength;
   }
 
-  if (!defined(this._vaf) || !defined(this._vaf.va) || !this._ready) {
+  if (
+    !defined(this._vaf) ||
+    !defined(this._vaf.va) ||
+    !this._ready & !debugging
+  ) {
     return;
   }
 
   var uniforms = this._uniforms;
-
   var vsSource = CloudCollectionVS;
   var fsSource = CloudCollectionFS;
 
@@ -758,6 +806,14 @@ CloudCollection.prototype.update = function (frameState) {
     defines: [],
     sources: [fsSource],
   });
+
+  if (this.debugBillboards) {
+    fs.defines.push("DEBUG_BILLBOARDS");
+  }
+
+  if (this.debugEllipsoids) {
+    fs.defines.push("DEBUG_ELLIPSOIDS");
+  }
 
   this._sp = ShaderProgram.replaceCache({
     context: context,

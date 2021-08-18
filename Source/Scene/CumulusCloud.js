@@ -24,19 +24,26 @@ function CumulusCloud(options, cloudCollection) {
   this._position = Cartesian3.clone(
     defaultValue(options.position, Cartesian3.ZERO)
   );
-  this._scale = Cartesian2.clone(
-    defaultValue(options.scale, new Cartesian2(20.0, 12.0))
-  );
 
-  var defaultMaxSize = new Cartesian3(
-    this._scale.x,
-    this._scale.y,
-    Math.min(this._scale.x, this._scale.y) / 1.5
-  );
-  this._maximumSize = Cartesian3.clone(
-    defaultValue(options.maximumSize, defaultMaxSize)
-  );
-  this._slice = defaultValue(options.slice, 0.0);
+  if (!defined(options.scale) && defined(options.maximumSize)) {
+    this._maximumSize = Cartesian3.clone(options.maximumSize);
+    this._scale = new Cartesian2(this._maximumSize.x, this._maximumSize.y);
+  } else {
+    this._scale = Cartesian2.clone(
+      defaultValue(options.scale, new Cartesian2(20.0, 12.0))
+    );
+
+    var defaultMaxSize = new Cartesian3(
+      this._scale.x,
+      this._scale.y,
+      Math.min(this._scale.x, this._scale.y) / 1.5
+    );
+    this._maximumSize = Cartesian3.clone(
+      defaultValue(options.maximumSize, defaultMaxSize)
+    );
+  }
+
+  this._slice = defaultValue(options.slice, -1.0);
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
 }
@@ -44,7 +51,7 @@ function CumulusCloud(options, cloudCollection) {
 var SHOW_INDEX = (CumulusCloud.SHOW_INDEX = 0);
 var POSITION_INDEX = (CumulusCloud.POSITION_INDEX = 1);
 var SCALE_INDEX = (CumulusCloud.SCALE_INDEX = 2);
-var MAXIMUM_SIZE_INDEX = (CumulusCloud.SIZE_INDEX = 3);
+var MAXIMUM_SIZE_INDEX = (CumulusCloud.MAXIMUM_SIZE_INDEX = 3);
 var SLICE_INDEX = (CumulusCloud.SLICE_INDEX = 4);
 CumulusCloud.NUMBER_OF_PROPERTIES = 5;
 
