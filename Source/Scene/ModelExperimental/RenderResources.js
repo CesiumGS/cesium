@@ -113,7 +113,8 @@ function NodeRenderResources(modelRenderResources, sceneNode) {
   this.modelMatrix = sceneNode.modelMatrix;
   /**
    * An array of objects describing vertex attributes that will eventually
-   * be used to create a {@link VertexArray} for the draw command.
+   * be used to create a {@link VertexArray} for the draw command. Attributes
+   * at the node level may be needed for extensions such as EXT_mesh_gpu_instancing.
    *
    * @type {Object[]}
    * @readonly
@@ -207,6 +208,18 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    * @private
    */
   this.attributes = nodeRenderResources.attributes.slice();
+
+  /**
+   * The index to give to the next vertex attribute added to the attributes array. POSITION
+   * takes index 0. Inherited from the node render resources.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.attributeIndex = nodeRenderResources.attributeIndex;
+
   /**
    * The computed model matrix for this primitive. This is cloned from the
    * node render resources as the primitive may further modify it
@@ -215,6 +228,7 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    *
    * @private
    */
+
   this.modelMatrix = nodeRenderResources.modelMatrix.clone();
   /**
    * An object used to build a shader incrementally. This is cloned from the
@@ -236,17 +250,6 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    * @private
    */
   this.instanceCount = nodeRenderResources.instanceCount;
-
-  /**
-   * The index to give to the next vertex attribute added to the attributes array. POSITION
-   * takes index 0. Inherited from the node render resources.
-   *
-   * @type {Number}
-   * @readonly
-   *
-   * @private
-   */
-  this.attributeIndex = nodeRenderResources.attributeIndex;
 
   /**
    * The mesh primitive associated with the render resources.
@@ -321,15 +324,17 @@ function MeshPrimitiveRenderResources(nodeRenderResources, sceneMeshPrimitive) {
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
+
   /**
-   * True if back face culling is enabled
+   * The pass to use in the {@link DrawCommand}.
    *
-   * @type {Boolean}
+   * @type {Pass}
    * @readonly
    *
    * @private
    */
-  this.cull = true;
+  this.pass = this.model.opaquePass;
+
   /**
    * An object storing options for creating a {@link RenderState}.
    * the pipeline stages simply set the options, the render state is created

@@ -8,8 +8,11 @@ import MaterialPipelineStage from "./MaterialPipelineStage.js";
  * In memory representation of a single mesh primitive, that is, a primitive
  * and its corresponding mesh.
  *
- * @param {Object} options An object containing the following options
- * @param {ModelComponents.Primitive} options.primitive the
+ * @param {Object} options An object containing the following options:
+ * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ *
+ * @alias ModelExperimentalSceneMeshPrimitive
+ * @constructor
  *
  * @private
  */
@@ -20,7 +23,7 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
   //>>includeEnd('debug');
 
   /**
-   * The primitive components associated with this mesh primitive.
+   * The primitive component associated with this mesh primitive.
    *
    * @type {ModelComponents.Primitive}
    *

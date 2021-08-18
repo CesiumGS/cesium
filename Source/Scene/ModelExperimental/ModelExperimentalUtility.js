@@ -19,7 +19,7 @@ export default function ModelExperimentalUtility() {}
  * @param {ModelExperimental} model The model to report about
  * @param {String} type The type of object to report about
  * @param {String} path The URI of the model file
- * @return {Function} An error function that
+ * @return {Function} An error function that throws an error for the failed model
  *
  * @private
  */
@@ -47,19 +47,19 @@ ModelExperimentalUtility.getNodeTransform = function (node) {
   }
 
   return Matrix4.fromTranslationQuaternionRotationScale(
-    defined(node.translation) ? node.translation : new Cartesian3(),
+    defined(node.translation) ? node.translation : Cartesian3.ZERO,
     defined(node.rotation) ? node.rotation : Quaternion.IDENTITY,
-    defined(node.scale) ? node.scale : new Cartesian3(1, 1, 1)
+    defined(node.scale) ? node.scale : Cartesian3.ONE
   );
 };
 
 /**
  * Find an attribute by semantic such as POSITION or TANGENT.
  *
- * @param {ModelComponents.Primitive} primitive The primitive components
- * @param {VertexAttributeSemantic} semantic The semantic to search for
+ * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
+ * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
  * @param {Number} setIndex The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
- * @return {ModelComponents.Attribute} The selected. attribute, or undefined if not found.
+ * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
  *
  * @private
  */
@@ -68,10 +68,9 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   semantic,
   setIndex
 ) {
-  var i;
   var attributes = object.attributes;
   var attributesLength = attributes.length;
-  for (i = 0; i < attributesLength; ++i) {
+  for (var i = 0; i < attributesLength; ++i) {
     var attribute = attributes[i];
     var matchesSetIndex = defined(setIndex)
       ? attribute.setIndex === setIndex
@@ -90,8 +89,8 @@ var cartesianMinScratch = new Cartesian3();
  *
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Matrix4} modelMatrix The primitive's model matrix.
- * @param {Cartesian3} instancingTranslationMax The component-wise maximum value of the instancing translation attribute.
- * @param {Cartesian3} instancingTranslationMin The component-wise minimum value of the instancing translation attribute.
+ * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
+ * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
  */
 ModelExperimentalUtility.createBoundingSphere = function (
   primitive,

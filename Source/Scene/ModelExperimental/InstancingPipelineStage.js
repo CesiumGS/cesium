@@ -55,7 +55,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   );
   if (
     defined(rotationAttribute) ||
-    (!defined(translationMax) && !defined(translationMin))
+    !defined(translationMax) ||
+    !defined(translationMin)
   ) {
     instancingVertexAttributes = processMatrixAttributes(
       node,
@@ -115,6 +116,9 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   );
 };
 
+var translationScratch = new Cartesian3();
+var rotationScratch = new Quaternion();
+var scaleScratch = new Cartesian3();
 var transformScratch = new Matrix4();
 
 function getInstanceTransformsTypedArray(instances, renderResources) {
@@ -153,7 +157,7 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   var rotationTypedArray = defined(rotationAttribute)
     ? rotationAttribute.typedArray
-    : new Float32Array(count * 3);
+    : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
   var scaleTypedArray = defined(scaleAttribute)
     ? scaleAttribute.typedArray
@@ -166,7 +170,8 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
     var translation = new Cartesian3(
       translationTypedArray[i * 3],
       translationTypedArray[i * 3 + 1],
-      translationTypedArray[i * 3 + 2]
+      translationTypedArray[i * 3 + 2],
+      translationScratch
     );
 
     Cartesian3.maximumByComponent(
@@ -184,13 +189,15 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
       rotationTypedArray[i * 4],
       rotationTypedArray[i * 4 + 1],
       rotationTypedArray[i * 4 + 2],
-      setRotationW ? rotationTypedArray[i * 4 + 3] : 1
+      setRotationW ? rotationTypedArray[i * 4 + 3] : 1,
+      rotationScratch
     );
 
     var scale = new Cartesian3(
       scaleTypedArray[i * 3],
       scaleTypedArray[i * 3 + 1],
-      scaleTypedArray[i * 3 + 2]
+      scaleTypedArray[i * 3 + 2],
+      scaleScratch
     );
 
     var transform = Matrix4.fromTranslationQuaternionRotationScale(
@@ -229,9 +236,11 @@ function processMatrixAttributes(node, renderResources, frameState) {
   );
   var transformsVertexBuffer = Buffer.createVertexBuffer({
     context: frameState.context,
-    typedArray: transformsTypedArray.buffer,
+    typedArray: transformsTypedArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+  // Destruction of resources allocated by the ModelExperimental is handled by ModelExperimental.destroy().
+  transformsVertexBuffer.vertexArrayDestroyable = false;
   renderResources.model._resources.push(transformsVertexBuffer);
 
   var vertexSizeInFloats = 12;

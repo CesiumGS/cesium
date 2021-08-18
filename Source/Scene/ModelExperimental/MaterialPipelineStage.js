@@ -4,6 +4,9 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
 import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js";
+import Pass from "../../Renderer/Pass.js";
+import Matrix3 from "../../Core/Matrix3.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -69,12 +72,15 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
 
   // Configure back-face culling
   var cull = !material.doubleSided;
-  renderResources.cull = cull;
   renderResources.renderStateOptions.cull = {
     enabled: cull,
   };
 
   addAlphaUniforms(material, uniformMap, shaderBuilder);
+
+  if (material.alphaMode === AlphaMode.BLEND) {
+    renderResources.pass = Pass.TRANSLUCENT;
+  }
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);
 };
@@ -162,7 +168,11 @@ function processTexture(
 
   // Some textures have matrix transforms (e.g. for texture atlases). Add those
   // to the shader if present.
-  if (defined(textureReader.transform)) {
+  var textureTransform = textureReader.transform;
+  if (
+    defined(textureTransform) &&
+    !Matrix3.equals(textureTransform, Matrix3.IDENTITY)
+  ) {
     processTextureTransform(
       shaderBuilder,
       uniformMap,
@@ -192,7 +202,10 @@ function processMaterialUniforms(
   }
 
   var emissiveFactor = material.emissiveFactor;
-  if (defined(emissiveFactor)) {
+  if (
+    defined(emissiveFactor) &&
+    !Cartesian3.equals(emissiveFactor, Cartesian3.ZERO)
+  ) {
     shaderBuilder.addUniform(
       "vec3",
       "u_emissiveFactor",

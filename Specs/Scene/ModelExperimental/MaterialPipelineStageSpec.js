@@ -6,6 +6,7 @@ import {
   LightingModel,
   Matrix3,
   MaterialPipelineStage,
+  Pass,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -344,18 +345,20 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
           model: mockModel,
+          pass: Pass.OPAQUE,
         };
 
         primitive.material.alphaMode = AlphaMode.BLEND;
         MaterialPipelineStage.process(renderResources, primitive);
 
+        expect(renderResources.pass).toBe(Pass.TRANSLUCENT);
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
           "ALPHA_MODE_BLEND",
         ]);
       });
     });
 
-    it("enables culling if material is not double-sided", function () {
+    it("enables back-face culling if material is not double-sided", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[1].primitives[0];
@@ -370,7 +373,6 @@ describe(
         };
 
         MaterialPipelineStage.process(renderResources, primitive);
-        expect(renderResources.cull).toBe(true);
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: true,
@@ -379,7 +381,7 @@ describe(
       });
     });
 
-    it("disables culling if material is double-sided", function () {
+    it("disables back-face culling if material is double-sided", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[1].primitives[0];
@@ -396,7 +398,6 @@ describe(
         primitive.material.doubleSided = true;
         MaterialPipelineStage.process(renderResources, primitive);
 
-        expect(renderResources.cull).toBe(false);
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: false,

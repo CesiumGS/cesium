@@ -611,6 +611,16 @@ function Scene() {
    * @private
    */
   this.nodes = [];
+
+  /**
+   * The scene's up axis.
+   */
+  this.upAxis = undefined;
+
+  /**
+   * The scene's forward axis.
+   */
+  this.forwardAxis = undefined;
 }
 
 /**

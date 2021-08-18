@@ -6,11 +6,12 @@ import InstancingPipelineStage from "./InstancingPipelineStage.js";
  * An in-memory representation of a scene node as part of
  * the {@link ModelExperimentalSceneGraph}
  *
- * @constructor
- *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
  * @param {Matrix4} options.modelMatrix The model matrix associated with this node.
+ *
+ * @alias ModelExperimentalSceneNode
+ * @constructor
  *
  * @private
  */
@@ -56,7 +57,7 @@ export default function ModelExperimentalSceneNode(options) {
   /**
    * The mesh primitives that belong to this node
    *
-   * @type {ModelExperimentalSceneMeshPrimitive}
+   * @type {ModelExperimentalSceneMeshPrimitive[]}
    * @readonly
    *
    * @private

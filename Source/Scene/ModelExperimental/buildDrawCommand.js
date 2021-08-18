@@ -1,6 +1,5 @@
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
-import Pass from "../../Renderer/Pass.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
@@ -37,6 +36,8 @@ export default function buildDrawCommand(
     meshPrimitiveRenderResources.renderStateOptions
   );
 
+  var model = meshPrimitiveRenderResources.model;
+
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   return new DrawCommand({
     boundingVolume: meshPrimitiveRenderResources.boundingSphere,
@@ -45,13 +46,12 @@ export default function buildDrawCommand(
     renderState: renderState,
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
-    cull: meshPrimitiveRenderResources.cull,
-    pass: Pass.OPAQUE,
+    cull: model.cull,
+    pass: meshPrimitiveRenderResources.pass,
     count: meshPrimitiveRenderResources.count,
     pickId: undefined,
     instanceCount: meshPrimitiveRenderResources.instanceCount,
     primitiveType: meshPrimitiveRenderResources.primitiveType,
-    debugShowBoundingVolume:
-      meshPrimitiveRenderResources.model._debugShowBoundingVolume,
+    debugShowBoundingVolume: model.debugShowBoundingVolume,
   });
 }

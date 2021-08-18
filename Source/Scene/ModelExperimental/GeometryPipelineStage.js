@@ -53,7 +53,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
 
   // add a function to initialize varyings for custom attributes.
-  // for example "v_custom_attribute = a_custom_attribute;""
+  // for example "v_custom_attribute = a_custom_attribute;"
   if (customAttributeInitializationLines.length > 0) {
     shaderBuilder.addDefine(
       "HAS_CUSTOM_ATTRIBUTES",
@@ -118,6 +118,7 @@ function processAttribute(
 
   var vertexAttribute = {
     index: attributeIndex,
+    value: defined(attribute.buffer) ? undefined : attribute.constant,
     vertexBuffer: attribute.buffer,
     componentsPerAttribute: AttributeType.getComponentsPerAttribute(
       attributeType

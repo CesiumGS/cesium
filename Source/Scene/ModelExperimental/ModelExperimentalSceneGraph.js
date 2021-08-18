@@ -1,4 +1,3 @@
-import Axis from "../../Scene/Axis.js";
 import buildDrawCommand from "./buildDrawCommand.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -16,8 +15,9 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
  * @param {Object} options An object containing the following options
  * @param {ModelExperimental} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
- * @param {Axis} [options.upAxis=Axis.Y] The upwards direction of the 3D model
- * @param {Axis} [options.forwardAxis=Axis.Z] The forwards direction of the 3D model
+ *
+ * @alias ModelExperimentalSceneGraph
+ * @constructor
  *
  * @private
  */
@@ -80,27 +80,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._drawCommands = [];
 
   /**
-   * The up direction of the model. It will be used to compute a matrix
-   * to orient models so Z is upwards
-   *
-   * @type {Axis}
-   * @readonly
-   *
-   * @private
-   */
-  this._upAxis = defaultValue(options.upAxis, Axis.Y);
-  /**
-   * The forward direction of the model. It will be used to compute a matrix
-   * to orient models so X is forwards.
-   *
-   * @type {Axis}
-   * @readonly
-   *
-   * @private
-   */
-  this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
-
-  /**
    * The bounding sphere containing all the primitives in the scene graph.
    *
    * @type {BoundingSphere}
@@ -143,11 +122,12 @@ export default function ModelExperimentalSceneGraph(options) {
 
 function initialize(sceneGraph) {
   var modelMatrix = sceneGraph.modelMatrix;
+  var scene = sceneGraph._modelComponents;
 
   ModelExperimentalUtility.correctModelMatrix(
     modelMatrix,
-    sceneGraph._upAxis,
-    sceneGraph._forwardAxis
+    scene.upAxis,
+    scene.forwardAxis
   );
 
   var rootNodes = sceneGraph._modelComponents.scene.nodes;

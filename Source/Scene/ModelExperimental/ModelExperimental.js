@@ -1,10 +1,12 @@
 import clone from "../../Core/clone.js";
+import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
@@ -16,6 +18,7 @@ import destroyObject from "../../Core/destroyObject.js";
  * This class is still experimental. glTF features that are core to 3D Tiles
  * are supported, but other features such as animation are not yet supported.
  *
+ * @alias ModelExperimental
  * @constructor
  *
  * @param {Object} options Object with the following properties:
@@ -50,6 +53,9 @@ export default function ModelExperimental(options) {
 
   this._defaultTexture = undefined;
   this._texturesLoaded = false;
+
+  this._cull = defaultValue(options.cull, true);
+  this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -103,39 +109,31 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's up axis.
-   * By default, models are Y-up according to the glTF 2.0 spec, however, geo-referenced models will typically be Z-up.
+   * Whether or not to cull the model. If the model is part of a 3D Tiles tileset, this property will always
+   * be false, since the 3D Tiles culling system is used.
    *
-   * @memberof ModelExperimental.prototype
-   *
-   * @type {Number}
-   * @default Axis.Y
+   * @type {Boolean}
    * @readonly
    *
    * @private
    */
-  upAxis: {
+  cull: {
     get: function () {
-      return this._sceneGraph._upAxis;
+      return this._cull;
     },
   },
 
   /**
-   * Gets the model's forward axis.
-   * By default, glTF 2.0 models are Z-forward according to the spec, however older
-   * glTF (1.0, 0.8) models used X-forward. Note that only Axis.X and Axis.Z are supported.
+   * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
    *
-   * @memberof ModelExperimental.prototype
-   *
-   * @type {Number}
-   * @default Axis.Z
+   * @type {Pass}
    * @readonly
    *
    * @private
    */
-  forwardAxis: {
+  opaquePass: {
     get: function () {
-      return this._sceneGraph._forwardAxis;
+      return this._opaquePass;
     },
   },
 
@@ -291,6 +289,8 @@ function initialize(model, options) {
     baseResource: options.basePath,
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
   };
 
   if (gltf instanceof Uint8Array) {
@@ -310,9 +310,7 @@ function initialize(model, options) {
     .then(function (loader) {
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
-        modelComponents: loader._components,
-        upAxis: options.upAxis,
-        forwardAxis: options.forwardAxis,
+        modelComponents: loader.components,
         modelMatrix: options.modelMatrix,
       });
       model._resourcesLoaded = true;
@@ -321,7 +319,7 @@ function initialize(model, options) {
       ModelExperimentalUtility.getFailedLoadFunction(
         this,
         "model",
-        options.basePath
+        options.gltfResource
       );
     });
 
@@ -333,7 +331,7 @@ function initialize(model, options) {
       ModelExperimentalUtility.getFailedLoadFunction(
         this,
         "model",
-        options.basePath
+        options.gltfResource
       );
     });
 }
@@ -349,10 +347,9 @@ function initialize(model, options) {
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  */
 ModelExperimental.fromGltf = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(options) || !defined(options.url)) {
-    throw new DeveloperError("options.url is required");
-  }
+  Check.defined("options.url", options.url);
   //>>includeEnd('debug');
 
   options = clone(options);
