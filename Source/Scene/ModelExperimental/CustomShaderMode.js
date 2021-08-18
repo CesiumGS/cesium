@@ -1,6 +1,6 @@
 var CustomShaderMode = {
-  BEFORE_MATERIAL: "BEFORE_MATERIAL",
   MODIFY_MATERIAL: "MODIFY_MATERIAL",
+  REPLACE_MATERIAL: "REPLACE_MATERIAL",
 };
 
 CustomShaderMode.getDefineName = function (customShaderMode) {

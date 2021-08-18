@@ -57,6 +57,11 @@ function createUniformFunction(customShader, uniformName) {
   };
 }
 
+/**
+ * Update the value of a uniform.
+ * @param {String} uniformName The GLSL name of the uniform. This must match one of the uniforms declared in the constructor
+ * @param {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4} value The new value of the uniform.
+ */
 CustomShader.prototype.setUniform = function (uniformName, value) {
   this.uniforms[uniformName].value = value;
 };
