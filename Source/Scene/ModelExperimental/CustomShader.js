@@ -1,4 +1,5 @@
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 
 /**
@@ -36,6 +37,28 @@ export default function CustomShader(options) {
   this.vertexShaderText = options.vertexShaderText;
   this.fragmentShaderText = options.fragmentShaderText;
   this.uniformMap = buildUniformMap(this);
+
+  // Lists of variables used from the automatically-generated structs. These
+  // can be used for optimizations when generating the overall shader.
+  // The values are JS objects used like sets. The keys are the variable names,
+  // the values do not matter here. This is for three reasons:
+  // 1. We are not using ES6 sets
+  // 2. Using a dictionary automatically de-duplicates variable names
+  // 3. It makes it easy to do queries such as:
+  //    if ("position" in attributeSet) { ... }
+  this._usedVariablesVertex = {
+    // attributes from the glTF
+    attributeSet: {},
+  };
+  this._usedVariablesFragment = {
+    // positions in various reference frames, e.g. positionMC, positionEC
+    positionSet: {},
+    // attributes from the glTF
+    attributeSet: {},
+    // properties of the material used
+    materialSet: {},
+  };
+  findUsedVariables(this);
 }
 
 function buildUniformMap(customShader) {
@@ -55,6 +78,44 @@ function createUniformFunction(customShader, uniformName) {
   return function () {
     return customShader.uniforms[uniformName].value;
   };
+}
+
+function getVariables(shaderText, regex, outputSet) {
+  var match;
+  while ((match = regex.exec(shaderText)) !== null) {
+    var variableName = match[1];
+
+    // Using a dictionary like a set. The value doesn't
+    // matter, as this will only be used for queries such as
+    // if (variableName in set) { ... }
+    outputSet[variableName] = true;
+  }
+}
+
+function findUsedVariables(customShader) {
+  var attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
+  var attributeSet;
+
+  var vertexShaderText = customShader.vertexShaderText;
+  if (defined(vertexShaderText)) {
+    attributeSet = customShader._usedVariablesVertex.attributeSet;
+    getVariables(vertexShaderText, attributeRegex, attributeSet);
+  }
+
+  var fragmentShaderText = customShader.fragmentShaderText;
+  if (defined(fragmentShaderText)) {
+    attributeSet = customShader._usedVariablesFragment.attributeSet;
+    getVariables(fragmentShaderText, attributeRegex, attributeSet);
+
+    var positionRegex = /fsInput\.(position\w+)/g;
+    var positionSet = customShader._usedVariablesFragment.positionSet;
+    getVariables(fragmentShaderText, positionRegex, positionSet);
+
+    var materialRegex = /material\.(\w+)/g;
+    var materialSet = customShader._usedVariablesFragment.materialSet;
+    getVariables(fragmentShaderText, materialRegex, materialSet);
+  }
+  console.log(customShader);
 }
 
 /**

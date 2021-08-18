@@ -96,4 +96,49 @@ describe("Scene/ModelExperimental/CustomShader", function () {
 
     expect(customShader.varyings).toBe(varyings);
   });
+
+  it("detects input variables in the shader text", function () {
+    var customShader = new CustomShader({
+      vertexShaderText: [
+        "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+        "{",
+        "    return positon + vsInput.attributes.expansion * vsInput.attributes.normal;",
+        "}",
+      ].join("\n"),
+      fragmentShaderText: [
+        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+        "{",
+        "    material.normal = normalize(fsInput.attributes.normal);",
+        "    material.diffuse = fsInput.attributes.color_0;",
+        "    material.specular = fsInput.positionWC / 1.0e6;",
+        "}",
+      ].join("\n"),
+    });
+
+    var expectedVertexVariables = {
+      attributeSet: {
+        expansion: true,
+        normal: true,
+      },
+    };
+    var expectedFragmentVariables = {
+      attributeSet: {
+        normal: true,
+        color_0: true,
+      },
+      positionSet: {
+        positionWC: true,
+      },
+      materialSet: {
+        normal: true,
+        diffuse: true,
+        specular: true,
+      },
+    };
+
+    expect(customShader._usedVariablesVertex).toEqual(expectedVertexVariables);
+    expect(customShader._usedVariablesFragment).toEqual(
+      expectedFragmentVariables
+    );
+  });
 });
