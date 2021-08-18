@@ -13,6 +13,22 @@ CustomShaderStage.process = function (renderResources, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
   var customShader = renderResources.model.customShader;
 
+  if (defined(customShader.vertexShaderText)) {
+    shaderBuilder.addDefine(
+      "HAS_CUSTOM_VERTEX_SHADER",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+  }
+
+  if (defined(customShader.fragmentShaderText)) {
+    shaderBuilder.addDefine(
+      "HAS_CUSTOM_FRAGMENT_SHADER",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
   shaderBuilder.addDefine(
     "CUSTOM_VERTEX_SHADER",
     undefined,
