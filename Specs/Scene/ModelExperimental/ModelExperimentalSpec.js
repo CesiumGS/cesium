@@ -13,6 +13,8 @@ import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
 describe(
   "Scene/ModelExperimental/ModelExperimental",
   function () {
+    var webglStub = !!window.webglStub;
+
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
 
@@ -117,7 +119,9 @@ describe(
         expect(loader.isDestroyed()).toEqual(false);
         expect(model.isDestroyed()).toEqual(false);
         scene.primitives.remove(model);
-        expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
+        if (!webglStub) {
+          expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
+        }
         for (i = 0; i < model._resources.length - 1; i++) {
           expect(model._resources[i].isDestroyed()).toEqual(true);
         }
