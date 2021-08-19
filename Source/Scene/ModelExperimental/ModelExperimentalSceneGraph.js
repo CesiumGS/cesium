@@ -103,7 +103,7 @@ export default function ModelExperimentalSceneGraph(options) {
 }
 
 function initialize(sceneGraph) {
-  var modelMatrix = sceneGraph._model.modelMatrix;
+  var modelMatrix = Matrix4.clone(sceneGraph._model.modelMatrix);
   var scene = sceneGraph._modelComponents.scene;
 
   ModelExperimentalUtility.correctModelMatrix(

@@ -49,9 +49,9 @@ MaterialPipelineStage.process = function (
   var shaderBuilder = renderResources.shaderBuilder;
 
   // When textures are loaded incrementally, fall back to a default 1x1 texture
-  var defaultTexture = frameState.context._defaultTexture;
-  var defaultNormalTexture = frameState.context._defaultNormalTexture;
-  var defaultEmissiveTexture = frameState.context._defaultEmissiveTexture;
+  var defaultTexture = frameState.context.defaultTexture;
+  var defaultNormalTexture = frameState.context.defaultNormalTexture;
+  var defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
   processMaterialUniforms(
     material,
