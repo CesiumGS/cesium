@@ -107,11 +107,11 @@ describe(
 
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { url: boxTexturedGlbUrl },
+          { gltf: boxTexturedGlbUrl },
           scene
         ).then(function (model) {
           var resources = model._resources;
-          var loader = model._gltfLoader;
+          var loader = model._loader;
 
           var i;
           for (i = 0; i < resources.length; i++) {

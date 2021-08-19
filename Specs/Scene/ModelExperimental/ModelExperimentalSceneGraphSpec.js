@@ -31,7 +31,7 @@ describe(
 
     it("creates scene nodes and scene primitives from a model", function () {
       return loadAndZoomToModelExperimental(
-        { url: vertexColorGltfUrl },
+        { gltf: vertexColorGltfUrl },
         scene
       ).then(function (model) {
         var sceneGraph = model._sceneGraph;
@@ -52,59 +52,61 @@ describe(
         ModelExperimentalSceneGraph.prototype,
         "buildDrawCommands"
       ).and.callThrough();
-      return loadAndZoomToModelExperimental({ url: parentGltfUrl }, scene).then(
-        function (model) {
-          var sceneGraph = model._sceneGraph;
-          var sceneNodes = sceneGraph._sceneNodes;
+      return loadAndZoomToModelExperimental(
+        { gltf: parentGltfUrl },
+        scene
+      ).then(function (model) {
+        var sceneGraph = model._sceneGraph;
+        var sceneNodes = sceneGraph._sceneNodes;
 
-          var primitivesCount = 0;
-          for (var i = 0; i < sceneNodes.length; i++) {
-            primitivesCount += sceneNodes[i].sceneMeshPrimitives.length;
-          }
-
-          var frameState = scene.frameState;
-          frameState.commandList = [];
-
-          model.update(frameState);
-          expect(
-            ModelExperimentalSceneGraph.prototype.buildDrawCommands
-          ).toHaveBeenCalled();
-          expect(frameState.commandList.length).toEqual(primitivesCount);
-
-          expect(model._drawCommandsBuilt).toEqual(true);
-          expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
-
-          // Reset the draw command list to see if they're re-built.
-          model._drawCommandsBuilt = false;
-          sceneGraph._drawCommands = [];
-          frameState.commandList = [];
-
-          model.update(frameState);
-          expect(
-            ModelExperimentalSceneGraph.prototype.buildDrawCommands
-          ).toHaveBeenCalled();
-          expect(frameState.commandList.length).toEqual(primitivesCount);
+        var primitivesCount = 0;
+        for (var i = 0; i < sceneNodes.length; i++) {
+          primitivesCount += sceneNodes[i].sceneMeshPrimitives.length;
         }
-      );
+
+        var frameState = scene.frameState;
+        frameState.commandList = [];
+
+        model.update(frameState);
+        expect(
+          ModelExperimentalSceneGraph.prototype.buildDrawCommands
+        ).toHaveBeenCalled();
+        expect(frameState.commandList.length).toEqual(primitivesCount);
+
+        expect(model._drawCommandsBuilt).toEqual(true);
+        expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
+
+        // Reset the draw command list to see if they're re-built.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+
+        model.update(frameState);
+        expect(
+          ModelExperimentalSceneGraph.prototype.buildDrawCommands
+        ).toHaveBeenCalled();
+        expect(frameState.commandList.length).toEqual(primitivesCount);
+      });
     });
 
     it("traverses scene graph correctly", function () {
-      return loadAndZoomToModelExperimental({ url: parentGltfUrl }, scene).then(
-        function (model) {
-          var sceneGraph = model._sceneGraph;
-          var modelComponents = sceneGraph._modelComponents;
-          var sceneNodes = sceneGraph._sceneNodes;
+      return loadAndZoomToModelExperimental(
+        { gltf: parentGltfUrl },
+        scene
+      ).then(function (model) {
+        var sceneGraph = model._sceneGraph;
+        var modelComponents = sceneGraph._modelComponents;
+        var sceneNodes = sceneGraph._sceneNodes;
 
-          expect(sceneNodes[1].node).toEqual(modelComponents.nodes[0]);
-          expect(sceneNodes[0].node).toEqual(modelComponents.nodes[1]);
-        }
-      );
+        expect(sceneNodes[1].node).toEqual(modelComponents.nodes[0]);
+        expect(sceneNodes[0].node).toEqual(modelComponents.nodes[1]);
+      });
     });
 
     it("propagates node transforms correctly", function () {
       return loadAndZoomToModelExperimental(
         {
-          url: parentGltfUrl,
+          gltf: parentGltfUrl,
           upAxis: Axis.Z,
           forwardAxis: Axis.X,
         },
