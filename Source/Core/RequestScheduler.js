@@ -350,8 +350,12 @@ RequestScheduler.getServerKey = function (url) {
   Check.typeOf.string("url", url);
   //>>includeEnd('debug');
 
-  var uri = new URI(url).absoluteTo(pageUri);
-  uri.normalize();
+  var uri = new URI(url);
+  if (!uri.is("urn")) {
+    uri = new URI(url).absoluteTo(pageUri);
+    uri.normalize();
+  }
+
   var serverKey = uri.authority();
   if (!/:/.test(serverKey)) {
     // If the authority does not contain a port number, add port 443 for https or port 80 for http
