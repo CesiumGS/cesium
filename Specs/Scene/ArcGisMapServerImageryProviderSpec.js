@@ -21,7 +21,7 @@ import { ImageryLayerFeatureInfo } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { Uri } from "../../Source/Cesium.js";
+import { urijs as URI } from "../../Source/Cesium.js";
 
 describe("Scene/ArcGisMapServerImageryProvider", function () {
   var supportsImageBitmapOptions;
@@ -53,16 +53,16 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     withProxy,
     token
   ) {
-    var uri = new Uri(actualUrl);
+    var uri = new URI(actualUrl);
 
     if (withProxy) {
-      uri = new Uri(decodeURIComponent(uri.query));
+      uri = new URI(decodeURIComponent(uri.query()));
     }
 
-    var params = queryToObject(uri.query);
+    var params = queryToObject(uri.query());
 
-    var uriWithoutQuery = new Uri(uri);
-    uriWithoutQuery.query = "";
+    var uriWithoutQuery = new URI(uri);
+    uriWithoutQuery.query("");
 
     expect(uriWithoutQuery.toString()).toEqual(
       appendForwardSlash(expectedBaseUrl)
@@ -416,11 +416,11 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var uri = new URI(request.url);
+        var params = queryToObject(uri.query());
 
-        var uriWithoutQuery = new Uri(uri);
-        uriWithoutQuery.query = "";
+        var uriWithoutQuery = new URI(uri);
+        uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
           getAbsoluteUri(baseUrl + "export")
@@ -495,11 +495,11 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var uri = new URI(request.url);
+        var params = queryToObject(uri.query());
 
-        var uriWithoutQuery = new Uri(uri);
-        uriWithoutQuery.query = "";
+        var uriWithoutQuery = new URI(uri);
+        uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
           getAbsoluteUri(baseUrl + "export")
@@ -1198,8 +1198,8 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         deferred,
         overrideMimeType
       ) {
-        var uri = new Uri(url);
-        var query = queryToObject(uri.getQuery());
+        var uri = new URI(url);
+        var query = queryToObject(uri.query());
 
         expect(query.layers).toContain("visible:someLayer,anotherLayerYay");
         Resource._DefaultImplementations.loadWithXhr(

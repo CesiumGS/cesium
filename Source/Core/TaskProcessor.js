@@ -201,9 +201,10 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
   var uri = new URI(workerPath);
-  this._workerPath = uri.scheme().length !== 0 && uri.fragment().length === 0
-    ? workerPath
-    : TaskProcessor._workerModulePrefix + workerPath;
+  this._workerPath =
+    uri.scheme().length !== 0 && uri.fragment().length === 0
+      ? workerPath
+      : TaskProcessor._workerModulePrefix + workerPath;
   this._maximumActiveTasks = defaultValue(
     maximumActiveTasks,
     Number.POSITIVE_INFINITY

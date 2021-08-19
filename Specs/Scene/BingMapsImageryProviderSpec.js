@@ -12,7 +12,7 @@ import { ImageryLayer } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { Uri } from "../../Source/Cesium.js";
+import { urijs as URI } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Scene/BingMapsImageryProvider", function () {
@@ -175,25 +175,26 @@ describe("Scene/BingMapsImageryProvider", function () {
   }
 
   function installFakeMetadataRequest(url, mapStyle, proxy) {
-    var expectedUri = new Uri("REST/v1/Imagery/Metadata/" + mapStyle).resolve(
-      new Uri(appendForwardSlash(url))
-    );
+    var baseUri = new URI(appendForwardSlash(url));
+    var expectedUri = new URI(
+      "REST/v1/Imagery/Metadata/" + mapStyle
+    ).absoluteTo(baseUri);
 
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName
     ) {
-      var uri = new Uri(url);
+      var uri = new URI(url);
       if (proxy) {
-        uri = new Uri(decodeURIComponent(uri.query));
+        uri = new URI(decodeURIComponent(uri.query()));
       }
 
-      var query = queryToObject(uri.query);
+      var query = queryToObject(uri.query());
       expect(query.jsonp).toBeDefined();
       expect(query.incl).toEqual("ImageryProviders");
       expect(query.key).toBeDefined();
 
-      uri.query = undefined;
+      uri.query("");
       expect(uri.toString()).toStartWith(expectedUri.toString());
 
       setTimeout(function () {
@@ -221,13 +222,13 @@ describe("Scene/BingMapsImageryProvider", function () {
         );
       } else {
         if (defined(expectedUrl)) {
-          var uri = new Uri(url);
+          var uri = new URI(url);
           if (proxy) {
-            uri = new Uri(decodeURIComponent(uri.query));
+            uri = new URI(decodeURIComponent(uri.query()));
           }
 
-          var query = queryToObject(uri.query);
-          uri.query = undefined;
+          var query = queryToObject(uri.query());
+          uri.query("");
           expect(uri.toString()).toEqual(expectedUrl);
           for (var param in expectedParams) {
             if (expectedParams.hasOwnProperty(param)) {
@@ -254,13 +255,13 @@ describe("Scene/BingMapsImageryProvider", function () {
       overrideMimeType
     ) {
       if (defined(expectedUrl)) {
-        var uri = new Uri(url);
+        var uri = new URI(url);
         if (proxy) {
-          uri = new Uri(decodeURIComponent(uri.query));
+          uri = new URI(decodeURIComponent(uri.query()));
         }
 
-        var query = queryToObject(uri.query);
-        uri.query = undefined;
+        var query = queryToObject(uri.query());
+        uri.query("");
         expect(uri.toString()).toEqual(expectedUrl);
         for (var param in expectedParams) {
           if (expectedParams.hasOwnProperty(param)) {

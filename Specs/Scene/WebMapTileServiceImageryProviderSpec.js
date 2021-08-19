@@ -17,7 +17,7 @@ import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import { WebMapTileServiceImageryProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { Uri } from "../../Source/Cesium.js";
+import { urijs as URI } from "../../Source/Cesium.js";
 
 describe("Scene/WebMapTileServiceImageryProvider", function () {
   beforeEach(function () {
@@ -53,8 +53,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var tilerow = 5;
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    var queryObject = queryToObject(uri.query);
+    var uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    var queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -71,8 +71,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     tilerow = 3;
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
-    uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    queryObject = queryToObject(uri.query);
+    uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -104,8 +104,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var tilerow = 5;
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    var queryObject = queryToObject(uri.query);
+    var uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    var queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -117,14 +117,14 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
-    expect(uri.authority).toEqual("wmtsa.invalid");
+    expect(uri.authority()).toEqual("wmtsa.invalid");
 
     tilecol = 2;
     tilerow = 3;
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
-    uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    queryObject = queryToObject(uri.query);
+    uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -136,7 +136,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
-    expect(uri.authority).toEqual("wmtsb.invalid");
+    expect(uri.authority()).toEqual("wmtsb.invalid");
   });
 
   it("supports subdomains string urls", function () {
@@ -204,7 +204,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var tilerow = 5;
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new Uri(
+    var uri = new URI(
       ImageryProvider.loadImage.calls.mostRecent().args[1].getUrlComponent()
     );
     expect(uri.toString()).toEqual(
@@ -737,7 +737,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var uri = new Uri("http://wmts.invalid/kvp");
+    var uri = new URI("http://wmts.invalid/kvp");
     var query = {
       tilematrix: 0,
       layer: "someLayer",
@@ -772,7 +772,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Verify request is correct
-        uri.query = objectToQuery(query);
+        uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
         expect(provider._reload.calls.count()).toEqual(0);
 
@@ -786,7 +786,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Verify request changed
-        uri.query = objectToQuery(query);
+        uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
       });
   });

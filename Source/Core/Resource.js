@@ -658,7 +658,9 @@ Resource.prototype.getDerivedResource = function (options) {
     if (uri.is("urn")) {
       resource._url = uri.toString();
     } else {
-      resource._url = uri.absoluteTo(new URI(getAbsoluteUri(this._url))).toString();
+      resource._url = uri
+        .absoluteTo(new URI(getAbsoluteUri(this._url)))
+        .toString();
     }
   }
 
