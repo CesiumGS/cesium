@@ -9,6 +9,7 @@ attribute vec4 compressedAttribute1;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
 varying float v_slice;
+varying float v_brightness;
 
 void main() {
     // Unpack attributes.
@@ -17,6 +18,7 @@ void main() {
     vec2 scale = vec2(positionHighAndScaleX.w, positionLowAndScaleY.w);
 
     float show = compressedAttribute0.x;
+    float brightness = compressedAttribute0.y;
     vec2 coordinates = compressedAttribute0.wz;
     vec3 maximumSize = compressedAttribute1.xyz;
     float slice = compressedAttribute1.w;
@@ -39,4 +41,5 @@ void main() {
     v_offset = offset;
     v_maximumSize = maximumSize;
     v_slice = slice;
+    v_brightness = brightness;
 }

@@ -52,6 +52,7 @@ describe(
       expect(c.scale).toEqual(new Cartesian2(20.0, 12.0));
       expect(c.maximumSize).toEqual(new Cartesian3(20.0, 12.0, 8.0));
       expect(c.slice).toEqual(-1.0);
+      expect(c.brightness).toEqual(1.0);
     });
 
     it("explicitly constructs a cloud", function () {
@@ -62,12 +63,14 @@ describe(
         scale: new Cartesian2(2.0, 3.0),
         maximumSize: new Cartesian3(4.0, 5.0, 6.0),
         slice: 0.5,
+        brightness: 0.7,
       });
       expect(c.show).toEqual(false);
       expect(c.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
       expect(c.scale).toEqual(new Cartesian2(2.0, 3.0));
       expect(c.maximumSize).toEqual(new Cartesian3(4.0, 5.0, 6.0));
       expect(c.slice).toEqual(0.5);
+      expect(c.brightness).toEqual(0.7);
     });
 
     it("sets cloud properties", function () {
@@ -77,12 +80,14 @@ describe(
       c.scale = new Cartesian2(2.0, 3.0);
       c.maximumSize = new Cartesian3(4.0, 5.0, 6.0);
       c.slice = 0.5;
+      c.brightness = 0.7;
 
       expect(c.show).toEqual(false);
       expect(c.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
       expect(c.scale).toEqual(new Cartesian2(2.0, 3.0));
       expect(c.maximumSize).toEqual(new Cartesian3(4.0, 5.0, 6.0));
       expect(c.slice).toEqual(0.5);
+      expect(c.brightness).toEqual(0.7);
     });
 
     it("is not destroyed", function () {
@@ -231,7 +236,7 @@ describe(
         scale: new Cartesian2(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("adds and renders a cloud", function () {
@@ -240,14 +245,14 @@ describe(
         scale: new Cartesian2(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       clouds.add({
         position: new Cartesian3(1.0, 0.0, 0.0),
         scale: new Cartesian2(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("modifies and removes a cloud, then renders", function () {
@@ -255,7 +260,7 @@ describe(
         position: Cartesian3.ZERO,
         scale: new Cartesian2(20.0, 12.0),
       });
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       c.scale = 2.0;
       clouds.remove(c);
@@ -272,10 +277,10 @@ describe(
         scale: new Cartesian2(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       clouds.remove(cloud);
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("removes all clouds and renders", function () {
@@ -287,7 +292,7 @@ describe(
         position: new Cartesian3(1.0, 0.0, 0.0),
         scale: new Cartesian2(20.0, 12.0),
       });
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       clouds.removeAll();
       expect(scene).toRender([0, 0, 0, 255]);
@@ -303,7 +308,7 @@ describe(
         position: new Cartesian3(1.0, 0.0, 0.0),
         scale: new Cartesian2(20.0, 12.0),
       });
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       clouds.removeAll();
       clouds.add({
@@ -311,7 +316,7 @@ describe(
         scale: new Cartesian2(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders using cloud show property", function () {
@@ -320,7 +325,7 @@ describe(
         scale: new Cartesian3(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
       c.show = false;
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -331,13 +336,13 @@ describe(
         scale: new Cartesian3(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       c.position = new Cartesian3(40.0, 0.0, 0.0); // Behind camera
       expect(scene).toRender([0, 0, 0, 255]);
 
       c.position = new Cartesian3(1.0, 0.0, 0.0); // Back in front of camera
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders using cloud scale property", function () {
@@ -346,13 +351,13 @@ describe(
         scale: new Cartesian3(20.0, 12.0),
       });
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       c.scale = Cartesian2.ZERO;
       expect(scene).toRender([0, 0, 0, 255]);
 
       c.scale = new Cartesian2(10.0, 5.0);
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders using cloud maximum size property", function () {
@@ -364,14 +369,14 @@ describe(
         scale: new Cartesian3(20.0, 12.0),
         maximumSize: new Cartesian3(20.0, 10.0, 8.0),
       });
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       c.maximumSize = Cartesian3.ZERO;
       expect(scene).toRender([0, 0, 0, 255]);
 
       clouds.debugClouds = true;
       c.maximumSize = new Cartesian3(10.0, 5.0, 5.0);
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders using cloud slice property", function () {
@@ -382,10 +387,31 @@ describe(
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      // out of bounds slice property
+      c.slice = 10.0;
+      expect(scene).toRender([0, 0, 0, 255]);
 
       c.slice = 0.5;
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
+    });
+
+    it("renders using cloud brightness property", function () {
+      clouds.debugBillboards = false;
+      clouds.debugEllipsoids = true;
+
+      var c = clouds.add({
+        position: Cartesian3.ZERO,
+        scale: new Cartesian3(20.0, 12.0),
+      });
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      c.brightness = 0.0;
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      c.brightness = 0.5;
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("updates 10% of clouds", function () {
@@ -397,13 +423,13 @@ describe(
         });
       }
 
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
 
       clouds.get(3).scale = Cartesian2.ZERO;
       expect(scene).toRender([0, 0, 0, 255]);
 
       clouds.get(3).scale = new Cartesian3(2.0, 2.0);
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("does not render if show is false", function () {
@@ -411,7 +437,7 @@ describe(
         position: Cartesian3.ZERO,
         scale: new Cartesian2(20.0, 12.0),
       });
-      expect(scene).not.toRender([0, 0, 0, 255]);
+      expect(scene).notToRender([0, 0, 0, 255]);
       clouds.show = false;
       expect(scene).toRender([0, 0, 0, 255]);
     });

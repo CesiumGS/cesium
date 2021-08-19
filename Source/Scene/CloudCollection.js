@@ -36,7 +36,7 @@ var attributeLocations;
 var attributeLocationsBatched = {
   positionHighAndScaleX: 0,
   positionLowAndScaleY: 1,
-  compressedAttribute0: 2, // show, direction
+  compressedAttribute0: 2, // show, brightness, direction
   compressedAttribute1: 3, // cloudSize, slice
 };
 
@@ -44,7 +44,7 @@ var attributeLocationsInstanced = {
   direction: 0,
   positionHighAndScaleX: 1,
   positionLowAndScaleY: 2,
-  compressedAttribute0: 3, // show,
+  compressedAttribute0: 3, // show, brightness
   compressedAttribute1: 4, // cloudSize, slice
 };
 
@@ -53,6 +53,7 @@ var POSITION_INDEX = CumulusCloud.POSITION_INDEX;
 var SCALE_INDEX = CumulusCloud.SCALE_INDEX;
 var MAXIMUM_SIZE_INDEX = CumulusCloud.MAXIMUM_SIZE_INDEX;
 var SLICE_INDEX = CumulusCloud.SLICE_INDEX;
+var BRIGHTNESS_INDEX = CumulusCloud.BRIGHTNESS_INDEX;
 var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
 
 /**
@@ -63,6 +64,8 @@ var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.show=true] Whether to display the clouds.
+ * @param {Number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
+ * @param {Number} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
  * @param {Boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
  * @param {Boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
  * @see CloudCollection#add
@@ -96,8 +99,33 @@ function CloudCollection(options) {
 
   this._noiseTexture = undefined;
   this._noiseTextureLength = 128;
-  this._noiseDetail = 16.0; // must be a power of two
-  this._noiseOffset = Cartesian3.ZERO;
+
+  /**
+   * <p>
+   * Controls the amount of detail captured in the precomputed noise texture
+   * used to render the cumulus clouds. In order for the texture to be tileable,
+   * this must be a power of two. For best results, set this to be a power of two
+   * between <code>8.0</code> and <code>32.0</code> (inclusive).
+   * </p>
+   *
+   * @type {Number}
+   *
+   * @default 16.0
+   */
+  this.noiseDetail = defaultValue(options.noiseDetail, 16.0);
+
+  /**
+   * <p>
+   * Applies a translation to noise texture coordinates to generate different data.
+   * This can be modified if the default noise does not generate good-looking clouds.
+   * </p>
+   *
+   * @type {Cartesian3}
+   */
+  this.noiseOffset = Cartesian3.clone(
+    defaultValue(options.noiseOffset, Cartesian3.ZERO)
+  );
+
   this._loading = false;
   this._ready = true;
 
@@ -110,7 +138,7 @@ function CloudCollection(options) {
       return that._noiseTextureLength;
     },
     u_noiseDetail: function () {
-      return that._noiseDetail;
+      return that.noiseDetail;
     },
   };
 
@@ -216,7 +244,7 @@ function destroyClouds(clouds) {
  *   position : Cesium.Cartesian3.ZERO,
  *   scale : new Cesium.Cartesian2(20.0, 12.0),
  *   maximumSize: new Cesium.Cartesian3(20.0, 12.0, 12.0),
- *   slice: 0.0,
+ *   slice: -1.0,
  *   cloudType : CloudType.CUMULUS
  * });
  *
@@ -572,16 +600,17 @@ function writeCompressedAttribute0(
   var i;
   var writer = vafWriters[attributeLocations.compressedAttribute0];
   var show = cloud.show;
+  var brightness = cloud.brightness;
 
   if (cloudCollection._instanced) {
     i = cloud._index;
-    writer(i, show, 0.0, 0.0, 0.0);
+    writer(i, show, brightness, 0.0, 0.0);
   } else {
     i = cloud._index * 4;
-    writer(i + 0, show, 0.0, 0.0, 0.0);
-    writer(i + 1, show, 0.0, 1.0, 0.0);
-    writer(i + 2, show, 0.0, 1.0, 1.0);
-    writer(i + 3, show, 0.0, 0.0, 1.0);
+    writer(i + 0, show, brightness, 0.0, 0.0);
+    writer(i + 1, show, brightness, 1.0, 0.0);
+    writer(i + 2, show, brightness, 1.0, 1.0);
+    writer(i + 3, show, brightness, 0.0, 1.0);
   }
 }
 
@@ -639,8 +668,8 @@ CloudCollection.prototype.update = function (frameState) {
     });
 
     var noiseTextureLength = this._noiseTextureLength;
-    var noiseDetail = this._noiseDetail;
-    var noiseOffset = this._noiseOffset;
+    var noiseDetail = this.noiseDetail;
+    var noiseOffset = this.noiseOffset;
 
     this._noiseTexture = new Texture({
       context: context,
@@ -727,7 +756,7 @@ CloudCollection.prototype.update = function (frameState) {
       writers.push(writePositionAndScale);
     }
 
-    if (properties[SHOW_INDEX]) {
+    if (properties[SHOW_INDEX] || properties[BRIGHTNESS_INDEX]) {
       writers.push(writeCompressedAttribute0);
     }
 

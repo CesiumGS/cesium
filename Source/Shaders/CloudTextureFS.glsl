@@ -34,7 +34,9 @@ vec3 quintic(vec3 t) {
     return 6.0 * t5 - 15.0 * t4 + 10.0 * t3;
 }
 
-vec3 getPerlinDirection(vec3 p) {
+vec3 getPerlinDirection(vec3 point) {
+    vec3 p = wrapVec(point, u_noiseTextureLength / u_noiseDetail);
+    p += u_noiseOffset;
     int i = int(random(p) * 16.0);
     if(i == 0) {
         return vec3(1, 1, 0);
@@ -73,13 +75,14 @@ vec3 getPerlinDirection(vec3 p) {
 
 float perlinNoise(vec3 p) {
     float noise = 0.0;
-    vec3 cell = floor(p);
+    vec3 baseCell = floor(p);
+    vec3 pointInCell = fract(p);
     for(float z = 0.0; z <= 1.0; z++) {
         for(float y = 0.0; y <= 1.0; y++) {
             for(float x = 0.0; x <= 1.0; x++) {
-                vec3 corner = cell + vec3(x, y, z);
-                vec3 cornerToPoint = p - corner;
-                vec3 randomDir = getPerlinDirection(corner);
+                vec3 corner = vec3(x, y, z);
+                vec3 cornerToPoint = pointInCell - corner;
+                vec3 randomDir = getPerlinDirection(baseCell + corner);
                 vec3 falloff = vec3(1.0) - quintic(abs(cornerToPoint));
 
                 float value = dot(cornerToPoint, randomDir);
@@ -95,6 +98,7 @@ float perlinNoise(vec3 p) {
 vec3 getWorleyCellPoint(vec3 centerCell, vec3 offset, float freq) {
     vec3 cell = centerCell + offset;
     cell = wrapVec(cell, u_noiseTextureLength / u_noiseDetail);
+    cell += floor(u_noiseOffset / u_noiseDetail);
     vec3 p = offset + random3(cell);
     return p;
 }
@@ -158,11 +162,10 @@ void main() {
     float z = floor(v_position.x / u_noiseTextureLength);
     float x = v_position.x - z * u_noiseTextureLength;
     vec3 position = vec3(x, v_position.y, z);
-    position += u_noiseOffset;
     position /= u_noiseDetail;
     float perlin = clamp(perlinFBMNoise(position, 3.0, 1.0) + 0.5, 0.0, 1.0);
     float worley0 = clamp(worleyFBMNoise(position, 3.0, 1.0), 0.0, 1.0);
     float worley1 = clamp(worleyFBMNoise(position, 3.0, 2.0), 0.0, 1.0);
-    float worley2 = clamp(worleyFBMNoise(position, 3.0, 4.0), 0.0, 1.0);
+    float worley2 = clamp(worleyFBMNoise(position, 3.0, 3.0), 0.0, 1.0);
     gl_FragColor = vec4(perlin, worley0, worley1, worley2);
 }

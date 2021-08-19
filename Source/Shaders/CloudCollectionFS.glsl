@@ -4,6 +4,7 @@ uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
 varying float v_slice;
+varying float v_brightness;
 
 float wrap(float value, float rangeLength) {
     if(value < 0.0) {
@@ -68,10 +69,6 @@ vec4 sampleNoiseTexture(vec3 position) {
     return mix(yLerp0, yLerp1, lerpValue.z);
 }
 
-float remap(float val, float in_start, float in_end, float out_start, float out_end) {
-    return out_start + ((out_end - out_start) / (in_end - in_start)) * (val - in_start);
-}
-
 // Intersection with a unit sphere with radius 0.5 at center (0, 0, 0).
 bool intersectSphere(vec3 origin, vec3 dir, float slice,
                      out vec3 point, out vec3 normal) {  
@@ -87,16 +84,18 @@ bool intersectSphere(vec3 origin, vec3 dir, float slice,
     if(t < 0.0) {
         t = (-B + root) / (2.0 * A);
     }
-    
-    if(slice > 0.0) {
-        float clampedSlice = clamp(slice, 0.0, 1.0);
-        float sliceOffset = clampedSlice * root / (2.0 * A);
-        t += sliceOffset;
-    } 
-
     point = origin + t * dir;
+    
+    if(slice >= 0.0) {
+        point.z = (slice / 2.0) - 0.5;
+        if(length(point) > 0.5) {
+            return false;
+        }
+    }
+
     normal = normalize(point);
     point -= 0.01 * normal;
+
     return true;
 }
 
@@ -164,7 +163,8 @@ float I(float Id, float Is, float It) {
 
 const vec3 lightDir = normalize(vec3(0.2, -1.0, 0.7));
 
-vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, float cloudSlice) {
+vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, float cloudSlice,
+               float brightness) {
     vec3 cloudPoint, cloudNormal;
     if(!intersectEllipsoid(rayOrigin, rayDir, cloudCenter, cloudScale, cloudSlice,
                             cloudPoint, cloudNormal)) {
@@ -176,22 +176,19 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
     float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
     float It = T(cloudPoint);                                 // texture function
     float intensity = I(Id, Is, It);
-    vec3 color = intensity * vec3(1.0);
-
+    vec3 color = intensity * clamp(brightness, 0.1, 1.0) * vec3(1.0);
     vec4 noise = sampleNoiseTexture(u_noiseDetail * cloudPoint);
     float W = noise.y;
     float W2 = noise.z;
     float W3 = noise.w;
     float TR = pow(ndDot, 3.0) - W;
     float minusDot = 0.5 - ndDot;
-    float heightSignal = clamp((cloudPoint.y + cloudScale.y * 0.5) / cloudScale.y, 0.0, 1.0);
-    float heightSignalPow = heightSignal * heightSignal;
-    TR *= heightSignalPow + 1.5;
-    TR -= max(1.8 * minusDot * W2 * W2, 0.0);
+    TR *= 1.3;
+    TR -= min(minusDot * W2, 0.0);
     TR -= 0.8 * (minusDot + 0.13) * W3;
-    float shading = mix(1.0 - 0.5 * W * W, 1.0, Id * (1.0 - TR));
-    shading = clamp(shading + 0.2, 0.5, 1.0);
-    vec3 finalColor = mix(vec3(0.5), shading * color, 1.2);
+    float shading = mix(1.0 - 0.8 * W * W, 1.0, Id * TR);
+    shading = clamp(shading + 0.2, 0.0, 1.0);
+    vec3 finalColor = mix(vec3(0.5), shading * color, 1.15);
     return vec4(finalColor, clamp(TR, 0.0, 1.0));
 }
 
@@ -215,12 +212,13 @@ void main() {
 #ifdef DEBUG_ELLIPSOIDS
     vec3 point, normal;
     if(intersectEllipsoid(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale, v_slice,
-                        point, normal)) {
-        gl_FragColor = vec4(1.0);
+                          point, normal)) {
+        gl_FragColor = v_brightness * vec4(1.0);
     }
 #else
     #ifndef DEBUG_BILLBOARDS
-    vec4 cloud = drawCloud(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale, v_slice);    
+    vec4 cloud = drawCloud(rayOrigin, rayDir,
+                           ellipsoidCenter, ellipsoidScale, v_slice, v_brightness);    
     if(cloud.w < 0.01) {
         discard;
     }

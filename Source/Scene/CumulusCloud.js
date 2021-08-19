@@ -44,6 +44,8 @@ function CumulusCloud(options, cloudCollection) {
   }
 
   this._slice = defaultValue(options.slice, -1.0);
+
+  this._brightness = defaultValue(options.brightness, 1.0);
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
 }
@@ -53,7 +55,8 @@ var POSITION_INDEX = (CumulusCloud.POSITION_INDEX = 1);
 var SCALE_INDEX = (CumulusCloud.SCALE_INDEX = 2);
 var MAXIMUM_SIZE_INDEX = (CumulusCloud.MAXIMUM_SIZE_INDEX = 3);
 var SLICE_INDEX = (CumulusCloud.SLICE_INDEX = 4);
-CumulusCloud.NUMBER_OF_PROPERTIES = 5;
+var BRIGHTNESS_INDEX = (CumulusCloud.BRIGHTNESS_INDEX = 5);
+CumulusCloud.NUMBER_OF_PROPERTIES = 6;
 
 function makeDirty(cloud, propertyChanged) {
   var cloudCollection = cloud._cloudCollection;
@@ -167,13 +170,16 @@ Object.defineProperties(CumulusCloud.prototype, {
   },
 
   /**
-   * Gets or sets the slice of the cloud that is rendered on the billboard.
-   * Must be a value between 0 and 1. Given the maximum size that the cloud
-   * can occupy, the slice specifies how deeply into the cloud to intersect.
-   * This can be used to produce a specific cross-section of the cloud for the
-   * billboard's appearance.
+   * Gets or sets the "slice" of the cloud that is rendered on the billboard, i.e.
+   * the specific cross-section of the cloud chosen for the billboard's appearance.
+   * Given a value between 0 and 1, the slice specifies how deeply into the cloud
+   * to intersect based on its maximum size in the z-direction.
+   * If this value is set to a negative number, the cloud will not render a cross-section.
+   * Instead, it will render the outside of the ellipsoid that is visible.
+   
    * @memberof CumulusCloud.prototype
    * @type {Number}
+   * @default -1.0
    */
   slice: {
     get: function () {
@@ -190,6 +196,32 @@ Object.defineProperties(CumulusCloud.prototype, {
       if (slice !== value) {
         this._slice = value;
         makeDirty(this, SLICE_INDEX);
+      }
+    },
+  },
+
+  /**
+   * Gets or sets the brightness of the cloud. This can be used to give clouds
+   * a darker, grayer appearance.
+   * @memberof CumulusCloud.prototype
+   * @type {Number}
+   * @default 1.0
+   */
+  brightness: {
+    get: function () {
+      return this._brightness;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug)
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
+
+      var brightness = this._brightness;
+      if (brightness !== value) {
+        this._brightness = value;
+        makeDirty(this, BRIGHTNESS_INDEX);
       }
     },
   },
