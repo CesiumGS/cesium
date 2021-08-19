@@ -99,30 +99,12 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
-  /**
-   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-   * Local reference frames can be used by providing a different transformation matrix, like that returned
-   * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
-   * @type {Matrix4}
-   *
-   * @default {@link Matrix4.IDENTITY}
-   *
-   * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-   */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
-
   initialize(this);
 }
 
 function initialize(sceneGraph) {
-  var modelMatrix = sceneGraph.modelMatrix;
-  var scene = sceneGraph._modelComponents;
+  var modelMatrix = sceneGraph._model.modelMatrix;
+  var scene = sceneGraph._modelComponents.scene;
 
   ModelExperimentalUtility.correctModelMatrix(
     modelMatrix,

@@ -9,6 +9,7 @@ import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -45,13 +46,14 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
+  this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
+
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
 
   this._ready = false;
   this._readyPromise = when.defer();
 
-  this._defaultTexture = undefined;
   this._texturesLoaded = false;
 
   this._cull = defaultValue(options.cull, true);
@@ -68,12 +70,13 @@ export default function ModelExperimental(options) {
     false
   );
 
-  initialize(this, options);
+  initialize(this);
 }
 
-function initialize(model, options) {
+function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
+  var modelMatrix = model._modelMatrix;
 
   loader.load();
 
@@ -82,7 +85,7 @@ function initialize(model, options) {
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
         modelComponents: loader.components,
-        modelMatrix: options.modelMatrix,
+        modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
     })
@@ -205,10 +208,10 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   modelMatrix: {
     get: function () {
-      return this._sceneGraph._modelMatrix;
+      return this._modelMatrix;
     },
     set: function (value) {
-      this._sceneGraph._modelMatrix = value;
+      this._modelMatrix = value;
     },
   },
 
@@ -248,10 +251,6 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @exception {RuntimeError} Failed to load external reference.
  */
 ModelExperimental.prototype.update = function (frameState) {
-  if (!defined(this._defaultTexture)) {
-    this._defaultTexture = frameState.context.defaultTexture;
-  }
-
   // Keep processing the model every frame until the main resources
   // (buffer views) and textures (which may be loaded asynchronously)
   // are processed.
