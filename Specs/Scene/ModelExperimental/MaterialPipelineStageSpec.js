@@ -10,6 +10,8 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
+  Cartesian4,
+  Cartesian3,
 } from "../../../Source/Cesium.js";
 import ModelLightingOptions from "../../../Source/Scene/ModelExperimental/ModelLightingOptions.js";
 import createScene from "../../createScene.js";
@@ -226,6 +228,61 @@ describe(
           u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
           u_specularGlossinessTexture:
             specularGlossiness.specularGlossinessTexture.texture,
+          u_glossinessFactor: specularGlossiness.glossinessFactor,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
+    it("adds specular glossiness uniforms without defaults", function () {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        // Alter PBR parameters so that defaults are not used.
+        var specularGlossiness = primitive.material.specularGlossiness;
+        specularGlossiness.diffuseFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
+        specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5, 0.5);
+
+        var shaderBuilder = new ShaderBuilder();
+        var uniformMap = {};
+        var renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          renderStateOptions: {},
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+          "uniform sampler2D u_diffuseTexture;",
+          "uniform vec4 u_diffuseFactor;",
+          "uniform sampler2D u_specularGlossinessTexture;",
+          "uniform vec3 u_specularFactor;",
+          "uniform float u_glossinessFactor;",
+        ]);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "USE_SPECULAR_GLOSSINESS",
+          "HAS_DIFFUSE_TEXTURE",
+          "TEXCOORD_DIFFUSE v_texCoord_0",
+          "HAS_DIFFUSE_FACTOR",
+          "HAS_SPECULAR_GLOSSINESS_TEXTURE",
+          "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
+          "HAS_SPECULAR_FACTOR",
+          "HAS_GLOSSINESS_FACTOR",
+        ]);
+
+        var expectedUniforms = {
+          u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
+          u_diffuseFactor: specularGlossiness.diffuseFactor,
+          u_specularGlossinessTexture:
+            specularGlossiness.specularGlossinessTexture.texture,
+          u_specularFactor: specularGlossiness.specularFactor,
           u_glossinessFactor: specularGlossiness.glossinessFactor,
         };
         expectUniformMap(uniformMap, expectedUniforms);
