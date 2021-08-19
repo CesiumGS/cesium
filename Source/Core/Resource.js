@@ -1,4 +1,4 @@
-import Uri from "../ThirdParty/Uri.js";
+import URI from "../ThirdPartyNpm/urijs.js";
 import when from "../ThirdPartyNpm/when.js";
 import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
@@ -37,7 +37,7 @@ var xhrBlobSupported = (function () {
 /**
  * Parses a query string and returns the object equivalent.
  *
- * @param {Uri} uri The Uri with a query object.
+ * @param {URI} uri The Uri with a query object.
  * @param {Resource} resource The Resource that will be assigned queryParameters.
  * @param {Boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
  * @param {Boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in uri will take precedence.
@@ -45,8 +45,8 @@ var xhrBlobSupported = (function () {
  * @private
  */
 function parseQuery(uri, resource, merge, preserveQueryParameters) {
-  var queryString = uri.query;
-  if (!defined(queryString) || queryString.length === 0) {
+  var queryString = uri.query();
+  if (queryString.length === 0) {
     return {};
   }
 
@@ -69,13 +69,13 @@ function parseQuery(uri, resource, merge, preserveQueryParameters) {
   } else {
     resource._queryParameters = query;
   }
-  uri.query = undefined;
+  uri.search("");
 }
 
 /**
  * Converts a query object into a string.
  *
- * @param {Uri} uri The Uri object that will have the query object set.
+ * @param {URI} uri The Uri object that will have the query object set.
  * @param {Resource} resource The resource that has queryParameters
  *
  * @private
@@ -87,9 +87,9 @@ function stringifyQuery(uri, resource) {
 
   // We have 1 key with an undefined value, so this is just a string, not key/value pairs
   if (keys.length === 1 && !defined(queryObject[keys[0]])) {
-    uri.query = keys[0];
+    uri.search(keys[0]);
   } else {
-    uri.query = objectToQuery(queryObject);
+    uri.search(objectToQuery(queryObject));
   }
 }
 
@@ -310,11 +310,11 @@ function Resource(options) {
   this.retryAttempts = defaultValue(options.retryAttempts, 0);
   this._retryCount = 0;
 
-  var uri = new Uri(options.url);
+  var uri = new URI(options.url);
   parseQuery(uri, this, true, true);
 
   // Remove the fragment as it's not sent with a request
-  uri.fragment = undefined;
+  uri.fragment("");
 
   this._url = uri.toString();
 }
@@ -448,12 +448,12 @@ Object.defineProperties(Resource.prototype, {
       return this.getUrlComponent(true, true);
     },
     set: function (value) {
-      var uri = new Uri(value);
+      var uri = new URI(value);
 
       parseQuery(uri, this, false);
 
       // Remove the fragment as it's not sent with a request
-      uri.fragment = undefined;
+      uri.fragment("");
 
       this._url = uri.toString();
     },
@@ -545,7 +545,7 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     return this._url;
   }
 
-  var uri = new Uri(this._url);
+  var uri = new URI(this._url);
 
   if (query) {
     stringifyQuery(uri, this);
@@ -644,7 +644,7 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    var uri = new Uri(options.url);
+    var uri = new URI(options.url);
 
     var preserveQueryParameters = defaultValue(
       options.preserveQueryParameters,
@@ -653,9 +653,13 @@ Resource.prototype.getDerivedResource = function (options) {
     parseQuery(uri, resource, true, preserveQueryParameters);
 
     // Remove the fragment as it's not sent with a request
-    uri.fragment = undefined;
+    uri.fragment("");
 
-    resource._url = uri.resolve(new Uri(getAbsoluteUri(this._url))).toString();
+    if (uri.is("urn")) {
+      resource._url = uri.toString();
+    } else {
+      resource._url = uri.absoluteTo(new URI(getAbsoluteUri(this._url))).toString();
+    }
   }
 
   if (defined(options.queryParameters)) {

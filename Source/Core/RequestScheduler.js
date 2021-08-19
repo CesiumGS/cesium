@@ -1,4 +1,4 @@
-import Uri from "../ThirdParty/Uri.js";
+import URI from "../ThirdPartyNpm/urijs.js";
 import when from "../ThirdPartyNpm/when.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
@@ -34,7 +34,7 @@ var activeRequests = [];
 var numberOfActiveRequestsByServer = {};
 
 var pageUri =
-  typeof document !== "undefined" ? new Uri(document.location.href) : new Uri();
+  typeof document !== "undefined" ? new URI(document.location.href) : new URI();
 
 var requestCompletedEvent = new Event();
 
@@ -350,12 +350,12 @@ RequestScheduler.getServerKey = function (url) {
   Check.typeOf.string("url", url);
   //>>includeEnd('debug');
 
-  var uri = new Uri(url).resolve(pageUri);
+  var uri = new URI(url).absoluteTo(pageUri);
   uri.normalize();
-  var serverKey = uri.authority;
+  var serverKey = uri.authority();
   if (!/:/.test(serverKey)) {
     // If the authority does not contain a port number, add port 443 for https or port 80 for http
-    serverKey = serverKey + ":" + (uri.scheme === "https" ? "443" : "80");
+    serverKey = serverKey + ":" + (uri.scheme() === "https" ? "443" : "80");
   }
 
   var length = numberOfActiveRequestsByServer[serverKey];

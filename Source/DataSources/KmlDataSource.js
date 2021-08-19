@@ -39,7 +39,7 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "../ThirdPartyNpm/Autolinker.js";
-import Uri from "../ThirdParty/Uri.js";
+import URI from "../ThirdPartyNpm/urijs.js";
 import when from "../ThirdPartyNpm/when.js";
 import zip from "../ThirdPartyNpm/zip.js";
 import BillboardGraphics from "./BillboardGraphics.js";
@@ -412,12 +412,13 @@ function loadDataUriFromZip(entry, uriResolver) {
 
 function embedDataUris(div, elementType, attributeName, uriResolver) {
   var keys = uriResolver.keys;
-  var baseUri = new Uri(".");
+  var baseUri = new URI(".");
   var elements = div.querySelectorAll(elementType);
   for (var i = 0; i < elements.length; i++) {
     var element = elements[i];
     var value = element.getAttribute(attributeName);
-    var uri = new Uri(value).resolve(baseUri).toString();
+    var relativeUri = new URI(value);
+    var uri = relativeUri.absoluteTo(baseUri).toString();
     var index = keys.indexOf(uri);
     if (index !== -1) {
       var key = keys[index];
@@ -634,9 +635,9 @@ function resolveHref(href, sourceResource, uriResolver) {
       });
     } else {
       // Needed for multiple levels of KML files in a KMZ
-      var baseUri = new Uri(sourceResource.getUrlComponent());
-      var uri = new Uri(href);
-      blob = uriResolver[uri.resolve(baseUri)];
+      var baseUri = new URI(sourceResource.getUrlComponent());
+      var uri = new URI(href);
+      blob = uriResolver[uri.absoluteTo(baseUri)];
       if (defined(blob)) {
         resource = new Resource({
           url: blob,

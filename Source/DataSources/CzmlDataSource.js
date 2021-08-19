@@ -40,7 +40,7 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import Uri from "../ThirdParty/Uri.js";
+import URI from "../ThirdPartyNpm/urijs.js";
 import when from "../ThirdPartyNpm/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";
@@ -508,7 +508,7 @@ function getPropertyType(czmlInterval) {
   ) {
     return Rectangle;
   } else if (czmlInterval.hasOwnProperty("uri")) {
-    return Uri;
+    return URI;
   } else if (czmlInterval.hasOwnProperty("verticalOrigin")) {
     return VerticalOrigin;
   }
@@ -592,7 +592,7 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       ];
     case Rectangle:
       return unwrapRectangleInterval(czmlInterval);
-    case Uri:
+    case URI:
       return unwrapUriInterval(czmlInterval, sourceUri);
     case VerticalOrigin:
       return VerticalOrigin[
@@ -3274,7 +3274,7 @@ function processModel(entity, packet, entityCollection, sourceUri) {
     entityCollection
   );
   processPacketData(
-    Uri,
+    URI,
     model,
     "uri",
     modelData.gltf,
@@ -4489,7 +4489,7 @@ function processTileset(entity, packet, entityCollection, sourceUri) {
     entityCollection
   );
   processPacketData(
-    Uri,
+    URI,
     tileset,
     "uri",
     tilesetData.uri,

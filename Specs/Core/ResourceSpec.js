@@ -6,7 +6,7 @@ import { RequestErrorEvent } from "../../Source/Cesium.js";
 import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
-import { Uri } from "../../Source/Cesium.js";
+import { urijs as URI } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";
 
@@ -2742,8 +2742,8 @@ describe("Core/Resource", function () {
         expect(receivedResource._retryCount).toEqual(1);
         expect(cb.calls.argsFor(0)[1]).toEqual("some error");
 
-        var uri = new Uri(lastUrl);
-        var query = queryToObject(uri.query);
+        var uri = new URI(lastUrl);
+        var query = queryToObject(uri.query());
         window[query.callback]("something good");
         expect(resolvedValue).toEqual("something good");
         expect(rejectedError).toBeUndefined();
