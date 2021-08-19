@@ -12,11 +12,6 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("ModelExperimental/CustomShaderStage", function () {
-  var emptyVertexShader =
-    "vec3 vertexMain(VertexInput vsInput, vec3 position){ return position; }";
-  var emptyFragmentShader =
-    "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
-
   var primitive = {
     attributes: [
       {
@@ -48,10 +43,19 @@ describe("ModelExperimental/CustomShaderStage", function () {
     ],
   };
 
+  var emptyVertexShader =
+    "vec3 vertexMain(VertexInput vsInput, vec3 position){ return position; }";
+  var emptyFragmentShader =
+    "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
+  var emptyShader = new CustomShader({
+    vertexShaderText: emptyVertexShader,
+    fragmentShaderText: emptyFragmentShader,
+  });
+
   it("sets defines in the shader", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
-      customShader: new CustomShader(),
+      customShader: emptyShader,
     };
     var renderResources = {
       shaderBuilder: shaderBuilder,
@@ -62,9 +66,12 @@ describe("ModelExperimental/CustomShaderStage", function () {
     CustomShaderStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
-      "CUSTOM_VERTEX_SHADER",
+      "USE_CUSTOM_SHADER",
+      "HAS_CUSTOM_VERTEX_SHADER",
     ]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+      "USE_CUSTOM_SHADER",
+      "HAS_CUSTOM_FRAGMENT_SHADER",
       "CUSTOM_SHADER_MODIFY_MATERIAL",
     ]);
   });
@@ -191,7 +198,24 @@ describe("ModelExperimental/CustomShaderStage", function () {
   it("generates shader code from built-in attributes", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
-      customShader: new CustomShader(),
+      customShader: new CustomShader({
+        vertexShaderText: [
+          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "{",
+          "    vec3 normal = vsInput.attributes.normal;",
+          "    vec2 texCoord = vsInput.attributes.texCoord_0;",
+          "    return vsInput.attributes.position;",
+          "}",
+        ].join("\n"),
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    vec3 position = fsInput.attributes.position;",
+          "    vec3 normal = fsInput.attributes.normal;",
+          "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+          "}",
+        ].join("\n"),
+      }),
     };
     var renderResources = {
       shaderBuilder: shaderBuilder,
@@ -234,7 +258,22 @@ describe("ModelExperimental/CustomShaderStage", function () {
   it("generates shader code for custom attributes", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
-      customShader: new CustomShader(),
+      customShader: new CustomShader({
+        vertexShaderText: [
+          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "{",
+          "    float temperature = vsInput.attributes.temperature;",
+          "    return vsInput.attributes.position;",
+          "}",
+        ].join("\n"),
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    float temperature = fsInput.attributes.temperature;",
+          "    vec3 position = fsInput.attributes.position;",
+          "}",
+        ].join("\n"),
+      }),
     };
     var renderResources = {
       shaderBuilder: shaderBuilder,
@@ -273,13 +312,52 @@ describe("ModelExperimental/CustomShaderStage", function () {
     expect(temperatureInitializationFS.test(generatedFragmentLines)).toBe(true);
   });
 
-  it("generates the shader lines in the correct order", function () {
+  it("only generates input lines for attributes that are used", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
       customShader: new CustomShader({
-        vertexShaderText: emptyVertexShader,
-        fragmentShaderText: emptyFragmentShader,
+        vertexShaderText: [
+          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "{",
+          "    return 2.0 * vsInput.attributes.position - 1.0;",
+          "}",
+        ].join("\n"),
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    float temperature = fsInput.attributes.temperature",
+          "    material.diffuse = vec3(temperature / 90.0, 0.0, 0.0);",
+          "}",
+        ].join("\n"),
       }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+    };
+
+    CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
+
+    var generatedVertexLines = shaderBuilder._vertexShaderParts.shaderLines[0];
+    var generatedFragmentLines =
+      shaderBuilder._fragmentShaderParts.shaderLines[0];
+
+    expect(/vec3 position;/.test(generatedVertexLines)).toBe(true);
+    expect(/vec3 position;/.test(generatedFragmentLines)).toBe(false);
+    expect(/float temperature;/.test(generatedVertexLines)).toBe(false);
+    expect(/float temperature;/.test(generatedFragmentLines)).toBe(true);
+
+    expect(/attributes.position/.test(generatedVertexLines)).toBe(true);
+    expect(/attributes.position/.test(generatedFragmentLines)).toBe(false);
+    expect(/attributes.temperature/.test(generatedVertexLines)).toBe(false);
+    expect(/attributes.temperature/.test(generatedFragmentLines)).toBe(true);
+  });
+
+  it("generates the shader lines in the correct order", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: emptyShader,
     };
     var renderResources = {
       shaderBuilder: shaderBuilder,
@@ -314,12 +392,37 @@ describe("ModelExperimental/CustomShaderStage", function () {
     expect(fragmentDeclarationOrder.test(fragmentLines[0])).toBe(true);
   });
 
-  it("configures positions in other coordinate systems", function () {
+  it("does not add positions in other coordinate systems if not needed", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: emptyShader,
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    var fragmentLines = shaderBuilder._fragmentShaderParts.shaderLines[0];
+    expect(/positionMC/.test(fragmentLines)).toBe(false);
+    expect(/positionWC/.test(fragmentLines)).toBe(false);
+    expect(/positionEC/.test(fragmentLines)).toBe(false);
+  });
+
+  it("configures positions in other coordinate systems when present in the shader", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
       customShader: new CustomShader({
-        vertexShaderText: emptyVertexShader,
-        fragmentShaderText: emptyFragmentShader,
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    material.diffuse = fsInput.positionMC;",
+          "    material.specular = fsInput.positionWC;",
+          "    material.normal = fsInput.positionEC;",
+          "}",
+        ].join("\n"),
       }),
     };
     var renderResources = {
@@ -342,6 +445,10 @@ describe("ModelExperimental/CustomShaderStage", function () {
         worldCoordDeclaration
       )
     ).not.toBe(-1);
+    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "USE_CUSTOM_SHADER",
+      "COMPUTE_POSITION_WC",
+    ]);
 
     var fragmentLines = shaderBuilder._fragmentShaderParts.shaderLines;
     var expectedInput = [
@@ -358,9 +465,9 @@ describe("ModelExperimental/CustomShaderStage", function () {
     var expectedInitialization = [
       "void initializeInputStruct\\(out FragmentInput fsInput\\)",
       "{",
-      "   fsInput.positionMC = v_position;",
-      "   fsInput.positionWC = v_positionWC;",
-      "   fsInput.positionEC = v_positionEC;",
+      "    fsInput.positionMC = v_position;",
+      "    fsInput.positionWC = v_positionWC;",
+      "    fsInput.positionEC = v_positionEC;",
     ].join("\n");
     expect(new RegExp(expectedInitialization).test(fragmentLines[0])).toBe(
       true

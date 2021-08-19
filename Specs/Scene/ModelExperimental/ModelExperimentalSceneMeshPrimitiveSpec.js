@@ -1,4 +1,5 @@
 import {
+  CustomShader,
   CustomShaderStage,
   GeometryPipelineStage,
   LightingPipelineStage,
@@ -52,13 +53,14 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
   });
 
   it("configures the pipeline for a custom shader that replaces the material", function () {
-    var mockShader = {
-      mode: CustomShaderMode.REPLACE_MATERIAL,
-    };
     var primitive = new ModelExperimentalSceneMeshPrimitive({
       primitive: mockPrimitive,
       model: {
-        customShader: mockShader,
+        customShader: new CustomShader({
+          mode: CustomShaderMode.REPLACE_MATERIAL,
+          fragmentShaderText:
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+        }),
       },
     });
 

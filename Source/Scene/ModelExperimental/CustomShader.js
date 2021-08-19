@@ -120,7 +120,6 @@ function findUsedVariables(customShader) {
     var materialSet = customShader._usedVariablesFragment.materialSet;
     getVariables(fragmentShaderText, materialRegex, materialSet);
   }
-  console.log(customShader);
 }
 
 /**

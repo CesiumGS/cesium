@@ -10,7 +10,7 @@ void main()
     position = instancingStage(position);
     #endif
 
-    #ifdef CUSTOM_VERTEX_SHADER
+    #ifdef USE_CUSTOM_SHADER
     position = customShaderStage(position);
     #endif
 
