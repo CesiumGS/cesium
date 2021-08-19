@@ -4,6 +4,7 @@ import {
   Resource,
   ModelExperimental,
   Cartesian3,
+  when,
 } from "../../../Source/Cesium.js";
 import ShaderProgram from "../../../Source/Renderer/ShaderProgram.js";
 import createScene from "../../createScene.js";
@@ -102,32 +103,58 @@ describe(
 
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
-      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      var loadPromise = resource.fetchArrayBuffer();
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        var resources = model._resources;
+        var loader = model._loader;
 
-      return loadPromise.then(function (buffer) {
-        return loadAndZoomToModelExperimental(
-          { gltf: boxTexturedGlbUrl },
-          scene
-        ).then(function (model) {
-          var resources = model._resources;
-          var loader = model._loader;
-
-          var i;
-          for (i = 0; i < resources.length; i++) {
-            expect(resources[i].isDestroyed()).toEqual(false);
-          }
-          expect(loader.isDestroyed()).toEqual(false);
-          expect(model.isDestroyed()).toEqual(false);
-          scene.primitives.remove(model);
-          expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
-          for (i = 0; i < model._resources.length - 1; i++) {
-            expect(model._resources[i].isDestroyed()).toEqual(true);
-          }
-          expect(loader.isDestroyed()).toEqual(true);
-          expect(model.isDestroyed()).toEqual(true);
-        });
+        var i;
+        for (i = 0; i < resources.length; i++) {
+          expect(resources[i].isDestroyed()).toEqual(false);
+        }
+        expect(loader.isDestroyed()).toEqual(false);
+        expect(model.isDestroyed()).toEqual(false);
+        scene.primitives.remove(model);
+        expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
+        for (i = 0; i < model._resources.length - 1; i++) {
+          expect(model._resources[i].isDestroyed()).toEqual(true);
+        }
+        expect(loader.isDestroyed()).toEqual(true);
+        expect(model.isDestroyed()).toEqual(true);
       });
+    });
+
+    it("destroy doesn't destroy resources when they're in use", function () {
+      return when
+        .all([
+          loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
+          loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
+        ])
+        .then(function (models) {
+          var cacheEntries = ResourceCache.cacheEntries;
+          var cacheKey;
+          var cacheEntry;
+
+          scene.primitives.remove(models[0]);
+
+          for (cacheKey in cacheEntries) {
+            if (cacheEntries.hasOwnProperty(cacheKey)) {
+              cacheEntry = cacheEntries[cacheKey];
+              expect(cacheEntry.referenceCount).toBeGreaterThan(0);
+            }
+          }
+
+          scene.primitives.remove(models[1]);
+
+          for (cacheKey in cacheEntries) {
+            if (cacheEntries.hasOwnProperty(cacheKey)) {
+              cacheEntry = cacheEntries[cacheKey];
+              expect(cacheEntry.referenceCount).toBe(0);
+            }
+          }
+        });
     });
   },
   "WebGL"
