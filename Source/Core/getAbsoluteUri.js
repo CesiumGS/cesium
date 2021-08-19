@@ -42,6 +42,9 @@ getAbsoluteUri._implementation = function (relative, base, documentObject) {
   if (relativeUri.is("urn")) {
     return relativeUri.toString();
   }
-  return relativeUri.absoluteTo(base).toString();
+  var url = relativeUri.absoluteTo(base).toString();
+  // URI.absoluteTo() escapes the placeholders. Undo that.
+  url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
+  return url;
 };
 export default getAbsoluteUri;
