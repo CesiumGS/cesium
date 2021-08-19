@@ -7,7 +7,7 @@ import LightingModel from "./LightingModel.js";
  * @param {Object} options An object containing the following options
  * @param {LightingModel} [options.lightingModel=LightingModel.UNLIT] The lighting model to use
  *
- * @ModelLightingOptions
+ * @alias ModelLightingOptions
  * @constructor
  *
  * @private
