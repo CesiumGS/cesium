@@ -323,7 +323,7 @@ function processSpecularGlossinessUniforms(
   var specularFactor = specularGlossiness.specularFactor;
   if (
     defined(specularFactor) &&
-    !Cartesian3.equals(diffuseFactor, Cartesian3.ONE)
+    !Cartesian3.equals(specularFactor, Cartesian3.ONE)
   ) {
     shaderBuilder.addUniform(
       "vec3",

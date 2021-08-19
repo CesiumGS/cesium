@@ -29,9 +29,12 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var mockDefaultTexture = {};
-    var mockModel = {
-      _defaultTexture: mockDefaultTexture,
+    var mockFrameState = {
+      context: {
+        defaultTexture: {},
+        defaultNormalTexture: {},
+        defaultEmissiveTexture: {},
+      },
     };
 
     afterEach(function () {
@@ -98,10 +101,13 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
@@ -143,10 +149,13 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
           "uniform sampler2D u_baseColorTexture;",
@@ -190,15 +199,16 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
           "uniform sampler2D u_diffuseTexture;",
-          "uniform vec4 u_diffuseFactor;",
           "uniform sampler2D u_specularGlossinessTexture;",
-          "uniform vec3 u_specularFactor;",
           "uniform float u_glossinessFactor;",
         ]);
 
@@ -206,20 +216,16 @@ describe(
           "USE_SPECULAR_GLOSSINESS",
           "HAS_DIFFUSE_TEXTURE",
           "TEXCOORD_DIFFUSE v_texCoord_0",
-          "HAS_DIFFUSE_FACTOR",
           "HAS_SPECULAR_GLOSSINESS_TEXTURE",
           "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
-          "HAS_SPECULAR_FACTOR",
           "HAS_GLOSSINESS_FACTOR",
         ]);
 
         var specularGlossiness = primitive.material.specularGlossiness;
         var expectedUniforms = {
           u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
-          u_diffuseFactor: specularGlossiness.diffuseFactor,
           u_specularGlossinessTexture:
             specularGlossiness.specularGlossinessTexture.texture,
-          u_specularFactor: specularGlossiness.specularFactor,
           u_glossinessFactor: specularGlossiness.glossinessFactor,
         };
         expectUniformMap(uniformMap, expectedUniforms);
@@ -236,10 +242,13 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(lightingOptions.lightingModel).toBe(LightingModel.PBR);
       });
     });
@@ -254,10 +263,13 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(lightingOptions.lightingModel).toBe(LightingModel.PBR);
       });
     });
@@ -272,10 +284,13 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(lightingOptions.lightingModel).toBe(LightingModel.UNLIT);
       });
     });
@@ -290,10 +305,13 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
           "ALPHA_MODE_OPAQUE",
@@ -312,13 +330,16 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
         var cutoff = 0.6;
         primitive.material.alphaMode = AlphaMode.MASK;
         primitive.material.alphaCutoff = cutoff;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
           "ALPHA_MODE_MASK",
@@ -344,12 +365,15 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
           pass: Pass.OPAQUE,
         };
 
         primitive.material.alphaMode = AlphaMode.BLEND;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expect(renderResources.pass).toBe(Pass.TRANSLUCENT);
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -368,11 +392,14 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
-          model: mockModel,
           cull: true,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: true,
@@ -391,12 +418,15 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
-          model: mockModel,
           cull: true,
         };
 
         primitive.material.doubleSided = true;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expect(renderStateOptions).toEqual({
           cull: {
@@ -416,11 +446,14 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
         primitive.material.doubleSided = true;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
         expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([
@@ -471,7 +504,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockDefaultTexture
+        mockFrameState.context.defaultTexture
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -504,7 +537,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockDefaultTexture
+        mockFrameState.context.defaultTexture
       );
 
       expectUniformMap(uniformMap, {
