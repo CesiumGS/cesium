@@ -15,18 +15,18 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 var GeometryPipelineStage = {};
 
 /**
- * This pipeline stage processes the vertex attributes of a mesh primitive, adding the attribute declarations to the shaders,
+ * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,
  * the attribute objects to the render resources and setting the flags as needed.
  *
- * Processes a mesh primitive. This stage modifies the following parts of the render resources:
+ * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
  *  <li> adds attribute and varying declarations for the vertex attributes in the vertex and fragment shaders
  *  <li> creates the objects required to create VertexArrays
  *  <li> sets the flag for point primitive types
  * </ul>
  *
- * @param {MeshPrimitiveRenderResources} renderResources The render resources for this mesh primitive.
- * @param {ModelComponents.Primitive} primitive The mesh primitive.
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
  *
  * @private
  */

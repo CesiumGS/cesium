@@ -10,12 +10,12 @@ import InstancingPipelineStage from "./InstancingPipelineStage.js";
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
  * @param {Matrix4} options.modelMatrix The model matrix associated with this node.
  *
- * @alias ModelExperimentalSceneNode
+ * @alias ModelExperimentalNode
  * @constructor
  *
  * @private
  */
-export default function ModelExperimentalSceneNode(options) {
+export default function ModelExperimentalNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.node", options.node);
@@ -57,19 +57,19 @@ export default function ModelExperimentalSceneNode(options) {
   /**
    * The mesh primitives that belong to this node
    *
-   * @type {ModelExperimentalSceneMeshPrimitive[]}
+   * @type {ModelExperimentalPrimitive[]}
    * @readonly
    *
    * @private
    */
-  this.sceneMeshPrimitives = [];
+  this.runtimePrimitives = [];
 
   initialize(this);
 }
 
-function initialize(sceneNode) {
-  var node = sceneNode.node;
-  var pipelineStages = sceneNode.pipelineStages;
+function initialize(runtimeNode) {
+  var node = runtimeNode.node;
+  var pipelineStages = runtimeNode.pipelineStages;
 
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPipelineStage);

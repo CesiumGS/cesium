@@ -25,7 +25,7 @@ var InstancingPipelineStage = {};
  *  <li>adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
  *  <li>adds an instancing translation min and max to compute an accurate bounding volume</li>
  * </ul>
- * @param {RenderResources.NodeRenderResources} renderResources The render resources for this node.
+ * @param {NodeRenderResources} renderResources The render resources for this node.
  * @param {ModelComponents.Node} node The node.
  * @param {FrameState} frameState The frame state.
  */
