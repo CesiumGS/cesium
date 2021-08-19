@@ -32,13 +32,16 @@ export default function buildDrawCommand(
     attributes: meshPrimitiveRenderResources.attributes,
   });
 
+  var model = meshPrimitiveRenderResources.model;
+  model._resources.push(vertexArray);
+
   var renderState = RenderState.fromCache(
     meshPrimitiveRenderResources.renderStateOptions
   );
 
-  var model = meshPrimitiveRenderResources.model;
-
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  model._resources.push(shaderProgram);
+
   return new DrawCommand({
     boundingVolume: meshPrimitiveRenderResources.boundingSphere,
     modelMatrix: meshPrimitiveRenderResources.modelMatrix,

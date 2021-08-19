@@ -5,6 +5,7 @@ import {
   ResourceCache,
   Resource,
   ModelExperimental,
+  VertexArray,
   Cartesian3,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -104,22 +105,36 @@ describe(
     it("destroy works", function () {
       var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       var loadPromise = resource.fetchArrayBuffer();
+
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
           { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
+          var context = scene.frameState.context;
+
           var buffer = Buffer.createVertexBuffer({
-            context: scene.frameState.context,
+            context: context,
             sizeInBytes: 16,
             usage: BufferUsage.STATIC_DRAW,
           });
-          model._resources = [buffer];
 
-          expect(buffer.isDestroyed()).toEqual(false);
+          var vertexArray = new VertexArray({
+            context: context,
+            attributes: {},
+          });
+
+          model._resources = [buffer, vertexArray];
+
+          var i;
+          for (i = 0; i < model._resources.length; i++) {
+            expect(model._resources[i].isDestroyed()).toEqual(false);
+          }
           expect(model.isDestroyed()).toEqual(false);
           scene.primitives.remove(model);
-          expect(buffer.isDestroyed()).toEqual(true);
+          for (i = 0; i < model._resources.length; i++) {
+            expect(model._resources[i].isDestroyed()).toEqual(true);
+          }
           expect(model.isDestroyed()).toEqual(true);
         });
       });

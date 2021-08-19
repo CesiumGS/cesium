@@ -162,6 +162,29 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+   * Local reference frames can be used by providing a different transformation matrix, like that returned
+   * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
+   * @type {Matrix4}
+
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+   */
+  modelMatrix: {
+    get: function () {
+      return this._sceneGraph._modelMatrix;
+    },
+    set: function (value) {
+      this._sceneGraph._modelMatrix = value;
+    },
+  },
+
+  /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
    * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
