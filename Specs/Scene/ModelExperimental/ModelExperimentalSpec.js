@@ -8,6 +8,7 @@ import {
   VertexArray,
   Cartesian3,
 } from "../../../Source/Cesium.js";
+import ShaderProgram from "../../../Source/Renderer/ShaderProgram.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
 
@@ -103,38 +104,30 @@ describe(
     });
 
     it("destroy works", function () {
+      spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       var loadPromise = resource.fetchArrayBuffer();
 
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer) },
+          { url: boxTexturedGlbUrl },
           scene
         ).then(function (model) {
-          var context = scene.frameState.context;
-
-          var buffer = Buffer.createVertexBuffer({
-            context: context,
-            sizeInBytes: 16,
-            usage: BufferUsage.STATIC_DRAW,
-          });
-
-          var vertexArray = new VertexArray({
-            context: context,
-            attributes: {},
-          });
-
-          model._resources = [buffer, vertexArray];
+          var resources = model._resources;
+          var loader = model._gltfLoader;
 
           var i;
-          for (i = 0; i < model._resources.length; i++) {
-            expect(model._resources[i].isDestroyed()).toEqual(false);
+          for (i = 0; i < resources.length; i++) {
+            expect(resources[i].isDestroyed()).toEqual(false);
           }
+          expect(loader.isDestroyed()).toEqual(false);
           expect(model.isDestroyed()).toEqual(false);
           scene.primitives.remove(model);
-          for (i = 0; i < model._resources.length; i++) {
+          expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
+          for (i = 0; i < model._resources.length - 1; i++) {
             expect(model._resources[i].isDestroyed()).toEqual(true);
           }
+          expect(loader.isDestroyed()).toEqual(true);
           expect(model.isDestroyed()).toEqual(true);
         });
       });
