@@ -7,6 +7,7 @@ import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js"
 import Pass from "../../Renderer/Pass.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -34,18 +35,32 @@ var MaterialPipelineStage = {};
  * </ul>
  * @param {RenderResources.PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {FrameState} frameState The frame state.
  * @private
  */
-MaterialPipelineStage.process = function (renderResources, primitive) {
+MaterialPipelineStage.process = function (
+  renderResources,
+  primitive,
+  frameState
+) {
   var material = primitive.material;
 
   var uniformMap = renderResources.uniformMap;
   var shaderBuilder = renderResources.shaderBuilder;
 
   // When textures are loaded incrementally, fall back to a default 1x1 texture
-  var defaultTexture = renderResources.model._defaultTexture;
+  var defaultTexture = frameState.context._defaultTexture;
+  var defaultNormalTexture = frameState.context._defaultNormalTexture;
+  var defaultEmissiveTexture = frameState.context._defaultEmissiveTexture;
 
-  processMaterialUniforms(material, uniformMap, shaderBuilder, defaultTexture);
+  processMaterialUniforms(
+    material,
+    uniformMap,
+    shaderBuilder,
+    defaultTexture,
+    defaultNormalTexture,
+    defaultEmissiveTexture
+  );
 
   if (defined(material.specularGlossiness)) {
     processSpecularGlossinessUniforms(
@@ -187,7 +202,9 @@ function processMaterialUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture
+  defaultTexture,
+  defaultNormalTexture,
+  defaultEmissiveTexture
 ) {
   var emissiveTexture = material.emissiveTexture;
   if (defined(emissiveTexture)) {
@@ -197,7 +214,7 @@ function processMaterialUniforms(
       emissiveTexture,
       "u_emissiveTexture",
       "EMISSIVE",
-      defaultTexture
+      defaultEmissiveTexture
     );
   }
 
@@ -229,7 +246,7 @@ function processMaterialUniforms(
       normalTexture,
       "u_normalTexture",
       "NORMAL",
-      defaultTexture
+      defaultNormalTexture
     );
   }
 
@@ -272,7 +289,10 @@ function processSpecularGlossinessUniforms(
   }
 
   var diffuseFactor = specularGlossiness.diffuseFactor;
-  if (defined(diffuseFactor)) {
+  if (
+    defined(diffuseFactor) &&
+    !Cartesian4.equals(diffuseFactor, Cartesian4.ONE)
+  ) {
     shaderBuilder.addUniform(
       "vec4",
       "u_diffuseFactor",
@@ -301,7 +321,10 @@ function processSpecularGlossinessUniforms(
   }
 
   var specularFactor = specularGlossiness.specularFactor;
-  if (defined(specularFactor)) {
+  if (
+    defined(specularFactor) &&
+    !Cartesian3.equals(diffuseFactor, Cartesian3.ONE)
+  ) {
     shaderBuilder.addUniform(
       "vec3",
       "u_specularFactor",
@@ -318,7 +341,7 @@ function processSpecularGlossinessUniforms(
   }
 
   var glossinessFactor = specularGlossiness.glossinessFactor;
-  if (defined(glossinessFactor)) {
+  if (defined(glossinessFactor) && glossinessFactor !== 1.0) {
     shaderBuilder.addUniform(
       "float",
       "u_glossinessFactor",
