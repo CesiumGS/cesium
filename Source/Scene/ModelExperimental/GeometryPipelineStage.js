@@ -34,6 +34,7 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   // The attribute index is taken from the node render resources, which may have added some attributes of its own.
   var attributeIndex = renderResources.attributeIndex;
   var index;
+  var setIndexedAttributeInitializationLines = [];
   var customAttributeInitializationLines = [];
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
@@ -46,21 +47,47 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
       renderResources,
       attribute,
       index,
+      setIndexedAttributeInitializationLines,
       customAttributeInitializationLines
     );
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
 
-  // add a function to initialize varyings for custom attributes.
-  // for example "v_custom_attribute = a_custom_attribute;"
-  if (customAttributeInitializationLines.length > 0) {
+  var varyingFunctionLines;
+
+  // Adds a function to initialize varyings for vertex attribute
+  // semantics that have a setIndex. For example:
+  // void initializeSetIndexedAttributes()
+  // {
+  //    #ifdef HAS_TEXCOORD_0
+  //    v_texCoord_0 = a_texCoord_0;
+  //    #endif
+  // }
+  if (setIndexedAttributeInitializationLines.length > 0) {
     shaderBuilder.addDefine(
-      "HAS_CUSTOM_ATTRIBUTES",
+      "HAS_SET_INDEXED_ATTRIBUTES",
       undefined,
       ShaderDestination.VERTEX
     );
-    var varyingFunctionLines = [].concat(
+    varyingFunctionLines = [].concat(
+      "void initializeSetIndexedAttributes()",
+      "{",
+      setIndexedAttributeInitializationLines,
+      "}"
+    );
+    shaderBuilder.addVertexLines(varyingFunctionLines);
+  }
+
+  // Adds a function to initialize varyings for custom vertex attributes.
+  // For example:
+  // void initializeCustomAttributes()
+  // {
+  //    v_customAttribute = a_customAttribute;
+  // }
+  if (customAttributeInitializationLines.length > 0) {
+    shaderBuilder.addDefine("HAS_CUSTOM_ATTRIBUTES");
+    varyingFunctionLines = [].concat(
       "void initializeCustomAttributes()",
       "{",
       customAttributeInitializationLines,
@@ -81,6 +108,7 @@ function processAttribute(
   renderResources,
   attribute,
   attributeIndex,
+  setIndexedAttributeInitializationLines,
   customAttributeInitializationLines
 ) {
   var semantic = attribute.semantic;
@@ -104,15 +132,19 @@ function processAttribute(
       case VertexAttributeSemantic.TANGENT:
         shaderBuilder.addDefine("HAS_TANGENTS");
         break;
-      case VertexAttributeSemantic.TEXCOORD:
-        shaderBuilder.addDefine("HAS_TEXCOORD_" + setIndex);
-        break;
-      case VertexAttributeSemantic.COLOR:
-        shaderBuilder.addDefine("HAS_VERTEX_COLORS");
-        break;
       case VertexAttributeSemantic.FEATURE_ID:
         shaderBuilder.addDefine("HAS_FEATURE_ID");
         break;
+      case VertexAttributeSemantic.TEXCOORD:
+      case VertexAttributeSemantic.COLOR:
+        shaderBuilder.addDefine("HAS_" + semantic + "_" + setIndex);
+        setIndexedAttributeInitializationLines.push(
+          "    #ifdef HAS_" + semantic + "_" + setIndex
+        );
+        setIndexedAttributeInitializationLines.push(
+          "    " + varyingName + " = a_" + variableName + ";"
+        );
+        setIndexedAttributeInitializationLines.push("    #endif");
     }
   }
 
