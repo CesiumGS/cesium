@@ -63,6 +63,27 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     expect(customShader.uniformMap.u_offset()).toBe(uniforms.u_offset.value);
   });
 
+  it("setUniform throws for undefined uniformName", function () {
+    var customShader = new CustomShader();
+    expect(function () {
+      return customShader.setUniform(undefined, 45);
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniform throws for undefined value", function () {
+    var customShader = new CustomShader();
+    expect(function () {
+      return customShader.setUniform("u_time", undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniform throws for undeclared uniform", function () {
+    var customShader = new CustomShader();
+    expect(function () {
+      return customShader.setUniform("u_time", 10);
+    }).toThrowDeveloperError();
+  });
+
   it("setUniform updates uniform values", function () {
     var uniforms = {
       u_time: {
