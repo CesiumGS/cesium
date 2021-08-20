@@ -5,7 +5,7 @@ import {
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
-import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
+import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
   "Scene/ModelExperimental/ModelExperimentalSceneGraph",

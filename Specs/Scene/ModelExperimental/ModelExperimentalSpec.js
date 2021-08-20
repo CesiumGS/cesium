@@ -8,7 +8,7 @@ import {
 } from "../../../Source/Cesium.js";
 import ShaderProgram from "../../../Source/Renderer/ShaderProgram.js";
 import createScene from "../../createScene.js";
-import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
+import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
   "Scene/ModelExperimental/ModelExperimental",

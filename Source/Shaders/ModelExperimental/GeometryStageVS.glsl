@@ -17,10 +17,12 @@ vec3 processGeometry(vec3 position)
     v_tangent.w = a_tangent.w;
     #endif
 
+    // This function is defined in GeometryPipelineStage
     #ifdef HAS_SET_INDEXED_ATTRIBUTES
     initializeSetIndexedAttributes();
     #endif
 
+    // This function is defined in GeometryPipelineStage
     #ifdef HAS_CUSTOM_ATTRIBUTES
     initializeCustomAttributes();
     #endif

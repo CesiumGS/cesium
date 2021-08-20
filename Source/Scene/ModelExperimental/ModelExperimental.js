@@ -140,8 +140,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Whether or not to cull the model. If the model is part of a 3D Tiles tileset, this property will always
-   * be false, since the 3D Tiles culling system is used.
+   * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
+   * will always be false, since the 3D Tiles culling system is used.
    *
    * @type {Boolean}
    * @readonly
@@ -194,7 +194,7 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
    *

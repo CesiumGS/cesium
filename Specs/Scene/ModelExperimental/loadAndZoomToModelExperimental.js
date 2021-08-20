@@ -1,9 +1,11 @@
-import { Cartesian3 } from "../../../Source/Cesium.js";
-import { defaultValue } from "../../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../../Source/Cesium.js";
-import { Matrix4 } from "../../../Source/Cesium.js";
-import { ModelExperimental } from "../../../Source/Cesium.js";
-import { when } from "../../../Source/Cesium.js";
+import {
+  Cartesian3,
+  defaultValue,
+  HeadingPitchRange,
+  Matrix4,
+  ModelExperimental,
+  when,
+} from "../../../Source/Cesium.js";
 import pollToPromise from "../../pollToPromise.js";
 
 function loadAndZoomToModelExperimental(options, scene) {
