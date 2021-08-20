@@ -91,7 +91,7 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     baseColorWithAlpha = u_baseColorFactor;
     #endif
 
-    #ifdef HAS_VERTEX_COLORS
+    #ifdef HAS_COLOR_0
     baseColorWithAlpha *= v_color_0;
     #endif
 
