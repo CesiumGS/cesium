@@ -206,7 +206,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   var uniform = this.uniforms[uniformName];
   if (uniform.type === UniformType.SAMPLER_2D) {
     // Textures are fetched asynchronously and updated in update();
-    fetchTexture2D(this, uniformName, uniform.value);
+    fetchTexture2D(this, uniformName, value);
   } else {
     uniform.value = value;
   }
