@@ -152,9 +152,7 @@ function processAttribute(
     index: attributeIndex,
     value: defined(attribute.buffer) ? undefined : attribute.constant,
     vertexBuffer: attribute.buffer,
-    componentsPerAttribute: AttributeType.getComponentsPerAttribute(
-      attributeType
-    ),
+    componentsPerAttribute: AttributeType.getNumberOfComponents(attributeType),
     componentDatatype: attribute.componentDatatype,
     offsetInBytes: attribute.byteOffset,
     strideInBytes: attribute.byteStride,
