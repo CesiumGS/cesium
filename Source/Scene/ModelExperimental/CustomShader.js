@@ -1,15 +1,24 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import Resource from "../../Core/Resource.js";
+import Sampler from "../../Renderer/Sampler.js";
+import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
+import TextureMagnificationFilter from "../../Renderer/TextureMagnificationFilter.js";
 import CustomShaderMode from "./CustomShaderMode.js";
+import UniformType from "./UniformType.js";
+import Texture from "../../Renderer/Texture.js";
 
 /**
  * An object describing a uniform, its type, and an initial value
  *
  * @typedef {Object} UniformSpecifier
  * @property {UniformType} type The Glsl type of the uniform.
- * @property {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4} value The initial value of the uniform
+ * @property {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|String|Resource} value The initial value of the uniform
+ * @property {TextureMinificationFilter} [textureMinificationFilter=TextureMinificationFilter.LINEAR] When type is UniformType.SAMPLER_2D, This controls the minification filter of the texture sampler
+ * @property {TextureMagnificationFilter} [textureMagnificationFilter=TextureMagnificationFilter.LINEAR] when type is UniformType.SAMPLER_2D, This controls the magnification filter of the texture sampler
  * @private
  */
 
@@ -38,9 +47,13 @@ export default function CustomShader(options) {
   this.lightingModel = options.lightingModel;
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
-
   this.vertexShaderText = options.vertexShaderText;
   this.fragmentShaderText = options.fragmentShaderText;
+
+  this._defaultTexture = undefined;
+  this._textures = {};
+  this._loadedImages = [];
+
   this.uniformMap = buildUniformMap(this);
 
   // Lists of variables used from the automatically-generated structs. These
@@ -67,22 +80,73 @@ export default function CustomShader(options) {
 }
 
 function buildUniformMap(customShader) {
+  var uniforms = customShader.uniforms;
   var uniformMap = {};
-  for (var uniformName in customShader.uniforms) {
-    if (customShader.uniforms.hasOwnProperty(uniformName)) {
-      uniformMap[uniformName] = createUniformFunction(
-        customShader,
-        uniformName
-      );
+  for (var uniformName in uniforms) {
+    if (uniforms.hasOwnProperty(uniformName)) {
+      var uniform = uniforms[uniformName];
+      var type = uniform.type;
+      //>>includeStart('debug', pragmas.debug);
+      if (type === UniformType.SAMPLER_CUBE) {
+        throw new DeveloperError(
+          "CustomShader does not support samplerCube uniforms"
+        );
+      }
+      //>>includeEnd('debug');
+
+      if (type === UniformType.SAMPLER_2D) {
+        fetchTexture2D(customShader, uniformName, uniform.value);
+        uniformMap[uniformName] = createUniformTexture2DFunction(
+          customShader,
+          uniformName
+        );
+      } else {
+        uniformMap[uniformName] = createUniformFunction(
+          customShader,
+          uniformName
+        );
+      }
     }
   }
   return uniformMap;
+}
+
+function createUniformTexture2DFunction(customShader, uniformName) {
+  return function () {
+    return customShader._textures[uniformName];
+  };
 }
 
 function createUniformFunction(customShader, uniformName) {
   return function () {
     return customShader.uniforms[uniformName].value;
   };
+}
+
+function fetchTexture2D(customShader, uniformName, textureValue) {
+  var resource;
+  if (typeof textureValue === "string") {
+    resource = Resource.createIfNeeded(textureValue);
+  } else if (textureValue instanceof Resource) {
+    resource = textureValue;
+  }
+
+  resource
+    .fetchImage()
+    .then(function (image) {
+      customShader._loadedImages.push({
+        uniformName: uniformName,
+        image: image,
+      });
+    })
+    .otherwise(function () {
+      var texture = customShader._textures[uniformName];
+      if (defined(texture) && texture !== customShader._defaultTexture) {
+        texture.destroy();
+      }
+
+      customShader._textures[uniformName] = customShader._defaultTexture;
+    });
 }
 
 function getVariables(shaderText, regex, outputSet) {
@@ -125,7 +189,7 @@ function findUsedVariables(customShader) {
 /**
  * Update the value of a uniform declared in the shader
  * @param {String} uniformName The GLSL name of the uniform. This must match one of the uniforms declared in the constructor
- * @param {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4} value The new value of the uniform.
+ * @param {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|String|Resource} value The new value of the uniform.
  */
 CustomShader.prototype.setUniform = function (uniformName, value) {
   //>>includeStart('debug', pragmas.debug);
@@ -139,5 +203,96 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
     );
   }
   //>>includeEnd('debug');
-  this.uniforms[uniformName].value = value;
+  var uniform = this.uniforms[uniformName];
+  if (uniform.type === UniformType.SAMPLER_2D) {
+    // Textures are fetched asynchronously and updated in update();
+    fetchTexture2D(this, uniformName, uniform.value);
+  } else {
+    uniform.value = value;
+  }
+};
+
+function createTexture(customShader, loadedImage, context) {
+  var uniformName = loadedImage.uniformName;
+  var uniform = customShader.uniforms[uniformName];
+  var sampler = new Sampler({
+    minificationFilter: defaultValue(
+      uniform.minificationFilter,
+      TextureMinificationFilter.LINEAR
+    ),
+    magnificationFilter: defaultValue(
+      uniform.magnificationFilter,
+      TextureMagnificationFilter.LINEAR
+    ),
+  });
+  var texture = new Texture({
+    context: context,
+    source: loadedImage.image,
+    sampler: sampler,
+  });
+
+  // Destroy the old texture once the new one is loaded for more seamless
+  // transitions between values
+  var oldTexture = customShader._textures[uniformName];
+  if (defined(oldTexture) && oldTexture !== context.defaultTexture) {
+    oldTexture.destroy();
+  }
+  customShader._textures[uniformName] = texture;
+}
+
+CustomShader.prototype.update = function (context) {
+  this._defaultTexture = context.defaultTexture;
+
+  // If any images were loaded since the last frame, create Textures
+  // for them and store in the uniform dictionary
+  var loadedImages = this._loadedImages;
+  for (var i = 0; i < loadedImages.length; i++) {
+    var loadedImage = loadedImages[i];
+    createTexture(this, loadedImage, context);
+  }
+  loadedImages.length = 0;
+};
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ *
+ * @see CustomShader#destroy
+ * @private
+ */
+CustomShader.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @example
+ * customShader = customShader && customShader.destroy();
+ *
+ * @see CustomShader#isDestroyed
+ * @private
+ */
+CustomShader.prototype.destroy = function () {
+  var textures = this._textures;
+  for (var texture in textures) {
+    if (textures.hasOwnProperty(texture)) {
+      var instance = textures[texture];
+      if (instance !== this._defaultTexture) {
+        instance.destroy();
+      }
+    }
+  }
+  return destroyObject(this);
 };

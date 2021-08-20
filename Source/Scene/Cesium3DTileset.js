@@ -2673,6 +2673,11 @@ function update(tileset, frameState, passStatistics, passOptions) {
     return false;
   }
 
+  var customShader = tileset.customShader;
+  if (defined(customShader)) {
+    customShader.update(frameState.context);
+  }
+
   var statistics = tileset._statistics;
   statistics.clear();
 
@@ -2835,6 +2840,10 @@ Cesium3DTileset.prototype.destroy = function () {
   this._tileDebugLabels =
     this._tileDebugLabels && this._tileDebugLabels.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
+  if (defined(this._customShader)) {
+    this.customShader = this.customShader && this.customShader.destroy();
+  }
 
   if (defined(this._schemaLoader)) {
     ResourceCache.unload(this._schemaLoader);
