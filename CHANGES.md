@@ -2,6 +2,10 @@
 
 ### 1.85 - 2021-09-01
 
+##### Additions :tada:
+
+- `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results.
+
 ##### Fixes :wrench:
 
 - Fixed several crashes related to point cloud eye dome lighting. [#9719](https://github.com/CesiumGS/cesium/pull/9719)
