@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results.
+- Adds ability to set bottomContainer will not be created by default.
 
 ##### Fixes :wrench:
 
