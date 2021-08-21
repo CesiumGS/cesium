@@ -330,6 +330,7 @@ function enableVRUI(viewer, enabled) {
  * @property {MapProjection} [mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
  * @property {Globe|false} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
  * @property {Boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
+ * @property {Boolean} [bottomContainer] If set to false, the {@link Viewer#bottomContainer} will not be created.
  * @property {Element|String} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
  * @property {Element|String} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
  * @property {DataSourceCollection} [dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
@@ -453,10 +454,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   viewerContainer.appendChild(cesiumWidgetContainer);
 
   // Bottom container
-  var bottomContainer = document.createElement("div");
-  bottomContainer.className = "cesium-viewer-bottom";
-
-  viewerContainer.appendChild(bottomContainer);
+  var bottomContainer;
+  if (!defined(options.bottomContainer) || options.bottomContainer !== false) {
+    bottomContainer = document.createElement("div");
+    bottomContainer.className = "cesium-viewer-bottom";
+    viewerContainer.appendChild(bottomContainer);
+  }
 
   var scene3DOnly = defaultValue(options.scene3DOnly, false);
 
@@ -948,7 +951,7 @@ Object.defineProperties(Viewer.prototype, {
    * Gets the DOM element for the area at the bottom of the window containing the
    * {@link CreditDisplay} and potentially other things.
    * @memberof Viewer.prototype
-   * @type {Element}
+   * @type {Element | undefined}
    * @readonly
    */
   bottomContainer: {
@@ -1642,8 +1645,10 @@ Viewer.prototype.resize = function () {
     timeline.resize();
   }
 
-  this._bottomContainer.style.left = creditLeft + "px";
-  this._bottomContainer.style.bottom = creditBottom + "px";
+  if (this._bottomContainer !== undefined) {
+    this._bottomContainer.style.left = creditLeft + "px";
+    this._bottomContainer.style.bottom = creditBottom + "px";
+  }
 
   this._lastWidth = width;
   this._lastHeight = height;
