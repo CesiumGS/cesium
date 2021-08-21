@@ -5,7 +5,7 @@
 ##### Additions :tada:
 
 - `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results.
-- Adds ability to set bottomContainer will not be created by default.
+- Adds ability to set bottomContainer will not be created by default. [#9742](https://github.com/CesiumGS/cesium/pull/9742)
 
 ##### Fixes :wrench:
 
