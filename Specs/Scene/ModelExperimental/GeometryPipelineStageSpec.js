@@ -623,10 +623,10 @@ describe(
           "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
       });
     });
@@ -675,12 +675,15 @@ describe(
           "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
+          "HAS_SET_INDEXED_ATTRIBUTES"
+        );
+        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
           "PRIMITIVE_TYPE_POINTS"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(

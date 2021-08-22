@@ -8,6 +8,11 @@ import Pass from "../../Renderer/Pass.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
+import ModelComponents from "../ModelComponents.js";
+
+var Material = ModelComponents.Material;
+var MetallicRoughness = ModelComponents.MetallicRoughness;
+var SpecularGlossiness = ModelComponents.SpecularGlossiness;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -221,7 +226,7 @@ function processMaterialUniforms(
   var emissiveFactor = material.emissiveFactor;
   if (
     defined(emissiveFactor) &&
-    !Cartesian3.equals(emissiveFactor, Cartesian3.ZERO)
+    !Cartesian3.equals(emissiveFactor, Material.DEFAULT_EMISSIVE_FACTOR)
   ) {
     shaderBuilder.addUniform(
       "vec3",
@@ -291,7 +296,7 @@ function processSpecularGlossinessUniforms(
   var diffuseFactor = specularGlossiness.diffuseFactor;
   if (
     defined(diffuseFactor) &&
-    !Cartesian4.equals(diffuseFactor, Cartesian4.ONE)
+    !Cartesian4.equals(diffuseFactor, SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR)
   ) {
     shaderBuilder.addUniform(
       "vec4",
@@ -323,7 +328,10 @@ function processSpecularGlossinessUniforms(
   var specularFactor = specularGlossiness.specularFactor;
   if (
     defined(specularFactor) &&
-    !Cartesian3.equals(specularFactor, Cartesian3.ONE)
+    !Cartesian3.equals(
+      specularFactor,
+      SpecularGlossiness.DEFAULT_SPECULAR_FACTOR
+    )
   ) {
     shaderBuilder.addUniform(
       "vec3",
@@ -341,7 +349,10 @@ function processSpecularGlossinessUniforms(
   }
 
   var glossinessFactor = specularGlossiness.glossinessFactor;
-  if (defined(glossinessFactor) && glossinessFactor !== 1.0) {
+  if (
+    defined(glossinessFactor) &&
+    glossinessFactor !== SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR
+  ) {
     shaderBuilder.addUniform(
       "float",
       "u_glossinessFactor",
@@ -384,7 +395,13 @@ function processMetallicRoughnessUniforms(
   }
 
   var baseColorFactor = metallicRoughness.baseColorFactor;
-  if (defined(baseColorFactor)) {
+  if (
+    defined(baseColorFactor) &&
+    !Cartesian4.equals(
+      baseColorFactor,
+      MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR
+    )
+  ) {
     shaderBuilder.addUniform(
       "vec4",
       "u_baseColorFactor",
@@ -413,7 +430,10 @@ function processMetallicRoughnessUniforms(
   }
 
   var metallicFactor = metallicRoughness.metallicFactor;
-  if (defined(metallicFactor)) {
+  if (
+    defined(metallicFactor) &&
+    metallicFactor !== MetallicRoughness.DEFAULT_METALLIC_FACTOR
+  ) {
     shaderBuilder.addUniform(
       "float",
       "u_metallicFactor",
@@ -430,7 +450,10 @@ function processMetallicRoughnessUniforms(
   }
 
   var roughnessFactor = metallicRoughness.roughnessFactor;
-  if (defined(roughnessFactor)) {
+  if (
+    defined(roughnessFactor) &&
+    roughnessFactor !== MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR
+  ) {
     shaderBuilder.addUniform(
       "float",
       "u_roughnessFactor",

@@ -133,8 +133,6 @@ function processAttribute(
         shaderBuilder.addDefine("HAS_TANGENTS");
         break;
       case VertexAttributeSemantic.FEATURE_ID:
-        shaderBuilder.addDefine("HAS_FEATURE_ID");
-        break;
       case VertexAttributeSemantic.TEXCOORD:
       case VertexAttributeSemantic.COLOR:
         shaderBuilder.addDefine("HAS_" + semantic + "_" + setIndex);

@@ -614,11 +614,17 @@ function Scene() {
 
   /**
    * The scene's up axis.
+   *
+   * @type {Axis}
+   * @private
    */
   this.upAxis = undefined;
 
   /**
    * The scene's forward axis.
+   *
+   * @type {Axis}
+   * @private
    */
   this.forwardAxis = undefined;
 }
@@ -756,12 +762,7 @@ function MetallicRoughness() {
 /**
  * @private
  */
-MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR = new Cartesian4(
-  1.0,
-  1.0,
-  1.0,
-  1.0
-);
+MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR = Cartesian4.ONE;
 
 /**
  * @private
@@ -813,7 +814,7 @@ function SpecularGlossiness() {
    * The specular factor.
    *
    * @type {Cartesian3}
-   * @default new Cartesian3(1.0, 1.0, 1.0, 1.0)
+   * @default new Cartesian3(1.0, 1.0, 1.0)
    * @private
    */
   this.specularFactor = Cartesian3.clone(
@@ -833,12 +834,12 @@ function SpecularGlossiness() {
 /**
  * @private
  */
-SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR = Cartesian4.ONE;
 
 /**
  * @private
  */
-SpecularGlossiness.DEFAULT_SPECULAR_FACTOR = new Cartesian3(1.0, 1.0, 1.0);
+SpecularGlossiness.DEFAULT_SPECULAR_FACTOR = Cartesian3.ONE;
 
 /**
  * @private

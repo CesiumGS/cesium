@@ -161,6 +161,54 @@ describe(
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
           "uniform sampler2D u_baseColorTexture;",
+          "uniform sampler2D u_metallicRoughnessTexture;",
+        ]);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_BASE_COLOR_TEXTURE",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+        ]);
+
+        var metallicRoughness = primitive.material.metallicRoughness;
+        var expectedUniforms = {
+          u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
+          u_metallicRoughnessTexture:
+            metallicRoughness.metallicRoughnessTexture.texture,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
+    it("adds metallic roughness uniforms without defaults", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        // Alter PBR parameters so that defaults are not used.
+        var metallicRoughness = primitive.material.metallicRoughness;
+        metallicRoughness.baseColorFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
+        metallicRoughness.metallicFactor = 0.5;
+        metallicRoughness.roughnessFactor = 0.5;
+
+        var shaderBuilder = new ShaderBuilder();
+        var uniformMap = {};
+        var renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          renderStateOptions: {},
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+          "uniform sampler2D u_baseColorTexture;",
           "uniform vec4 u_baseColorFactor;",
           "uniform sampler2D u_metallicRoughnessTexture;",
           "uniform float u_metallicFactor;",
@@ -177,7 +225,6 @@ describe(
           "HAS_ROUGHNESS_FACTOR",
         ]);
 
-        var metallicRoughness = primitive.material.metallicRoughness;
         var expectedUniforms = {
           u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
           u_baseColorFactor: metallicRoughness.baseColorFactor,
@@ -242,7 +289,7 @@ describe(
         // Alter PBR parameters so that defaults are not used.
         var specularGlossiness = primitive.material.specularGlossiness;
         specularGlossiness.diffuseFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
-        specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5, 0.5);
+        specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5);
 
         var shaderBuilder = new ShaderBuilder();
         var uniformMap = {};

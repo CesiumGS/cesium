@@ -25,6 +25,8 @@ import Matrix4 from "../../Core/Matrix4.js";
  * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -346,6 +348,10 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  *
  * @returns {ModelExperimental} The newly created model.
  *
@@ -382,6 +388,8 @@ ModelExperimental.fromGltf = function (options) {
     resource: loaderOptions.gltfResource,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
   };
   var model = new ModelExperimental(modelOptions);
 

@@ -66,8 +66,8 @@ var GltfLoaderState = {
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Cartesian3} [options.upAxis=Axis.Y] The up-axis of the glTF model.
- * @param {Cartesian3} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  *
  * @private
  */
