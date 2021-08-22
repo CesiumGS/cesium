@@ -150,21 +150,26 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
     Number.MAX_VALUE
   );
 
+  var hasTranslation = defined(translationAttribute);
+  var hasRotation = defined(rotationAttribute);
+  var hasScale = defined(scaleAttribute);
+
   // Translations get initialized to (0, 0, 0).
-  var translationTypedArray = defined(translationAttribute)
+  var translationTypedArray = hasTranslation
     ? translationAttribute.typedArray
     : new Float32Array(count * 3);
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
-  var rotationTypedArray = defined(rotationAttribute)
+  var rotationTypedArray = hasRotation
     ? rotationAttribute.typedArray
     : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
-  var scaleTypedArray = defined(scaleAttribute)
-    ? scaleAttribute.typedArray
-    : new Float32Array(count * 3);
-  scaleTypedArray.fill(1);
-
-  var setRotationW = defined(rotationAttribute);
+  var scaleTypedArray;
+  if (hasScale) {
+    scaleTypedArray = scaleAttribute.typedArray;
+  } else {
+    scaleTypedArray = new Float32Array(count * 3);
+    scaleTypedArray.fill(1);
+  }
 
   for (var i = 0; i < count; i++) {
     var translation = new Cartesian3(
@@ -189,7 +194,7 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
       rotationTypedArray[i * 4],
       rotationTypedArray[i * 4 + 1],
       rotationTypedArray[i * 4 + 2],
-      setRotationW ? rotationTypedArray[i * 4 + 3] : 1,
+      hasRotation ? rotationTypedArray[i * 4 + 3] : 1,
       rotationScratch
     );
 
