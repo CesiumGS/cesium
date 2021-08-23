@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -342,4 +343,8 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
     fragmentShaderSource: fragmentShaderSource,
     attributeLocations: this._attributeLocations,
   });
+};
+
+ShaderBuilder.prototype.clone = function () {
+  return clone(this, true);
 };

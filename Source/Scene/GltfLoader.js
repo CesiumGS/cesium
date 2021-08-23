@@ -14,6 +14,7 @@ import getComponentReader from "../ThirdParty/GltfPipeline/getComponentReader.js
 import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
+import Axis from "./Axis.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
@@ -65,6 +66,8 @@ var GltfLoaderState = {
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  *
  * @private
  */
@@ -79,6 +82,8 @@ export default function GltfLoader(options) {
     options.incrementallyLoadTextures,
     true
   );
+  var upAxis = defaultValue(options.upAxis, Axis.Y);
+  var forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -92,6 +97,9 @@ export default function GltfLoader(options) {
   this._releaseGltfJson = releaseGltfJson;
   this._asynchronous = asynchronous;
   this._incrementallyLoadTextures = incrementallyLoadTextures;
+  this._upAxis = upAxis;
+  this._forwardAxis = forwardAxis;
+
   this._gltfJsonLoader = undefined;
   this._state = GltfLoaderState.UNLOADED;
   this._textureState = GltfLoaderState.UNLOADED;
@@ -895,13 +903,20 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
   var attributes = instancingExtension.attributes;
   if (defined(attributes)) {
     var hasRotation = defined(attributes.ROTATION);
+    var hasTranslationMinMax =
+      defined(attributes.TRANSLATION) &&
+      defined(gltf.accessors[attributes.TRANSLATION].min) &&
+      defined(gltf.accessors[attributes.TRANSLATION].max);
     for (var semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
         // If the instances have rotations load the attributes as typed arrays
         // so that instance matrices are computed on the CPU. This avoids the
         // expensive quaternion -> rotation matrix conversion in the shader.
+        // If the translation accessor does not have a min and max, load the
+        // attributes as typed arrays, so the values can be used for computing
+        // an accurate bounding volume.
         var loadAsTypedArray =
-          hasRotation &&
+          (hasRotation || !hasTranslationMinMax) &&
           (semantic === InstanceAttributeSemantic.TRANSLATION ||
             semantic === InstanceAttributeSemantic.ROTATION ||
             semantic === InstanceAttributeSemantic.SCALE);
@@ -1087,8 +1102,10 @@ function getSceneNodeIds(gltf) {
   return nodesIds;
 }
 
-function loadScene(gltf, nodes) {
+function loadScene(gltf, nodes, upAxis, forwardAxis) {
   var scene = new Scene();
+  scene.upAxis = upAxis;
+  scene.forwardAxis = forwardAxis;
   var sceneNodeIds = getSceneNodeIds(gltf);
   scene.nodes = sceneNodeIds.map(function (sceneNodeId) {
     return nodes[sceneNodeId];
@@ -1098,7 +1115,9 @@ function loadScene(gltf, nodes) {
 
 function parse(loader, gltf, supportedImageFormats, frameState) {
   var nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
-  var scene = loadScene(gltf, nodes);
+  var upAxis = loader._upAxis;
+  var forwardAxis = loader._forwardAxis;
+  var scene = loadScene(gltf, nodes, upAxis, forwardAxis);
 
   var components = new Components();
   components.scene = scene;
