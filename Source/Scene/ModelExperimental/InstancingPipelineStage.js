@@ -295,4 +295,7 @@ function processMatrixAttributes(node, renderResources, frameState) {
   return instancingVertexAttributes;
 }
 
+// Exposed for testing
+InstancingPipelineStage._getInstanceTransformsTypedArray = getInstanceTransformsTypedArray;
+
 export default InstancingPipelineStage;
