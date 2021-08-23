@@ -4,17 +4,17 @@ import {
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
-  ModelExperimentalSceneMeshPrimitive,
+  ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
 import CustomShaderMode from "../../../Source/Scene/ModelExperimental/CustomShaderMode.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function () {
+describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {};
   var mockModel = {};
 
   it("throws for undefined primitive", function () {
     expect(function () {
-      return new ModelExperimentalSceneMeshPrimitive({
+      return new ModelExperimentalPrimitive({
         primitive: undefined,
         model: {},
       });
@@ -23,7 +23,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
 
   it("throws for undefined model", function () {
     expect(function () {
-      return new ModelExperimentalSceneMeshPrimitive({
+      return new ModelExperimentalPrimitive({
         primitive: mockPrimitive,
         model: undefined,
       });
@@ -31,7 +31,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
   });
 
   it("constructs", function () {
-    var primitive = new ModelExperimentalSceneMeshPrimitive({
+    var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
       model: mockModel,
     });
@@ -40,7 +40,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
   });
 
   it("configures the pipeline stages", function () {
-    var primitive = new ModelExperimentalSceneMeshPrimitive({
+    var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
       model: mockModel,
     });
@@ -53,7 +53,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
   });
 
   it("configures the pipeline for a custom shader that replaces the material", function () {
-    var primitive = new ModelExperimentalSceneMeshPrimitive({
+    var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
       model: {
         customShader: new CustomShader({
@@ -83,7 +83,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
         mode: modes[i],
       };
 
-      var primitive = new ModelExperimentalSceneMeshPrimitive({
+      var primitive = new ModelExperimentalPrimitive({
         primitive: mockPrimitive,
         model: {
           customShader: mockShader,

@@ -5,7 +5,7 @@ import {
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
-import loadAndZoomToModelExperimental from "./loadModelExperimentalForSpec.js";
+import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
 describe(
   "Scene/ModelExperimental/ModelExperimentalSceneGraph",
@@ -31,7 +31,7 @@ describe(
 
     it("creates scene nodes and scene primitives from a model", function () {
       return loadAndZoomToModelExperimental(
-        { url: vertexColorGltfUrl },
+        { gltf: vertexColorGltfUrl },
         scene
       ).then(function (model) {
         var sceneGraph = model._sceneGraph;
@@ -39,11 +39,11 @@ describe(
 
         expect(sceneGraph).toBeDefined();
 
-        var sceneNodes = sceneGraph._sceneNodes;
-        expect(sceneNodes.length).toEqual(modelComponents.nodes.length);
+        var runtimeNodes = sceneGraph._runtimeNodes;
+        expect(runtimeNodes.length).toEqual(modelComponents.nodes.length);
 
-        expect(sceneNodes[0].sceneMeshPrimitives.length).toEqual(1);
-        expect(sceneNodes[1].sceneMeshPrimitives.length).toEqual(1);
+        expect(runtimeNodes[0].runtimePrimitives.length).toEqual(1);
+        expect(runtimeNodes[1].runtimePrimitives.length).toEqual(1);
       });
     });
 
@@ -52,59 +52,61 @@ describe(
         ModelExperimentalSceneGraph.prototype,
         "buildDrawCommands"
       ).and.callThrough();
-      return loadAndZoomToModelExperimental({ url: parentGltfUrl }, scene).then(
-        function (model) {
-          var sceneGraph = model._sceneGraph;
-          var sceneNodes = sceneGraph._sceneNodes;
+      return loadAndZoomToModelExperimental(
+        { gltf: parentGltfUrl },
+        scene
+      ).then(function (model) {
+        var sceneGraph = model._sceneGraph;
+        var runtimeNodes = sceneGraph._runtimeNodes;
 
-          var primitivesCount = 0;
-          for (var i = 0; i < sceneNodes.length; i++) {
-            primitivesCount += sceneNodes[i].sceneMeshPrimitives.length;
-          }
-
-          var frameState = scene.frameState;
-          frameState.commandList = [];
-
-          model.update(frameState);
-          expect(
-            ModelExperimentalSceneGraph.prototype.buildDrawCommands
-          ).toHaveBeenCalled();
-          expect(frameState.commandList.length).toEqual(primitivesCount);
-
-          expect(model._drawCommandsBuilt).toEqual(true);
-          expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
-
-          // Reset the draw command list to see if they're re-built.
-          model._drawCommandsBuilt = false;
-          sceneGraph._drawCommands = [];
-          frameState.commandList = [];
-
-          model.update(frameState);
-          expect(
-            ModelExperimentalSceneGraph.prototype.buildDrawCommands
-          ).toHaveBeenCalled();
-          expect(frameState.commandList.length).toEqual(primitivesCount);
+        var primitivesCount = 0;
+        for (var i = 0; i < runtimeNodes.length; i++) {
+          primitivesCount += runtimeNodes[i].runtimePrimitives.length;
         }
-      );
+
+        var frameState = scene.frameState;
+        frameState.commandList = [];
+
+        model.update(frameState);
+        expect(
+          ModelExperimentalSceneGraph.prototype.buildDrawCommands
+        ).toHaveBeenCalled();
+        expect(frameState.commandList.length).toEqual(primitivesCount);
+
+        expect(model._drawCommandsBuilt).toEqual(true);
+        expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
+
+        // Reset the draw command list to see if they're re-built.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+
+        model.update(frameState);
+        expect(
+          ModelExperimentalSceneGraph.prototype.buildDrawCommands
+        ).toHaveBeenCalled();
+        expect(frameState.commandList.length).toEqual(primitivesCount);
+      });
     });
 
     it("traverses scene graph correctly", function () {
-      return loadAndZoomToModelExperimental({ url: parentGltfUrl }, scene).then(
-        function (model) {
-          var sceneGraph = model._sceneGraph;
-          var modelComponents = sceneGraph._modelComponents;
-          var sceneNodes = sceneGraph._sceneNodes;
+      return loadAndZoomToModelExperimental(
+        { gltf: parentGltfUrl },
+        scene
+      ).then(function (model) {
+        var sceneGraph = model._sceneGraph;
+        var modelComponents = sceneGraph._modelComponents;
+        var runtimeNodes = sceneGraph._runtimeNodes;
 
-          expect(sceneNodes[1].node).toEqual(modelComponents.nodes[0]);
-          expect(sceneNodes[0].node).toEqual(modelComponents.nodes[1]);
-        }
-      );
+        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[0]);
+        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[1]);
+      });
     });
 
     it("propagates node transforms correctly", function () {
       return loadAndZoomToModelExperimental(
         {
-          url: parentGltfUrl,
+          gltf: parentGltfUrl,
           upAxis: Axis.Z,
           forwardAxis: Axis.X,
         },
@@ -112,17 +114,18 @@ describe(
       ).then(function (model) {
         var sceneGraph = model._sceneGraph;
         var modelComponents = sceneGraph._modelComponents;
-        var sceneNodes = sceneGraph._sceneNodes;
+        var scene = modelComponents.scene;
+        var runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(model.upAxis).toEqual(Axis.Z);
-        expect(model.forwardAxis).toEqual(Axis.X);
+        expect(scene.upAxis).toEqual(Axis.Z);
+        expect(scene.forwardAxis).toEqual(Axis.X);
 
-        expect(sceneNodes[1].modelMatrix).toEqual(
+        expect(runtimeNodes[1].modelMatrix).toEqual(
           modelComponents.nodes[0].matrix
         );
-        expect(sceneNodes[0].modelMatrix).toEqual(
+        expect(runtimeNodes[0].modelMatrix).toEqual(
           Matrix4.multiplyByTranslation(
-            sceneNodes[1].modelMatrix,
+            runtimeNodes[1].modelMatrix,
             modelComponents.nodes[1].translation,
             new Matrix4()
           )

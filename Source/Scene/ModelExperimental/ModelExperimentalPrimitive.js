@@ -8,15 +8,18 @@ import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 
 /**
- * In memory representation of a single mesh primitive, that is, a primitive
+ * In memory representation of a single primitive, that is, a primitive
  * and its corresponding mesh.
  *
- * @param {Object} options An object containing the following options
- * @param {ModelComponents.Primitive} options.primitive the
+ * @param {Object} options An object containing the following options:
+ * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ *
+ * @alias ModelExperimentalPrimitive
+ * @constructor
  *
  * @private
  */
-export default function ModelExperimentalSceneMeshPrimitive(options) {
+export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
@@ -24,7 +27,7 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
   //>>includeEnd('debug');
 
   /**
-   * The primitive components associated with this mesh primitive.
+   * The primitive component associated with this primitive.
    *
    * @type {ModelComponents.Primitive}
    *
@@ -42,7 +45,7 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
   this.model = options.model;
 
   /**
-   * Pipeline stages to apply to this mesh primitive. This
+   * Pipeline stages to apply to this primitive. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
    *
@@ -56,11 +59,11 @@ export default function ModelExperimentalSceneMeshPrimitive(options) {
   initialize(this);
 }
 
-function initialize(sceneMeshPrimitive) {
-  var pipelineStages = sceneMeshPrimitive.pipelineStages;
+function initialize(runtimePrimitive) {
+  var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
 
-  var customShader = sceneMeshPrimitive.model.customShader;
+  var customShader = runtimePrimitive.model.customShader;
   var hasCustomShader = defined(customShader);
   var hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);

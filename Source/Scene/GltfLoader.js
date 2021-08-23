@@ -14,6 +14,7 @@ import getComponentReader from "../ThirdParty/GltfPipeline/getComponentReader.js
 import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
+import Axis from "./Axis.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
@@ -65,6 +66,8 @@ var GltfLoaderState = {
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  *
  * @private
  */
@@ -79,6 +82,8 @@ export default function GltfLoader(options) {
     options.incrementallyLoadTextures,
     true
   );
+  var upAxis = defaultValue(options.upAxis, Axis.Y);
+  var forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -92,6 +97,9 @@ export default function GltfLoader(options) {
   this._releaseGltfJson = releaseGltfJson;
   this._asynchronous = asynchronous;
   this._incrementallyLoadTextures = incrementallyLoadTextures;
+  this._upAxis = upAxis;
+  this._forwardAxis = forwardAxis;
+
   this._gltfJsonLoader = undefined;
   this._state = GltfLoaderState.UNLOADED;
   this._textureState = GltfLoaderState.UNLOADED;
@@ -308,7 +316,14 @@ GltfLoader.prototype.process = function (frameState) {
   }
 };
 
-function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
+function loadVertexBuffer(
+  loader,
+  gltf,
+  accessorId,
+  semantic,
+  draco,
+  dequantize
+) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
 
@@ -318,9 +333,10 @@ function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
     baseResource: loader._baseResource,
     bufferViewId: bufferViewId,
     draco: draco,
-    dracoAttributeSemantic: semantic,
-    dracoAccessorId: accessorId,
+    attributeSemantic: semantic,
+    accessorId: accessorId,
     asynchronous: loader._asynchronous,
+    dequantize: dequantize,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -473,7 +489,8 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     gltf,
     accessorId,
     gltfSemantic,
-    draco
+    draco,
+    false
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -527,7 +544,8 @@ function loadInstancedAttribute(
       gltf,
       accessorId,
       gltfSemantic,
-      undefined
+      undefined,
+      true
     );
     vertexBufferLoader.promise.then(function (vertexBufferLoader) {
       if (loader.isDestroyed()) {
@@ -1084,8 +1102,10 @@ function getSceneNodeIds(gltf) {
   return nodesIds;
 }
 
-function loadScene(gltf, nodes) {
+function loadScene(gltf, nodes, upAxis, forwardAxis) {
   var scene = new Scene();
+  scene.upAxis = upAxis;
+  scene.forwardAxis = forwardAxis;
   var sceneNodeIds = getSceneNodeIds(gltf);
   scene.nodes = sceneNodeIds.map(function (sceneNodeId) {
     return nodes[sceneNodeId];
@@ -1095,7 +1115,9 @@ function loadScene(gltf, nodes) {
 
 function parse(loader, gltf, supportedImageFormats, frameState) {
   var nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
-  var scene = loadScene(gltf, nodes);
+  var upAxis = loader._upAxis;
+  var forwardAxis = loader._forwardAxis;
+  var scene = loadScene(gltf, nodes, upAxis, forwardAxis);
 
   var components = new Components();
   components.scene = scene;

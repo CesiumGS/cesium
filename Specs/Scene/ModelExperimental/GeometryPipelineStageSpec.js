@@ -197,6 +197,21 @@ describe(
         expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
           "HAS_TEXCOORD_0"
         );
+
+        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
+          "HAS_SET_INDEXED_ATTRIBUTES"
+        );
+        var expectedSetIndexedAttributedInitializationLines = [
+          "void initializeSetIndexedAttributes()",
+          "{",
+          "    #ifdef HAS_TEXCOORD_0",
+          "    v_texCoord_0 = a_texCoord_0;",
+          "    #endif",
+          "}",
+        ];
+        expect(
+          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 6)
+        ).toEqual(expectedSetIndexedAttributedInitializationLines);
       });
     });
 
@@ -287,6 +302,21 @@ describe(
         expect(shaderBuilder._positionAttributeLine).toEqual(
           "attribute vec3 a_position;"
         );
+
+        expect(shaderBuilder._vertexShaderParts.defineLines[3]).toEqual(
+          "HAS_SET_INDEXED_ATTRIBUTES"
+        );
+        var expectedSetIndexedAttributedInitializationLines = [
+          "void initializeSetIndexedAttributes()",
+          "{",
+          "    #ifdef HAS_TEXCOORD_0",
+          "    v_texCoord_0 = a_texCoord_0;",
+          "    #endif",
+          "}",
+        ];
+        expect(
+          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 6)
+        ).toEqual(expectedSetIndexedAttributedInitializationLines);
       });
     });
 
@@ -356,6 +386,23 @@ describe(
         expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
           "HAS_TEXCOORD_1"
         );
+        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
+          "HAS_SET_INDEXED_ATTRIBUTES"
+        );
+        var expectedSetIndexedAttributedInitializationLines = [
+          "void initializeSetIndexedAttributes()",
+          "{",
+          "    #ifdef HAS_TEXCOORD_0",
+          "    v_texCoord_0 = a_texCoord_0;",
+          "    #endif",
+          "    #ifdef HAS_TEXCOORD_1",
+          "    v_texCoord_1 = a_texCoord_1;",
+          "    #endif",
+          "}",
+        ];
+        expect(
+          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 9)
+        ).toEqual(expectedSetIndexedAttributedInitializationLines);
       });
     });
 
@@ -390,10 +437,10 @@ describe(
           "attribute vec4 a_color_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_VERTEX_COLORS"
+          "HAS_COLOR_0"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_VERTEX_COLORS"
+          "HAS_COLOR_0"
         );
 
         var normalAttribute = attributes[1];
@@ -446,6 +493,23 @@ describe(
         expect(shaderBuilder._fragmentShaderParts.defineLines[2]).toEqual(
           "HAS_TEXCOORD_0"
         );
+        expect(shaderBuilder._vertexShaderParts.defineLines[3]).toEqual(
+          "HAS_SET_INDEXED_ATTRIBUTES"
+        );
+        var expectedSetIndexedAttributedInitializationLines = [
+          "void initializeSetIndexedAttributes()",
+          "{",
+          "    #ifdef HAS_COLOR_0",
+          "    v_color_0 = a_color_0;",
+          "    #endif",
+          "    #ifdef HAS_TEXCOORD_0",
+          "    v_texCoord_0 = a_texCoord_0;",
+          "    #endif",
+          "}",
+        ];
+        expect(
+          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 9)
+        ).toEqual(expectedSetIndexedAttributedInitializationLines);
       });
     });
 
@@ -559,10 +623,10 @@ describe(
           "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
       });
     });
@@ -611,12 +675,15 @@ describe(
           "attribute float a_featureId_0;"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_FEATURE_ID"
+          "HAS_FEATURE_ID_0"
         );
         expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
+          "HAS_SET_INDEXED_ATTRIBUTES"
+        );
+        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
           "PRIMITIVE_TYPE_POINTS"
         );
         expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(

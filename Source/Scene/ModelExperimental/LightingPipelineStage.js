@@ -20,7 +20,7 @@ var LightingPipelineStage = {};
  * <ul>
  *   <li>modifies the shader to include the lighting stage</li>
  * </ul>
- * @param {RenderResources.PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  *
  * @private
