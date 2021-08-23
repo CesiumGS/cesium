@@ -228,6 +228,11 @@ ModelExperimental.prototype.update = function (frameState) {
     this._gltfLoader.process(frameState);
   }
 
+  // A custom shader may have to load texture uniforms.
+  if (defined(this._customShader)) {
+    this._customShader.update(frameState);
+  }
+
   // short-circuit if the glTF resources aren't ready.
   if (!this._resourcesLoaded) {
     return;
