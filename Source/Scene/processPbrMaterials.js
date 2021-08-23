@@ -2,9 +2,9 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
-import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import usesExtension from "../ThirdParty/GltfPipeline/usesExtension.js";
+import addToArray from "./GltfPipeline/addToArray.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
