@@ -36,6 +36,7 @@ Source/ThirdParty/lerc.js
 Source/ThirdParty/mersenne-twister.js
 Source/ThirdParty/nosleep.js
 Source/ThirdParty/pako.js
+Source/ThirdParty/protobufjs.js
 Source/ThirdParty/rbush.js
 Source/ThirdParty/topojson.js
 Source/ThirdParty/Tween.js

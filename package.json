@@ -95,6 +95,7 @@
     "pako": "^1.0.4",
     "prettier": "2.1.2",
     "pretty-quick": "^3.1.1",
+    "protobufjs": "6.7.0",
     "rbush": "^3.0.1",
     "request": "^2.79.0",
     "rimraf": "^3.0.2",

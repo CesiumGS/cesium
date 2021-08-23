@@ -74,7 +74,6 @@ const filesToLeaveInThirdParty = [
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/knockout*.js",
   "!Source/ThirdParty/measureText.js",
-  "!Source/ThirdParty/protobuf-minimal.js",
   "!Source/ThirdParty/Uri.js",
 ];
 
@@ -136,12 +135,10 @@ const filesToConvertES6 = [
 
 function rollupWarning(message) {
   // Ignore eval warnings in third-party code we don't have control over
-  if (
-    message.code === "EVAL" &&
-    /protobuf-minimal\.js$/.test(message.loc.file)
-  ) {
+  if (message.code === "EVAL" && /protobufjs/.test(message.loc.file)) {
     return;
   }
+
   console.log(message);
 }
 
