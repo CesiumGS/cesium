@@ -3,8 +3,8 @@ attribute vec2 direction;
 #endif
 attribute vec4 positionHighAndScaleX;
 attribute vec4 positionLowAndScaleY;
-attribute vec4 compressedAttribute0;
-attribute vec4 compressedAttribute1;
+attribute vec4 packedAttribute0;
+attribute vec4 packedAttribute1;
 
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
@@ -17,11 +17,11 @@ void main() {
     vec3 positionLow = positionLowAndScaleY.xyz;
     vec2 scale = vec2(positionHighAndScaleX.w, positionLowAndScaleY.w);
 
-    float show = compressedAttribute0.x;
-    float brightness = compressedAttribute0.y;
-    vec2 coordinates = compressedAttribute0.wz;
-    vec3 maximumSize = compressedAttribute1.xyz;
-    float slice = compressedAttribute1.w;
+    float show = packedAttribute0.x;
+    float brightness = packedAttribute0.y;
+    vec2 coordinates = packedAttribute0.wz;
+    vec3 maximumSize = packedAttribute1.xyz;
+    float slice = packedAttribute1.w;
 
 #ifdef INSTANCED
     vec2 dir = direction;

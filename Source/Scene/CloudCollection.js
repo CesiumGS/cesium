@@ -5,8 +5,8 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CloudType from "./CloudType.js";
 import CloudCollectionFS from "../Shaders/CloudCollectionFS.js";
 import CloudCollectionVS from "../Shaders/CloudCollectionVS.js";
-import CloudTextureFS from "../Shaders/CloudTextureFS.js";
-import CloudTextureVS from "../Shaders/CloudTextureVS.js";
+import CloudNoiseFS from "../Shaders/CloudNoiseFS.js";
+import CloudNoiseVS from "../Shaders/CloudNoiseVS.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CumulusCloud from "./CumulusCloud.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -36,16 +36,16 @@ var attributeLocations;
 var attributeLocationsBatched = {
   positionHighAndScaleX: 0,
   positionLowAndScaleY: 1,
-  compressedAttribute0: 2, // show, brightness, direction
-  compressedAttribute1: 3, // cloudSize, slice
+  packedAttribute0: 2, // show, brightness, direction
+  packedAttribute1: 3, // cloudSize, slice
 };
 
 var attributeLocationsInstanced = {
   direction: 0,
   positionHighAndScaleX: 1,
   positionLowAndScaleY: 2,
-  compressedAttribute0: 3, // show, brightness
-  compressedAttribute1: 4, // cloudSize, slice
+  packedAttribute0: 3, // show, brightness
+  packedAttribute1: 4, // cloudSize, slice
 };
 
 var SHOW_INDEX = CumulusCloud.SHOW_INDEX;
@@ -73,7 +73,7 @@ var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
  * @see CumulusCloud
  *
  * @example
- * // Create a billboard collection with two cumulus clouds
+ * // Create a cloud collection with two cumulus clouds
  * var clouds = scene.primitives.add(new Cesium.CloudCollection());
  * clouds.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
@@ -145,6 +145,7 @@ function CloudCollection(options) {
   this._vaNoise = undefined;
   this._spNoise = undefined;
 
+  this._spCompiled = false;
   this._sp = undefined;
   this._rs = undefined;
 
@@ -162,6 +163,7 @@ function CloudCollection(options) {
    * @default false
    */
   this.debugBillboards = defaultValue(options.debugBillboards, false);
+  this._compiledDebugBillboards = false;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -175,6 +177,7 @@ function CloudCollection(options) {
    * @default false
    */
   this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
+  this._compiledDebugEllipsoids = false;
 }
 
 Object.defineProperties(CloudCollection.prototype, {
@@ -312,7 +315,6 @@ CloudCollection.prototype.remove = function (cloud) {
  * from a collection and then add new ones than to create a new collection entirely.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
  *
  * @example
  * clouds.add(...);
@@ -533,13 +535,13 @@ function createVAF(context, numberOfClouds, instanced) {
       usage: BufferUsage.STATIC_DRAW,
     },
     {
-      index: attributeLocations.compressedAttribute0,
+      index: attributeLocations.packedAttribute0,
       componentsPerAttribute: 4,
       componentDatatype: ComponentDatatype.FLOAT,
       usage: BufferUsage.STATIC_DRAW,
     },
     {
-      index: attributeLocations.compressedAttribute1,
+      index: attributeLocations.packedAttribute1,
       componentsPerAttribute: 4,
       componentDatatype: ComponentDatatype.FLOAT,
       usage: BufferUsage.STATIC_DRAW,
@@ -591,14 +593,9 @@ function writePositionAndScale(cloudCollection, frameState, vafWriters, cloud) {
   }
 }
 
-function writeCompressedAttribute0(
-  cloudCollection,
-  frameState,
-  vafWriters,
-  cloud
-) {
+function writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud) {
   var i;
-  var writer = vafWriters[attributeLocations.compressedAttribute0];
+  var writer = vafWriters[attributeLocations.packedAttribute0];
   var show = cloud.show;
   var brightness = cloud.brightness;
 
@@ -614,14 +611,9 @@ function writeCompressedAttribute0(
   }
 }
 
-function writeCompressedAttribute1(
-  cloudCollection,
-  frameState,
-  vafWriters,
-  cloud
-) {
+function writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud) {
   var i;
-  var writer = vafWriters[attributeLocations.compressedAttribute1];
+  var writer = vafWriters[attributeLocations.packedAttribute1];
   var maximumSize = cloud.maximumSize;
   var slice = cloud.slice;
 
@@ -639,8 +631,8 @@ function writeCompressedAttribute1(
 
 function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
   writePositionAndScale(cloudCollection, frameState, vafWriters, cloud);
-  writeCompressedAttribute0(cloudCollection, frameState, vafWriters, cloud);
-  writeCompressedAttribute1(cloudCollection, frameState, vafWriters, cloud);
+  writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud);
+  writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud);
 }
 
 var scratchWriterArray = [];
@@ -660,8 +652,8 @@ CloudCollection.prototype.update = function (frameState) {
     this._vaNoise = createTextureVA(context);
     this._spNoise = ShaderProgram.fromCache({
       context: context,
-      vertexShaderSource: CloudTextureVS,
-      fragmentShaderSource: CloudTextureFS,
+      vertexShaderSource: CloudNoiseVS,
+      fragmentShaderSource: CloudNoiseFS,
       attributeLocations: {
         position: 0,
       },
@@ -757,11 +749,11 @@ CloudCollection.prototype.update = function (frameState) {
     }
 
     if (properties[SHOW_INDEX] || properties[BRIGHTNESS_INDEX]) {
-      writers.push(writeCompressedAttribute0);
+      writers.push(writePackedAttribute0);
     }
 
     if (properties[MAXIMUM_SIZE_INDEX] || properties[SLICE_INDEX]) {
-      writers.push(writeCompressedAttribute1);
+      writers.push(writePackedAttribute1);
     }
 
     var numWriters = writers.length;
@@ -822,43 +814,54 @@ CloudCollection.prototype.update = function (frameState) {
   var vsSource = CloudCollectionVS;
   var fsSource = CloudCollectionFS;
 
-  var vs = new ShaderSource({
-    defines: [],
-    sources: [vsSource],
-  });
+  var vs, fs;
+  if (
+    !this._spCompiled ||
+    this.debugBillboards !== this._compiledDebugBillboards ||
+    this.debugEllipsoids !== this._compiledDebugEllipsoids
+  ) {
+    vs = new ShaderSource({
+      defines: [],
+      sources: [vsSource],
+    });
 
-  if (this._instanced) {
-    vs.defines.push("INSTANCED");
+    if (this._instanced) {
+      vs.defines.push("INSTANCED");
+    }
+
+    fs = new ShaderSource({
+      defines: [],
+      sources: [fsSource],
+    });
+
+    if (this.debugBillboards) {
+      fs.defines.push("DEBUG_BILLBOARDS");
+    }
+
+    if (this.debugEllipsoids) {
+      fs.defines.push("DEBUG_ELLIPSOIDS");
+    }
+
+    this._sp = ShaderProgram.replaceCache({
+      context: context,
+      shaderProgram: this._sp,
+      vertexShaderSource: vs,
+      fragmentShaderSource: fs,
+      attributeLocations: attributeLocations,
+    });
+
+    this._rs = RenderState.fromCache({
+      depthTest: {
+        enabled: true,
+        func: WebGLConstants.LESS,
+      },
+      depthMask: true,
+    });
+
+    this._spCompiled = true;
+    this._compiledDebugBillboards = this.debugBillboards;
+    this._compiledDebugEllipsoids = this.debugEllipsoids;
   }
-
-  var fs = new ShaderSource({
-    defines: [],
-    sources: [fsSource],
-  });
-
-  if (this.debugBillboards) {
-    fs.defines.push("DEBUG_BILLBOARDS");
-  }
-
-  if (this.debugEllipsoids) {
-    fs.defines.push("DEBUG_ELLIPSOIDS");
-  }
-
-  this._sp = ShaderProgram.replaceCache({
-    context: context,
-    shaderProgram: this._sp,
-    vertexShaderSource: vs,
-    fragmentShaderSource: fs,
-    attributeLocations: attributeLocations,
-  });
-
-  this._rs = RenderState.fromCache({
-    depthTest: {
-      enabled: true,
-      func: WebGLConstants.LESS,
-    },
-    depthMask: true,
-  });
 
   var commandList = frameState.commandList;
   if (pass.render) {

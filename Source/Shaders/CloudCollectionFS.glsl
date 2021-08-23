@@ -118,19 +118,20 @@ bool intersectEllipsoid(vec3 origin, vec3 dir, vec3 center, vec3 scale, float sl
     return intersected;
 }
 
-#define M_PI 3.1415927
 // Assume that if phase shift is being called for octave i,
 // the frequency is of i - 1. This saves us from doing extra
 // division / multiplication operations.
 vec2 phaseShift2D(vec2 p, vec2 freq) {
-    return (M_PI / 2.0) * sin(freq.yx * p.yx); 
+    return (czm_pi / 2.0) * sin(freq.yx * p.yx); 
 }
 
 vec2 phaseShift3D(vec3 p, vec2 freq) {
-    return phaseShift2D(p.xy, freq) + M_PI * vec2(sin(freq.x * p.z));
+    return phaseShift2D(p.xy, freq) + czm_pi * vec2(sin(freq.x * p.z));
 }
 
-// The cloud texture function derived from Gardner's paper.
+// The cloud texture function derived from Gardner's 1985 paper,
+// "Visual Simulation of Clouds."
+// https://www.cs.drexel.edu/~david/Classes/Papers/p297-gardner.pdf
 const float T0    = 0.6;  // contrast of the texture pattern
 const float k     = 0.1;  // computed to produce a maximum value of 1 
 const float C0    = 0.8;  // coefficient
@@ -153,8 +154,8 @@ float T(vec3 point) {
     return k * sum.x * sum.y;
 }
 
-const float a = 0.5; // fraction of surface reflection due to ambient or scattered light, 
-const float t = 0.4; // fraction of texture shading 
+const float a = 0.5;  // fraction of surface reflection due to ambient or scattered light, 
+const float t = 0.4;  // fraction of texture shading 
 const float s = 0.25; // fraction of specular reflection
 
 float I(float Id, float Is, float It) {
@@ -171,23 +172,65 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
         return vec4(0.0);
     }
 
-    float ndDot = clamp(dot(cloudNormal, -rayDir), 0.0, 1.0);
     float Id = clamp(dot(cloudNormal, -lightDir), 0.0, 1.0);  // diffuse reflection
     float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
     float It = T(cloudPoint);                                 // texture function
     float intensity = I(Id, Is, It);
     vec3 color = intensity * clamp(brightness, 0.1, 1.0) * vec3(1.0);
+
     vec4 noise = sampleNoiseTexture(u_noiseDetail * cloudPoint);
-    float W = noise.y;
-    float W2 = noise.z;
-    float W3 = noise.w;
-    float TR = pow(ndDot, 3.0) - W;
-    float minusDot = 0.5 - ndDot;
+    float W = noise.x;
+    float W2 = noise.y;
+    float W3 = noise.z;
+
+    // The dot product between the cloud's normal and the ray's direction is greatest
+    // in the center of the ellipsoid's surface. It decreases towards the edge.
+    // Thus, it is used to blur the areas leading to the edges of the ellipsoid,
+    // so that no harsh lines appear.
+    
+    // The first (and biggest) layer of worley noise is then subtracted from this.
+    // The final result is scaled up so that the base cloud is not too translucent.
+    float ndDot = clamp(dot(cloudNormal, -rayDir), 0.0, 1.0);
+    float TR = pow(ndDot, 3.0) - W; // translucency
     TR *= 1.3;
+    
+    // Subtracting the second and third layers of worley noise is more complicated.
+    // If these layers of noise were simply subtracted from the current translucency,
+    // the shape derived from the first layer of noise would be completely deleted.
+    // The erosion of this noise should thus be constricted to the edges of the cloud.
+    // However, because the edges of the ellipsoid were already blurred away, mapping
+    // the noise to (1.0 - ndDot) will have no impact on most of the cloud's appearance.
+    // The value of (0.5 - ndDot) provides the best compromise.
+    float minusDot = 0.5 - ndDot;
+
+    // Even with the previous calculation, subtracting the second layer of wnoise
+    // erode too much of the cloud. The addition of it, however, will detailed
+    // volume to the cloud. As long as the noise is only added and not subtracted,
+    // the results are aesthetically pleasing.
+    
+    // The minusDot product is mapped in a way that it is larger at the edges of
+    // the ellipsoid, so a subtraction and min operation are used instead of
+    // an addition and max one.
     TR -= min(minusDot * W2, 0.0);
-    TR -= 0.8 * (minusDot + 0.13) * W3;
+
+    // The third level of worley noise is subtracted from the result, with some
+    // modifications. First, a scalar is added to minusDot so that the noise
+    // starts affecting the shape farther away from the center of the ellipsoid's
+    // surface. Then, it is scaled down so its impact is not too intense.
+    TR -= 0.8 * (minusDot + 0.25) * W3;
+
+    // The texture function's shading does not correlate with the shape of the cloud
+    // produced by the layers of noise, so an extra shading scalar is calculated.
+    // The darkest areas of the cloud are assigned to be where the noise erodes
+    // the cloud the most. This is then interpolated based on the translucency
+    // and the diffuse shading term of that point in the cloud.
     float shading = mix(1.0 - 0.8 * W * W, 1.0, Id * TR);
-    shading = clamp(shading + 0.2, 0.0, 1.0);
+
+    // To avoid values that are too dark, this scalar is increased by a small amount
+    // and clamped so it never goes to zero.
+    shading = clamp(shading + 0.2, 0.3, 1.0);
+
+    // Finally, the contrast of the cloud's color is increased.
     vec3 finalColor = mix(vec3(0.5), shading * color, 1.15);
     return vec4(finalColor, clamp(TR, 0.0, 1.0));
 }
