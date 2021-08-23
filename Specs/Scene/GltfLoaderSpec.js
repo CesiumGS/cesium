@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   Cartesian2,
   Cartesian3,
   Cartesian4,
@@ -1737,6 +1738,8 @@ describe(
         var material = primitive.material;
         var specularGlossiness = material.specularGlossiness;
 
+        expect(scene.upAxis).toBe(Axis.Y);
+        expect(scene.forwardAxis).toBe(Axis.Z);
         expect(material.occlusionTexture.texture.width).toBe(128);
         expect(material.normalTexture.texture.width).toBe(128);
         expect(material.emissiveTexture.texture.width).toBe(128);

@@ -104,18 +104,14 @@ AttributeType.getMathType = function (attributeType) {
 };
 
 /**
- * Gets number of components in the attribute type.
+ * Gets the number of components per attribute.
  *
  * @param {AttributeType} attributeType The attribute type.
- * @returns {Number} Number of components in the attribute type.
+ * @returns {Number} The number of components.
  *
  * @private
  */
-AttributeType.getComponentsPerAttribute = function (attributeType) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("attributeType", attributeType);
-  //>>includeEnd('debug');
-
+AttributeType.getNumberOfComponents = function (attributeType) {
   switch (attributeType) {
     case AttributeType.SCALAR:
       return 1;
@@ -124,7 +120,6 @@ AttributeType.getComponentsPerAttribute = function (attributeType) {
     case AttributeType.VEC3:
       return 3;
     case AttributeType.VEC4:
-      return 4;
     case AttributeType.MAT2:
       return 4;
     case AttributeType.MAT3:
@@ -143,6 +138,8 @@ AttributeType.getComponentsPerAttribute = function (attributeType) {
  *
  * @param {AttributeType} attributeType The attribute type.
  * @returns {String} The GLSL type for the attribute type.
+ *
+ * @private
  */
 AttributeType.getGlslType = function (attributeType) {
   //>>includeStart('debug', pragmas.debug);

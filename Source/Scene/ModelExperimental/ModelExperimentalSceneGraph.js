@@ -1,14 +1,15 @@
-import Axis from "../../Scene/Axis.js";
 import buildDrawCommand from "./buildDrawCommand.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelExperimentalSceneMeshPrimitive from "./ModelExperimentalSceneMeshPrimitive.js";
-import ModelExperimentalSceneNode from "./ModelExperimentalSceneNode.js";
+import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
+import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-import RenderResources from "./RenderResources.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
+import ModelRenderResources from "./ModelRenderResources.js";
+import NodeRenderResources from "./NodeRenderResources.js";
+import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -16,8 +17,9 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
  * @param {Object} options An object containing the following options
  * @param {ModelExperimental} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
- * @param {Axis} [options.upAxis=Axis.Y] The upwards direction of the 3D model
- * @param {Axis} [options.forwardAxis=Axis.Z] The forwards direction of the 3D model
+ *
+ * @alias ModelExperimentalSceneGraph
+ * @constructor
  *
  * @private
  */
@@ -61,12 +63,12 @@ export default function ModelExperimentalSceneGraph(options) {
   /**
    * The scene nodes that make up the scene graph
    *
-   * @type {ModelExperimentalSceneNode[]}
+   * @type {ModelExperimentalNode[]}
    * @readonly
    *
    * @private
    */
-  this._sceneNodes = [];
+  this._runtimeNodes = [];
 
   /**
    * Once computed, the {@link DrawCommand}s that are used to render this
@@ -78,28 +80,6 @@ export default function ModelExperimentalSceneGraph(options) {
    * @private
    */
   this._drawCommands = [];
-
-  /**
-   * The up direction of the model. It will be used to compute a matrix
-   * to orient models so Z is upwards
-   *
-   * @type {Axis}
-   * @readonly
-   *
-   * @private
-   */
-  this._upAxis = defaultValue(options.upAxis, Axis.Y);
-  /**
-   * The forward direction of the model. It will be used to compute a matrix
-   * to orient models so X is forwards.
-   *
-   * @type {Axis}
-   * @readonly
-   *
-   * @private
-   */
-  this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
-  this._allowPicking = defaultValue(options.allowPicking, true);
 
   /**
    * The bounding sphere containing all the primitives in the scene graph.
@@ -121,34 +101,17 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
-  /**
-   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-   * Local reference frames can be used by providing a different transformation matrix, like that returned
-   * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
-   * @type {Matrix4}
-   *
-   * @default {@link Matrix4.IDENTITY}
-   *
-   * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-   */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
-
   initialize(this);
 }
 
 function initialize(sceneGraph) {
-  var modelMatrix = sceneGraph.modelMatrix;
+  var modelMatrix = Matrix4.clone(sceneGraph._model.modelMatrix);
+  var scene = sceneGraph._modelComponents.scene;
 
   ModelExperimentalUtility.correctModelMatrix(
     modelMatrix,
-    sceneGraph._upAxis,
-    sceneGraph._forwardAxis
+    scene.upAxis,
+    scene.forwardAxis
   );
 
   var rootNodes = sceneGraph._modelComponents.scene.nodes;
@@ -196,15 +159,15 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   }
 
   // Process node and mesh primitives.
-  var sceneNode = new ModelExperimentalSceneNode({
+  var runtimeNode = new ModelExperimentalNode({
     node: node,
     modelMatrix: modelMatrix,
   });
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      sceneNode.sceneMeshPrimitives.push(
-        new ModelExperimentalSceneMeshPrimitive({
+      runtimeNode.runtimePrimitives.push(
+        new ModelExperimentalPrimitive({
           primitive: node.primitives[i],
           allowPicking: sceneGraph._allowPicking,
         })
@@ -212,7 +175,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
     }
   }
 
-  sceneGraph._sceneNodes.push(sceneNode);
+  sceneGraph._runtimeNodes.push(runtimeNode);
 }
 
 /**
@@ -226,53 +189,48 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
 ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
 ) {
-  var modelRenderResources = new RenderResources.ModelRenderResources(
-    this._model
-  );
+  var modelRenderResources = new ModelRenderResources(this._model);
 
   var i, j, k;
-  for (i = 0; i < this._sceneNodes.length; i++) {
-    var sceneNode = this._sceneNodes[i];
+  for (i = 0; i < this._runtimeNodes.length; i++) {
+    var runtimeNode = this._runtimeNodes[i];
 
-    var nodeRenderResources = new RenderResources.NodeRenderResources(
+    var nodeRenderResources = new NodeRenderResources(
       modelRenderResources,
-      sceneNode
+      runtimeNode
     );
 
-    for (j = 0; j < sceneNode.pipelineStages.length; j++) {
-      var nodePipelineStage = sceneNode.pipelineStages[j];
+    for (j = 0; j < runtimeNode.pipelineStages.length; j++) {
+      var nodePipelineStage = runtimeNode.pipelineStages[j];
 
       nodePipelineStage.process(
         nodeRenderResources,
-        sceneNode.node,
+        runtimeNode.node,
         frameState
       );
     }
 
-    for (j = 0; j < sceneNode.sceneMeshPrimitives.length; j++) {
-      var sceneMeshPrimitive = sceneNode.sceneMeshPrimitives[j];
+    for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      var meshPrimitiveRenderResources = new RenderResources.MeshPrimitiveRenderResources(
+      var primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
-        sceneMeshPrimitive
+        runtimePrimitive
       );
 
-      for (k = 0; k < sceneMeshPrimitive.pipelineStages.length; k++) {
-        var primitivePipelineStage = sceneMeshPrimitive.pipelineStages[k];
+      for (k = 0; k < runtimePrimitive.pipelineStages.length; k++) {
+        var primitivePipelineStage = runtimePrimitive.pipelineStages[k];
 
         primitivePipelineStage.process(
-          meshPrimitiveRenderResources,
-          sceneMeshPrimitive.primitive,
+          primitiveRenderResources,
+          runtimePrimitive.primitive,
           frameState
         );
       }
 
-      this._boundingSpheres.push(meshPrimitiveRenderResources.boundingSphere);
+      this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
-      var drawCommand = buildDrawCommand(
-        meshPrimitiveRenderResources,
-        frameState
-      );
+      var drawCommand = buildDrawCommand(primitiveRenderResources, frameState);
       this._drawCommands.push(drawCommand);
     }
   }

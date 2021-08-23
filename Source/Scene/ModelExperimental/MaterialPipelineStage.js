@@ -4,6 +4,15 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
 import LightingModel from "./LightingModel.js";
 import MaterialStageFS from "../../Shaders/ModelExperimental/MaterialStageFS.js";
+import Pass from "../../Renderer/Pass.js";
+import Matrix3 from "../../Core/Matrix3.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
+import ModelComponents from "../ModelComponents.js";
+
+var Material = ModelComponents.Material;
+var MetallicRoughness = ModelComponents.MetallicRoughness;
+var SpecularGlossiness = ModelComponents.SpecularGlossiness;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -29,20 +38,34 @@ var MaterialPipelineStage = {};
  *   <li>Modifies the lighting options to set either PBR or unlit lighting</li>
  *   <li>Sets the render state for back-face culling</li>
  * </ul>
- * @param {RenderResources.PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {FrameState} frameState The frame state.
  * @private
  */
-MaterialPipelineStage.process = function (renderResources, primitive) {
+MaterialPipelineStage.process = function (
+  renderResources,
+  primitive,
+  frameState
+) {
   var material = primitive.material;
 
   var uniformMap = renderResources.uniformMap;
   var shaderBuilder = renderResources.shaderBuilder;
 
   // When textures are loaded incrementally, fall back to a default 1x1 texture
-  var defaultTexture = renderResources.model._defaultTexture;
+  var defaultTexture = frameState.context.defaultTexture;
+  var defaultNormalTexture = frameState.context.defaultNormalTexture;
+  var defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
 
-  processMaterialUniforms(material, uniformMap, shaderBuilder, defaultTexture);
+  processMaterialUniforms(
+    material,
+    uniformMap,
+    shaderBuilder,
+    defaultTexture,
+    defaultNormalTexture,
+    defaultEmissiveTexture
+  );
 
   if (defined(material.specularGlossiness)) {
     processSpecularGlossinessUniforms(
@@ -69,12 +92,15 @@ MaterialPipelineStage.process = function (renderResources, primitive) {
 
   // Configure back-face culling
   var cull = !material.doubleSided;
-  renderResources.cull = cull;
   renderResources.renderStateOptions.cull = {
     enabled: cull,
   };
 
   addAlphaUniforms(material, uniformMap, shaderBuilder);
+
+  if (material.alphaMode === AlphaMode.BLEND) {
+    renderResources.pass = Pass.TRANSLUCENT;
+  }
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);
 };
@@ -162,7 +188,11 @@ function processTexture(
 
   // Some textures have matrix transforms (e.g. for texture atlases). Add those
   // to the shader if present.
-  if (defined(textureReader.transform)) {
+  var textureTransform = textureReader.transform;
+  if (
+    defined(textureTransform) &&
+    !Matrix3.equals(textureTransform, Matrix3.IDENTITY)
+  ) {
     processTextureTransform(
       shaderBuilder,
       uniformMap,
@@ -177,7 +207,9 @@ function processMaterialUniforms(
   material,
   uniformMap,
   shaderBuilder,
-  defaultTexture
+  defaultTexture,
+  defaultNormalTexture,
+  defaultEmissiveTexture
 ) {
   var emissiveTexture = material.emissiveTexture;
   if (defined(emissiveTexture)) {
@@ -187,12 +219,15 @@ function processMaterialUniforms(
       emissiveTexture,
       "u_emissiveTexture",
       "EMISSIVE",
-      defaultTexture
+      defaultEmissiveTexture
     );
   }
 
   var emissiveFactor = material.emissiveFactor;
-  if (defined(emissiveFactor)) {
+  if (
+    defined(emissiveFactor) &&
+    !Cartesian3.equals(emissiveFactor, Material.DEFAULT_EMISSIVE_FACTOR)
+  ) {
     shaderBuilder.addUniform(
       "vec3",
       "u_emissiveFactor",
@@ -216,7 +251,7 @@ function processMaterialUniforms(
       normalTexture,
       "u_normalTexture",
       "NORMAL",
-      defaultTexture
+      defaultNormalTexture
     );
   }
 
@@ -259,7 +294,10 @@ function processSpecularGlossinessUniforms(
   }
 
   var diffuseFactor = specularGlossiness.diffuseFactor;
-  if (defined(diffuseFactor)) {
+  if (
+    defined(diffuseFactor) &&
+    !Cartesian4.equals(diffuseFactor, SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR)
+  ) {
     shaderBuilder.addUniform(
       "vec4",
       "u_diffuseFactor",
@@ -288,7 +326,13 @@ function processSpecularGlossinessUniforms(
   }
 
   var specularFactor = specularGlossiness.specularFactor;
-  if (defined(specularFactor)) {
+  if (
+    defined(specularFactor) &&
+    !Cartesian3.equals(
+      specularFactor,
+      SpecularGlossiness.DEFAULT_SPECULAR_FACTOR
+    )
+  ) {
     shaderBuilder.addUniform(
       "vec3",
       "u_specularFactor",
@@ -305,7 +349,10 @@ function processSpecularGlossinessUniforms(
   }
 
   var glossinessFactor = specularGlossiness.glossinessFactor;
-  if (defined(glossinessFactor)) {
+  if (
+    defined(glossinessFactor) &&
+    glossinessFactor !== SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR
+  ) {
     shaderBuilder.addUniform(
       "float",
       "u_glossinessFactor",
@@ -348,7 +395,13 @@ function processMetallicRoughnessUniforms(
   }
 
   var baseColorFactor = metallicRoughness.baseColorFactor;
-  if (defined(baseColorFactor)) {
+  if (
+    defined(baseColorFactor) &&
+    !Cartesian4.equals(
+      baseColorFactor,
+      MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR
+    )
+  ) {
     shaderBuilder.addUniform(
       "vec4",
       "u_baseColorFactor",
@@ -377,7 +430,10 @@ function processMetallicRoughnessUniforms(
   }
 
   var metallicFactor = metallicRoughness.metallicFactor;
-  if (defined(metallicFactor)) {
+  if (
+    defined(metallicFactor) &&
+    metallicFactor !== MetallicRoughness.DEFAULT_METALLIC_FACTOR
+  ) {
     shaderBuilder.addUniform(
       "float",
       "u_metallicFactor",
@@ -394,7 +450,10 @@ function processMetallicRoughnessUniforms(
   }
 
   var roughnessFactor = metallicRoughness.roughnessFactor;
-  if (defined(roughnessFactor)) {
+  if (
+    defined(roughnessFactor) &&
+    roughnessFactor !== MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR
+  ) {
     shaderBuilder.addUniform(
       "float",
       "u_roughnessFactor",

@@ -17,18 +17,12 @@ vec3 processGeometry(vec3 position)
     v_tangent.w = a_tangent.w;
     #endif
 
-    #ifdef HAS_TEXCOORD_0
-    v_texCoord_0 = a_texCoord_0;
+    // This function is defined in GeometryPipelineStage
+    #ifdef HAS_SET_INDEXED_ATTRIBUTES
+    initializeSetIndexedAttributes();
     #endif
 
-    #ifdef HAS_TEXCOORD_1
-    v_texCoord_1 = a_texCoord_1;
-    #endif
-
-    #ifdef HAS_VERTEX_COLORS
-    v_color_0 = a_color_0;
-    #endif
-
+    // This function is defined in GeometryPipelineStage
     #ifdef HAS_CUSTOM_ATTRIBUTES
     initializeCustomAttributes();
     #endif

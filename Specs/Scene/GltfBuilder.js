@@ -1,5 +1,5 @@
 import { defined, RuntimeError } from "../../Source/Cesium.js";
-import findAccessorMinMax from "../../Source/ThirdParty/GltfPipeline/findAccessorMinMax.js";
+import findAccessorMinMax from "../../Source/Scene/GltfPipeline/findAccessorMinMax.js";
 
 /**
  * A fluent interface for programmatically building a glTF.

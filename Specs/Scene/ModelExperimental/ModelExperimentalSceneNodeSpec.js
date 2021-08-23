@@ -1,16 +1,16 @@
 import {
   InstancingPipelineStage,
   Matrix4,
-  ModelExperimentalSceneNode,
+  ModelExperimentalNode,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalSceneNode", function () {
+describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   var mockNode = {};
   var modelMatrix = Matrix4.IDENTITY;
 
   it("throws for undefined node", function () {
     expect(function () {
-      return new ModelExperimentalSceneNode({
+      return new ModelExperimentalNode({
         node: undefined,
         modelMatrix: modelMatrix,
       });
@@ -19,7 +19,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneNode", function () {
 
   it("throws for undefined modelMatrix", function () {
     expect(function () {
-      return new ModelExperimentalSceneNode({
+      return new ModelExperimentalNode({
         node: mockNode,
         modelMatrix: undefined,
       });
@@ -27,7 +27,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneNode", function () {
   });
 
   it("constructs", function () {
-    var node = new ModelExperimentalSceneNode({
+    var node = new ModelExperimentalNode({
       node: mockNode,
       modelMatrix: modelMatrix,
     });
@@ -35,7 +35,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneNode", function () {
     expect(node.node).toBe(mockNode);
     expect(node.modelMatrix).toBe(modelMatrix);
     expect(node.pipelineStages).toEqual([]);
-    expect(node.sceneMeshPrimitives).toEqual([]);
+    expect(node.runtimePrimitives).toEqual([]);
   });
 
   it("adds instancing pipeline stage if node is instanced", function () {
@@ -44,7 +44,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneNode", function () {
         attributes: [],
       },
     };
-    var node = new ModelExperimentalSceneNode({
+    var node = new ModelExperimentalNode({
       node: instancedMockNode,
       modelMatrix: modelMatrix,
     });
@@ -53,6 +53,6 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneNode", function () {
     expect(node.modelMatrix).toBe(modelMatrix);
     expect(node.pipelineStages.length).toBe(1);
     expect(node.pipelineStages[0]).toEqual(InstancingPipelineStage);
-    expect(node.sceneMeshPrimitives).toEqual([]);
+    expect(node.runtimePrimitives).toEqual([]);
   });
 });

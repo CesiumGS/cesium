@@ -2,22 +2,22 @@ import {
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
-  ModelExperimentalSceneMeshPrimitive,
+  ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function () {
+describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {};
 
   it("throws for undefined primitive", function () {
     expect(function () {
-      return new ModelExperimentalSceneMeshPrimitive({
+      return new ModelExperimentalPrimitive({
         primitive: undefined,
       });
     }).toThrowDeveloperError();
   });
 
   it("constructs", function () {
-    var primitive = new ModelExperimentalSceneMeshPrimitive({
+    var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
     });
 
@@ -25,7 +25,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSceneMeshPrimitive", function
   });
 
   it("configures the pipeline stages", function () {
-    var primitive = new ModelExperimentalSceneMeshPrimitive({
+    var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
     });
 

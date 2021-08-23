@@ -1,57 +1,58 @@
 import defined from "../../Core/defined.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
-import Pass from "../../Renderer/Pass.js";
-import VertexArray from "../../Renderer/VertexArray.js";
-import RenderState from "../../Renderer/RenderState.js";
 import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperimentalFS.js";
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
+import RenderState from "../../Renderer/RenderState.js";
+import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
- * Builds a DrawCommand for a {@link ModelExperimentalSceneMeshPrimitive} using its render resources.
+ * Builds a DrawCommand for a {@link ModelExperimentalPrimitive} using its render resources.
  *
- * @param {RenderResources.MeshRenderResources} meshPrimitiveRenderResources The render resources for a primitive.
+ * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
+ *
  * @returns {DrawCommand} The generated DrawCommand.
  *
  * @private
  */
-export default function buildDrawCommand(
-  meshPrimitiveRenderResources,
-  frameState
-) {
-  var shaderBuilder = meshPrimitiveRenderResources.shaderBuilder;
+export default function buildDrawCommand(primitiveRenderResources, frameState) {
+  var shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  var indexBuffer = defined(meshPrimitiveRenderResources.indices)
-    ? meshPrimitiveRenderResources.indices.buffer
+  var indexBuffer = defined(primitiveRenderResources.indices)
+    ? primitiveRenderResources.indices.buffer
     : undefined;
 
   var vertexArray = new VertexArray({
     context: frameState.context,
     indexBuffer: indexBuffer,
-    attributes: meshPrimitiveRenderResources.attributes,
+    attributes: primitiveRenderResources.attributes,
   });
 
+  var model = primitiveRenderResources.model;
+  model._resources.push(vertexArray);
+
   var renderState = RenderState.fromCache(
-    meshPrimitiveRenderResources.renderStateOptions
+    primitiveRenderResources.renderStateOptions
   );
 
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  model._resources.push(shaderProgram);
+
   return new DrawCommand({
-    boundingVolume: meshPrimitiveRenderResources.boundingSphere,
-    modelMatrix: meshPrimitiveRenderResources.modelMatrix,
-    uniformMap: meshPrimitiveRenderResources.uniformMap,
+    boundingVolume: primitiveRenderResources.boundingSphere,
+    modelMatrix: primitiveRenderResources.modelMatrix,
+    uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
-    cull: meshPrimitiveRenderResources.cull,
-    pass: Pass.OPAQUE,
-    count: meshPrimitiveRenderResources.count,
+    cull: model.cull,
+    pass: primitiveRenderResources.pass,
+    count: primitiveRenderResources.count,
     pickId: undefined,
-    instanceCount: meshPrimitiveRenderResources.instanceCount,
-    primitiveType: meshPrimitiveRenderResources.primitiveType,
-    debugShowBoundingVolume:
-      meshPrimitiveRenderResources.model._debugShowBoundingVolume,
+    instanceCount: primitiveRenderResources.instanceCount,
+    primitiveType: primitiveRenderResources.primitiveType,
+    debugShowBoundingVolume: model.debugShowBoundingVolume,
   });
 }
