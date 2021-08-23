@@ -1,4 +1,4 @@
-import URI from "../ThirdPartyNpm/urijs.js";
+import URI from "../ThirdParty/urijs.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
