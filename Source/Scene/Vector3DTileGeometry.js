@@ -7,7 +7,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Matrix4 from "../Core/Matrix4.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import ClassificationType from "./ClassificationType.js";
 import Vector3DTileBatch from "./Vector3DTileBatch.js";
 import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";

@@ -17,7 +17,7 @@ import VertexArray from "../Renderer/VertexArray.js";
 import OctahedralProjectionAtlasFS from "../Shaders/OctahedralProjectionAtlasFS.js";
 import OctahedralProjectionFS from "../Shaders/OctahedralProjectionFS.js";
 import OctahedralProjectionVS from "../Shaders/OctahedralProjectionVS.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 
 /**
  * Packs all mip levels of a cube map into a 2D texture atlas.

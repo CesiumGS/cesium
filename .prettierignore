@@ -22,9 +22,9 @@
 # Re-ignore a few things caught above
 **/*.min.js
 Source/Cesium.js
+Source/Scene/GltfPipeline/**
 Source/Shaders/**/*.js
 Source/ThirdParty/**
-Source/ThirdPartyNpm/**
 Source/Workers/**/*
 Apps/Sandcastle/ThirdParty
 

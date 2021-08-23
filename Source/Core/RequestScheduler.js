@@ -1,5 +1,5 @@
-import URI from "../ThirdPartyNpm/urijs.js";
-import when from "../ThirdPartyNpm/when.js";
+import URI from "../ThirdParty/urijs.js";
+import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";

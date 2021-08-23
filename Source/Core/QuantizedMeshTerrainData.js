@@ -1,4 +1,4 @@
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";

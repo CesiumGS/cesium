@@ -1,5 +1,5 @@
-import URI from "../ThirdPartyNpm/urijs.js";
-import when from "../ThirdPartyNpm/when.js";
+import URI from "../ThirdParty/urijs.js";
+import when from "../ThirdParty/when.js";
 import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
 import clone from "./clone.js";
@@ -14,6 +14,7 @@ import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
+import CesiumMath from "./Math.js";
 import objectToQuery from "./objectToQuery.js";
 import queryToObject from "./queryToObject.js";
 import Request from "./Request.js";
@@ -1264,7 +1265,8 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   //generate a unique function name
   var functionName;
   do {
-    functionName = "loadJsonp" + Math.random().toString().substring(2, 8);
+    functionName =
+      "loadJsonp" + CesiumMath.nextRandomNumber().toString().substring(2, 8);
   } while (defined(window[functionName]));
 
   return fetchJsonp(this, callbackParameterName, functionName);

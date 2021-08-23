@@ -1,4 +1,4 @@
-import RBush from "../ThirdPartyNpm/rbush.js";
+import RBush from "../ThirdParty/rbush.js";
 import Check from "./Check.js";
 
 /**

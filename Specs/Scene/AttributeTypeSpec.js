@@ -24,4 +24,20 @@ describe("Scene/AttributeType", function () {
       AttributeType.getMathType("Invalid");
     }).toThrowDeveloperError();
   });
+
+  it("getNumberOfComponents works", function () {
+    expect(AttributeType.getNumberOfComponents(AttributeType.SCALAR)).toBe(1);
+    expect(AttributeType.getNumberOfComponents(AttributeType.VEC2)).toBe(2);
+    expect(AttributeType.getNumberOfComponents(AttributeType.VEC3)).toBe(3);
+    expect(AttributeType.getNumberOfComponents(AttributeType.VEC4)).toBe(4);
+    expect(AttributeType.getNumberOfComponents(AttributeType.MAT2)).toBe(4);
+    expect(AttributeType.getNumberOfComponents(AttributeType.MAT3)).toBe(9);
+    expect(AttributeType.getNumberOfComponents(AttributeType.MAT4)).toBe(16);
+  });
+
+  it("getNumberOfComponents throws with invalid type", function () {
+    expect(function () {
+      AttributeType.getNumberOfComponents("Invalid");
+    }).toThrowDeveloperError();
+  });
 });

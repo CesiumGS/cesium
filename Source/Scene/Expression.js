@@ -7,14 +7,14 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import jsep from "../ThirdPartyNpm/jsep.js";
+import jsep from "../ThirdParty/jsep.js";
 import ExpressionNodeType from "./ExpressionNodeType.js";
 
 /**
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Evaluates an expression defined using the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * Implements the {@link StyleExpression} interface.
@@ -123,7 +123,7 @@ var scratchStorage = {
 /**
  * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
  * the expression in the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
  * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
  * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
  * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,

@@ -16,7 +16,7 @@ import PolylineShadowVolumeFS from "../Shaders/PolylineShadowVolumeFS.js";
 import PolylineShadowVolumeMorphFS from "../Shaders/PolylineShadowVolumeMorphFS.js";
 import PolylineShadowVolumeMorphVS from "../Shaders/PolylineShadowVolumeMorphVS.js";
 import PolylineShadowVolumeVS from "../Shaders/PolylineShadowVolumeVS.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import ClassificationType from "./ClassificationType.js";
 import CullFace from "./CullFace.js";

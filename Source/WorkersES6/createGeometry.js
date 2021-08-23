@@ -1,7 +1,7 @@
 /* global require */
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 var moduleCache = {};

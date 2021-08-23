@@ -16,7 +16,7 @@ import ClassificationType from "./ClassificationType.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import SceneMode from "./SceneMode.js";
 import ShadowVolumeAppearance from "./ShadowVolumeAppearance.js";
-import when from "../ThirdPartyNpm/when.js";
+import when from "../ThirdParty/when.js";
 
 var GroundPrimitiveUniformMap = {
   u_globeMinimumAltitude: function () {
