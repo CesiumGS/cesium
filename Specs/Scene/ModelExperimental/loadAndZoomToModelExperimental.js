@@ -5,6 +5,7 @@ function loadAndZoomToModelExperimental(options, scene) {
   var model = ModelExperimental.fromGltf({
     gltf: options.gltf,
     modelMatrix: options.modelMatrix,
+    allowPicking: options.allowPicking,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     debugShowBoundingVolume: options.debugShowBoundingVolume,

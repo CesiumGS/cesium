@@ -124,6 +124,26 @@ describe(
       });
     });
 
+    it("doesn't pick when allowPicking is false", function () {
+      if (FeatureDetection.isInternetExplorer()) {
+        // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+        return;
+      }
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Matrix4.fromTranslation(new Cartesian3(6378237, 0, 0)),
+          allowPicking: false,
+        },
+        scene
+      ).then(function (model) {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result).toBeUndefined();
+        });
+      });
+    });
+
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       return loadAndZoomToModelExperimental(
