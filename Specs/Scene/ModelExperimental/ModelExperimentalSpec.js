@@ -153,10 +153,11 @@ describe(
       ).then(function (model) {
         var resources = model._resources;
         var loader = model._loader;
+        var resource;
 
         var i;
         for (i = 0; i < resources.length; i++) {
-          var resource = resources[i];
+          resource = resources[i];
           if (defined(resource.isDestroyed)) {
             expect(resource.isDestroyed()).toEqual(false);
           }
@@ -168,7 +169,7 @@ describe(
           expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
         }
         for (i = 0; i < resources.length - 1; i++) {
-          var resource = resources[i];
+          resource = resources[i];
           if (defined(resource.isDestroyed)) {
             expect(resource.isDestroyed()).toEqual(true);
           }
