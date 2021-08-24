@@ -94,6 +94,16 @@ export default function PrimitiveRenderResources(
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
+   * A reference to the runtime node
+   *
+   * @type {ModelExperimentalPrimitive}
+   * @readonly
+   *
+   * @private
+   */
+  this.runtimePrimitive = runtimePrimitive;
+
+  /**
    * The primitive associated with the render resources.
    *
    * @type {ModelComponents.Primitive}
@@ -176,6 +186,16 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.pass = this.model.opaquePass;
+
+  /**
+   * The shader variable to use for picking.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.pickId = undefined;
 
   /**
    * An object storing options for creating a {@link RenderState}.

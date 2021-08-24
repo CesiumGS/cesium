@@ -3,6 +3,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import PickingPipelineStage from "./PickingPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -51,5 +52,6 @@ function initialize(runtimePrimitive) {
   pipelineStages.push(GeometryPipelineStage);
   pipelineStages.push(MaterialPipelineStage);
   pipelineStages.push(LightingPipelineStage);
+  pipelineStages.push(PickingPipelineStage);
   return;
 }
