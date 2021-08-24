@@ -475,6 +475,34 @@ describe(
       context._instancedArrays = instancedArrays;
     });
 
+    it("updates clouds when instancing is disabled", function () {
+      // disable extension
+      var instancedArrays = context._instancedArrays;
+      context._instancedArrays = undefined;
+
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      var c1 = clouds.add({
+        position: Cartesian3.ZERO,
+        maximumScale: new Cartesian3(10.0, 5.0, 5.0),
+      });
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      var c2 = clouds.add({
+        position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
+        maximumScale: new Cartesian3(10.0, 5.0, 5.0),
+      });
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      c2.scale = Cartesian2.ZERO;
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      c1.scale = Cartesian2.ZERO;
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      context._instancedArrays = instancedArrays;
+    });
+
     it("creates compute command with cloud texture shader", function () {
       clouds.debugBillboards = false;
 
