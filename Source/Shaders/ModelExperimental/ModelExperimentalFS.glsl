@@ -15,10 +15,10 @@ vec4 handleAlpha(vec3 color, float alpha)
 void main() 
 {
     czm_modelMaterial material = defaultModelMaterial();
-
     material = materialStage(material);
     material = lightingStage(material);
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
+    color = pickingStage(color);
     gl_FragColor = color;
 }

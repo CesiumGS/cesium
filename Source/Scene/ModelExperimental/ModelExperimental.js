@@ -9,7 +9,7 @@ import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
@@ -40,9 +40,6 @@ export default function ModelExperimental(options) {
   Check.typeOf.object("options.resource", options.resource);
   //>>includeEnd('debug');
 
-  this._content = undefined;
-  this._featureTable = undefined;
-  this._pickObject = undefined;
   /**
    * The loader used to load resources for this model.
    *
@@ -65,6 +62,8 @@ export default function ModelExperimental(options) {
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+
+  this._featureTable = undefined;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -95,6 +94,8 @@ function initialize(model) {
         modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
+
+      initializeFeatureTable(model);
     })
     .otherwise(function () {
       ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
@@ -412,7 +413,7 @@ function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
   }
 }
 
-function createFeatureTable(model) {
+function initializeFeatureTable(model) {
   var featureMetadata = model._sceneGraph._modelComponents.featureMetadata;
   var featureTableCount = featureMetadata.featureTableCount;
 

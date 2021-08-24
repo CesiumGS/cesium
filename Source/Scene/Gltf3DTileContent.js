@@ -142,6 +142,7 @@ function initialize(content, gltf) {
     upAxis: tileset._gltfUpAxis,
     forwardAxis: Axis.X,
     incrementallyLoadTextures: false,
+    content: this,
   };
 
   if (ExperimentalFeatures.enableModelExperimental) {

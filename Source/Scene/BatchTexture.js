@@ -492,7 +492,7 @@ function updateBatchTexture(batchTexture) {
   });
 }
 
-BatchTexture.prototype.update = function (tileset, frameState) {
+BatchTexture.prototype.update = function (owner, frameState) {
   var context = frameState.context;
   this._defaultTexture = context.defaultTexture;
 
@@ -507,7 +507,7 @@ BatchTexture.prototype.update = function (tileset, frameState) {
     // Create batch texture on-demand
     if (!defined(this._batchTexture)) {
       this._batchTexture = createTexture(this, context, this._batchValues);
-      tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
+      owner._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
     }
 
     updateBatchTexture(this); // Apply per-feature show/color updates

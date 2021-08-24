@@ -10,6 +10,10 @@ void main()
     position = instancingStage(position);
     #endif
 
+    #ifdef FEATURE_PICKING
+    position = pickingStage(position);
+    #endif
+
     gl_Position = czm_modelViewProjection * vec4(position, 1.0);
 
     #ifdef PRIMITIVE_TYPE_POINTS

@@ -1,9 +1,9 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
-import PickingPipelineStage from "./PickingPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import PickingPipelineStage from "./PickingPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -32,8 +32,6 @@ export default function ModelExperimentalPrimitive(options) {
    */
   this.primitive = options.primitive;
 
-  this.allowPicking = options.allowPicking;
-
   /**
    * Pipeline stages to apply to this primitive. This
    * is an array of classes, each with a static method called
@@ -52,11 +50,7 @@ export default function ModelExperimentalPrimitive(options) {
 function initialize(runtimePrimitive) {
   var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
-
-  if (sceneMeshPrimitive._allowPicking) {
-    pipelineStages.push(PickingPipelineStage);
-  }
-
+  pipelineStages.push(PickingPipelineStage);
   pipelineStages.push(MaterialPipelineStage);
   pipelineStages.push(LightingPipelineStage);
   return;
