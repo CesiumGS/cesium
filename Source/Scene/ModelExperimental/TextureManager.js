@@ -22,6 +22,11 @@ export default function TextureManager() {
   this._lastUpdatedFrame = -1;
 }
 
+/**
+ * Get one of the loaded textures
+ * @param {String} textureId The unique ID of the texture loaded by {@link TextureManager#loadTexture2D}
+ * @return {Texture} The texture or <code>undefined</code> if no texture exists
+ */
 TextureManager.prototype.getTexture = function (textureId) {
   return this._textures[textureId];
 };
@@ -56,7 +61,6 @@ function fetchTexture2D(textureManager, textureId, textureUniform) {
  * @private
  */
 TextureManager.prototype.loadTexture2D = function (textureId, textureUniform) {
-  // should probably return a promise
   if (defined(textureUniform.typedArray)) {
     this._loadedImages.push({
       id: textureId,
@@ -76,7 +80,14 @@ function createTexture(textureManager, loadedImage, context) {
 
   var texture;
   if (defined(typedArray)) {
-    texture = new Texture({});
+    texture = new Texture({
+      context: context,
+      source: {
+        arrayBufferView: typedArray,
+        width: textureUniform.width,
+        height: textureUniform.height,
+      },
+    });
   } else {
     texture = new Texture({
       context: context,
