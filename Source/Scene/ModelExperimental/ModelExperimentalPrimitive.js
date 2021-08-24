@@ -11,6 +11,7 @@ import PickingPipelineStage from "./PickingPipelineStage.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ * @param {Boolean} options.allowPicking Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
  *
  * @alias ModelExperimentalPrimitive
  * @constructor
@@ -33,6 +34,15 @@ export default function ModelExperimentalPrimitive(options) {
   this.primitive = options.primitive;
 
   /**
+   * Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
+   *
+   * @type {Boolean}
+   *
+   * @private
+   */
+  this.allowPicking = options.allowPicking;
+
+  /**
    * Pipeline stages to apply to this primitive. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -52,6 +62,10 @@ function initialize(runtimePrimitive) {
   pipelineStages.push(GeometryPipelineStage);
   pipelineStages.push(MaterialPipelineStage);
   pipelineStages.push(LightingPipelineStage);
-  pipelineStages.push(PickingPipelineStage);
+
+  if (runtimePrimitive.allowPicking) {
+    pipelineStages.push(PickingPipelineStage);
+  }
+
   return;
 }

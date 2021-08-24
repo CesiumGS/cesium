@@ -33,7 +33,7 @@ export default function PrimitiveRenderResources(
    */
   this.model = nodeRenderResources.model;
   /**
-   * A reference to the scene node. Inherited from the node render resources.
+   * A reference to the runtime node. Inherited from the node render resources.
    *
    * @type {ModelExperimentalNode}
    * @readonly
