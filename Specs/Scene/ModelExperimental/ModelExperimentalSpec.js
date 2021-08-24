@@ -6,6 +6,7 @@ import {
   ModelExperimental,
   Matrix4,
   Cartesian3,
+  defined,
   when,
 } from "../../../Source/Cesium.js";
 import ShaderProgram from "../../../Source/Renderer/ShaderProgram.js";
@@ -155,7 +156,10 @@ describe(
 
         var i;
         for (i = 0; i < resources.length; i++) {
-          expect(resources[i].isDestroyed()).toEqual(false);
+          var resource = resources[i];
+          if (defined(resource.isDestroyed)) {
+            expect(resource.isDestroyed()).toEqual(false);
+          }
         }
         expect(loader.isDestroyed()).toEqual(false);
         expect(model.isDestroyed()).toEqual(false);
@@ -163,8 +167,11 @@ describe(
         if (!webglStub) {
           expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
         }
-        for (i = 0; i < model._resources.length - 1; i++) {
-          expect(model._resources[i].isDestroyed()).toEqual(true);
+        for (i = 0; i < resources.length - 1; i++) {
+          var resource = resources[i];
+          if (defined(resource.isDestroyed)) {
+            expect(resource.isDestroyed()).toEqual(true);
+          }
         }
         expect(loader.isDestroyed()).toEqual(true);
         expect(model.isDestroyed()).toEqual(true);
