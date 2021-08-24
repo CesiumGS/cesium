@@ -47,7 +47,7 @@ CustomShaderStage.process = function (renderResources, primitive) {
     );
   }
 
-  if (defined(customShader.fragmentLinesEnabled)) {
+  if (defined(generatedCode.fragmentLinesEnabled)) {
     shaderBuilder.addDefine(
       "HAS_CUSTOM_FRAGMENT_SHADER",
       undefined,

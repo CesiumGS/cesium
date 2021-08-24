@@ -66,15 +66,119 @@ describe("ModelExperimental/CustomShaderStage", function () {
     CustomShaderStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
-      "USE_CUSTOM_SHADER",
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
-      "USE_CUSTOM_SHADER",
       "HAS_CUSTOM_FRAGMENT_SHADER",
       "CUSTOM_SHADER_MODIFY_MATERIAL",
     ]);
   });
+
+  // extract lines between curly braces of a struct or function. for example:
+  // struct Attributes
+  // {
+  //   vec3 position; // <-- these lines
+  //   vec3 normal;   // <--
+  // }
+  function betweenTheBraces(array, startLine) {
+    var start = array.indexOf(startLine);
+    expect(start).not.toEqual(-1);
+    expect(array[start + 1]).toEqual("{");
+    start = start + 2;
+
+    // find the first }; (structs) or } (functions)
+    var end = array.length;
+    for (var i = start; i < array.length; i++) {
+      var line = array[i];
+      if (line === "}" || line === "};") {
+        end = i;
+        break;
+      }
+    }
+
+    return array.slice(start, end);
+  }
+
+  function groupVertexShaderLines(shaderBuilder) {
+    var vertexShaderLines = shaderBuilder._vertexShaderParts.shaderLines;
+    var length = vertexShaderLines.length;
+
+    var results = {
+      attributeFields: [],
+      initializationLines: [],
+      customShaderLine: undefined,
+    };
+
+    if (length === 0) {
+      return results;
+    }
+
+    if (length === 1) {
+      expect(vertexShaderLines).toEqual([_shadersCustomShaderStageVS]);
+      return results;
+    }
+
+    results.attributeFields = betweenTheBraces(
+      vertexShaderLines,
+      "struct Attributes"
+    );
+
+    // At this time, the vertex input struct is always the same so check it here
+    var vertexInputLines = betweenTheBraces(
+      vertexShaderLines,
+      "struct VertexInput"
+    );
+    expect(vertexInputLines).toEqual(["    Attributes attributes;"]);
+
+    results.initializationLines = betweenTheBraces(
+      vertexShaderLines,
+      "void initializeInputStruct(out VertexInput vsInput)"
+    );
+
+    // The last 3 lines will be a line number directive, the custom shader text,
+    // and the static GLSL file
+    expect(vertexShaderLines[length - 3]).toEqual("#line 0");
+    results.customShaderLine = vertexShaderLines[length - 2];
+    expect(vertexShaderLines[length - 1]).toEqual(_shadersCustomShaderStageVS);
+
+    return results;
+  }
+
+  function groupFragmentShaderLines(shaderBuilder) {
+    var fragmentShaderLines = shaderBuilder._fragmentShaderParts.shaderLines;
+    var length = fragmentShaderLines.length;
+
+    var results = {
+      attributeFields: [],
+      fragmentInputFields: [],
+      initializationLines: [],
+    };
+
+    if (length === 0) {
+      return results;
+    }
+
+    results.attributeFields = betweenTheBraces(
+      fragmentShaderLines,
+      "struct Attributes"
+    );
+
+    var fragmentInputFields = betweenTheBraces(
+      fragmentShaderLines,
+      "struct FragmentInput"
+    );
+
+    // The first line is constant, so check it here.
+    expect(fragmentInputFields[0]).toEqual("    Attributes attributes;");
+    fragmentInputFields.shift();
+    results.fragmentInputFields = fragmentInputFields;
+
+    results.initializationLines = betweenTheBraces(
+      fragmentShaderLines,
+      "void initializeInputStruct(out FragmentInput fsInput)"
+    );
+    return results;
+  }
 
   it("adds uniforms from the custom shader", function () {
     var uniforms = {
@@ -87,6 +191,8 @@ describe("ModelExperimental/CustomShaderStage", function () {
     };
     var customShader = new CustomShader({
       uniforms: uniforms,
+      vertexShaderText: emptyVertexShader,
+      fragmentShaderText: emptyFragmentShader,
     });
     var model = {
       customShader: customShader,
@@ -123,6 +229,8 @@ describe("ModelExperimental/CustomShaderStage", function () {
       v_computedMatrix: VaryingType.MAT3,
     };
     var customShader = new CustomShader({
+      vertexShaderText: emptyVertexShader,
+      fragmentShaderText: emptyFragmentShader,
       varyings: varyings,
     });
     var model = {
@@ -141,7 +249,6 @@ describe("ModelExperimental/CustomShaderStage", function () {
     var expectedLines = [
       "varying float v_distanceFromCenter;",
       "varying mat2 v_computedMatrix;",
-      "varying vec3 v_positionWC;",
     ];
     expect(shaderBuilder._vertexShaderParts.varyingLines.sort()).toEqual(
       expectedLines
@@ -155,6 +262,8 @@ describe("ModelExperimental/CustomShaderStage", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
       customShader: new CustomShader({
+        vertexShaderText: emptyVertexShader,
+        fragmentShaderText: emptyFragmentShader,
         lightingModel: LightingModel.PBR,
       }),
     };
@@ -173,27 +282,6 @@ describe("ModelExperimental/CustomShaderStage", function () {
       LightingModel.PBR
     );
   });
-
-  function makeAttributeRegex(type, name) {
-    var declarationLine = "    " + type + " " + name + ";";
-    // check that the declaration comes between the curly braces of
-    // the attributes struct
-    return new RegExp("struct Attributes[^}]*" + declarationLine + "[^}]*};");
-  }
-
-  function makeInitializationRegex(name, isVertex) {
-    var initializationLine;
-    if (isVertex) {
-      initializationLine =
-        "vsInput\\.attributes\\." + name + " = a_" + name + ";";
-    } else {
-      initializationLine =
-        "fsInput\\.attributes\\." + name + " = v_" + name + ";";
-    }
-    return new RegExp(
-      "void initializeInputStruct[^}]*" + initializationLine + "[^}]*}"
-    );
-  }
 
   it("generates shader code from built-in attributes", function () {
     var shaderBuilder = new ShaderBuilder();
@@ -225,34 +313,38 @@ describe("ModelExperimental/CustomShaderStage", function () {
 
     CustomShaderStage.process(renderResources, primitive);
 
-    var generatedVertexLines = shaderBuilder._vertexShaderParts.shaderLines[0];
-    var generatedFragmentLines =
-      shaderBuilder._fragmentShaderParts.shaderLines[0];
+    var generatedVertexLines = groupVertexShaderLines(shaderBuilder);
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 
-    var positionDeclaration = makeAttributeRegex("vec3", "position");
-    var normalDeclaration = makeAttributeRegex("vec3", "normal");
-    var texCoordDeclaration = makeAttributeRegex("vec2", "texCoord_0");
+    var expectedAttributes = [
+      "    vec3 position;",
+      "    vec3 normal;",
+      "    vec2 texCoord_0;",
+    ].sort();
 
-    expect(positionDeclaration.test(generatedVertexLines)).toBe(true);
-    expect(positionDeclaration.test(generatedFragmentLines)).toBe(true);
-    expect(normalDeclaration.test(generatedVertexLines)).toBe(true);
-    expect(normalDeclaration.test(generatedFragmentLines)).toBe(true);
-    expect(texCoordDeclaration.test(generatedVertexLines)).toBe(true);
-    expect(texCoordDeclaration.test(generatedFragmentLines)).toBe(true);
+    expect(generatedVertexLines.attributeFields.sort()).toEqual(
+      expectedAttributes
+    );
+    expect(generatedFragmentLines.attributeFields.sort()).toEqual(
+      expectedAttributes
+    );
 
-    var positionInitializationVS = makeInitializationRegex("position", true);
-    var normalInitializationVS = makeInitializationRegex("normal", true);
-    var texCoordInitializationVS = makeInitializationRegex("texCoord_0", true);
-    expect(positionInitializationVS.test(generatedVertexLines)).toBe(true);
-    expect(normalInitializationVS.test(generatedVertexLines)).toBe(true);
-    expect(texCoordInitializationVS.test(generatedVertexLines)).toBe(true);
+    expect(generatedFragmentLines.fragmentInputFields).toEqual([]);
 
-    var positionInitializationFS = makeInitializationRegex("position", false);
-    var normalInitializationFS = makeInitializationRegex("normal", false);
-    var texCoordInitializationFS = makeInitializationRegex("texCoord_0", false);
-    expect(positionInitializationFS.test(generatedFragmentLines)).toBe(true);
-    expect(normalInitializationFS.test(generatedFragmentLines)).toBe(true);
-    expect(texCoordInitializationFS.test(generatedFragmentLines)).toBe(true);
+    expect(generatedVertexLines.initializationLines.sort()).toEqual(
+      [
+        "    vsInput.attributes.position = a_position;",
+        "    vsInput.attributes.normal = a_normal;",
+        "    vsInput.attributes.texCoord_0 = a_texCoord_0;",
+      ].sort()
+    );
+    expect(generatedFragmentLines.initializationLines.sort()).toEqual(
+      [
+        "    fsInput.attributes.position = v_position;",
+        "    fsInput.attributes.normal = v_normal;",
+        "    fsInput.attributes.texCoord_0 = v_texCoord_0;",
+      ].sort()
+    );
   });
 
   it("generates shader code for custom attributes", function () {
@@ -283,33 +375,35 @@ describe("ModelExperimental/CustomShaderStage", function () {
 
     CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
 
-    var generatedVertexLines = shaderBuilder._vertexShaderParts.shaderLines[0];
-    var generatedFragmentLines =
-      shaderBuilder._fragmentShaderParts.shaderLines[0];
+    var generatedVertexLines = groupVertexShaderLines(shaderBuilder);
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 
-    var positionDeclaration = makeAttributeRegex("vec3", "position");
-    var temperatureDeclaration = makeAttributeRegex("float", "temperature");
+    var expectedAttributes = [
+      "    vec3 position;",
+      "    float temperature;",
+    ].sort();
 
-    expect(positionDeclaration.test(generatedVertexLines)).toBe(true);
-    expect(positionDeclaration.test(generatedFragmentLines)).toBe(true);
-    expect(temperatureDeclaration.test(generatedVertexLines)).toBe(true);
-    expect(temperatureDeclaration.test(generatedFragmentLines)).toBe(true);
-
-    var positionInitializationVS = makeInitializationRegex("position", true);
-    var temperatureInitializationVS = makeInitializationRegex(
-      "temperature",
-      true
+    expect(generatedVertexLines.attributeFields.sort()).toEqual(
+      expectedAttributes
     );
-    expect(positionInitializationVS.test(generatedVertexLines)).toBe(true);
-    expect(temperatureInitializationVS.test(generatedVertexLines)).toBe(true);
-
-    var positionInitializationFS = makeInitializationRegex("position", false);
-    var temperatureInitializationFS = makeInitializationRegex(
-      "temperature",
-      false
+    expect(generatedFragmentLines.attributeFields.sort()).toEqual(
+      expectedAttributes
     );
-    expect(positionInitializationFS.test(generatedFragmentLines)).toBe(true);
-    expect(temperatureInitializationFS.test(generatedFragmentLines)).toBe(true);
+
+    expect(generatedFragmentLines.fragmentInputFields).toEqual([]);
+
+    expect(generatedVertexLines.initializationLines.sort()).toEqual(
+      [
+        "    vsInput.attributes.position = a_position;",
+        "    vsInput.attributes.temperature = a_temperature;",
+      ].sort()
+    );
+    expect(generatedFragmentLines.initializationLines.sort()).toEqual(
+      [
+        "    fsInput.attributes.position = v_position;",
+        "    fsInput.attributes.temperature = v_temperature;",
+      ].sort()
+    );
   });
 
   it("only generates input lines for attributes that are used", function () {
@@ -339,20 +433,34 @@ describe("ModelExperimental/CustomShaderStage", function () {
 
     CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
 
-    var generatedVertexLines = shaderBuilder._vertexShaderParts.shaderLines[0];
-    var generatedFragmentLines =
-      shaderBuilder._fragmentShaderParts.shaderLines[0];
+    var generatedVertexLines = groupVertexShaderLines(shaderBuilder);
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 
-    expect(/vec3 position;/.test(generatedVertexLines)).toBe(true);
-    expect(/vec3 position;/.test(generatedFragmentLines)).toBe(false);
-    expect(/float temperature;/.test(generatedVertexLines)).toBe(false);
-    expect(/float temperature;/.test(generatedFragmentLines)).toBe(true);
+    expect(generatedVertexLines.attributeFields).toEqual([
+      "    vec3 position;",
+    ]);
+    expect(generatedVertexLines.initializationLines).toEqual([
+      "    vsInput.attributes.position = a_position;",
+    ]);
 
-    expect(/attributes.position/.test(generatedVertexLines)).toBe(true);
-    expect(/attributes.position/.test(generatedFragmentLines)).toBe(false);
-    expect(/attributes.temperature/.test(generatedVertexLines)).toBe(false);
-    expect(/attributes.temperature/.test(generatedFragmentLines)).toBe(true);
+    expect(generatedFragmentLines.attributeFields).toEqual([
+      "    float temperature;",
+    ]);
+    expect(generatedFragmentLines.initializationLines).toEqual([
+      "    fsInput.attributes.temperature = v_temperature;",
+    ]);
   });
+
+  function isPositiveAndAscending(array) {
+    var current = -1;
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] <= current) {
+        return false;
+      }
+      current = array[i];
+    }
+    return true;
+  }
 
   it("generates the shader lines in the correct order", function () {
     var shaderBuilder = new ShaderBuilder();
@@ -370,26 +478,36 @@ describe("ModelExperimental/CustomShaderStage", function () {
     var vertexLines = shaderBuilder._vertexShaderParts.shaderLines;
     var fragmentLines = shaderBuilder._fragmentShaderParts.shaderLines;
 
-    // if the struct Attributes declaration is present, the partial shader
-    // string is the automatically-generated portion.
-    var generatedCodeRegex = /struct Attributes/;
+    // Check that the vertex shader parts appear in the shader and in the
+    // correct order.
+    var attributesStruct = vertexLines.indexOf("struct Attributes");
+    var inputStruct = vertexLines.indexOf("struct VertexInput");
+    var line0 = vertexLines.indexOf("#line 0");
+    var customShaderText = vertexLines.indexOf(emptyVertexShader);
+    var glslFile = vertexLines.indexOf(_shadersCustomShaderStageVS);
+    var lineNumbers = [
+      attributesStruct,
+      inputStruct,
+      line0,
+      customShaderText,
+      glslFile,
+    ];
+    expect(isPositiveAndAscending(lineNumbers)).toBe(true);
 
-    // Check that all the parts of each shader are ordered correctly
-    expect(generatedCodeRegex.test(vertexLines[0])).toBe(true);
-    expect(vertexLines[1]).toEqual("#line 0");
-    expect(vertexLines[2]).toBe(emptyVertexShader);
-    expect(vertexLines[3]).toBe(_shadersCustomShaderStageVS);
-    expect(generatedCodeRegex.test(fragmentLines[0])).toBe(true);
-    expect(fragmentLines[1]).toEqual("#line 0");
-    expect(fragmentLines[2]).toBe(emptyFragmentShader);
-    expect(fragmentLines[3]).toBe(_shadersCustomShaderStageFS);
-
-    // The auto-generated portion is one big string, so test that the
-    // declarations are in the right order.
-    var vertexDeclarationOrder = /struct Attributes(.|\n)*struct VertexInput(.|\n)*void initializeInputStruct/;
-    expect(vertexDeclarationOrder.test(vertexLines[0])).toBe(true);
-    var fragmentDeclarationOrder = /struct Attributes(.|\n)*struct FragmentInput(.|\n)*void initializeInputStruct/;
-    expect(fragmentDeclarationOrder.test(fragmentLines[0])).toBe(true);
+    // similarly for the fragment shader.
+    attributesStruct = fragmentLines.indexOf("struct Attributes");
+    inputStruct = fragmentLines.indexOf("struct FragmentInput");
+    line0 = fragmentLines.indexOf("#line 0");
+    customShaderText = fragmentLines.indexOf(emptyFragmentShader);
+    glslFile = fragmentLines.indexOf(_shadersCustomShaderStageFS);
+    lineNumbers = [
+      attributesStruct,
+      inputStruct,
+      line0,
+      customShaderText,
+      glslFile,
+    ];
+    expect(isPositiveAndAscending(lineNumbers)).toBe(true);
   });
 
   it("does not add positions in other coordinate systems if not needed", function () {
@@ -405,16 +523,15 @@ describe("ModelExperimental/CustomShaderStage", function () {
 
     CustomShaderStage.process(renderResources, primitive);
 
-    var fragmentLines = shaderBuilder._fragmentShaderParts.shaderLines[0];
-    expect(/positionMC/.test(fragmentLines)).toBe(false);
-    expect(/positionWC/.test(fragmentLines)).toBe(false);
-    expect(/positionEC/.test(fragmentLines)).toBe(false);
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
+    expect(generatedFragmentLines.fragmentInputFields).toEqual([]);
   });
 
   it("configures positions in other coordinate systems when present in the shader", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
       customShader: new CustomShader({
+        vertexShaderText: emptyVertexShader,
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
@@ -446,31 +563,21 @@ describe("ModelExperimental/CustomShaderStage", function () {
       )
     ).not.toBe(-1);
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
-      "USE_CUSTOM_SHADER",
       "COMPUTE_POSITION_WC",
+      "HAS_CUSTOM_VERTEX_SHADER",
     ]);
 
-    var fragmentLines = shaderBuilder._fragmentShaderParts.shaderLines;
-    var expectedInput = [
-      "struct FragmentInput",
-      "{",
-      "    Attributes attributes;",
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
+
+    expect(generatedFragmentLines.fragmentInputFields).toEqual([
       "    vec3 positionMC;",
       "    vec3 positionWC;",
       "    vec3 positionEC;",
-      "};",
-    ].join("\n");
-    expect(new RegExp(expectedInput).test(fragmentLines[0])).toBe(true);
-
-    var expectedInitialization = [
-      "void initializeInputStruct\\(out FragmentInput fsInput\\)",
-      "{",
+    ]);
+    expect(generatedFragmentLines.initializationLines).toEqual([
       "    fsInput.positionMC = v_position;",
       "    fsInput.positionWC = v_positionWC;",
       "    fsInput.positionEC = v_positionEC;",
-    ].join("\n");
-    expect(new RegExp(expectedInitialization).test(fragmentLines[0])).toBe(
-      true
-    );
+    ]);
   });
 });
