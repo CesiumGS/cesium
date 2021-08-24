@@ -2,19 +2,26 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { CloudCollection } from "../../Source/Cesium.js";
 import { CloudType } from "../../Source/Cesium.js";
+import { ComputeCommand } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import { DrawCommand } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { PerspectiveFrustum } from "../../Source/Cesium.js";
+
+import pollToPromise from "../pollToPromise.js";
 
 describe(
   "Scene/CloudCollection",
   function () {
     var scene;
+    var context;
     var camera;
     var clouds;
 
     beforeAll(function () {
       scene = createScene();
+      context = scene.context;
       camera = scene.camera;
     });
 
@@ -71,6 +78,14 @@ describe(
       expect(c.maximumSize).toEqual(new Cartesian3(4.0, 5.0, 6.0));
       expect(c.slice).toEqual(0.5);
       expect(c.brightness).toEqual(0.7);
+    });
+
+    it("constructs cloud with only maximum size", function () {
+      var c = clouds.add({
+        maximumSize: new Cartesian3(1.0, 2.0, 3.0),
+      });
+      expect(c.maximumSize).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+      expect(c.scale).toEqual(new Cartesian2(1.0, 2.0));
     });
 
     it("sets cloud properties", function () {
@@ -432,6 +447,72 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
 
+    it("renders clouds when instancing is disabled", function () {
+      // disable extension
+      var instancedArrays = context._instancedArrays;
+      context._instancedArrays = undefined;
+
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      var c1 = clouds.add({
+        position: Cartesian3.ZERO,
+        maximumScale: new Cartesian3(10.0, 5.0, 5.0),
+      });
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      var c2 = clouds.add({
+        position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
+        maximumScale: new Cartesian3(10.0, 5.0, 5.0),
+      });
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      clouds.remove(c2);
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      clouds.remove(c1);
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      context._instancedArrays = instancedArrays;
+    });
+
+    it("creates compute command with cloud texture shader", function () {
+      clouds.debugBillboards = false;
+
+      clouds.add({
+        position: Cartesian3.ZERO,
+        scale: new Cartesian3(20.0, 12.0),
+      });
+
+      scene.renderForSpecs();
+      var commandList = scene._computeCommandList;
+      var index = commandList.length - 1;
+      var command = commandList[index];
+      expect(command instanceof ComputeCommand).toBe(true);
+      expect(command.owner).toBe(clouds);
+    });
+
+    it("creates draw command after texture is ready", function () {
+      clouds.debugBillboards = false;
+
+      clouds.add({
+        position: Cartesian3.ZERO,
+        scale: new Cartesian3(20.0, 12.0),
+      });
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return clouds._ready;
+      }).then(function () {
+        scene.renderForSpecs();
+        var commandList = scene.frameState.commandList;
+        var index = commandList.length - 1;
+        var command = commandList[index];
+        expect(command instanceof DrawCommand).toEqual(true);
+        expect(command.owner).toBe(clouds);
+        expect(defined(clouds._noiseTexture)).toEqual(true);
+      });
+    });
+
     it("does not render if show is false", function () {
       clouds.add({
         position: Cartesian3.ZERO,
@@ -445,6 +526,61 @@ describe(
     it("throws when accessing without an index", function () {
       expect(function () {
         clouds.get();
+      }).toThrowDeveloperError();
+    });
+    it("throws when setting undefined show property", function () {
+      expect(function () {
+        clouds.show = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting invalid cloud type property of cloud", function () {
+      expect(function () {
+        clouds.add({
+          cloudType: "not a cloud type",
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting undefined show property of cloud", function () {
+      expect(function () {
+        var c = clouds.add();
+        c.show = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting undefined position property of cloud", function () {
+      expect(function () {
+        var c = clouds.add();
+        c.position = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting undefined scale property of cloud", function () {
+      expect(function () {
+        var c = clouds.add();
+        c.scale = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting undefined maximum size property of cloud", function () {
+      expect(function () {
+        var c = clouds.add();
+        c.maximumSize = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting undefined slice property of cloud", function () {
+      expect(function () {
+        var c = clouds.add();
+        c.slice = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when setting undefined brightness property of cloud", function () {
+      expect(function () {
+        var c = clouds.add();
+        c.brightness = undefined;
       }).toThrowDeveloperError();
     });
   },

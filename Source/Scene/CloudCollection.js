@@ -127,7 +127,7 @@ function CloudCollection(options) {
   );
 
   this._loading = false;
-  this._ready = true;
+  this._ready = false;
 
   var that = this;
   this._uniforms = {
@@ -145,7 +145,7 @@ function CloudCollection(options) {
   this._vaNoise = undefined;
   this._spNoise = undefined;
 
-  this._spCompiled = false;
+  this._spCreated = false;
   this._sp = undefined;
   this._rs = undefined;
 
@@ -263,6 +263,12 @@ function destroyClouds(clouds) {
 CloudCollection.prototype.add = function (options) {
   var cloudType;
   if (defined(options)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(options.cloudType) && !CloudType.validate(options.cloudType)) {
+      throw new DeveloperError("invalid cloud type");
+    }
+    //>>includeEnd('debug');
+
     cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
   } else {
     cloudType = CloudType.CUMULUS;
@@ -635,7 +641,230 @@ function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
   writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud);
 }
 
+function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
+  var that = cloudCollection;
+  var context = frameState.context;
+  that._vaNoise = createTextureVA(context);
+  that._spNoise = ShaderProgram.fromCache({
+    context: context,
+    vertexShaderSource: vsSource,
+    fragmentShaderSource: fsSource,
+    attributeLocations: {
+      position: 0,
+    },
+  });
+
+  var noiseTextureLength = that._noiseTextureLength;
+  var noiseDetail = that.noiseDetail;
+  var noiseOffset = that.noiseOffset;
+
+  that._noiseTexture = new Texture({
+    context: context,
+    width: noiseTextureLength * noiseTextureLength,
+    height: noiseTextureLength,
+    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+    pixelFormat: PixelFormat.RGBA,
+    sampler: new Sampler({
+      wrapS: TextureWrap.REPEAT,
+      wrapT: TextureWrap.REPEAT,
+      minificationFilter: TextureMinificationFilter.NEAREST,
+      magnificationFilter: TextureMagnificationFilter.NEAREST,
+    }),
+  });
+
+  var textureCommand = new ComputeCommand({
+    vertexArray: that._vaNoise,
+    shaderProgram: that._spNoise,
+    outputTexture: that._noiseTexture,
+    uniformMap: {
+      u_noiseTextureLength: function () {
+        return noiseTextureLength;
+      },
+      u_noiseDetail: function () {
+        return noiseDetail;
+      },
+      u_noiseOffset: function () {
+        return noiseOffset;
+      },
+    },
+    persists: false,
+    owner: cloudCollection,
+    postExecute: function (texture) {
+      that._ready = true;
+      that._loading = false;
+    },
+  });
+
+  frameState.commandList.push(textureCommand);
+  that._loading = true;
+}
+
+function createVertexArray(cloudCollection, frameState) {
+  var that = cloudCollection;
+  var context = frameState.context;
+  that._createVertexArray = false;
+  that._vaf = that._vaf && that._vaf.destroy();
+
+  var clouds = cloudCollection._clouds;
+  var cloudsLength = clouds.length;
+  if (cloudsLength > 0) {
+    that._vaf = createVAF(context, cloudsLength, that._instanced);
+    var vafWriters = that._vaf.writers;
+
+    var i;
+    // Rewrite entire buffer if clouds were added or removed.
+    for (i = 0; i < cloudsLength; ++i) {
+      var cloud = clouds[i];
+      writeCloud(cloudCollection, frameState, vafWriters, cloud);
+    }
+
+    // Different cloud collections share the same index buffer.
+    that._vaf.commit(getIndexBuffer(context));
+  }
+}
+
 var scratchWriterArray = [];
+
+function updateClouds(cloudCollection, frameState) {
+  var context = frameState.context;
+  var that = cloudCollection;
+  var clouds = that._clouds;
+  var cloudsLength = clouds.length;
+  var cloudsToUpdate = that._cloudsToUpdate;
+  var cloudsToUpdateLength = that._cloudsToUpdateIndex;
+
+  var properties = that._propertiesChanged;
+
+  var writers = scratchWriterArray;
+  writers.length = 0;
+
+  if (properties[POSITION_INDEX] || properties[SCALE_INDEX]) {
+    writers.push(writePositionAndScale);
+  }
+
+  if (properties[SHOW_INDEX] || properties[BRIGHTNESS_INDEX]) {
+    writers.push(writePackedAttribute0);
+  }
+
+  if (properties[MAXIMUM_SIZE_INDEX] || properties[SLICE_INDEX]) {
+    writers.push(writePackedAttribute1);
+  }
+
+  var numWriters = writers.length;
+  var vafWriters = that._vaf.writers;
+
+  var i, c, w;
+  if (cloudsToUpdateLength / cloudsLength > 0.1) {
+    // Like BillboardCollection, if more than 10% of clouds change,
+    // rewrite the entire buffer.
+
+    for (i = 0; i < cloudsToUpdateLength; ++i) {
+      c = cloudsToUpdate[i];
+      c._dirty = false;
+
+      for (w = 0; w < numWriters; ++w) {
+        writers[w](cloudCollection, frameState, vafWriters, c);
+      }
+    }
+
+    that._vaf.commit(getIndexBuffer(context));
+  } else {
+    for (i = 0; i < cloudsToUpdateLength; ++i) {
+      c = cloudsToUpdate[i];
+      c._dirty = false;
+
+      for (w = 0; w < numWriters; ++w) {
+        writers[w](cloudCollection, frameState, vafWriters, c);
+      }
+
+      if (that._instanced) {
+        that._vaf.subCommit(c._index, 1);
+      } else {
+        that._vaf.subCommit(c._index * 4, 4);
+      }
+    }
+    that._vaf.endSubCommits();
+  }
+
+  that._cloudsToUpdateIndex = 0;
+}
+
+function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
+  var context = frameState.context;
+  var that = cloudCollection;
+  var vs = new ShaderSource({
+    defines: [],
+    sources: [vsSource],
+  });
+
+  if (that._instanced) {
+    vs.defines.push("INSTANCED");
+  }
+
+  var fs = new ShaderSource({
+    defines: [],
+    sources: [fsSource],
+  });
+
+  if (that.debugBillboards) {
+    fs.defines.push("DEBUG_BILLBOARDS");
+  }
+
+  if (that.debugEllipsoids) {
+    fs.defines.push("DEBUG_ELLIPSOIDS");
+  }
+
+  that._sp = ShaderProgram.replaceCache({
+    context: context,
+    shaderProgram: that._sp,
+    vertexShaderSource: vs,
+    fragmentShaderSource: fs,
+    attributeLocations: attributeLocations,
+  });
+
+  that._rs = RenderState.fromCache({
+    depthTest: {
+      enabled: true,
+      func: WebGLConstants.LESS,
+    },
+    depthMask: true,
+  });
+
+  that._spCreated = true;
+  that._compiledDebugBillboards = that.debugBillboards;
+  that._compiledDebugEllipsoids = that.debugEllipsoids;
+}
+
+function createDrawCommands(cloudCollection, frameState) {
+  var that = cloudCollection;
+  var pass = frameState.passes;
+  var uniforms = that._uniforms;
+  var commandList = frameState.commandList;
+  if (pass.render) {
+    var colorList = that._colorCommands;
+
+    var va = that._vaf.va;
+    var vaLength = va.length;
+    colorList.length = vaLength;
+    var command;
+    for (var j = 0; j < vaLength; j++) {
+      command = colorList[j] = new DrawCommand();
+      command.pass = Pass.TRANSLUCENT;
+      command.owner = cloudCollection;
+      command.uniformMap = uniforms;
+      command.count = va[j].indicesCount;
+      command.vertexArray = va[j].va;
+      command.shaderProgram = that._sp;
+      command.renderState = that._rs;
+      if (that._instanced) {
+        command.count = 6;
+        command.instanceCount = that._clouds.length;
+      }
+
+      commandList.push(command);
+    }
+  }
+}
 
 /**
  * @private
@@ -646,65 +875,14 @@ CloudCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var context = frameState.context;
   var debugging = this.debugBillboards || this.debugEllipsoids;
-  if (!defined(this._texture) && !this._loading && !debugging) {
-    this._vaNoise = createTextureVA(context);
-    this._spNoise = ShaderProgram.fromCache({
-      context: context,
-      vertexShaderSource: CloudNoiseVS,
-      fragmentShaderSource: CloudNoiseFS,
-      attributeLocations: {
-        position: 0,
-      },
-    });
+  this._ready = debugging ? true : defined(this._noiseTexture);
 
-    var noiseTextureLength = this._noiseTextureLength;
-    var noiseDetail = this.noiseDetail;
-    var noiseOffset = this.noiseOffset;
-
-    this._noiseTexture = new Texture({
-      context: context,
-      width: noiseTextureLength * noiseTextureLength,
-      height: noiseTextureLength,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      pixelFormat: PixelFormat.RGBA,
-      sampler: new Sampler({
-        wrapS: TextureWrap.REPEAT,
-        wrapT: TextureWrap.REPEAT,
-        minificationFilter: TextureMinificationFilter.NEAREST,
-        magnificationFilter: TextureMagnificationFilter.NEAREST,
-      }),
-    });
-
-    var textureCommand = new ComputeCommand({
-      vertexArray: this._vaNoise,
-      shaderProgram: this._spNoise,
-      outputTexture: this._noiseTexture,
-      uniformMap: {
-        u_noiseTextureLength: function () {
-          return noiseTextureLength;
-        },
-        u_noiseDetail: function () {
-          return noiseDetail;
-        },
-        u_noiseOffset: function () {
-          return noiseOffset;
-        },
-      },
-      persists: false,
-      owner: this,
-      postExecute: function (texture) {
-        this._ready = true;
-        this._loading = false;
-      },
-    });
-
-    frameState.commandList.push(textureCommand);
-    this._loading = true;
+  if (!this._ready && !this._loading && !debugging) {
+    createNoiseTexture(this, frameState, CloudNoiseVS, CloudNoiseFS);
   }
 
-  this._instanced = context.instancedArrays;
+  this._instanced = frameState.context.instancedArrays;
   attributeLocations = this._instanced
     ? attributeLocationsInstanced
     : attributeLocationsBatched;
@@ -717,82 +895,11 @@ CloudCollection.prototype.update = function (frameState) {
   var cloudsToUpdate = this._cloudsToUpdate;
   var cloudsToUpdateLength = this._cloudsToUpdateIndex;
 
-  var properties = this._propertiesChanged;
-
-  var vafWriters;
-  var pass = frameState.passes;
-
-  var i;
   if (this._createVertexArray) {
-    this._createVertexArray = false;
-    this._vaf = this._vaf && this._vaf.destroy();
-    if (cloudsLength > 0) {
-      this._vaf = createVAF(context, cloudsLength, this._instanced);
-      vafWriters = this._vaf.writers;
-
-      // Rewrite entire buffer if clouds were added or removed.
-      for (i = 0; i < cloudsLength; ++i) {
-        var cloud = clouds[i];
-        writeCloud(this, frameState, vafWriters, cloud);
-      }
-
-      // Different cloud collections share the same index buffer.
-      this._vaf.commit(getIndexBuffer(context));
-    }
+    createVertexArray(this, frameState);
   } else if (cloudsToUpdateLength > 0) {
     // Clouds were modified, but none were added or removed.
-    var writers = scratchWriterArray;
-    writers.length = 0;
-
-    if (properties[POSITION_INDEX] || properties[SCALE_INDEX]) {
-      writers.push(writePositionAndScale);
-    }
-
-    if (properties[SHOW_INDEX] || properties[BRIGHTNESS_INDEX]) {
-      writers.push(writePackedAttribute0);
-    }
-
-    if (properties[MAXIMUM_SIZE_INDEX] || properties[SLICE_INDEX]) {
-      writers.push(writePackedAttribute1);
-    }
-
-    var numWriters = writers.length;
-    vafWriters = this._vaf.writers;
-
-    var c;
-    var w;
-    if (cloudsToUpdateLength / cloudsLength > 0.1) {
-      // Like BillboardCollection, if more than 10% of clouds change,
-      // rewrite the entire buffer.
-
-      for (i = 0; i < cloudsToUpdateLength; ++i) {
-        c = cloudsToUpdate[i];
-        c._dirty = false;
-
-        for (w = 0; w < numWriters; ++w) {
-          writers[w](this, frameState, vafWriters, c);
-        }
-      }
-      this._vaf.commit(getIndexBuffer(context));
-    } else {
-      for (i = 0; i < cloudsToUpdateLength; ++i) {
-        c = cloudsToUpdate[i];
-        c._dirty = false;
-
-        for (w = 0; w < numWriters; ++w) {
-          writers[w](this, frameState, vafWriters, c);
-        }
-
-        if (this._instanced) {
-          this._vaf.subCommit(c._index, 1);
-        } else {
-          this._vaf.subCommit(c._index * 4, 4);
-        }
-      }
-      this._vaf.endSubCommits();
-    }
-
-    this._cloudsToUpdateIndex = 0;
+    updateClouds(this, frameState);
   }
 
   // If the number of total clouds ever shrinks considerably,
@@ -810,84 +917,15 @@ CloudCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var uniforms = this._uniforms;
-  var vsSource = CloudCollectionVS;
-  var fsSource = CloudCollectionFS;
-
-  var vs, fs;
   if (
-    !this._spCompiled ||
+    !this._spCreated ||
     this.debugBillboards !== this._compiledDebugBillboards ||
     this.debugEllipsoids !== this._compiledDebugEllipsoids
   ) {
-    vs = new ShaderSource({
-      defines: [],
-      sources: [vsSource],
-    });
-
-    if (this._instanced) {
-      vs.defines.push("INSTANCED");
-    }
-
-    fs = new ShaderSource({
-      defines: [],
-      sources: [fsSource],
-    });
-
-    if (this.debugBillboards) {
-      fs.defines.push("DEBUG_BILLBOARDS");
-    }
-
-    if (this.debugEllipsoids) {
-      fs.defines.push("DEBUG_ELLIPSOIDS");
-    }
-
-    this._sp = ShaderProgram.replaceCache({
-      context: context,
-      shaderProgram: this._sp,
-      vertexShaderSource: vs,
-      fragmentShaderSource: fs,
-      attributeLocations: attributeLocations,
-    });
-
-    this._rs = RenderState.fromCache({
-      depthTest: {
-        enabled: true,
-        func: WebGLConstants.LESS,
-      },
-      depthMask: true,
-    });
-
-    this._spCompiled = true;
-    this._compiledDebugBillboards = this.debugBillboards;
-    this._compiledDebugEllipsoids = this.debugEllipsoids;
+    createShaderProgram(this, frameState, CloudCollectionVS, CloudCollectionFS);
   }
 
-  var commandList = frameState.commandList;
-  if (pass.render) {
-    var colorList = this._colorCommands;
-
-    var va = this._vaf.va;
-    var vaLength = va.length;
-    colorList.length = vaLength;
-    var command;
-    for (var j = 0; j < vaLength; j++) {
-      command = colorList[j] = new DrawCommand();
-      command.pass = Pass.TRANSLUCENT;
-      command.owner = this;
-      command.uniformMap = uniforms;
-      command.count = va[j].indicesCount;
-      command.vertexArray = va[j].va;
-      command.shaderProgram = this._sp;
-      command.renderState = this._rs;
-      if (this._instanced) {
-        command.count = 6;
-        command.instanceCount = cloudsLength;
-      }
-
-      commandList.push(command);
-    }
-  }
+  createDrawCommands(this, frameState);
 };
 
 /**
@@ -921,6 +959,10 @@ CloudCollection.prototype.isDestroyed = function () {
  * @see CloudCollection#isDestroyed
  */
 CloudCollection.prototype.destroy = function () {
+  this._noiseTexture = this._noiseTexture && this._noiseTexture.destroy();
+  this._sp = this._sp && this._sp.destroy();
+  this._vaf = this._vaf && this._vaf.destroy();
+
   destroyClouds(this._clouds);
 
   return destroyObject(this);
