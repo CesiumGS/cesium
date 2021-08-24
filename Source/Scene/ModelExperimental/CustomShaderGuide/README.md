@@ -130,7 +130,7 @@ var textureFromTypedArray = new Cesium.TextureUniform({
   width: 1,
   height: 1,
   pixelFormat: Cesium.PixelFormat.RGBA,
-  pixelDataType: Cesium.PixelDataType.UNSIGNED_BYTE,
+  pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
 });
 
 // TextureUniform also provides options for controlling the sampler
