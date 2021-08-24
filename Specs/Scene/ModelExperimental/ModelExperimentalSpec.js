@@ -137,7 +137,7 @@ describe(
           allowPicking: false,
         },
         scene
-      ).then(function (model) {
+      ).then(function () {
         expect(scene).toPickAndCall(function (result) {
           expect(result).toBeUndefined();
         });

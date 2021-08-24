@@ -13,6 +13,16 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
         primitive: undefined,
+        allowPicking: true,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws for undefined allowPicking", function () {
+    expect(function () {
+      return new ModelExperimentalPrimitive({
+        primitive: {},
+        allowPicking: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -30,6 +40,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      allowPicking: false,
     });
 
     expect(primitive.pipelineStages).toEqual([

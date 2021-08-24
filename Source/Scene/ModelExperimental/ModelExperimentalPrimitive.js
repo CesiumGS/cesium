@@ -22,6 +22,7 @@ export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
+  Check.typeOf.boolean("options.allowPicking", options.primitive);
   //>>includeEnd('debug');
 
   /**
