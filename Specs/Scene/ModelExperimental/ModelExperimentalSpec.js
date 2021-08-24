@@ -1,8 +1,10 @@
 import {
+  FeatureDetection,
   Math as CesiumMath,
   ResourceCache,
   Resource,
   ModelExperimental,
+  Matrix4,
   Cartesian3,
   when,
 } from "../../../Source/Cesium.js";
@@ -101,6 +103,25 @@ describe(
       expect(function () {
         ModelExperimental.fromGltf({});
       }).toThrowDeveloperError();
+    });
+
+    it("picks box textured", function () {
+      if (FeatureDetection.isInternetExplorer()) {
+        // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+        return;
+      }
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: Matrix4.fromTranslation(new Cartesian3(6378237, 0, 0)),
+        },
+        scene
+      ).then(function (model) {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.model).toEqual(model);
+        });
+      });
     });
 
     it("destroy works", function () {

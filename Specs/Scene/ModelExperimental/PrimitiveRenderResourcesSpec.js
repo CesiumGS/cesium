@@ -61,11 +61,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  var scenePrimitive = new ModelExperimentalPrimitive({
+  var runtimePrimitive = new ModelExperimentalPrimitive({
     primitive: primitive,
   });
 
-  var scenePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
+  var runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
     primitive: primitiveWithoutIndices,
   });
 
@@ -78,7 +78,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   it("throws for undefined nodeRenderResources", function () {
     expect(function () {
-      return new PrimitiveRenderResources(undefined, scenePrimitive);
+      return new PrimitiveRenderResources(undefined, runtimePrimitive);
     }).toThrowDeveloperError();
   });
 
@@ -95,9 +95,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     var primitiveResources = new PrimitiveRenderResources(
       nodeResources,
-      scenePrimitive
+      runtimePrimitive
     );
 
+    expect(primitiveResources.runtimePrimitive).toBe(runtimePrimitive);
+    expect(primitiveResources.pickId).toBeUndefined();
     expect(primitiveResources.count).toBe(6);
     expect(primitiveResources.indices).toBe(primitive.indices);
     expect(primitiveResources.primitiveType).toBe(PrimitiveType.TRIANGLES);
@@ -123,7 +125,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     var primitiveResources = new PrimitiveRenderResources(
       nodeResources,
-      scenePrimitiveWithoutIndices
+      runtimePrimitiveWithoutIndices
     );
 
     expect(primitiveResources.count).toBe(8);
@@ -154,7 +156,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     nodeResources.shaderBuilder.addDefine("NODE");
     var primitiveResources = new PrimitiveRenderResources(
       nodeResources,
-      scenePrimitive
+      runtimePrimitive
     );
     primitiveResources.shaderBuilder.addDefine("PRIMITIVE");
 
@@ -185,7 +187,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     nodeResources.shaderBuilder.addDefine("NODE");
     var primitiveResources = new PrimitiveRenderResources(
       nodeResources,
-      scenePrimitive
+      runtimePrimitive
     );
     expect(primitiveResources.runtimeNode).toBe(runtimeNode);
     expect(primitiveResources.modelMatrix).toEqual(runtimeNode.modelMatrix);
