@@ -5,10 +5,14 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
- * A cumulus cloud billboard that is created and rendered using a {@link CloudCollection}.
+ * A cumulus cloud billboard positioned in the 3D scene, that is created and rendered using a {@link CloudCollection}.
  * A cloud is created and its initial properties are set by calling {@link CloudCollection#add}.
  * and {@link CloudCollection#remove}.
- *
+ * <br /><br />
+ * <div align='center'>
+ * <img src='Images/CumulusCloud.png' width='400' height='300' /><br />
+ * Example cumulus clouds
+ * </div>
  * @alias CumulusCloud
  *
  * @performance Similar to {@link Billboard}, reading a property, e.g., {@link CumulusCloud#show},

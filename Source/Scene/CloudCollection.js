@@ -57,8 +57,15 @@ var BRIGHTNESS_INDEX = CumulusCloud.BRIGHTNESS_INDEX;
 var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
 
 /**
- * A collection of clouds in the sky.
- *
+ * A renderable collection of clouds in the 3D scene.
+ * <br /><br />
+ * <div align='center'>
+ * <img src='Images/CumulusCloud.png' width='400' height='300' /><br />
+ * Example cumulus clouds
+ * </div>
+ * <br /><br />
+ * Clouds are added and removed from the collection using {@link CloudCollection#add}
+ * and {@link CloudCollection#remove}.
  * @alias CloudCollection
  * @constructor
  *
@@ -71,6 +78,8 @@ var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
  * @see CloudCollection#add
  * @see CloudCollection#remove
  * @see CumulusCloud
+ *
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Clouds.html|Cesium Sandcastle Clouds Demo}
  *
  * @example
  * // Create a cloud collection with two cumulus clouds
@@ -108,6 +117,19 @@ function CloudCollection(options) {
    * between <code>8.0</code> and <code>32.0</code> (inclusive).
    * </p>
    *
+   * <div align='center'>
+   * <table border='0' cellpadding='5'><tr>
+   * <td align='center'>
+   *   <code>clouds.noiseDetail = 8.0;</code><br/>
+   *   <img src='Images/CloudCollection.noiseDetail8.png' width='250' height='158' />
+   * </td>
+   * <td align='center'>
+   *   <code>clouds.noiseDetail = 32.0;</code><br/>
+   *   <img src='Images/CloudCollection.noiseDetail32.png' width='250' height='158' />
+   * </td>
+   * </tr></table>
+   * </div>
+   *
    * @type {Number}
    *
    * @default 16.0
@@ -120,7 +142,21 @@ function CloudCollection(options) {
    * This can be modified if the default noise does not generate good-looking clouds.
    * </p>
    *
+   * <div align='center'>
+   * <table border='0' cellpadding='5'><tr>
+   * <td align='center'>
+   *   <code>default</code><br/>
+   *   <img src='Images/CloudCollection.noiseOffsetdefault.png' width='250' height='158' />
+   * </td>
+   * <td align='center'>
+   *   <code>clouds.noiseOffset = new Cesium.Cartesian3(10, 20, 10);</code><br/>
+   *   <img src='Images/CloudCollection.noiseOffsetx10y20z10.png' width='250' height='158' />
+   * </td>
+   * </tr></table>
+   * </div>
    * @type {Cartesian3}
+   *
+   * @default Cartesian3.ZERO
    */
   this.noiseOffset = Cartesian3.clone(
     defaultValue(options.noiseOffset, Cartesian3.ZERO)
