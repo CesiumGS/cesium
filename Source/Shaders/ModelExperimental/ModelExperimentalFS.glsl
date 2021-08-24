@@ -1,3 +1,9 @@
+#if defined(HAS_NORMALS) && !defined(HAS_TANGENTS) && !defined(LIGHTING_UNLIT)
+    #ifdef GL_OES_standard_derivatives
+    #extension GL_OES_standard_derivatives : enable
+    #endif
+#endif
+
 vec4 handleAlpha(vec3 color, float alpha)
 {
     #ifdef ALPHA_MODE_MASK
