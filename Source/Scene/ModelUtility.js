@@ -11,9 +11,9 @@ import Quaternion from "../Core/Quaternion.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
-import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import usesExtension from "../ThirdParty/GltfPipeline/usesExtension.js";
+import addToArray from "./GltfPipeline/addToArray.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 

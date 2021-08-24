@@ -1,3 +1,9 @@
+#if defined(HAS_NORMALS) && !defined(HAS_TANGENTS) && !defined(LIGHTING_UNLIT)
+    #ifdef GL_OES_standard_derivatives
+    #extension GL_OES_standard_derivatives : enable
+    #endif
+#endif
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;

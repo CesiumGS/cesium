@@ -13,7 +13,7 @@ import LabelCollection from "../Scene/LabelCollection.js";
 import PointPrimitive from "../Scene/PointPrimitive.js";
 import PointPrimitiveCollection from "../Scene/PointPrimitiveCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
-import kdbush from "../ThirdParty/kdbush.js";
+import KDBush from "../ThirdParty/kdbush.js";
 
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.
@@ -335,7 +335,7 @@ function createDeclutterCallback(entityCluster) {
     var collection;
     var collectionIndex;
 
-    var index = kdbush(points, getX, getY, 64, Int32Array);
+    var index = new KDBush(points, getX, getY, 64, Int32Array);
 
     if (currentHeight < previousHeight) {
       length = clusters.length;
