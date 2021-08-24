@@ -62,7 +62,9 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       attributeIndex: 1,
       pickId: undefined,
       shaderBuilder: new ShaderBuilder(),
-      model: {},
+      model: {
+        _resources: [],
+      },
       runtimePrimitive: {
         primitive: {},
       },
@@ -102,6 +104,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       var uniformMap = renderResources.uniformMap;
       expect(uniformMap.czm_pickColor).toBeDefined();
       expect(uniformMap.czm_pickColor()).toBeDefined();
+
+      expect(renderResources.model._resources.length).toEqual(1);
 
       expect(renderResources.pickId).toEqual("czm_pickColor");
     });
@@ -176,6 +180,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         renderResources.instanceCount * 4
       );
       expect(pickIdAttribute.instanceDivisor).toEqual(1);
+
+      expect(renderResources.model._resources.length).toEqual(5);
 
       expect(renderResources.pickId).toEqual("v_pickColor");
     });

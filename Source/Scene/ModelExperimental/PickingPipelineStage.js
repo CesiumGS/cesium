@@ -41,13 +41,15 @@ PickingPipelineStage.process = function (
     processInstancedPickIds(renderResources, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
+    var model = renderResources.model;
     var pickObject = {
-      model: renderResources.model,
+      model: model,
       node: renderResources.runtimeNode,
       primitive: renderResources.runtimePrimitive,
     };
 
     var pickId = context.createPickId(pickObject);
+    model._resources.push(pickId);
     shaderBuilder.addUniform(
       "vec4",
       "czm_pickColor",
@@ -68,6 +70,7 @@ function processInstancedPickIds(renderResources, context) {
   var pickIds = new Array(instanceCount);
   var pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
+  var modelResources = renderResources.model._resources;
   for (var i = 0; i < instanceCount; i++) {
     var pickObject = {
       model: renderResources.model,
@@ -79,10 +82,10 @@ function processInstancedPickIds(renderResources, context) {
     };
 
     var pickId = context.createPickId(pickObject);
-    var pickColor = pickId.color;
-
+    modelResources.push(pickId);
     pickIds[i] = pickId;
 
+    var pickColor = pickId.color;
     pickIdsTypedArray[i * 4 + 0] = Color.floatToByte(pickColor.red);
     pickIdsTypedArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
     pickIdsTypedArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
@@ -94,8 +97,9 @@ function processInstancedPickIds(renderResources, context) {
     typedArray: pickIdsTypedArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+  // Destruction of resources allocated by the ModelExperimental is handled by ModelExperimental.destroy().
   pickIdsBuffer.vertexArrayDestroyable = false;
-  renderResources.model._resources.push(pickIdsBuffer);
+  modelResources.push(pickIdsBuffer);
 
   var pickIdsVertexAttribute = {
     index: renderResources.attributeIndex++,
