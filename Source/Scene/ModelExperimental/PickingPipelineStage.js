@@ -5,8 +5,26 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
+/**
+ * The picking pipeline stage is responsible for handling picking of primitives.
+ *
+ * @namespace PickingPipelineStage
+ * @private
+ */
 var PickingPipelineStage = {};
 
+/**
+ * Process a primitive. This modifies the following parts of the render resources:
+ * <ul>
+ *  <li>adds attribute and varying declaration for the pick color vertex attribute in the vertex shader for instanced meshes</li>
+ *  <li>adds declaration for the pick color uniform for non-instanced meshes</li>
+ *  <li>adds defines in the shader for when picking is enabled</li>
+ *  <li>creates the pick ID objects in the context</li>
+ * </ul>
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} node The primitive.
+ * @param {FrameState} frameState The frame state.
+ */
 PickingPipelineStage.process = function (
   renderResources,
   primitive,
@@ -19,8 +37,10 @@ PickingPipelineStage.process = function (
   shaderBuilder.addDefine("ALLOWS_PICKING");
 
   if (defined(runtimeNode.node.instances)) {
+    // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
   } else {
+    // For non-instanced meshes, a pick color uniform is used.
     var pickObject = {
       model: renderResources.model,
       node: renderResources.runtimeNode,
