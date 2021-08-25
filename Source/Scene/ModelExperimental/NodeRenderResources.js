@@ -42,7 +42,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
 
   // other properties
   /**
-   * A reference to the scene node
+   * A reference to the runtime node
    *
    * @type {ModelExperimentalNode}
    * @readonly

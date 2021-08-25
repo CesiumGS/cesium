@@ -6,6 +6,7 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import PickingPipelineStage from "./PickingPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -13,6 +14,7 @@ import MaterialPipelineStage from "./MaterialPipelineStage.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ * @param {Boolean} options.allowPicking Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
  *
  * @alias ModelExperimentalPrimitive
  * @constructor
@@ -24,6 +26,7 @@ export default function ModelExperimentalPrimitive(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
   Check.typeOf.object("options.model", options.model);
+  Check.typeOf.bool("options.allowPicking", options.allowPicking);
   //>>includeEnd('debug');
 
   /**
@@ -43,6 +46,15 @@ export default function ModelExperimentalPrimitive(options) {
    * @private
    */
   this.model = options.model;
+
+  /**
+   * Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
+   *
+   * @type {Boolean}
+   *
+   * @private
+   */
+  this.allowPicking = options.allowPicking;
 
   /**
    * Pipeline stages to apply to this primitive. This
@@ -80,5 +92,10 @@ function initialize(runtimePrimitive) {
   }
 
   pipelineStages.push(LightingPipelineStage);
+
+  if (runtimePrimitive.allowPicking) {
+    pipelineStages.push(PickingPipelineStage);
+  }
+
   return;
 }

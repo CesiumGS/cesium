@@ -14,7 +14,7 @@ import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS
  * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
  * level.
  *
- * @namespace
+ * @namespace InstancingPipelineStage
  * @private
  */
 var InstancingPipelineStage = {};

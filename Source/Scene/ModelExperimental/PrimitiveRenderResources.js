@@ -33,7 +33,7 @@ export default function PrimitiveRenderResources(
    */
   this.model = nodeRenderResources.model;
   /**
-   * A reference to the scene node. Inherited from the node render resources.
+   * A reference to the runtime node. Inherited from the node render resources.
    *
    * @type {ModelExperimentalNode}
    * @readonly
@@ -92,6 +92,16 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.instanceCount = nodeRenderResources.instanceCount;
+
+  /**
+   * A reference to the runtime node
+   *
+   * @type {ModelExperimentalPrimitive}
+   * @readonly
+   *
+   * @private
+   */
+  this.runtimePrimitive = runtimePrimitive;
 
   /**
    * The primitive associated with the render resources.
@@ -176,6 +186,16 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.pass = this.model.opaquePass;
+
+  /**
+   * The shader variable to use for picking.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.pickId = undefined;
 
   /**
    * An object storing options for creating a {@link RenderState}.

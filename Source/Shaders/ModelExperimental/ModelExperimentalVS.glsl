@@ -8,6 +8,9 @@ void main()
 
     #ifdef HAS_INSTANCING
     position = instancingStage(position);
+        #ifdef USE_PICKING
+        v_pickColor = a_pickColor;
+        #endif
     #endif
 
     #ifdef USE_CUSTOM_SHADER

@@ -50,7 +50,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     cull: model.cull,
     pass: primitiveRenderResources.pass,
     count: primitiveRenderResources.count,
-    pickId: undefined,
+    pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,

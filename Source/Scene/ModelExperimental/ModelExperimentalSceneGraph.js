@@ -61,7 +61,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this._pipelineStages = [];
 
   /**
-   * The scene nodes that make up the scene graph
+   * The runtime nodes that make up the scene graph
    *
    * @type {ModelExperimentalNode[]}
    * @readonly
@@ -170,6 +170,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
         new ModelExperimentalPrimitive({
           primitive: node.primitives[i],
           model: sceneGraph._model,
+          allowPicking: sceneGraph._model.allowPicking,
         })
       );
     }

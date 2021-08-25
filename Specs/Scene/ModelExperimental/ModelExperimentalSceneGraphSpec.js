@@ -29,7 +29,7 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("creates scene nodes and scene primitives from a model", function () {
+    it("creates runtime nodes and runtime primitives from a model", function () {
       return loadAndZoomToModelExperimental(
         { gltf: vertexColorGltfUrl },
         scene
