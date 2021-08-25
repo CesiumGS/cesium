@@ -39,7 +39,7 @@ CustomShaderStage.process = function (renderResources, primitive) {
     shaderBuilder.addVarying("vec3", "v_positionWC");
   }
 
-  if (defined(generatedCode.vertexLinesEnabled)) {
+  if (defined(customShader.vertexShaderText)) {
     shaderBuilder.addDefine(
       "HAS_CUSTOM_VERTEX_SHADER",
       undefined,
@@ -47,7 +47,7 @@ CustomShaderStage.process = function (renderResources, primitive) {
     );
   }
 
-  if (defined(generatedCode.fragmentLinesEnabled)) {
+  if (defined(customShader.fragmentShaderText)) {
     shaderBuilder.addDefine(
       "HAS_CUSTOM_FRAGMENT_SHADER",
       undefined,
@@ -199,7 +199,7 @@ function generateVertexShaderLines(customShader, namedAttributes) {
       // This primitive isn't compatible with the shader. To avoid compiling
       // a shader with a syntax error, the custom shader will be disabled.
       // this is indicated by returning an empty list of shader lines.
-      oneTimeWarning(
+      CustomShaderStage._oneTimeWarning(
         "CustomShaderStage.incompatiblePrimitiveVS",
         "Primitive is missing attribute " +
           variableName +
@@ -308,7 +308,7 @@ function generateFragmentShaderLines(customShader, namedAttributes) {
     variableName = needsDefault[i];
     var attributeDefaults = inferAttributeDefaults(variableName);
     if (!defined(attributeDefaults)) {
-      oneTimeWarning(
+      CustomShaderStage._oneTimeWarning(
         "CustomShaderStage.incompatiblePrimitiveFS",
         "Primitive is missing attribute " +
           variableName +
@@ -452,3 +452,6 @@ function generateShaderLines(customShader, primitive) {
     shouldComputePositionWC: shouldComputePositionWC,
   };
 }
+
+// exposed for testing.
+CustomShaderStage._oneTimeWarning = oneTimeWarning;

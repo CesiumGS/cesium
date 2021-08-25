@@ -580,4 +580,209 @@ describe("ModelExperimental/CustomShaderStage", function () {
       "    fsInput.positionEC = v_positionEC;",
     ]);
   });
+
+  it("infers default values for built-in attributes", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        vertexShaderText: [
+          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "{",
+          "    vec2 texCoords = vsInput.attributes.texCoord_1",
+          "    return position;",
+          "}",
+        ].join("\n"),
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    material.diffuse = vec3(fsInput.attributes.tangent);",
+          "}",
+        ].join("\n"),
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    var generatedVertexLines = groupVertexShaderLines(shaderBuilder);
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
+
+    expect(generatedVertexLines.attributeFields).toEqual([
+      "    vec2 texCoord_1;",
+    ]);
+    expect(generatedFragmentLines.attributeFields).toEqual([
+      "    vec4 tangent;",
+    ]);
+
+    expect(generatedVertexLines.initializationLines).toEqual([
+      "    vsInput.attributes.texCoord_1 = vec2(0.0);",
+    ]);
+
+    expect(generatedFragmentLines.initializationLines).toEqual([
+      "    fsInput.attributes.tangent = vec4(1.0, 0.0, 0.0, 1.0);",
+    ]);
+  });
+
+  it("handles incompatible primitives gracefully", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        vertexShaderText: [
+          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "{",
+          "    vec3 texCoords = vsInput.attributes.color_0",
+          "    return position;",
+          "}",
+        ].join("\n"),
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    material.diffuse *= fsInput.attributes.notAnAttribute;",
+          "}",
+        ].join("\n"),
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+    };
+
+    spyOn(CustomShaderStage, "_oneTimeWarning");
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    // once for the vertex shader, once for the fragment shader
+    expect(CustomShaderStage._oneTimeWarning.calls.count()).toBe(2);
+
+    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
+    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
+  });
+
+  it("disables vertex shader if vertexShaderText is not provided", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        fragmentShaderText: emptyFragmentShader,
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      uniformMap: {},
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
+    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+      "HAS_CUSTOM_FRAGMENT_SHADER",
+      "CUSTOM_SHADER_MODIFY_MATERIAL",
+    ]);
+
+    expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
+    var fragmentShaderIndex = shaderBuilder._fragmentShaderParts.shaderLines.indexOf(
+      emptyFragmentShader
+    );
+    expect(fragmentShaderIndex).not.toBe(-1);
+  });
+
+  it("disables fragment shader if fragmentShaderText is not provided", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        vertexShaderText: emptyVertexShader,
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      uniformMap: {},
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "HAS_CUSTOM_VERTEX_SHADER",
+    ]);
+    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
+
+    var vertexShaderIndex = shaderBuilder._vertexShaderParts.shaderLines.indexOf(
+      emptyVertexShader
+    );
+    expect(vertexShaderIndex).not.toBe(-1);
+    expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([]);
+  });
+
+  it("disables custom shader if neither fragmentShaderText nor vertexShaderText are provided", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader(),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      uniformMap: {},
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    // Essentially the shader stage is skipped, so nothing should be updated
+    expect(shaderBuilder).toEqual(new ShaderBuilder());
+    expect(renderResources.uniformMap).toEqual({});
+    expect(renderResources.lightingOptions).toEqual(new ModelLightingOptions());
+  });
+
+  it("handles fragment-only custom shader that computes positionWC", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    material.diffuse = fsInput.positionWC;",
+          "}",
+        ].join("\n"),
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    // World coordinates require an extra varying.
+    var worldCoordDeclaration = "varying vec3 v_positionWC;";
+    expect(
+      shaderBuilder._vertexShaderParts.varyingLines.indexOf(
+        worldCoordDeclaration
+      )
+    ).not.toBe(-1);
+    expect(
+      shaderBuilder._fragmentShaderParts.varyingLines.indexOf(
+        worldCoordDeclaration
+      )
+    ).not.toBe(-1);
+    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "COMPUTE_POSITION_WC",
+    ]);
+
+    var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
+
+    expect(generatedFragmentLines.fragmentInputFields).toEqual([
+      "    vec3 positionWC;",
+    ]);
+    expect(generatedFragmentLines.initializationLines).toEqual([
+      "    fsInput.positionWC = v_positionWC;",
+    ]);
+  });
 });
