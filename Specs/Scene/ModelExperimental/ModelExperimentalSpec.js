@@ -4,12 +4,11 @@ import {
   ResourceCache,
   Resource,
   ModelExperimental,
-  Matrix4,
   Cartesian3,
   defined,
   when,
+  ShaderProgram,
 } from "../../../Source/Cesium.js";
-import ShaderProgram from "../../../Source/Renderer/ShaderProgram.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
@@ -115,7 +114,6 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: Matrix4.fromTranslation(new Cartesian3(6378237, 0, 0)),
         },
         scene
       ).then(function (model) {
@@ -134,7 +132,6 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: Matrix4.fromTranslation(new Cartesian3(6378237, 0, 0)),
           allowPicking: false,
         },
         scene

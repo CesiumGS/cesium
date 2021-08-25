@@ -80,6 +80,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       var frameState = scene.frameState;
       var context = frameState.context;
+      // Reset pick objects.
       context._pickObjects = [];
 
       PickingPipelineStage.process(renderResources, primitive, frameState);
@@ -137,6 +138,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       var frameState = scene.frameState;
       var context = frameState.context;
+      // Reset pick objects.
       context._pickObjects = [];
 
       PickingPipelineStage.process(renderResources, primitive, frameState);

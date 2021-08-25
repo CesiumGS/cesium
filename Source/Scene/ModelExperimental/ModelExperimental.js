@@ -173,7 +173,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * When <code>true</code>, each mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+   * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
    *
    * @type {Boolean}
    * @readonly
