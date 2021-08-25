@@ -8,11 +8,23 @@ import {
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {};
+  var mockModel = {};
 
   it("throws for undefined primitive", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
         primitive: undefined,
+        model: mockModel,
+        allowPicking: true,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws for undefined model", function () {
+    expect(function () {
+      return new ModelExperimentalPrimitive({
+        primitive: {},
+        model: undefined,
         allowPicking: true,
       });
     }).toThrowDeveloperError();
@@ -22,6 +34,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
         primitive: {},
+        model: mockModel,
         allowPicking: undefined,
       });
     }).toThrowDeveloperError();
@@ -30,6 +43,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("constructs", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      model: mockModel,
       allowPicking: true,
     });
 
@@ -40,6 +54,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      model: mockModel,
       allowPicking: false,
     });
 
@@ -51,6 +66,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      model: mockModel,
       allowPicking: true,
     });
 
