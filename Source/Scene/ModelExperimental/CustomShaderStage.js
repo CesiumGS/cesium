@@ -64,6 +64,15 @@ CustomShaderStage.process = function (renderResources, primitive, frameState) {
   shaderBuilder.addVertexLines(generatedCode.vertexLines);
   shaderBuilder.addFragmentLines(generatedCode.fragmentLines);
 
+  // Enable the vertex shader stage. The fragment shader is handled differently
+  if (generatedCode.vertexLinesEnabled) {
+    shaderBuilder.addDefine(
+      "USE_CUSTOM_SHADER",
+      undefined,
+      ShaderDestination.VERTEX
+    );
+  }
+
   // the input to the fragment shader may include a low-precision ECEF position
   if (generatedCode.shouldComputePositionWC) {
     shaderBuilder.addDefine(
