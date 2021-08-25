@@ -166,7 +166,7 @@ var attributeTypeLUT = {
   normal: "vec3",
   tangent: "vec4",
   texCoord: "vec2",
-  joints: "vec4",
+  joints: "ivec4",
   weights: "vec4",
 };
 
@@ -176,7 +176,7 @@ var attributeDefaultValueLUT = {
   normal: "vec3(0.0, 0.0, 1.0)",
   tangent: "vec4(1.0, 0.0, 0.0, 1.0)",
   texCoord: "vec2(0.0)",
-  joints: "vec4(0.0)",
+  joints: "ivec4(0)",
   weights: "vec4(0.0)",
 };
 
