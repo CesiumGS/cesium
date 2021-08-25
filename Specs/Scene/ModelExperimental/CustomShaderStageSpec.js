@@ -44,7 +44,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
   };
 
   var emptyVertexShader =
-    "vec3 vertexMain(VertexInput vsInput, vec3 position){ return position; }";
+    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
   var emptyShader = new CustomShader({
@@ -288,11 +288,11 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 position)",
           "{",
           "    vec3 normal = vsInput.attributes.normal;",
           "    vec2 texCoord = vsInput.attributes.texCoord_0;",
-          "    return vsInput.attributes.position;",
+          "    position = vsInput.attributes.position;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -352,10 +352,10 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 position)",
           "{",
           "    float temperature = vsInput.attributes.temperature;",
-          "    return vsInput.attributes.position;",
+          "    position = vsInput.attributes.position;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -411,9 +411,9 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 position)",
           "{",
-          "    return 2.0 * vsInput.attributes.position - 1.0;",
+          "    position = 2.0 * vsInput.attributes.position - 1.0;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -586,10 +586,9 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 position)",
           "{",
-          "    vec2 texCoords = vsInput.attributes.texCoord_1",
-          "    return position;",
+          "    vec2 texCoords = vsInput.attributes.texCoord_1;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -632,10 +631,9 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 position)",
           "{",
-          "    vec3 texCoords = vsInput.attributes.color_0",
-          "    return position;",
+          "    vec3 texCoords = vsInput.attributes.color_0;",
           "}",
         ].join("\n"),
         fragmentShaderText: [

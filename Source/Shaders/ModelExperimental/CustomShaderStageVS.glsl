@@ -11,9 +11,8 @@ vec3 customShaderStage(vec3 position) {
   // see CustomShaderStage.js
   VertexInput vsInput;
   initializeInputStruct(vsInput);
-
-  return vertexMain(vsInput, position);
-  #else
-  return position;
+  vertexMain(vsInput, position);
   #endif
+
+  return position;
 }

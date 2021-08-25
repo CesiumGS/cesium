@@ -49,7 +49,7 @@ var customShader = new Cesium.CustomShader({
   // VertexInput will be documented below
   // NOTE: which coordinate system is used here may change (e.g. could become model -> view space
   vertexShaderText: `
-    vec3 vertexMain(VertexInput vsInput, vec3 position) {
+    void vertexMain(VertexInput vsInput, inout vec3 position) {
         // code goes here. e.g. for a no-op:
         return position;
     }
@@ -159,7 +159,7 @@ var customShader = new Cesium.CustomShader({
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
-    vec3 vertexMain(VertexInput vsInput, vec3 position) {
+    void vertexMain(VertexInput vsInput, inout vec3 position) {
         float positiveX = step(0.0, position.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,

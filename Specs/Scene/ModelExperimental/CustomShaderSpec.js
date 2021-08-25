@@ -12,7 +12,7 @@ import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/CustomShader", function () {
   var emptyVertexShader =
-    "vec3 vertexMain(VertexInput vsInput, vec3 position){ return position; }";
+    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
@@ -124,9 +124,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   it("detects input variables in the shader text", function () {
     var customShader = new CustomShader({
       vertexShaderText: [
-        "vec3 vertexMain(VertexInput vsInput, vec3 position)",
+        "void vertexMain(VertexInput vsInput, inout vec3 position)",
         "{",
-        "    return positon + vsInput.attributes.expansion * vsInput.attributes.normal;",
+        "    positon += vsInput.attributes.expansion * vsInput.attributes.normal;",
         "}",
       ].join("\n"),
       fragmentShaderText: [
