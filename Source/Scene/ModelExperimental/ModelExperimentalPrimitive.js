@@ -14,7 +14,7 @@ import PickingPipelineStage from "./PickingPipelineStage.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
- * @param {Boolean} options.allowPicking Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
+ * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
  *
  * @alias ModelExperimentalPrimitive
  * @constructor
@@ -26,7 +26,6 @@ export default function ModelExperimentalPrimitive(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
   Check.typeOf.object("options.model", options.model);
-  Check.typeOf.bool("options.allowPicking", options.allowPicking);
   //>>includeEnd('debug');
 
   /**
@@ -48,15 +47,6 @@ export default function ModelExperimentalPrimitive(options) {
   this.model = options.model;
 
   /**
-   * Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
-   *
-   * @type {Boolean}
-   *
-   * @private
-   */
-  this.allowPicking = options.allowPicking;
-
-  /**
    * Pipeline stages to apply to this primitive. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -75,7 +65,8 @@ function initialize(runtimePrimitive) {
   var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
 
-  var customShader = runtimePrimitive.model.customShader;
+  var model = runtimePrimitive.model;
+  var customShader = model.customShader;
   var hasCustomShader = defined(customShader);
   var hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -93,7 +84,7 @@ function initialize(runtimePrimitive) {
 
   pipelineStages.push(LightingPipelineStage);
 
-  if (runtimePrimitive.allowPicking) {
+  if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
   }
 
