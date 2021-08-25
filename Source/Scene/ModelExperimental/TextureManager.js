@@ -3,8 +3,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import Texture from "../../Renderer/Texture.js";
 
 /**
- * An object to manage loading textures. This is used to decouple texture
- * loading from {@link CustomShader}
+ * An object to manage loading textures
  *
  * @alias TextureManager
  * @constructor

@@ -3,10 +3,10 @@ import {
   CustomShader,
   CustomShaderMode,
   LightingModel,
+  TextureUniform,
   UniformType,
   VaryingType,
 } from "../../../Source/Cesium.js";
-import TextureUniform from "../../../Source/Scene/ModelExperimental/TextureUniform.js";
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 

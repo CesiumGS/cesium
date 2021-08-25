@@ -24,7 +24,7 @@ CustomShaderStage.process = function (renderResources, primitive) {
     return;
   }
 
-  // generateShaderLines() will always return an arrays of shader code, even
+  // generateShaderLines() will always return an array of shader code, even
   // if they are empty.
   shaderBuilder.addVertexLines(generatedCode.vertexLines);
   shaderBuilder.addFragmentLines(generatedCode.fragmentLines);
