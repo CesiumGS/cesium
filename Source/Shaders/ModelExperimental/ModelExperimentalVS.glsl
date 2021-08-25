@@ -8,6 +8,9 @@ void main()
 
     #ifdef HAS_INSTANCING
     position = instancingStage(position);
+        #ifdef USE_PICKING
+        v_pickColor = a_pickColor;
+        #endif
     #endif
 
     gl_Position = czm_modelViewProjection * vec4(position, 1.0);
