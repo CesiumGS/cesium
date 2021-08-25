@@ -6,6 +6,9 @@ import {
   UniformType,
   VaryingType,
 } from "../../../Source/Cesium.js";
+import TextureUniform from "../../../Source/Scene/ModelExperimental/TextureUniform.js";
+import createScene from "../../createScene.js";
+import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/CustomShader", function () {
   var emptyVertexShader =
@@ -162,4 +165,129 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       expectedFragmentVariables
     );
   });
+
+  // asynchronous code is only needed if texture uniforms are used.
+  describe(
+    "texture uniforms",
+    function () {
+      var scene;
+
+      beforeAll(function () {
+        scene = createScene();
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      var blueUrl = "Data/Images/Blue2x2.png";
+      var greenUrl = "Data/Images/Green1x4.png";
+
+      function waitForTextureLoad(customShader, textureId) {
+        var textureManager = customShader._textureManager;
+        var oldValue = textureManager.getTexture(textureId);
+        return pollToPromise(function () {
+          scene.renderForSpecs();
+          customShader.update(scene.frameState);
+
+          // Check that the texture changed. This allows waitForTextureLoad()
+          // to be called multiple times in one promise chain, which is needed
+          // for testing setUniform()
+          return textureManager.getTexture(textureId) !== oldValue;
+        }).then(function () {
+          return textureManager.getTexture(textureId);
+        });
+      }
+
+      it("supports texture uniforms", function () {
+        var customShader = new CustomShader({
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+          uniforms: {
+            u_blue: {
+              type: UniformType.SAMPLER_2D,
+              value: new TextureUniform({
+                url: blueUrl,
+              }),
+            },
+          },
+        });
+        expect(customShader.uniformMap.u_blue).toBeDefined();
+        expect(customShader.uniformMap.u_blue()).not.toBeDefined();
+
+        return waitForTextureLoad(customShader, "u_blue").then(function (
+          texture
+        ) {
+          expect(customShader.uniformMap.u_blue()).toBe(texture);
+          expect(texture.width).toBe(2);
+          expect(texture.height).toBe(2);
+        });
+      });
+
+      it("can change texture uniform value", function () {
+        var customShader = new CustomShader({
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+          uniforms: {
+            u_testTexture: {
+              type: UniformType.SAMPLER_2D,
+              value: new TextureUniform({
+                url: blueUrl,
+              }),
+            },
+          },
+        });
+
+        return waitForTextureLoad(customShader, "u_testTexture").then(function (
+          blueTexture
+        ) {
+          expect(customShader.uniformMap.u_testTexture()).toBe(blueTexture);
+          expect(blueTexture.width).toBe(2);
+          expect(blueTexture.height).toBe(2);
+          customShader.setUniform(
+            "u_testTexture",
+            new TextureUniform({
+              url: greenUrl,
+            })
+          );
+          return waitForTextureLoad(customShader, "u_testTexture").then(
+            function (greenTexture) {
+              expect(customShader.uniformMap.u_testTexture()).toBe(
+                greenTexture
+              );
+              expect(greenTexture.width).toBe(1);
+              expect(greenTexture.height).toBe(4);
+            }
+          );
+        });
+      });
+
+      it("destroys", function () {
+        var customShader = new CustomShader({
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+          uniforms: {
+            u_blue: {
+              type: UniformType.SAMPLER_2D,
+              value: new TextureUniform({
+                url: blueUrl,
+              }),
+            },
+          },
+        });
+        return waitForTextureLoad(customShader, "u_blue").then(function (
+          texture
+        ) {
+          expect(customShader.isDestroyed()).toBe(false);
+          expect(texture.isDestroyed()).toBe(false);
+
+          customShader.destroy();
+
+          expect(customShader.isDestroyed()).toBe(true);
+          expect(texture.isDestroyed()).toBe(true);
+        });
+      });
+    },
+    "WebGL"
+  );
 });
