@@ -45,9 +45,8 @@ var customShader = new Cesium.CustomShader({
   // either PBR (physically-based rendering) or UNLIT depending on the desired
   // results.
   lightingModel: Cesium.LightingModel.PBR,
-  // Custom vertex shader. Right now this is a function from model space -> model space.
-  // VertexInput will be documented below
-  // NOTE: which coordinate system is used here may change (e.g. could become model -> view space
+  // Custom vertex shader. This is a function from model space -> model space.
+  // VertexInput is documented below
   vertexShaderText: `
     void vertexMain(VertexInput vsInput, inout vec3 position) {
         // code goes here. e.g. for a no-op:

@@ -33,6 +33,37 @@ import TextureManager from "./TextureManager.js";
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @example
+ * var customShader = new CustomShader({
+ *   uniforms: {
+ *     u_colorIndex: {
+ *       type: Cesium.UniformType.FLOAT,
+ *       value: 1.0
+ *     },
+ *     u_normalMap: {
+ *       type: Cesium.UniformType.SAMPLER_2D,
+ *       value: new Cesium.TextureUniform({
+ *         url: "http://example.com/normal.png"
+ *       })
+ *     }
+ *   },
+ *   varyings: {
+ *     v_selectedColor: Cesium.VaryingType.VEC3
+ *   },
+ *   vertexShaderText: `
+ *   void vertexMain(VertexInput vsInput, inout vec3 position) {
+ *     v_selectedColor = mix(vsInput.attributes.color_0, vsInput.attributes.color_1, u_colorIndex);
+ *     position += 0.1 * vsInput.attributes.normal;
+ *   }
+ *   `,
+ *   fragmentShaderText: `
+ *   void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+ *     material.normal = texture2D(u_normalMap, fsInput.attributes.normal);
+ *     material.diffuse = v_selectedColor;
+ *   }
+ *   `
+ * });
  */
 export default function CustomShader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
