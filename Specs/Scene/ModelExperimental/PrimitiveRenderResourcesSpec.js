@@ -64,13 +64,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   var runtimePrimitive = new ModelExperimentalPrimitive({
     primitive: primitive,
     model: mockModel,
-    allowPicking: true,
   });
 
   var runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
     primitive: primitiveWithoutIndices,
     model: mockModel,
-    allowPicking: true,
   });
 
   var expectedDepthTest = {

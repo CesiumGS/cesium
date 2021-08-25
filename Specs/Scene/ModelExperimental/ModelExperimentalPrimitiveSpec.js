@@ -8,14 +8,15 @@ import {
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {};
-  var mockModel = {};
+  var mockModel = {
+    allowPicking: true,
+  };
 
   it("throws for undefined primitive", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
         primitive: undefined,
         model: mockModel,
-        allowPicking: true,
       });
     }).toThrowDeveloperError();
   });
@@ -25,17 +26,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       return new ModelExperimentalPrimitive({
         primitive: {},
         model: undefined,
-        allowPicking: true,
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("throws for undefined allowPicking", function () {
-    expect(function () {
-      return new ModelExperimentalPrimitive({
-        primitive: {},
-        model: mockModel,
-        allowPicking: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -44,30 +34,16 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
       model: mockModel,
-      allowPicking: true,
     });
 
     expect(primitive.primitive).toBe(mockPrimitive);
-    expect(primitive.allowPicking).toBe(true);
+    expect(primitive.model).toBe(mockModel);
   });
 
   it("configures the pipeline stages", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
       model: mockModel,
-      allowPicking: false,
-    });
-
-    expect(primitive.pipelineStages).toEqual([
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      LightingPipelineStage,
-    ]);
-
-    primitive = new ModelExperimentalPrimitive({
-      primitive: mockPrimitive,
-      model: mockModel,
-      allowPicking: true,
     });
 
     expect(primitive.pipelineStages).toEqual([
@@ -75,6 +51,19 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MaterialPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
+    ]);
+
+    primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        allowPicking: false,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
     ]);
   });
 });
