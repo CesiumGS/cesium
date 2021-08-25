@@ -38,7 +38,7 @@ void main()
     material = materialStage(material);
     #endif
 
-    #ifdef CUSTOM_SHADER_MODIFY_MATERIAL
+    #if defined(CUSTOM_SHADER_MODIFY_MATERIAL) || defined(CUSTOM_SHADER_REPLACE_MATERIAL) 
     material = customShaderStage(material);
     #endif
 
