@@ -18,6 +18,7 @@ import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS
  * @private
  */
 var InstancingPipelineStage = {};
+InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debugging
 
 /**
  * Process a node. This modifies the following parts of the render resources:

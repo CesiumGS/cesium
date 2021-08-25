@@ -19,7 +19,8 @@ import CustomShaderMode from "./CustomShaderMode.js";
  *
  * @private
  */
-export default function CustomShaderStage() {}
+var CustomShaderStage = {};
+CustomShaderStage.name = "CustomShaderStage"; // Helps with debugging
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -489,3 +490,5 @@ function generateShaderLines(customShader, primitive) {
 
 // exposed for testing.
 CustomShaderStage._oneTimeWarning = oneTimeWarning;
+
+export default CustomShaderStage;

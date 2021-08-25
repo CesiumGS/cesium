@@ -1,4 +1,7 @@
 import {
+  CustomShader,
+  CustomShaderMode,
+  CustomShaderStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
@@ -11,6 +14,11 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockModel = {
     allowPicking: true,
   };
+
+  var emptyVertexShader =
+    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
+  var emptyFragmentShader =
+    "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
   it("throws for undefined primitive", function () {
     expect(function () {
@@ -63,6 +71,66 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       MaterialPipelineStage,
+      LightingPipelineStage,
+    ]);
+  });
+
+  it("configures the pipeline stages for custom shaders", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        customShader: new CustomShader({
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+        }),
+        allowPicking: false,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderStage,
+      LightingPipelineStage,
+    ]);
+  });
+
+  it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        customShader: new CustomShader({
+          mode: CustomShaderMode.REPLACE_MATERIAL,
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+        }),
+        allowPicking: false,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      CustomShaderStage,
+      LightingPipelineStage,
+    ]);
+  });
+
+  it("does not disable the material stage if the custom shader has no fragment shader", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        customShader: new CustomShader({
+          mode: CustomShaderMode.REPLACE_MATERIAL,
+          vertexShaderText: emptyVertexShader,
+        }),
+        allowPicking: false,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderStage,
       LightingPipelineStage,
     ]);
   });

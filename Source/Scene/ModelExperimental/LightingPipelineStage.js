@@ -13,6 +13,7 @@ import LightingModel from "./LightingModel.js";
  * @private
  */
 var LightingPipelineStage = {};
+LightingPipelineStage.name = "LightingPipelineStage"; // Helps with debugging
 
 /**
  * Process a primitive. This modifies the following parts of the render
