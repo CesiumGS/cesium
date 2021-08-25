@@ -11,7 +11,7 @@ import {
   _shadersCustomShaderStageFS,
 } from "../../../Source/Cesium.js";
 
-describe("ModelExperimental/CustomShaderStage", function () {
+describe("Scene/ModelExperimental/CustomShaderStage", function () {
   var primitive = {
     attributes: [
       {
