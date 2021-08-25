@@ -8,7 +8,7 @@ void main()
 
     #ifdef HAS_INSTANCING
     position = instancingStage(position);
-        #ifdef ALLOWS_PICKING
+        #ifdef USE_PICKING
         v_pickColor = a_pickColor;
         #endif
     #endif

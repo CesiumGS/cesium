@@ -34,7 +34,7 @@ PickingPipelineStage.process = function (
   var runtimeNode = renderResources.runtimeNode;
   var shaderBuilder = renderResources.shaderBuilder;
 
-  shaderBuilder.addDefine("ALLOWS_PICKING");
+  shaderBuilder.addDefine("USE_PICKING");
 
   if (defined(runtimeNode.node.instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
@@ -76,9 +76,7 @@ function processInstancedPickIds(renderResources, context) {
       model: renderResources.model,
       node: renderResources.runtimeNode,
       primitive: renderResources.runtimePrimitive,
-      instance: {
-        id: i,
-      },
+      instanceId: i,
     };
 
     var pickId = context.createPickId(pickObject);

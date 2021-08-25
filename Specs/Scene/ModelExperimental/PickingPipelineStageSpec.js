@@ -92,15 +92,15 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       var fragmentUniformLines =
         renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
 
-      expect(vertexDefineLines[0]).toEqual("ALLOWS_PICKING");
-      expect(fragmentDefineLines[0]).toEqual("ALLOWS_PICKING");
+      expect(vertexDefineLines[0]).toEqual("USE_PICKING");
+      expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
       expect(fragmentUniformLines[0]).toEqual("uniform vec4 czm_pickColor;");
 
       var pickObject = context._pickObjects["1"];
       expect(pickObject).toBeDefined();
-      expect(pickObject.model).toBeDefined();
-      expect(pickObject.node).toBeDefined();
-      expect(pickObject.primitive).toBeDefined();
+      expect(pickObject.model).toBe(renderResources.model);
+      expect(pickObject.node).toBe(renderResources.runtimeNode);
+      expect(pickObject.primitive).toBe(renderResources.runtimePrimitive);
 
       var uniformMap = renderResources.uniformMap;
       expect(uniformMap.czm_pickColor).toBeDefined();
@@ -154,8 +154,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
 
       expect(attributeLines[0]).toEqual("attribute vec4 a_pickColor;");
-      expect(vertexDefineLines[0]).toEqual("ALLOWS_PICKING");
-      expect(fragmentDefineLines[0]).toEqual("ALLOWS_PICKING");
+      expect(vertexDefineLines[0]).toEqual("USE_PICKING");
+      expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
       expect(vertexVaryingLines[0]).toEqual("varying vec4 v_pickColor;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec4 v_pickColor;");
 
@@ -164,11 +164,10 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         if (context._pickObjects.hasOwnProperty(key)) {
           var pickObject = context._pickObjects[key];
           expect(pickObject).toBeDefined();
-          expect(pickObject.model).toBeDefined();
-          expect(pickObject.node).toBeDefined();
-          expect(pickObject.primitive).toBeDefined();
-          expect(pickObject.instance).toBeDefined();
-          expect(pickObject.instance.id).toEqual(i++);
+          expect(pickObject.model).toBe(renderResources.model);
+          expect(pickObject.node).toBe(renderResources.runtimeNode);
+          expect(pickObject.primitive).toBe(renderResources.runtimePrimitive);
+          expect(pickObject.instanceId).toEqual(i++);
         }
       }
 
