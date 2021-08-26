@@ -18,7 +18,8 @@ import Texture from "../Renderer/Texture.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} featuresLength The number of features in the batch table or feature table
- * @param {Cesium3DTileContent} content The content this batch texture belongs to. Used for creating the picking texture.
+ * @param {Cesium3DTileContent|ModelFeatureTable} content The content this batch texture belongs to. Used for creating the picking texture.
+ * @param {Object} [statistics] The statistics object to update with information about the batch texture.
  * @param {Function} [colorChangedCallback] A callback function that is called whenever the color of a feature changes.
  *
  * @alias BatchTexture
@@ -69,6 +70,7 @@ export default function BatchTexture(options) {
   this._textureDimensions = textureDimensions;
   this._textureStep = textureStep;
   this._content = options.content;
+  this._statistics = options.statistics;
   this._colorChangedCallback = options.colorChangedCallback;
 }
 
@@ -455,6 +457,7 @@ function createPickTexture(batchTexture, context) {
     var byteLength = getByteLength(batchTexture);
     var bytes = new Uint8Array(byteLength);
     var content = batchTexture._content;
+    var statistics = batchTexture._statistics;
 
     // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
     // a continuous range of pickIds and then converting the base pickId + batchId
@@ -473,8 +476,9 @@ function createPickTexture(batchTexture, context) {
     }
 
     batchTexture._pickTexture = createTexture(batchTexture, context, bytes);
-    content.tileset._statistics.batchTableByteLength +=
-      batchTexture._pickTexture.sizeInBytes;
+    if (defined(statistics)) {
+      statistics.batchTableByteLength += batchTexture._pickTexture.sizeInBytes;
+    }
   }
 }
 
@@ -507,7 +511,9 @@ BatchTexture.prototype.update = function (tileset, frameState) {
     // Create batch texture on-demand
     if (!defined(this._batchTexture)) {
       this._batchTexture = createTexture(this, context, this._batchValues);
-      tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
+      if (defined(this._statistics)) {
+        this._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
+      }
     }
 
     updateBatchTexture(this); // Apply per-feature show/color updates
