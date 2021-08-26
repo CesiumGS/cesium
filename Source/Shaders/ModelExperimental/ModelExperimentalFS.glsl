@@ -13,6 +13,7 @@ czm_modelMaterial defaultModelMaterial()
     material.occlusion = 1.0;
     material.normal = vec3(0.0, 0.0, 1.0);
     material.emissive = vec3(0.0);
+    material.alpha = 1.0;
     return material;
 }
 
