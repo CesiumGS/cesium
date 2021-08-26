@@ -3,6 +3,7 @@ import {
   CustomShader,
   CustomShaderStage,
   LightingModel,
+  ModelAlphaOptions,
   ModelLightingOptions,
   ShaderBuilder,
   UniformType,
@@ -61,11 +62,13 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "USE_CUSTOM_SHADER",
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
@@ -205,6 +208,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       uniformMap: uniformMap,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -242,6 +246,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -271,6 +276,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -309,6 +315,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -371,6 +378,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
@@ -429,6 +437,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
@@ -471,6 +480,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -519,6 +529,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -546,6 +557,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -563,6 +575,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       )
     ).not.toBe(-1);
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "USE_CUSTOM_SHADER",
       "COMPUTE_POSITION_WC",
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
@@ -603,6 +616,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -648,6 +662,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     spyOn(CustomShaderStage, "_oneTimeWarning");
@@ -673,6 +688,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       model: model,
       lightingOptions: new ModelLightingOptions(),
       uniformMap: {},
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -701,12 +717,14 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
     };
 
     CustomShaderStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "USE_CUSTOM_SHADER",
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
@@ -727,6 +745,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
     };
 
@@ -754,6 +773,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
     };
 
     CustomShaderStage.process(renderResources, primitive);
@@ -771,6 +791,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       )
     ).not.toBe(-1);
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+      "USE_CUSTOM_SHADER",
       "COMPUTE_POSITION_WC",
     ]);
 

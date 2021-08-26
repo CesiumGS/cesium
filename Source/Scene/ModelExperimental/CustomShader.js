@@ -23,6 +23,7 @@ import TextureManager from "./TextureManager.js";
  * @param {Object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
  * @param {LightingModel} [options.lightingModel] The lighting model (e.g. PBR or unlit). If present, this overrides the default lighting for the model.
+ * @param {Boolean} [options.isTranslucent=false] If set, the model will be rendered as translucent. This overrides the default settings for the model.
  * @param {Object.<String, UniformSpecifier>} [options.uniforms] A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
  * @param {Object.<String, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
  * @param {String} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
@@ -74,6 +75,7 @@ export default function CustomShader(options) {
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
   this.vertexShaderText = options.vertexShaderText;
   this.fragmentShaderText = options.fragmentShaderText;
+  this.isTranslucent = defaultValue(options.isTranslucent, false);
 
   this._textureManager = new TextureManager();
   this.uniformMap = buildUniformMap(this);

@@ -3,6 +3,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import CustomShaderStage from "./CustomShaderStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
+import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
@@ -87,6 +88,8 @@ function initialize(runtimePrimitive) {
   if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
   }
+
+  pipelineStages.push(AlphaPipelineStage);
 
   return;
 }

@@ -2,10 +2,12 @@ import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Pass from "../../Renderer/Pass.js";
 import CustomShaderStageVS from "../../Shaders/ModelExperimental/CustomShaderStageVS.js";
 import CustomShaderStageFS from "../../Shaders/ModelExperimental/CustomShaderStageFS.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
+import AlphaMode from "../AlphaMode.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 
 /**
@@ -126,6 +128,18 @@ CustomShaderStage.process = function (renderResources, primitive, frameState) {
   // if present, the lighting model overrides the material's lighting model.
   renderResources.lightingOptions.customShaderLightingModel =
     customShader.lightingModel;
+
+  var alphaOptions = renderResources.alphaOptions;
+  if (customShader.isTranslucent) {
+    alphaOptions.pass = Pass.TRANSLUCENT;
+    alphaOptions.alphaMode = AlphaMode.BLEND;
+  } else {
+    // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
+    // the material pipeline stage used translucent. The default is configured
+    // in AlphaPipelineStage
+    alphaOptions.pass = undefined;
+    alphaOptions.alphaMode = AlphaMode.OPAQUE;
+  }
 
   renderResources.uniformMap = combine(
     renderResources.uniformMap,

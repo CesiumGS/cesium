@@ -1,4 +1,5 @@
 import {
+  AlphaPipelineStage,
   CustomShader,
   CustomShaderMode,
   CustomShaderStage,
@@ -59,6 +60,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MaterialPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
+      AlphaPipelineStage,
     ]);
 
     primitive = new ModelExperimentalPrimitive({
@@ -72,6 +74,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
     ]);
   });
 
@@ -92,6 +95,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MaterialPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
     ]);
   });
 
@@ -112,6 +116,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
     ]);
   });
 
@@ -132,6 +137,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MaterialPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
     ]);
   });
 });

@@ -48,7 +48,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
     cull: model.cull,
-    pass: primitiveRenderResources.pass,
+    pass: primitiveRenderResources.alphaOptions.pass,
     count: primitiveRenderResources.count,
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
