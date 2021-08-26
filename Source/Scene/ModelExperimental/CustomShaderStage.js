@@ -475,6 +475,7 @@ function generateShaderLines(customShader, primitive) {
 
   if (vertexLinesEnabled || shouldComputePositionWC) {
     vertexLines.push(CustomShaderStageVS);
+    vertexLinesEnabled = true;
   }
 
   if (fragmentLinesEnabled) {
