@@ -126,8 +126,7 @@ CustomShaderStage.process = function (renderResources, primitive, frameState) {
   }
 
   // if present, the lighting model overrides the material's lighting model.
-  renderResources.lightingOptions.customShaderLightingModel =
-    customShader.lightingModel;
+  renderResources.lightingOptions.lightingModel = customShader.lightingModel;
 
   var alphaOptions = renderResources.alphaOptions;
   if (customShader.isTranslucent) {

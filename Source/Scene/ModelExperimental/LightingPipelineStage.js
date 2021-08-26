@@ -1,4 +1,3 @@
-import defaultValue from "../../Core/defaultValue.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import LightingStageFS from "../../Shaders/ModelExperimental/LightingStageFS.js";
 import LightingModel from "./LightingModel.js";
@@ -32,10 +31,7 @@ LightingPipelineStage.process = function (renderResources, primitive) {
 
   // The lighting model is always set by the material. However, custom shaders
   // can override this.
-  var lightingModel = defaultValue(
-    lightingOptions.customShaderLightingModel,
-    lightingOptions.lightingModel
-  );
+  var lightingModel = lightingOptions.lightingModel;
 
   if (lightingModel === LightingModel.PBR) {
     shaderBuilder.addDefine(

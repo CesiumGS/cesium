@@ -24,14 +24,4 @@ export default function ModelLightingOptions(options) {
    * @private
    */
   this.lightingModel = defaultValue(options.lightingModel, LightingModel.UNLIT);
-
-  /**
-   * Custom shaders allow the user to choose a lighting model. This overrides
-   * the lighting model when present
-   *
-   * @type {LightingModel}
-   *
-   * @private
-   */
-  this.customShadersLightingModel = undefined;
 }

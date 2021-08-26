@@ -282,9 +282,6 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     CustomShaderStage.process(renderResources, primitive);
 
     expect(renderResources.lightingOptions.lightingModel).toBe(
-      LightingModel.UNLIT
-    );
-    expect(renderResources.lightingOptions.customShaderLightingModel).toBe(
       LightingModel.PBR
     );
   });
