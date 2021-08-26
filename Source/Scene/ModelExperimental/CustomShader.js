@@ -77,6 +77,7 @@ export default function CustomShader(options) {
 
   this._textureManager = new TextureManager();
   this.uniformMap = buildUniformMap(this);
+  this._defaultTexture = undefined;
 
   // Lists of variables used from the automatically-generated structs. These
   // can be used for optimizations when generating the overall shader.
@@ -135,7 +136,10 @@ function buildUniformMap(customShader) {
 
 function createUniformTexture2DFunction(customShader, uniformName) {
   return function () {
-    return customShader._textureManager.getTexture(uniformName);
+    return defaultValue(
+      customShader._textureManager.getTexture(uniformName),
+      customShader._defaultTexture
+    );
   };
 }
 
@@ -209,6 +213,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
 };
 
 CustomShader.prototype.update = function (frameState) {
+  this._defaultTexture = frameState.context.defaultTexture;
   this._textureManager.update(frameState);
 };
 
