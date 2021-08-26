@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
+import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -212,5 +213,6 @@ export default function PrimitiveRenderResources(
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
+    blending: BlendingState.DISABLED,
   };
 }

@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  BlendingState,
   Cartesian3,
   ComponentDatatype,
   DepthFunction,
@@ -76,6 +77,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
+    blending: BlendingState.DISABLED,
   };
 
   it("throws for undefined nodeRenderResources", function () {

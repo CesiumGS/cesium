@@ -1,10 +1,11 @@
 import {
   AlphaMode,
   AlphaPipelineStage,
+  BlendingState,
   ModelAlphaOptions,
   Pass,
   ShaderBuilder,
-} from "../../Source/Cesium.js";
+} from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
   var mockModel = {
@@ -19,13 +20,14 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
+      renderStateOptions: {},
     };
 
     expect(renderResources.alphaOptions.pass).not.toBeDefined();
 
     AlphaPipelineStage.process(renderResources, mockPrimitive, mockFrameState);
 
-    expect(renderResources.alphaOptions.pass).toBe(mockModel.pass);
+    expect(renderResources.alphaOptions.pass).toBe(mockModel.opaquePass);
   });
 
   it("handles alphaMode = OPAQUE", function () {
@@ -35,7 +37,9 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
+      renderStateOptions: {},
     };
+    renderResources.alphaOptions.pass = Pass.OPAQUE;
     renderResources.alphaOptions.alphaMode = AlphaMode.OPAQUE;
 
     AlphaPipelineStage.process(renderResources, mockPrimitive, mockFrameState);
@@ -44,6 +48,9 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       "ALPHA_MODE_OPAQUE",
     ]);
     expect(renderResources.uniformMap).toEqual({});
+    expect(renderResources.renderStateOptions.blending).toEqual(
+      BlendingState.DISABLED
+    );
   });
 
   it("handles alphaMode = MASK", function () {
@@ -53,10 +60,14 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
+      renderStateOptions: {},
     };
     var cutoff = 0.6;
+    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
     renderResources.alphaOptions.alphaCutoff = cutoff;
     renderResources.alphaOptions.alphaMode = AlphaMode.MASK;
+
+    AlphaPipelineStage.process(renderResources, mockPrimitive, mockFrameState);
 
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
       "ALPHA_MODE_MASK",
@@ -67,6 +78,9 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
     ]);
 
     expect(renderResources.uniformMap.u_alphaCutoff()).toBe(cutoff);
+    expect(renderResources.renderStateOptions.blending).toEqual(
+      BlendingState.ALPHA_BLEND
+    );
   });
 
   it("handles alphaMode = BLEND", function () {
@@ -76,7 +90,9 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
+      renderStateOptions: {},
     };
+    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
     renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
 
     AlphaPipelineStage.process(renderResources, mockPrimitive, mockFrameState);
@@ -85,5 +101,8 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
       "ALPHA_MODE_BLEND",
     ]);
     expect(renderResources.uniformMap).toEqual({});
+    expect(renderResources.renderStateOptions.blending).toEqual(
+      BlendingState.ALPHA_BLEND
+    );
   });
 });

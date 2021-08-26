@@ -1,6 +1,8 @@
 import defaultValue from "../../Core/defaultValue.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AlphaMode from "../AlphaMode.js";
+import BlendingState from "../BlendingState.js";
+import Pass from "../../Renderer/Pass.js";
 
 /**
  * A pipeline stage for configuring the alpha options for handling translucency.
@@ -18,6 +20,13 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
   // Ensure the pass is defined
   var model = renderResources.model;
   alphaOptions.pass = defaultValue(alphaOptions.pass, model.opaquePass);
+
+  var renderStateOptions = renderResources.renderStateOptions;
+  if (alphaOptions.pass === Pass.TRANSLUCENT) {
+    renderStateOptions.blending = BlendingState.ALPHA_BLEND;
+  } else {
+    renderStateOptions.blending = BlendingState.DISABLED;
+  }
 
   var shaderBuilder = renderResources.shaderBuilder;
   var uniformMap = renderResources.uniformMap;
