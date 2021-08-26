@@ -22,20 +22,25 @@ DracoLoader._decoderTaskProcessor = undefined;
 DracoLoader._taskProcessorReady = false;
 DracoLoader._getDecoderTaskProcessor = function () {
   if (!defined(DracoLoader._decoderTaskProcessor)) {
-    var processor = new TaskProcessor(
+    // var processor = new TaskProcessor(
+    DracoLoader._decoderTaskProcessor = new TaskProcessor(
       "decodeDraco",
       DracoLoader._maxDecodingConcurrency
     );
-    processor
-      .initWebAssemblyModule({
-        modulePath: "ThirdParty/Workers/draco_wasm_wrapper.js",
-        wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-        fallbackModulePath: "ThirdParty/Workers/draco_decoder.js",
-      })
-      .then(function () {
-        DracoLoader._taskProcessorReady = true;
-      });
-    DracoLoader._decoderTaskProcessor = processor;
+    // processor
+    //   // .initWebAssemblyModule({
+    //   //   modulePath: "ThirdParty/Workers/draco_wasm_wrapper.js",
+    //   //   wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
+    //   //   fallbackModulePath: "ThirdParty/Workers/draco_decoder.js",
+    //   // })
+    //   .initWebAssemblyModule({
+    //     modulePath: "../node_modules/draco3d/draco_decoder_nodejs.js",
+    //     wasmBinaryFile: "../node_modules/draco3d/draco_decoder.wasm",
+    //   })
+    //   .then(function () {
+    //     DracoLoader._taskProcessorReady = true;
+    //   });
+    // DracoLoader._decoderTaskProcessor = processor;
   }
 
   return DracoLoader._decoderTaskProcessor;

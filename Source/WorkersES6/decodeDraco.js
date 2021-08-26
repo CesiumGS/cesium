@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import draco3d from "../ThirdParty/draco3d.js";
 
 var draco;
 
@@ -345,25 +346,33 @@ function initWorker(dracoModule) {
 }
 
 function decodeDraco(event) {
-  var data = event.data;
+  draco3d.createDecoderModule({}).then(function(module) {
+    // This is reached when everything is ready, and you can call methods on
+    // Module.
+    initWorker(module);
+    // console.log('Decoder Module Initialized!');
+    // moduleInitialized();
+  });
 
-  // Expect the first message to be to load a web assembly module
-  var wasmConfig = data.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    // Require and compile WebAssembly module, or use fallback if not supported
-    return require([wasmConfig.modulePath], function (dracoModule) {
-      if (defined(wasmConfig.wasmBinaryFile)) {
-        if (!defined(dracoModule)) {
-          dracoModule = self.DracoDecoderModule;
-        }
+  // var data = event.data;
 
-        dracoModule(wasmConfig).then(function (compiledModule) {
-          initWorker(compiledModule);
-        });
-      } else {
-        initWorker(dracoModule());
-      }
-    });
-  }
+  // // Expect the first message to be to load a web assembly module
+  // var wasmConfig = data.webAssemblyConfig;
+  // if (defined(wasmConfig)) {
+  //   // Require and compile WebAssembly module, or use fallback if not supported
+  //   return require([wasmConfig.modulePath], function (dracoModule) {
+  //     if (defined(wasmConfig.wasmBinaryFile)) {
+  //       if (!defined(dracoModule)) {
+  //         dracoModule = self.DracoDecoderModule;
+  //       }
+
+  //       dracoModule(wasmConfig).then(function (compiledModule) {
+  //         initWorker(compiledModule);
+  //       });
+  //     } else {
+  //       initWorker(dracoModule());
+  //     }
+  //   });
+  // }
 }
 export default decodeDraco;

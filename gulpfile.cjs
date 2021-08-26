@@ -35,6 +35,7 @@ const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
 const rollupPluginUglify = require("rollup-plugin-uglify");
 const rollupCommonjs = require("@rollup/plugin-commonjs");
 const rollupResolve = require("@rollup/plugin-node-resolve").default;
+const rollupPolyfillNode = require("rollup-plugin-polyfill-node");
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 
@@ -165,6 +166,13 @@ function createWorkers() {
   return rollup
     .rollup({
       input: workers,
+      // external: ['path', 'fs'],
+      // plugins: [
+      //   rollupPolyfillNode({
+      //     include: ['path', 'fs'],
+      //   }),
+      //   rollupResolve({ preferBuiltins: false })
+      // ],
       onwarn: rollupWarning,
     })
     .then(function (bundle) {
@@ -196,7 +204,14 @@ async function buildThirdParty() {
   return rollup
     .rollup({
       input: workers,
-      plugins: [rollupResolve(), rollupCommonjs()],
+      external: ['path', 'fs'],
+      plugins: [
+        rollupPolyfillNode({
+          include: ['path', 'fs'],
+        }),
+        rollupResolve({ preferBuiltins: false }),
+        rollupCommonjs()
+      ],
       onwarn: rollupWarning,
     })
     .then(function (bundle) {
@@ -1200,7 +1215,6 @@ gulp.task("convertToModules", function () {
 
 function combineCesium(debug, optimizer, combineOutput) {
   const plugins = [];
-
   if (!debug) {
     plugins.push(
       rollupPluginStripPragma({
@@ -1273,7 +1287,6 @@ function combineWorkers(debug, optimizer, combineOutput) {
     })
     .then(function (files) {
       const plugins = [];
-
       if (!debug) {
         plugins.push(
           rollupPluginStripPragma({
