@@ -1,11 +1,13 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
+import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RequestType from "../Core/RequestType.js";
@@ -17,8 +19,9 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ClassificationModel from "./ClassificationModel.js";
 import Model from "./Model.js";
-import ModelUtility from "./ModelUtility.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
+import ModelExperimental from "./ModelExperimental/ModelExperimental.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * Represents the contents of a
@@ -419,39 +422,51 @@ function initialize(content, arrayBuffer, byteOffset) {
   );
 
   if (!defined(content._classificationType)) {
-    // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-    // The pick shader still needs to be patched.
-    content._model = new Model({
+    var modelOptions = {
       gltf: gltfView,
       cull: false, // The model is already culled by 3D Tiles
       releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
       opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
       basePath: resource,
-      requestType: RequestType.TILES3D,
       modelMatrix: content._contentModelMatrix,
       upAxis: tileset._gltfUpAxis,
       forwardAxis: Axis.X,
-      shadows: tileset.shadows,
-      debugWireframe: tileset.debugWireframe,
       incrementallyLoadTextures: false,
-      vertexShaderLoaded: getVertexShaderCallback(content),
-      fragmentShaderLoaded: getFragmentShaderCallback(content),
-      uniformMapLoaded: batchTable.getUniformMapCallback(),
-      pickIdLoaded: getPickIdCallback(content),
-      addBatchIdToGeneratedShaders: batchLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
-      pickObject: pickObject,
-      imageBasedLightingFactor: tileset.imageBasedLightingFactor,
-      lightColor: tileset.lightColor,
-      luminanceAtZenith: tileset.luminanceAtZenith,
-      sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: tileset.specularEnvironmentMaps,
-      backFaceCulling: tileset.backFaceCulling,
-      showOutline: tileset.showOutline,
-    });
-    content._model.readyPromise.then(function (model) {
-      model.activeAnimations.addAll({
-        loop: ModelAnimationLoop.REPEAT,
+    };
+
+    if (ExperimentalFeatures.enableModelExperimental) {
+      modelOptions.customShader = tileset.customShader;
+      content._model = ModelExperimental.fromGltf(modelOptions);
+    } else {
+      modelOptions = combine(modelOptions, {
+        requestType: RequestType.TILES3D,
+        shadows: tileset.shadows,
+        debugWireframe: tileset.debugWireframe,
+        vertexShaderLoaded: getVertexShaderCallback(content),
+        fragmentShaderLoaded: getFragmentShaderCallback(content),
+        uniformMapLoaded: batchTable.getUniformMapCallback(),
+        pickIdLoaded: getPickIdCallback(content),
+        addBatchIdToGeneratedShaders: batchLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
+        pickObject: pickObject,
+        imageBasedLightingFactor: tileset.imageBasedLightingFactor,
+        lightColor: tileset.lightColor,
+        luminanceAtZenith: tileset.luminanceAtZenith,
+        sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
+        specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+        backFaceCulling: tileset.backFaceCulling,
+        showOutline: tileset.showOutline,
       });
+      // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+      // The pick shader still needs to be patched.
+      content._model = new Model(modelOptions);
+    }
+
+    content._model.readyPromise.then(function (model) {
+      if (defined(model.activeAnimations)) {
+        model.activeAnimations.addAll({
+          loop: ModelAnimationLoop.REPEAT,
+        });
+      }
     });
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
