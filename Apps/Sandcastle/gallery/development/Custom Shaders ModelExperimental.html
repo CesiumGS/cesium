@@ -43,7 +43,9 @@
         "use strict";
         //Sandcastle_Begin
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          orderIndependentTranslucency: false,
+        });
 
         // Model positioning ===============================================
 
@@ -105,6 +107,125 @@
           ].join("\n"),
         });
 
+        // make a checkerboard texture with an alpha that increases with the
+        // diagonal number
+        function makeCheckerboardTexture(textureSize) {
+          var checkerboard = new Uint8Array(4 * textureSize * textureSize);
+
+          var maxDiagonal = 2 * (textureSize - 1);
+          for (var i = 0; i < textureSize; i++) {
+            for (var j = 0; j < textureSize; j++) {
+              var index = i * textureSize + j;
+              // Checking the parity of the diagonal number gives a checkerboard
+              // pattern.
+              var diagonal = i + j;
+              if (diagonal % 2 === 0) {
+                // set the square red. We only need to set the red channel!
+                checkerboard[4 * index] = 255;
+              }
+              // otherwise we'd set the square to black. But arrays are already
+              // initialized to 0s so nothing needed here.
+
+              // for the alpha channel, map the diagonal number to [0, 255]
+              checkerboard[4 * index + 3] = (255 * diagonal) / maxDiagonal;
+            }
+          }
+          return new Cesium.TextureUniform({
+            typedArray: checkerboard,
+            width: textureSize,
+            height: textureSize,
+            // Don't interpolate, we want crisp checkerboard edges
+            minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
+            magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
+          });
+        }
+        var checkerboardTexture = makeCheckerboardTexture(8);
+
+        // Use the checkerboard red channel as a mask
+        var checkerboardMaskShader = new Cesium.CustomShader({
+          uniforms: {
+            u_checkerboard: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: checkerboardTexture,
+            },
+          },
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
+            "    material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);",
+            "}",
+          ].join("\n"),
+        });
+
+        // Color like a checkerboard but make the transparency vary with
+        // the diagonal
+        var checkerboardAlphaShader = new Cesium.CustomShader({
+          uniforms: {
+            u_checkerboard: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: checkerboardTexture,
+            },
+          },
+          // necessary when setting material.alpha
+          isTranslucent: true,
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
+            "    material.diffuse = checkerboard.rgb;",
+            "    material.alpha = checkerboard.a;",
+            "}",
+          ].join("\n"),
+        });
+
+        // Use the checkerboard to cut holes in the model
+        var checkerboardHolesShader = new Cesium.CustomShader({
+          uniforms: {
+            u_checkerboard: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: checkerboardTexture,
+            },
+          },
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
+            "    if (checkerboard.r > 0.0) {",
+            "        discard;",
+            "    }",
+            "}",
+          ].join("\n"),
+        });
+
+        // Dragging the mouse will modify the PBR values
+        var modifyPbrShader = new Cesium.CustomShader({
+          uniforms: {
+            // Vector from latest drag center to the mouse
+            u_drag: {
+              type: Cesium.UniformType.VEC2,
+              value: new Cesium.Cartesian2(0.0, 0.0),
+            },
+          },
+          fragmentShaderText: [
+            // Click and drag to vary the PBR values
+            "void fragmentMain(FragmentInput vsInput, inout czm_modelMaterial material)",
+            "{",
+            "    float dragDistance = length(u_drag);",
+            "    float variation = smoothstep(0.0, 300.0, dragDistance);",
+            // variation adds an golden tint to the specular highlights
+            "    material.specular = mix(material.specular, vec3(0.8, 0.5, 0.1), variation);",
+            // variation makes the material glossier
+            "    material.roughness = clamp(1.0 - variation, 0.01, 1.0);",
+            // variation mixes some red into the diffuse color
+            "    material.diffuse += vec3(0.5, 0.0, 0.0) * variation;",
+            "}",
+          ].join("\n"),
+        });
+
         // Demos ==============================================================
 
         var models = {
@@ -124,6 +245,34 @@
             onselect: function () {
               selectModel(models.groundVehicle, textureUniformShader);
               needsDrag = false;
+            },
+          },
+          {
+            text: "Procedural Texture",
+            onselect: function () {
+              selectModel(models.balloon, checkerboardMaskShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Translucent materials",
+            onselect: function () {
+              selectModel(models.balloon, checkerboardAlphaShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Use Texture as Mask",
+            onselect: function () {
+              selectModel(models.balloon, checkerboardHolesShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Modify PBR values via Mouse Drag",
+            onselect: function () {
+              selectModel(models.groundVehicle, modifyPbrShader);
+              needsDrag = true;
             },
           },
           {
@@ -202,6 +351,7 @@
 
             // Update uniforms
             expandModelShader.setUniform("u_drag", drag);
+            modifyPbrShader.setUniform("u_drag", drag);
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
