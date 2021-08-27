@@ -42,4 +42,5 @@ void main() {
     v_maximumSize = maximumSize;
     v_slice = slice;
     v_brightness = brightness;
+
 }

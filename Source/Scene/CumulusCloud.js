@@ -1,8 +1,8 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * A cumulus cloud billboard positioned in the 3D scene, that is created and rendered using a {@link CloudCollection}.
@@ -93,9 +93,7 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.bool("value", value);
       //>>includeEnd('debug');
 
       if (this._show !== value) {
@@ -116,9 +114,7 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var position = this._position;
@@ -160,9 +156,7 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var scale = this._scale;
@@ -218,9 +212,7 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var maximumSize = this._maximumSize;
@@ -285,9 +277,8 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      console.log(value);
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       var slice = this._slice;
@@ -319,9 +310,7 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       var brightness = this._brightness;

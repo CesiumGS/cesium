@@ -1,6 +1,8 @@
+import BlendingState from "./BlendingState.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CloudType from "./CloudType.js";
 import CloudCollectionFS from "../Shaders/CloudCollectionFS.js";
@@ -80,6 +82,7 @@ var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
  * @see CumulusCloud
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Clouds.html|Cesium Sandcastle Clouds Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
  *
  * @example
  * // Create a cloud collection with two cumulus clouds
@@ -185,7 +188,14 @@ function CloudCollection(options) {
   this._sp = undefined;
   this._rs = undefined;
 
-  this._show = defaultValue(options.show, true);
+  /**
+   * Determines if billboards in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
+
   this._colorCommands = [];
 
   /**
@@ -226,29 +236,6 @@ Object.defineProperties(CloudCollection.prototype, {
     get: function () {
       removeClouds(this);
       return this._clouds.length;
-    },
-  },
-
-  /**
-   * Determines if this collection of clouds will be shown.
-   * @memberof CloudCollection.prototype
-   * @type {Boolean}
-   * @default true
-   */
-  show: {
-    get: function () {
-      return this._show;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
-      //>>includeEnd('debug');
-
-      if (this._show !== value) {
-        this._show = value;
-      }
     },
   },
 });
@@ -297,28 +284,23 @@ function destroyClouds(clouds) {
  * @see CloudCollection#removeAll
  */
 CloudCollection.prototype.add = function (options) {
-  var cloudType;
-  if (defined(options)) {
-    //>>includeStart('debug', pragmas.debug);
-    if (defined(options.cloudType) && !CloudType.validate(options.cloudType)) {
-      throw new DeveloperError("invalid cloud type");
-    }
-    //>>includeEnd('debug');
-
-    cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
-  } else {
-    cloudType = CloudType.CUMULUS;
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
+  //>>includeStart('debug', pragmas.debug);
+  if (!CloudType.validate(cloudType)) {
+    throw new DeveloperError("invalid cloud type");
   }
+  //>>includeEnd('debug');
 
-  var c;
+  var cloud;
   if (cloudType === CloudType.CUMULUS) {
-    c = new CumulusCloud(options, this);
-    c._index = this._clouds.length;
-    this._clouds.push(c);
+    cloud = new CumulusCloud(options, this);
+    cloud._index = this._clouds.length;
+    this._clouds.push(cloud);
     this._createVertexArray = true;
   }
 
-  return c;
+  return cloud;
 };
 
 /**
@@ -340,7 +322,7 @@ CloudCollection.prototype.add = function (options) {
  */
 CloudCollection.prototype.remove = function (cloud) {
   if (this.contains(cloud)) {
-    this._clouds[cloud._index] = null; // Removed later in removeClouds()
+    this._clouds[cloud._index] = undefined; // Removed later in removeClouds()
     this._cloudsRemoved = true;
     this._createVertexArray = true;
     cloud._destroy();
@@ -369,6 +351,8 @@ CloudCollection.prototype.remove = function (cloud) {
 CloudCollection.prototype.removeAll = function () {
   destroyClouds(this._clouds);
   this._clouds = [];
+  this._cloudsToUpdate = [];
+  this._cloudsToUpdateIndex = 0;
   this._cloudsRemoved = false;
 
   this._createVertexArray = true;
@@ -383,7 +367,7 @@ function removeClouds(cloudCollection) {
     var length = clouds.length;
     for (var i = 0, j = 0; i < length; ++i) {
       var cloud = clouds[i];
-      if (cloud) {
+      if (defined(cloud)) {
         clouds._index = j++;
         newClouds.push(cloud);
       }
@@ -441,9 +425,7 @@ CloudCollection.prototype.contains = function (cloud) {
  */
 CloudCollection.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(index)) {
-    throw new DeveloperError("index is required.");
-  }
+  Check.typeOf.number("index", index);
   //>>includeEnd('debug');
 
   removeClouds(this);
@@ -863,7 +845,8 @@ function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
       enabled: true,
       func: WebGLConstants.LESS,
     },
-    depthMask: true,
+    depthMask: false,
+    blending: BlendingState.ALPHA_BLEND,
   });
 
   that._spCreated = true;
@@ -882,14 +865,16 @@ function createDrawCommands(cloudCollection, frameState) {
     var va = that._vaf.va;
     var vaLength = va.length;
     colorList.length = vaLength;
-    var command;
-    for (var j = 0; j < vaLength; j++) {
-      command = colorList[j] = new DrawCommand();
+    for (var i = 0; i < vaLength; i++) {
+      var command = colorList[i];
+      if (!defined(command)) {
+        command = colorList[i] = new DrawCommand();
+      }
       command.pass = Pass.TRANSLUCENT;
       command.owner = cloudCollection;
       command.uniformMap = uniforms;
-      command.count = va[j].indicesCount;
-      command.vertexArray = va[j].va;
+      command.count = va[i].indicesCount;
+      command.vertexArray = va[i].va;
       command.shaderProgram = that._sp;
       command.renderState = that._rs;
       if (that._instanced) {

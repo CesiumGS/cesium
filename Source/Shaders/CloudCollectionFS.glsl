@@ -73,16 +73,16 @@ vec4 sampleNoiseTexture(vec3 position) {
 bool intersectSphere(vec3 origin, vec3 dir, float slice,
                      out vec3 point, out vec3 normal) {  
     float A = dot(dir, dir);
-    float B = 2.0 * dot(origin, dir);
+    float B = dot(origin, dir);
     float C = dot(origin, origin) - 0.25;
-    float discriminant = (B * B) - (4.0 * A * C);
+    float discriminant = (B * B) - (A * C);
     if(discriminant < 0.0) {
         return false;
     }
     float root = sqrt(discriminant);
-    float t = (-B - root) / (2.0 * A);
+    float t = (-B - root) / A;
     if(t < 0.0) {
-        t = (-B + root) / (2.0 * A);
+        t = (-B + root) / A;
     }
     point = origin + t * dir;
     
@@ -94,7 +94,7 @@ bool intersectSphere(vec3 origin, vec3 dir, float slice,
     }
 
     normal = normalize(point);
-    point -= 0.01 * normal;
+    point -= czm_epsilon2 * normal;
 
     return true;
 }
@@ -259,13 +259,14 @@ void main() {
         gl_FragColor = v_brightness * vec4(1.0);
     }
 #else
-    #ifndef DEBUG_BILLBOARDS
+#ifndef DEBUG_BILLBOARDS
     vec4 cloud = drawCloud(rayOrigin, rayDir,
                            ellipsoidCenter, ellipsoidScale, v_slice, v_brightness);    
     if(cloud.w < 0.01) {
         discard;
     }
     gl_FragColor = cloud;
-    #endif
 #endif
+#endif
+
 }

@@ -277,7 +277,7 @@ describe(
       });
       expect(scene).notToRender([0, 0, 0, 255]);
 
-      c.scale = 2.0;
+      c.scale = new Cartesian2(10.0, 2.0);
       clouds.remove(c);
       expect(scene).toRender([0, 0, 0, 255]);
     });
@@ -556,11 +556,6 @@ describe(
         clouds.get();
       }).toThrowDeveloperError();
     });
-    it("throws when setting undefined show property", function () {
-      expect(function () {
-        clouds.show = undefined;
-      }).toThrowDeveloperError();
-    });
 
     it("throws when setting invalid cloud type property of cloud", function () {
       expect(function () {
@@ -570,7 +565,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when setting undefined show property of cloud", function () {
+    it("throws when setting invalid show property of cloud", function () {
       expect(function () {
         var c = clouds.add();
         c.show = undefined;
