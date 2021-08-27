@@ -13,6 +13,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 var GeometryPipelineStage = {};
+GeometryPipelineStage.name = "GeometryPipelineStage"; // Helps with debugging
 
 /**
  * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,
@@ -31,17 +32,16 @@ var GeometryPipelineStage = {};
  * @private
  */
 GeometryPipelineStage.process = function (renderResources, primitive) {
-  // The attribute index is taken from the node render resources, which may have added some attributes of its own.
-  var attributeIndex = renderResources.attributeIndex;
   var index;
   var setIndexedAttributeInitializationLines = [];
   var customAttributeInitializationLines = [];
   for (var i = 0; i < primitive.attributes.length; i++) {
     var attribute = primitive.attributes[i];
-    if (attribute.semantic !== VertexAttributeSemantic.POSITION) {
-      index = attributeIndex++;
-    } else {
+    if (attribute.semantic === VertexAttributeSemantic.POSITION) {
       index = 0;
+    } else {
+      // The attribute index is taken from the node render resources, which may have added some attributes of its own.
+      index = renderResources.attributeIndex++;
     }
     processAttribute(
       renderResources,

@@ -61,7 +61,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this._pipelineStages = [];
 
   /**
-   * The scene nodes that make up the scene graph
+   * The runtime nodes that make up the scene graph
    *
    * @type {ModelExperimentalNode[]}
    * @readonly

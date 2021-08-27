@@ -27,6 +27,7 @@ import Matrix4 from "../../Core/Matrix4.js";
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders
  *
  * @private
@@ -62,6 +63,7 @@ export default function ModelExperimental(options) {
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+  this._allowPicking = defaultValue(options.allowPicking, true);
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -184,6 +186,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   customShader: {
     get: function () {
       return this._customShader;
+    },
+  },
+
+  /**
+   * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  allowPicking: {
+    get: function () {
+      return this._allowPicking;
     },
   },
 
@@ -374,6 +390,7 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders
  *
  * @returns {ModelExperimental} The newly created model.
@@ -417,6 +434,7 @@ ModelExperimental.fromGltf = function (options) {
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
     opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
     customShader: options.customShader,
   };
   var model = new ModelExperimental(modelOptions);

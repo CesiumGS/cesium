@@ -1,6 +1,8 @@
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
+import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
+import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 
@@ -33,7 +35,7 @@ export default function PrimitiveRenderResources(
    */
   this.model = nodeRenderResources.model;
   /**
-   * A reference to the scene node. Inherited from the node render resources.
+   * A reference to the runtime node. Inherited from the node render resources.
    *
    * @type {ModelExperimentalNode}
    * @readonly
@@ -92,6 +94,16 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.instanceCount = nodeRenderResources.instanceCount;
+
+  /**
+   * A reference to the runtime node
+   *
+   * @type {ModelExperimentalPrimitive}
+   * @readonly
+   *
+   * @private
+   */
+  this.runtimePrimitive = runtimePrimitive;
 
   /**
    * The primitive associated with the render resources.
@@ -166,16 +178,25 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
-
   /**
-   * The pass to use in the {@link DrawCommand}.
+   * Options for configuring the alpha stage such as pass and alpha mode.
    *
-   * @type {Pass}
+   * @type {ModelAlphaOptions}
    * @readonly
    *
    * @private
    */
-  this.pass = this.model.opaquePass;
+  this.alphaOptions = new ModelAlphaOptions();
+
+  /**
+   * The shader variable to use for picking.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.pickId = undefined;
 
   /**
    * An object storing options for creating a {@link RenderState}.
@@ -192,5 +213,6 @@ export default function PrimitiveRenderResources(
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
+    blending: BlendingState.DISABLED,
   };
 }

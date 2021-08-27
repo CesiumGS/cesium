@@ -3,7 +3,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 /**
- * An in-memory representation of a scene node as part of
+ * An in-memory representation of a node as part of
  * the {@link ModelExperimentalSceneGraph}
  *
  * @param {Object} options An object containing the following options:

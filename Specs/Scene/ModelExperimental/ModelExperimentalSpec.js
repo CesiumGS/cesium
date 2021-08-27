@@ -1,12 +1,14 @@
 import {
+  FeatureDetection,
   Math as CesiumMath,
   ResourceCache,
   Resource,
   ModelExperimental,
   Cartesian3,
+  defined,
   when,
+  ShaderProgram,
 } from "../../../Source/Cesium.js";
-import ShaderProgram from "../../../Source/Renderer/ShaderProgram.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
 
@@ -122,6 +124,43 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("picks box textured", function () {
+      if (FeatureDetection.isInternetExplorer()) {
+        // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+        return;
+      }
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.model).toEqual(model);
+        });
+      });
+    });
+
+    it("doesn't pick when allowPicking is false", function () {
+      if (FeatureDetection.isInternetExplorer()) {
+        // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+        return;
+      }
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          allowPicking: false,
+        },
+        scene
+      ).then(function () {
+        expect(scene).toPickAndCall(function (result) {
+          expect(result).toBeUndefined();
+        });
+      });
+    });
+
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       return loadAndZoomToModelExperimental(
@@ -130,10 +169,14 @@ describe(
       ).then(function (model) {
         var resources = model._resources;
         var loader = model._loader;
+        var resource;
 
         var i;
         for (i = 0; i < resources.length; i++) {
-          expect(resources[i].isDestroyed()).toEqual(false);
+          resource = resources[i];
+          if (defined(resource.isDestroyed)) {
+            expect(resource.isDestroyed()).toEqual(false);
+          }
         }
         expect(loader.isDestroyed()).toEqual(false);
         expect(model.isDestroyed()).toEqual(false);
@@ -141,8 +184,11 @@ describe(
         if (!webglStub) {
           expect(ShaderProgram.prototype.destroy).toHaveBeenCalled();
         }
-        for (i = 0; i < model._resources.length - 1; i++) {
-          expect(model._resources[i].isDestroyed()).toEqual(true);
+        for (i = 0; i < resources.length - 1; i++) {
+          resource = resources[i];
+          if (defined(resource.isDestroyed)) {
+            expect(resource.isDestroyed()).toEqual(true);
+          }
         }
         expect(loader.isDestroyed()).toEqual(true);
         expect(model.isDestroyed()).toEqual(true);

@@ -1,22 +1,31 @@
 import {
+  AlphaPipelineStage,
   CustomShader,
+  CustomShaderMode,
   CustomShaderStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
+  PickingPipelineStage,
   ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
-import CustomShaderMode from "../../../Source/Scene/ModelExperimental/CustomShaderMode.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {};
-  var mockModel = {};
+  var mockModel = {
+    allowPicking: true,
+  };
+
+  var emptyVertexShader =
+    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
+  var emptyFragmentShader =
+    "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
   it("throws for undefined primitive", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
         primitive: undefined,
-        model: {},
+        model: mockModel,
       });
     }).toThrowDeveloperError();
   });
@@ -24,7 +33,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("throws for undefined model", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
-        primitive: mockPrimitive,
+        primitive: {},
         model: undefined,
       });
     }).toThrowDeveloperError();
@@ -37,6 +46,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
 
     expect(primitive.primitive).toBe(mockPrimitive);
+    expect(primitive.model).toBe(mockModel);
   });
 
   it("configures the pipeline stages", function () {
@@ -49,18 +59,56 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+
+    primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        allowPicking: false,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
     ]);
   });
 
-  it("configures the pipeline for a custom shader that replaces the material", function () {
+  it("configures the pipeline stages for custom shaders", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        customShader: new CustomShader({
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+        }),
+        allowPicking: false,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+  });
+
+  it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
       model: {
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
-          fragmentShaderText:
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
         }),
+        allowPicking: false,
       },
     });
 
@@ -68,34 +116,28 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
     ]);
   });
 
-  it("configures the pipeline for a custom shader that uses the material", function () {
-    var modes = [
-      CustomShaderMode.BEFORE_MATERIAL,
-      CustomShaderMode.MODIFY_MATERIAL,
-      CustomShaderMode.AFTER_LIGHTING,
-    ];
+  it("does not disable the material stage if the custom shader has no fragment shader", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        customShader: new CustomShader({
+          mode: CustomShaderMode.REPLACE_MATERIAL,
+          vertexShaderText: emptyVertexShader,
+        }),
+        allowPicking: false,
+      },
+    });
 
-    for (var i = 0; i < modes.length; i++) {
-      var mockShader = {
-        mode: modes[i],
-      };
-
-      var primitive = new ModelExperimentalPrimitive({
-        primitive: mockPrimitive,
-        model: {
-          customShader: mockShader,
-        },
-      });
-
-      expect(primitive.pipelineStages).toEqual([
-        GeometryPipelineStage,
-        MaterialPipelineStage,
-        CustomShaderStage,
-        LightingPipelineStage,
-      ]);
-    }
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ]);
   });
 });

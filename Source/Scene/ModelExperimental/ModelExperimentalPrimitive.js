@@ -3,9 +3,11 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import CustomShaderStage from "./CustomShaderStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
+import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import PickingPipelineStage from "./PickingPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -13,6 +15,7 @@ import MaterialPipelineStage from "./MaterialPipelineStage.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
+ * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
  *
  * @alias ModelExperimentalPrimitive
  * @constructor
@@ -63,7 +66,8 @@ function initialize(runtimePrimitive) {
   var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
 
-  var customShader = runtimePrimitive.model.customShader;
+  var model = runtimePrimitive.model;
+  var customShader = model.customShader;
   var hasCustomShader = defined(customShader);
   var hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -80,5 +84,12 @@ function initialize(runtimePrimitive) {
   }
 
   pipelineStages.push(LightingPipelineStage);
+
+  if (model.allowPicking) {
+    pipelineStages.push(PickingPipelineStage);
+  }
+
+  pipelineStages.push(AlphaPipelineStage);
+
   return;
 }
