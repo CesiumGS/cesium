@@ -6,9 +6,12 @@ import {
   LightingModel,
   Matrix3,
   MaterialPipelineStage,
+  Pass,
   Resource,
   ResourceCache,
   ShaderBuilder,
+  Cartesian4,
+  Cartesian3,
 } from "../../../Source/Cesium.js";
 import ModelLightingOptions from "../../../Source/Scene/ModelExperimental/ModelLightingOptions.js";
 import createScene from "../../createScene.js";
@@ -28,9 +31,12 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var mockDefaultTexture = {};
-    var mockModel = {
-      _defaultTexture: mockDefaultTexture,
+    var mockFrameState = {
+      context: {
+        defaultTexture: {},
+        defaultNormalTexture: {},
+        defaultEmissiveTexture: {},
+      },
     };
 
     afterEach(function () {
@@ -97,10 +103,13 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expect(shaderBuilder._vertexShaderParts.uniformLines).toEqual([]);
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
@@ -142,10 +151,61 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+          "uniform sampler2D u_baseColorTexture;",
+          "uniform sampler2D u_metallicRoughnessTexture;",
+        ]);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "HAS_BASE_COLOR_TEXTURE",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+        ]);
+
+        var metallicRoughness = primitive.material.metallicRoughness;
+        var expectedUniforms = {
+          u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
+          u_metallicRoughnessTexture:
+            metallicRoughness.metallicRoughnessTexture.texture,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
+    it("adds metallic roughness uniforms without defaults", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        // Alter PBR parameters so that defaults are not used.
+        var metallicRoughness = primitive.material.metallicRoughness;
+        metallicRoughness.baseColorFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
+        metallicRoughness.metallicFactor = 0.5;
+        metallicRoughness.roughnessFactor = 0.5;
+
+        var shaderBuilder = new ShaderBuilder();
+        var uniformMap = {};
+        var renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          renderStateOptions: {},
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
           "uniform sampler2D u_baseColorTexture;",
@@ -165,7 +225,6 @@ describe(
           "HAS_ROUGHNESS_FACTOR",
         ]);
 
-        var metallicRoughness = primitive.material.metallicRoughness;
         var expectedUniforms = {
           u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
           u_baseColorFactor: metallicRoughness.baseColorFactor,
@@ -189,10 +248,63 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
+          "uniform sampler2D u_diffuseTexture;",
+          "uniform sampler2D u_specularGlossinessTexture;",
+          "uniform float u_glossinessFactor;",
+        ]);
+
+        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
+          "USE_SPECULAR_GLOSSINESS",
+          "HAS_DIFFUSE_TEXTURE",
+          "TEXCOORD_DIFFUSE v_texCoord_0",
+          "HAS_SPECULAR_GLOSSINESS_TEXTURE",
+          "TEXCOORD_SPECULAR_GLOSSINESS v_texCoord_0",
+          "HAS_GLOSSINESS_FACTOR",
+        ]);
+
+        var specularGlossiness = primitive.material.specularGlossiness;
+        var expectedUniforms = {
+          u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
+          u_specularGlossinessTexture:
+            specularGlossiness.specularGlossinessTexture.texture,
+          u_glossinessFactor: specularGlossiness.glossinessFactor,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
+    it("adds specular glossiness uniforms without defaults", function () {
+      return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        // Alter PBR parameters so that defaults are not used.
+        var specularGlossiness = primitive.material.specularGlossiness;
+        specularGlossiness.diffuseFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
+        specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5);
+
+        var shaderBuilder = new ShaderBuilder();
+        var uniformMap = {};
+        var renderResources = {
+          shaderBuilder: shaderBuilder,
+          uniformMap: uniformMap,
+          lightingOptions: new ModelLightingOptions(),
+          renderStateOptions: {},
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
           "uniform sampler2D u_diffuseTexture;",
           "uniform vec4 u_diffuseFactor;",
@@ -212,7 +324,6 @@ describe(
           "HAS_GLOSSINESS_FACTOR",
         ]);
 
-        var specularGlossiness = primitive.material.specularGlossiness;
         var expectedUniforms = {
           u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
           u_diffuseFactor: specularGlossiness.diffuseFactor,
@@ -235,10 +346,13 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(lightingOptions.lightingModel).toBe(LightingModel.PBR);
       });
     });
@@ -253,10 +367,13 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(lightingOptions.lightingModel).toBe(LightingModel.PBR);
       });
     });
@@ -271,10 +388,13 @@ describe(
           uniformMap: {},
           lightingOptions: lightingOptions,
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(lightingOptions.lightingModel).toBe(LightingModel.UNLIT);
       });
     });
@@ -289,10 +409,13 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
           "ALPHA_MODE_OPAQUE",
@@ -311,13 +434,16 @@ describe(
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
         var cutoff = 0.6;
         primitive.material.alphaMode = AlphaMode.MASK;
         primitive.material.alphaCutoff = cutoff;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
           "ALPHA_MODE_MASK",
@@ -343,19 +469,24 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
+          pass: Pass.OPAQUE,
         };
 
         primitive.material.alphaMode = AlphaMode.BLEND;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
+        expect(renderResources.pass).toBe(Pass.TRANSLUCENT);
         expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
           "ALPHA_MODE_BLEND",
         ]);
       });
     });
 
-    it("enables culling if material is not double-sided", function () {
+    it("enables back-face culling if material is not double-sided", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[1].primitives[0];
@@ -365,12 +496,14 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
-          model: mockModel,
           cull: true,
         };
 
-        MaterialPipelineStage.process(renderResources, primitive);
-        expect(renderResources.cull).toBe(true);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: true,
@@ -379,7 +512,7 @@ describe(
       });
     });
 
-    it("disables culling if material is double-sided", function () {
+    it("disables back-face culling if material is double-sided", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var primitive = components.nodes[1].primitives[0];
@@ -389,14 +522,16 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: renderStateOptions,
-          model: mockModel,
           cull: true,
         };
 
         primitive.material.doubleSided = true;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
-        expect(renderResources.cull).toBe(false);
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: false,
@@ -415,11 +550,14 @@ describe(
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           renderStateOptions: {},
-          model: mockModel,
         };
 
         primitive.material.doubleSided = true;
-        MaterialPipelineStage.process(renderResources, primitive);
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
 
         expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
         expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual([
@@ -470,7 +608,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockDefaultTexture
+        mockFrameState.context.defaultTexture
       );
 
       expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
@@ -503,7 +641,7 @@ describe(
         textureReader,
         "u_testTexture",
         "TEST",
-        mockDefaultTexture
+        mockFrameState.context.defaultTexture
       );
 
       expectUniformMap(uniformMap, {

@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   Cartesian2,
   Cartesian3,
   Cartesian4,
@@ -39,8 +40,6 @@ describe(
   function () {
     var boxInterleaved =
       "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
-    var alaskaMeshopt =
-      "./Data/Models/GltfLoader/AlaskaMeshopt/glTF/AlaskaMeshopt.gltf";
     var boxTextured =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
     var boxTexturedBinary =
@@ -1739,6 +1738,8 @@ describe(
         var material = primitive.material;
         var specularGlossiness = material.specularGlossiness;
 
+        expect(scene.upAxis).toBe(Axis.Y);
+        expect(scene.forwardAxis).toBe(Axis.Z);
         expect(material.occlusionTexture.texture.width).toBe(128);
         expect(material.normalTexture.texture.width).toBe(128);
         expect(material.emissiveTexture.texture.width).toBe(128);
@@ -1757,18 +1758,6 @@ describe(
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
-      });
-    });
-
-    it("unnormalizes min and max for POSITION accessor if normalized is true", function () {
-      return loadGltf(alaskaMeshopt).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var positionAttribute = primitive.attributes[1];
-        expect(positionAttribute.min).toEqual(new Cartesian3(0, 0, 0));
-        expect(positionAttribute.max).toEqual(new Cartesian3(1, 1, 1));
       });
     });
 

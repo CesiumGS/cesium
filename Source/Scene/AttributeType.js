@@ -138,6 +138,8 @@ AttributeType.getNumberOfComponents = function (attributeType) {
  *
  * @param {AttributeType} attributeType The attribute type.
  * @returns {String} The GLSL type for the attribute type.
+ *
+ * @private
  */
 AttributeType.getGlslType = function (attributeType) {
   //>>includeStart('debug', pragmas.debug);

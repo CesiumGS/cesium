@@ -14,6 +14,7 @@ import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
+import CesiumMath from "./Math.js";
 import objectToQuery from "./objectToQuery.js";
 import queryToObject from "./queryToObject.js";
 import Request from "./Request.js";
@@ -1258,7 +1259,8 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   //generate a unique function name
   var functionName;
   do {
-    functionName = "loadJsonp" + Math.random().toString().substring(2, 8);
+    functionName =
+      "loadJsonp" + CesiumMath.nextRandomNumber().toString().substring(2, 8);
   } while (defined(window[functionName]));
 
   return fetchJsonp(this, callbackParameterName, functionName);

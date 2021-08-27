@@ -1,46 +1,55 @@
-import clone from "../../Core/clone.js";
+import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
- * A 3D model based on glTF, the runtime asset format for WebGL. This is
- * a new architecture that is more decoupled than the older {@link Model}.
+ * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
  *
- * This class is still experimental. glTF features that are core to 3D Tiles
- * are supported, but other features such as animation are not yet supported.
+ * Do not call this function directly, instead use the `from` functions to create
+ * the Model from your source data type.
  *
+ * @alias ModelExperimental
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {String|Resource|ArrayBuffer|Uint8Array} [options.gltf] A Resource/URL to a glTF/glb file or a binary glTF buffer.
- * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {ResourceLoader} options.loader The loader responsible for loading the 3D model.
+ * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.loader", options.loader);
+  Check.typeOf.object("options.resource", options.resource);
+  //>>includeEnd('debug');
 
   /**
-   * The glTF Loader used to load resources for this model.
+   * The loader used to load resources for this model.
    *
-   * @type {GltfLoader}
-   * @readonly
+   * @type {ResourceLoader}
    *
    * @private
    */
-  this._gltfLoader = undefined;
+  this._loader = options.loader;
+  this._resource = options.resource;
+
+  this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -48,8 +57,11 @@ export default function ModelExperimental(options) {
   this._ready = false;
   this._readyPromise = when.defer();
 
-  this._defaultTexture = undefined;
   this._texturesLoaded = false;
+
+  this._cull = defaultValue(options.cull, true);
+  this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+  this._allowPicking = defaultValue(options.allowPicking, true);
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -62,7 +74,36 @@ export default function ModelExperimental(options) {
     false
   );
 
-  initialize(this, options);
+  initialize(this);
+}
+
+function initialize(model) {
+  var loader = model._loader;
+  var resource = model._resource;
+  var modelMatrix = model._modelMatrix;
+
+  loader.load();
+
+  loader.promise
+    .then(function (loader) {
+      model._sceneGraph = new ModelExperimentalSceneGraph({
+        model: model,
+        modelComponents: loader.components,
+        modelMatrix: modelMatrix,
+      });
+      model._resourcesLoaded = true;
+    })
+    .otherwise(function () {
+      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
+    });
+
+  loader.texturesLoadedPromise
+    .then(function () {
+      model._texturesLoaded = true;
+    })
+    .otherwise(function () {
+      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
+    });
 }
 
 Object.defineProperties(ModelExperimental.prototype, {
@@ -103,39 +144,45 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * Gets the model's up axis.
-   * By default, models are Y-up according to the glTF 2.0 spec, however, geo-referenced models will typically be Z-up.
+   * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
+   * will always be false, since the 3D Tiles culling system is used.
    *
-   * @memberof ModelExperimental.prototype
-   *
-   * @type {Number}
-   * @default Axis.Y
+   * @type {Boolean}
    * @readonly
    *
    * @private
    */
-  upAxis: {
+  cull: {
     get: function () {
-      return this._sceneGraph._upAxis;
+      return this._cull;
     },
   },
 
   /**
-   * Gets the model's forward axis.
-   * By default, glTF 2.0 models are Z-forward according to the spec, however older
-   * glTF (1.0, 0.8) models used X-forward. Note that only Axis.X and Axis.Z are supported.
+   * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
    *
-   * @memberof ModelExperimental.prototype
-   *
-   * @type {Number}
-   * @default Axis.Z
+   * @type {Pass}
    * @readonly
    *
    * @private
    */
-  forwardAxis: {
+  opaquePass: {
     get: function () {
-      return this._sceneGraph._forwardAxis;
+      return this._opaquePass;
+    },
+  },
+
+  /**
+   * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  allowPicking: {
+    get: function () {
+      return this._allowPicking;
     },
   },
 
@@ -164,10 +211,32 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
+   * Local reference frames can be used by providing a different transformation matrix, like that returned
+   * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
+   * @type {Matrix4}
+
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+   */
+  modelMatrix: {
+    get: function () {
+      return this._modelMatrix;
+    },
+    set: function (value) {
+      this._modelMatrix = value;
+    },
+  },
+
+  /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
-   * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
-   * to one draw command.  A glTF mesh has an array of primitives, often of length one.
+   * Draws the bounding sphere for each draw command in the model.
    * </p>
    *
    * @memberof ModelExperimental.prototype
@@ -200,18 +269,14 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @exception {RuntimeError} Failed to load external reference.
  */
 ModelExperimental.prototype.update = function (frameState) {
-  if (!defined(this._defaultTexture)) {
-    this._defaultTexture = frameState.context.defaultTexture;
-  }
-
-  // Keep processing the glTF every frame until the main resources
+  // Keep processing the model every frame until the main resources
   // (buffer views) and textures (which may be loaded asynchronously)
   // are processed.
   if (!this._resourcesLoaded || !this._texturesLoaded) {
-    this._gltfLoader.process(frameState);
+    this._loader.process(frameState);
   }
 
-  // short-circuit if the glTF resources aren't ready.
+  // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {
     return;
   }
@@ -271,9 +336,9 @@ ModelExperimental.prototype.isDestroyed = function () {
  * @see ModelExperimental#isDestroyed
  */
 ModelExperimental.prototype.destroy = function () {
-  var gltfLoader = this._gltfLoader;
-  if (defined(gltfLoader)) {
-    gltfLoader.destroy();
+  var loader = this._loader;
+  if (defined(loader)) {
+    loader.destroy();
   }
 
   var resources = this._resources;
@@ -284,80 +349,68 @@ ModelExperimental.prototype.destroy = function () {
   destroyObject(this);
 };
 
-function initialize(model, options) {
-  var gltf = options.gltf;
+/**
+ * <p>
+ * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
+ * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
+ * </p>
+ * <p>
+ * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String|Resource|Uint8Array} [options.gltf] A Resource/URL to a glTF/glb file or a binary glTF buffer
+ * @param {Object} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ *
+ * @returns {ModelExperimental} The newly created model.
+ *
+ * @private
+ */
+ModelExperimental.fromGltf = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.gltf", options.gltf);
+  //>>includeEnd('debug');
 
   var loaderOptions = {
     baseResource: options.basePath,
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
   };
 
+  var gltf = options.gltf;
   if (gltf instanceof Uint8Array) {
     loaderOptions.typedArray = gltf;
     loaderOptions.gltfResource = Resource.createIfNeeded(
       defaultValue(options.basePath, "")
     );
   } else {
-    loaderOptions.gltfResource = gltf;
+    loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
   }
 
   var loader = new GltfLoader(loaderOptions);
-  model._gltfLoader = loader;
-  loader.load();
 
-  loader.promise
-    .then(function (loader) {
-      model._sceneGraph = new ModelExperimentalSceneGraph({
-        model: model,
-        modelComponents: loader._components,
-        upAxis: options.upAxis,
-        forwardAxis: options.forwardAxis,
-        modelMatrix: options.modelMatrix,
-      });
-      model._resourcesLoaded = true;
-    })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(
-        this,
-        "model",
-        options.basePath
-      );
-    });
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.gltfResource,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+  };
+  var model = new ModelExperimental(modelOptions);
 
-  loader.texturesLoadedPromise
-    .then(function () {
-      model._texturesLoaded = true;
-    })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(
-        this,
-        "model",
-        options.basePath
-      );
-    });
-}
-
-/**
- *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url to the .gltf or .glb file.
- * @param {Object} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
- * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- */
-ModelExperimental.fromGltf = function (options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options) || !defined(options.url)) {
-    throw new DeveloperError("options.url is required");
-  }
-  //>>includeEnd('debug');
-
-  options = clone(options);
-  options.gltf = Resource.createIfNeeded(options.url);
-  var model = new ModelExperimental(options);
   return model;
 };
 
