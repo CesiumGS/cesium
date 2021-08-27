@@ -613,14 +613,6 @@ function Scene(options) {
 
   this._brdfLutGenerator = new BrdfLutGenerator();
 
-  if (defined(options.terrainExaggeration)) {
-    deprecationWarning(
-      "terrainExaggeration-removed",
-      "terrainExaggeration is now a property of Globe"
-    );
-  }
-  this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
-
   this._performanceDisplay = undefined;
   this._debugVolume = undefined;
 
@@ -1434,34 +1426,6 @@ Object.defineProperties(Scene.prototype, {
   numberOfFrustums: {
     get: function () {
       return this._view.frustumCommandsList.length;
-    },
-  },
-
-  /**
-   * Gets or sets the scalar used to exaggerate the terrain.
-   * @memberof Scene.prototype
-   * @type {Number}
-   */
-  terrainExaggeration: {
-    get: function () {
-      deprecationWarning(
-        "terrainExaggeration-removed",
-        "terrainExaggeration is now a property of Globe"
-      );
-      if (defined(this.globe)) {
-        return this.globe.terrainExaggeration;
-      }
-      return this._terrainExaggeration;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "terrainExaggeration-removed",
-        "terrainExaggeration is now a property of Globe"
-      );
-      if (defined(this.globe)) {
-        this.globe.terrainExaggeration = value;
-      }
-      this._terrainExaggeration = value;
     },
   },
 

@@ -2,6 +2,10 @@
 
 ### 1.85 - 2021-09-01
 
+##### Breaking Changes :mega:
+
+- Removed `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene`, which were deprecated in CesiumJS 1.82. Use `Globe.terrainExaggeration` instead.
+
 ##### Additions :tada:
 
 - `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results.
