@@ -17,6 +17,8 @@ describe(
 
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+    var boxTexturedGltfUrl =
+      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
 
     var scene;
 
@@ -39,6 +41,23 @@ describe(
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
           { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph).toBeDefined();
+          expect(model._resourcesLoaded).toEqual(true);
+        });
+      });
+    });
+
+    it("initializes from JSON object", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+          },
           scene
         ).then(function (model) {
           expect(model.ready).toEqual(true);

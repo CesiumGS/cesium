@@ -63,6 +63,7 @@ var GltfLoaderState = {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
+ * @param {Object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
@@ -91,6 +92,7 @@ export default function GltfLoader(options) {
 
   baseResource = defined(baseResource) ? baseResource : gltfResource.clone();
 
+  this._gltfJson = options.gltfJson;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._typedArray = typedArray;
@@ -188,6 +190,13 @@ Object.defineProperties(GltfLoader.prototype, {
  * @private
  */
 GltfLoader.prototype.load = function () {
+  // If we have a parsed Gltf JSON, we can short circut
+  if (defined(this._gltfJson)) {
+    this._state = GltfLoaderState.LOADED;
+    this._textureState = GltfLoaderState.LOADED;
+    return;
+  }
+
   var gltfJsonLoader = ResourceCache.loadGltfJson({
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
@@ -274,7 +283,12 @@ GltfLoader.prototype.process = function (frameState) {
       basis: frameState.context.supportsBasis,
     });
 
-    var gltf = this._gltfJsonLoader.gltf;
+    var gltf;
+    if (defined(this._gltfJsonLoader)) {
+      gltf = this._gltfJsonLoader.gltf;
+    } else {
+      gltf = this._gltfJson;
+    }
 
     // Parse the glTF which populates the loaders arrays. The ready promise
     // resolves once all the loaders are ready (i.e. all external resources
