@@ -9,6 +9,7 @@ import {
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import pollToPromise from "../pollToPromise.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
@@ -284,7 +285,7 @@ describe("Scene/GltfDracoLoader", function () {
     dracoLoader.load();
 
     return pollToPromise(function () {
-      dracoLoader.process(scene.frameState);
+      loaderProcess(dracoLoader, scene);
       if (processCallsCount++ === processCallsTotal) {
         deferredPromise.resolve(decodeDracoResults);
       }
@@ -294,7 +295,7 @@ describe("Scene/GltfDracoLoader", function () {
       );
     }).then(function () {
       return dracoLoader.promise.then(function (dracoLoader) {
-        dracoLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(dracoLoader, scene); // Check that calling process after load doesn't break anything
         expect(dracoLoader.decodedData.indices).toBe(
           decodeDracoResults.indexArray
         );
@@ -418,7 +419,7 @@ describe("Scene/GltfDracoLoader", function () {
     expect(dracoLoader.decodedData).not.toBeDefined();
 
     dracoLoader.load();
-    dracoLoader.process(scene.frameState);
+    loaderProcess(dracoLoader, scene);
     expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
     dracoLoader.destroy();

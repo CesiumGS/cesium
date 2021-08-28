@@ -33,6 +33,8 @@ const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
 const rollupPluginUglify = require("rollup-plugin-uglify");
+const rollupCommonjs = require("@rollup/plugin-commonjs");
+const rollupResolve = require("@rollup/plugin-node-resolve").default;
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 
@@ -65,6 +67,16 @@ if (!concurrency) {
   concurrency = os.cpus().length;
 }
 
+// Work-around until all third party libraries use npm
+const filesToLeaveInThirdParty = [
+  "!Source/ThirdParty/Workers/*",
+  "!Source/ThirdParty/*.wasm",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/knockout*.js",
+  "!Source/ThirdParty/measureText.js",
+  "!Source/ThirdParty/Uri.js",
+];
+
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
@@ -73,7 +85,7 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/pako_inflate.js",
+  "!Source/ThirdParty/_*",
 ];
 
 const watchedFiles = [
@@ -123,12 +135,10 @@ const filesToConvertES6 = [
 
 function rollupWarning(message) {
   // Ignore eval warnings in third-party code we don't have control over
-  if (
-    message.code === "EVAL" &&
-    /protobuf-minimal\.js$/.test(message.loc.file)
-  ) {
+  if (message.code === "EVAL" && /protobufjs/.test(message.loc.file)) {
     return;
   }
+
   console.log(message);
 }
 
@@ -175,8 +185,43 @@ function createWorkers() {
     });
 }
 
-gulp.task("build", function () {
+async function buildThirdParty() {
+  rimraf.sync("Build/createWorkers");
+  globby.sync(filesToLeaveInThirdParty).forEach(function (file) {
+    rimraf.sync(file);
+  });
+
+  const workers = globby.sync(["ThirdParty/npm/**"]);
+
+  return rollup
+    .rollup({
+      input: workers,
+      plugins: [rollupResolve(), rollupCommonjs()],
+      onwarn: rollupWarning,
+    })
+    .then(function (bundle) {
+      return bundle.write({
+        dir: "Build/createThirdPartyNpm",
+        banner:
+          "/* This file is automatically rebuilt by the Cesium build process. */",
+        format: "es",
+      });
+    })
+    .then(function () {
+      return streamToPromise(
+        gulp
+          .src("Build/createThirdPartyNpm/**")
+          .pipe(gulp.dest("Source/ThirdParty"))
+      );
+    })
+    .then(function () {
+      rimraf.sync("Build/createThirdPartyNpm");
+    });
+}
+
+gulp.task("build", async function () {
   mkdirp.sync("Build");
+
   fs.writeFileSync(
     "Build/package.json",
     JSON.stringify({
@@ -184,6 +229,8 @@ gulp.task("build", function () {
     }),
     "utf8"
   );
+
+  await buildThirdParty();
   glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();

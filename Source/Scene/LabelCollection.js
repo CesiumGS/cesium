@@ -17,7 +17,7 @@ import LabelStyle from "./LabelStyle.js";
 import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "./TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
-import GraphemeSplitter from "../ThirdParty/graphemesplitter.js";
+import GraphemeSplitter from "../ThirdParty/grapheme-splitter.js";
 
 // A glyph represents a single character in a particular label.  It may or may
 // not have a billboard, depending on whether the texture info has an index into

@@ -15,7 +15,8 @@ czm_pbrParameters czm_pbrMetallicRoughnessMaterial(
     vec3 baseColor,
     float metallic,
     float roughness
-) {
+) 
+{
     czm_pbrParameters results;
 
     // roughness is authored as perceptual roughness

@@ -1,11 +1,29 @@
 # Change Log
 
-### 1.84 - 2021-08-02
+### 1.85 - 2021-09-01
 
 ##### Additions :tada:
 
+- `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results.
+
 ##### Fixes :wrench:
 
+- Fixed several crashes related to point cloud eye dome lighting. [#9719](https://github.com/CesiumGS/cesium/pull/9719)
+
+### 1.84 - 2021-08-02
+
+##### Breaking Changes :mega:
+
+- Dropped support for Internet Explorer, which was deprecated in CesiumJS 1.83.
+
+##### Additions :tada:
+
+- Added a `polylinePositions` getter to `Cesium3DTileFeature` that gets the decoded positions of a polyline vector feature. [#9684](https://github.com/CesiumGS/cesium/pull/9684)
+- Added `ImageryLayerCollection.pickImageryLayers` which determines the imagery layers that are intersected by a pick ray. [#9651](https://github.com/CesiumGS/cesium/pull/9651)
+
+##### Fixes :wrench:
+
+- Fixed an issue where styling vector points based on their batch table properties would crash. [#9692](https://github.com/CesiumGS/cesium/pull/9692)
 - Fixed an issue in `TileBoundingRegion.distanceToCamera` that caused incorrect results when the camera was on the opposite site of the globe. [#9678](https://github.com/CesiumGS/cesium/pull/9678)
 - Fixes an error with removing a CZML datasource when the clock interval has a duration of zero. [#9637](https://github.com/CesiumGS/cesium/pull/9637)
 - Fixed the ability to set a material's image to `undefined` and `Material.DefaultImageId`. [#9644](https://github.com/CesiumGS/cesium/pull/9644)

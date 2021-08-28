@@ -173,6 +173,13 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
       ? Cartesian2.unpack(textureTransform.scale)
       : defaultScale;
 
+    // glTF assumes UV coordinates start with (0, 0) in the top left corner
+    // (y-down) unlike WebGL which puts (0, 0) in the bottom left corner (y-up).
+    // This means rotations are reversed since the angle from x to y is now
+    // clockwise instead of CCW. Translations and scales are not impacted by
+    // this.
+    rotation = -rotation;
+
     // prettier-ignore
     transform = new Matrix3(
         Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,

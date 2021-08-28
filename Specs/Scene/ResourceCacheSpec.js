@@ -849,6 +849,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -888,15 +889,15 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
+        attributeSemantic: "POSITION",
       });
       var vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
-        dracoAccessorId: 0,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
       });
 
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -910,8 +911,8 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: 0,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
         })
       ).toBe(vertexBufferLoader);
 
@@ -965,8 +966,8 @@ describe(
           baseResource: gltfResource,
           bufferViewId: 0,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: 0,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
         });
       }).toThrowDeveloperError();
     });
@@ -981,28 +982,28 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("loadVertexBuffer throws if draco is defined and dracoAttributeSemantic is not defined", function () {
+    it("loadVertexBuffer throws if draco is defined and attributeSemantic is not defined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: undefined,
-          dracoAccessorId: 0,
+          attributeSemantic: undefined,
+          accessorId: 0,
         });
       }).toThrowDeveloperError();
     });
 
-    it("loadVertexBuffer throws if draco is defined and dracoAccessorId is not defined", function () {
+    it("loadVertexBuffer throws if draco is defined and accessorId is not defined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: undefined,
+          attributeSemantic: "POSITION",
+          accessorId: undefined,
         });
       }).toThrowDeveloperError();
     });

@@ -20,6 +20,28 @@ describe("ResourceCacheKey", function () {
   var bufferResource = new Resource({ url: bufferUri });
   var bufferId = 0;
 
+  var meshoptGltfEmbeddedBuffer = {
+    buffers: [
+      {
+        byteLength: 100,
+      },
+    ],
+    bufferViews: [
+      {
+        buffer: 0,
+        byteOffset: 0,
+        byteLength: 100,
+        extensions: {
+          EXT_meshopt_compression: {
+            buffer: 1,
+            byteOffset: 25,
+            byteLength: 50,
+          },
+        },
+      },
+    ],
+  };
+
   var gltfEmbeddedBuffer = {
     buffers: [
       {
@@ -347,6 +369,19 @@ describe("ResourceCacheKey", function () {
     );
   });
 
+  it("getBufferViewCacheKey works with meshopt", function () {
+    var cacheKey = ResourceCacheKey.getBufferViewCacheKey({
+      gltf: meshoptGltfEmbeddedBuffer,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    expect(cacheKey).toBe(
+      "buffer-view:" + gltfUri + "-buffer-id-1-range-25-75"
+    );
+  });
+
   it("getBufferViewCacheKey throws if gltf is undefined", function () {
     expect(function () {
       ResourceCacheKey.getBufferViewCacheKey({
@@ -482,7 +517,7 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       draco: draco,
-      dracoAttributeSemantic: "POSITION",
+      attributeSemantic: "POSITION",
     });
 
     expect(cacheKey).toBe(
@@ -544,12 +579,12 @@ describe("ResourceCacheKey", function () {
         baseResource: baseResource,
         bufferViewId: 0,
         draco: draco,
-        dracoAttributeSemantic: "POSITION",
+        attributeSemantic: "POSITION",
       });
     }).toThrowDeveloperError();
   });
 
-  it("getVertexBufferCacheKey throws if both draco is defined and dracoAttributeSemantic is undefined", function () {
+  it("getVertexBufferCacheKey throws if both draco is defined and attributeSemantic is undefined", function () {
     var draco =
       gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
 
@@ -559,7 +594,7 @@ describe("ResourceCacheKey", function () {
         gltfResource: gltfResource,
         baseResource: baseResource,
         draco: draco,
-        dracoAttributeSemantic: undefined,
+        attributeSemantic: undefined,
       });
     }).toThrowDeveloperError();
   });
