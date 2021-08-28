@@ -1,13 +1,15 @@
 /**
  * Specifies the type of the cloud that is added to a {@link CloudCollection} in {@link CloudCollection#add}.
- * @enum {Number}
  *
+ * @enum {Number}
  */
 
 var CloudType = {
   /**
    * Cumulus cloud.
+   *
    * @type {Number}
+   * @constant
    */
   CUMULUS: 0,
 };

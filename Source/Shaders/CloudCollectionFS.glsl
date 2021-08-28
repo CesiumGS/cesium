@@ -268,5 +268,4 @@ void main() {
     gl_FragColor = cloud;
 #endif
 #endif
-
 }
