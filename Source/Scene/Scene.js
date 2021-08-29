@@ -124,7 +124,7 @@ var requestRenderAfterFrame = function (scene) {
  * @alias Scene
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {Object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
