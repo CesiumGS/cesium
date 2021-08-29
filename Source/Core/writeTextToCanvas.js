@@ -1,8 +1,85 @@
-import measureText from "../ThirdParty/measureText.js";
 import Color from "./Color.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+
+function measureText(context2D, textString, font, stroke, fill) {
+  var metrics = context2D.measureText(textString);
+  var isSpace = !/\S/.test(textString);
+
+  if (!isSpace) {
+    var fontSize = document.defaultView
+      .getComputedStyle(context2D.canvas)
+      .getPropertyValue("font-size")
+      .replace("px", "");
+    var canvas = document.createElement("canvas");
+    var padding = 100;
+    var width = (metrics.width + padding) | 0;
+    var height = 3 * fontSize;
+    var baseline = height / 2;
+    canvas.width = width;
+    canvas.height = height;
+
+    var ctx = canvas.getContext("2d");
+    ctx.font = font;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width + 1, canvas.height + 1);
+
+    if (stroke) {
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = context2D.lineWidth;
+      ctx.strokeText(textString, padding / 2, baseline);
+    }
+
+    if (fill) {
+      ctx.fillStyle = "black";
+      ctx.fillText(textString, padding / 2, baseline);
+    }
+
+    // Context image data has width * height * 4 elements, because
+    // each pixel's R, G, B and A are consecutive values in the array.
+    var pixelData = ctx.getImageData(0, 0, width, height).data;
+    var width4 = width * 4;
+    var length = pixelData.length;
+    var i, j;
+
+    // Find the first row (from the top) containing a non-white pixel
+    for (i = 0; i < length && pixelData[i] === 255; ++i) {}
+    var ascent = (i / width4) | 0;
+
+    // Find the first row (from the bottom) containing a non-white pixel
+    for (i = length - 1; i > 0 && pixelData[i] === 255; --i) {}
+    var descent = (i / width4) | 0;
+
+    var minx = -1;
+    // For each column, for each row, check for first non-white pixel
+    for (i = 0; i < width && minx === -1; ++i) {
+      for (j = 0; j < height; ++j) {
+        if (
+          pixelData[i * 4 + j * width4] !== 255 ||
+          pixelData[i * 4 + j * width4 + 1] !== 255 ||
+          pixelData[i * 4 + j * width4 + 2] !== 255 ||
+          pixelData[i * 4 + j * width4 + 3] !== 255
+        ) {
+          minx = i;
+          break;
+        }
+      }
+    }
+
+    metrics.ascent = baseline - ascent;
+    metrics.descent = descent - baseline;
+    metrics.minx = minx - padding / 2;
+    metrics.height = 1 + (descent - ascent);
+  } else {
+    metrics.ascent = 0;
+    metrics.descent = 0;
+    metrics.minx = 0;
+    metrics.height = 0;
+  }
+
+  return metrics;
+}
 
 var imageSmoothingEnabledName;
 
@@ -52,7 +129,6 @@ function writeTextToCanvas(text, options) {
   canvas.width = 1;
   canvas.height = 1;
   canvas.style.font = font;
-
   var context2D = canvas.getContext("2d");
 
   if (!defined(imageSmoothingEnabledName)) {
@@ -72,32 +148,28 @@ function writeTextToCanvas(text, options) {
   context2D.lineWidth = strokeWidth;
   context2D[imageSmoothingEnabledName] = false;
 
-  // textBaseline needs to be set before the measureText call. It won't work otherwise.
-  // It's magic.
-  context2D.textBaseline = defaultValue(options.textBaseline, "bottom");
-
   // in order for measureText to calculate style, the canvas has to be
   // (temporarily) added to the DOM.
   canvas.style.visibility = "hidden";
   document.body.appendChild(canvas);
 
-  var dimensions = measureText(context2D, text, stroke, fill);
+  var dimensions = measureText(context2D, text, font, stroke, fill);
   canvas.dimensions = dimensions;
 
   document.body.removeChild(canvas);
   canvas.style.visibility = "";
 
-  //Some characters, such as the letter j, have a non-zero starting position.
-  //This value is used for kerning later, but we need to take it into account
-  //now in order to draw the text completely on the canvas
-  var x = -dimensions.bounds.minx;
+  // Some characters, such as the letter j, have a non-zero starting position.
+  // This value is used for kerning later, but we need to take it into account
+  // now in order to draw the text completely on the canvas
+  var x = -dimensions.minx;
 
-  //Expand the width to include the starting position.
+  // Expand the width to include the starting position.
   var width = Math.ceil(dimensions.width) + x + doublePadding;
 
-  //While the height of the letter is correct, we need to adjust
-  //where we start drawing it so that letters like j and y properly dip
-  //below the line.
+  // While the height of the letter is correct, we need to adjust
+  // where we start drawing it so that letters like j and y properly dip
+  // below the line.
 
   var height = dimensions.height + doublePadding;
   var baseline = height - dimensions.ascent + padding;
