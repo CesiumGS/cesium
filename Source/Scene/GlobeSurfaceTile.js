@@ -450,6 +450,54 @@ GlobeSurfaceTile.prototype.removeGeodeticSurfaceNormals = function (
   toggleGeodeticSurfaceNormals(this, false, undefined, frameState);
 };
 
+GlobeSurfaceTile.prototype.updateExaggeration = function (
+  tile,
+  frameState,
+  quadtree
+) {
+  var surfaceTile = this;
+  var mesh = surfaceTile.renderedMesh;
+  if (mesh === undefined) {
+    return;
+  }
+
+  // Check the tile's terrain encoding to see if it has been exaggerated yet
+  var exaggeration = frameState.terrainExaggeration;
+  var exaggerationRelativeHeight = frameState.terrainExaggerationRelativeHeight;
+  var hasExaggerationScale = exaggeration !== 1.0;
+
+  var encoding = mesh.encoding;
+  var encodingExaggerationScaleChanged = encoding.exaggeration !== exaggeration;
+  var encodingRelativeHeightChanged =
+    encoding.exaggerationRelativeHeight !== exaggerationRelativeHeight;
+
+  if (encodingExaggerationScaleChanged || encodingRelativeHeightChanged) {
+    // Turning exaggeration scale on/off requires adding or removing geodetic surface normals
+    // Relative height only translates, so it has no effect on normals
+    if (encodingExaggerationScaleChanged) {
+      if (hasExaggerationScale && !encoding.hasGeodeticSurfaceNormals) {
+        var ellipsoid = tile.tilingScheme.ellipsoid;
+        surfaceTile.addGeodeticSurfaceNormals(ellipsoid, frameState);
+      } else if (!hasExaggerationScale && encoding.hasGeodeticSurfaceNormals) {
+        surfaceTile.removeGeodeticSurfaceNormals(frameState);
+      }
+    }
+
+    encoding.exaggeration = exaggeration;
+    encoding.exaggerationRelativeHeight = exaggerationRelativeHeight;
+
+    // Notify the quadtree that this tile's height has changed
+    quadtree._tileToUpdateHeights.push(tile);
+    var customData = tile.customData;
+    var customDataLength = customData.length;
+    for (var i = 0; i < customDataLength; i++) {
+      // Restart the level so that a height update is triggered
+      var data = customData[i];
+      data.level = -1;
+    }
+  }
+};
+
 function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
   var available = terrainProvider.getTileDataAvailable(
     tile.x,
