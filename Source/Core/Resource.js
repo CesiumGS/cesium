@@ -38,7 +38,7 @@ var xhrBlobSupported = (function () {
 /**
  * Parses a query string and returns the object equivalent.
  *
- * @param {URI} uri The Uri with a query object.
+ * @param {Uri} uri The Uri with a query object.
  * @param {Resource} resource The Resource that will be assigned queryParameters.
  * @param {Boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
  * @param {Boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in uri will take precedence.
@@ -76,7 +76,7 @@ function parseQuery(uri, resource, merge, preserveQueryParameters) {
 /**
  * Converts a query object into a string.
  *
- * @param {URI} uri The Uri object that will have the query object set.
+ * @param {Uri} uri The Uri object that will have the query object set.
  * @param {Resource} resource The resource that has queryParameters
  *
  * @private

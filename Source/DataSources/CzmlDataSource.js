@@ -508,7 +508,7 @@ function getPropertyType(czmlInterval) {
   ) {
     return Rectangle;
   } else if (czmlInterval.hasOwnProperty("uri")) {
-    return URI;
+    return Uri;
   } else if (czmlInterval.hasOwnProperty("verticalOrigin")) {
     return VerticalOrigin;
   }
@@ -592,7 +592,7 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       ];
     case Rectangle:
       return unwrapRectangleInterval(czmlInterval);
-    case URI:
+    case Uri:
       return unwrapUriInterval(czmlInterval, sourceUri);
     case VerticalOrigin:
       return VerticalOrigin[
@@ -3274,7 +3274,7 @@ function processModel(entity, packet, entityCollection, sourceUri) {
     entityCollection
   );
   processPacketData(
-    URI,
+    Uri,
     model,
     "uri",
     modelData.gltf,
@@ -4489,7 +4489,7 @@ function processTileset(entity, packet, entityCollection, sourceUri) {
     entityCollection
   );
   processPacketData(
-    URI,
+    Uri,
     tileset,
     "uri",
     tilesetData.uri,
