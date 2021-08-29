@@ -21,7 +21,7 @@ import { ImageryLayerFeatureInfo } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { urijs as URI } from "../../Source/Cesium.js";
+import { Uri } from "../../Source/Cesium.js";
 
 describe("Scene/ArcGisMapServerImageryProvider", function () {
   var supportsImageBitmapOptions;
@@ -53,15 +53,15 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     withProxy,
     token
   ) {
-    var uri = new URI(actualUrl);
+    var uri = new Uri(actualUrl);
 
     if (withProxy) {
-      uri = new URI(decodeURIComponent(uri.query()));
+      uri = new Uri(decodeURIComponent(uri.query()));
     }
 
     var params = queryToObject(uri.query());
 
-    var uriWithoutQuery = new URI(uri);
+    var uriWithoutQuery = new Uri(uri);
     uriWithoutQuery.query("");
 
     expect(uriWithoutQuery.toString()).toEqual(
@@ -416,10 +416,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
-        var uriWithoutQuery = new URI(uri);
+        var uriWithoutQuery = new Uri(uri);
         uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
@@ -495,10 +495,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
-        var uriWithoutQuery = new URI(uri);
+        var uriWithoutQuery = new Uri(uri);
         uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
@@ -1198,7 +1198,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         deferred,
         overrideMimeType
       ) {
-        var uri = new URI(url);
+        var uri = new Uri(url);
         var query = queryToObject(uri.query());
 
         expect(query.layers).toContain("visible:someLayer,anotherLayerYay");

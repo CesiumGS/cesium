@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import defaultValue from "./defaultValue.js";
@@ -200,7 +200,7 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        work to be rescheduled in future frames.
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
-  var uri = new URI(workerPath);
+  var uri = new Uri(workerPath);
   this._workerPath =
     uri.scheme().length !== 0 && uri.fragment().length === 0
       ? workerPath

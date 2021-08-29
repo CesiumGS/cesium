@@ -21,7 +21,7 @@ import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import { WebMapServiceImageryProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { urijs as URI } from "../../Source/Cesium.js";
+import { Uri } from "../../Source/Cesium.js";
 
 describe("Scene/WebMapServiceImageryProvider", function () {
   beforeEach(function () {
@@ -132,7 +132,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
         expect(params.something).toEqual("foo");
         expect(params.another).toEqual("false");
@@ -166,7 +166,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
         expect(params.crs).toEqual("CRS:27");
         expect(params.version).toEqual("1.3.0");
@@ -199,7 +199,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.0");
@@ -232,7 +232,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
         expect(params.srs).toEqual("IAU2000:30118");
         expect(params.version).toEqual("1.1.0");
@@ -349,7 +349,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         var questionMarkCount = url.match(/\?/g).length;
         expect(questionMarkCount).toEqual(1);
 
-        var uri = new URI(url);
+        var uri = new Uri(url);
         var params = queryToObject(uri.query());
         expect(params.foo).toEqual("bar");
 
@@ -378,7 +378,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var url = request.url;
-        var uri = new URI(url);
+        var uri = new Uri(url);
         var params = queryToObject(uri.query());
         expect(params.version).toEqual("1.1.1");
 
@@ -459,7 +459,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:3857");
@@ -514,7 +514,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("EPSG:3857");
@@ -566,7 +566,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:4326");
@@ -621,7 +621,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:4326");
@@ -676,7 +676,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("CRS:84");
@@ -731,7 +731,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("CRS:84");
@@ -773,7 +773,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new URI(request.url);
+        var uri = new Uri(request.url);
         var params = queryToObject(uri.query());
 
         expect(params.format).toEqual("foo");

@@ -1,6 +1,6 @@
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { isCrossOriginUrl } from "../../Source/Cesium.js";
-import { urijs as URI } from "../../Source/Cesium.js";
+import { Uri } from "../../Source/Cesium.js";
 
 describe("Core/isCrossOriginUrl", function () {
   it("returns false for relative urls", function () {
@@ -22,14 +22,14 @@ describe("Core/isCrossOriginUrl", function () {
     );
 
     // a different scheme counts as cross-origin
-    var pageUri = new URI(location.href);
+    var pageUri = new Uri(location.href);
     pageUri.scheme(location.protocol === "https:" ? "http" : "https");
 
     var absoluteUrl = pageUri.toString();
     expect(isCrossOriginUrl(absoluteUrl)).toEqual(true);
 
     // so does a different port
-    pageUri = new URI(location.href);
+    pageUri = new Uri(location.href);
     pageUri.authority(location.hostname + ":" + (+location.port + 1));
 
     absoluteUrl = pageUri.toString();

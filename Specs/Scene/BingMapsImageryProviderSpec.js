@@ -12,7 +12,7 @@ import { ImageryLayer } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { urijs as URI } from "../../Source/Cesium.js";
+import { Uri } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Scene/BingMapsImageryProvider", function () {
@@ -175,8 +175,8 @@ describe("Scene/BingMapsImageryProvider", function () {
   }
 
   function installFakeMetadataRequest(url, mapStyle, proxy) {
-    var baseUri = new URI(appendForwardSlash(url));
-    var expectedUri = new URI(
+    var baseUri = new Uri(appendForwardSlash(url));
+    var expectedUri = new Uri(
       "REST/v1/Imagery/Metadata/" + mapStyle
     ).absoluteTo(baseUri);
 
@@ -184,9 +184,9 @@ describe("Scene/BingMapsImageryProvider", function () {
       url,
       functionName
     ) {
-      var uri = new URI(url);
+      var uri = new Uri(url);
       if (proxy) {
-        uri = new URI(decodeURIComponent(uri.query()));
+        uri = new Uri(decodeURIComponent(uri.query()));
       }
 
       var query = queryToObject(uri.query());
@@ -222,9 +222,9 @@ describe("Scene/BingMapsImageryProvider", function () {
         );
       } else {
         if (defined(expectedUrl)) {
-          var uri = new URI(url);
+          var uri = new Uri(url);
           if (proxy) {
-            uri = new URI(decodeURIComponent(uri.query()));
+            uri = new Uri(decodeURIComponent(uri.query()));
           }
 
           var query = queryToObject(uri.query());
@@ -255,9 +255,9 @@ describe("Scene/BingMapsImageryProvider", function () {
       overrideMimeType
     ) {
       if (defined(expectedUrl)) {
-        var uri = new URI(url);
+        var uri = new Uri(url);
         if (proxy) {
-          uri = new URI(decodeURIComponent(uri.query()));
+          uri = new Uri(decodeURIComponent(uri.query()));
         }
 
         var query = queryToObject(uri.query());

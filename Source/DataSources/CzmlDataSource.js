@@ -40,7 +40,7 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";

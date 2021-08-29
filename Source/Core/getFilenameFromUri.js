@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -20,7 +20,7 @@ function getFilenameFromUri(uri) {
   }
   //>>includeEnd('debug');
 
-  var uriObject = new URI(uri);
+  var uriObject = new Uri(uri);
   uriObject.normalize();
   var path = uriObject.path();
   var index = path.lastIndexOf("/");

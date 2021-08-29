@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
@@ -34,7 +34,7 @@ var activeRequests = [];
 var numberOfActiveRequestsByServer = {};
 
 var pageUri =
-  typeof document !== "undefined" ? new URI(document.location.href) : new URI();
+  typeof document !== "undefined" ? new Uri(document.location.href) : new Uri();
 
 var requestCompletedEvent = new Event();
 
@@ -350,9 +350,9 @@ RequestScheduler.getServerKey = function (url) {
   Check.typeOf.string("url", url);
   //>>includeEnd('debug');
 
-  var uri = new URI(url);
+  var uri = new Uri(url);
   if (!uri.is("urn")) {
-    uri = new URI(url).absoluteTo(pageUri);
+    uri = new Uri(url).absoluteTo(pageUri);
     uri.normalize();
   }
 

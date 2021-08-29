@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -38,7 +38,7 @@ getAbsoluteUri._implementation = function (relative, base, documentObject) {
     base = defaultValue(documentObject.baseURI, documentObject.location.href);
   }
 
-  var relativeUri = new URI(relative);
+  var relativeUri = new Uri(relative);
   if (relativeUri.is("urn")) {
     return relativeUri.toString();
   }

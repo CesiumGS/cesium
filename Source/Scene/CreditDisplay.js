@@ -5,7 +5,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 
 var mobileWidth = 576;
 var lightboxHeight = 100;
@@ -521,7 +521,7 @@ function getDefaultCredit() {
       logo.indexOf("https://") !== 0 &&
       logo.indexOf("data:") !== 0
     ) {
-      var logoUrl = new URI(logo);
+      var logoUrl = new Uri(logo);
       logo = logoUrl.path();
     }
 

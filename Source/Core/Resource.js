@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
@@ -311,7 +311,7 @@ function Resource(options) {
   this.retryAttempts = defaultValue(options.retryAttempts, 0);
   this._retryCount = 0;
 
-  var uri = new URI(options.url);
+  var uri = new Uri(options.url);
   parseQuery(uri, this, true, true);
 
   // Remove the fragment as it's not sent with a request
@@ -449,7 +449,7 @@ Object.defineProperties(Resource.prototype, {
       return this.getUrlComponent(true, true);
     },
     set: function (value) {
-      var uri = new URI(value);
+      var uri = new Uri(value);
 
       parseQuery(uri, this, false);
 
@@ -546,7 +546,7 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     return this._url;
   }
 
-  var uri = new URI(this._url);
+  var uri = new Uri(this._url);
 
   if (query) {
     stringifyQuery(uri, this);
@@ -645,7 +645,7 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    var uri = new URI(options.url);
+    var uri = new Uri(options.url);
 
     var preserveQueryParameters = defaultValue(
       options.preserveQueryParameters,
@@ -660,7 +660,7 @@ Resource.prototype.getDerivedResource = function (options) {
       resource._url = uri.toString();
     } else {
       resource._url = uri
-        .absoluteTo(new URI(getAbsoluteUri(this._url)))
+        .absoluteTo(new Uri(getAbsoluteUri(this._url)))
         .toString();
     }
   }

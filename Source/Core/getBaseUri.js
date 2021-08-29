@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -34,7 +34,7 @@ function getBaseUri(uri, includeQuery) {
     return basePath;
   }
 
-  uri = new URI(uri);
+  uri = new Uri(uri);
   if (uri.query().length !== 0) {
     basePath += "?" + uri.query();
   }

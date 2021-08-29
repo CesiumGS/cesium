@@ -1,4 +1,4 @@
-import URI from "../ThirdParty/urijs.js";
+import Uri from "../ThirdParty/Uri.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -66,7 +66,7 @@ TrustedServers.remove = function (host, port) {
 };
 
 function getAuthority(url) {
-  var uri = new URI(url);
+  var uri = new Uri(url);
   uri.normalize();
 
   // Removes username:password@ so we just have host[:port]

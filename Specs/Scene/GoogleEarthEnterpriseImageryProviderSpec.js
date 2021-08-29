@@ -15,7 +15,7 @@ import { ImageryLayer } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { urijs as URI } from "../../Source/Cesium.js";
+import { Uri } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
@@ -113,7 +113,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
         );
       } else {
         if (proxy) {
-          var uri = new URI(url);
+          var uri = new Uri(url);
           url = decodeURIComponent(uri.query());
         }
         if (defined(expectedUrl)) {
@@ -139,7 +139,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     ) {
       if (defined(expectedUrl) && !/^blob:/.test(url)) {
         if (proxy) {
-          var uri = new URI(url);
+          var uri = new Uri(url);
           url = decodeURIComponent(uri.query());
         }
 

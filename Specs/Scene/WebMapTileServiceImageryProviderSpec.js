@@ -17,7 +17,7 @@ import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import { WebMapTileServiceImageryProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { urijs as URI } from "../../Source/Cesium.js";
+import { Uri } from "../../Source/Cesium.js";
 
 describe("Scene/WebMapTileServiceImageryProvider", function () {
   beforeEach(function () {
@@ -53,7 +53,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var tilerow = 5;
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
     var queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
@@ -71,7 +71,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     tilerow = 3;
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
-    uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
     queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
@@ -104,7 +104,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var tilerow = 5;
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
     var queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
@@ -123,7 +123,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     tilerow = 3;
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
-    uri = new URI(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
     queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
@@ -204,7 +204,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var tilerow = 5;
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new URI(
+    var uri = new Uri(
       ImageryProvider.loadImage.calls.mostRecent().args[1].getUrlComponent()
     );
     expect(uri.toString()).toEqual(
@@ -737,7 +737,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var uri = new URI("http://wmts.invalid/kvp");
+    var uri = new Uri("http://wmts.invalid/kvp");
     var query = {
       tilematrix: 0,
       layer: "someLayer",
