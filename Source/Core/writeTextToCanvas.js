@@ -40,17 +40,7 @@ function measureText(context2D, textString, font, stroke, fill) {
     // each pixel's R, G, B and A are consecutive values in the array.
     var pixelData = ctx.getImageData(0, 0, width, height).data;
     var width4 = width * 4;
-    var length = pixelData.length;
     var i, j;
-
-    // Find the first row (from the top) containing a non-white pixel
-    for (i = 0; i < length && pixelData[i] === 255; ++i) {}
-    var ascent = (i / width4) | 0;
-
-    // Find the first row (from the bottom) containing a non-white pixel
-    for (i = length - 1; i > 0 && pixelData[i] === 255; --i) {}
-    var descent = (i / width4) | 0;
-
     var minx = -1;
     // For each column, for each row, check for first non-white pixel
     for (i = 0; i < width && minx === -1; ++i) {
@@ -67,10 +57,10 @@ function measureText(context2D, textString, font, stroke, fill) {
       }
     }
 
-    metrics.ascent = baseline - ascent;
-    metrics.descent = descent - baseline;
+    metrics.ascent = metrics.actualBoundingBoxAscent | 0;
+    metrics.descent = metrics.actualBoundingBoxDescent | 0;
     metrics.minx = minx - padding / 2;
-    metrics.height = 1 + (descent - ascent);
+    metrics.height = metrics.descent + metrics.ascent;
   } else {
     metrics.ascent = 0;
     metrics.descent = 0;
