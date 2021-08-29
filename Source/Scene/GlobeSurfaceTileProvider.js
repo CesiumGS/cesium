@@ -602,6 +602,7 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
     frameState,
     this.terrainProvider,
     this._imageryLayers,
+    this.quadtree,
     this._vertexArraysToDestroy,
     terrainOnly
   );
@@ -623,6 +624,7 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
         frameState,
         this.terrainProvider,
         this._imageryLayers,
+        this.quadtree,
         this._vertexArraysToDestroy,
         terrainOnly
       );

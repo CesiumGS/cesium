@@ -251,6 +251,7 @@ GlobeSurfaceTile.processStateMachine = function (
   frameState,
   terrainProvider,
   imageryLayerCollection,
+  quadtree,
   vertexArraysToDestroy,
   terrainOnly
 ) {
@@ -264,6 +265,7 @@ GlobeSurfaceTile.processStateMachine = function (
       frameState,
       terrainProvider,
       imageryLayerCollection,
+      quadtree,
       vertexArraysToDestroy
     );
   }
@@ -487,13 +489,15 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
     encoding.exaggerationRelativeHeight = exaggerationRelativeHeight;
 
     // Notify the quadtree that this tile's height has changed
-    quadtree._tileToUpdateHeights.push(tile);
-    var customData = tile.customData;
-    var customDataLength = customData.length;
-    for (var i = 0; i < customDataLength; i++) {
-      // Restart the level so that a height update is triggered
-      var data = customData[i];
-      data.level = -1;
+    if (quadtree !== undefined) {
+      quadtree._tileToUpdateHeights.push(tile);
+      var customData = tile.customData;
+      var customDataLength = customData.length;
+      for (var i = 0; i < customDataLength; i++) {
+        // Restart the level so that a height update is triggered
+        var data = customData[i];
+        data.level = -1;
+      }
     }
   }
 };
@@ -538,6 +542,7 @@ function processTerrainStateMachine(
   frameState,
   terrainProvider,
   imageryLayerCollection,
+  quadtree,
   vertexArraysToDestroy
 ) {
   var surfaceTile = tile.data;
@@ -559,6 +564,7 @@ function processTerrainStateMachine(
         frameState,
         terrainProvider,
         imageryLayerCollection,
+        quadtree,
         vertexArraysToDestroy,
         true
       );
@@ -608,6 +614,9 @@ function processTerrainStateMachine(
       tile.level,
       vertexArraysToDestroy
     );
+
+    // Update the tile's exaggeration in case the globe's exaggeration changed while the tile was being processed
+    surfaceTile.updateExaggeration(tile, frameState, quadtree);
   }
 
   if (
