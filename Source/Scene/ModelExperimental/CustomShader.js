@@ -50,6 +50,21 @@ import TextureManager from "./TextureManager.js";
 /**
  * A user defined GLSL shader used with {@link ModelExperimental} as well
  * as {@link Cesium3DTileset}.
+ * <p>
+ * If texture uniforms are used, additional resource management must be done:
+ * </p>
+ * <ul>
+ *   <li>
+ *      The <code>update</code> function must be called each frame. When a
+ *      custom shader is passed to a {@link ModelExperimental} or a
+ *      {@link Cesium3DTileset}, this step is handled automaticaly
+ *   </li>
+ *   <li>
+ *      {@link CustomShader#destroy} must be called when the custom shader is
+ *      no longer needed to clean up GPU resources properly. The application
+ *      is responsible for calling this method.
+ *   </li>
+ * </ul>
  *
  * @param {Object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
@@ -100,17 +115,93 @@ import TextureManager from "./TextureManager.js";
 export default function CustomShader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  /**
+   * A value determining how the custom shader interacts with the overall
+   * fragment shader. This is used by {@link CustomShaderStage}
+   *
+   * @type {CustomShaderMode}
+   * @readonly
+   * @private
+   */
   this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
+  /**
+   * The lighting model to use when using the custom shader.
+   * This is used by {@link CustomShaderStage}
+   *
+   * @type {LightingModel}
+   * @readonly
+   * @private
+   */
   this.lightingModel = options.lightingModel;
+  /**
+   * Additional uniforms as declared by the user.
+   *
+   * @type {Object.<String, UniformSpecifier>}
+   * @readonly
+   * @private
+   */
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
+  /**
+   * Additional varyings as declared by the user.
+   * This is used by {@link CustomShaderStage}
+   *
+   * @type {Object.<String, VaryingType>}
+   * @readonly
+   * @private
+   */
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
+  /**
+   * The user-defined GLSL code for the vertex shader
+   *
+   * @type {String}
+   * @readonly
+   * @private
+   */
   this.vertexShaderText = options.vertexShaderText;
+  /**
+   * The user-defined GLSL code for the fragment shader
+   *
+   * @type {String}
+   * @readonly
+   * @private
+   */
   this.fragmentShaderText = options.fragmentShaderText;
+  /**
+   * Whether the shader should be rendered as translucent
+   *
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
   this.isTranslucent = defaultValue(options.isTranslucent, false);
 
+  /**
+   * texture uniforms require some asynchronous processing. This is delegated
+   * to a texture manager.
+   *
+   * @type {TextureManager}
+   * @readonly
+   * @private
+   */
   this._textureManager = new TextureManager();
-  this.uniformMap = buildUniformMap(this);
+  /**
+   * The default texture (from the {@link Context}) to use while textures
+   * are loading
+   *
+   * @type {Texture}
+   * @readonly
+   * @private
+   */
   this._defaultTexture = undefined;
+  /**
+   * The map of uniform names to a function that returns a value. This map
+   * is combined with the overall uniform map used by the {@link DrawCommand}
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   * @private
+   */
+  this.uniformMap = buildUniformMap(this);
 
   /**
    * A collection of variables used in <code>vertexShaderText</code>. This
@@ -132,6 +223,7 @@ export default function CustomShader(options) {
     attributeSet: {},
     materialSet: {},
   };
+
   findUsedVariables(this);
 }
 
