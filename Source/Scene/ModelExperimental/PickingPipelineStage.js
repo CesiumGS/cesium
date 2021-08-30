@@ -4,7 +4,6 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import FeaturePickingStageVS from "../../Shaders/ModelExperimental/FeaturePickingStageVS.js";
 
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -42,10 +41,7 @@ PickingPipelineStage.process = function (
 
   if (defined(model._featureTable)) {
     // For models with features, the pick texture is used.
-    processPickTexture(
-      renderResources,
-      model._featureTable._batchTexture.pickTexture
-    );
+    processPickTexture(renderResources, model._featureTable);
   } else if (defined(runtimeNode.node.instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
@@ -74,10 +70,9 @@ PickingPipelineStage.process = function (
   }
 };
 
-function processPickTexture(renderResources, pickTexture) {
+function processPickTexture(renderResources, featureTable) {
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("USE_FEATURE_PICKING");
-  shaderBuilder.addVertexLines([FeaturePickingStageVS]);
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
@@ -86,7 +81,7 @@ function processPickTexture(renderResources, pickTexture) {
 
   var pickingUniforms = {
     model_pickTexture: function () {
-      return pickTexture;
+      return featureTable._batchTexture.pickTexture;
     },
   };
 
@@ -95,7 +90,7 @@ function processPickTexture(renderResources, pickTexture) {
     renderResources.uniformMap
   );
 
-  renderResources.pickUd = "texture2D(model_pickTexture, model_featureSt);";
+  renderResources.pickId = "texture2D(model_pickTexture, model_featureSt);";
 }
 
 function processInstancedPickIds(renderResources, context) {

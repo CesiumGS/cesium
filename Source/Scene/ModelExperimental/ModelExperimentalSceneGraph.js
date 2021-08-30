@@ -170,6 +170,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
         new ModelExperimentalPrimitive({
           primitive: node.primitives[i],
           allowPicking: sceneGraph._model.allowPicking,
+          model: sceneGraph._model,
         })
       );
     }

@@ -87,12 +87,6 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
-      model._sceneGraph = new ModelExperimentalSceneGraph({
-        model: model,
-        modelComponents: loader.components,
-        modelMatrix: modelMatrix,
-      });
-
       var featureMetadata = loader.components.featureMetadata;
       var featureTableKeys = Object.keys(featureMetadata._featureTables);
       if (defined(featureMetadata) && featureTableKeys.length > 0) {
@@ -103,6 +97,11 @@ function initialize(model) {
         });
       }
 
+      model._sceneGraph = new ModelExperimentalSceneGraph({
+        model: model,
+        modelComponents: loader.components,
+        modelMatrix: modelMatrix,
+      });
       model._resourcesLoaded = true;
     })
     .otherwise(function () {

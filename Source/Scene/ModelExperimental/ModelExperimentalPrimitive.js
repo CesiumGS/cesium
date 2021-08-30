@@ -5,6 +5,7 @@ import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
+import FeaturePipelineStage from "./FeaturePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -64,6 +65,10 @@ function initialize(runtimePrimitive) {
   pipelineStages.push(GeometryPipelineStage);
   pipelineStages.push(MaterialPipelineStage);
   pipelineStages.push(LightingPipelineStage);
+
+  if (defined(runtimePrimitive.model._featureTable)) {
+    pipelineStages.push(FeaturePipelineStage);
+  }
 
   if (runtimePrimitive.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
