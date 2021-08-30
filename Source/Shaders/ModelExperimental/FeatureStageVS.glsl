@@ -16,7 +16,7 @@ vec2 computeSt(float featureId)
     #endif
 }
 
-vec3 featurePickingStage(vec3 position)
+vec3 featureStage(vec3 position)
 {
     vec2 st = computeSt(FEATURE_ID_ATTRIBUTE);
     model_featureSt = st;

@@ -1,7 +1,7 @@
 import combine from "../../Core/combine.js";
 import defaultValue from "../../Core/defaultValue.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import FeaturePickingStageVS from "../../Shaders/ModelExperimental/FeaturePickingStageVS.js";
+import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
 
 /**
  * The feature pipeline stage is responsible for handling features in the model.
@@ -17,6 +17,7 @@ var FeaturePipelineStage = {};
  *  <li>sets the define for the feature ID attribute to use for feature picking</li>
  *  <li>adds uniforms for the batch textures</li>
  *  <li>sets up varying for the feature coordinates</li>
+ *  <li>adds vertex shader code for computing feature coordinates</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
@@ -72,7 +73,7 @@ FeaturePipelineStage.process = function (
     renderResources.uniformMap
   );
 
-  shaderBuilder.addVertexLines([FeaturePickingStageVS]);
+  shaderBuilder.addVertexLines([FeatureStageVS]);
 };
 
 export default FeaturePipelineStage;
