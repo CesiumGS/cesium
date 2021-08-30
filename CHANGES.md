@@ -4,7 +4,7 @@
 
 ##### Breaking Changes :mega:
 
-- Removed `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene`, which were deprecated in CesiumJS 1.82. Use `Globe.terrainExaggeration` instead.
+- Removed `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene`, which were deprecated in CesiumJS 1.83. Use `Globe.terrainExaggeration` instead.
 
 ##### Additions :tada:
 
