@@ -220,6 +220,17 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         scene.destroyForSpecs();
       });
 
+      var shaders = [];
+      afterEach(function () {
+        for (var i = 0; i < shaders.length; i++) {
+          var shader = shaders[i];
+          if (!shader.isDestroyed()) {
+            shader.destroy();
+          }
+          shaders.length = 0;
+        }
+      });
+
       var blueUrl = "Data/Images/Blue2x2.png";
       var greenUrl = "Data/Images/Green1x4.png";
 
@@ -252,6 +263,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
             },
           },
         });
+        shaders.push(customShader);
         expect(customShader.uniformMap.u_blue).toBeDefined();
         expect(customShader.uniformMap.u_blue()).not.toBeDefined();
 
@@ -277,6 +289,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
             },
           },
         });
+        shaders.push(customShader);
 
         return waitForTextureLoad(customShader, "u_testTexture").then(function (
           blueTexture
@@ -315,6 +328,8 @@ describe("Scene/ModelExperimental/CustomShader", function () {
             },
           },
         });
+        shaders.push(customShader);
+
         return waitForTextureLoad(customShader, "u_blue").then(function (
           texture
         ) {
