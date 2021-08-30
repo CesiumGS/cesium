@@ -46,15 +46,15 @@ function measureText(context2D, textString, font, stroke, fill) {
     var ascent, descent;
     // Find the number of rows (from the top) until the first non-white pixel
     for (i = 0; i < length; ++i) {
-      if (pixelData[i] === 255) {
+      if (pixelData[i] !== 255) {
         ascent = (i / width4) | 0;
         break;
       }
     }
 
     // Find the number of rows (from the bottom) until the first non-white pixel
-    for (i = length - 1; i > 0 && pixelData[i] === 255; --i) {
-      if (pixelData[i] === 255) {
+    for (i = length - 1; i > 0; --i) {
+      if (pixelData[i] !== 255) {
         descent = (i / width4) | 0;
         break;
       }
