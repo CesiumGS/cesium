@@ -201,6 +201,51 @@
           ].join("\n"),
         });
 
+        // This example is to demonstrate the conventions used for orienting
+        // the texture. +x is to the right and +y is from **bottom to top**.
+        // This is to be consistent with WebGL conventions.
+        //
+        // This example also demonstrates how to use a different pixel format,
+        // in this case, RGB.
+        function makeGradientTexture() {
+          var size = 256;
+          var typedArray = new Uint8Array(3 * size * size);
+          for (var i = 0; i < size; i++) {
+            for (var j = 0; j < size; j++) {
+              var index = i * size + j;
+              // red increases in the +x direction (to the right)
+              typedArray[3 * index + 0] = j;
+              // Green increases in the +y direction (from bottom to top)
+              typedArray[3 * index + 1] = i;
+              // blue is 0 so it is omitted.
+            }
+          }
+
+          return new Cesium.TextureUniform({
+            typedArray: typedArray,
+            width: size,
+            height: size,
+            pixelFormat: Cesium.PixelFormat.RGB,
+          });
+        }
+        var gradientTexture = makeGradientTexture();
+
+        // Color the texture along its UV coordinates.
+        var gradientShader = new Cesium.CustomShader({
+          uniforms: {
+            u_gradient: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: gradientTexture,
+            },
+          },
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;",
+            "}",
+          ].join("\n"),
+        });
+
         // Dragging the mouse will modify the PBR values
         var modifyPbrShader = new Cesium.CustomShader({
           uniforms: {
@@ -265,6 +310,13 @@
             text: "Use Texture as Mask",
             onselect: function () {
               selectModel(models.balloon, checkerboardHolesShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Procedural Gradient Texture",
+            onselect: function () {
+              selectModel(models.balloon, gradientShader);
               needsDrag = false;
             },
           },

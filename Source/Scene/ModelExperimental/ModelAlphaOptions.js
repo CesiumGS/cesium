@@ -17,7 +17,7 @@ export default function ModelAlphaOptions() {
    */
   this.pass = undefined;
   /**
-   * Which method to use for
+   * Which method to use for handling the alpha channel in the fragment shader.
    *
    * @type {AlphaMode}
    * @private
