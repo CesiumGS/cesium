@@ -27,8 +27,8 @@ describe(
         if (!textureManager.isDestroyed()) {
           textureManager.destroy();
         }
-        textureManagers.length = 0;
       }
+      textureManagers.length = 0;
     });
 
     function waitForTextureLoad(textureManager, textureId) {

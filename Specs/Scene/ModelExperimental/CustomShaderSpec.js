@@ -227,8 +227,8 @@ describe("Scene/ModelExperimental/CustomShader", function () {
           if (!shader.isDestroyed()) {
             shader.destroy();
           }
-          shaders.length = 0;
         }
+        shaders.length = 0;
       });
 
       var blueUrl = "Data/Images/Blue2x2.png";
