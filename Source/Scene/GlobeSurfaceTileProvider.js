@@ -178,7 +178,6 @@ function GlobeSurfaceTileProvider(options) {
 
   this._oldTerrainExaggeration = undefined;
   this._oldTerrainExaggerationRelativeHeight = undefined;
-  this._processingTerrainExaggerationChange = false;
 }
 
 Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -480,7 +479,6 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
   var quadtree = this.quadtree;
   var exaggeration = frameState.terrainExaggeration;
   var exaggerationRelativeHeight = frameState.terrainExaggerationRelativeHeight;
-  var hasExaggerationScale = exaggeration !== 1.0;
   var exaggerationChanged =
     this._oldTerrainExaggeration !== exaggeration ||
     this._oldTerrainExaggerationRelativeHeight !== exaggerationRelativeHeight;
@@ -489,58 +487,12 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
   this._oldTerrainExaggeration = exaggeration;
   this._oldTerrainExaggerationRelativeHeight = exaggerationRelativeHeight;
 
-  var processingChange =
-    exaggerationChanged || this._processingTerrainExaggerationChange;
-  var continueProcessing = false;
-
-  if (processingChange) {
-    quadtree.forEachRenderedTile(function (tile) {
+  if (exaggerationChanged) {
+    quadtree.forEachLoadedTile(function (tile) {
       var surfaceTile = tile.data;
-      var mesh = surfaceTile.renderedMesh;
-      if (mesh !== undefined) {
-        // Check the tile's terrain encoding to see if it has been exaggerated yet
-        var encoding = mesh.encoding;
-        var encodingExaggerationScaleChanged =
-          encoding.exaggeration !== exaggeration;
-        var encodingRelativeHeightChanged =
-          encoding.exaggerationRelativeHeight !== exaggerationRelativeHeight;
-
-        if (encodingExaggerationScaleChanged || encodingRelativeHeightChanged) {
-          // Turning exaggeration scale on/off requires adding or removing geodetic surface normals
-          // Relative height only translates, so it has no effect on normals
-          if (encodingExaggerationScaleChanged) {
-            if (hasExaggerationScale && !encoding.hasGeodeticSurfaceNormals) {
-              var ellipsoid = tile.tilingScheme.ellipsoid;
-              surfaceTile.addGeodeticSurfaceNormals(ellipsoid, frameState);
-            } else if (
-              !hasExaggerationScale &&
-              encoding.hasGeodeticSurfaceNormals
-            ) {
-              surfaceTile.removeGeodeticSurfaceNormals(frameState);
-            }
-          }
-
-          encoding.exaggeration = exaggeration;
-          encoding.exaggerationRelativeHeight = exaggerationRelativeHeight;
-
-          // Notify the quadtree that this tile's height has changed
-          quadtree._tileToUpdateHeights.push(tile);
-          var customData = tile.customData;
-          var customDataLength = customData.length;
-          for (var i = 0; i < customDataLength; i++) {
-            // Restart the level so that a height update is triggered
-            var data = customData[i];
-            data.level = -1;
-          }
-        }
-      } else {
-        // this tile may come into view at a later time so keep the loop active
-        continueProcessing = true;
-      }
+      surfaceTile.updateExaggeration(tile, frameState, quadtree);
     });
   }
-
-  this._processingTerrainExaggerationChange = continueProcessing;
 
   // Add the tile render commands to the command list, sorted by texture count.
   var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
@@ -650,6 +602,7 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
     frameState,
     this.terrainProvider,
     this._imageryLayers,
+    this.quadtree,
     this._vertexArraysToDestroy,
     terrainOnly
   );
@@ -671,6 +624,7 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
         frameState,
         this.terrainProvider,
         this._imageryLayers,
+        this.quadtree,
         this._vertexArraysToDestroy,
         terrainOnly
       );

@@ -1,5 +1,9 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
+import CustomShaderStage from "./CustomShaderStage.js";
+import CustomShaderMode from "./CustomShaderMode.js";
+import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
@@ -11,7 +15,7 @@ import PickingPipelineStage from "./PickingPipelineStage.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
- * @param {Boolean} options.allowPicking Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
+ * @param {ModelExperimental} options.model The {@link ModelExperimental} this primitive belongs to.
  *
  * @alias ModelExperimentalPrimitive
  * @constructor
@@ -22,7 +26,7 @@ export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
-  Check.typeOf.bool("options.allowPicking", options.allowPicking);
+  Check.typeOf.object("options.model", options.model);
   //>>includeEnd('debug');
 
   /**
@@ -35,13 +39,13 @@ export default function ModelExperimentalPrimitive(options) {
   this.primitive = options.primitive;
 
   /**
-   * Whether or not the model this primitive belongs to allows picking of primitives. See {@link ModelExperimental#allowPicking}.
+   * A reference to the model
    *
-   * @type {Boolean}
+   * @type {ModelExperimental}
    *
    * @private
    */
-  this.allowPicking = options.allowPicking;
+  this.model = options.model;
 
   /**
    * Pipeline stages to apply to this primitive. This
@@ -61,12 +65,31 @@ export default function ModelExperimentalPrimitive(options) {
 function initialize(runtimePrimitive) {
   var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
-  pipelineStages.push(MaterialPipelineStage);
+
+  var model = runtimePrimitive.model;
+  var customShader = model.customShader;
+  var hasCustomShader = defined(customShader);
+  var hasCustomFragmentShader =
+    hasCustomShader && defined(customShader.fragmentShaderText);
+  var materialsEnabled =
+    !hasCustomFragmentShader ||
+    customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
+
+  if (materialsEnabled) {
+    pipelineStages.push(MaterialPipelineStage);
+  }
+
+  if (hasCustomShader) {
+    pipelineStages.push(CustomShaderStage);
+  }
+
   pipelineStages.push(LightingPipelineStage);
 
-  if (runtimePrimitive.allowPicking) {
+  if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
   }
+
+  pipelineStages.push(AlphaPipelineStage);
 
   return;
 }

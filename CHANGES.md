@@ -2,6 +2,10 @@
 
 ### 1.85 - 2021-09-01
 
+##### Breaking Changes :mega:
+
+- Removed `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene`, which were deprecated in CesiumJS 1.83. Use `Globe.terrainExaggeration` instead.
+
 ##### Additions :tada:
 
 - Added `CloudCollection` and `CumulusCloud` for adding procedurally generated clouds to a scene. [#9737](https://github.com/CesiumGS/cesium/pull/9737)

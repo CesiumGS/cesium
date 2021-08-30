@@ -6,6 +6,7 @@ void processPoints()
 vec3 processGeometry(vec3 position) 
 {  
     position = a_position;
+    v_position = position;
     v_positionEC = (czm_modelView * vec4(position, 1.0)).xyz;
 
     #ifdef HAS_NORMALS
