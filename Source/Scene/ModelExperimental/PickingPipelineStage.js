@@ -1,8 +1,11 @@
 import Color from "../../Core/Color.js";
+import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import FeaturePickingStageVS from "../../Shaders/ModelExperimental/FeaturePickingStageVS.js";
+
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -22,7 +25,7 @@ var PickingPipelineStage = {};
  *  <li>creates the pick ID objects in the context</li>
  * </ul>
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
- * @param {ModelComponents.Primitive} node The primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
  */
 PickingPipelineStage.process = function (
@@ -33,15 +36,21 @@ PickingPipelineStage.process = function (
   var context = frameState.context;
   var runtimeNode = renderResources.runtimeNode;
   var shaderBuilder = renderResources.shaderBuilder;
+  var model = renderResources.model;
 
   shaderBuilder.addDefine("USE_PICKING");
 
-  if (defined(runtimeNode.node.instances)) {
+  if (defined(model._featureTable)) {
+    // For models with features, the pick texture is used.
+    processPickTexture(
+      renderResources,
+      model._featureTable._batchTexture.pickTexture
+    );
+  } else if (defined(runtimeNode.node.instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
-    var model = renderResources.model;
     var pickObject = {
       model: model,
       node: renderResources.runtimeNode,
@@ -64,6 +73,30 @@ PickingPipelineStage.process = function (
     renderResources.pickId = "czm_pickColor";
   }
 };
+
+function processPickTexture(renderResources, pickTexture) {
+  var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("USE_FEATURE_PICKING");
+  shaderBuilder.addVertexLines([FeaturePickingStageVS]);
+  shaderBuilder.addUniform(
+    "sampler2D",
+    "model_pickTexture",
+    ShaderDestination.FRAGMENT
+  );
+
+  var pickingUniforms = {
+    model_pickTexture: function () {
+      return pickTexture;
+    },
+  };
+
+  renderResources.uniformMap = combine(
+    pickingUniforms,
+    renderResources.uniformMap
+  );
+
+  renderResources.pickUd = "texture2D(model_pickTexture, model_featureSt);";
+}
 
 function processInstancedPickIds(renderResources, context) {
   var instanceCount = renderResources.instanceCount;

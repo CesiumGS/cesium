@@ -10,10 +10,16 @@ vec2 computeSt(float featureId)
     float xId = mod(featureId, model_textureDimensions.x); 
     float yId = floor(featureId / model_textureDimensions.x);
     
-    return 
+    return vec2(centerX + (xId * stepX), centerY + (yId * stepY));
     #else
-    return vec2()
+    return vec2(centerX + (featureId * stepX), 0.5);
     #endif
-    
+}
 
+vec3 featurePickingStage(vec3 position)
+{
+    vec2 st = computeSt(FEATURE_ID_ATTRIBUTE);
+    model_featureSt = st;
+
+    return position;
 }

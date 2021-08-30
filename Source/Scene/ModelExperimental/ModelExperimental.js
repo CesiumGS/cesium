@@ -92,6 +92,17 @@ function initialize(model) {
         modelComponents: loader.components,
         modelMatrix: modelMatrix,
       });
+
+      var featureMetadata = loader.components.featureMetadata;
+      var featureTableKeys = Object.keys(featureMetadata._featureTables);
+      if (defined(featureMetadata) && featureTableKeys.length > 0) {
+        // Currently, only the first feature table is used.
+        model._featureTable = new ModelFeatureTable({
+          model: model,
+          featureTable: featureMetadata._featureTables[featureTableKeys[0]],
+        });
+      }
+
       model._resourcesLoaded = true;
     })
     .otherwise(function () {
@@ -101,14 +112,6 @@ function initialize(model) {
   loader.texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
-
-      var featureMetadata = loader.components.featureMetadata;
-      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
-        // Currently, only the first feature table is used.
-        model._featureTable = new ModelFeatureTable(
-          featureMetadata.getFeatureTable(0)
-        );
-      }
     })
     .otherwise(function () {
       ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
@@ -301,6 +304,10 @@ ModelExperimental.prototype.update = function (frameState) {
       model._ready = true;
       model._readyPromise.resolve(model);
     });
+  }
+
+  if (defined(this._featureTable)) {
+    this._featureTable.update(frameState);
   }
 
   if (this._debugShowBoundingVolumeDirty) {

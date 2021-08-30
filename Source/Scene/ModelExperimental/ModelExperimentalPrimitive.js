@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defined from "../../Core/defined.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";

@@ -13,6 +13,10 @@ void main()
         #endif
     #endif
 
+    #ifdef USE_FEATURE_PICKING
+    position = featurePickingStage(position);
+    #endif
+
     gl_Position = czm_modelViewProjection * vec4(position, 1.0);
 
     #ifdef PRIMITIVE_TYPE_POINTS

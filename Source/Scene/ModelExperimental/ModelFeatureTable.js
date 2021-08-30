@@ -3,6 +3,7 @@ import ModelFeature from "./ModelFeature.js";
 
 export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
+  this._model = options.model;
   this._features = undefined;
   this._featuresLength = 0;
 
@@ -29,11 +30,15 @@ function initialize(modelFeatureTable) {
   modelFeatureTable._featuresLength = featuresLength;
   modelFeatureTable._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
-    content: this,
+    content: modelFeatureTable,
     statistics: modelFeatureTable._statistics,
   });
 }
 
 ModelFeatureTable.prototype.update = function (frameState) {
-  this._batchTexture.update(frameState);
+  this._batchTexture.update(undefined, frameState);
+};
+
+ModelFeatureTable.prototype.getFeature = function (featureId) {
+  return this._features[featureId];
 };
