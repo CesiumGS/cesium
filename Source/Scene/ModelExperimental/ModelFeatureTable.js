@@ -5,6 +5,7 @@ export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
   this._features = undefined;
   this._featuresLength = 0;
+
   this._batchTexture = undefined;
 
   initialize(this);
@@ -32,3 +33,7 @@ function initialize(modelFeatureTable) {
     statistics: modelFeatureTable._statistics,
   });
 }
+
+ModelFeatureTable.prototype.update = function (frameState) {
+  this._batchTexture.update(frameState);
+};

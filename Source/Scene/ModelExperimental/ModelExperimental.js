@@ -10,6 +10,7 @@ import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -100,6 +101,14 @@ function initialize(model) {
   loader.texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
+
+      var featureMetadata = loader.components.featureMetadata;
+      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
+        // Currently, only the first feature table is used.
+        model._featureTable = new ModelFeatureTable(
+          featureMetadata.getFeatureTable(0)
+        );
+      }
     })
     .otherwise(function () {
       ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
