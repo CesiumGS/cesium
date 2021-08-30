@@ -81,6 +81,8 @@ function createTexture(textureManager, loadedImage, context) {
   if (defined(typedArray)) {
     texture = new Texture({
       context: context,
+      pixelFormat: textureUniform.pixelFormat,
+      pixelDatatype: textureUniform.pixelDatatype,
       source: {
         arrayBufferView: typedArray,
         width: textureUniform.width,
