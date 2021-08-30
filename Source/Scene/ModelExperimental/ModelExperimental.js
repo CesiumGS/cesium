@@ -29,6 +29,7 @@ import ModelFeatureTable from "./ModelFeatureTable.js";
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -57,6 +58,7 @@ export default function ModelExperimental(options) {
 
   this._ready = false;
   this._readyPromise = when.defer();
+  this._customShader = options.customShader;
 
   this._texturesLoaded = false;
 
@@ -182,6 +184,21 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._opaquePass;
     },
   },
+  /**
+   * The model's custom shader if it exists
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {CustomShader}
+   * @readonly
+   *
+   * @private
+   */
+  customShader: {
+    get: function () {
+      return this._customShader;
+    },
+  },
 
   /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -287,6 +304,11 @@ ModelExperimental.prototype.update = function (frameState) {
     this._loader.process(frameState);
   }
 
+  // A custom shader may have to load texture uniforms.
+  if (defined(this._customShader)) {
+    this._customShader.update(frameState);
+  }
+
   // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {
     return;
@@ -384,6 +406,7 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders
  *
  * @returns {ModelExperimental} The newly created model.
  *
@@ -423,6 +446,7 @@ ModelExperimental.fromGltf = function (options) {
     cull: options.cull,
     opaquePass: options.opaquePass,
     allowPicking: options.allowPicking,
+    customShader: options.customShader,
   };
   var model = new ModelExperimental(modelOptions);
 

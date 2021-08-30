@@ -951,6 +951,16 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
+  /**
+   * A custom shader to apply to the tileset. Only used for contents that use
+   * {@link ModelExperimental}
+   *
+   * @type {CustomShader}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.customShader = options.customShader;
+
   this._schemaLoader = undefined;
 
   var that = this;

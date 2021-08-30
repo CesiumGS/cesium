@@ -88,6 +88,7 @@
     "lerc": "^2.0.0",
     "merge-stream": "^2.0.0",
     "mersenne-twister": "^1.1.0",
+    "meshoptimizer": "^0.16.1",
     "mime": "^2.5.2",
     "mkdirp": "^1.0.4",
     "nosleep.js": "^0.9.0",

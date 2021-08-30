@@ -16,6 +16,10 @@ void main()
     #ifdef USE_FEATURE_PICKING
     position = featurePickingStage(position);
     #endif
+    
+    #ifdef USE_CUSTOM_SHADER
+    position = customShaderStage(position);
+    #endif
 
     gl_Position = czm_modelViewProjection * vec4(position, 1.0);
 

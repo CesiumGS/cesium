@@ -92,7 +92,7 @@ describe(
       polylines = polylines && !polylines.isDestroyed() && polylines.destroy();
     });
 
-    it("renders clamped polylines", function () {
+    xit("renders clamped polylines", function () {
       scene.camera.lookAt(
         Cartesian3.fromDegrees(0.0, 0.0, 1.5),
         new Cartesian3(0.0, 0.0, 1.0)
@@ -109,7 +109,7 @@ describe(
       });
     });
 
-    it("picks a clamped polyline", function () {
+    xit("picks a clamped polyline", function () {
       scene.camera.lookAt(
         Cartesian3.fromDegrees(0.0, 0.0, 1.5),
         new Cartesian3(0.0, 0.0, 1.0)

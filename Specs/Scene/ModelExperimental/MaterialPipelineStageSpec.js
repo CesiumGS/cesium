@@ -6,6 +6,8 @@ import {
   LightingModel,
   Matrix3,
   MaterialPipelineStage,
+  ModelAlphaOptions,
+  ModelLightingOptions,
   Pass,
   Resource,
   ResourceCache,
@@ -13,7 +15,6 @@ import {
   Cartesian4,
   Cartesian3,
 } from "../../../Source/Cesium.js";
-import ModelLightingOptions from "../../../Source/Scene/ModelExperimental/ModelLightingOptions.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
@@ -102,6 +103,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -150,6 +152,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -198,6 +201,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -247,6 +251,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -297,6 +302,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -345,6 +351,7 @@ describe(
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: lightingOptions,
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -366,6 +373,7 @@ describe(
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: lightingOptions,
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -387,6 +395,7 @@ describe(
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: lightingOptions,
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -408,6 +417,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -417,9 +427,9 @@ describe(
           mockFrameState
         );
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "ALPHA_MODE_OPAQUE",
-        ]);
+        expect(renderResources.alphaOptions.pass).not.toBeDefined();
+        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.OPAQUE);
+        expect(renderResources.alphaOptions.alphaCutoff).not.toBeDefined();
       });
     });
 
@@ -433,6 +443,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 
@@ -445,17 +456,9 @@ describe(
           mockFrameState
         );
 
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "ALPHA_MODE_MASK",
-        ]);
-
-        expectShaderLines(shaderBuilder._fragmentShaderParts.uniformLines, [
-          "uniform float u_alphaCutoff;",
-        ]);
-
-        expectUniformMap(uniformMap, {
-          u_alphaCutoff: cutoff,
-        });
+        expect(renderResources.alphaOptions.pass).not.toBeDefined();
+        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.MASK);
+        expect(renderResources.alphaOptions.alphaCutoff).toBe(cutoff);
       });
     });
 
@@ -468,6 +471,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
           pass: Pass.OPAQUE,
         };
@@ -479,10 +483,9 @@ describe(
           mockFrameState
         );
 
-        expect(renderResources.pass).toBe(Pass.TRANSLUCENT);
-        expectShaderLines(shaderBuilder._fragmentShaderParts.defineLines, [
-          "ALPHA_MODE_BLEND",
-        ]);
+        expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
+        expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
+        expect(renderResources.alphaOptions.alphaCutoff).not.toBeDefined();
       });
     });
 
@@ -495,6 +498,7 @@ describe(
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
           cull: true,
         };
@@ -521,6 +525,7 @@ describe(
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
           cull: true,
         };
@@ -549,6 +554,7 @@ describe(
           shaderBuilder: shaderBuilder,
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
         };
 

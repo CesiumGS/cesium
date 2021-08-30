@@ -13,6 +13,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 var GeometryPipelineStage = {};
+GeometryPipelineStage.name = "GeometryPipelineStage"; // Helps with debugging
 
 /**
  * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,

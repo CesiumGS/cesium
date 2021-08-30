@@ -1,6 +1,8 @@
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
+import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
+import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 
@@ -176,16 +178,15 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
-
   /**
-   * The pass to use in the {@link DrawCommand}.
+   * Options for configuring the alpha stage such as pass and alpha mode.
    *
-   * @type {Pass}
+   * @type {ModelAlphaOptions}
    * @readonly
    *
    * @private
    */
-  this.pass = this.model.opaquePass;
+  this.alphaOptions = new ModelAlphaOptions();
 
   /**
    * The shader variable to use for picking.
@@ -212,5 +213,6 @@ export default function PrimitiveRenderResources(
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
+    blending: BlendingState.DISABLED,
   };
 }

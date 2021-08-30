@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Modify the appearance of a procedural cumulus cloud."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>Scale with Max Size</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: scaleWithMaximumSize"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Scale X</td>
+            <td>
+              <input
+                type="range"
+                min="5.0"
+                max="50.0"
+                step="1.0"
+                data-bind="value: scaleX, valueUpdate: 'input', enable: !scaleWithMaximumSize"
+              />
+              <input
+                type="text"
+                size="1"
+                data-bind="value: scaleX, enable: !scaleWithMaximumSize"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Scale Y</td>
+            <td>
+              <input
+                type="range"
+                min="5.0"
+                max="50.0"
+                step="1.0"
+                data-bind="value: scaleY, valueUpdate: 'input', enable: !scaleWithMaximumSize"
+              />
+              <input
+                type="text"
+                size="1"
+                data-bind="value: scaleX, enable: !scaleWithMaximumSize"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Size X</td>
+            <td>
+              <input
+                type="range"
+                min="5.0"
+                max="50.0"
+                step="1.0"
+                data-bind="value: maximumSizeX, valueUpdate: 'input'"
+              />
+              <input type="text" size="1" data-bind="value: maximumSizeX" />
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Size Y</td>
+            <td>
+              <input
+                type="range"
+                min="5.0"
+                max="50.0"
+                step="1.0"
+                data-bind="value: maximumSizeY, valueUpdate: 'input'"
+              />
+              <input type="text" size="1" data-bind="value: maximumSizeY" />
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Size Z</td>
+            <td>
+              <input
+                type="range"
+                min="5.0"
+                max="50.0"
+                step="1.0"
+                data-bind="value: maximumSizeZ, valueUpdate: 'input'"
+              />
+              <input type="text" size="1" data-bind="value: maximumSizeZ" />
+            </td>
+          </tr>
+          <tr>
+            <td>Render Slice</td>
+            <td>
+              <input type="checkbox" data-bind="checked: renderSlice" />
+            </td>
+          </tr>
+          <tr>
+            <td>Slice</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="1.0"
+                step="0.01"
+                data-bind="value: slice, valueUpdate: 'input', enable: renderSlice"
+              />
+              <input
+                type="text"
+                size="1"
+                data-bind="value: slice, enable: renderSlice"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Brightness</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="1.0"
+                step="0.01"
+                data-bind="value: brightness, valueUpdate: 'input'"
+              />
+              <input type="text" size="1" data-bind="value: brightness" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+        var position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706,
+          50
+        );
+
+        // These noise parameters are set to default, but can be changed
+        // to produce different cloud results. However, the noise is precomputed,
+        // so this cannot be changed dynamically.
+        var clouds = scene.primitives.add(
+          new Cesium.CloudCollection({
+            noiseDetail: 16.0,
+            noiseOffset: Cesium.Cartesian3.ZERO,
+          })
+        );
+
+        var cloudParameters = {
+          scaleWithMaximumSize: true,
+          scaleX: 25,
+          scaleY: 12,
+          maximumSizeX: 25,
+          maximumSizeY: 12,
+          maximumSizeZ: 15,
+          renderSlice: true, // if false, renders the entire surface of the ellipsoid
+          slice: 0.36,
+          brightness: 1.0,
+        };
+
+        var cloud = clouds.add({
+          position: position,
+          scale: new Cesium.Cartesian2(
+            cloudParameters.scaleX,
+            cloudParameters.scaleY
+          ),
+          maximumSize: new Cesium.Cartesian3(
+            cloudParameters.maximumSizeX,
+            cloudParameters.maximumSizeY,
+            cloudParameters.maximumSizeZ
+          ),
+          slice: cloudParameters.renderSlice ? cloudParameters.slice : -1.0,
+          brightness: cloudParameters.brightness,
+        });
+
+        Cesium.knockout.track(cloudParameters);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(cloudParameters, toolbar);
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "scaleWithMaximumSize")
+          .subscribe(function (newValue) {
+            if (Boolean(newValue)) {
+              cloudParameters.scaleX = cloudParameters.maximumSizeX;
+              cloudParameters.scaleY = cloudParameters.maximumSizeY;
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "scaleX")
+          .subscribe(function (newValue) {
+            var value = Number(newValue);
+            cloud.scale = new Cesium.Cartesian2(value, cloud.scale.y);
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "scaleY")
+          .subscribe(function (newValue) {
+            var value = Number(newValue);
+            cloud.scale = new Cesium.Cartesian2(cloud.scale.x, value);
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "maximumSizeX")
+          .subscribe(function (newValue) {
+            var value = Number(newValue);
+            cloud.maximumSize = new Cesium.Cartesian3(
+              value,
+              cloud.maximumSize.y,
+              cloud.maximumSize.z
+            );
+            if (cloudParameters.scaleWithMaximumSize) {
+              cloud.scale = new Cesium.Cartesian2(value, cloud.scale.y);
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "maximumSizeY")
+          .subscribe(function (newValue) {
+            var value = Number(newValue);
+            cloud.maximumSize = new Cesium.Cartesian3(
+              cloud.maximumSize.x,
+              value,
+              cloud.maximumSize.z
+            );
+            if (cloudParameters.scaleWithMaximumSize) {
+              cloud.scale = new Cesium.Cartesian2(cloud.scale.x, value);
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "maximumSizeZ")
+          .subscribe(function (newValue) {
+            var value = Number(newValue);
+            cloud.maximumSize = new Cesium.Cartesian3(
+              cloud.maximumSize.x,
+              cloud.maximumSize.y,
+              value
+            );
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "renderSlice")
+          .subscribe(function (newValue) {
+            if (Boolean(newValue)) {
+              cloud.slice = Number(cloudParameters.slice);
+            } else {
+              cloud.slice = -1.0;
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "slice")
+          .subscribe(function (newValue) {
+            cloud.slice = Number(newValue);
+          });
+
+        Cesium.knockout
+          .getObservable(cloudParameters, "brightness")
+          .subscribe(function (newValue) {
+            cloud.brightness = Number(newValue);
+          });
+
+        viewer.camera.lookAt(position, new Cesium.Cartesian3(30, 30, -10));
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

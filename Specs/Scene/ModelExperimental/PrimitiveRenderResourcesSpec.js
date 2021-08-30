@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  BlendingState,
   Cartesian3,
   ComponentDatatype,
   DepthFunction,
@@ -63,12 +64,12 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   var runtimePrimitive = new ModelExperimentalPrimitive({
     primitive: primitive,
-    allowPicking: true,
+    model: mockModel,
   });
 
   var runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
     primitive: primitiveWithoutIndices,
-    allowPicking: true,
+    model: mockModel,
   });
 
   var expectedDepthTest = {
@@ -76,6 +77,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
+    blending: BlendingState.DISABLED,
   };
 
   it("throws for undefined nodeRenderResources", function () {
