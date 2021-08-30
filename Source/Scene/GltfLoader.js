@@ -190,17 +190,11 @@ Object.defineProperties(GltfLoader.prototype, {
  * @private
  */
 GltfLoader.prototype.load = function () {
-  // Skip loading glTF JSON if it was passed in as an argument.
-  if (defined(this._gltfJson)) {
-    this._state = GltfLoaderState.LOADED;
-    this._textureState = GltfLoaderState.LOADED;
-    return;
-  }
-
   var gltfJsonLoader = ResourceCache.loadGltfJson({
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     typedArray: this._typedArray,
+    gltfJson: this._gltfJson,
   });
 
   this._gltfJsonLoader = gltfJsonLoader;

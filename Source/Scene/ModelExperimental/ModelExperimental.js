@@ -380,7 +380,7 @@ ModelExperimental.prototype.destroy = function () {
  * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
  *
  * @param {Object} options Object with the following properties:
- * @param {String|Resource|Uint8Array|Object} [options.gltf] A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
