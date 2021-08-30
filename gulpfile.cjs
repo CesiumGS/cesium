@@ -74,7 +74,6 @@ const filesToLeaveInThirdParty = [
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/knockout*.js",
   "!Source/ThirdParty/measureText.js",
-  "!Source/ThirdParty/Uri.js",
 ];
 
 const sourceFiles = [
