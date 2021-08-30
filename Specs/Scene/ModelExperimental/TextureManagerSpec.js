@@ -1,5 +1,4 @@
 import {
-  defined,
   Resource,
   TextureManager,
   TextureUniform,
@@ -22,15 +21,20 @@ describe(
     });
 
     function waitForTextureLoad(textureManager, textureId) {
+      var oldValue = textureManager.getTexture(textureId);
       return pollToPromise(function () {
         scene.renderForSpecs();
         textureManager.update(scene.frameState);
-        return defined(textureManager.getTexture(textureId));
+
+        // Checking that the texture changed allows the waitForTextureLoad()
+        // to be called multiple times in one promise chain.
+        return textureManager.getTexture(textureId) !== oldValue;
       }).then(function () {
         return textureManager.getTexture(textureId);
       });
     }
     var blueUrl = "Data/Images/Blue2x2.png";
+    var greenUrl = "Data/Images/Green1x4.png";
 
     it("constructs", function () {
       var textureManager = new TextureManager();
@@ -71,6 +75,41 @@ describe(
       return waitForTextureLoad(textureManager, id).then(function (texture) {
         expect(texture.width).toBe(1);
         expect(texture.height).toBe(2);
+      });
+    });
+
+    it("destroys old texture before adding a new one", function () {
+      var textureManager = new TextureManager();
+      var id = "testTexture";
+
+      textureManager.loadTexture2D(
+        id,
+        new TextureUniform({
+          url: blueUrl,
+        })
+      );
+
+      return waitForTextureLoad(textureManager, id).then(function (
+        blueTexture
+      ) {
+        expect(blueTexture.width).toBe(2);
+        expect(blueTexture.height).toBe(2);
+        expect(blueTexture.isDestroyed()).toBe(false);
+
+        textureManager.loadTexture2D(
+          id,
+          new TextureUniform({
+            url: greenUrl,
+          })
+        );
+        return waitForTextureLoad(textureManager, id).then(function (
+          greenTexture
+        ) {
+          expect(blueTexture.isDestroyed()).toBe(true);
+          expect(greenTexture.width).toBe(1);
+          expect(greenTexture.height).toBe(4);
+          expect(greenTexture.isDestroyed()).toBe(false);
+        });
       });
     });
 
