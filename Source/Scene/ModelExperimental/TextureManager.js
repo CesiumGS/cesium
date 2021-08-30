@@ -87,6 +87,7 @@ function createTexture(textureManager, loadedImage, context) {
         height: textureUniform.height,
       },
       sampler: sampler,
+      flipY: false,
     });
   } else {
     texture = new Texture({
