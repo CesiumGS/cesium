@@ -34,6 +34,7 @@ Source/ThirdParty/kdbush.js
 Source/ThirdParty/ktx-parse.js
 Source/ThirdParty/lerc.js
 Source/ThirdParty/mersenne-twister.js
+Source/ThirdParty/meshoptimizer.js
 Source/ThirdParty/nosleep.js
 Source/ThirdParty/pako.js
 Source/ThirdParty/protobufjs.js
