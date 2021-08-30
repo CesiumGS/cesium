@@ -209,7 +209,7 @@ export default function CustomShader(options) {
    * @type {VertexVariableSets}
    * @private
    */
-  this._usedVariablesVertex = {
+  this.usedVariablesVertex = {
     attributeSet: {},
   };
   /**
@@ -218,7 +218,7 @@ export default function CustomShader(options) {
    * @type {FragmentVariableSets}
    * @private
    */
-  this._usedVariablesFragment = {
+  this.usedVariablesFragment = {
     positionSet: {},
     attributeSet: {},
     materialSet: {},
@@ -292,21 +292,21 @@ function findUsedVariables(customShader) {
 
   var vertexShaderText = customShader.vertexShaderText;
   if (defined(vertexShaderText)) {
-    attributeSet = customShader._usedVariablesVertex.attributeSet;
+    attributeSet = customShader.usedVariablesVertex.attributeSet;
     getVariables(vertexShaderText, attributeRegex, attributeSet);
   }
 
   var fragmentShaderText = customShader.fragmentShaderText;
   if (defined(fragmentShaderText)) {
-    attributeSet = customShader._usedVariablesFragment.attributeSet;
+    attributeSet = customShader.usedVariablesFragment.attributeSet;
     getVariables(fragmentShaderText, attributeRegex, attributeSet);
 
     var positionRegex = /fsInput\.(position\w+)/g;
-    var positionSet = customShader._usedVariablesFragment.positionSet;
+    var positionSet = customShader.usedVariablesFragment.positionSet;
     getVariables(fragmentShaderText, positionRegex, positionSet);
 
     var materialRegex = /material\.(\w+)/g;
-    var materialSet = customShader._usedVariablesFragment.materialSet;
+    var materialSet = customShader.usedVariablesFragment.materialSet;
     getVariables(fragmentShaderText, materialRegex, materialSet);
   }
 }

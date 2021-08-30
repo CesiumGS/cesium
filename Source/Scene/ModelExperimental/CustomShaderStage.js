@@ -227,7 +227,7 @@ function inferAttributeDefaults(attributeName) {
 function generateVertexShaderLines(customShader, namedAttributes) {
   var categories = partitionAttributes(
     namedAttributes,
-    customShader._usedVariablesVertex.attributeSet
+    customShader.usedVariablesVertex.attributeSet
   );
   var addToShader = categories.addToShader;
   var needsDefault = categories.missingAttributes;
@@ -304,7 +304,7 @@ function generateVertexShaderLines(customShader, namedAttributes) {
 function generatePositionBuiltins(customShader) {
   var fragmentInputFields = [];
   var initializationLines = [];
-  var usedVariables = customShader._usedVariablesFragment.positionSet;
+  var usedVariables = customShader.usedVariablesFragment.positionSet;
 
   // Model space position is the same position as in the glTF accessor.
   if (usedVariables.hasOwnProperty("positionMC")) {
@@ -334,7 +334,7 @@ function generatePositionBuiltins(customShader) {
 function generateFragmentShaderLines(customShader, namedAttributes) {
   var categories = partitionAttributes(
     namedAttributes,
-    customShader._usedVariablesFragment.attributeSet
+    customShader.usedVariablesFragment.attributeSet
   );
   var addToShader = categories.addToShader;
   var needsDefault = categories.missingAttributes;
@@ -481,7 +481,7 @@ function generateShaderLines(customShader, primitive) {
   // - positionWC isn't used in the fragment shader
   // - or the fragment shader is disabled
   var shouldComputePositionWC =
-    "positionWC" in customShader._usedVariablesFragment.positionSet &&
+    "positionWC" in customShader.usedVariablesFragment.positionSet &&
     fragmentLinesEnabled;
 
   if (vertexLinesEnabled) {

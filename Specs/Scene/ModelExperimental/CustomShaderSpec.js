@@ -200,8 +200,8 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       },
     };
 
-    expect(customShader._usedVariablesVertex).toEqual(expectedVertexVariables);
-    expect(customShader._usedVariablesFragment).toEqual(
+    expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
+    expect(customShader.usedVariablesFragment).toEqual(
       expectedFragmentVariables
     );
   });
