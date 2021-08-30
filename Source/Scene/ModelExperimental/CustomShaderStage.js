@@ -163,7 +163,7 @@ function getAttributeNames(attributes) {
       );
     } else {
       // Handle user defined vertex attributes. They must begin with an underscore
-      // For example, "_TEMPERATURE" will be converted to "a_temperature".
+      // For example, "_TEMPERATURE" will be converted to "temperature".
       variableName = attribute.name.substring(1).toLowerCase();
     }
 
@@ -307,20 +307,20 @@ function generatePositionBuiltins(customShader) {
   var usedVariables = customShader._usedVariablesFragment.positionSet;
 
   // Model space position is the same position as in the glTF accessor.
-  if ("positionMC" in usedVariables) {
+  if (usedVariables.hasOwnProperty("positionMC")) {
     fragmentInputFields.push("    vec3 positionMC;");
     initializationLines.push("    fsInput.positionMC = v_position;");
   }
 
   // World coordinates in ECEF coordinates. Note that this is
   // low precision (32-bit floats) on the GPU.
-  if ("positionWC" in usedVariables) {
+  if (usedVariables.hasOwnProperty("positionWC")) {
     fragmentInputFields.push("    vec3 positionWC;");
     initializationLines.push("    fsInput.positionWC = v_positionWC;");
   }
 
   // position in eye coordinates
-  if ("positionEC" in usedVariables) {
+  if (usedVariables.hasOwnProperty("positionEC")) {
     fragmentInputFields.push("    vec3 positionEC;");
     initializationLines.push("    fsInput.positionEC = v_positionEC;");
   }
@@ -437,7 +437,7 @@ function partitionAttributes(primitiveAttributes, shaderAttributeSet) {
     if (primitiveAttributes.hasOwnProperty(attributeName)) {
       var attribute = primitiveAttributes[attributeName];
 
-      if (attributeName in shaderAttributeSet) {
+      if (shaderAttributeSet.hasOwnProperty(attributeName)) {
         addToShader[attributeName] = attribute;
       }
     }
@@ -445,7 +445,7 @@ function partitionAttributes(primitiveAttributes, shaderAttributeSet) {
 
   var missingAttributes = [];
   for (attributeName in shaderAttributeSet) {
-    if (!(attributeName in primitiveAttributes)) {
+    if (!primitiveAttributes.hasOwnProperty(attributeName)) {
       missingAttributes.push(attributeName);
     }
   }

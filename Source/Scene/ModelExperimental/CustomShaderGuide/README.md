@@ -22,16 +22,6 @@ var customShader = new Cesium.CustomShader({
         url: "http://example.com/image.png"
       }),
       type: Cesium.UniformType.SAMPLER_2D
-    },
-    // Textures can also be
-    u_arrayTexture: {
-      value: new Cesium.TextureUniform({
-        typedArray: new Uint8Array([255, 0, 0, 1]),
-        width: 1,
-        height: 1,
-        pixelFormat: Cesium.PixelFormat.RGBA
-      }),
-      type: Cesium.UniformType.SAMPLER_2D
     }
   }
   // Custom varyings that will appear in the custom vertex and fragment shader
@@ -45,6 +35,8 @@ var customShader = new Cesium.CustomShader({
   // either PBR (physically-based rendering) or UNLIT depending on the desired
   // results.
   lightingModel: Cesium.LightingModel.PBR,
+  // required when setting material.alpha in the fragment shader
+  isTranslucent: true,
   // Custom vertex shader. This is a function from model space -> model space.
   // VertexInput is documented below
   vertexShaderText: `
@@ -58,8 +50,9 @@ var customShader = new Cesium.CustomShader({
   // Regardless of the mode, this always takes in a material and modifies it in place.
   fragmentShaderText: `
     void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-        // code goes here. e.g. to set the diffuse color to solid red:
+        // code goes here. e.g. to set the diffuse color to a translucent red:
         material.diffuse = vec3(1.0, 0.0, 0.0);
+        material.alpha = 0.5;
     }
   `,
 });
@@ -214,7 +207,7 @@ struct Attributes {
     // optional semantics (added if available in the 3D model file)
     vec3 normal; // corresponds to attribute with semantic "NORMAL"
     vec3 tangent;
-    vec3 texCoord_0;
+    vec2 texCoord_0;
     // etc.
 
     // custom attribues
@@ -243,7 +236,7 @@ struct Attributes {
     // optional semantics (added if available in the 3D model file)
     vec3 normal; // corresponds to attribute with semantic "NORMAL"
     vec3 tangent;
-    vec3 texCoord_0;
+    vec2 texCoord_0;
     // etc.
 
     // custom attribues

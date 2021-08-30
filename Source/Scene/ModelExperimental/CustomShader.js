@@ -17,6 +17,37 @@ import TextureManager from "./TextureManager.js";
  */
 
 /**
+ * A set of variables parsed from the user-defined shader code. These can be
+ * used for optimizations when generating the overall shader. Though they are
+ * represented as JS objects, the intended use is like a set, so only the
+ * existence of keys matter. The values will always be <code>true</code> if
+ * defined. This data structure is used because:
+ * <ul>
+ *   <li>We cannot yet use ES6 Set objects</li>
+ *   <li>Using a dictionary automatically de-duplicates variable names</li>
+ *   <li>Queries such as <code>variableSet.hasOwnProperty("position")</code> are straightforward</li>
+ * </ul>
+ * @typedef {Object<String, Boolean>} VariableSet
+ * @private
+ */
+
+/**
+ * Variable sets parsed from the user-defined vertex shader text.
+ * @typedef {Object} VertexVariableSets
+ * @property {VariableSet} attributeSet A set of all unique attributes used in the vertex shader via the <code>vsInput.attributes</code> struct.
+ * @private
+ */
+
+/**
+ * Variable sets parsed from the user-defined fragment shader text.
+ * @typedef {Object} FragmentVariableSets
+ * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
+ * @property {VariableSet} positionSet A set of all position variables like positionWC or positionEC used in the fragment shader via the <code>fsInput</code> struct
+ * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
+ * @private
+ */
+
+/**
  * A user defined GLSL shader used with {@link ModelExperimental} as well
  * as {@link Cesium3DTileset}.
  *
@@ -60,7 +91,7 @@ import TextureManager from "./TextureManager.js";
  *   `,
  *   fragmentShaderText: `
  *   void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
- *     material.normal = texture2D(u_normalMap, fsInput.attributes.normal);
+ *     material.normal = texture2D(u_normalMap, fsInput.attributes.texCoord_0);
  *     material.diffuse = v_selectedColor;
  *   }
  *   `
@@ -81,24 +112,24 @@ export default function CustomShader(options) {
   this.uniformMap = buildUniformMap(this);
   this._defaultTexture = undefined;
 
-  // Lists of variables used from the automatically-generated structs. These
-  // can be used for optimizations when generating the overall shader.
-  // The values are JS objects used like sets. The keys are the variable names,
-  // the values do not matter here. This is for three reasons:
-  // 1. We are not using ES6 sets
-  // 2. Using a dictionary automatically de-duplicates variable names
-  // 3. It makes it easy to do queries such as:
-  //    if ("position" in attributeSet) { ... }
+  /**
+   * A collection of variables used in <code>vertexShaderText</code>. This
+   * is used only for optimizations in {@link CustomShaderStage}.
+   * @type {VertexVariableSets}
+   * @private
+   */
   this._usedVariablesVertex = {
-    // attributes from the glTF
     attributeSet: {},
   };
+  /**
+   * A collection of variables used in <code>fragmentShaderText</code>. This
+   * is used only for optimizations in {@link CustomShaderStage}.
+   * @type {FragmentVariableSets}
+   * @private
+   */
   this._usedVariablesFragment = {
-    // positions in various reference frames, e.g. positionMC, positionEC
     positionSet: {},
-    // attributes from the glTF
     attributeSet: {},
-    // properties of the material used
     materialSet: {},
   };
   findUsedVariables(this);
@@ -158,7 +189,7 @@ function getVariables(shaderText, regex, outputSet) {
 
     // Using a dictionary like a set. The value doesn't
     // matter, as this will only be used for queries such as
-    // if (variableName in set) { ... }
+    // if (set.hasOwnProperty(variableName)) { ... }
     outputSet[variableName] = true;
   }
 }
