@@ -240,6 +240,9 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   if (uniform.type === UniformType.SAMPLER_2D) {
     // Textures are loaded asynchronously
     this._textureManager.loadTexture2D(uniformName, value);
+  } else if (defined(value.clone)) {
+    // clone Cartesian and Matrix types.
+    uniform.value = value.clone(uniform.value);
   } else {
     uniform.value = value;
   }

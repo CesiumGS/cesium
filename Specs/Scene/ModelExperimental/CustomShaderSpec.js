@@ -1,5 +1,7 @@
 import {
   Cartesian2,
+  Cartesian3,
+  Matrix2,
   CustomShader,
   CustomShaderMode,
   LightingModel,
@@ -106,6 +108,44 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     expect(customShader.uniformMap.u_time()).toBe(0);
     customShader.setUniform("u_time", 10);
     expect(customShader.uniformMap.u_time()).toBe(10);
+  });
+
+  it("setUniform clones vectors", function () {
+    var uniforms = {
+      u_vector: {
+        type: UniformType.VEC3,
+        value: new Cartesian3(),
+      },
+    };
+
+    var customShader = new CustomShader({
+      uniforms: uniforms,
+    });
+
+    var value = new Cartesian3(1, 0, 0);
+    customShader.setUniform("u_vector", value);
+    var result = customShader.uniformMap.u_vector();
+    expect(result).toEqual(value);
+    expect(result).not.toBe(value);
+  });
+
+  it("setUniform clones matrices", function () {
+    var uniforms = {
+      u_matrix: {
+        type: UniformType.MAT2,
+        value: new Matrix2(),
+      },
+    };
+
+    var customShader = new CustomShader({
+      uniforms: uniforms,
+    });
+
+    var value = new Matrix2(2, 0, 0, 2);
+    customShader.setUniform("u_matrix", value);
+    var result = customShader.uniformMap.u_matrix();
+    expect(result).toEqual(value);
+    expect(result).not.toBe(value);
   });
 
   it("declares varyings", function () {
