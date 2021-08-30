@@ -53,7 +53,7 @@ function measureText(context2D, textString, font, stroke, fill) {
     }
 
     // Find the number of rows (from the bottom) until the first non-white pixel
-    for (i = length - 1; i > 0; --i) {
+    for (i = length - 1; i >= 0; --i) {
       if (pixelData[i] !== 255) {
         descent = (i / width4) | 0;
         break;
@@ -64,11 +64,12 @@ function measureText(context2D, textString, font, stroke, fill) {
     // For each column, for each row, check for first non-white pixel
     for (i = 0; i < width && minx === -1; ++i) {
       for (j = 0; j < height; ++j) {
+        var pixelIndex = i * 4 + j * width4;
         if (
-          pixelData[i * 4 + j * width4] !== 255 ||
-          pixelData[i * 4 + j * width4 + 1] !== 255 ||
-          pixelData[i * 4 + j * width4 + 2] !== 255 ||
-          pixelData[i * 4 + j * width4 + 3] !== 255
+          pixelData[pixelIndex] !== 255 ||
+          pixelData[pixelIndex + 1] !== 255 ||
+          pixelData[pixelIndex + 2] !== 255 ||
+          pixelData[pixelIndex + 3] !== 255
         ) {
           minx = i;
           break;
@@ -76,18 +77,22 @@ function measureText(context2D, textString, font, stroke, fill) {
       }
     }
 
-    metrics.ascent = baseline - ascent;
-    metrics.descent = descent - baseline;
-    metrics.minx = minx - padding / 2;
-    metrics.height = metrics.descent + metrics.ascent;
-  } else {
-    metrics.ascent = 0;
-    metrics.descent = 0;
-    metrics.minx = 0;
-    metrics.height = 0;
+    return {
+      width: metrics.width,
+      height: descent - ascent,
+      ascent: baseline - ascent,
+      descent: descent - baseline,
+      minx: minx - padding / 2,
+    };
   }
 
-  return metrics;
+  return {
+    ascent: 0,
+    descent: 0,
+    minx: 0,
+    width: 0,
+    height: 0,
+  };
 }
 
 var imageSmoothingEnabledName;
@@ -163,6 +168,7 @@ function writeTextToCanvas(text, options) {
   document.body.appendChild(canvas);
 
   var dimensions = measureText(context2D, text, font, stroke, fill);
+  // Set canvas.dimensions to be accessed in LabelCollection
   canvas.dimensions = dimensions;
 
   document.body.removeChild(canvas);
