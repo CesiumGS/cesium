@@ -12,6 +12,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 var PickingPipelineStage = {};
+PickingPipelineStage.name = "PickingPipelineStage"; // Helps with debugging
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:

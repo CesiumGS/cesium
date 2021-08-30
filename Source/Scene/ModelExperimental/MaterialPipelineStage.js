@@ -28,6 +28,7 @@ var SpecularGlossiness = ModelComponents.SpecularGlossiness;
  * @private
  */
 var MaterialPipelineStage = {};
+MaterialPipelineStage.name = "MaterialPipelineStage"; // Helps with debugging
 
 /**
  * Process a primitive. This modifies the following parts of the render
@@ -96,10 +97,12 @@ MaterialPipelineStage.process = function (
     enabled: cull,
   };
 
-  addAlphaUniforms(material, uniformMap, shaderBuilder);
-
+  var alphaOptions = renderResources.alphaOptions;
+  alphaOptions.alphaMode = material.alphaMode;
   if (material.alphaMode === AlphaMode.BLEND) {
-    renderResources.pass = Pass.TRANSLUCENT;
+    alphaOptions.pass = Pass.TRANSLUCENT;
+  } else if (material.alphaMode === AlphaMode.MASK) {
+    alphaOptions.alphaCutoff = material.alphaCutoff;
   }
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);
@@ -464,37 +467,6 @@ function processMetallicRoughnessUniforms(
     };
     shaderBuilder.addDefine(
       "HAS_ROUGHNESS_FACTOR",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-}
-
-function addAlphaUniforms(material, uniformMap, shaderBuilder) {
-  var alphaMode = material.alphaMode;
-  if (alphaMode === AlphaMode.MASK) {
-    shaderBuilder.addDefine(
-      "ALPHA_MODE_MASK",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addUniform(
-      "float",
-      "u_alphaCutoff",
-      ShaderDestination.FRAGMENT
-    );
-    uniformMap.u_alphaCutoff = function () {
-      return material.alphaCutoff;
-    };
-  } else if (alphaMode === AlphaMode.BLEND) {
-    shaderBuilder.addDefine(
-      "ALPHA_MODE_BLEND",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  } else {
-    shaderBuilder.addDefine(
-      "ALPHA_MODE_OPAQUE",
       undefined,
       ShaderDestination.FRAGMENT
     );

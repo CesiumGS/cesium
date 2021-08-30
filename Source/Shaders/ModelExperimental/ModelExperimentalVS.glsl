@@ -13,6 +13,10 @@ void main()
         #endif
     #endif
 
+    #ifdef USE_CUSTOM_SHADER
+    position = customShaderStage(position);
+    #endif
+
     gl_Position = czm_modelViewProjection * vec4(position, 1.0);
 
     #ifdef PRIMITIVE_TYPE_POINTS
