@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 import when from "../ThirdParty/when.js";
-import MeshoptDecoder from "../ThirdParty/meshopt_decode.js";
+import MeshoptDecoder from "../ThirdParty/meshoptimizer.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -229,7 +229,7 @@ GltfBufferViewLoader.prototype.process = function (frameState) {
   var count = this._meshoptCount;
   var byteStride = this._meshoptByteStride;
   var result = new Uint8Array(count * byteStride);
-  MeshoptDecoder.MeshoptDecoder.decodeGltfBuffer(
+  MeshoptDecoder.decodeGltfBuffer(
     result,
     count,
     byteStride,
