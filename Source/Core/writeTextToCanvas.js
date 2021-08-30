@@ -87,11 +87,11 @@ function measureText(context2D, textString, font, stroke, fill) {
   }
 
   return {
+    width: 0,
+    height: 0,
     ascent: 0,
     descent: 0,
     minx: 0,
-    width: 0,
-    height: 0,
   };
 }
 
