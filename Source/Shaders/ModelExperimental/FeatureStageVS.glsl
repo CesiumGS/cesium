@@ -18,7 +18,15 @@ vec2 computeSt(float featureId)
 
 vec3 featureStage(vec3 position)
 {
-    vec2 st = computeSt(FEATURE_ID_ATTRIBUTE);
+    float featureId;
+
+    #ifdef FEATURE_ID_ATTRIBUTE
+    featureId = floor(texture2D(u_featureIdTexture, FEATURE_ID_TEXCOORD)).FEATURE_ID_CHANNEL * 255 + 0.5);
+    #else
+    featureId = FEATURE_ID_ATTRIBUTE
+    #endif
+
+    vec2 st = computeSt(featureId);
     model_featureSt = st;
 
     return position;

@@ -32,11 +32,28 @@ FeaturePipelineStage.process = function (
   var batchTexture = renderResources.model._featureTable._batchTexture;
   var shaderBuilder = renderResources.shaderBuilder;
 
-  shaderBuilder.addDefine(
-    "FEATURE_ID_ATTRIBUTE",
-    "a_featureId_0",
-    ShaderDestination.VERTEX
-  );
+  var featureIdTextures = primitive.featureIdTextures;
+  if (featureIdTextures.length > 0) {
+    // Currently, only one feature ID texture is supported.
+    var featureIdTexture = featureIdTextures[0];
+    var featureIdTextureReader = featureIdTexture.textureReader;
+    shaderBuilder.addDefine(
+      "FEATURE_ID_TEXCOORD",
+      "v_texCoord_" + featureIdTextureReader.texCoord,
+      ShaderDestination.VERTEX
+    );
+
+    shaderBuilder.addDefine(
+      "FEATURE_ID_CHANNEL",
+      featureIdTextureReader.channels
+    );
+  } else {
+    shaderBuilder.addDefine(
+      "FEATURE_ID_ATTRIBUTE",
+      "a_featureId_0",
+      ShaderDestination.VERTEX
+    );
+  }
 
   shaderBuilder.addUniform(
     "sampler2D",
