@@ -31,15 +31,31 @@ FeaturePipelineStage.process = function (
 ) {
   var batchTexture = renderResources.model._featureTable._batchTexture;
   var shaderBuilder = renderResources.shaderBuilder;
+  var uniformMap = renderResources.uniformMap;
 
   var featureIdTextures = primitive.featureIdTextures;
   if (featureIdTextures.length > 0) {
+    var featureIdIndex = 0;
     // Currently, only one feature ID texture is supported.
-    var featureIdTexture = featureIdTextures[0];
+    var featureIdTexture = featureIdTextures[featureIdIndex];
     var featureIdTextureReader = featureIdTexture.textureReader;
+
+    var featureIdTextureUniformName = "u_featureIdTexture_" + featureIdIndex;
+    shaderBuilder.addUniform(
+      "sampler2D",
+      featureIdTextureUniformName,
+      ShaderDestination.VERTEX
+    );
+    uniformMap[featureIdTextureUniformName] = function () {
+      return defaultValue(
+        featureIdTextureReader.texture,
+        frameState.context.defaultTexture
+      );
+    };
+
     shaderBuilder.addDefine(
       "FEATURE_ID_TEXCOORD",
-      "v_texCoord_" + featureIdTextureReader.texCoord,
+      "a_texCoord_" + featureIdTextureReader.texCoord,
       ShaderDestination.VERTEX
     );
 

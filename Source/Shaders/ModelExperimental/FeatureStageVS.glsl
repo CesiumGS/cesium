@@ -20,8 +20,8 @@ vec3 featureStage(vec3 position)
 {
     float featureId;
 
-    #ifdef FEATURE_ID_ATTRIBUTE
-    featureId = floor(texture2D(u_featureIdTexture, FEATURE_ID_TEXCOORD)).FEATURE_ID_CHANNEL * 255 + 0.5);
+    #ifdef FEATURE_ID_TEXCOORD
+    featureId = floor(texture2D(u_featureIdTexture_0, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);
     #else
     featureId = FEATURE_ID_ATTRIBUTE
     #endif

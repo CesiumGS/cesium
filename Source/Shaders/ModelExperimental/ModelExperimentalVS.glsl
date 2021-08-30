@@ -14,7 +14,7 @@ void main()
     #endif
 
     #ifdef USE_FEATURE_PICKING
-    position = featurePickingStage(position);
+    position = featureStage(position);
     #endif
     
     #ifdef USE_CUSTOM_SHADER
