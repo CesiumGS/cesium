@@ -190,7 +190,7 @@ Object.defineProperties(GltfLoader.prototype, {
  * @private
  */
 GltfLoader.prototype.load = function () {
-  // If we have a parsed Gltf JSON, we can short circut
+  // Skip loading glTF JSON if it was passed in as an argument.
   if (defined(this._gltfJson)) {
     this._state = GltfLoaderState.LOADED;
     this._textureState = GltfLoaderState.LOADED;
