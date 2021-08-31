@@ -5,7 +5,7 @@ import defined from "../Core/defined.js";
 /**
  * An object containing feature metadata.
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -61,7 +61,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
   /**
    * Statistics about the metadata.
    * <p>
-   * See the {@link https://github.com/CesiumGS/glTF/blob/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0/schema/statistics.schema.json|statistics schema reference} for the full set of properties.
+   * See the {@link https://github.com/CesiumGS/glTF/blob/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/schema/statistics.schema.json|statistics schema reference} for the full set of properties.
    * </p>
    *
    * @memberof FeatureMetadata.prototype
