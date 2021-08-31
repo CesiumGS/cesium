@@ -1,23 +1,27 @@
 import BatchTexture from "../BatchTexture.js";
-import ModelFeature from "./ModelFeature.js";
+import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import ModelFeature from "./ModelFeature.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
  * Extracts the properties from a {@link FeatureTable}.
  *
  * @param {Object} options:
- * @param {ModelExperimental} model The model that owns this feature table.
- * @param {FeatureTable} featureTable The feature table from the model used to initialize the model.
+ * @param {ModelExperimental} options.model The model that owns this feature table.
+ * @param {FeatureTable} options.featureTable The feature table from the model used to initialize the model.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to.
  *
  * @alias ModelFeatureTable
  * @constructor
  *
  * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
   this._model = options.model;
+  this._content = options.content;
   this._features = undefined;
   this._featuresLength = 0;
 
@@ -40,7 +44,9 @@ function initialize(modelFeatureTable) {
     features[i] = new ModelFeature({
       model: modelFeatureTable._model,
       featureId: i,
-      content: modelFeatureTable,
+      content: defined(modelFeatureTable._content)
+        ? modelFeatureTable._content
+        : modelFeatureTable,
     });
   }
 

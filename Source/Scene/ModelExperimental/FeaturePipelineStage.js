@@ -15,7 +15,7 @@ var FeaturePipelineStage = {};
  * Process a primitive. This modifies the following parts of the render resources.
  * <ul>
  *  <li>sets the defines for the feature ID attribute or texture coordinates to use for feature picking</li>
- *  <li>adds uniforms for the batch textures</li>
+ *  <li>adds uniforms for the batch texture</li>
  *  <li>sets up varying for the feature coordinates</li>
  *  <li>adds vertex shader code for computing feature coordinates</li>
  * </ul>

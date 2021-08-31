@@ -144,6 +144,7 @@ function initialize(content, gltf) {
 
   if (ExperimentalFeatures.enableModelExperimental) {
     modelOptions.customShader = tileset.customShader;
+    modelOptions.content = content;
     content._model = ModelExperimental.fromGltf(modelOptions);
   } else {
     modelOptions = combine(modelOptions, {

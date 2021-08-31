@@ -29,7 +29,8 @@ import ModelFeatureTable from "./ModelFeatureTable.js";
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -59,6 +60,7 @@ export default function ModelExperimental(options) {
   this._ready = false;
   this._readyPromise = when.defer();
   this._customShader = options.customShader;
+  this._content = options.content;
 
   this._texturesLoaded = false;
 
@@ -98,6 +100,7 @@ function initialize(model) {
         var featureTable = new ModelFeatureTable({
           model: model,
           featureTable: featureMetadata._featureTables[featureTableKeys[0]],
+          content: model._content,
         });
         model._featureTable = featureTable;
         model._resources.push(featureTable);
@@ -188,8 +191,9 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._opaquePass;
     },
   },
+
   /**
-   * The model's custom shader if it exists
+   * The model's custom shader, if it exists.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -201,6 +205,22 @@ Object.defineProperties(ModelExperimental.prototype, {
   customShader: {
     get: function () {
       return this._customShader;
+    },
+  },
+
+  /**
+   * The tile content this model belongs to, if it is loaded as part of a {@link Cesium3DTileset}.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cesium3DTileContent}
+   * @readonly
+   *
+   * @private
+   */
+  content: {
+    get: function () {
+      return this._content;
     },
   },
 
@@ -410,7 +430,8 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  *
  * @returns {ModelExperimental} The newly created model.
  *
@@ -451,6 +472,7 @@ ModelExperimental.fromGltf = function (options) {
     opaquePass: options.opaquePass,
     allowPicking: options.allowPicking,
     customShader: options.customShader,
+    content: options.content,
   };
   var model = new ModelExperimental(modelOptions);
 
