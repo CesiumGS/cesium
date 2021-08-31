@@ -4,6 +4,7 @@ import pollToPromise from "../../pollToPromise.js";
 function loadAndZoomToModelExperimental(options, scene) {
   var model = ModelExperimental.fromGltf({
     gltf: options.gltf,
+    basePath: options.basePath,
     modelMatrix: options.modelMatrix,
     allowPicking: options.allowPicking,
     upAxis: options.upAxis,

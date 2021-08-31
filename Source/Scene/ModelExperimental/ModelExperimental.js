@@ -380,8 +380,8 @@ ModelExperimental.prototype.destroy = function () {
  * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
  *
  * @param {Object} options Object with the following properties:
- * @param {String|Resource|Uint8Array} [options.gltf] A Resource/URL to a glTF/glb file or a binary glTF buffer
- * @param {Object} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+ * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
@@ -403,8 +403,11 @@ ModelExperimental.fromGltf = function (options) {
   Check.defined("options.gltf", options.gltf);
   //>>includeEnd('debug');
 
+  var basePath = defaultValue(options.basePath, "");
+  var baseResource = Resource.createIfNeeded(basePath);
+
   var loaderOptions = {
-    baseResource: options.basePath,
+    baseResource: baseResource,
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
@@ -412,11 +415,12 @@ ModelExperimental.fromGltf = function (options) {
   };
 
   var gltf = options.gltf;
-  if (gltf instanceof Uint8Array) {
+  if (defined(gltf.asset)) {
+    loaderOptions.gltfJson = gltf;
+    loaderOptions.gltfResource = baseResource;
+  } else if (gltf instanceof Uint8Array) {
     loaderOptions.typedArray = gltf;
-    loaderOptions.gltfResource = Resource.createIfNeeded(
-      defaultValue(options.basePath, "")
-    );
+    loaderOptions.gltfResource = baseResource;
   } else {
     loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
   }
