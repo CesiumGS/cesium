@@ -177,8 +177,12 @@ Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
 };
 
-Gltf3DTileContent.prototype.getFeature = function (batchId) {
-  return undefined;
+Gltf3DTileContent.prototype.getFeature = function (featureId) {
+  return this._model._featureTable.getFeature(featureId);
+};
+
+Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
+  return this._model._featureTable.getProperty(featureId, name);
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
