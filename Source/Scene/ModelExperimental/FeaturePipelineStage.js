@@ -14,7 +14,7 @@ var FeaturePipelineStage = {};
 /**
  * Process a primitive. This modifies the following parts of the render resources.
  * <ul>
- *  <li>sets the define for the feature ID attribute to use for feature picking</li>
+ *  <li>sets the defines for the feature ID attribute or texture coordinates to use for feature picking</li>
  *  <li>adds uniforms for the batch textures</li>
  *  <li>sets up varying for the feature coordinates</li>
  *  <li>adds vertex shader code for computing feature coordinates</li>
@@ -29,10 +29,10 @@ FeaturePipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var batchTexture = renderResources.model._featureTable._batchTexture;
   var shaderBuilder = renderResources.shaderBuilder;
   var uniformMap = renderResources.uniformMap;
 
+  // Handle feature attribution: through feature ID texture or feature ID vertex attribute.
   var featureIdTextures = primitive.featureIdTextures;
   if (featureIdTextures.length > 0) {
     var featureIdIndex = 0;
@@ -58,7 +58,6 @@ FeaturePipelineStage.process = function (
       "a_texCoord_" + featureIdTextureReader.texCoord,
       ShaderDestination.VERTEX
     );
-
     shaderBuilder.addDefine(
       "FEATURE_ID_CHANNEL",
       featureIdTextureReader.channels
@@ -71,14 +70,14 @@ FeaturePipelineStage.process = function (
     );
   }
 
+  // Handle the batch texture.
+  var batchTexture = renderResources.model._featureTable._batchTexture;
   shaderBuilder.addUniform(
     "sampler2D",
     "model_batchTexture",
     ShaderDestination.VERTEX
   );
-
   shaderBuilder.addUniform("vec4", "model_textureStep");
-  // Handle multi-line batch texture.
   if (batchTexture.textureDimensions.y > 1) {
     shaderBuilder.addDefine("MULTILINE_BATCH_TEXTURE");
     shaderBuilder.addUniform("vec2", "model_textureDimensions");

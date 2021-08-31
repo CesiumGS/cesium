@@ -1,6 +1,19 @@
 import BatchTexture from "../BatchTexture.js";
 import ModelFeature from "./ModelFeature.js";
 
+/**
+ * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
+ * Extracts the properties from a {@link FeatureTable}.
+ *
+ * @param {Object} options:
+ * @param {ModelExperimental} model The model that owns this feature table.
+ * @param {FeatureTable} featureTable The feature table from the model used to initialize the model.
+ *
+ * @alias ModelFeatureTable
+ * @constructor
+ *
+ * @private
+ */
 export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
   this._model = options.model;
@@ -35,10 +48,26 @@ function initialize(modelFeatureTable) {
   });
 }
 
+/**
+ * Creates/updates the batch texture.
+ *
+ * @param {FrameState} frameState The frame state.
+ *
+ * @private
+ */
 ModelFeatureTable.prototype.update = function (frameState) {
   this._batchTexture.update(undefined, frameState);
 };
 
+/**
+ * Gets the {@link ModelFeature} with the given <code>featureId</code>.
+ *
+ * @param {featureId} Number The ID of the feature selected or picked.
+ *
+ * @returns {ModelFeature} The model feature.
+ *
+ * @private
+ */
 ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
 };
