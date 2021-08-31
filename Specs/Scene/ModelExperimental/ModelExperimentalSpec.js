@@ -53,7 +53,7 @@ describe(
       });
     });
 
-    it("initializes ModelFeatureTable", function () {
+    it("initializes feature table", function () {
       return loadAndZoomToModelExperimental(
         { gltf: buildingsMetadata },
         scene
@@ -72,7 +72,7 @@ describe(
           expect(modelFeature instanceof ModelFeature).toEqual(true);
           expect(modelFeature._featureId).toEqual(i);
           expect(modelFeature.primitive).toEqual(model);
-          expect(modelFeature.content).toBeUndefined();
+          expect(modelFeature.content).toEqual(modelFeatureTable);
         }
 
         expect(model._resourcesLoaded).toEqual(true);
