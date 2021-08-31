@@ -14,6 +14,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
     "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
   var boxInstanced =
     "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+  var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
 
   var scene;
   var gltfLoaders = [];
@@ -55,6 +56,17 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
     gltfLoader.load();
 
     return waitForLoaderProcess(gltfLoader, scene);
+  }
+
+  function expectUniformMap(uniformMap, expected) {
+    for (var key in expected) {
+      if (expected.hasOwnProperty(key)) {
+        var expectedValue = expected[key];
+        var uniformFunction = uniformMap[key];
+        expect(uniformFunction).toBeDefined();
+        expect(uniformFunction()).toEqual(expectedValue);
+      }
+    }
   }
 
   it("sets the picking variables in render resources", function () {
@@ -185,6 +197,70 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       expect(renderResources.model._resources.length).toEqual(5);
 
       expect(renderResources.pickId).toEqual("v_pickColor");
+    });
+  });
+
+  it("sets the picking variables in render resources with feature ID textures", function () {
+    var renderResources = {
+      attributeIndex: 1,
+      instanceCount: 4,
+      pickId: undefined,
+      shaderBuilder: new ShaderBuilder(),
+      uniformMap: {},
+      model: {
+        _resources: [],
+        _featureTable: {
+          _batchTexture: {
+            pickTexture: "mockPickTexture",
+          },
+        },
+      },
+      runtimePrimitive: {
+        primitive: {},
+      },
+      runtimeNode: {
+        node: {
+          instances: {},
+        },
+      },
+      attributes: [],
+    };
+
+    return loadGltf(microcosm).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+
+      var frameState = scene.frameState;
+      var context = frameState.context;
+      // Reset pick objects.
+      context._pickObjects = [];
+
+      PickingPipelineStage.process(renderResources, primitive, frameState);
+
+      var expectedUniforms = {
+        model_pickTexture:
+          renderResources.model._featureTable._batchTexture.pickTexture,
+      };
+      expectUniformMap(renderResources.uniformMap, expectedUniforms);
+
+      var vertexDefineLines =
+        renderResources.shaderBuilder._vertexShaderParts.defineLines;
+      var fragmentDefineLines =
+        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
+      var fragmentUniformLines =
+        renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
+
+      expect(vertexDefineLines[0]).toEqual("USE_PICKING");
+      expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
+      expect(vertexDefineLines[1]).toEqual("USE_FEATURE_PICKING");
+      expect(fragmentDefineLines[1]).toEqual("USE_FEATURE_PICKING");
+      expect(fragmentUniformLines[0]).toEqual(
+        "uniform sampler2D model_pickTexture;"
+      );
+
+      expect(renderResources.pickId).toEqual(
+        "texture2D(model_pickTexture, model_featureSt);"
+      );
     });
   });
 });

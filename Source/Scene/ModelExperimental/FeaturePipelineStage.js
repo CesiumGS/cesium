@@ -60,7 +60,8 @@ FeaturePipelineStage.process = function (
     );
     shaderBuilder.addDefine(
       "FEATURE_ID_CHANNEL",
-      featureIdTextureReader.channels
+      featureIdTextureReader.channels,
+      ShaderDestination.VERTEX
     );
   } else {
     shaderBuilder.addDefine(
@@ -78,12 +79,6 @@ FeaturePipelineStage.process = function (
     ShaderDestination.VERTEX
   );
   shaderBuilder.addUniform("vec4", "model_textureStep");
-  if (batchTexture.textureDimensions.y > 1) {
-    shaderBuilder.addDefine("MULTILINE_BATCH_TEXTURE");
-    shaderBuilder.addUniform("vec2", "model_textureDimensions");
-  }
-
-  shaderBuilder.addVarying("vec2", "model_featureSt");
 
   var batchTextureUniforms = {
     model_batchTexture: function () {
@@ -92,13 +87,19 @@ FeaturePipelineStage.process = function (
         batchTexture.defaultTexture
       );
     },
-    model_textureDimensions: function () {
-      return batchTexture.textureDimensions;
-    },
     model_textureStep: function () {
       return batchTexture.textureStep;
     },
   };
+  if (batchTexture.textureDimensions.y > 1) {
+    shaderBuilder.addDefine("MULTILINE_BATCH_TEXTURE");
+    shaderBuilder.addUniform("vec2", "model_textureDimensions");
+    batchTextureUniforms.model_textureDimensions = function () {
+      return batchTexture.textureDimensions;
+    };
+  }
+
+  shaderBuilder.addVarying("vec2", "model_featureSt");
 
   renderResources.uniformMap = combine(
     batchTextureUniforms,
