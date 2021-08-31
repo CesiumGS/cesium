@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 
 /**
  * An object containing feature metadata.
@@ -29,7 +30,13 @@ function FeatureMetadata(options) {
   //>>includeEnd('debug');
 
   this._schema = options.schema;
-  this._featureTables = options.featureTables;
+  var featureTableCount = 0;
+  var featureTables = options.featureTables;
+  if (defined(featureTables)) {
+    featureTableCount = Object.keys(featureTables).length;
+  }
+  this._featureTableCount = featureTableCount;
+  this._featureTables = featureTables;
   this._featureTextures = options.featureTextures;
   this._statistics = options.statistics;
   this._extras = options.extras;
@@ -106,7 +113,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
    */
   featureTableCount: {
     get: function () {
-      return Object.keys(this._featureTables).length;
+      return this._featureTableCount;
     },
   },
 });

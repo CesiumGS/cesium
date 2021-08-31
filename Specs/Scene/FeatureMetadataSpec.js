@@ -69,6 +69,8 @@ describe("Scene/FeatureMetadata", function () {
       featureTables: mockFeatureTables,
     });
 
+    expect(metadata.featureTableCount).toEqual(2);
+
     var buildingClass = metadata.schema.classes.building;
     var treeClass = metadata.schema.classes.tree;
 
