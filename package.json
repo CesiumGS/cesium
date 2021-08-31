@@ -43,6 +43,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
+    "@zip.js/zip.js": "^2.3.8",
     "autolinker": "^3.14.3",
     "aws-sdk": "^2.932.0",
     "bitmap-sdf": "^1.0.3",
@@ -67,7 +68,7 @@
     "gulp-tap": "^2.0.0",
     "gulp-uglify": "^3.0.2",
     "gulp-zip": "^5.1.0",
-    "husky": "^4.3.8",
+    "husky": "^7.0.0",
     "jasmine-core": "^3.7.1",
     "jsdoc": "^3.6.7",
     "jsep": "^0.3.1",
@@ -110,13 +111,7 @@
     "tween.js": "^16.6.0",
     "typescript": "^4.3.4",
     "when": "1.7.1",
-    "yargs": "^17.0.1",
-    "@zip.js/zip.js": "^2.3.8"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
+    "yargs": "^17.0.1"
   },
   "scripts": {
     "convertToModules": "gulp convertToModules",
@@ -151,6 +146,6 @@
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\"",
-    "pretty-quick": "pretty-quick"
+    "prepare": "husky install"
   }
 }
