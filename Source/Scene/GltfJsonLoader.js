@@ -30,6 +30,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
+ * @param {Object} [options.gltfJson] The parsed glTF JSON contents.
  * @param {String} [options.cacheKey] The cache key of the resource.
  *
  * @private
@@ -40,6 +41,7 @@ export default function GltfJsonLoader(options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var typedArray = options.typedArray;
+  var gltfJson = options.gltfJson;
   var cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
@@ -52,6 +54,7 @@ export default function GltfJsonLoader(options) {
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._typedArray = typedArray;
+  this._gltfJson = gltfJson;
   this._cacheKey = cacheKey;
   this._gltf = undefined;
   this._bufferLoaders = [];
@@ -114,57 +117,44 @@ Object.defineProperties(GltfJsonLoader.prototype, {
  * @private
  */
 GltfJsonLoader.prototype.load = function () {
-  if (defined(this._typedArray)) {
-    loadFromTypedArray(this);
+  this._state = ResourceLoaderState.LOADING;
+
+  var processPromise;
+  if (defined(this._gltfJson)) {
+    processPromise = processGltfJson(this, this._gltfJson);
+  } else if (defined(this._typedArray)) {
+    processPromise = processGltfTypedArray(this, this._typedArray);
   } else {
-    loadFromUri(this);
+    processPromise = loadFromUri(this);
   }
+
+  var that = this;
+
+  return processPromise
+    .then(function (gltf) {
+      if (that.isDestroyed()) {
+        return;
+      }
+      that._gltf = gltf;
+      that._state = ResourceLoaderState.READY;
+      that._promise.resolve(that);
+    })
+    .otherwise(function (error) {
+      if (that.isDestroyed()) {
+        return;
+      }
+      handleError(that, error);
+    });
 };
 
-function loadFromTypedArray(gltfJsonLoader) {
-  gltfJsonLoader._state = ResourceLoaderState.LOADING;
-  return processGltf(gltfJsonLoader, gltfJsonLoader._typedArray)
-    .then(function (gltf) {
-      if (gltfJsonLoader.isDestroyed()) {
-        return;
-      }
-      gltfJsonLoader._gltf = gltf;
-      gltfJsonLoader._state = ResourceLoaderState.READY;
-      gltfJsonLoader._promise.resolve(gltfJsonLoader);
-    })
-    .otherwise(function (error) {
-      if (gltfJsonLoader.isDestroyed()) {
-        return;
-      }
-      handleError(gltfJsonLoader, error);
-    });
-}
-
 function loadFromUri(gltfJsonLoader) {
-  gltfJsonLoader._state = ResourceLoaderState.LOADING;
-  gltfJsonLoader
-    ._fetchGltf()
-    .then(function (arrayBuffer) {
-      if (gltfJsonLoader.isDestroyed()) {
-        return;
-      }
-      var typedArray = new Uint8Array(arrayBuffer);
-      return processGltf(gltfJsonLoader, typedArray);
-    })
-    .then(function (gltf) {
-      if (gltfJsonLoader.isDestroyed()) {
-        return;
-      }
-      gltfJsonLoader._gltf = gltf;
-      gltfJsonLoader._state = ResourceLoaderState.READY;
-      gltfJsonLoader._promise.resolve(gltfJsonLoader);
-    })
-    .otherwise(function (error) {
-      if (gltfJsonLoader.isDestroyed()) {
-        return;
-      }
-      handleError(gltfJsonLoader, error);
-    });
+  return gltfJsonLoader._fetchGltf().then(function (arrayBuffer) {
+    if (gltfJsonLoader.isDestroyed()) {
+      return;
+    }
+    var typedArray = new Uint8Array(arrayBuffer);
+    return processGltfTypedArray(gltfJsonLoader, typedArray);
+  });
 }
 
 function handleError(gltfJsonLoader, error) {
@@ -249,14 +239,7 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
   return when.all(promises);
 }
 
-function processGltf(gltfJsonLoader, typedArray) {
-  var gltf;
-  if (getMagic(typedArray) === "glTF") {
-    gltf = parseGlb(typedArray);
-  } else {
-    gltf = getJsonFromTypedArray(typedArray);
-  }
-
+function processGltfJson(gltfJsonLoader, gltf) {
   addPipelineExtras(gltf);
 
   return decodeDataUris(gltf).then(function () {
@@ -268,6 +251,17 @@ function processGltf(gltfJsonLoader, typedArray) {
       });
     });
   });
+}
+
+function processGltfTypedArray(gltfJsonLoader, typedArray) {
+  var gltf;
+  if (getMagic(typedArray) === "glTF") {
+    gltf = parseGlb(typedArray);
+  } else {
+    gltf = getJsonFromTypedArray(typedArray);
+  }
+
+  return processGltfJson(gltfJsonLoader, gltf);
 }
 
 /**

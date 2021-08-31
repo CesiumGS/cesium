@@ -6,6 +6,7 @@ import {
   ModelExperimental,
   Cartesian3,
   defined,
+  HeadingPitchRange,
   when,
   ShaderProgram,
   ModelFeature,
@@ -22,6 +23,8 @@ describe(
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    var boxTexturedGltfUrl =
+      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
 
     var scene;
 
@@ -76,6 +79,23 @@ describe(
         }
 
         expect(model._resourcesLoaded).toEqual(true);
+      });
+    });
+
+    it("initializes from JSON object", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph).toBeDefined();
+          expect(model._resourcesLoaded).toEqual(true);
+        });
       });
     });
 
@@ -140,9 +160,14 @@ describe(
         return;
       }
 
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      var offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
+          offset: offset,
         },
         scene
       ).then(function (model) {

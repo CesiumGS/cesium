@@ -268,6 +268,7 @@ ResourceCache.loadExternalBuffer = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
+ * @param {Object} [options.gltfJson] The parsed glTF JSON contents.
  *
  * @returns {GltfJsonLoader} The glTF JSON.
  * @private
@@ -277,6 +278,7 @@ ResourceCache.loadGltfJson = function (options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var typedArray = options.typedArray;
+  var gltfJson = options.gltfJson;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -297,6 +299,7 @@ ResourceCache.loadGltfJson = function (options) {
     gltfResource: gltfResource,
     baseResource: baseResource,
     typedArray: typedArray,
+    gltfJson: gltfJson,
     cacheKey: cacheKey,
   });
 
