@@ -23,7 +23,7 @@ vec3 featureStage(vec3 position)
     #ifdef FEATURE_ID_TEXTURE
     featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);
     #else
-    featureId = FEATURE_ID_ATTRIBUTE
+    featureId = FEATURE_ID_ATTRIBUTE;
     #endif
 
     if (featureId < model_featuresLength)
@@ -33,6 +33,7 @@ vec3 featureStage(vec3 position)
 
         float show = ceil(featureProperties.a);
         position *= show;
+
 
         model_featureSt = computeSt(featureId);
         model_featureColor = featureProperties;
