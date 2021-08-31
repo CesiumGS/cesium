@@ -8,6 +8,7 @@ import {
   defined,
   when,
   ShaderProgram,
+  ModelFeature,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -19,6 +20,8 @@ describe(
 
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+    var buildingsMetadata =
+      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
     var scene;
 
@@ -47,6 +50,32 @@ describe(
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
         });
+      });
+    });
+
+    it("initializes ModelFeatureTable", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._featureTable).toBeDefined();
+
+        var modelFeatureTable = model._featureTable;
+        expect(modelFeatureTable._featuresLength).toEqual(10);
+        expect(modelFeatureTable._batchTexture).toBeDefined();
+        expect(modelFeatureTable._batchTexture._featuresLength).toEqual(10);
+
+        var modelFeatures = modelFeatureTable._features;
+        for (var i = 0; i < modelFeatures.length; i++) {
+          var modelFeature = modelFeatures[i];
+          expect(modelFeature instanceof ModelFeature).toEqual(true);
+          expect(modelFeature._featureId).toEqual(i);
+          expect(modelFeature.primitive).toEqual(model);
+          expect(modelFeature.content).toBeUndefined();
+        }
+
+        expect(model._resourcesLoaded).toEqual(true);
       });
     });
 

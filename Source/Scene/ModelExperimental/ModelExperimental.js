@@ -66,6 +66,8 @@ export default function ModelExperimental(options) {
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
   this._allowPicking = defaultValue(options.allowPicking, true);
 
+  this._featureTable = undefined;
+
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
 
@@ -90,9 +92,9 @@ function initialize(model) {
   loader.promise
     .then(function (loader) {
       var featureMetadata = loader.components.featureMetadata;
-      var featureTableKeys = Object.keys(featureMetadata._featureTables);
-      if (defined(featureMetadata) && featureTableKeys.length > 0) {
+      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         // Currently, only the first feature table is used.
+        var featureTableKeys = Object.keys(featureMetadata._featureTables);
         model._featureTable = new ModelFeatureTable({
           model: model,
           featureTable: featureMetadata._featureTables[featureTableKeys[0]],

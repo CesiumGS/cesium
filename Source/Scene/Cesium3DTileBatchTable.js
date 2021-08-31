@@ -70,7 +70,7 @@ function Cesium3DTileBatchTable(
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
     content: content,
-    statistics: content.tileset._statistics,
+    statistics: content._tileset._statistics,
   });
 }
 

@@ -106,7 +106,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
    */
   featureTableCount: {
     get: function () {
-      return this._featureTables.length;
+      return Object.keys(this._featureTables).length;
     },
   },
 });

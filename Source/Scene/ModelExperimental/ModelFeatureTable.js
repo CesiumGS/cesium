@@ -1,5 +1,6 @@
 import BatchTexture from "../BatchTexture.js";
 import ModelFeature from "./ModelFeature.js";
+import destroyObject from "../../Core/destroyObject.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -70,4 +71,42 @@ ModelFeatureTable.prototype.update = function (frameState) {
  */
 ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
+};
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <p>
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ * </p>
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see ModelFeatureTable#destroy
+ * @private
+ */
+ModelFeatureTable.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <p>
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ * </p>
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @example
+ * e = e && e.destroy();
+ *
+ * @see ModelFeatureTable#isDestroyed
+ * @private
+ */
+ModelFeatureTable.prototype.update = function (frameState) {
+  this._batchTexture.destroy();
+  destroyObject(this);
 };
