@@ -106,7 +106,7 @@ ModelFeatureTable.prototype.isDestroyed = function () {
  * @see ModelFeatureTable#isDestroyed
  * @private
  */
-ModelFeatureTable.prototype.update = function (frameState) {
+ModelFeatureTable.prototype.destroy = function (frameState) {
   this._batchTexture.destroy();
   destroyObject(this);
 };

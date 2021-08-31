@@ -95,10 +95,12 @@ function initialize(model) {
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         // Currently, only the first feature table is used.
         var featureTableKeys = Object.keys(featureMetadata._featureTables);
-        model._featureTable = new ModelFeatureTable({
+        var featureTable = new ModelFeatureTable({
           model: model,
           featureTable: featureMetadata._featureTables[featureTableKeys[0]],
         });
+        model._featureTable = featureTable;
+        model._resources.push(featureTable);
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
