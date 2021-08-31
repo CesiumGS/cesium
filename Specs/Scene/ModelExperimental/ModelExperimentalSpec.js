@@ -112,8 +112,8 @@ describe(
         return;
       }
 
-      // This model gets clipped in cesium-analytics due to disabled
-      // log depth, so zoom out just a little bit
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
       var offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
       return loadAndZoomToModelExperimental(
