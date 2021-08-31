@@ -41,6 +41,11 @@ FeaturePipelineStage.process = function (
     var featureIdTextureReader = featureIdTexture.textureReader;
 
     var featureIdTextureUniformName = "u_featureIdTexture_" + featureIdIndex;
+    shaderBuilder.addDefine(
+      "FEATURE_ID_TEXTURE",
+      featureIdTextureUniformName,
+      ShaderDestination.VERTEX
+    );
     shaderBuilder.addUniform(
       "sampler2D",
       featureIdTextureUniformName,

@@ -187,8 +187,11 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       var fragmentVaryingLines =
         renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
 
-      expect(vertexDefineLines[0]).toEqual("FEATURE_ID_TEXCOORD a_texCoord_0");
-      expect(vertexDefineLines[1]).toEqual("FEATURE_ID_CHANNEL r");
+      expect(vertexDefineLines[0]).toEqual(
+        "FEATURE_ID_TEXTURE u_featureIdTexture_0"
+      );
+      expect(vertexDefineLines[1]).toEqual("FEATURE_ID_TEXCOORD a_texCoord_0");
+      expect(vertexDefineLines[2]).toEqual("FEATURE_ID_CHANNEL r");
 
       expect(vertexUniformLines[0]).toEqual(
         "uniform sampler2D u_featureIdTexture_0;"
