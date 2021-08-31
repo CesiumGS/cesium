@@ -15,7 +15,7 @@ CPUStylingStage.process = function (renderResources, model, frameState) {
   );
   shaderBuilder.addFragmentLines([CPUStylingStageFS]);
 
-  if (defined(model.hasStyle)) {
+  if (defined(model._hasStyle)) {
     shaderBuilder.addDefine(
       "FEATURE_STYLING",
       undefined,

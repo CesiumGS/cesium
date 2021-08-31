@@ -196,7 +196,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   }
 
   var modelRenderResources = new ModelRenderResources(model);
-  if (model.hasStyle || defined(model.color)) {
+  if (model._hasStyle || defined(model.color)) {
     this._pipelineStages.push(CPUStylingStage);
   }
 

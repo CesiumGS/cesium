@@ -76,3 +76,7 @@ Object.defineProperties(ModelFeature.prototype, {
 ModelFeature.prototype.getProperty = function (name) {
   return this._content.getProperty(this._featureId, name);
 };
+
+ModelFeature.prototype.getPropertyInherited = function (name) {
+  return this._content.getPropertyInherited(this._featureId, name);
+};
