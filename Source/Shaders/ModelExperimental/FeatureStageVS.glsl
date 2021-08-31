@@ -27,8 +27,7 @@ vec3 featureStage(vec3 position)
     #endif
 
     if (featureId < model_featuresLength) {
-        vec2 st = computeSt(featureId);
-        model_featureSt = st;
+        model_featureSt = computeSt(featureId);
     }
 
     return position;
