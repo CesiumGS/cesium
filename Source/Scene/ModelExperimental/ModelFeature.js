@@ -40,6 +40,7 @@ Object.defineProperties(ModelFeature.prototype, {
    * @type {ModelExperimental}
    *
    * @readonly
+   * @private
    */
   primitive: {
     get: function () {

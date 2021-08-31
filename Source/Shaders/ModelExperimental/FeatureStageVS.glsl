@@ -26,8 +26,10 @@ vec3 featureStage(vec3 position)
     featureId = FEATURE_ID_ATTRIBUTE
     #endif
 
-    vec2 st = computeSt(featureId);
-    model_featureSt = st;
+    if (featureId < model_featuresLength) {
+        vec2 st = computeSt(featureId);
+        model_featureSt = st;
+    }
 
     return position;
 }

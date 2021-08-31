@@ -75,6 +75,7 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       model: {
         _resources: [],
         _featureTable: {
+          _featuresLength: 10,
           _batchTexture: {
             batchTexture: 0,
             textureDimensions: {
@@ -118,23 +119,25 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       );
 
       expect(vertexUniformLines[0]).toEqual(
+        "uniform float model_featuresLength;"
+      );
+      expect(vertexUniformLines[1]).toEqual(
         "uniform sampler2D model_batchTexture;"
       );
-      expect(vertexUniformLines[1]).toEqual("uniform vec4 model_textureStep;");
-      expect(vertexUniformLines[2]).toEqual(
+      expect(vertexUniformLines[2]).toEqual("uniform vec4 model_textureStep;");
+      expect(vertexUniformLines[3]).toEqual(
         "uniform vec2 model_textureDimensions;"
       );
 
       expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
 
+      var featureTable = renderResources.model._featureTable;
       var expectedUniforms = {
-        model_batchTexture:
-          renderResources.model._featureTable._batchTexture.batchTexture,
-        model_textureDimensions:
-          renderResources.model._featureTable._batchTexture.textureDimensions,
-        model_textureStep:
-          renderResources.model._featureTable._batchTexture.textureStep,
+        model_featuresLength: featureTable._featuresLength,
+        model_batchTexture: featureTable._batchTexture.batchTexture,
+        model_textureDimensions: featureTable._batchTexture.textureDimensions,
+        model_textureStep: featureTable._batchTexture.textureStep,
       };
 
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
@@ -149,6 +152,7 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       model: {
         _resources: [],
         _featureTable: {
+          _featuresLength: 10,
           _batchTexture: {
             batchTexture: 0,
             textureDimensions: {
@@ -197,25 +201,26 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
         "uniform sampler2D u_featureIdTexture_0;"
       );
       expect(vertexUniformLines[1]).toEqual(
+        "uniform float model_featuresLength;"
+      );
+      expect(vertexUniformLines[2]).toEqual(
         "uniform sampler2D model_batchTexture;"
       );
-      expect(vertexUniformLines[2]).toEqual("uniform vec4 model_textureStep;");
-      expect(vertexUniformLines[3]).toEqual(
+      expect(vertexUniformLines[3]).toEqual("uniform vec4 model_textureStep;");
+      expect(vertexUniformLines[4]).toEqual(
         "uniform vec2 model_textureDimensions;"
       );
-
       expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
 
+      var featureTable = renderResources.model._featureTable;
       var expectedUniforms = {
         u_featureIdTexture_0:
           primitive.featureIdTextures[0].textureReader.texture,
-        model_batchTexture:
-          renderResources.model._featureTable._batchTexture.batchTexture,
-        model_textureDimensions:
-          renderResources.model._featureTable._batchTexture.textureDimensions,
-        model_textureStep:
-          renderResources.model._featureTable._batchTexture.textureStep,
+        model_featuresLength: featureTable._featuresLength,
+        model_batchTexture: featureTable._batchTexture.batchTexture,
+        model_textureDimensions: featureTable._batchTexture.textureDimensions,
+        model_textureStep: featureTable._batchTexture.textureStep,
       };
 
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
