@@ -53,7 +53,7 @@ Object.defineProperties(ModelFeature.prototype, {
    *
    * @memberof ModelFeature.prototype
    *
-   * @type {Cesium3DTileContent}
+   * @type {Cesium3DTileContent|ModelFeature}
    *
    * @readonly
    * @private
@@ -64,3 +64,7 @@ Object.defineProperties(ModelFeature.prototype, {
     },
   },
 });
+
+ModelFeature.prototype.getProperty = function (name) {
+  return this._content.getProperty(this._featureId, name);
+};

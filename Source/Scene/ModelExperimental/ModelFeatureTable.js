@@ -23,6 +23,8 @@ export default function ModelFeatureTable(options) {
 
   this._batchTexture = undefined;
 
+  this._table = options.featureTable._metadataTable;
+
   initialize(this);
 }
 
@@ -37,6 +39,7 @@ function initialize(modelFeatureTable) {
     features[i] = new ModelFeature({
       model: modelFeatureTable._model,
       featureId: i,
+      content: modelFeatureTable,
     });
   }
 
@@ -71,6 +74,20 @@ ModelFeatureTable.prototype.update = function (frameState) {
  */
 ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
+};
+
+/**
+ * Gets the property value for the feature with the given feature ID.
+ *
+ * @param {featureId} Number The ID of the feature selected or picked.
+ * @param {name} String The property name.
+ *
+ * @returns {Object}
+ *
+ * @private
+ */
+ModelFeatureTable.prototype.getProperty = function (featureId, name) {
+  return this._table.getProperty(featureId, name);
 };
 
 /**
