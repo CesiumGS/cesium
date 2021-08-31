@@ -184,8 +184,12 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
 
       var vertexDefineLines =
         renderResources.shaderBuilder._vertexShaderParts.defineLines;
+      var fragmentDefineLines =
+        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
       var vertexUniformLines =
         renderResources.shaderBuilder._vertexShaderParts.uniformLines;
+      var fragmentUniformLines =
+        renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
       var vertexVaryingLines =
         renderResources.shaderBuilder._vertexShaderParts.varyingLines;
       var fragmentVaryingLines =
@@ -196,6 +200,14 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       );
       expect(vertexDefineLines[1]).toEqual("FEATURE_ID_TEXCOORD a_texCoord_0");
       expect(vertexDefineLines[2]).toEqual("FEATURE_ID_CHANNEL r");
+
+      expect(fragmentDefineLines[0]).toEqual(
+        "FEATURE_ID_TEXTURE u_featureIdTexture_0"
+      );
+      expect(fragmentDefineLines[1]).toEqual(
+        "FEATURE_ID_TEXCOORD v_texCoord_0"
+      );
+      expect(fragmentDefineLines[2]).toEqual("FEATURE_ID_CHANNEL r");
 
       expect(vertexUniformLines[0]).toEqual(
         "uniform sampler2D u_featureIdTexture_0;"
@@ -210,6 +222,11 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       expect(vertexUniformLines[4]).toEqual(
         "uniform vec2 model_textureDimensions;"
       );
+
+      expect(fragmentUniformLines[0]).toEqual(
+        "uniform sampler2D u_featureIdTexture_0;"
+      );
+
       expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
 

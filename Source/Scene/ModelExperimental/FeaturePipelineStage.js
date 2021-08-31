@@ -44,12 +44,12 @@ FeaturePipelineStage.process = function (
     shaderBuilder.addDefine(
       "FEATURE_ID_TEXTURE",
       featureIdTextureUniformName,
-      ShaderDestination.VERTEX
+      ShaderDestination.BOTH
     );
     shaderBuilder.addUniform(
       "sampler2D",
       featureIdTextureUniformName,
-      ShaderDestination.VERTEX
+      ShaderDestination.BOTH
     );
     uniformMap[featureIdTextureUniformName] = function () {
       return defaultValue(
@@ -64,9 +64,15 @@ FeaturePipelineStage.process = function (
       ShaderDestination.VERTEX
     );
     shaderBuilder.addDefine(
+      "FEATURE_ID_TEXCOORD",
+      "v_texCoord_" + featureIdTextureReader.texCoord,
+      ShaderDestination.FRAGMENT
+    );
+
+    shaderBuilder.addDefine(
       "FEATURE_ID_CHANNEL",
       featureIdTextureReader.channels,
-      ShaderDestination.VERTEX
+      ShaderDestination.BOTH
     );
   } else {
     shaderBuilder.addDefine(
