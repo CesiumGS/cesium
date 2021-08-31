@@ -34,4 +34,15 @@ export default function ModelRenderResources(model) {
    * @private
    */
   this.model = model;
+
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = {};
 }

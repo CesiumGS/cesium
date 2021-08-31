@@ -191,6 +191,11 @@ Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
 };
 
 Gltf3DTileContent.prototype.applyStyle = function (style) {
+  if (defined(this._model._featureTable)) {
+    this._model._featureTable.applyStyle(style);
+    return;
+  }
+
   var hasColorStyle = defined(style) && defined(style.color);
   var hasShowStyle = defined(style) && defined(style.show);
   this._model.color = hasColorStyle

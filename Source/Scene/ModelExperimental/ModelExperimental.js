@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -31,6 +32,9 @@ import ModelFeatureTable from "./ModelFeatureTable.js";
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -61,6 +65,15 @@ export default function ModelExperimental(options) {
   this._readyPromise = when.defer();
   this._customShader = options.customShader;
   this._content = options.content;
+
+  this._hasStyle = false;
+  this._color = options.color;
+  this._colorBlendMode = defaultValue(
+    options.colorBlendMode,
+    ColorBlendMode.HIGHLIGHT
+  );
+  this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+  this._show = defaultValue(options.show, true);
 
   this._texturesLoaded = false;
 
@@ -225,6 +238,48 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The color to blend with the model's rendered color.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Color}
+   *
+   * @private
+   */
+  color: {
+    get: function () {
+      return this._color;
+    },
+    set: function (value) {
+      if (value !== this._color) {
+        this.resetDrawCommands();
+      }
+      this._color = value;
+    },
+  },
+
+  /**
+   * Whether or not to show the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Color}
+   *
+   * @private
+   */
+  show: {
+    get: function () {
+      return this._show;
+    },
+    set: function (value) {
+      if (value !== this._color) {
+        this.resetDrawCommands();
+      }
+      this._show = value;
+    },
+  },
+
+  /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
    *
    * @type {Boolean}
@@ -364,6 +419,11 @@ ModelExperimental.prototype.update = function (frameState) {
     frameState.commandList,
     this._sceneGraph._drawCommands
   );
+};
+
+ModelExperimental.prototype.resetDrawCommands = function () {
+  this._drawCommandsBuilt = false;
+  this._sceneGraph._drawCommands = [];
 };
 
 /**

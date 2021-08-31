@@ -121,6 +121,7 @@ FeaturePipelineStage.process = function (
   }
 
   shaderBuilder.addVarying("vec2", "model_featureSt");
+  shaderBuilder.addVarying("vec4", "model_featureColor");
 
   renderResources.uniformMap = combine(
     batchTextureUniforms,

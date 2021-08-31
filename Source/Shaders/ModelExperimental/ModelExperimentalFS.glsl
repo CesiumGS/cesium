@@ -46,5 +46,10 @@ void main()
     material = lightingStage(material);
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
+
+    #ifdef USE_CPU_STYLING
+    color = cpuStylingStage(color);
+    #endif
+
     gl_FragColor = color;
 }

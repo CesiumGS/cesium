@@ -1,4 +1,6 @@
 import BatchTexture from "../BatchTexture.js";
+import Color from "../../Core/Color.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
@@ -130,7 +132,58 @@ ModelFeatureTable.prototype.isDestroyed = function () {
  * @see ModelFeatureTable#isDestroyed
  * @private
  */
-ModelFeatureTable.prototype.destroy = function (frameState) {
+ModelFeatureTable.prototype.destroy = function () {
   this._batchTexture.destroy();
   destroyObject(this);
+};
+
+ModelFeatureTable.prototype.setShow = function (featureId, show) {
+  this._batchTexture.setShow(featureId, show);
+};
+
+ModelFeatureTable.prototype.setAllShow = function (show) {
+  this._batchTexture.setAllShow(show);
+};
+
+ModelFeatureTable.prototype.getShow = function (featureId) {
+  return this._batchTexture.getShow(featureId);
+};
+
+ModelFeatureTable.prototype.setColor = function (featureId, color) {
+  this._batchTexture.setColor(featureId, color);
+};
+
+ModelFeatureTable.prototype.setAllColor = function (color) {
+  this._batchTexture.setAllColor(color);
+};
+
+ModelFeatureTable.prototype.getColor = function (featureId, result) {
+  return this._batchTexture.getColor(featureId, result);
+};
+
+var scratchColor = new Color();
+ModelFeatureTable.prototype.applyStyle = function (style) {
+  // TODO: Handle style === undefined
+
+  for (var i = 0; i < this._featuresLength; i++) {
+    var feature = this.getFeature(i);
+    var color = defined(style.color)
+      ? defaultValue(
+          style.color.evaluateColor(feature, scratchColor),
+          BatchTexture.DEFAULT_COLOR_VALUE
+        )
+      : BatchTexture.DEFAULT_COLOR_VALUE;
+    var show = defined(style.show)
+      ? defaultValue(
+          style.show.evaluate(feature),
+          BatchTexture.DEFAULT_SHOW_VALUE
+        )
+      : BatchTexture.DEFAULT_SHOW_VALUE;
+    this.setColor(i, color);
+    this.setShow(i, show);
+  }
+
+  var model = this._model;
+  model._hasStyle = true;
+  model.resetDrawCommands();
 };

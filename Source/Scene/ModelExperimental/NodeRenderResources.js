@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
@@ -39,6 +40,17 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
+
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values. Inherited from the model render resources.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = clone(modelRenderResources.uniformMap);
 
   // other properties
   /**

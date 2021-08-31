@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
@@ -96,6 +97,17 @@ export default function PrimitiveRenderResources(
   this.instanceCount = nodeRenderResources.instanceCount;
 
   /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values. Inherited from the node render resources.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = clone(nodeRenderResources.uniformMap);
+
+  /**
    * A reference to the runtime node
    *
    * @type {ModelExperimentalPrimitive}
@@ -158,16 +170,6 @@ export default function PrimitiveRenderResources(
     nodeRenderResources.instancingTranslationMax,
     nodeRenderResources.instancingTranslationMin
   );
-  /**
-   * A dictionary mapping uniform name to functions that return the uniform
-   * values.
-   *
-   * @type {Object.<String, Function>}
-   * @readonly
-   *
-   * @private
-   */
-  this.uniformMap = {};
   /**
    * Options for configuring the lighting stage such as selecting between
    * unlit and PBR shading.

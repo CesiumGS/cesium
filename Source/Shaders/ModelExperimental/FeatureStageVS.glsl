@@ -28,7 +28,14 @@ vec3 featureStage(vec3 position)
 
     if (featureId < model_featuresLength)
     {
+        vec2 st = computeSt(featureId);
+        vec4 featureProperties = texture2D(model_batchTexture, st);
+
+        float show = ceil(featureProperties.a);
+        position *= show;
+
         model_featureSt = computeSt(featureId);
+        model_featureColor = featureProperties;
     }
 
     return position;
