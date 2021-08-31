@@ -23,6 +23,7 @@ function loadAndZoomToModelExperimental(options, scene) {
     .then(function () {
       scene.camera.flyToBoundingSphere(model.boundingSphere, {
         duration: 0,
+        offset: options.offset,
       });
       return model;
     })
