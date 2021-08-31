@@ -6,6 +6,7 @@ import {
   ModelExperimental,
   Cartesian3,
   defined,
+  HeadingPitchRange,
   when,
   ShaderProgram,
 } from "../../../Source/Cesium.js";
@@ -130,9 +131,14 @@ describe(
         return;
       }
 
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      var offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
+          offset: offset,
         },
         scene
       ).then(function (model) {
