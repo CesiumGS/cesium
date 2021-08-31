@@ -639,25 +639,25 @@ describe("Scene/GltfJsonLoader", function () {
     });
   });
 
-  it("loads JSON directly", function () {
-    var gltf2Binary = clone(gltf2, true);
-    delete gltf2Binary.buffers[0].uri;
+  it("loads JSON directly", function() {
+    var gltf = clone(gltf2, true);
 
-    var gltf2BinaryUpdated = clone(gltf2Updated, true);
-    delete gltf2BinaryUpdated.buffers[0].uri;
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      when.resolve(new Float32Array([0.0, 0.0, 0.0]).buffer)
+    );
 
     var gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      gltfJson: gltf2Binary,
+      gltfJson: gltf
     });
 
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
       var gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2BinaryUpdated);
+      expect(gltf).toEqual(gltf2Updated);
     });
   });
 
