@@ -26,7 +26,8 @@ vec3 featureStage(vec3 position)
     featureId = FEATURE_ID_ATTRIBUTE
     #endif
 
-    if (featureId < model_featuresLength) {
+    if (featureId < model_featuresLength)
+    {
         model_featureSt = computeSt(featureId);
     }
 

@@ -23,6 +23,7 @@ export default function ModelFeatureTable(options) {
 
   this._batchTexture = undefined;
 
+  // At the moment, only the metadata table is supported.
   this._table = options.featureTable._metadataTable;
 
   initialize(this);
