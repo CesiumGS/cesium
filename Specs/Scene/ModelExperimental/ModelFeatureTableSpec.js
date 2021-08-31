@@ -54,4 +54,18 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
       }
     }
   });
+
+  it("destroy works", function () {
+    var table = new ModelFeatureTable({
+      featureTable: mockFeatureTable,
+    });
+    var batchTexture = table._batchTexture;
+    expect(batchTexture.isDestroyed()).toEqual(false);
+    expect(table.isDestroyed()).toEqual(false);
+
+    table.destroy();
+
+    expect(batchTexture.isDestroyed()).toEqual(true);
+    expect(table.isDestroyed()).toEqual(true);
+  });
 });
