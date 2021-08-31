@@ -639,6 +639,28 @@ describe("Scene/GltfJsonLoader", function () {
     });
   });
 
+  it("loads JSON directly", function () {
+    var gltf2Binary = clone(gltf2, true);
+    delete gltf2Binary.buffers[0].uri;
+
+    var gltf2BinaryUpdated = clone(gltf2Updated, true);
+    delete gltf2BinaryUpdated.buffers[0].uri;
+
+    var gltfJsonLoader = new GltfJsonLoader({
+      resourceCache: ResourceCache,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+      gltfJson: gltf2Binary,
+    });
+
+    gltfJsonLoader.load();
+
+    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
+      var gltf = gltfJsonLoader.gltf;
+      expect(gltf).toEqual(gltf2BinaryUpdated);
+    });
+  });
+
   it("destroys", function () {
     var gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
