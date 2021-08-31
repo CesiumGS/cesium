@@ -3,6 +3,7 @@ import {
   CustomShader,
   CustomShaderMode,
   CustomShaderStage,
+  FeaturePipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
@@ -74,6 +75,30 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+  });
+
+  it("configures the pipeline stages for feature picking", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      model: {
+        customShader: new CustomShader({
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+        }),
+        allowPicking: true,
+        _featureTable: {},
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderStage,
+      LightingPipelineStage,
+      FeaturePipelineStage,
+      PickingPipelineStage,
       AlphaPipelineStage,
     ]);
   });
