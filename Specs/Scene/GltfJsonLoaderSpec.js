@@ -639,7 +639,7 @@ describe("Scene/GltfJsonLoader", function () {
     });
   });
 
-  it("loads JSON directly", function() {
+  it("loads JSON directly", function () {
     var gltf = clone(gltf2, true);
 
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
@@ -650,7 +650,7 @@ describe("Scene/GltfJsonLoader", function () {
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
-      gltfJson: gltf
+      gltfJson: gltf,
     });
 
     gltfJsonLoader.load();
