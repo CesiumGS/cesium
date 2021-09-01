@@ -73,7 +73,6 @@ const filesToLeaveInThirdParty = [
   "!Source/ThirdParty/*.wasm",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/knockout*.js",
-  "!Source/ThirdParty/Uri.js",
 ];
 
 const sourceFiles = [
