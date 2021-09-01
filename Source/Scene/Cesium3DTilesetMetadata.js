@@ -7,7 +7,7 @@ import TilesetMetadata from "./TilesetMetadata.js";
 /**
  * An object containing metadata about a 3D Tileset.
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles.
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles.
  * </p>
  * <p>
  * This object represents the <code>3DTILES_metadata</code> object which
@@ -112,7 +112,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   /**
    * Statistics about the metadata.
    * <p>
-   * See the {@link https://github.com/CesiumGS/3d-tiles/blob/3d-tiles-next/extensions/3DTILES_metadata/1.0.0/schema/statistics.schema.json|statistics schema reference}
+   * See the {@link https://github.com/CesiumGS/3d-tiles/blob/3d-tiles-next/extensions/3DTILES_metadata/schema/statistics.schema.json|statistics schema reference}
    * in the 3D Tiles spec for the full set of properties.
    * </p>
    *

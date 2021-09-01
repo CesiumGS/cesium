@@ -387,9 +387,9 @@ function repositionAllGlyphs(label) {
       maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
 
       //Computing the line width must also account for the kerning that occurs between letters.
-      lastLineWidth += dimensions.width - dimensions.bounds.minx;
+      lastLineWidth += dimensions.width - dimensions.minx;
       if (glyphIndex < glyphLength - 1) {
-        lastLineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+        lastLineWidth += glyphs[glyphIndex + 1].dimensions.minx;
       }
       maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
     }
@@ -481,9 +481,7 @@ function repositionAllGlyphs(label) {
       if (glyphIndex < glyphLength - 1) {
         var nextGlyph = glyphs[glyphIndex + 1];
         glyphPixelOffset.x +=
-          (dimensions.width -
-            dimensions.bounds.minx +
-            nextGlyph.dimensions.bounds.minx) *
+          (dimensions.width - dimensions.minx + nextGlyph.dimensions.minx) *
           scale;
       }
     }

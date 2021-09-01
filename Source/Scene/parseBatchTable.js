@@ -14,7 +14,7 @@ import MetadataTable from "./MetadataTable.js";
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
  * be compatible with feature metadata from the `EXT_feature_metadata` glTF extension
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:

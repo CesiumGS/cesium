@@ -2743,7 +2743,7 @@ describe("Core/Resource", function () {
         expect(cb.calls.argsFor(0)[1]).toEqual("some error");
 
         var uri = new Uri(lastUrl);
-        var query = queryToObject(uri.query);
+        var query = queryToObject(uri.query());
         window[query.callback]("something good");
         expect(resolvedValue).toEqual("something good");
         expect(rejectedError).toBeUndefined();

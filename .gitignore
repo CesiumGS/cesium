@@ -43,6 +43,7 @@ Source/ThirdParty/protobufjs.js
 Source/ThirdParty/rbush.js
 Source/ThirdParty/topojson.js
 Source/ThirdParty/Tween.js
+Source/ThirdParty/Uri.js
 Source/ThirdParty/when.js
 Source/ThirdParty/zip.js
 

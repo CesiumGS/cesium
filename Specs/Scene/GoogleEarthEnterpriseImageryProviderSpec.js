@@ -114,7 +114,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       } else {
         if (proxy) {
           var uri = new Uri(url);
-          url = decodeURIComponent(uri.query);
+          url = decodeURIComponent(uri.query());
         }
         if (defined(expectedUrl)) {
           expect(url).toEqual(expectedUrl);
@@ -140,7 +140,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       if (defined(expectedUrl) && !/^blob:/.test(url)) {
         if (proxy) {
           var uri = new Uri(url);
-          url = decodeURIComponent(uri.query);
+          url = decodeURIComponent(uri.query());
         }
 
         expect(url).toEqual(expectedUrl);
