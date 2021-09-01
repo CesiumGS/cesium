@@ -30,7 +30,6 @@ DracoLoader._getDecoderTaskProcessor = function () {
       .initWebAssemblyModule({
         modulePath: "ThirdParty/Workers/draco_wasm_wrapper.js",
         wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-        fallbackModulePath: "ThirdParty/Workers/draco_decoder.js",
       })
       .then(function () {
         DracoLoader._taskProcessorReady = true;

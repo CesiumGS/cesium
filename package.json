@@ -120,6 +120,7 @@
     }
   },
   "scripts": {
+    "prepare": "gulp prepare",
     "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
     "startPublic": "node server.cjs --public",
