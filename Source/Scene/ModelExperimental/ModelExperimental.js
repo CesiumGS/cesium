@@ -283,7 +283,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {Boolean}
    *
-   * @default false
+   * @default true
    */
   show: {
     get: function () {
