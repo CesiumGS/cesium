@@ -456,7 +456,7 @@ gulp.task(
     const scripts = buildPackageJson.scripts;
     delete scripts.prepare;
     fs.writeFileSync(
-      "/package.json",
+      "./package.json",
       JSON.stringify(buildPackageJson, null, 2)
     );
 
