@@ -384,18 +384,31 @@ function combineRelease() {
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
 // Downloads Draco3D files from gstatic servers
-function downloadDraco() {
-  request(
-    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js"
-  ).pipe(
-    fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")
-  );
-  request(
-    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm"
-  ).pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"));
+async function downloadDraco() {
+  const wrapperPromise = new Promise(function (resolve) {
+    request(
+      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js"
+    )
+      .pipe(
+        fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")
+      )
+      .on("finish", resolve);
+  });
+
+  const wasmPromise = new Promise(function (resolve) {
+    request(
+      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm"
+    )
+      .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"))
+      .on("finish", resolve);
+  });
+
+  return Promise.all([wrapperPromise, wasmPromise]);
 }
 
-gulp.task("downloadDraco", downloadDraco);
+gulp.task("downloadDraco", async function () {
+  await downloadDraco();
+});
 
 //Builds the documentation
 function generateDocumentation() {
