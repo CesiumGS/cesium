@@ -416,7 +416,7 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
- * @param {Boolean} [options.show=false] Whether or not to render the model.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  *
  * @returns {ModelExperimental} The newly created model.
  *
