@@ -31,6 +31,7 @@ import ModelFeatureTable from "./ModelFeatureTable.js";
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -67,6 +68,7 @@ export default function ModelExperimental(options) {
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
   this._allowPicking = defaultValue(options.allowPicking, true);
+  this._show = defaultValue(options.show, true);
 
   this._featureTable = undefined;
 
@@ -308,6 +310,24 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._debugShowBoundingVolume = value;
     },
   },
+
+  /**
+   * Whether or not to render the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  show: {
+    get: function () {
+      return this._show;
+    },
+    set: function (value) {
+      this._show = value;
+    },
+  },
 });
 
 /**
@@ -360,10 +380,14 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  frameState.commandList.push.apply(
-    frameState.commandList,
-    this._sceneGraph._drawCommands
-  );
+  // Check for show here because we still want the draw commands to be built so user can instantly see the model
+  // when show is set to true.
+  if (this._show) {
+    frameState.commandList.push.apply(
+      frameState.commandList,
+      this._sceneGraph._drawCommands
+    );
+  }
 };
 
 /**
@@ -432,6 +456,7 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
  *
  * @returns {ModelExperimental} The newly created model.
  *
@@ -443,11 +468,7 @@ ModelExperimental.fromGltf = function (options) {
   Check.defined("options.gltf", options.gltf);
   //>>includeEnd('debug');
 
-  var basePath = defaultValue(options.basePath, "");
-  var baseResource = Resource.createIfNeeded(basePath);
-
   var loaderOptions = {
-    baseResource: baseResource,
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
@@ -455,11 +476,17 @@ ModelExperimental.fromGltf = function (options) {
   };
 
   var gltf = options.gltf;
+
+  var basePath = defaultValue(options.basePath, "");
+  var baseResource = Resource.createIfNeeded(basePath);
+
   if (defined(gltf.asset)) {
     loaderOptions.gltfJson = gltf;
+    loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
   } else if (gltf instanceof Uint8Array) {
     loaderOptions.typedArray = gltf;
+    loaderOptions.baseResource = baseResource;
     loaderOptions.gltfResource = baseResource;
   } else {
     loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
@@ -477,6 +504,7 @@ ModelExperimental.fromGltf = function (options) {
     allowPicking: options.allowPicking,
     customShader: options.customShader,
     content: options.content,
+    show: options.show,
   };
   var model = new ModelExperimental(modelOptions);
 
