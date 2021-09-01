@@ -21,11 +21,11 @@ describe(
   function () {
     var webglStub = !!window.webglStub;
 
-    var boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     var boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
 
     var scene;
 
@@ -55,25 +55,18 @@ describe(
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
-    function verifyRender(model) {
+    function verifyRender(model, shouldRender) {
       expect(model.ready).toBe(true);
-
-      expect({
-        scene: scene,
-        time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
-      }).toRenderAndCall(function (rgba) {
-        expect(rgba).toEqual([0, 0, 0, 255]);
-      });
-
-      expect(scene).toRender([0, 0, 0, 255]);
-      model.show = true;
       zoomTo(model);
-
       expect({
         scene: scene,
         time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
       }).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
+        if (shouldRender) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        } else {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        }
       });
     }
 
@@ -82,13 +75,13 @@ describe(
       var loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer), show: false },
+          { gltf: new Uint8Array(buffer) },
           scene
         ).then(function (model) {
           expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
-          verifyRender(model);
+          verifyRender(model, true);
         });
       });
     });
@@ -100,33 +93,50 @@ describe(
           {
             gltf: gltf,
             basePath: boxTexturedGltfUrl,
-            show: false,
           },
           scene
         ).then(function (model) {
           expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
-          verifyRender(model);
+          verifyRender(model, true);
         });
       });
     });
 
     it("initializes and renders from JSON object with external buffers", function () {
-      var resource = Resource.createIfNeeded(boomBox);
+      var resource = Resource.createIfNeeded(microcosm);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
             gltf: gltf,
-            basePath: boomBox,
-            show: false,
+            basePath: microcosm,
           },
           scene
         ).then(function (model) {
           expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
-          verifyRender(model);
+          verifyRender(model, true);
+        });
+      });
+    });
+
+    it("show works", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      var loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), show: false },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph._drawCommands.length).toBeGreaterThan(0);
+          expect(model.show).toEqual(false);
+          verifyRender(model, false);
+          model.show = true;
+          expect(model.show).toEqual(true);
+          verifyRender(model, true);
         });
       });
     });
