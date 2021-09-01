@@ -375,10 +375,13 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far <= value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance."
+          );
+        }
       }
       //>>includeEnd('debug');
 
@@ -418,10 +421,13 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far <= value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance."
+          );
+        }
       }
       //>>includeEnd('debug');
 
@@ -465,10 +471,13 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far <= value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance."
+          );
+        }
       }
       //>>includeEnd('debug');
 
@@ -725,6 +734,11 @@ Object.defineProperties(Billboard.prototype, {
       return defaultValue(this._width, this._imageWidth);
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("value", value);
+      }
+      //>>includeEnd('debug');
       if (this._width !== value) {
         this._width = value;
         makeDirty(this, IMAGE_INDEX_INDEX);
@@ -742,6 +756,11 @@ Object.defineProperties(Billboard.prototype, {
       return defaultValue(this._height, this._imageHeight);
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("value", value);
+      }
+      //>>includeEnd('debug');
       if (this._height !== value) {
         this._height = value;
         makeDirty(this, IMAGE_INDEX_INDEX);
