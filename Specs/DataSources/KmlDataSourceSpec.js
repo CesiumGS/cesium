@@ -1344,7 +1344,7 @@ describe("DataSources/KmlDataSource", function () {
       var billboard = entities[0].billboard;
       expect(billboard.scale.getValue()).toEqual(2.0);
       expect(billboard.rotation.getValue()).toEqual(CesiumMath.toRadians(-4.0));
-      expect(billboard.image.getValue().url).toEqual("http://test.invalid");
+      expect(billboard.image.getValue().url).toEqual("http://test.invalid/");
     });
   });
 
@@ -2348,7 +2348,7 @@ describe("DataSources/KmlDataSource", function () {
 
       var a = element.firstChild.firstChild;
       expect(a.localName).toEqual("a");
-      expect(a.getAttribute("href")).toEqual("http://cesiumjs.org");
+      expect(a.getAttribute("href")).toEqual("http://cesiumjs.org/");
       expect(a.getAttribute("target")).toEqual("_blank");
     });
   });
@@ -2395,7 +2395,7 @@ describe("DataSources/KmlDataSource", function () {
       var a = element.firstChild.firstChild;
       expect(a.localName).toEqual("a");
       expect(a.textContent).toEqual("Homepage");
-      expect(a.getAttribute("href")).toEqual("http://cesiumjs.org");
+      expect(a.getAttribute("href")).toEqual("http://cesiumjs.org/");
       expect(a.getAttribute("target")).toEqual("_blank");
     });
   });
