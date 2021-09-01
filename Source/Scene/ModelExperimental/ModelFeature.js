@@ -73,22 +73,94 @@ Object.defineProperties(ModelFeature.prototype, {
   },
 });
 
+/**
+ * Returns whether the feature contains this property. This includes properties from this feature's
+ * class and inherited classes when using a batch table hierarchy.
+ *
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ *
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {Boolean} Whether the feature contains this property.
+ */
 ModelFeature.prototype.hasProperty = function (name) {
-  return this._content.hasProperty(this._featureId, name);
+  return this._content.hasProperty(name);
 };
 
+/**
+ * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
+ * class and inherited classes when using a batch table hierarchy.
+ *
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ *
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ *
+ * @example
+ * // Display all the properties for a feature in the console log.
+ * var propertyNames = feature.getPropertyNames();
+ * var length = propertyNames.length;
+ * for (var i = 0; i < length; ++i) {
+ *     var propertyName = propertyNames[i];
+ *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ * }
+ */
 ModelFeature.prototype.getProperty = function (name) {
   return this._content.getProperty(this._featureId, name);
 };
 
+/**
+ * Returns an array of property names for the feature. This includes properties from this feature's
+ * class and inherited classes when using a batch table hierarchy.
+ *
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ *
+ * @param {String[]} [results] An array into which to store the results.
+ * @returns {String[]} The names of the feature's properties.
+ */
 ModelFeature.prototype.getPropertyNames = function (results) {
   return this._content.getPropertyNames(results);
 };
 
+/**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * inherited.
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @private
+ */
 ModelFeature.prototype.getPropertyInherited = function (name) {
   return this._content.getPropertyInherited(this._featureId, name);
 };
 
+/**
+ * Sets the value of the feature's property with the given name.
+ *
+ * @param {String} name The case-sensitive name of the property.
+ * @param {*} value The value of the property that will be copied.
+ * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ *
+ * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
+ *
+ * @example
+ * var height = feature.getProperty('Height'); // e.g., the height of a building
+ *
+ * @example
+ * var name = 'clicked';
+ * if (feature.getProperty(name)) {
+ *     console.log('already clicked');
+ * } else {
+ *     feature.setProperty(name, true);
+ *     console.log('first click');
+ * }
+ */
 ModelFeature.prototype.setProperty = function (name, value) {
-  this._content.batchTable.setProperty(this._batchId, name, value);
+  return this._content.setProperty(this._featureId, name, value);
 };

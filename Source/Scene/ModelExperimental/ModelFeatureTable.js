@@ -70,55 +70,18 @@ ModelFeatureTable.prototype.update = function (frameState) {
   this._batchTexture.update(undefined, frameState);
 };
 
-/**
- * Gets the {@link ModelFeature} with the given <code>featureId</code>.
- *
- * @param {featureId} Number The ID of the feature selected or picked.
- *
- * @returns {ModelFeature} The model feature.
- *
- * @private
- */
 ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
 };
 
-/**
- * Returns whether this feature table has this property.
- *
- * @param {String} propertyId The case-sensitive name of the property.
- *
- * @returns {Boolean} Whether this table has this property.
- *
- * @private
- */
 ModelFeatureTable.prototype.hasProperty = function (propertyName) {
   return this._table.hasProperty(propertyName);
 };
 
-/**
- * Gets the property value for the feature with the given feature ID.
- *
- * @param {featureId} Number The ID of the feature selected or picked.
- * @param {name} String The property name.
- *
- * @returns {Object}
- *
- * @private
- */
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
   return this._table.getProperty(featureId, name);
 };
 
-/**
- * Gets the names of the properties available for the features in this feature table.
- *
- * @param {String[]} [results] An array into which to store the results.
- *
- * @returns {String[]} The property names.
- *
- * @private
- */
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
   return this._table.getPropertyIds(results);
 };
