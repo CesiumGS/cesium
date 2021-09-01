@@ -786,11 +786,13 @@ Object.defineProperties(Billboard.prototype, {
         !DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)
       ) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object("value", value);
-        if (value.far <= value.near) {
-          throw new DeveloperError(
-            "far distance must be greater than near distance."
-          );
+        if (defined(value)) {
+          Check.typeOf.object("value", value);
+          if (value.far <= value.near) {
+            throw new DeveloperError(
+              "far distance must be greater than near distance."
+            );
+          }
         }
         //>>includeEnd('debug');
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
@@ -813,15 +815,17 @@ Object.defineProperties(Billboard.prototype, {
       return this._disableDepthTestDistance;
     },
     set: function (value) {
-      if (this._disableDepthTestDistance !== value) {
-        //>>includeStart('debug', pragmas.debug);
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
         Check.typeOf.number("value", value);
         if (value < 0.0) {
           throw new DeveloperError(
             "disableDepthTestDistance must be greater than or equal to 0.0."
           );
         }
-        //>>includeEnd('debug');
+      }
+      //>>includeEnd('debug');
+      if (this._disableDepthTestDistance !== value) {
         this._disableDepthTestDistance = value;
         makeDirty(this, DISABLE_DEPTH_DISTANCE);
       }
