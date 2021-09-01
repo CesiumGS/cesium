@@ -384,16 +384,15 @@ function combineRelease() {
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
 // Downloads Draco3D files from gstatic servers
-async function downloadDraco() {
-  const wrapperPromise = Promise.promisify(request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js")
-    .pipe(fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")));
-  const wasmPromise = Promise.promisify(request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm")
-    .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm")));
-
-  return Promise.all([wrapperPromise, wasmPromise]);
+function downloadDraco() {
+  request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js")
+    .pipe(fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js"));
+  request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm")
+    .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"));
 }
+
 gulp.task("downloadDraco", async function () {
-  await downloadDraco();
+  downloadDraco();
 });
 
 //Builds the documentation
@@ -425,7 +424,7 @@ gulp.task(
     "build-ts",
     combine,
     minifyRelease,
-    generateDocumentation
+    // generateDocumentation
   )
 );
 
@@ -435,6 +434,13 @@ gulp.task(
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
+
+    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    const packageJsonData = fs.readFileSync("./package.json");
+    const buildPackageJson = JSON.parse(packageJsonData);
+    const scripts = buildPackageJson.scripts;
+    delete scripts.prepare;
+    fs.writeFileSync("/package.json", JSON.stringify(buildPackageJson, null, 2));
 
     const builtSrc = gulp.src(
       [
