@@ -39,7 +39,7 @@ getAbsoluteUri._implementation = function (relative, base, documentObject) {
   }
 
   var relativeUri = new Uri(relative);
-  if (relativeUri.is("urn")) {
+  if (relativeUri.scheme() !== "") {
     return relativeUri.toString();
   }
   return relativeUri.absoluteTo(base).toString();

@@ -656,7 +656,7 @@ Resource.prototype.getDerivedResource = function (options) {
     // Remove the fragment as it's not sent with a request
     uri.fragment("");
 
-    if (uri.is("urn")) {
+    if (uri.scheme() !== "") {
       resource._url = uri.toString();
     } else {
       resource._url = uri

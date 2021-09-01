@@ -351,7 +351,7 @@ RequestScheduler.getServerKey = function (url) {
   //>>includeEnd('debug');
 
   var uri = new Uri(url);
-  if (!uri.is("urn")) {
+  if (uri.scheme() === "") {
     uri = new Uri(url).absoluteTo(pageUri);
     uri.normalize();
   }
