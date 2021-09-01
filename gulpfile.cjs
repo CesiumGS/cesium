@@ -395,9 +395,7 @@ function downloadDraco() {
   ).pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"));
 }
 
-gulp.task("downloadDraco", async function () {
-  downloadDraco();
-});
+gulp.task("downloadDraco", downloadDraco);
 
 //Builds the documentation
 function generateDocumentation() {
