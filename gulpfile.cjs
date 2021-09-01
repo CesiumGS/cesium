@@ -385,10 +385,14 @@ gulp.task("combineRelease", gulp.series("build", combineRelease));
 
 // Downloads Draco3D files from gstatic servers
 function downloadDraco() {
-  request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js")
-    .pipe(fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js"));
-  request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm")
-    .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"));
+  request(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js"
+  ).pipe(
+    fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")
+  );
+  request(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm"
+  ).pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"));
 }
 
 gulp.task("downloadDraco", async function () {
@@ -424,7 +428,7 @@ gulp.task(
     "build-ts",
     combine,
     minifyRelease,
-    // generateDocumentation
+    generateDocumentation
   )
 );
 
@@ -440,7 +444,10 @@ gulp.task(
     const buildPackageJson = JSON.parse(packageJsonData);
     const scripts = buildPackageJson.scripts;
     delete scripts.prepare;
-    fs.writeFileSync("/package.json", JSON.stringify(buildPackageJson, null, 2));
+    fs.writeFileSync(
+      "/package.json",
+      JSON.stringify(buildPackageJson, null, 2)
+    );
 
     const builtSrc = gulp.src(
       [

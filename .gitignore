@@ -28,7 +28,7 @@ Source/ThirdParty/Autolinker.js
 Source/ThirdParty/bitmap-sdf.js
 Source/ThirdParty/dompurify.js
 Source/ThirdParty/earcut.js
-Source/ThidParty/draco_decoder.wasm
+Source/ThirdParty/draco_decoder.wasm
 Source/ThirdParty/Workers/draco_wasm_wrapper.js
 Source/ThirdParty/grapheme-splitter.js
 Source/ThirdParty/jsep.js
