@@ -73,6 +73,22 @@ Object.defineProperties(ModelFeature.prototype, {
   },
 });
 
+ModelFeature.prototype.hasProperty = function (name) {
+  return this._content.hasProperty(this._featureId, name);
+};
+
 ModelFeature.prototype.getProperty = function (name) {
   return this._content.getProperty(this._featureId, name);
+};
+
+ModelFeature.prototype.getPropertyNames = function (results) {
+  return this._content.getPropertyNames(results);
+};
+
+ModelFeature.prototype.getPropertyInherited = function (name) {
+  return this._content.getPropertyInherited(this._featureId, name);
+};
+
+ModelFeature.prototype.setProperty = function (name, value) {
+  this._content.batchTable.setProperty(this._batchId, name, value);
 };
