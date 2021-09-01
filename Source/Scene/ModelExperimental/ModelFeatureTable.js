@@ -33,6 +33,24 @@ export default function ModelFeatureTable(options) {
   initialize(this);
 }
 
+Object.defineProperties(ModelFeatureTable.prototype, {
+  /**
+   * The batch texture created for the features in this table.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {BatchTexture}
+   * @readonly
+   *
+   * @private
+   */
+  batchTexture: {
+    get: function () {
+      return this._batchTexture;
+    },
+  },
+});
+
 function initialize(modelFeatureTable) {
   var featuresLength = modelFeatureTable._featureTable.count;
   if (featuresLength === 0) {

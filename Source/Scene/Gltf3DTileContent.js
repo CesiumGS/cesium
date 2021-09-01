@@ -174,23 +174,23 @@ function initialize(content, gltf) {
 }
 
 Gltf3DTileContent.prototype.getFeature = function (featureId) {
-  return this._model._featureTable.getFeature(featureId);
+  return this._model.featureTable.getFeature(featureId);
 };
 
 Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
-  return this._model._featureTable.hasProperty(featureId, name);
+  return this._model.featureTable.hasProperty(featureId, name);
 };
 
 Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
-  return this._model._featureTable.getProperty(featureId, name);
+  return this._model.featureTable.getProperty(featureId, name);
 };
 
 Gltf3DTileContent.prototype.getPropertyNames = function (results) {
-  return this._model._featureTable.getPropertyNames(results);
+  return this._model.featureTable.getPropertyNames(results);
 };
 
 Gltf3DTileContent.prototype.setProperty = function (featureId, name, value) {
-  return this._model._featureTable.setProperty(featureId, name, value);
+  return this._model.featureTable.setProperty(featureId, name, value);
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {

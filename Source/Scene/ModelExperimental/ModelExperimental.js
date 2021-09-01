@@ -98,10 +98,11 @@ function initialize(model) {
       var featureMetadata = loader.components.featureMetadata;
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         // Currently, only the first feature table is used.
-        var featureTableKeys = Object.keys(featureMetadata._featureTables);
+        var featureTables = featureMetadata._featureTables;
+        var featureTableKeys = Object.keys(featureTables);
         var featureTable = new ModelFeatureTable({
           model: model,
-          featureTable: featureMetadata._featureTables[featureTableKeys[0]],
+          featureTable: featureTables[featureTableKeys[0]],
           content: model._content,
         });
         model._featureTable = featureTable;
@@ -223,6 +224,22 @@ Object.defineProperties(ModelExperimental.prototype, {
   content: {
     get: function () {
       return this._content;
+    },
+  },
+
+  /**
+   * The feature table created from the feature metadata in the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelFeatureTable}
+   * @readonly
+   *
+   * @private
+   */
+  featureTable: {
+    get: function () {
+      return this._featureTable;
     },
   },
 

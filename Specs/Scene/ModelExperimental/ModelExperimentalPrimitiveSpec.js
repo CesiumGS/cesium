@@ -88,7 +88,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
           fragmentShaderText: emptyFragmentShader,
         }),
         allowPicking: true,
-        _featureTable: {},
+        featureTable: {},
       },
     });
 
