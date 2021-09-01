@@ -445,12 +445,12 @@ gulp.task(
     // Remove prepare step from package.json to avoid redownloading Draco3d files
     delete packageJson.scripts.prepare;
     fs.writeFileSync(
-      "./package.noprepare.json",
+      "./Build/package.noprepare.json",
       JSON.stringify(packageJson, null, 2)
     );
 
     const packageJsonSrc = gulp
-      .src("package.noprepare.json")
+      .src("Build/package.noprepare.json")
       .pipe(gulpRename("package.json"));
 
     const builtSrc = gulp.src(
@@ -504,7 +504,7 @@ gulp.task(
       .pipe(gulpZip("Cesium-" + version + ".zip"))
       .pipe(gulp.dest("."))
       .on("finish", function () {
-        rimraf.sync("./package.noprepare.json");
+        rimraf.sync("./Build/package.noprepare.json");
       });
   })
 );
