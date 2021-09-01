@@ -74,9 +74,9 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
-        _featureTable: {
+        featureTable: {
           _featuresLength: 10,
-          _batchTexture: {
+          batchTexture: {
             batchTexture: 0,
             textureDimensions: {
               y: 2,
@@ -132,12 +132,12 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
 
-      var featureTable = renderResources.model._featureTable;
+      var featureTable = renderResources.model.featureTable;
       var expectedUniforms = {
         model_featuresLength: featureTable._featuresLength,
-        model_batchTexture: featureTable._batchTexture.batchTexture,
-        model_textureDimensions: featureTable._batchTexture.textureDimensions,
-        model_textureStep: featureTable._batchTexture.textureStep,
+        model_batchTexture: featureTable.batchTexture.batchTexture,
+        model_textureDimensions: featureTable.batchTexture.textureDimensions,
+        model_textureStep: featureTable.batchTexture.textureStep,
       };
 
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
@@ -151,9 +151,9 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
-        _featureTable: {
+        featureTable: {
           _featuresLength: 10,
-          _batchTexture: {
+          batchTexture: {
             batchTexture: 0,
             textureDimensions: {
               y: 2,
@@ -230,14 +230,14 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
 
-      var featureTable = renderResources.model._featureTable;
+      var featureTable = renderResources.model.featureTable;
       var expectedUniforms = {
         u_featureIdTexture_0:
           primitive.featureIdTextures[0].textureReader.texture,
         model_featuresLength: featureTable._featuresLength,
-        model_batchTexture: featureTable._batchTexture.batchTexture,
-        model_textureDimensions: featureTable._batchTexture.textureDimensions,
-        model_textureStep: featureTable._batchTexture.textureStep,
+        model_batchTexture: featureTable.batchTexture.batchTexture,
+        model_textureDimensions: featureTable.batchTexture.textureDimensions,
+        model_textureStep: featureTable.batchTexture.textureStep,
       };
 
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
