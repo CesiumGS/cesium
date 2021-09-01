@@ -69,8 +69,8 @@ if (!concurrency) {
 
 // Work-around until all third party libraries use npm
 const filesToLeaveInThirdParty = [
-  "!Source/ThirdParty/Workers/*",
-  "!Source/ThirdParty/*.wasm",
+  "!Source/ThirdParty/Workers/basis_transcoder.js",
+  "!Source/ThirdParty/basis_transcoder.wasm",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/knockout*.js",
   "!Source/ThirdParty/measureText.js",
@@ -382,6 +382,19 @@ function combineRelease() {
 }
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
+
+// Downloads Draco3D files from gstatic servers
+async function downloadDraco() {
+  const wrapperPromise = Promise.promisify(request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js")
+    .pipe(fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")));
+  const wasmPromise = Promise.promisify(request("https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm")
+    .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm")));
+
+  return Promise.all([wrapperPromise, wasmPromise]);
+}
+gulp.task("downloadDraco", async function () {
+  await downloadDraco();
+});
 
 //Builds the documentation
 function generateDocumentation() {

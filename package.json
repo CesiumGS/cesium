@@ -137,6 +137,7 @@
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
+    "prepare": "gulp downloadDraco",
     "release": "gulp release",
     "build-specs": "gulp build-specs",
     "test": "gulp test",
