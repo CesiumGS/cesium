@@ -250,18 +250,10 @@ describe(
       b.horizontalOrigin = HorizontalOrigin.LEFT;
       b.verticalOrigin = VerticalOrigin.BOTTOM;
       b.scale = 2.0;
-      //b.image = greenImage;
       b.color = new Color(1.0, 2.0, 3.0, 4.0);
       b.rotation = 1.0;
       b.alignedAxis = Cartesian3.UNIT_Z;
-      //b.width = 300.0;
-      //b.height = 200.0;
-      //b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
-      //b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
-      //b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
       b.sizeInMeters = true;
-      //b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
-      //b.disableDepthTestDistance = 10.0;
 
       expect(function () {
         b.show = undefined;
@@ -300,23 +292,12 @@ describe(
 
     it("optional properties handle undefined gracefully", function () {
       var b = billboards.add();
-      //b.show = false;
-      //b.position = new Cartesian3(1.0, 2.0, 3.0);
-      //b.pixelOffset = new Cartesian2(1.0, 2.0);
-      //b.eyeOffset = new Cartesian3(1.0, 2.0, 3.0);
-      //b.horizontalOrigin = HorizontalOrigin.LEFT;
-      //b.verticalOrigin = VerticalOrigin.BOTTOM;
-      //b.scale = 2.0;
       b.image = greenImage;
-      //b.color = new Color(1.0, 2.0, 3.0, 4.0);
-      //b.rotation = 1.0;
-      //b.alignedAxis = Cartesian3.UNIT_Z;
       b.width = 300.0;
       b.height = 200.0;
       b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
       b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
       b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
-      //b.sizeInMeters = true;
       b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
       b.disableDepthTestDistance = 10.0;
 
@@ -348,7 +329,6 @@ describe(
       b.horizontalOrigin = HorizontalOrigin.LEFT;
       b.verticalOrigin = VerticalOrigin.BOTTOM;
       b.scale = 2.0;
-      b.image = greenImage;
       b.color = new Color(1.0, 2.0, 3.0, 4.0);
       b.rotation = 1.0;
       b.alignedAxis = Cartesian3.UNIT_Z;
@@ -382,9 +362,6 @@ describe(
       expect(function () {
         b.scale = "scale";
       }).toThrowDeveloperError();
-      /*expect(function() {
-        b.image = 10;
-      }).toThrowDeveloperError();*/
       expect(function () {
         b.color = 10;
       }).toThrowDeveloperError();
