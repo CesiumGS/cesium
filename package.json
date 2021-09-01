@@ -120,6 +120,7 @@
     }
   },
   "scripts": {
+    "prepare": "gulp prepare",
     "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
     "startPublic": "node server.cjs --public",
@@ -138,7 +139,6 @@
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
-    "prepare": "gulp downloadDraco",
     "release": "gulp release",
     "build-specs": "gulp build-specs",
     "test": "gulp test",

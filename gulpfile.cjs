@@ -381,31 +381,25 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-// Downloads Draco3D files from gstatic servers
-async function downloadDraco() {
-  const wrapperPromise = new Promise(function (resolve) {
-    request(
-      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js"
-    )
-      .pipe(
-        fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")
-      )
+async function downloadAndWriteFile(url, path) {
+  return new Promise(function (resolve, reject) {
+    request(url)
+      .pipe(fs.createWriteStream(path))
+      .on("error", reject)
       .on("finish", resolve);
   });
-
-  const wasmPromise = new Promise(function (resolve) {
-    request(
-      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm"
-    )
-      .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"))
-      .on("finish", resolve);
-  });
-
-  return Promise.all([wrapperPromise, wasmPromise]);
 }
 
-gulp.task("downloadDraco", async function () {
-  await downloadDraco();
+// Downloads Draco3D files from gstatic servers
+gulp.task("prepare", async function () {
+  await downloadAndWriteFile(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js",
+    "Source/ThirdParty/Workers/draco_wasm_wrapper.js"
+  );
+  await downloadAndWriteFile(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm",
+    "Source/ThirdParty/draco_decoder.wasm"
+  );
 });
 
 //Builds the documentation
@@ -449,14 +443,15 @@ gulp.task(
     glslToJavaScript(false, "Build/minifyShaders.state");
 
     // Remove prepare step from package.json to avoid redownloading Draco3d files
-    const packageJsonData = fs.readFileSync("./package.json");
-    const buildPackageJson = JSON.parse(packageJsonData);
-    const scripts = buildPackageJson.scripts;
-    delete scripts.prepare;
+    delete packageJson.scripts.prepare;
     fs.writeFileSync(
-      "./package.json",
-      JSON.stringify(buildPackageJson, null, 2)
+      "./package.noprepare.json",
+      JSON.stringify(packageJson, null, 2)
     );
+
+    const packageJsonSrc = gulp
+      .src("package.noprepare.json")
+      .pipe(gulpRename("package.json"));
 
     const builtSrc = gulp.src(
       [
@@ -481,7 +476,6 @@ gulp.task(
         "gulpfile.cjs",
         "server.cjs",
         "index.cjs",
-        "package.json",
         "LICENSE.md",
         "CHANGES.md",
         "README.md",
@@ -496,7 +490,7 @@ gulp.task(
       .src("index.release.html")
       .pipe(gulpRename("index.html"));
 
-    return mergeStream(builtSrc, staticSrc, indexSrc)
+    return mergeStream(packageJsonSrc, builtSrc, staticSrc, indexSrc)
       .pipe(
         gulpTap(function (file) {
           // Work around an issue with gulp-zip where archives generated on Windows do
@@ -508,7 +502,10 @@ gulp.task(
         })
       )
       .pipe(gulpZip("Cesium-" + version + ".zip"))
-      .pipe(gulp.dest("."));
+      .pipe(gulp.dest("."))
+      .on("finish", function () {
+        rimraf.sync("./package.noprepare.json");
+      });
   })
 );
 
