@@ -417,7 +417,8 @@ function embedDataUris(div, elementType, attributeName, uriResolver) {
   for (var i = 0; i < elements.length; i++) {
     var element = elements[i];
     var value = element.getAttribute(attributeName);
-    var uri = new Uri(value).resolve(baseUri).toString();
+    var relativeUri = new Uri(value);
+    var uri = relativeUri.absoluteTo(baseUri).toString();
     var index = keys.indexOf(uri);
     if (index !== -1) {
       var key = keys[index];
@@ -636,7 +637,7 @@ function resolveHref(href, sourceResource, uriResolver) {
       // Needed for multiple levels of KML files in a KMZ
       var baseUri = new Uri(sourceResource.getUrlComponent());
       var uri = new Uri(href);
-      blob = uriResolver[uri.resolve(baseUri)];
+      blob = uriResolver[uri.absoluteTo(baseUri)];
       if (defined(blob)) {
         resource = new Resource({
           url: blob,
