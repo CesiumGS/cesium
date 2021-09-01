@@ -91,7 +91,7 @@ var implementation;
 
 /**
  * Given a relative URL under the Cesium base URL, returns an absolute URL.
- * @function
+ * @function buildModuleUrl
  *
  * @param {String} relativeUrl The relative path.
  * @returns {String} The absolutely URL representation of the provided path.
@@ -130,9 +130,14 @@ buildModuleUrl._clearBaseResource = function () {
   baseResource = undefined;
 };
 
+/** @namespace buildModuleUrl(1) */
+
 /**
  * Sets the base URL for resolving modules.
+ * @function setBaseUrl
+ * @memberof buildModuleUrl(1)
  * @param {String} value The new base URL.
+ * @return {Void} void
  */
 buildModuleUrl.setBaseUrl = function (value) {
   baseResource = Resource.DEFAULT.getDerivedResource({
@@ -142,6 +147,9 @@ buildModuleUrl.setBaseUrl = function (value) {
 
 /**
  * Gets the base URL for resolving modules.
+ * @function getCesiumBaseUrl
+ * @memberof buildModuleUrl(1)
+ * @return {Resource} The base URL for resolving modules.
  */
 buildModuleUrl.getCesiumBaseUrl = getCesiumBaseUrl;
 
