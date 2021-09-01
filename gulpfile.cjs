@@ -387,7 +387,7 @@ gulp.task("combineRelease", gulp.series("build", combineRelease));
 async function downloadDraco() {
   const wrapperPromise = new Promise(function (resolve) {
     request(
-      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper_gltf.js"
+      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js"
     )
       .pipe(
         fs.createWriteStream("Source/ThirdParty/Workers/draco_wasm_wrapper.js")
@@ -397,7 +397,7 @@ async function downloadDraco() {
 
   const wasmPromise = new Promise(function (resolve) {
     request(
-      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder_gltf.wasm"
+      "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm"
     )
       .pipe(fs.createWriteStream("Source/ThirdParty/draco_decoder.wasm"))
       .on("finish", resolve);
