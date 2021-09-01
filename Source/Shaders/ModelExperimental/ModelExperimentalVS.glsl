@@ -4,7 +4,7 @@ void main()
 {
     vec3 position = vec3(0.0);  
 
-    position = processGeometry(position);
+    position = geometryStage(position);
 
     #ifdef HAS_INSTANCING
     position = instancingStage(position);
@@ -14,7 +14,7 @@ void main()
     #endif
 
     #ifdef USE_FEATURE_PICKING
-    position = featureStage(position);
+    featureStage(position);
     #endif
     
     #ifdef USE_CUSTOM_SHADER
@@ -24,6 +24,6 @@ void main()
     gl_Position = czm_modelViewProjection * vec4(position, 1.0);
 
     #ifdef PRIMITIVE_TYPE_POINTS
-    processPoints();
+    pointStage();
     #endif
 }
