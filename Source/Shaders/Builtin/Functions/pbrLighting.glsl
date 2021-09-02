@@ -68,7 +68,8 @@ vec3 czm_pbrLighting(
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
     czm_pbrParameters pbrParameters
-) {
+)
+{
     vec3 v = -normalize(positionEC);
     vec3 l = normalize(lightDirectionEC);
     vec3 h = normalize(v + l);
@@ -93,6 +94,6 @@ vec3 czm_pbrLighting(
     // F here represents the specular contribution
     vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);
 
-    // Lo = kD * albedo/pi + specular * Li * NdotL
-    return (diffuseContribution + specularContribution) + NdotL * lightColorHdr;
+    // Lo = (diffuse + specular) * Li * NdotL
+    return (diffuseContribution + specularContribution) * NdotL * lightColorHdr;
 }

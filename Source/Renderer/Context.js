@@ -473,7 +473,12 @@ function Context(canvas, options) {
 
   this._defaultPassState = ps;
   this._defaultRenderState = rs;
+  // default texture has a value of (1, 1, 1)
+  // default emissive texture has a value of (0, 0, 0)
+  // default normal texture is +z which is encoded as (0.5, 0.5, 1)
   this._defaultTexture = undefined;
+  this._defaultEmissiveTexture = undefined;
+  this._defaultNormalTexture = undefined;
   this._defaultCubeMap = undefined;
 
   this._us = us;
@@ -955,6 +960,57 @@ Object.defineProperties(Context.prototype, {
       }
 
       return this._defaultTexture;
+    },
+  },
+  /**
+   * A 1x1 RGB texture initialized to [0, 0, 0] representing a material that is
+   * not emissive. This can be used as a placeholder texture for emissive
+   * textures while other textures are downloaded.
+   * @memberof Context.prototype
+   * @type {Texture}
+   */
+  defaultEmissiveTexture: {
+    get: function () {
+      if (this._defaultEmissiveTexture === undefined) {
+        this._defaultEmissiveTexture = new Texture({
+          context: this,
+          pixelFormat: PixelFormat.RGB,
+          source: {
+            width: 1,
+            height: 1,
+            arrayBufferView: new Uint8Array([0, 0, 0]),
+          },
+          flipY: false,
+        });
+      }
+
+      return this._defaultEmissiveTexture;
+    },
+  },
+  /**
+   * A 1x1 RGBA texture initialized to [128, 128, 255] to encode a tangent
+   * space normal pointing in the +z direction, i.e. (0, 0, 1). This can
+   * be used as a placeholder normal texture while other textures are
+   * downloaded.
+   * @memberof Context.prototype
+   * @type {Texture}
+   */
+  defaultNormalTexture: {
+    get: function () {
+      if (this._defaultNormalTexture === undefined) {
+        this._defaultNormalTexture = new Texture({
+          context: this,
+          pixelFormat: PixelFormat.RGB,
+          source: {
+            width: 1,
+            height: 1,
+            arrayBufferView: new Uint8Array([128, 128, 255]),
+          },
+          flipY: false,
+        });
+      }
+
+      return this._defaultNormalTexture;
     },
   },
 
@@ -1518,6 +1574,10 @@ Context.prototype.destroy = function () {
   this._shaderCache = this._shaderCache.destroy();
   this._textureCache = this._textureCache.destroy();
   this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+  this._defaultEmissiveTexture =
+    this._defaultEmissiveTexture && this._defaultEmissiveTexture.destroy();
+  this._defaultNormalTexture =
+    this._defaultNormalTexture && this._defaultNormalTexture.destroy();
   this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
 
   return destroyObject(this);

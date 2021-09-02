@@ -9,8 +9,8 @@ import QuaternionSpline from "../Core/QuaternionSpline.js";
 import Spline from "../Core/Spline.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import WeightSpline from "../Core/WeightSpline.js";
-import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import AttributeType from "./AttributeType.js";
 
 /**

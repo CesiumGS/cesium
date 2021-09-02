@@ -59,7 +59,7 @@ function IonResource(endpoint, endpointResource) {
   this._ionEndpoint = endpoint;
   this._ionEndpointDomain = isExternal
     ? undefined
-    : new Uri(endpoint.url).authority;
+    : new Uri(endpoint.url).authority();
 
   // The endpoint resource to fetch when a new token is needed
   this._ionEndpointResource = endpointResource;
@@ -186,7 +186,7 @@ IonResource.prototype._makeRequest = function (options) {
   // Don't send ion access token to non-ion servers.
   if (
     this._isExternal ||
-    new Uri(this.url).authority !== this._ionEndpointDomain
+    new Uri(this.url).authority() !== this._ionEndpointDomain
   ) {
     return Resource.prototype._makeRequest.call(this, options);
   }

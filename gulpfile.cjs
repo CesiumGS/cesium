@@ -35,6 +35,8 @@ const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
 const rollupPluginUglify = require("rollup-plugin-uglify");
+const rollupCommonjs = require("@rollup/plugin-commonjs");
+const rollupResolve = require("@rollup/plugin-node-resolve").default;
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 
@@ -69,6 +71,14 @@ if (!concurrency) {
   concurrency = os.cpus().length;
 }
 
+// Work-around until all third party libraries use npm
+const filesToLeaveInThirdParty = [
+  "!Source/ThirdParty/Workers/basis_transcoder.js",
+  "!Source/ThirdParty/basis_transcoder.wasm",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/knockout*.js",
+];
+
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
@@ -77,7 +87,7 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/pako_inflate.js",
+  "!Source/ThirdParty/_*",
 ];
 
 const watchedFiles = [
@@ -127,12 +137,10 @@ const filesToConvertES6 = [
 
 function rollupWarning(message) {
   // Ignore eval warnings in third-party code we don't have control over
-  if (
-    message.code === "EVAL" &&
-    /protobuf-minimal\.js$/.test(message.loc.file)
-  ) {
+  if (message.code === "EVAL" && /protobufjs/.test(message.loc.file)) {
     return;
   }
+
   console.log(message);
 }
 
@@ -179,8 +187,43 @@ function createWorkers() {
     });
 }
 
-gulp.task("build", function () {
+async function buildThirdParty() {
+  rimraf.sync("Build/createWorkers");
+  globby.sync(filesToLeaveInThirdParty).forEach(function (file) {
+    rimraf.sync(file);
+  });
+
+  const workers = globby.sync(["ThirdParty/npm/**"]);
+
+  return rollup
+    .rollup({
+      input: workers,
+      plugins: [rollupResolve(), rollupCommonjs()],
+      onwarn: rollupWarning,
+    })
+    .then(function (bundle) {
+      return bundle.write({
+        dir: "Build/createThirdPartyNpm",
+        banner:
+          "/* This file is automatically rebuilt by the Cesium build process. */",
+        format: "es",
+      });
+    })
+    .then(function () {
+      return streamToPromise(
+        gulp
+          .src("Build/createThirdPartyNpm/**")
+          .pipe(gulp.dest("Source/ThirdParty"))
+      );
+    })
+    .then(function () {
+      rimraf.sync("Build/createThirdPartyNpm");
+    });
+}
+
+gulp.task("build", async function () {
   mkdirp.sync("Build");
+
   fs.writeFileSync(
     "Build/package.json",
     JSON.stringify({
@@ -188,6 +231,8 @@ gulp.task("build", function () {
     }),
     "utf8"
   );
+
+  await buildThirdParty();
   glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();
@@ -349,6 +394,27 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
+async function downloadAndWriteFile(url, path) {
+  return new Promise(function (resolve, reject) {
+    request(url)
+      .pipe(fs.createWriteStream(path))
+      .on("error", reject)
+      .on("finish", resolve);
+  });
+}
+
+// Downloads Draco3D files from gstatic servers
+gulp.task("prepare", async function () {
+  await downloadAndWriteFile(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js",
+    "Source/ThirdParty/Workers/draco_wasm_wrapper.js"
+  );
+  await downloadAndWriteFile(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm",
+    "Source/ThirdParty/draco_decoder.wasm"
+  );
+});
+
 //Builds the documentation
 function generateDocumentation() {
   child_process.execSync("npx jsdoc --configure Tools/jsdoc/conf.json", {
@@ -394,6 +460,17 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
+    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    delete packageJson.scripts.prepare;
+    fs.writeFileSync(
+      "./Build/package.noprepare.json",
+      JSON.stringify(packageJson, null, 2)
+    );
+
+    const packageJsonSrc = gulp
+      .src("Build/package.noprepare.json")
+      .pipe(gulpRename("package.json"));
+
     const builtSrc = gulp.src(
       [
         "Build/Cesium/**",
@@ -417,7 +494,6 @@ gulp.task(
         "gulpfile.cjs",
         "server.cjs",
         "index.cjs",
-        "package.json",
         "LICENSE.md",
         "CHANGES.md",
         "README.md",
@@ -432,7 +508,7 @@ gulp.task(
       .src("index.release.html")
       .pipe(gulpRename("index.html"));
 
-    return mergeStream(builtSrc, staticSrc, indexSrc)
+    return mergeStream(packageJsonSrc, builtSrc, staticSrc, indexSrc)
       .pipe(
         gulpTap(function (file) {
           // Work around an issue with gulp-zip where archives generated on Windows do
@@ -444,7 +520,10 @@ gulp.task(
         })
       )
       .pipe(gulpZip("Cesium-" + version + ".zip"))
-      .pipe(gulp.dest("."));
+      .pipe(gulp.dest("."))
+      .on("finish", function () {
+        rimraf.sync("./Build/package.noprepare.json");
+      });
   })
 );
 

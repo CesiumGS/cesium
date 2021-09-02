@@ -9,11 +9,12 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import Sampler from "../Renderer/Sampler.js";
-import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "../ThirdParty/GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import getComponentReader from "./GltfPipeline/getComponentReader.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
+import Axis from "./Axis.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
@@ -62,9 +63,12 @@ var GltfLoaderState = {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
+ * @param {Object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  *
  * @private
  */
@@ -79,6 +83,8 @@ export default function GltfLoader(options) {
     options.incrementallyLoadTextures,
     true
   );
+  var upAxis = defaultValue(options.upAxis, Axis.Y);
+  var forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -86,12 +92,16 @@ export default function GltfLoader(options) {
 
   baseResource = defined(baseResource) ? baseResource : gltfResource.clone();
 
+  this._gltfJson = options.gltfJson;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._typedArray = typedArray;
   this._releaseGltfJson = releaseGltfJson;
   this._asynchronous = asynchronous;
   this._incrementallyLoadTextures = incrementallyLoadTextures;
+  this._upAxis = upAxis;
+  this._forwardAxis = forwardAxis;
+
   this._gltfJsonLoader = undefined;
   this._state = GltfLoaderState.UNLOADED;
   this._textureState = GltfLoaderState.UNLOADED;
@@ -184,6 +194,7 @@ GltfLoader.prototype.load = function () {
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     typedArray: this._typedArray,
+    gltfJson: this._gltfJson,
   });
 
   this._gltfJsonLoader = gltfJsonLoader;
@@ -266,7 +277,12 @@ GltfLoader.prototype.process = function (frameState) {
       basis: frameState.context.supportsBasis,
     });
 
-    var gltf = this._gltfJsonLoader.gltf;
+    var gltf;
+    if (defined(this._gltfJsonLoader)) {
+      gltf = this._gltfJsonLoader.gltf;
+    } else {
+      gltf = this._gltfJson;
+    }
 
     // Parse the glTF which populates the loaders arrays. The ready promise
     // resolves once all the loaders are ready (i.e. all external resources
@@ -308,7 +324,14 @@ GltfLoader.prototype.process = function (frameState) {
   }
 };
 
-function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
+function loadVertexBuffer(
+  loader,
+  gltf,
+  accessorId,
+  semantic,
+  draco,
+  dequantize
+) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
 
@@ -318,9 +341,10 @@ function loadVertexBuffer(loader, gltf, accessorId, semantic, draco) {
     baseResource: loader._baseResource,
     bufferViewId: bufferViewId,
     draco: draco,
-    dracoAttributeSemantic: semantic,
-    dracoAccessorId: accessorId,
+    attributeSemantic: semantic,
+    accessorId: accessorId,
     asynchronous: loader._asynchronous,
+    dequantize: dequantize,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -473,7 +497,8 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     gltf,
     accessorId,
     gltfSemantic,
-    draco
+    draco,
+    false
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
@@ -527,7 +552,8 @@ function loadInstancedAttribute(
       gltf,
       accessorId,
       gltfSemantic,
-      undefined
+      undefined,
+      true
     );
     vertexBufferLoader.promise.then(function (vertexBufferLoader) {
       if (loader.isDestroyed()) {
@@ -885,13 +911,20 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
   var attributes = instancingExtension.attributes;
   if (defined(attributes)) {
     var hasRotation = defined(attributes.ROTATION);
+    var hasTranslationMinMax =
+      defined(attributes.TRANSLATION) &&
+      defined(gltf.accessors[attributes.TRANSLATION].min) &&
+      defined(gltf.accessors[attributes.TRANSLATION].max);
     for (var semantic in attributes) {
       if (attributes.hasOwnProperty(semantic)) {
         // If the instances have rotations load the attributes as typed arrays
         // so that instance matrices are computed on the CPU. This avoids the
         // expensive quaternion -> rotation matrix conversion in the shader.
+        // If the translation accessor does not have a min and max, load the
+        // attributes as typed arrays, so the values can be used for computing
+        // an accurate bounding volume.
         var loadAsTypedArray =
-          hasRotation &&
+          (hasRotation || !hasTranslationMinMax) &&
           (semantic === InstanceAttributeSemantic.TRANSLATION ||
             semantic === InstanceAttributeSemantic.ROTATION ||
             semantic === InstanceAttributeSemantic.SCALE);
@@ -1077,8 +1110,10 @@ function getSceneNodeIds(gltf) {
   return nodesIds;
 }
 
-function loadScene(gltf, nodes) {
+function loadScene(gltf, nodes, upAxis, forwardAxis) {
   var scene = new Scene();
+  scene.upAxis = upAxis;
+  scene.forwardAxis = forwardAxis;
   var sceneNodeIds = getSceneNodeIds(gltf);
   scene.nodes = sceneNodeIds.map(function (sceneNodeId) {
     return nodes[sceneNodeId];
@@ -1088,7 +1123,9 @@ function loadScene(gltf, nodes) {
 
 function parse(loader, gltf, supportedImageFormats, frameState) {
   var nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
-  var scene = loadScene(gltf, nodes);
+  var upAxis = loader._upAxis;
+  var forwardAxis = loader._forwardAxis;
+  var scene = loadScene(gltf, nodes, upAxis, forwardAxis);
 
   var components = new Components();
   components.scene = scene;

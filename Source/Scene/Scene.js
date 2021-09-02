@@ -10,7 +10,6 @@ import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
@@ -124,7 +123,7 @@ var requestRenderAfterFrame = function (scene) {
  * @alias Scene
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {Object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
@@ -612,14 +611,6 @@ function Scene(options) {
   this.postProcessStages = new PostProcessStageCollection();
 
   this._brdfLutGenerator = new BrdfLutGenerator();
-
-  if (defined(options.terrainExaggeration)) {
-    deprecationWarning(
-      "terrainExaggeration-removed",
-      "terrainExaggeration is now a property of Globe"
-    );
-  }
-  this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
   this._performanceDisplay = undefined;
   this._debugVolume = undefined;
@@ -1434,34 +1425,6 @@ Object.defineProperties(Scene.prototype, {
   numberOfFrustums: {
     get: function () {
       return this._view.frustumCommandsList.length;
-    },
-  },
-
-  /**
-   * Gets or sets the scalar used to exaggerate the terrain.
-   * @memberof Scene.prototype
-   * @type {Number}
-   */
-  terrainExaggeration: {
-    get: function () {
-      deprecationWarning(
-        "terrainExaggeration-removed",
-        "terrainExaggeration is now a property of Globe"
-      );
-      if (defined(this.globe)) {
-        return this.globe.terrainExaggeration;
-      }
-      return this._terrainExaggeration;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "terrainExaggeration-removed",
-        "terrainExaggeration is now a property of Globe"
-      );
-      if (defined(this.globe)) {
-        this.globe.terrainExaggeration = value;
-      }
-      this._terrainExaggeration = value;
     },
   },
 

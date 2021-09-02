@@ -1,5 +1,20 @@
 # Change Log
 
+### 1.85 - 2021-09-01
+
+##### Breaking Changes :mega:
+
+- Removed `Scene.terrainExaggeration` and `options.terrainExaggeration` for `CesiumWidget`, `Viewer`, and `Scene`, which were deprecated in CesiumJS 1.83. Use `Globe.terrainExaggeration` instead.
+
+##### Additions :tada:
+
+- Added `CloudCollection` and `CumulusCloud` for adding procedurally generated clouds to a scene. [#9737](https://github.com/CesiumGS/cesium/pull/9737)
+- `BingMapsGeocoderService` now takes an optional [Culture Code](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes) for localizing results. [#9729](https://github.com/CesiumGS/cesium/pull/9729)
+
+##### Fixes :wrench:
+
+- Fixed several crashes related to point cloud eye dome lighting. [#9719](https://github.com/CesiumGS/cesium/pull/9719)
+
 ### 1.84 - 2021-08-02
 
 ##### Breaking Changes :mega:

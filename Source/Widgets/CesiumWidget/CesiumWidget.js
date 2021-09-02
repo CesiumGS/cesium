@@ -3,7 +3,6 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Clock from "../../Core/Clock.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import deprecationWarning from "../../Core/deprecationWarning.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
@@ -271,7 +270,6 @@ function CesiumWidget(container, options) {
       mapProjection: options.mapProjection,
       orderIndependentTranslucency: options.orderIndependentTranslucency,
       scene3DOnly: defaultValue(options.scene3DOnly, false),
-      terrainExaggeration: options.terrainExaggeration,
       shadows: options.shadows,
       mapMode2D: options.mapMode2D,
       requestRenderMode: options.requestRenderMode,
@@ -292,13 +290,6 @@ function CesiumWidget(container, options) {
     var globe = options.globe;
     if (!defined(globe)) {
       globe = new Globe(ellipsoid);
-    }
-    if (defined(options.terrainExaggeration)) {
-      deprecationWarning(
-        "terrainExaggeration-removed",
-        "terrainExaggeration is now a property of Globe"
-      );
-      globe.terrainExaggeration = options.terrainExaggeration;
     }
     if (globe !== false) {
       scene.globe = globe;
