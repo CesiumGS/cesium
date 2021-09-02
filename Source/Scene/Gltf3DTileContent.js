@@ -221,10 +221,6 @@ Gltf3DTileContent.prototype.setProperty = function (featureId, name, value) {
   return false;
 };
 
-Gltf3DTileContent.prototype.getPropertyInherited = function (featureId, name) {
-  return this._model._featureTable.getPropertyInherited(this, featureId, name);
-};
-
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
   color = enabled ? color : Color.WHITE;
   this._model.color = color;
