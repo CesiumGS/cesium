@@ -64,7 +64,7 @@ function initialize(modelFeatureTable) {
     features[i] = new ModelFeature({
       model: modelFeatureTable._model,
       featureId: i,
-      content: defined(modelFeatureTable._content)
+      owner: defined(modelFeatureTable._content)
         ? modelFeatureTable._content
         : modelFeatureTable,
     });
@@ -74,7 +74,7 @@ function initialize(modelFeatureTable) {
   modelFeatureTable._featuresLength = featuresLength;
   modelFeatureTable._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
-    content: modelFeatureTable,
+    owner: modelFeatureTable,
     statistics: modelFeatureTable._statistics,
   });
 }

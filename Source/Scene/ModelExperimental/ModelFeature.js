@@ -15,9 +15,9 @@
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {ModelExperimental} options.model The loader responsible for loading the 3D model.
+ * @param {ModelExperimental} options.model The model the feature belongs to.
  * @param {Number} options.featureId The unique identifier for this feature.
- * @param {Cesium3DTileContent|ModelFeatureTable} options.content the content of the tile containing the feature.
+ * @param {Cesium3DTileContent|ModelFeatureTable} options.owner The owner of this feature. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
  *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
@@ -31,10 +31,9 @@
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-
 export default function ModelFeature(options) {
   this._model = options.model;
-  this._content = options.content;
+  this._owner = options.owner;
   this._featureId = options.featureId;
 }
 
@@ -57,7 +56,7 @@ Object.defineProperties(ModelFeature.prototype, {
   },
 
   /**
-   * Gets the content of the tile containing the feature.
+   * Gets the owner of this feature. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
    *
    * @memberof ModelFeature.prototype
    *
@@ -66,9 +65,9 @@ Object.defineProperties(ModelFeature.prototype, {
    * @readonly
    * @private
    */
-  content: {
+  owner: {
     get: function () {
-      return this._content;
+      return this._owner;
     },
   },
 });
@@ -83,7 +82,7 @@ Object.defineProperties(ModelFeature.prototype, {
  * @returns {Boolean} Whether the feature contains this property.
  */
 ModelFeature.prototype.hasProperty = function (name) {
-  return this._content.hasProperty(name);
+  return this._owner.hasProperty(name);
 };
 
 /**
@@ -105,7 +104,7 @@ ModelFeature.prototype.hasProperty = function (name) {
  * }
  */
 ModelFeature.prototype.getProperty = function (name) {
-  return this._content.getProperty(this._featureId, name);
+  return this._owner.getProperty(this._featureId, name);
 };
 
 /**
@@ -118,7 +117,7 @@ ModelFeature.prototype.getProperty = function (name) {
  * @returns {String[]} The names of the feature's properties.
  */
 ModelFeature.prototype.getPropertyNames = function (results) {
-  return this._content.getPropertyNames(results);
+  return this._owner.getPropertyNames(results);
 };
 
 /**
@@ -137,7 +136,7 @@ ModelFeature.prototype.getPropertyNames = function (results) {
  * @private
  */
 ModelFeature.prototype.getPropertyInherited = function (name) {
-  return this._content.getPropertyInherited(this._featureId, name);
+  return this._owner.getPropertyInherited(this._featureId, name);
 };
 
 /**
@@ -162,5 +161,5 @@ ModelFeature.prototype.getPropertyInherited = function (name) {
  * }
  */
 ModelFeature.prototype.setProperty = function (name, value) {
-  return this._content.setProperty(this._featureId, name, value);
+  return this._owner.setProperty(this._featureId, name, value);
 };
