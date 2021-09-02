@@ -97,7 +97,7 @@ describe(
         expect(model.ready).toEqual(true);
         expect(model._featureTable).toBeDefined();
 
-        var modelFeatureTable = model._featureTable;
+        var modelFeatureTable = model.featureTable;
         expect(modelFeatureTable._featuresLength).toEqual(10);
         expect(modelFeatureTable._batchTexture).toBeDefined();
         expect(modelFeatureTable._batchTexture._featuresLength).toEqual(10);
@@ -108,7 +108,7 @@ describe(
           expect(modelFeature instanceof ModelFeature).toEqual(true);
           expect(modelFeature._featureId).toEqual(i);
           expect(modelFeature.primitive).toEqual(model);
-          expect(modelFeature.content).toEqual(modelFeatureTable);
+          expect(modelFeature.owner).toEqual(modelFeatureTable);
         }
 
         expect(model._resourcesLoaded).toEqual(true);
