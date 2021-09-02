@@ -201,11 +201,11 @@ describe(
     });
 
     describe("ModelExperimental", function () {
-      beforeAll(function () {
+      beforeEach(function () {
         ExperimentalFeatures.enableModelExperimental = true;
       });
 
-      afterAll(function () {
+      afterEach(function () {
         ExperimentalFeatures.enableModelExperimental = false;
       });
 
@@ -265,6 +265,7 @@ describe(
           for (var i = 0; i < modelFeatures.length; i++) {
             var feature = modelFeatures[i];
             expect(feature.getProperty("id")).toEqual(feature._featureId);
+            expect(feature.getProperty("xid")).toEqual(undefined);
           }
         });
       });
@@ -280,7 +281,10 @@ describe(
           var modelFeatures = featureTable._features;
           for (var i = 0; i < modelFeatures.length; i++) {
             var feature = modelFeatures[i];
-            expect(feature.getProperty("id")).toEqual(feature._featureId);
+            expect(feature.getPropertyInherited("id")).toEqual(
+              feature._featureId
+            );
+            expect(feature.getPropertyInherited("xid")).toEqual(undefined);
           }
         });
       });
@@ -299,6 +303,21 @@ describe(
             var results = [];
             expect(feature.getPropertyNames(results)).toEqual(["height", "id"]);
           }
+        });
+      });
+
+      it("setProperty works", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          var featureTable = content._model.featureTable;
+          expect(featureTable).toBeDefined();
+          var feature = featureTable._features[0];
+          expect(feature.getProperty("height")).not.toEqual(1.0);
+          expect(feature.setProperty("height", 3.0)).toEqual(true);
+          expect(feature.getProperty("height")).toEqual(3.0);
         });
       });
     });

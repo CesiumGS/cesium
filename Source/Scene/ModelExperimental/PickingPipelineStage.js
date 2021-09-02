@@ -40,12 +40,12 @@ PickingPipelineStage.process = function (
 
   shaderBuilder.addDefine("USE_PICKING");
 
-  if (defined(model.featureTable)) {
-    // For models with features, the pick texture is used.
-    processPickTexture(renderResources, model.featureTable);
-  } else if (defined(runtimeNode.node.instances)) {
+  if (defined(runtimeNode.node.instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
+  } else if (defined(model.featureTable)) {
+    // For models with features, the pick texture is used.
+    processPickTexture(renderResources, model.featureTable);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
     var pickObject = {
@@ -99,14 +99,21 @@ function processInstancedPickIds(renderResources, context) {
   var pickIds = new Array(instanceCount);
   var pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
-  var modelResources = renderResources.model._resources;
+  var model = renderResources.model;
+  var featureTable = model.featureTable;
+  var modelResources = model._resources;
   for (var i = 0; i < instanceCount; i++) {
-    var pickObject = {
-      model: renderResources.model,
-      node: renderResources.runtimeNode,
-      primitive: renderResources.runtimePrimitive,
-      instanceId: i,
-    };
+    var pickObject;
+    if (defined(featureTable)) {
+      pickObject = featureTable.getFeature(i);
+    } else {
+      pickObject = {
+        model: renderResources.model,
+        node: renderResources.runtimeNode,
+        primitive: renderResources.runtimePrimitive,
+        instanceId: i,
+      };
+    }
 
     var pickId = context.createPickId(pickObject);
     modelResources.push(pickId);

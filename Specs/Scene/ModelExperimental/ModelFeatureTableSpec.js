@@ -80,7 +80,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
       if (properties.hasOwnProperty(propertyName)) {
         for (var i = 0; i < modelFeatures.length; i++) {
           var feature = modelFeatures[i];
-          expect(feature.getProperty(propertyName)).toEqual(
+          expect(feature.getPropertyInherited(propertyName)).toEqual(
             propertyValues[propertyName][i]
           );
         }
