@@ -35,6 +35,24 @@ export default function ModelFeatureTable(options) {
   initialize(this);
 }
 
+Object.defineProperties(ModelFeatureTable.prototype, {
+  /**
+   * The batch texture created for the features in this table.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {BatchTexture}
+   * @readonly
+   *
+   * @private
+   */
+  batchTexture: {
+    get: function () {
+      return this._batchTexture;
+    },
+  },
+});
+
 function initialize(modelFeatureTable) {
   var featuresLength = modelFeatureTable._featureTable.count;
   if (featuresLength === 0) {
@@ -72,31 +90,24 @@ ModelFeatureTable.prototype.update = function (frameState) {
   this._batchTexture.update(undefined, frameState);
 };
 
-/**
- * Gets the {@link ModelFeature} with the given <code>featureId</code>.
- *
- * @param {featureId} Number The ID of the feature selected or picked.
- *
- * @returns {ModelFeature} The model feature.
- *
- * @private
- */
 ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
 };
 
-/**
- * Gets the property value for the feature with the given feature ID.
- *
- * @param {featureId} Number The ID of the feature selected or picked.
- * @param {name} String The property name.
- *
- * @returns {Object}
- *
- * @private
- */
+ModelFeatureTable.prototype.hasProperty = function (propertyName) {
+  return this._table.hasProperty(propertyName);
+};
+
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
   return this._table.getProperty(featureId, name);
+};
+
+ModelFeatureTable.prototype.getPropertyNames = function (results) {
+  return this._table.getPropertyIds(results);
+};
+
+ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
+  return this._table.setProperty(featureId, name, value);
 };
 
 /**

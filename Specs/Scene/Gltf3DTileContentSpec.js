@@ -8,6 +8,8 @@ import {
   GroupMetadata,
   Model,
 } from "../../Source/Cesium.js";
+import ExperimentalFeatures from "../../Source/Core/ExperimentalFeatures.js";
+import Gltf3DTileContent from "../../Source/Scene/Gltf3DTileContent.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -20,6 +22,8 @@ describe(
 
     var gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     var glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
+    var buildingsMetadataUrl =
+      "./Data/Cesium3DTiles/Metadata/FeatureMetadata/tileset.json";
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
@@ -194,6 +198,93 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, gltfContentUrl);
+    });
+
+    describe("ModelExperimental", function () {
+      beforeAll(function () {
+        ExperimentalFeatures.enableModelExperimental = true;
+      });
+
+      afterAll(function () {
+        ExperimentalFeatures.enableModelExperimental = false;
+      });
+
+      it("assigns model feature table", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          expect(content._model.featureTable).toBeDefined();
+        });
+      });
+
+      it("hasProperty works", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          var featureTable = content._model.featureTable;
+          expect(featureTable).toBeDefined();
+          var modelFeatures = featureTable._features;
+          for (var i = 0; i < modelFeatures.length; i++) {
+            var feature = modelFeatures[i];
+            expect(feature.hasProperty("height")).toEqual(true);
+            expect(feature.hasProperty("width")).toEqual(false);
+          }
+        });
+      });
+
+      it("getFeature works", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          var featureTable = content._model.featureTable;
+          expect(featureTable).toBeDefined();
+          var modelFeatures = featureTable._features;
+          for (var i = 0; i < modelFeatures.length; i++) {
+            var feature = content.getFeature(i);
+            expect(feature).toEqual(modelFeatures[i]);
+            expect(feature.content).toBeInstanceOf(Gltf3DTileContent);
+          }
+        });
+      });
+
+      it("getProperty works", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          var featureTable = content._model.featureTable;
+          expect(featureTable).toBeDefined();
+          var modelFeatures = featureTable._features;
+          for (var i = 0; i < modelFeatures.length; i++) {
+            var feature = modelFeatures[i];
+            expect(feature.getProperty("id")).toEqual(feature._featureId);
+          }
+        });
+      });
+
+      it("getPropertyNames works", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          var featureTable = content._model.featureTable;
+          expect(featureTable).toBeDefined();
+          var modelFeatures = featureTable._features;
+          for (var i = 0; i < modelFeatures.length; i++) {
+            var feature = modelFeatures[i];
+            var results = [];
+            expect(feature.getPropertyNames(results)).toEqual(["height", "id"]);
+          }
+        });
+      });
     });
 
     describe("3DTILES_metadata", function () {

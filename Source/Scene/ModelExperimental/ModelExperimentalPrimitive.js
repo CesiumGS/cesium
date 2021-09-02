@@ -86,7 +86,7 @@ function initialize(runtimePrimitive) {
 
   pipelineStages.push(LightingPipelineStage);
 
-  if (defined(model._featureTable)) {
+  if (defined(model.featureTable)) {
     pipelineStages.push(FeaturePipelineStage);
   }
 

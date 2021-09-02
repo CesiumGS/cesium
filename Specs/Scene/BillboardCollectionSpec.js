@@ -241,6 +241,170 @@ describe(
       expect(b.disableDepthTestDistance).toEqual(10.0);
     });
 
+    it("required properties throw for undefined", function () {
+      var b = billboards.add();
+      b.show = false;
+      b.position = new Cartesian3(1.0, 2.0, 3.0);
+      b.pixelOffset = new Cartesian2(1.0, 2.0);
+      b.eyeOffset = new Cartesian3(1.0, 2.0, 3.0);
+      b.horizontalOrigin = HorizontalOrigin.LEFT;
+      b.verticalOrigin = VerticalOrigin.BOTTOM;
+      b.scale = 2.0;
+      b.color = new Color(1.0, 2.0, 3.0, 4.0);
+      b.rotation = 1.0;
+      b.alignedAxis = Cartesian3.UNIT_Z;
+      b.sizeInMeters = true;
+
+      expect(function () {
+        b.show = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.position = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.pixelOffset = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.eyeOffset = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.horizontalOrigin = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.verticalOrigin = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.scale = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.color = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.rotation = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.alignedAxis = undefined;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.sizeInMeters = undefined;
+      }).toThrowDeveloperError();
+    });
+
+    it("optional properties handle undefined gracefully", function () {
+      var b = billboards.add();
+      b.image = greenImage;
+      b.width = 300.0;
+      b.height = 200.0;
+      b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+      b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+      b.disableDepthTestDistance = 10.0;
+
+      b.image = undefined;
+      b.width = undefined;
+      b.height = undefined;
+      b.scaleByDistance = undefined;
+      b.translucencyByDistance = undefined;
+      b.pixelOffsetScaleByDistance = undefined;
+      b.distanceDisplayCondition = undefined;
+      b.disableDepthTestDistance = undefined;
+
+      expect(b.image).not.toBeDefined();
+      expect(b.width).not.toBeDefined();
+      expect(b.height).not.toBeDefined();
+      expect(b.scaleByDistance).not.toBeDefined();
+      expect(b.translucencyByDistance).not.toBeDefined();
+      expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
+      expect(b.distanceDisplayCondition).not.toBeDefined();
+      expect(b.disableDepthTestDistance).not.toBeDefined();
+    });
+
+    it("properties throw for incorrect types", function () {
+      var b = billboards.add();
+      b.show = false;
+      b.position = new Cartesian3(1.0, 2.0, 3.0);
+      b.pixelOffset = new Cartesian2(1.0, 2.0);
+      b.eyeOffset = new Cartesian3(1.0, 2.0, 3.0);
+      b.horizontalOrigin = HorizontalOrigin.LEFT;
+      b.verticalOrigin = VerticalOrigin.BOTTOM;
+      b.scale = 2.0;
+      b.color = new Color(1.0, 2.0, 3.0, 4.0);
+      b.rotation = 1.0;
+      b.alignedAxis = Cartesian3.UNIT_Z;
+      b.width = 300.0;
+      b.height = 200.0;
+      b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+      b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+      b.sizeInMeters = true;
+      b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+      b.disableDepthTestDistance = 10.0;
+
+      expect(function () {
+        b.show = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.position = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.pixelOffset = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.eyeOffset = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.horizontalOrigin = "left";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.verticalOrigin = "bottom";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.scale = "scale";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.color = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.rotation = "rotation";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.alignedAxis = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.width = "100px";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.height = "300px";
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.scaleByDistance = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.translucencyByDistance = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.pixelOffsetScaleByDistance = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.sizeInMeters = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.distanceDisplayCondition = 10;
+      }).toThrowDeveloperError();
+      expect(function () {
+        b.disableDepthTestDistance = "far";
+      }).toThrowDeveloperError();
+    });
+
+    it("image property setter creates image with GUID for non-uris", function () {
+      var b = billboards.add();
+      b.image = 42;
+      expect(b.image).not.toBe(42);
+      var guidLength = 36; // 32 hex digits + 4 dashes
+      expect(b._imageId.length).toBe(guidLength);
+    });
+
     it("is not destroyed", function () {
       expect(billboards.isDestroyed()).toEqual(false);
     });

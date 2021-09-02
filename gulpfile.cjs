@@ -69,11 +69,10 @@ if (!concurrency) {
 
 // Work-around until all third party libraries use npm
 const filesToLeaveInThirdParty = [
-  "!Source/ThirdParty/Workers/*",
-  "!Source/ThirdParty/*.wasm",
+  "!Source/ThirdParty/Workers/basis_transcoder.js",
+  "!Source/ThirdParty/basis_transcoder.wasm",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/knockout*.js",
-  "!Source/ThirdParty/Uri.js",
 ];
 
 const sourceFiles = [
@@ -382,6 +381,27 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
+async function downloadAndWriteFile(url, path) {
+  return new Promise(function (resolve, reject) {
+    request(url)
+      .pipe(fs.createWriteStream(path))
+      .on("error", reject)
+      .on("finish", resolve);
+  });
+}
+
+// Downloads Draco3D files from gstatic servers
+gulp.task("prepare", async function () {
+  await downloadAndWriteFile(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js",
+    "Source/ThirdParty/Workers/draco_wasm_wrapper.js"
+  );
+  await downloadAndWriteFile(
+    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm",
+    "Source/ThirdParty/draco_decoder.wasm"
+  );
+});
+
 //Builds the documentation
 function generateDocumentation() {
   child_process.execSync("npx jsdoc --configure Tools/jsdoc/conf.json", {
@@ -422,6 +442,17 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
+    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    delete packageJson.scripts.prepare;
+    fs.writeFileSync(
+      "./Build/package.noprepare.json",
+      JSON.stringify(packageJson, null, 2)
+    );
+
+    const packageJsonSrc = gulp
+      .src("Build/package.noprepare.json")
+      .pipe(gulpRename("package.json"));
+
     const builtSrc = gulp.src(
       [
         "Build/Cesium/**",
@@ -445,7 +476,6 @@ gulp.task(
         "gulpfile.cjs",
         "server.cjs",
         "index.cjs",
-        "package.json",
         "LICENSE.md",
         "CHANGES.md",
         "README.md",
@@ -460,7 +490,7 @@ gulp.task(
       .src("index.release.html")
       .pipe(gulpRename("index.html"));
 
-    return mergeStream(builtSrc, staticSrc, indexSrc)
+    return mergeStream(packageJsonSrc, builtSrc, staticSrc, indexSrc)
       .pipe(
         gulpTap(function (file) {
           // Work around an issue with gulp-zip where archives generated on Windows do
@@ -472,7 +502,10 @@ gulp.task(
         })
       )
       .pipe(gulpZip("Cesium-" + version + ".zip"))
-      .pipe(gulp.dest("."));
+      .pipe(gulp.dest("."))
+      .on("finish", function () {
+        rimraf.sync("./Build/package.noprepare.json");
+      });
   })
 );
 

@@ -209,8 +209,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       uniformMap: {},
       model: {
         _resources: [],
-        _featureTable: {
-          _batchTexture: {
+        featureTable: {
+          batchTexture: {
             pickTexture: "mockPickTexture",
           },
         },
@@ -239,7 +239,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       var expectedUniforms = {
         model_pickTexture:
-          renderResources.model._featureTable._batchTexture.pickTexture,
+          renderResources.model.featureTable.batchTexture.pickTexture,
       };
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
 

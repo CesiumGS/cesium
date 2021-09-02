@@ -173,16 +173,44 @@ function initialize(content, gltf) {
   });
 }
 
-Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
+Gltf3DTileContent.prototype.getFeature = function (featureId) {
+  var featureTable = this._model.featureTable;
+  if (defined(featureTable)) {
+    return featureTable.getFeature(featureId);
+  }
+  return undefined;
+};
+
+Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
+  var featureTable = this._model.featureTable;
+  if (defined(featureTable)) {
+    return featureTable.hasProperty(featureId, name);
+  }
   return false;
 };
 
-Gltf3DTileContent.prototype.getFeature = function (featureId) {
-  return this._model._featureTable.getFeature(featureId);
+Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
+  var featureTable = this._model.featureTable;
+  if (defined(featureTable)) {
+    return featureTable.getProperty(featureId, name);
+  }
+  return undefined;
 };
 
-Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
-  return this._model._featureTable.getProperty(featureId, name);
+Gltf3DTileContent.prototype.getPropertyNames = function (results) {
+  var featureTable = this._model.featureTable;
+  if (defined(featureTable)) {
+    return featureTable.getPropertyNames(results);
+  }
+  return undefined;
+};
+
+Gltf3DTileContent.prototype.setProperty = function (featureId, name, value) {
+  var featureTable = this._model.featureTable;
+  if (defined(featureTable)) {
+    return featureTable.setProperty(featureId, name, value);
+  }
+  return false;
 };
 
 Gltf3DTileContent.prototype.getPropertyInherited = function (featureId, name) {

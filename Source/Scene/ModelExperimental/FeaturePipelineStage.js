@@ -82,7 +82,7 @@ FeaturePipelineStage.process = function (
     );
   }
 
-  var featureTable = renderResources.model._featureTable;
+  var featureTable = renderResources.model.featureTable;
   // Handle the batch texture.
   var featuresLength = featureTable._featuresLength;
   shaderBuilder.addUniform(
@@ -90,7 +90,7 @@ FeaturePipelineStage.process = function (
     "model_featuresLength",
     ShaderDestination.VERTEX
   );
-  var batchTexture = renderResources.model._featureTable._batchTexture;
+  var batchTexture = renderResources.model.featureTable.batchTexture;
   shaderBuilder.addUniform(
     "sampler2D",
     "model_batchTexture",

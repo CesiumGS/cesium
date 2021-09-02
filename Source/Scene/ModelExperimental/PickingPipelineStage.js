@@ -40,9 +40,9 @@ PickingPipelineStage.process = function (
 
   shaderBuilder.addDefine("USE_PICKING");
 
-  if (defined(model._featureTable)) {
+  if (defined(model.featureTable)) {
     // For models with features, the pick texture is used.
-    processPickTexture(renderResources, model._featureTable);
+    processPickTexture(renderResources, model.featureTable);
   } else if (defined(runtimeNode.node.instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, context);
@@ -82,7 +82,7 @@ function processPickTexture(renderResources, featureTable) {
 
   var pickingUniforms = {
     model_pickTexture: function () {
-      return featureTable._batchTexture.pickTexture;
+      return featureTable.batchTexture.pickTexture;
     },
   };
 

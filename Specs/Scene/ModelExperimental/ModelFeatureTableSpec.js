@@ -1,4 +1,4 @@
-import { ModelFeatureTable } from "../../../Source/Cesium.js";
+import { ModelFeatureTable, ModelFeature } from "../../../Source/Cesium.js";
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
@@ -25,6 +25,18 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     _metadataTable: mockMetadataTable,
   };
 
+  it("hasProperty works", function () {
+    var table = new ModelFeatureTable({
+      featureTable: mockFeatureTable,
+    });
+    var modelFeatures = table._features;
+    for (var i = 0; i < modelFeatures.length; i++) {
+      var feature = modelFeatures[i];
+      expect(feature.hasProperty("height")).toEqual(true);
+      expect(feature.hasProperty("width")).toEqual(false);
+    }
+  });
+
   it("getFeature works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
@@ -32,7 +44,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     expect(table._featuresLength).toEqual(mockMetadataTable.count);
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
-      expect(table.getFeature(i)).toEqual(modelFeatures[i]);
+      var feature = table.getFeature(i);
+      expect(feature).toEqual(modelFeatures[i]);
+      expect(feature).toBeInstanceOf(ModelFeature);
     }
   });
 
@@ -53,6 +67,29 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
         }
       }
     }
+  });
+
+  it("getPropertyNames works", function () {
+    var table = new ModelFeatureTable({
+      featureTable: mockFeatureTable,
+    });
+    var modelFeatures = table._features;
+    var results;
+    for (var i = 0; i < modelFeatures.length; i++) {
+      results = [];
+      var feature = modelFeatures[i];
+      expect(feature.getPropertyNames(results)).toEqual(["height", "name"]);
+    }
+  });
+
+  it("setProperty works", function () {
+    var table = new ModelFeatureTable({
+      featureTable: mockFeatureTable,
+    });
+    var feature = table._features[0];
+    expect(feature.getProperty("height")).toEqual(1.0);
+    expect(feature.setProperty("height", 3.0)).toEqual(true);
+    expect(feature.getProperty("height")).toEqual(3.0);
   });
 
   it("destroy works", function () {
