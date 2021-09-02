@@ -18,7 +18,7 @@ import Texture from "../Renderer/Texture.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} featuresLength The number of features in the batch table or feature table
- * @param {Cesium3DTileContent|ModelFeatureTable} content The content this batch texture belongs to. Used for creating the picking texture.
+ * @param {Cesium3DTileContent|ModelFeatureTable} owner The owner of this batch texture. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
  * @param {Object} [statistics] The statistics object to update with information about the batch texture.
  * @param {Function} [colorChangedCallback] A callback function that is called whenever the color of a feature changes.
  *
@@ -30,7 +30,7 @@ import Texture from "../Renderer/Texture.js";
 export default function BatchTexture(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.featuresLength", options.featuresLength);
-  Check.typeOf.object("options.content", options.content);
+  Check.typeOf.object("options.owner", options.owner);
   //>>includeEnd('debug');
 
   var featuresLength = options.featuresLength;
@@ -69,7 +69,7 @@ export default function BatchTexture(options) {
   this._featuresLength = featuresLength;
   this._textureDimensions = textureDimensions;
   this._textureStep = textureStep;
-  this._content = options.content;
+  this._owner = options.owner;
   this._statistics = options.statistics;
   this._colorChangedCallback = options.colorChangedCallback;
 }
@@ -456,7 +456,7 @@ function createPickTexture(batchTexture, context) {
     var pickIds = batchTexture._pickIds;
     var byteLength = getByteLength(batchTexture);
     var bytes = new Uint8Array(byteLength);
-    var content = batchTexture._content;
+    var owner = batchTexture._owner;
     var statistics = batchTexture._statistics;
 
     // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
@@ -464,7 +464,7 @@ function createPickTexture(batchTexture, context) {
     // to RGBA in the shader.  The only consider is precision issues, which might
     // not be an issue in WebGL 2.
     for (var i = 0; i < featuresLength; ++i) {
-      var pickId = context.createPickId(content.getFeature(i));
+      var pickId = context.createPickId(owner.getFeature(i));
       pickIds.push(pickId);
 
       var pickColor = pickId.color;
