@@ -201,11 +201,11 @@ describe(
     });
 
     describe("ModelExperimental", function () {
-      beforeAll(function () {
+      beforeEach(function () {
         ExperimentalFeatures.enableModelExperimental = true;
       });
 
-      afterAll(function () {
+      afterEach(function () {
         ExperimentalFeatures.enableModelExperimental = false;
       });
 
