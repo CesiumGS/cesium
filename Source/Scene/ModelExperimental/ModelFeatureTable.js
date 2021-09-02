@@ -115,69 +115,6 @@ ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
 };
 
 /**
- * @private
- */
-ModelFeatureTable.prototype.getPropertyInherited = function (
-  content,
-  featureId,
-  name
-) {
-  var value;
-  var table = this._table;
-  if (defined(this)) {
-    value = table.getProperty(featureId, name);
-    if (defined(value)) {
-      return value;
-    }
-  }
-
-  if (!defined(content)) {
-    return;
-  }
-
-  var tileMetadata = content.tile.metadata;
-  if (defined(tileMetadata)) {
-    value = tileMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
-    }
-
-    value = tileMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
-    }
-  }
-
-  var groupMetadata = content.groupMetadata;
-  if (defined(groupMetadata)) {
-    value = groupMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
-    }
-
-    value = groupMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
-    }
-  }
-
-  var tilesetMetadata = content.tileset.metadata;
-  if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
-    tilesetMetadata = tilesetMetadata.tileset;
-    value = tilesetMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
-    }
-
-    value = tilesetMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
-    }
-  }
-
-  return undefined;
-};
-/**
  * Returns true if this object was destroyed; otherwise, false.
  * <p>
  * If this object was destroyed, it should not be used; calling any function other than
