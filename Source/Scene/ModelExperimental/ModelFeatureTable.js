@@ -100,6 +100,10 @@ ModelFeatureTable.prototype.getProperty = function (featureId, name) {
   return this._table.getProperty(featureId, name);
 };
 
+ModelFeatureTable.prototype.getPropertyInherited = function (featureId, name) {
+  return this._table.getProperty(featureId, name);
+};
+
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
   return this._table.getPropertyIds(results);
 };

@@ -269,6 +269,22 @@ describe(
         });
       });
 
+      it("getPropertyInherited works", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          var featureTable = content._model.featureTable;
+          expect(featureTable).toBeDefined();
+          var modelFeatures = featureTable._features;
+          for (var i = 0; i < modelFeatures.length; i++) {
+            var feature = modelFeatures[i];
+            expect(feature.getProperty("id")).toEqual(feature._featureId);
+          }
+        });
+      });
+
       it("getPropertyNames works", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,

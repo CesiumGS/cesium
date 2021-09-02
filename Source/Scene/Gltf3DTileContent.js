@@ -197,6 +197,14 @@ Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
   return undefined;
 };
 
+Gltf3DTileContent.prototype.getPropertyInherited = function (featureId, name) {
+  var featureTable = this._model.featureTable;
+  if (defined(featureTable)) {
+    return featureTable.getProperty(featureId, name);
+  }
+  return undefined;
+};
+
 Gltf3DTileContent.prototype.getPropertyNames = function (results) {
   var featureTable = this._model.featureTable;
   if (defined(featureTable)) {
