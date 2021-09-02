@@ -219,9 +219,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         primitive: {},
       },
       runtimeNode: {
-        node: {
-          instances: {},
-        },
+        node: {},
       },
       attributes: [],
     };
