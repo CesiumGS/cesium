@@ -70,7 +70,7 @@ function Cesium3DTileBatchTable(
   this._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
-    content: content,
+    owner: content,
     statistics: defined(tileset) ? tileset._statistics : undefined,
   });
 }

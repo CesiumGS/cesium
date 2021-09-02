@@ -248,7 +248,7 @@ describe(
           for (var i = 0; i < modelFeatures.length; i++) {
             var feature = content.getFeature(i);
             expect(feature).toEqual(modelFeatures[i]);
-            expect(feature.content).toBeInstanceOf(Gltf3DTileContent);
+            expect(feature.owner).toBeInstanceOf(Gltf3DTileContent);
           }
         });
       });
