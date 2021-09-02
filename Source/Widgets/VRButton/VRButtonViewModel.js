@@ -6,7 +6,7 @@ import EventHelper from "../../Core/EventHelper.js";
 import Fullscreen from "../../Core/Fullscreen.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import knockout from "../../ThirdParty/knockout.js";
-import NoSleep from "../../ThirdParty/NoSleep.js";
+import NoSleep from "../../ThirdParty/nosleep.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 

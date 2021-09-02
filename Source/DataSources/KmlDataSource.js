@@ -390,23 +390,23 @@ function removeDuplicateNamespaces(text) {
   return text;
 }
 
-function loadXmlFromZip(entry, uriResolver, deferred) {
-  entry.getData(new zip.TextWriter(), function (text) {
+function loadXmlFromZip(entry, uriResolver) {
+  return when(entry.getData(new zip.TextWriter())).then(function (text) {
     text = insertNamespaces(text);
     text = removeDuplicateNamespaces(text);
     uriResolver.kml = parser.parseFromString(text, "application/xml");
-    deferred.resolve();
   });
 }
 
-function loadDataUriFromZip(entry, uriResolver, deferred) {
+function loadDataUriFromZip(entry, uriResolver) {
   var mimeType = defaultValue(
     MimeTypes.detectFromFilename(entry.filename),
     "application/octet-stream"
   );
-  entry.getData(new zip.Data64URIWriter(mimeType), function (dataUri) {
+  return when(entry.getData(new zip.Data64URIWriter(mimeType))).then(function (
+    dataUri
+  ) {
     uriResolver[entry.filename] = dataUri;
-    deferred.resolve();
   });
 }
 
@@ -417,7 +417,8 @@ function embedDataUris(div, elementType, attributeName, uriResolver) {
   for (var i = 0; i < elements.length; i++) {
     var element = elements[i];
     var value = element.getAttribute(attributeName);
-    var uri = new Uri(value).resolve(baseUri).toString();
+    var relativeUri = new Uri(value);
+    var uri = relativeUri.absoluteTo(baseUri).toString();
     var index = keys.indexOf(uri);
     if (index !== -1) {
       var key = keys[index];
@@ -636,7 +637,7 @@ function resolveHref(href, sourceResource, uriResolver) {
       // Needed for multiple levels of KML files in a KMZ
       var baseUri = new Uri(sourceResource.getUrlComponent());
       var uri = new Uri(href);
-      blob = uriResolver[uri.resolve(baseUri)];
+      blob = uriResolver[uri.absoluteTo(baseUri)];
       if (defined(blob)) {
         resource = new Resource({
           url: blob,
@@ -3164,74 +3165,53 @@ function loadKml(
 }
 
 function loadKmz(dataSource, entityCollection, blob, sourceResource) {
-  var deferred = when.defer();
-  zip.createReader(
-    new zip.BlobReader(blob),
-    function (reader) {
-      reader.getEntries(function (entries) {
-        var promises = [];
-        var uriResolver = {};
-        var docEntry;
-        var docDefer;
-        for (var i = 0; i < entries.length; i++) {
-          var entry = entries[i];
-          if (!entry.directory) {
-            var innerDefer = when.defer();
-            promises.push(innerDefer.promise);
-            if (/\.kml$/i.test(entry.filename)) {
-              // We use the first KML document we come across
-              //  https://developers.google.com/kml/documentation/kmzarchives
-              // Unless we come across a .kml file at the root of the archive because GE does this
-              if (!defined(docEntry) || !/\//i.test(entry.filename)) {
-                if (defined(docEntry)) {
-                  // We found one at the root so load the initial kml as a data uri
-                  loadDataUriFromZip(docEntry, uriResolver, docDefer);
-                }
-                docEntry = entry;
-                docDefer = innerDefer;
-              } else {
-                // Wasn't the first kml and wasn't at the root
-                loadDataUriFromZip(entry, uriResolver, innerDefer);
-              }
-            } else {
-              loadDataUriFromZip(entry, uriResolver, innerDefer);
+  var reader = new zip.ZipReader(new zip.BlobReader(blob));
+  return when(reader.getEntries()).then(function (entries) {
+    var promises = [];
+    var uriResolver = {};
+    var docEntry;
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      if (!entry.directory) {
+        if (/\.kml$/i.test(entry.filename)) {
+          // We use the first KML document we come across
+          //  https://developers.google.com/kml/documentation/kmzarchives
+          // Unless we come across a .kml file at the root of the archive because GE does this
+          if (!defined(docEntry) || !/\//i.test(entry.filename)) {
+            if (defined(docEntry)) {
+              // We found one at the root so load the initial kml as a data uri
+              promises.push(loadDataUriFromZip(docEntry, uriResolver));
             }
+            docEntry = entry;
+          } else {
+            // Wasn't the first kml and wasn't at the root
+            promises.push(loadDataUriFromZip(entry, uriResolver));
           }
+        } else {
+          promises.push(loadDataUriFromZip(entry, uriResolver));
         }
-
-        // Now load the root KML document
-        if (defined(docEntry)) {
-          loadXmlFromZip(docEntry, uriResolver, docDefer);
-        }
-        when
-          .all(promises)
-          .then(function () {
-            reader.close();
-            if (!defined(uriResolver.kml)) {
-              deferred.reject(
-                new RuntimeError("KMZ file does not contain a KML document.")
-              );
-              return;
-            }
-            uriResolver.keys = Object.keys(uriResolver);
-            return loadKml(
-              dataSource,
-              entityCollection,
-              uriResolver.kml,
-              sourceResource,
-              uriResolver
-            );
-          })
-          .then(deferred.resolve)
-          .otherwise(deferred.reject);
-      });
-    },
-    function (e) {
-      deferred.reject(e);
+      }
     }
-  );
 
-  return deferred.promise;
+    // Now load the root KML document
+    if (defined(docEntry)) {
+      promises.push(loadXmlFromZip(docEntry, uriResolver));
+    }
+    return when.all(promises).then(function () {
+      reader.close();
+      if (!defined(uriResolver.kml)) {
+        throw new RuntimeError("KMZ file does not contain a KML document.");
+      }
+      uriResolver.keys = Object.keys(uriResolver);
+      return loadKml(
+        dataSource,
+        entityCollection,
+        uriResolver.kml,
+        sourceResource,
+        uriResolver
+      );
+    });
+  });
 }
 
 function load(dataSource, entityCollection, data, options) {

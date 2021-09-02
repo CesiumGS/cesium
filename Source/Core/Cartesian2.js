@@ -719,6 +719,14 @@ Cartesian2.equalsEpsilon = function (
 Cartesian2.ZERO = Object.freeze(new Cartesian2(0.0, 0.0));
 
 /**
+ * An immutable Cartesian2 instance initialized to (1.0, 1.0).
+ *
+ * @type {Cartesian2}
+ * @constant
+ */
+Cartesian2.ONE = Object.freeze(new Cartesian2(1.0, 1.0));
+
+/**
  * An immutable Cartesian2 instance initialized to (1.0, 0.0).
  *
  * @type {Cartesian2}

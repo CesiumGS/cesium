@@ -6,11 +6,14 @@ import Pass from "../Renderer/Pass.js";
 import Axis from "./Axis.js";
 import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
+import ModelExperimental from "./ModelExperimental/ModelExperimental.js";
+import combine from "../Core/combine.js";
 
 /**
- * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
+ * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf|3DTILES_content_gltf} extension.
  * <p>
- * This class does not yet support the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension}.
+ * This class does not yet support the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}.
  * </p>
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
@@ -127,33 +130,45 @@ function initialize(content, gltf) {
     primitive: tileset,
   };
 
-  content._model = new Model({
+  var modelOptions = {
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
     basePath: resource,
-    requestType: RequestType.TILES3D,
     modelMatrix: tile.computedTransform,
     upAxis: tileset._gltfUpAxis,
     forwardAxis: Axis.X,
-    shadows: tileset.shadows,
-    debugWireframe: tileset.debugWireframe,
     incrementallyLoadTextures: false,
-    addBatchIdToGeneratedShaders: false,
-    pickObject: pickObject,
-    imageBasedLightingFactor: tileset.imageBasedLightingFactor,
-    lightColor: tileset.lightColor,
-    luminanceAtZenith: tileset.luminanceAtZenith,
-    sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-    specularEnvironmentMaps: tileset.specularEnvironmentMaps,
-    backFaceCulling: tileset.backFaceCulling,
-    showOutline: tileset.showOutline,
-  });
-  content._model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
+  };
+
+  if (ExperimentalFeatures.enableModelExperimental) {
+    modelOptions.customShader = tileset.customShader;
+    content._model = ModelExperimental.fromGltf(modelOptions);
+  } else {
+    modelOptions = combine(modelOptions, {
+      requestType: RequestType.TILES3D,
+      shadows: tileset.shadows,
+      debugWireframe: tileset.debugWireframe,
+      addBatchIdToGeneratedShaders: false,
+      pickObject: pickObject,
+      imageBasedLightingFactor: tileset.imageBasedLightingFactor,
+      lightColor: tileset.lightColor,
+      luminanceAtZenith: tileset.luminanceAtZenith,
+      sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
+      specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      backFaceCulling: tileset.backFaceCulling,
+      showOutline: tileset.showOutline,
     });
+    content._model = new Model(modelOptions);
+  }
+
+  content._model.readyPromise.then(function (model) {
+    if (defined(model.activeAnimations)) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
+    }
   });
 }
 

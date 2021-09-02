@@ -3,7 +3,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
+import ForEach from "./GltfPipeline/ForEach.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -30,7 +30,6 @@ DracoLoader._getDecoderTaskProcessor = function () {
       .initWebAssemblyModule({
         modulePath: "ThirdParty/Workers/draco_wasm_wrapper.js",
         wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-        fallbackModulePath: "ThirdParty/Workers/draco_decoder.js",
       })
       .then(function () {
         DracoLoader._taskProcessorReady = true;

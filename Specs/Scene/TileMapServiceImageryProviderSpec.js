@@ -329,9 +329,10 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       return provider.ready;
     }).then(function () {
       // check some details about the tilemapresourcel.xml so we know we got parsed/configured properly
-      expect(provider.url).toEqual(
-        getAbsoluteUri("made/up/tms/server/{z}/{x}/{reverseY}.jpg")
-      );
+      var url = getAbsoluteUri("made/up/tms/server/{z}/{x}/{reverseY}.jpg");
+      // Uri.absoluteTo() escapes the placeholders. Undo that.
+      url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
+      expect(provider.url).toEqual(url);
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
 

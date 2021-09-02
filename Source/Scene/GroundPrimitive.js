@@ -11,12 +11,12 @@ import GeometryInstance from "../Core/GeometryInstance.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
 import TerrainExaggeration from "../Core/TerrainExaggeration.js";
-import when from "../ThirdParty/when.js";
 import ClassificationPrimitive from "./ClassificationPrimitive.js";
 import ClassificationType from "./ClassificationType.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import SceneMode from "./SceneMode.js";
 import ShadowVolumeAppearance from "./ShadowVolumeAppearance.js";
+import when from "../ThirdParty/when.js";
 
 var GroundPrimitiveUniformMap = {
   u_globeMinimumAltitude: function () {
