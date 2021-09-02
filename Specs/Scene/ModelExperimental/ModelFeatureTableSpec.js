@@ -1,4 +1,4 @@
-import { ModelFeatureTable } from "../../../Source/Cesium.js";
+import { ModelFeatureTable, ModelFeature } from "../../../Source/Cesium.js";
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
@@ -44,7 +44,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     expect(table._featuresLength).toEqual(mockMetadataTable.count);
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
-      expect(table.getFeature(i)).toEqual(modelFeatures[i]);
+      var feature = table.getFeature(i);
+      expect(feature).toEqual(modelFeatures[i]);
+      expect(feature).toBeInstanceOf(ModelFeature);
     }
   });
 
