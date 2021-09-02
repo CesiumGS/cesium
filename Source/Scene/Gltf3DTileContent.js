@@ -200,7 +200,7 @@ Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
 Gltf3DTileContent.prototype.getPropertyInherited = function (featureId, name) {
   var featureTable = this._model.featureTable;
   if (defined(featureTable)) {
-    return featureTable.getProperty(featureId, name);
+    return featureTable.getPropertyInherited(featureId, name);
   }
   return undefined;
 };
