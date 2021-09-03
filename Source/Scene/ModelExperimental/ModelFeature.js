@@ -1,13 +1,13 @@
 /**
  * A feature of a {@link ModelExperimental}.
  * <p>
- * Provides access to a feature's properties stored in the tile's feature table.
+ * Provides access to a feature's properties stored in the model's feature table.
  * </p>
  * <p>
  * Modifications to a <code>ModelFeature</code> object have the lifetime of the model.
  * </p>
  * <p>
- * Do not construct this directly. Access it through {@link ModelFeatureTable#getFeature} or
+ * Do not construct this directly. Access it through {@link ModelFeatureTable#getFeature}, {@link Cesium3DTileContent#getFeature} or
  * picking using {@link Scene#pick} and {@link Scene#pickPosition}.
  * </p>
  *
@@ -16,7 +16,7 @@
  *
  * @param {Object} options Object with the following properties:
  * @param {ModelExperimental} options.model The model the feature belongs to.
- * @param {Number} options.featureId The unique identifier for this feature.
+ * @param {Number} options.featureId The unique integral identifier for this feature.
  * @param {Cesium3DTileContent|ModelFeatureTable} options.owner The owner of this feature. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
  *
  * @example
@@ -40,7 +40,7 @@ export default function ModelFeature(options) {
 Object.defineProperties(ModelFeature.prototype, {
   /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
-   * the tileset containing the feature.
+   * the model containing the feature.
    *
    * @memberof ModelFeature.prototype
    *
