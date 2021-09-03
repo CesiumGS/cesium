@@ -115,7 +115,7 @@
     "yargs": "^17.0.1"
   },
   "scripts": {
-    "prepare": "gulp prepare",
+    "prepare": "gulp prepare && husky install",
     "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
     "startPublic": "node server.cjs --public",
@@ -147,7 +147,6 @@
     "deploy-status": "gulp deploy-status",
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
-    "prettier-check": "prettier --check \"**/*\"",
-    "prepare": "husky install"
+    "prettier-check": "prettier --check \"**/*\""
   }
 }
