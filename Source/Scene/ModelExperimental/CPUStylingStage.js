@@ -17,7 +17,7 @@ CPUStylingStage.process = function (renderResources, model, frameState) {
 
   if (defined(model._hasStyle)) {
     shaderBuilder.addDefine(
-      "FEATURE_STYLING",
+      "USE_FEATURE_STYLING",
       undefined,
       ShaderDestination.FRAGMENT
     );
