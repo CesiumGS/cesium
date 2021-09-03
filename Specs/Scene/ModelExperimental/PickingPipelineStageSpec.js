@@ -250,8 +250,6 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       expect(vertexDefineLines[0]).toEqual("USE_PICKING");
       expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
-      expect(vertexDefineLines[1]).toEqual("USE_FEATURE_PICKING");
-      expect(fragmentDefineLines[1]).toEqual("USE_FEATURE_PICKING");
       expect(fragmentUniformLines[0]).toEqual(
         "uniform sampler2D model_pickTexture;"
       );

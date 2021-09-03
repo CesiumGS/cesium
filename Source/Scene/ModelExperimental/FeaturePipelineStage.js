@@ -78,8 +78,6 @@ FeaturePipelineStage.process = function (
       featureIdTextureReader.channels,
       ShaderDestination.BOTH
     );
-    shaderBuilder.addFragmentLines([FeatureStageCommon]);
-    shaderBuilder.addFragmentLines([FeatureStageFS]);
   } else {
     shaderBuilder.addDefine(
       "FEATURE_ID_ATTRIBUTE",
@@ -91,6 +89,9 @@ FeaturePipelineStage.process = function (
     shaderBuilder.addVertexLines([FeatureStageCommon]);
     shaderBuilder.addVertexLines([FeatureStageVS]);
   }
+
+  shaderBuilder.addFragmentLines([FeatureStageCommon]);
+  shaderBuilder.addFragmentLines([FeatureStageFS]);
 
   var featureTable = renderResources.model.featureTable;
   // Handle the batch texture.

@@ -73,7 +73,6 @@ PickingPipelineStage.process = function (
 
 function processPickTexture(renderResources, featureTable) {
   var shaderBuilder = renderResources.shaderBuilder;
-  shaderBuilder.addDefine("USE_FEATURE_PICKING");
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
