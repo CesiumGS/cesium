@@ -13,8 +13,8 @@ void main()
         #endif
     #endif
 
-    #ifdef USE_FEATURE_PICKING
-    featureStage(position);
+    #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
+    featureStage();
     #endif
     
     #ifdef USE_CUSTOM_SHADER

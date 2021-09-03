@@ -1,7 +1,9 @@
 import combine from "../../Core/combine.js";
 import defaultValue from "../../Core/defaultValue.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
 import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
+import FeatureStageCommon from "../../Shaders/ModelExperimental/FeatureStageCommon.js";
 
 /**
  * The feature pipeline stage is responsible for handling features in the model.
@@ -31,6 +33,8 @@ FeaturePipelineStage.process = function (
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
   var uniformMap = renderResources.uniformMap;
+
+  shaderBuilder.addDefine("HAS_FEATURES", undefined, ShaderDestination.BOTH);
 
   // Handle feature attribution: through feature ID texture or feature ID vertex attribute.
   var featureIdTextures = primitive.featureIdTextures;
@@ -74,12 +78,18 @@ FeaturePipelineStage.process = function (
       featureIdTextureReader.channels,
       ShaderDestination.BOTH
     );
+    shaderBuilder.addFragmentLines([FeatureStageCommon]);
+    shaderBuilder.addFragmentLines([FeatureStageFS]);
   } else {
     shaderBuilder.addDefine(
       "FEATURE_ID_ATTRIBUTE",
       "a_featureId_0",
       ShaderDestination.VERTEX
     );
+    shaderBuilder.addVarying("float", "model_featureId");
+    shaderBuilder.addVarying("vec2", "model_featureSt");
+    shaderBuilder.addVertexLines([FeatureStageCommon]);
+    shaderBuilder.addVertexLines([FeatureStageVS]);
   }
 
   var featureTable = renderResources.model.featureTable;
@@ -88,7 +98,7 @@ FeaturePipelineStage.process = function (
   shaderBuilder.addUniform(
     "float",
     "model_featuresLength",
-    ShaderDestination.VERTEX
+    ShaderDestination.BOTH
   );
   var batchTexture = renderResources.model.featureTable.batchTexture;
   shaderBuilder.addUniform(
@@ -120,14 +130,10 @@ FeaturePipelineStage.process = function (
     };
   }
 
-  shaderBuilder.addVarying("vec2", "model_featureSt");
-
   renderResources.uniformMap = combine(
     batchTextureUniforms,
     renderResources.uniformMap
   );
-
-  shaderBuilder.addVertexLines([FeatureStageVS]);
 };
 
 export default FeaturePipelineStage;
