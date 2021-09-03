@@ -1,22 +1,13 @@
 import {
-  combine,
   Color,
   ColorBlendMode,
-  GltfLoader,
-  Resource,
-  ResourceCache,
+  CPUStylingStage,
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
-import CPUStylingStage from "../../../Source/Scene/ModelExperimental/CPUStylingStage.js";
 import createScene from "../../createScene.js";
-import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/CPUStylingStage", function () {
-  var buildingsMetadata =
-    "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-
   var scene;
-  var gltfLoaders = [];
 
   beforeAll(function () {
     scene = createScene();
@@ -66,7 +57,7 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
 
     expect(fragmentDefineLines[0]).toEqual("USE_CPU_STYLING");
     expect(fragmentUniformLines[0]).toEqual("uniform vec4 model_color;");
-    expect(fragmentUniformLines[1]).toEqual("float vec4 model_colorBlend;");
+    expect(fragmentUniformLines[1]).toEqual("uniform float model_colorBlend;");
 
     var uniformMap = renderResources.uniformMap;
     expect(uniformMap.model_color()).toEqual(mockModel._color);

@@ -1,6 +1,5 @@
 import ColorBlendMode from "../ColorBlendMode.js";
 import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
 
@@ -15,7 +14,7 @@ CPUStylingStage.process = function (renderResources, model, frameState) {
   );
   shaderBuilder.addFragmentLines([CPUStylingStageFS]);
 
-  if (defined(model._hasStyle)) {
+  if (model._hasStyle) {
     shaderBuilder.addDefine(
       "USE_FEATURE_STYLING",
       undefined,

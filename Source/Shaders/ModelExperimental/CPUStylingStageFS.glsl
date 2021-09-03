@@ -1,6 +1,6 @@
 vec4 cpuStylingStage(vec4 color)
 {
-    #ifdef FEATURE_STYLING
+    #ifdef USE_FEATURE_STYLING
 
     color = model_featureColor;
 
