@@ -73,7 +73,6 @@ PickingPipelineStage.process = function (
 
 function processPickTexture(renderResources, featureTable) {
   var shaderBuilder = renderResources.shaderBuilder;
-  shaderBuilder.addDefine("USE_FEATURE_PICKING");
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
@@ -91,7 +90,8 @@ function processPickTexture(renderResources, featureTable) {
     renderResources.uniformMap
   );
 
-  renderResources.pickId = "texture2D(model_pickTexture, model_featureSt);";
+  renderResources.pickId =
+    "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))";
 }
 
 function processInstancedPickIds(renderResources, context) {

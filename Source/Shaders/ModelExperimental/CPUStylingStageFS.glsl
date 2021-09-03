@@ -1,9 +1,14 @@
 vec4 cpuStylingStage(vec4 color)
 {
-    #ifdef USE_FEATURE_STYLING
+    #if !defined(FEATURE_ID_TEXTURE) && !defined(FEATURE_ID_ATTRIBUTE)
+    vec4 featureProperties = texture2D(model_batchTexture, featureSt);
+    float show = ceil(featureProperties.a);
+    if (show == 0.0) {
+        discard;
+    }
 
+    #elif defined(FEATURE_ID_ATTRIBUTE)
     color = model_featureColor;
-
     #else
     
     color.rgb = mix(color.rgb, model_color.rgb, model_colorBlend);

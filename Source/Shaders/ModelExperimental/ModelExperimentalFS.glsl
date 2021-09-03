@@ -47,6 +47,10 @@ void main()
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
+    #ifdef HAS_FEATURES
+    featureStage();
+    #endif
+
     #ifdef USE_CPU_STYLING
     color = cpuStylingStage(color);
     #endif

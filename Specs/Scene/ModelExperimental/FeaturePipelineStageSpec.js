@@ -111,13 +111,15 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
         renderResources.shaderBuilder._vertexShaderParts.uniformLines;
       var vertexVaryingLines =
         renderResources.shaderBuilder._vertexShaderParts.varyingLines;
+      var fragmentDefineLines =
+        renderResources.shaderBuilder._vertexShaderParts.defineLines;
       var fragmentVaryingLines =
         renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
 
-      expect(vertexDefineLines[0]).toEqual(
+      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
+      expect(vertexDefineLines[1]).toEqual(
         "FEATURE_ID_ATTRIBUTE a_featureId_0"
       );
-
       expect(vertexUniformLines[0]).toEqual(
         "uniform float model_featuresLength;"
       );
@@ -128,9 +130,12 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       expect(vertexUniformLines[3]).toEqual(
         "uniform vec2 model_textureDimensions;"
       );
+      expect(vertexVaryingLines[0]).toEqual("varying float model_featureId;");
+      expect(vertexVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
 
-      expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
-      expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
+      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+      expect(fragmentVaryingLines[0]).toEqual("varying float model_featureId;");
+      expect(fragmentVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
 
       var featureTable = renderResources.model.featureTable;
       var expectedUniforms = {
@@ -195,19 +200,22 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       var fragmentVaryingLines =
         renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
 
-      expect(vertexDefineLines[0]).toEqual(
+      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
+      expect(vertexDefineLines[1]).toEqual(
         "FEATURE_ID_TEXTURE u_featureIdTexture_0"
       );
-      expect(vertexDefineLines[1]).toEqual("FEATURE_ID_TEXCOORD a_texCoord_0");
-      expect(vertexDefineLines[2]).toEqual("FEATURE_ID_CHANNEL r");
+      expect(vertexDefineLines[2]).toEqual("FEATURE_ID_TEXCOORD a_texCoord_0");
+      expect(vertexDefineLines[3]).toEqual("FEATURE_ID_CHANNEL r");
 
-      expect(fragmentDefineLines[0]).toEqual(
+      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+
+      expect(fragmentDefineLines[1]).toEqual(
         "FEATURE_ID_TEXTURE u_featureIdTexture_0"
       );
-      expect(fragmentDefineLines[1]).toEqual(
+      expect(fragmentDefineLines[2]).toEqual(
         "FEATURE_ID_TEXCOORD v_texCoord_0"
       );
-      expect(fragmentDefineLines[2]).toEqual("FEATURE_ID_CHANNEL r");
+      expect(fragmentDefineLines[3]).toEqual("FEATURE_ID_CHANNEL r");
 
       expect(vertexUniformLines[0]).toEqual(
         "uniform sampler2D u_featureIdTexture_0;"
@@ -226,9 +234,6 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       expect(fragmentUniformLines[0]).toEqual(
         "uniform sampler2D u_featureIdTexture_0;"
       );
-
-      expect(vertexVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
-      expect(fragmentVaryingLines[0]).toEqual("varying vec2 model_featureSt;");
 
       var featureTable = renderResources.model.featureTable;
       var expectedUniforms = {
