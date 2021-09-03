@@ -4,6 +4,8 @@ import pollToPromise from "../../pollToPromise.js";
 function loadAndZoomToModelExperimental(options, scene) {
   var model = ModelExperimental.fromGltf({
     gltf: options.gltf,
+    show: options.show,
+    basePath: options.basePath,
     modelMatrix: options.modelMatrix,
     allowPicking: options.allowPicking,
     upAxis: options.upAxis,
@@ -23,6 +25,7 @@ function loadAndZoomToModelExperimental(options, scene) {
     .then(function () {
       scene.camera.flyToBoundingSphere(model.boundingSphere, {
         duration: 0,
+        offset: options.offset,
       });
       return model;
     })

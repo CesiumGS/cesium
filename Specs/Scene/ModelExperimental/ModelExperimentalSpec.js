@@ -1,11 +1,15 @@
 import {
   FeatureDetection,
+  JulianDate,
+  defaultValue,
+  Matrix4,
   Math as CesiumMath,
   ResourceCache,
   Resource,
   ModelExperimental,
   Cartesian3,
   defined,
+  HeadingPitchRange,
   when,
   ShaderProgram,
 } from "../../../Source/Cesium.js";
@@ -19,6 +23,9 @@ describe(
 
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+    var boxTexturedGltfUrl =
+      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
 
     var scene;
 
@@ -35,7 +42,35 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    it("initializes from Uint8Array", function () {
+    function zoomTo(model, zoom) {
+      zoom = defaultValue(zoom, 4.0);
+
+      var camera = scene.camera;
+      var center = Matrix4.multiplyByPoint(
+        model.modelMatrix,
+        model.boundingSphere.center,
+        new Cartesian3()
+      );
+      var r = zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
+      camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
+    }
+
+    function verifyRender(model, shouldRender) {
+      expect(model.ready).toBe(true);
+      zoomTo(model);
+      expect({
+        scene: scene,
+        time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+      }).toRenderAndCall(function (rgba) {
+        if (shouldRender) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        } else {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        }
+      });
+    }
+
+    it("initializes and renders from Uint8Array", function () {
       var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       var loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
@@ -46,6 +81,62 @@ describe(
           expect(model.ready).toEqual(true);
           expect(model._sceneGraph).toBeDefined();
           expect(model._resourcesLoaded).toEqual(true);
+          verifyRender(model, true);
+        });
+      });
+    });
+
+    it("initializes and renders from JSON object", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph).toBeDefined();
+          expect(model._resourcesLoaded).toEqual(true);
+          verifyRender(model, true);
+        });
+      });
+    });
+
+    it("initializes and renders from JSON object with external buffers", function () {
+      var resource = Resource.createIfNeeded(microcosm);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: microcosm,
+          },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph).toBeDefined();
+          expect(model._resourcesLoaded).toEqual(true);
+          verifyRender(model, true);
+        });
+      });
+    });
+
+    it("show works", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      var loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), show: false },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph._drawCommands.length).toBeGreaterThan(0);
+          expect(model.show).toEqual(false);
+          verifyRender(model, false);
+          model.show = true;
+          expect(model.show).toEqual(true);
+          verifyRender(model, true);
         });
       });
     });
@@ -111,9 +202,14 @@ describe(
         return;
       }
 
+      // This model gets clipped if log depth is disabled, so zoom out
+      // the camera just a little
+      var offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
+          offset: offset,
         },
         scene
       ).then(function (model) {
