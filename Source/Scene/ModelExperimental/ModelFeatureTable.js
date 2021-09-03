@@ -178,7 +178,14 @@ ModelFeatureTable.prototype.getColor = function (featureId, result) {
 
 var scratchColor = new Color();
 ModelFeatureTable.prototype.applyStyle = function (style) {
-  // TODO: Handle style === undefined
+  var model = this._model;
+
+  if (!defined(style)) {
+    model._hasStyle = false;
+    this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
+    this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);
+    return;
+  }
 
   for (var i = 0; i < this._featuresLength; i++) {
     var feature = this.getFeature(i);
@@ -198,7 +205,5 @@ ModelFeatureTable.prototype.applyStyle = function (style) {
     this.setShow(i, show);
   }
 
-  var model = this._model;
-  model._hasStyle = true;
   model.resetDrawCommands();
 };
