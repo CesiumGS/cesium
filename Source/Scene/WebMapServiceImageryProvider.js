@@ -239,6 +239,37 @@ function WebMapServiceImageryProvider(options) {
         ? "EPSG:3857"
         : "CRS:84"
     );
+
+    // The axis order in previous versions of the WMS specifications was to always use easting (x or lon ) and northing (y or
+    // lat). WMS 1.3.0 specifies that, depending on the particular CRS, the x axis may or may not be oriented West-to-East,
+    // and the y axis may or may not be oriented South-to-North. The WMS portrayal operation shall account for axis order.
+    // This affects some of the EPSG codes that were commonly used such as ESPG:4326. The current implementation
+    // makes sure that coordinates passed to the server (as part of the GetMap BBOX parameter) as well as those advertised
+    // in the capabilities document reflect the inverse axe orders for EPSG codes between 4000 and 5000.
+    //  - Taken from Section 9.1.3 of https://download.osgeo.org/mapserver/docs/MapServer-56.pdf
+    var parts = parameters.crs.split(":");
+    if (parts[0] === "EPSG") {
+      var includesReverseAxis = [
+        3034, // ETRS89-extended / LCC Europe
+        3035, // ETRS89-extended / LAEA Europe
+        3042, // ETRS89 / UTM zone 30N (N-E)
+        3043, // ETRS89 / UTM zone 31N (N-E)
+        3044, // ETRS89 / UTM zone 32N (N-E)
+      ];
+      var excludesReverseAxis = [
+        4471, // Mayotte
+        4559, // French Antilles
+      ];
+
+      var code = Number(parts[1]);
+      if (
+        (code >= 4000 && code < 5000 && !excludesReverseAxis.includes(code)) ||
+        includesReverseAxis.includes(code)
+      ) {
+        parameters.bbox =
+          "{southProjected},{westProjected},{northProjected},{eastProjected}";
+      }
+    }
   } else {
     // SRS for WMS 1.1.0 or 1.1.1.
     parameters.srs = defaultValue(
