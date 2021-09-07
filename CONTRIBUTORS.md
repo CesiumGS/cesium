@@ -295,3 +295,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Calogero Mauceri](https://github.com/kalosma)
 - [Ren Jianqiang](https://github.com/renjianqiang)
 - [Yang Puxiao](https://github.com/puxiao)
+- [Brendan Smith](https://github.com/tantricllama)
