@@ -71,7 +71,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {Boolean} [show] A boolean value indicating if the entity and its children are displayed.
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
- * @property {Property} [orientation] A Property specifying the entity orientation.
+ * @property {Property | Quaternion} [orientation] A Property specifying the entity orientation.
  * @property {Property} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
  * @property {BillboardGraphics | BillboardGraphics.ConstructorOptions} [billboard] A billboard to associate with this entity.
@@ -415,7 +415,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the orientation.
    * @memberof Entity.prototype
-   * @type {Property|undefined}
+   * @type {Property|Quaternion|undefined}
    */
   orientation: createPropertyDescriptor("orientation"),
   /**
