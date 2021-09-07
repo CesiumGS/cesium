@@ -947,7 +947,7 @@ Object.defineProperties(Viewer.prototype, {
    * Gets the DOM element for the area at the bottom of the window containing the
    * {@link CreditDisplay} and potentially other things.
    * @memberof Viewer.prototype
-   * @type {Element}
+   * @type {HTMLDivElement}
    * @readonly
    */
   bottomContainer: {
