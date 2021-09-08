@@ -83,6 +83,16 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   }
 };
 
+ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
+  for (var i = 0; i < attributes.length; i++) {
+    var attribute = attributes[i];
+    if (defined(attribute.quantization)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 /**
  * @param {ModelComponents.attribute} attribute
  *
@@ -108,12 +118,15 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
   var attributeType = attribute.type;
   var glslType = AttributeType.getGlslType(attributeType);
 
+  var isQuantized = defined(attribute.quantization);
   var quantizedGlslType;
-  if (defined(attribute.quantization)) {
+  if (isQuantized) {
     quantizedGlslType = AttributeType.getGlslType(attributeType);
   }
 
   return {
+    attribute: attribute,
+    isQuantized: isQuantized,
     variableName: variableName,
     hasSemantic: hasSemantic,
     glslType: glslType,

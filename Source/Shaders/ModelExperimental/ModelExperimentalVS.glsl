@@ -21,15 +21,13 @@ void main()
         #endif
     #endif
 
-    // Let the user decide what to do
     #ifdef USE_CUSTOM_SHADER
-    customShaderStage(position, attributes);
+    customShaderStage(attributes);
     #endif
 
-    // Compute the final position in each coordinate system needed
-    geometryStage(attributes);
-
-    gl_Position = czm_modelViewProjection * vec4(attributes.positionMC, 1.0);
+    // Compute the final position in each coordinate system needed.
+    // This also sets gl_Position.
+    geometryStage(attributes);    
 
     #ifdef PRIMITIVE_TYPE_POINTS
     processPoints();

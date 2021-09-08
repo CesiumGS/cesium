@@ -4,9 +4,11 @@ import defined from "../../Core/defined.js";
 import CustomShaderStage from "./CustomShaderStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
+import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 
 /**
@@ -63,9 +65,6 @@ export default function ModelExperimentalPrimitive(options) {
 }
 
 function initialize(runtimePrimitive) {
-  var pipelineStages = runtimePrimitive.pipelineStages;
-  pipelineStages.push(GeometryPipelineStage);
-
   var model = runtimePrimitive.model;
   var customShader = model.customShader;
   var hasCustomShader = defined(customShader);
@@ -74,6 +73,16 @@ function initialize(runtimePrimitive) {
   var materialsEnabled =
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
+  var hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
+    runtimePrimitive.primitive.attributes
+  );
+
+  var pipelineStages = runtimePrimitive.pipelineStages;
+  pipelineStages.push(GeometryPipelineStage);
+
+  if (hasQuantization) {
+    pipelineStages.push(DequantizationPipelineStage);
+  }
 
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);

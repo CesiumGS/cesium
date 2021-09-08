@@ -141,11 +141,16 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
 
 /**
  * Add a new dynamically-generated struct to the shader
- * @param {String} structName The name of the struct as it will appear in the shader. This will also be used to identify the struct in {@link ShaderBuilder#addStructField}
+ * @param {String} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
+ * @param {String} structName The name of the struct as it will appear in the shader.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
  */
-ShaderBuilder.prototype.addStruct = function (structName, destination) {
-  this._structs[structName] = new ShaderStruct(structName, destination);
+ShaderBuilder.prototype.addStruct = function (
+  structId,
+  structName,
+  destination
+) {
+  this._structs[structId] = new ShaderStruct(structName, destination);
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.structIds.push(structName);
   }
@@ -157,16 +162,12 @@ ShaderBuilder.prototype.addStruct = function (structName, destination) {
 
 /**
  * Add a field to a dynamically-generated struct.
- * @param {String} structName The name of the struct. This must be created first with {@link ShaderBuilder#addStruct}
+ * @param {String} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
  * @param {String} type The GLSL type of the field
  * @param {String} identifier The identifier of the field.
  */
-ShaderBuilder.prototype.addStructField = function (
-  structName,
-  type,
-  identifier
-) {
-  this._structs[structName].addField(type, identifier);
+ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
+  this._structs[structId].addField(type, identifier);
 };
 
 /**

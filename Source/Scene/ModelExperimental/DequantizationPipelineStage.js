@@ -13,68 +13,102 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 var DequantizationPipelineStage = {};
 DequantizationPipelineStage.name = "DequantizationPipelineStage"; // Helps with debugging
 
+var dequantizationFunctionId = "dequantizationStage";
+
 DequantizationPipelineStage.process = function (
   renderResources,
   primitive,
   frameState
 ) {
-  var attributes = primitive.attributes;
-  var dequantizationLines = generateDequantizationLines(attributes);
-
   var shaderBuilder = renderResources.shaderBuilder;
+  var functionId = "dequantizationStage";
+  var signature = "void dequantizationStage(inout Attributes attributes)";
+  shaderBuilder.addFunction(functionId, signature, ShaderDestination.VERTEX);
+
   shaderBuilder.addDefine(
     "USE_DEQUANTIZATION",
     undefined,
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVertexLines(
-    [].concat([
-      "void dequantizationStage(inout Attributes attributes)",
-      "{",
-      dequantizationLines,
-      "}",
-    ])
-  );
-};
-
-function generateDequantizationLines(attributes) {
-  var dequantizationLines = [];
-  for (var i = 0; i < attributes.length; i++) {
+  var attributes = primitive.attributes;
+  for (var i = 0; attributes.length; i++) {
     var attribute = attributes[i];
     var quantization = attribute.quantization;
     if (!defined(quantization)) {
       // non-quantized attributes were already handled in GeometryPipelineStage
       continue;
     }
-
     var attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
-    var variableName = attributeInfo.variableName;
-
-    var line;
-    if (quantization.octEncoded) {
-      line = generateOctDecodeLine(variableName);
-    } else {
-      line = generateDequantizeLine(variableName);
-    }
-
-    dequantizationLines.push(line);
+    updateDequantizationFunction(shaderBuilder, attributeInfo);
+    addDequantizationUniforms(renderResources, attributeInfo);
   }
+};
 
-  return dequantizationLines;
+function addDequantizationUniforms(renderResources, attributeInfo) {
+  var shaderBuilder = renderResources.shaderBuilder;
+  var uniformMap = renderResources.uniformMap;
+  var variableName = attributeInfo.variableName;
+  var quantization = attributeInfo.attribute.quantization;
+
+  if (quantization.octEncoded) {
+    var normalizationRange = "model_normalizationRange_" + variableName;
+    shaderBuilder.addUniform(
+      "float",
+      normalizationRange,
+      ShaderDestination.VERTEX
+    );
+    uniformMap[normalizationRange] = function () {
+      return quantization.normalizationRange;
+    };
+  } else {
+    var offset = "model_quantizedVolumeOffset_" + variableName;
+    var dimensions = "model_quantizedVolumeDimensions_" + variableName;
+    var glslType = attributeInfo.glslType;
+    shaderBuilder.addUniform(glslType, offset, ShaderDestination.VERTEX);
+    shaderBuilder.addUniform(glslType, dimensions, ShaderDestination.VERTEX);
+
+    uniformMap[offset] = function () {
+      return quantization.quantizedVolumeOffset;
+    };
+    uniformMap[dimensions] = function () {
+      return quantization.quantizedVolumeDimensions;
+    };
+  }
 }
 
-function generateOctDecodeLine(variableName) {
+function updateDequantizationFunction(shaderBuilder, attributeInfo) {
+  var variableName = attributeInfo.variableName;
+  var quantization = attributeInfo.attribute.quantization;
+
+  var line;
+  if (quantization.octEncoded) {
+    line = generateOctDecodeLine(variableName, quantization);
+  } else {
+    line = generateDequantizeLine(variableName);
+  }
+
+  shaderBuilder.addFunctionLine(dequantizationFunctionId, line);
+}
+
+function generateOctDecodeLine(variableName, quantization) {
   var structField = "attributes." + variableName;
   var encodedAttribute = "a_encoded_" + variableName;
   var decodeRange = "model_decode_" + variableName;
+
+  // Draco stores things as .zxy instead of xyz, so be explicit about the
+  // swizzle to avoid confusion
+  var swizzle = quantization.octEncodedZXY ? ".zxy" : ".xyz";
+
   return (
     structField +
     " = czm_octDecode(" +
     encodedAttribute +
     ", " +
     decodeRange +
-    ").zxy;"
+    ")" +
+    swizzle +
+    ";"
   );
 }
 
