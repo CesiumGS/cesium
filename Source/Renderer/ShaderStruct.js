@@ -51,5 +51,5 @@ ShaderStruct.prototype.generateGlslLines = function () {
     fields = ["    float __empty;"];
   }
 
-  return [].concat(["struct " + this.name, "{", fields, "};"]);
+  return [].concat("struct " + this.name, "{", fields, "};");
 };

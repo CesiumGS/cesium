@@ -46,12 +46,12 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   );
   shaderBuilder.addFunction(
     initializeAttributesFunctionId,
-    "void initializeAttributes(out Attributes)",
+    "void initializeAttributes(out Attributes attributes)",
     ShaderDestination.VERTEX
   );
   shaderBuilder.addFunction(
     setDynamicVaryingsFunctionId,
-    "void setDynamicVaryings(inout Attributes)",
+    "void setDynamicVaryings(inout Attributes attributes)",
     ShaderDestination.VERTEX
   );
 
@@ -86,16 +86,13 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     attributeIndex
   );
   addAttributeDeclaration(shaderBuilder, attributeInfo);
+  addVaryingDeclaration(shaderBuilder, attributeInfo);
 
   // For common attributes like positions, normals and tangents, the code is
   // already in GeometryStageVS, we just need to enable it
   if (defined(attribute.semantic)) {
-    addSemanticDefine(attributeInfo);
+    addSemanticDefine(shaderBuilder, attribute);
   }
-
-  // Always declare a varying for the attribute
-  var varyingName = "v_" + attributeInfo.variableName;
-  shaderBuilder.addVarying(attributeInfo.glslType, varyingName);
 
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
@@ -139,6 +136,12 @@ function addAttributeToAttributesArray(
   attributesArray.push(vertexAttribute);
 }
 
+function addVaryingDeclaration(shaderBuilder, attributeInfo) {
+  var variableName = attributeInfo.variableName;
+  var varyingName = "v_" + variableName;
+  shaderBuilder.addVarying(attributeInfo.glslType, varyingName);
+}
+
 function addAttributeDeclaration(shaderBuilder, attributeInfo) {
   var semantic = attributeInfo.attribute.semantic;
   var variableName = attributeInfo.variableName;
@@ -163,10 +166,7 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo) {
 function updateAttributesStruct(shaderBuilder, attributeInfo) {
   var structId = attributesStructId;
   var variableName = attributeInfo.variableName;
-  if (variableName === "position") {
-    // add position in model, world and eye coordinates to the struct.
-    shaderBuilder.addStructField(structId, "vec3", "positionMC");
-  } else if (variableName === "color") {
+  if (variableName === "color") {
     // Always declare color as a vec4, even if it was a vec3
     shaderBuilder.addStructField(structId, "vec4", "color");
   } else if (variableName === "tangent") {
@@ -191,14 +191,7 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
 
   var functionId = initializeAttributesFunctionId;
   var variableName = attributeInfo.variableName;
-  if (variableName === "position") {
-    // only store the model coordinates for now, the projection will be
-    // handled in the geometry function
-    shaderBuilder.addFunctionLine(
-      functionId,
-      "attributes.positionMC = a_position;"
-    );
-  } else if (variableName === "tangent") {
+  if (variableName === "tangent") {
     shaderBuilder.addFunctionLine(
       functionId,
       "attributes.tangent = a_tangent.xyz;"
@@ -227,7 +220,7 @@ function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
 
   var functionId = setDynamicVaryingsFunctionId;
   var variableName = attributeInfo.variableName;
-  var line = "v_" + variableName + " = attributes." + variableName;
+  var line = "v_" + variableName + " = attributes." + variableName + ";";
   shaderBuilder.addFunctionLine(functionId, line);
 }
 

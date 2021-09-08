@@ -32,7 +32,7 @@ DequantizationPipelineStage.process = function (
   );
 
   var attributes = primitive.attributes;
-  for (var i = 0; attributes.length; i++) {
+  for (var i = 0; i < attributes.length; i++) {
     var attribute = attributes[i];
     var quantization = attribute.quantization;
     if (!defined(quantization)) {
@@ -93,8 +93,9 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
 
 function generateOctDecodeLine(variableName, quantization) {
   var structField = "attributes." + variableName;
+
   var encodedAttribute = "a_encoded_" + variableName;
-  var decodeRange = "model_decode_" + variableName;
+  var normalizationRange = "model_normalizationRange_" + variableName;
 
   // Draco stores things as .zxy instead of xyz, so be explicit about the
   // swizzle to avoid confusion
@@ -104,8 +105,8 @@ function generateOctDecodeLine(variableName, quantization) {
     structField +
     " = czm_octDecode(" +
     encodedAttribute +
-    ", " +
-    decodeRange +
+    ".xy, " +
+    normalizationRange +
     ")" +
     swizzle +
     ";"
@@ -115,16 +116,18 @@ function generateOctDecodeLine(variableName, quantization) {
 function generateDequantizeLine(variableName) {
   var structField = "attributes." + variableName;
   var encodedAttribute = "a_encoded_" + variableName;
-  var minimumValue = "model_decode_" + variableName + "_min";
-  var normConstant = "model_decode_" + variableName + "norm_constant";
+  var offset = "model_quantizedVolumeOffset_" + variableName;
+  var dimensions = "model_quantizedVolumeDimensions_" + variableName;
   return (
     structField +
     " = " +
-    minimumValue +
+    offset +
     " + " +
     encodedAttribute +
     " * " +
-    normConstant +
+    dimensions +
     ";"
   );
 }
+
+export default DequantizationPipelineStage;

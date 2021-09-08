@@ -32,6 +32,4 @@ void geometryStage(inout Attributes attributes)
     // All other varyings need to be dynamically generated in
     // GeometryPipelineStage
     setDynamicVaryings(attributes);
-
-    return position;
 }
