@@ -184,4 +184,33 @@ function processAttribute(
   renderResources.attributes.push(vertexAttribute);
 }
 
+/*
+function generateInitializationLines() {
+  shaderBuilder.addDynamicFunction("initializeAttributes", "void initializeAttributes(inout Attributes attributes)", ShaderDestination.VERTEX);
+
+  
+  for attribute in attributes:
+    // POSITION
+    line = "attributes.positionMC = a_position"
+
+    // NORMAL
+    line = "attributes.normal = a_normal;"
+
+    // TANGENT
+    // handle the w
+    line = "attributes.tangent = computeTangent"
+
+    // COLOR
+    line = "attributes.color = "
+
+    // actually... this should go in the geometry processing stage
+    line = "attributes.positionWC = M * positionMC"
+    line = "attributes.positionCartographic = cartesianToCartographic(positionWC);"
+    line = "attributes.positionEC = MV * positionMC"
+    // REGULAR
+    line = "attributes.{name} = a_{name}"
+
+}
+*/
+
 export default GeometryPipelineStage;

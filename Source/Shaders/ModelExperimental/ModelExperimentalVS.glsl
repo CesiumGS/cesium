@@ -2,22 +2,34 @@ precision highp float;
 
 void main() 
 {
-    vec3 position = vec3(0.0);  
+    // Initialize the attributes struct with all
+    // attributes except quantized ones.
+    Attributes attributes;
+    initializeAttributes(attributes);
 
-    position = processGeometry(position);
+    // Dequantize the quantized ones and add them to the
+    // attributes struct.
+    #ifdef USE_QUANTIZATION
+    dequantizeAttributes(attributes);
+    #endif
 
+    // Update the position for this instance in place
     #ifdef HAS_INSTANCING
-    position = instancingStage(position);
+    instancingStage(attributes.positionMC);
         #ifdef USE_PICKING
         v_pickColor = a_pickColor;
         #endif
     #endif
 
+    // Let the user decide what to do
     #ifdef USE_CUSTOM_SHADER
-    position = customShaderStage(position);
+    customShaderStage(position, attributes);
     #endif
 
-    gl_Position = czm_modelViewProjection * vec4(position, 1.0);
+    // Compute the final position in each coordinate system needed
+    geometryStage(attributes);
+
+    gl_Position = czm_modelViewProjection * vec4(attributes.positionMC, 1.0);
 
     #ifdef PRIMITIVE_TYPE_POINTS
     processPoints();

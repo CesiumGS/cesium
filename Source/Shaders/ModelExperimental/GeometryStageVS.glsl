@@ -3,7 +3,7 @@ void processPoints()
     gl_PointSize = 4.0;
 }
 
-vec3 processGeometry(vec3 position) 
+vec3 geometryStage(vec3 position, Attributes attributes) 
 {  
     position = a_position;
     v_position = position;
