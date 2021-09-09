@@ -9,8 +9,8 @@ void main()
 
     // Dequantize the quantized ones and add them to the
     // attributes struct.
-    #ifdef USE_QUANTIZATION
-    dequantizeAttributes(attributes);
+    #ifdef USE_DEQUANTIZATION
+    dequantizationStage(attributes);
     #endif
 
     // Update the position for this instance in place
