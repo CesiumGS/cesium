@@ -63,16 +63,17 @@ function addDequantizationUniforms(renderResources, attributeInfo) {
     };
   } else {
     var offset = "model_quantizedVolumeOffset_" + variableName;
-    var dimensions = "model_quantizedVolumeDimensions_" + variableName;
+    var stepSize = "model_quantizedVolumeStepSize_" + variableName;
     var glslType = attributeInfo.glslType;
     shaderBuilder.addUniform(glslType, offset, ShaderDestination.VERTEX);
-    shaderBuilder.addUniform(glslType, dimensions, ShaderDestination.VERTEX);
+    shaderBuilder.addUniform(glslType, stepSize, ShaderDestination.VERTEX);
 
     uniformMap[offset] = function () {
       return quantization.quantizedVolumeOffset;
     };
-    uniformMap[dimensions] = function () {
-      return quantization.quantizedVolumeDimensions;
+
+    uniformMap[stepSize] = function () {
+      return quantization.quantizedVolumeStepSize;
     };
   }
 }
@@ -117,7 +118,7 @@ function generateDequantizeLine(variableName) {
   var structField = "attributes." + variableName;
   var encodedAttribute = "a_encoded_" + variableName;
   var offset = "model_quantizedVolumeOffset_" + variableName;
-  var dimensions = "model_quantizedVolumeDimensions_" + variableName;
+  var dimensions = "model_quantizedVolumeStepSize_" + variableName;
   return (
     structField +
     " = " +

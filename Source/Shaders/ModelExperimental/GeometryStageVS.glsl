@@ -5,7 +5,7 @@ void processPoints()
 
 void geometryStage(inout Attributes attributes) 
 {
-    // Compute positions in different positions
+    // Compute positions in different coordinate systems
     vec3 positionMC = attributes.positionMC;
     v_positionMC = positionMC;
     v_positionEC = (czm_modelView * vec4(positionMC, 1.0)).xyz;
