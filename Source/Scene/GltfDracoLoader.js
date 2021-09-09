@@ -178,7 +178,11 @@ GltfDracoLoader.prototype.process = function (frameState) {
   var compressedAttributes = draco.attributes;
 
   var decodeOptions = {
-    array: this._bufferViewTypedArray,
+    // Need to make a copy of the typed array otherwise the underlying
+    // ArrayBuffer may be accessed on both the worker and the main thread and
+    // throw an error like "ArrayBuffer at index 0 is already detached".
+    // Look into SharedArrayBuffer at some point to get around this.
+    array: new Uint8Array(this._bufferViewTypedArray),
     bufferView: bufferView,
     compressedAttributes: compressedAttributes,
     dequantizeInShader: true,
