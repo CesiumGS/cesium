@@ -122,12 +122,23 @@ function addAttributeToAttributesArray(
   attribute,
   attributeIndex
 ) {
+  var quantization = attribute.quantization;
+  var type;
+  var componentDatatype;
+  if (defined(quantization)) {
+    type = quantization.type;
+    componentDatatype = quantization.componentDatatype;
+  } else {
+    type = attribute.type;
+    componentDatatype = attribute.componentDatatype;
+  }
+
   var vertexAttribute = {
     index: attributeIndex,
     value: defined(attribute.buffer) ? undefined : attribute.constant,
     vertexBuffer: attribute.buffer,
-    componentsPerAttribute: AttributeType.getNumberOfComponents(attribute.type),
-    componentDatatype: attribute.componentDatatype,
+    componentsPerAttribute: AttributeType.getNumberOfComponents(type),
+    componentDatatype: componentDatatype,
     offsetInBytes: attribute.byteOffset,
     strideInBytes: attribute.byteStride,
     normalize: attribute.normalized,
