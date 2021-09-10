@@ -4,7 +4,7 @@ void main()
 {
     // Initialize the attributes struct with all
     // attributes except quantized ones.
-    Attributes attributes;
+    ProcessedAttributes attributes;
     initializeAttributes(attributes);
 
     // Dequantize the quantized ones and add them to the
@@ -21,7 +21,7 @@ void main()
         #endif
     #endif
 
-    #ifdef USE_CUSTOM_SHADER
+    #ifdef HAS_CUSTOM_VERTEX_SHADER
     customShaderStage(attributes);
     #endif
 

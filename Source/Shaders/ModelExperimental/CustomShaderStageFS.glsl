@@ -1,14 +1,8 @@
-czm_modelMaterial customShaderStage(czm_modelMaterial inputMaterial) 
+void customShaderStage(inout czm_modelMaterial material, ProcessedAttributes attributes) 
 {
-  #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-  // FragmentInput and initializeInputStruct() are dynamically generated in JS, 
-  // see CustomShaderStage.js
-  FragmentInput fsInput;
-  initializeInputStruct(fsInput);
-  czm_modelMaterial outputMaterial = inputMaterial;
-  fragmentMain(fsInput, outputMaterial);
-  return outputMaterial;
-  #else
-  return inputMaterial;
-  #endif
+    // FragmentInput and initializeInputStruct() are dynamically generated in JS, 
+    // see CustomShaderStage.js
+    FragmentInput fsInput;
+    initializeInputStruct(fsInput, attributes);
+    fragmentMain(fsInput, material);
 }

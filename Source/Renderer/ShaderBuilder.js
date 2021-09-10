@@ -152,11 +152,11 @@ ShaderBuilder.prototype.addStruct = function (
 ) {
   this._structs[structId] = new ShaderStruct(structName, destination);
   if (ShaderDestination.includesVertexShader(destination)) {
-    this._vertexShaderParts.structIds.push(structName);
+    this._vertexShaderParts.structIds.push(structId);
   }
 
   if (ShaderDestination.includesFragmentShader(destination)) {
-    this._fragmentShaderParts.structIds.push(structName);
+    this._fragmentShaderParts.structIds.push(structId);
   }
 };
 

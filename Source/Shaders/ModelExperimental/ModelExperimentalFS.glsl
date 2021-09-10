@@ -35,15 +35,18 @@ void main()
 {
     czm_modelMaterial material = defaultModelMaterial();
 
+    ProcessedAttributes attributes;
+    geometryStage(attributes);
+
     #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
-    material = materialStage(material);
+    materialStage(material, attributes);
     #endif
 
-    #if defined(CUSTOM_SHADER_MODIFY_MATERIAL) || defined(CUSTOM_SHADER_REPLACE_MATERIAL) 
-    material = customShaderStage(material);
+    #ifdef HAS_CUSTOM_FRAGMENT_SHADER
+    customShaderStage(material, attributes);
     #endif
 
-    material = lightingStage(material);
+    lightingStage(material);
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
     gl_FragColor = color;

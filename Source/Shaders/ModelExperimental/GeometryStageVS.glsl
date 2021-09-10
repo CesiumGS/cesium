@@ -3,7 +3,7 @@ void processPoints()
     gl_PointSize = 4.0;
 }
 
-void geometryStage(inout Attributes attributes) 
+void geometryStage(inout ProcessedAttributes attributes) 
 {
     // Compute positions in different coordinate systems
     vec3 positionMC = attributes.positionMC;
@@ -23,10 +23,11 @@ void geometryStage(inout Attributes attributes)
     #endif
 
     #ifdef HAS_TANGENTS
-    v_tangent = attributes.tangent;
-        #ifdef HAS_NORMALS
-        v_bitangent = attributes.bitangent;
-        #endif
+    v_tangent = attributes.tangent;    
+    #endif
+
+    #ifdef HAS_BITANGENTS
+    v_bitangent = attributes.bitangent;
     #endif
 
     // All other varyings need to be dynamically generated in

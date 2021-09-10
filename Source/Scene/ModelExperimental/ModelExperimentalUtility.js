@@ -84,6 +84,10 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
 };
 
 ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
+  if (!defined(attributes)) {
+    return false;
+  }
+
   for (var i = 0; i < attributes.length; i++) {
     var attribute = attributes[i];
     if (defined(attribute.quantization)) {

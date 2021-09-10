@@ -11,6 +11,7 @@ import {
   _shadersCustomShaderStageVS,
   _shadersCustomShaderStageFS,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/CustomShaderStage", function () {
   var primitive = {
@@ -67,11 +68,11 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
 
     CustomShaderStage.process(renderResources, primitive);
 
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "USE_CUSTOM_SHADER",
       "HAS_CUSTOM_VERTEX_SHADER",
     ]);
-    expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "HAS_CUSTOM_FRAGMENT_SHADER",
       "CUSTOM_SHADER_MODIFY_MATERIAL",
     ]);
@@ -80,7 +81,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
   // extract lines between curly braces of a struct or function. for example:
   // struct Attributes
   // {
-  //   vec3 position; // <-- these lines
+  //   vec3 positionMC; // <-- these lines
   //   vec3 normal;   // <--
   // }
   function betweenTheBraces(array, startLine) {
@@ -295,13 +296,13 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
           "{",
           "    vec3 normal = vsInput.attributes.normal;",
           "    vec2 texCoord = vsInput.attributes.texCoord_0;",
-          "    position = vsInput.attributes.position;",
+          "    position = vsInput.attributes.positionMC;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    vec3 position = fsInput.attributes.position;",
+          "    vec3 positionMC = fsInput.attributes.positionMC;",
           "    vec3 normal = fsInput.attributes.normal;",
           "    vec2 texCoord = fsInput.attributes.texCoord_0;",
           "}",
@@ -321,7 +322,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 
     var expectedAttributes = [
-      "    vec3 position;",
+      "    vec3 positionMC;",
       "    vec3 normal;",
       "    vec2 texCoord_0;",
     ].sort();
@@ -337,14 +338,14 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
 
     expect(generatedVertexLines.initializationLines.sort()).toEqual(
       [
-        "    vsInput.attributes.position = a_position;",
+        "    vsInput.attributes.positionMC = a_positionMC;",
         "    vsInput.attributes.normal = a_normal;",
         "    vsInput.attributes.texCoord_0 = a_texCoord_0;",
       ].sort()
     );
     expect(generatedFragmentLines.initializationLines.sort()).toEqual(
       [
-        "    fsInput.attributes.position = v_position;",
+        "    fsInput.attributes.positionMC = v_positionMC;",
         "    fsInput.attributes.normal = v_normal;",
         "    fsInput.attributes.texCoord_0 = v_texCoord_0;",
       ].sort()
@@ -359,14 +360,14 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
           "void vertexMain(VertexInput vsInput, inout vec3 position)",
           "{",
           "    float temperature = vsInput.attributes.temperature;",
-          "    position = vsInput.attributes.position;",
+          "    position = vsInput.attributes.positionMC;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
           "    float temperature = fsInput.attributes.temperature;",
-          "    vec3 position = fsInput.attributes.position;",
+          "    vec3 positionMC = fsInput.attributes.positionMC;",
           "}",
         ].join("\n"),
       }),
@@ -384,7 +385,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 
     var expectedAttributes = [
-      "    vec3 position;",
+      "    vec3 positionMC;",
       "    float temperature;",
     ].sort();
 
@@ -399,13 +400,13 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
 
     expect(generatedVertexLines.initializationLines.sort()).toEqual(
       [
-        "    vsInput.attributes.position = a_position;",
+        "    vsInput.attributes.positionMC = a_positionMC;",
         "    vsInput.attributes.temperature = a_temperature;",
       ].sort()
     );
     expect(generatedFragmentLines.initializationLines.sort()).toEqual(
       [
-        "    fsInput.attributes.position = v_position;",
+        "    fsInput.attributes.positionMC = v_positionMC;",
         "    fsInput.attributes.temperature = v_temperature;",
       ].sort()
     );
@@ -443,10 +444,10 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 
     expect(generatedVertexLines.attributeFields).toEqual([
-      "    vec3 position;",
+      "    vec3 positionMC;",
     ]);
     expect(generatedVertexLines.initializationLines).toEqual([
-      "    vsInput.attributes.position = a_position;",
+      "    vsInput.attributes.positionMC = a_positionMC;",
     ]);
 
     expect(generatedFragmentLines.attributeFields).toEqual([
@@ -585,7 +586,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       "    vec3 positionEC;",
     ]);
     expect(generatedFragmentLines.initializationLines).toEqual([
-      "    fsInput.positionMC = v_position;",
+      "    fsInput.positionMC = v_positionMC;",
       "    fsInput.positionWC = v_positionWC;",
       "    fsInput.positionEC = v_positionEC;",
     ]);
@@ -775,22 +776,15 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
 
     CustomShaderStage.process(renderResources, primitive);
 
-    // World coordinates require an extra varying.
-    var worldCoordDeclaration = "varying vec3 v_positionWC;";
-    expect(
-      shaderBuilder._vertexShaderParts.varyingLines.indexOf(
-        worldCoordDeclaration
-      )
-    ).not.toBe(-1);
-    expect(
-      shaderBuilder._fragmentShaderParts.varyingLines.indexOf(
-        worldCoordDeclaration
-      )
-    ).not.toBe(-1);
-    expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "USE_CUSTOM_SHADER",
       "COMPUTE_POSITION_WC",
     ]);
+
+    /*ShaderBuilderTester.expectHasFragmentFunction(shaderBuilder, initializeInputStructId, initializationInputStructSignature, [
+      "    fsInput.posiitonWC = v_positionWC;"
+    ])
+    */
 
     var generatedFragmentLines = groupFragmentShaderLines(shaderBuilder);
 

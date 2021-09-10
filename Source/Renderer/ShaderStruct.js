@@ -48,7 +48,7 @@ ShaderStruct.prototype.generateGlslLines = function () {
   var fields = this.fields;
   if (fields.length === 0) {
     // GLSL requires structs to have at least one field
-    fields = ["    float __empty;"];
+    fields = ["    float _empty;"];
   }
 
   return [].concat("struct " + this.name, "{", fields, "};");
