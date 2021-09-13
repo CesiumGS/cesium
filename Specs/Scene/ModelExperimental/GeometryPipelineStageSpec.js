@@ -61,13 +61,13 @@ describe(
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
-    var scene;
-    var gltfLoaders = [];
-
     var setDynamicVaryingsVSId = "setDynamicVaryingsVS";
     var setDynamicVaryingsFSId = "setDynamicVaryingsFS";
     var setDynamicVaryingsSignature =
       "void setDynamicVaryings(inout ProcessedAttributes attributes)";
+
+    var scene;
+    var gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();

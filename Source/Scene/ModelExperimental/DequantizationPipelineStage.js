@@ -15,14 +15,25 @@ DequantizationPipelineStage.name = "DequantizationPipelineStage"; // Helps with 
 
 var dequantizationFunctionId = "dequantizationStage";
 
-DequantizationPipelineStage.process = function (
-  renderResources,
-  primitive,
-  frameState
-) {
+/**
+ * Process a primitive with quantized properties. This stage modifies the
+ * following parts of the render resources:
+ * <ul>
+ *  <li> adds attribute and varying declarations for the vertex attributes in the vertex and fragment shaders
+ *  <li> creates the objects required to create VertexArrays
+ *  <li> sets the flag for point primitive types
+ * </ul>
+ *
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive
+ *
+ * @private
+ */
+DequantizationPipelineStage.process = function (renderResources, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
   var functionId = "dequantizationStage";
-  var signature = "void dequantizationStage(inout Attributes attributes)";
+  var signature =
+    "void dequantizationStage(inout ProcessedAttributes attributes)";
   shaderBuilder.addFunction(functionId, signature, ShaderDestination.VERTEX);
 
   shaderBuilder.addDefine(
