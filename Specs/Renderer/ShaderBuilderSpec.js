@@ -114,6 +114,359 @@ describe(
       checkFragmentShader(shaderProgram, ["PI 3.1415"], []);
     });
 
+    it("addStruct throws for undefined structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addStruct(
+          undefined,
+          "TestStruct",
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addStruct throws for invalid structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addStruct(
+          {},
+          "TestStruct",
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addStruct throws for undefined structName", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addStruct(
+          "testStruct",
+          undefined,
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addStruct throws for invalid structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addStruct(
+          "testStruct",
+          {},
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addStruct throws for undefined destination", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addStruct("testStruct", "TestStruct", undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("addStruct throws for invalid structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addStruct("testStruct", "TestStruct", "vertex");
+      }).toThrowDeveloperError();
+    });
+
+    it("addStruct adds a struct to the shader", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      shaderBuilder.addStruct(
+        "structFS",
+        "TestStruct",
+        ShaderDestination.FRAGMENT
+      );
+
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(
+        shaderProgram,
+        [],
+        ["struct TestStruct", "{", "    float _empty;", "};"]
+      );
+      checkFragmentShader(
+        shaderProgram,
+        [],
+        ["struct TestStruct", "{", "    float _empty;", "};"]
+      );
+    });
+
+    it("addStructField throws for undefined structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addStructField(undefined, "vec3", "positionMC");
+      }).toThrowDeveloperError();
+    });
+
+    it("addStructField throws for invalid structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addStructField(-1, "vec3", "positionMC");
+      }).toThrowDeveloperError();
+    });
+
+    it("addStructField throws for undefined type", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addStructField(
+          "structVS",
+          undefined,
+          "positionMC"
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addStructField throws for invalid type", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addStructField("structVS", -1, "positionMC");
+      }).toThrowDeveloperError();
+    });
+
+    it("addStructField throws for undefined identifier", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addStructField("structVS", "vec3", undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("addStructField throws for invalid identifier", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addStructField("structVS", "vec3", -1);
+      }).toThrowDeveloperError();
+    });
+
+    it("addStructField adds a struct field to the shader", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addStruct(
+        "structVS",
+        "TestStruct",
+        ShaderDestination.VERTEX
+      );
+      shaderBuilder.addStruct(
+        "structFS",
+        "TestStruct",
+        ShaderDestination.FRAGMENT
+      );
+
+      shaderBuilder.addStructField("structVS", "vec3", "positionMC");
+      shaderBuilder.addStructField("structFS", "vec3", "positionMC");
+      shaderBuilder.addStructField("structFS", "float", "temperature");
+
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(
+        shaderProgram,
+        [],
+        ["struct TestStruct", "{", "    vec3 positionMC;", "};"]
+      );
+      checkFragmentShader(
+        shaderProgram,
+        [],
+        [
+          "struct TestStruct",
+          "{",
+          "    vec3 positionMC;",
+          "    float temperature;",
+          "};",
+        ]
+      );
+    });
+
+    var signature = "float circleMask(float radius)";
+    it("addFunction throws for undefined functionName", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addFunction(
+          undefined,
+          signature,
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunction throws for invalid functionName", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addFunction(
+          {},
+          signature,
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunction throws for undefined signature", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addFunction(
+          "testFunction",
+          undefined,
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunction throws for invalid signature", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addFunction(
+          "testFunction",
+          -1,
+          ShaderDestination.FRAGMENT
+        );
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunction throws for undefined destination", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addFunction("testFunction", signature, undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunction throws for invalid structId", function () {
+      var shaderBuilder = new ShaderBuilder();
+      expect(function () {
+        return shaderBuilder.addFunction("testFunction", signature, "fragment");
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunction adds a struct to the shader", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      shaderBuilder.addFunction(
+        "testFunctionFS",
+        signature,
+        ShaderDestination.FRAGMENT
+      );
+
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(shaderProgram, [], [signature, "{", "}"]);
+      checkFragmentShader(shaderProgram, [], [signature, "{", "}"]);
+    });
+
+    it("addFunctionLine throws for undefined functionName", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addFunctionLine(undefined, "return 1.0;");
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunctionLine throws for invalid functionName", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addFunctionLine(-1, "return 1.0;");
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunctionLine throws for undefined line", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addFunctionLine("testFunctionVS", undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunctionLine throws for invalid line", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      expect(function () {
+        return shaderBuilder.addFunctionLine("testFunctionVS", -1);
+      }).toThrowDeveloperError();
+    });
+
+    it("addFunctionLine adds a line to the body of a function", function () {
+      var shaderBuilder = new ShaderBuilder();
+      shaderBuilder.addFunction(
+        "testFunctionVS",
+        signature,
+        ShaderDestination.VERTEX
+      );
+      shaderBuilder.addFunction(
+        "testFunctionFS",
+        signature,
+        ShaderDestination.FRAGMENT
+      );
+
+      shaderBuilder.addFunctionLine("testFunctionVS", "return 1.0;");
+      shaderBuilder.addFunctionLine(
+        "testFunctionFS",
+        "return 1.0 - step(0.3, radius);"
+      );
+
+      var shaderProgram = shaderBuilder.buildShaderProgram(context);
+      checkVertexShader(
+        shaderProgram,
+        [],
+        [signature, "{", "    return 1.0;", "}"]
+      );
+      checkFragmentShader(
+        shaderProgram,
+        [],
+        [signature, "{", "    return 1.0 - step(0.3, radius);", "}"]
+      );
+    });
+
     it("addUniform throws for undefined type", function () {
       var shaderBuilder = new ShaderBuilder();
       expect(function () {

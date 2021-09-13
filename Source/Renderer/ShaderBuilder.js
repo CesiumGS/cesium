@@ -150,6 +150,11 @@ ShaderBuilder.prototype.addStruct = function (
   structName,
   destination
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("structId", structId);
+  Check.typeOf.string("structName", structName);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
   this._structs[structId] = new ShaderStruct(structName);
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.structIds.push(structId);
@@ -167,6 +172,11 @@ ShaderBuilder.prototype.addStruct = function (
  * @param {String} identifier The identifier of the field.
  */
 ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("structId", structId);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", "identifier");
+  //>>includeEnd('debug');
   this._structs[structId].addField(type, identifier);
 };
 
@@ -181,6 +191,11 @@ ShaderBuilder.prototype.addFunction = function (
   signature,
   destination
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("functionName", functionName);
+  Check.typeOf.string("signature", signature);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
   this._functions[functionName] = new ShaderFunction(signature);
 
   if (ShaderDestination.includesVertexShader(destination)) {
@@ -198,6 +213,10 @@ ShaderBuilder.prototype.addFunction = function (
  * @param {String} line The line of GLSL code to add to the function body. Do not include any whitespace at either end, but do include the semicolon
  */
 ShaderBuilder.prototype.addFunctionLine = function (functionName, line) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("functionName", functionName);
+  Check.typeOf.string("line", line);
+  //>>includeEnd('debug');
   this._functions[functionName].addLine(line);
 };
 
