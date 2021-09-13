@@ -1,7 +1,7 @@
 import {
   combine,
   GltfLoader,
-  FeaturePipelineStage,
+  FeatureIdPipelineStage,
   ShaderBuilder,
   Resource,
   ResourceCache,
@@ -9,7 +9,7 @@ import {
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
-describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
+describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
   var buildingsMetadata =
     "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
   var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
@@ -44,7 +44,7 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
 
     return combine(options, {
       gltfResource: resource,
-      incrementallyLoadTexture: false,
+      incrementallyLoadTextures: false,
     });
   }
 
@@ -103,7 +103,7 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       // Reset pick objects.
       context._pickObjects = [];
 
-      FeaturePipelineStage.process(renderResources, primitive, frameState);
+      FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
       var vertexDefineLines =
         renderResources.shaderBuilder._vertexShaderParts.defineLines;
@@ -185,7 +185,7 @@ describe("Scene/ModelExperimental/FeaturePipelineStage", function () {
       // Reset pick objects.
       context._pickObjects = [];
 
-      FeaturePipelineStage.process(renderResources, primitive, frameState);
+      FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
       var vertexDefineLines =
         renderResources.shaderBuilder._vertexShaderParts.defineLines;

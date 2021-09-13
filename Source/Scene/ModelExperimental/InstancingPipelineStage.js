@@ -32,8 +32,11 @@ InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debuggin
  */
 InstancingPipelineStage.process = function (renderResources, node, frameState) {
   var instances = node.instances;
+  var attributes = instances.attributes;
+  var count = instances.attributes[0].count;
   var instancingVertexAttributes = [];
 
+  var model = renderResources.model;
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
   shaderBuilder.addVertexLines([InstancingStageVS]);
@@ -61,6 +64,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   ) {
     instancingVertexAttributes = processMatrixAttributes(
       node,
+      count,
       renderResources,
       frameState
     );
@@ -110,7 +114,48 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     }
   }
 
-  renderResources.instanceCount = node.instances.attributes[0].count;
+  // Load Feature ID attributes.
+  for (var i = 0; i < attributes.length; i++) {
+    var attribute = attributes[i];
+    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
+      continue;
+    }
+
+    var vertexBuffer = Buffer.createVertexBuffer({
+      context: frameState.context,
+      typedArray: attribute.typedArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    vertexBuffer.vertexArrayDestroyable = false;
+    model._resources.push(vertexBuffer);
+
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: vertexBuffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        attribute.type
+      ),
+      componentDatatype: attribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: attribute.byteOffset,
+      strideInBytes: attribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    shaderBuilder.addAttribute(
+      "float",
+      "a_instanceFeatureId_" + attribute.setIndex
+    );
+  }
+
+  var featureIdAttributes = instances.featureIdAttributes;
+  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+  if (featureIdAttributeIndex < featureIdAttributes.length) {
+    renderResources.featureTableId =
+      featureIdAttributes[featureIdAttributeIndex].featureTableId;
+  }
+
+  renderResources.instanceCount = count;
   renderResources.attributes.push.apply(
     renderResources.attributes,
     instancingVertexAttributes
@@ -122,8 +167,7 @@ var rotationScratch = new Quaternion();
 var scaleScratch = new Cartesian3();
 var transformScratch = new Matrix4();
 
-function getInstanceTransformsTypedArray(instances, renderResources) {
-  var count = instances.attributes[0].count;
+function getInstanceTransformsTypedArray(instances, count, renderResources) {
   var elements = 12;
   var transformsTypedArray = new Float32Array(count * elements);
 
@@ -235,9 +279,10 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   return transformsTypedArray;
 }
 
-function processMatrixAttributes(node, renderResources, frameState) {
+function processMatrixAttributes(node, count, renderResources, frameState) {
   var transformsTypedArray = getInstanceTransformsTypedArray(
     node.instances,
+    count,
     renderResources
   );
   var transformsVertexBuffer = Buffer.createVertexBuffer({

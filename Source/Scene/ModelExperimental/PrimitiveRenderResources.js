@@ -65,6 +65,16 @@ export default function PrimitiveRenderResources(
   this.attributeIndex = nodeRenderResources.attributeIndex;
 
   /**
+   * The ID of the feature table to use for picking and styling. Inherited from the node render resources.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.featureTableId = nodeRenderResources.featureTableId;
+
+  /**
    * The computed model matrix for this primitive. This is cloned from the
    * node render resources as the primitive may further modify it
    *

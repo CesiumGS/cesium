@@ -4,7 +4,8 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -37,15 +38,15 @@ PickingPipelineStage.process = function (
   var runtimeNode = renderResources.runtimeNode;
   var shaderBuilder = renderResources.shaderBuilder;
   var model = renderResources.model;
+  var featureTables = model.featureTables;
 
-  shaderBuilder.addDefine("USE_PICKING");
-
-  if (defined(runtimeNode.node.instances)) {
+  var instances = runtimeNode.node.instances;
+  if (defined(instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
-    processInstancedPickIds(renderResources, context);
-  } else if (defined(model.featureTable)) {
+    processInstancedPickIds(renderResources, instances, context);
+  } else if (defined(featureTables)) {
     // For models with features, the pick texture is used.
-    processPickTexture(renderResources, model.featureTable);
+    processPickTexture(renderResources, primitive, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
     var pickObject = {
@@ -71,7 +72,54 @@ PickingPipelineStage.process = function (
   }
 };
 
-function processPickTexture(renderResources, featureTable) {
+function processPickTexture(renderResources, primitive, context) {
+  var model = renderResources.model;
+  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+  var featureIdAttribute =
+    primitive.featureIdAttributes[featureIdAttributeIndex];
+  var featureTable = model.featureTables[featureIdAttribute.featureTableId];
+
+  // If the Feature ID attribute does not have a vertex attribute, it needs to be created
+  // from the constant and divisor properties.
+  if (!defined(featureIdAttribute.setIndex)) {
+    var buffer;
+
+    if (featureIdAttribute.divisor !== 0) {
+      var typedArray = generateFeatureIdTypedArray(
+        featureIdAttribute,
+        featureTable.featuresLength
+      );
+      buffer = Buffer.createVertexBuffer({
+        context: context,
+        typedArray: typedArray,
+        usage: BufferUsage.STATIC_DRAW,
+      });
+      buffer.vertexArrayDestroyable = false;
+      model._resources.push(buffer);
+    }
+
+    var vertexAttribute = {
+      index: renderResources.attributeIndex++,
+      vertexBuffer: buffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+      normalize: true,
+      offsetInBytes: 0,
+      strideInBytes: 0,
+      instanceDivisor: 1,
+      value: !defined(buffer) ? featureIdAttribute.constant : undefined,
+    };
+
+    renderResources.featureTableId = featureIdAttribute.featureTableId;
+    renderResources.attributes.push(vertexAttribute);
+    renderResources.shaderBuilder.addAttribute("float", "a_featureId_1");
+    renderResources.shaderBuilder.addDefine(
+      "FEATURE_ID_ATTRIBUTE",
+      "a_featureId_1",
+      ShaderDestination.VERTEX
+    );
+  }
+
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addUniform(
     "sampler2D",
@@ -90,23 +138,67 @@ function processPickTexture(renderResources, featureTable) {
     renderResources.uniformMap
   );
 
+  // The feature ID  is ignored if it is greater than the number of features.
   renderResources.pickId =
     "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))";
 }
 
-function processInstancedPickIds(renderResources, context) {
+function generateFeatureIdTypedArray(featureIdAttribute, count) {
+  var constant = featureIdAttribute.constant;
+  var divisor = featureIdAttribute.divisor;
+
+  var typedArray = new Uint32Array(count);
+  if (divisor === 0) {
+    typedArray.fill(constant);
+  } else {
+    for (var i = 0; i < count; i++) {
+      typedArray[i] = constant + i / divisor;
+    }
+  }
+
+  return typedArray;
+}
+
+function processInstancedPickIds(renderResources, instances, context) {
   var instanceCount = renderResources.instanceCount;
   var pickIds = new Array(instanceCount);
   var pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
   var model = renderResources.model;
-  var featureTable = model.featureTable;
+  var modelFeatureTables = model.featureTables;
+
   var modelResources = model._resources;
   for (var i = 0; i < instanceCount; i++) {
     var pickObject;
-    if (defined(featureTable)) {
-      pickObject = featureTable.getFeature(i);
+
+    if (defined(modelFeatureTables)) {
+      // Process per-instance Feature IDs.
+      var featureIdAttributeIndex = model.featureIdAttributeIndex;
+      var featureIdAttribute =
+        instances.featureIdAttributes[featureIdAttributeIndex];
+      var featureTable = modelFeatureTables[featureIdAttribute.featureTableId];
+
+      if (defined(featureIdAttribute) && defined(featureIdAttribute.setIndex)) {
+        // Process Feature ID vertex attribute.
+        var featureIdAttributeSetIndex = featureIdAttribute.setIndex;
+        var featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+          instances,
+          InstanceAttributeSemantic.FEATURE_ID,
+          featureIdAttributeSetIndex
+        );
+        pickObject = featureTable.getFeature(
+          featureIdVertexAttribute.typedArray[i]
+        );
+      } else {
+        //  Process Feature ID vertex attribute.
+        var constant = featureIdAttribute.constant;
+        var divisor = featureIdAttribute.divisor;
+
+        var featureId = divisor === 0 ? constant : constant + i / divisor;
+        pickObject = featureTable.getFeature(featureId);
+      }
     } else {
+      // Process per-instance Feature ID vertex attribute.
       pickObject = {
         model: renderResources.model,
         node: renderResources.runtimeNode,

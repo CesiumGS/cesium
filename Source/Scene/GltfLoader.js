@@ -924,10 +924,11 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
         // attributes as typed arrays, so the values can be used for computing
         // an accurate bounding volume.
         var loadAsTypedArray =
-          (hasRotation || !hasTranslationMinMax) &&
-          (semantic === InstanceAttributeSemantic.TRANSLATION ||
-            semantic === InstanceAttributeSemantic.ROTATION ||
-            semantic === InstanceAttributeSemantic.SCALE);
+          ((hasRotation || !hasTranslationMinMax) &&
+            (semantic === InstanceAttributeSemantic.TRANSLATION ||
+              semantic === InstanceAttributeSemantic.ROTATION ||
+              semantic === InstanceAttributeSemantic.SCALE)) ||
+          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) > 0;
 
         var accessorId = attributes[semantic];
         instances.attributes.push(

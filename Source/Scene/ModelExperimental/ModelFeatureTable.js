@@ -7,7 +7,7 @@ import ModelFeature from "./ModelFeature.js";
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
  * Extracts the properties from a {@link FeatureTable}.
  *
- * @param {Object} options:
+ * @param {Object} options An object containing the following options:
  * @param {ModelExperimental} options.model The model that owns this feature table.
  * @param {FeatureTable} options.featureTable The feature table from the model used to initialize the model.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to.
@@ -27,9 +27,6 @@ export default function ModelFeatureTable(options) {
 
   this._batchTexture = undefined;
 
-  // At the moment, only the metadata table is supported.
-  this._table = options.featureTable._metadataTable;
-
   initialize(this);
 }
 
@@ -47,6 +44,22 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   batchTexture: {
     get: function () {
       return this._batchTexture;
+    },
+  },
+
+  /**
+   * The number of features in this table.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  featuresLength: {
+    get: function () {
+      return this._featuresLength;
     },
   },
 });
@@ -93,23 +106,23 @@ ModelFeatureTable.prototype.getFeature = function (featureId) {
 };
 
 ModelFeatureTable.prototype.hasProperty = function (propertyName) {
-  return this._table.hasProperty(propertyName);
+  return this._featureTable.hasProperty(propertyName);
 };
 
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
-  return this._table.getProperty(featureId, name);
+  return this._featureTable.getProperty(featureId, name);
 };
 
 ModelFeatureTable.prototype.getPropertyInherited = function (featureId, name) {
-  return this._table.getProperty(featureId, name);
+  return this._featureTable.getProperty(featureId, name);
 };
 
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
-  return this._table.getPropertyIds(results);
+  return this._featureTable.getPropertyIds(results);
 };
 
 ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
-  return this._table.setProperty(featureId, name, value);
+  return this._featureTable.setProperty(featureId, name, value);
 };
 
 /**

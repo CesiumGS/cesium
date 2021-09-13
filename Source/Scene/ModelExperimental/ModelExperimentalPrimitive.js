@@ -1,14 +1,15 @@
+import AlphaPipelineStage from "./AlphaPipelineStage.js";
+import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
 import Check from "../../Core/Check.js";
+import CustomShaderMode from "./CustomShaderMode.js";
+import CustomShaderStage from "./CustomShaderStage.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import CustomShaderStage from "./CustomShaderStage.js";
-import CustomShaderMode from "./CustomShaderMode.js";
-import AlphaPipelineStage from "./AlphaPipelineStage.js";
+import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
-import FeaturePipelineStage from "./FeaturePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -27,6 +28,7 @@ export default function ModelExperimentalPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.primitive", options.primitive);
+  Check.typeOf.object("options.node", options.node);
   Check.typeOf.object("options.model", options.model);
   //>>includeEnd('debug');
 
@@ -38,6 +40,15 @@ export default function ModelExperimentalPrimitive(options) {
    * @private
    */
   this.primitive = options.primitive;
+
+  /**
+   * A reference to the node this primitive belongs to.
+   *
+   * @type {ModelComponents.Node}
+   *
+   * @private
+   */
+  this.node = options.node;
 
   /**
    * A reference to the model
@@ -67,6 +78,8 @@ function initialize(runtimePrimitive) {
   var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
 
+  var primitive = runtimePrimitive.primitive;
+  var node = runtimePrimitive.node;
   var model = runtimePrimitive.model;
   var customShader = model.customShader;
   var hasCustomShader = defined(customShader);
@@ -86,12 +99,32 @@ function initialize(runtimePrimitive) {
 
   pipelineStages.push(LightingPipelineStage);
 
-  if (defined(model.featureTable)) {
-    pipelineStages.push(FeaturePipelineStage);
+  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+  var featureIdTextureIndex = model.featureIdTextureIndex;
+
+  var hasInstancedFeatureIds;
+  if (
+    defined(node.instances) &&
+    node.instances.featureIdAttributes.length > 0
+  ) {
+    var featureIdAttributes = node.instances.featureIdAttributes;
+    if (defined(featureIdAttributes[featureIdAttributeIndex].setIndex)) {
+      hasInstancedFeatureIds = true;
+    }
+  }
+
+  var hasFeatureIds =
+    defined(primitive.featureIdAttributes[featureIdAttributeIndex].setIndex) ||
+    defined(primitive.featureIdTextures[featureIdTextureIndex]);
+  if (hasInstancedFeatureIds || hasFeatureIds) {
+    pipelineStages.push(FeatureIdPipelineStage);
   }
 
   if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
+  }
+  if (defined(model._featureTables)) {
+    pipelineStages.push(BatchTexturePipelineStage);
   }
 
   pipelineStages.push(AlphaPipelineStage);

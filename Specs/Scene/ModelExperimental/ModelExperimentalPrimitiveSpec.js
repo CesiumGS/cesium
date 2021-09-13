@@ -3,7 +3,7 @@ import {
   CustomShader,
   CustomShaderMode,
   CustomShaderStage,
-  FeaturePipelineStage,
+  FeatureIdPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
@@ -97,7 +97,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MaterialPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
-      FeaturePipelineStage,
+      FeatureIdPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ]);

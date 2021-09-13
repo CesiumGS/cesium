@@ -110,4 +110,14 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.instancingTranslationMin = undefined;
+
+  /**
+   * The ID of the feature table to use for picking and styling.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.featureTableId = undefined;
 }
