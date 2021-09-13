@@ -150,7 +150,7 @@ ShaderBuilder.prototype.addStruct = function (
   structName,
   destination
 ) {
-  this._structs[structId] = new ShaderStruct(structName, destination);
+  this._structs[structId] = new ShaderStruct(structName);
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.structIds.push(structId);
   }
@@ -181,7 +181,7 @@ ShaderBuilder.prototype.addFunction = function (
   signature,
   destination
 ) {
-  this._functions[functionName] = new ShaderFunction(signature, destination);
+  this._functions[functionName] = new ShaderFunction(signature);
 
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.functionIds.push(functionName);

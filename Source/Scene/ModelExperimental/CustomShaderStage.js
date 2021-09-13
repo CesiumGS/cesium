@@ -171,7 +171,8 @@ function generateAttributeField(name, attribute) {
 var attributeTypeLUT = {
   positionMC: "vec3",
   normal: "vec3",
-  tangent: "vec4",
+  tangent: "vec3",
+  bitangent: "vec3",
   texCoord: "vec2",
   joints: "ivec4",
   weights: "vec4",
@@ -181,7 +182,8 @@ var attributeTypeLUT = {
 var attributeDefaultValueLUT = {
   positionMC: "vec3(0.0)",
   normal: "vec3(0.0, 0.0, 1.0)",
-  tangent: "vec4(1.0, 0.0, 0.0, 1.0)",
+  tangent: "vec3(1.0, 0.0, 0.0)",
+  bitangent: "vec3(0.0, 1.0, 0.0)",
   texCoord: "vec2(0.0)",
   joints: "ivec4(0)",
   weights: "vec4(0.0)",

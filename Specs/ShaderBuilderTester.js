@@ -40,6 +40,66 @@ ShaderBuilderTester.expectHasFragmentDefines = function (
   );
 };
 
+ShaderBuilderTester.expectHasVertexUniforms = function (
+  shaderBuilder,
+  expectedUniforms
+) {
+  expectEqualUnordered(
+    shaderBuilder._vertexShaderParts.uniformLines,
+    expectedUniforms
+  );
+};
+
+ShaderBuilderTester.expectHasFragmentUniforms = function (
+  shaderBuilder,
+  expectedUniforms
+) {
+  expectEqualUnordered(
+    shaderBuilder._fragmentShaderParts.uniformLines,
+    expectedUniforms
+  );
+};
+
+ShaderBuilderTester.expectHasVaryings = function (
+  shaderBuilder,
+  expectedVaryings
+) {
+  expectEqualUnordered(
+    shaderBuilder._vertexShaderParts.varyingLines,
+    expectedVaryings
+  );
+  expectEqualUnordered(
+    shaderBuilder._fragmentShaderParts.varyingLines,
+    expectedVaryings
+  );
+};
+
+ShaderBuilderTester.expectHasVertexStruct = function (
+  shaderBuilder,
+  structId,
+  structName,
+  expectedFields
+) {
+  expectHasLine(shaderBuilder._vertexShaderParts.structIds, structId);
+  var struct = shaderBuilder._structs[structId];
+
+  expect(struct.name).toEqual(structName);
+  expectEqualUnordered(struct.fields, expectedFields);
+};
+
+ShaderBuilderTester.expectHasFragmentStruct = function (
+  shaderBuilder,
+  structId,
+  structName,
+  expectedFields
+) {
+  expectHasLine(shaderBuilder._fragmentShaderParts.structIds, structId);
+  var struct = shaderBuilder._structs[structId];
+
+  expect(struct.name).toEqual(structName);
+  expectEqualUnordered(struct.fields, expectedFields);
+};
+
 ShaderBuilderTester.expectHasVertexFunction = function (
   shaderBuilder,
   functionId,
@@ -64,4 +124,22 @@ ShaderBuilderTester.expectHasFragmentFunction = function (
 
   expect(func.signature).toEqual(signature);
   expectEqualUnordered(func.body, bodyLines);
+};
+
+ShaderBuilderTester.expectVertexLinesEqual = function (
+  shaderBuilder,
+  expectedVertexLines
+) {
+  expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual(
+    expectedVertexLines
+  );
+};
+
+ShaderBuilderTester.expectFragmentLinesEqual = function (
+  shaderBuilder,
+  expectedFragmentLines
+) {
+  expect(shaderBuilder._fragmentShaderParts.shaderLines).toEqual(
+    expectedFragmentLines
+  );
 };

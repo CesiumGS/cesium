@@ -64,9 +64,10 @@ describe(
     var scene;
     var gltfLoaders = [];
 
-    var setDynamicVaryingsId = "setDynamicVaryings";
+    var setDynamicVaryingsVSId = "setDynamicVaryingsVS";
+    var setDynamicVaryingsFSId = "setDynamicVaryingsFS";
     var setDynamicVaryingsSignature =
-      "void setDynamicVaryings(inout Attributes attributes)";
+      "void setDynamicVaryings(inout ProcessedAttributes attributes)";
 
     beforeAll(function () {
       scene = createScene();
@@ -187,10 +188,23 @@ describe(
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsId,
+          setDynamicVaryingsVSId,
           setDynamicVaryingsSignature,
           ["    v_texCoord_0 = attributes.texCoord_0;"]
         );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          setDynamicVaryingsFSId,
+          setDynamicVaryingsSignature,
+          ["    attributes.texCoord_0 = v_texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normal;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
           "HAS_TEXCOORD_0",
@@ -267,16 +281,33 @@ describe(
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsId,
+          setDynamicVaryingsVSId,
           setDynamicVaryingsSignature,
           ["    v_texCoord_0 = attributes.texCoord_0;"]
         );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          setDynamicVaryingsFSId,
+          setDynamicVaryingsSignature,
+          ["    attributes.texCoord_0 = v_texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normal;",
+          "varying vec3 v_tangent;",
+          "varying vec3 v_bitangent;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_BITANGENTS",
           "HAS_NORMALS",
           "HAS_TANGENTS",
           "HAS_TEXCOORD_0",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_BITANGENTS",
           "HAS_NORMALS",
           "HAS_TANGENTS",
           "HAS_TEXCOORD_0",
@@ -341,13 +372,29 @@ describe(
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsId,
+          setDynamicVaryingsVSId,
           setDynamicVaryingsSignature,
           [
             "    v_texCoord_0 = attributes.texCoord_0;",
             "    v_texCoord_1 = attributes.texCoord_1;",
           ]
         );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          setDynamicVaryingsFSId,
+          setDynamicVaryingsSignature,
+          [
+            "    attributes.texCoord_0 = v_texCoord_0;",
+            "    attributes.texCoord_1 = v_texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec2 v_texCoord_0;",
+          "varying vec2 v_texCoord_1;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_TEXCOORD_0",
           "HAS_TEXCOORD_1",
@@ -424,13 +471,30 @@ describe(
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsId,
+          setDynamicVaryingsVSId,
           setDynamicVaryingsSignature,
           [
             "    v_color_0 = attributes.color_0;",
             "    v_texCoord_0 = attributes.texCoord_0;",
           ]
         );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          setDynamicVaryingsFSId,
+          setDynamicVaryingsSignature,
+          [
+            "    attributes.color_0 = v_color_0;",
+            "    attributes.texCoord_0 = v_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normal;",
+          "varying vec4 v_color_0;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
           "HAS_COLOR_0",
@@ -486,12 +550,25 @@ describe(
       );
       expect(customAttribute.offsetInBytes).toBe(0);
       expect(customAttribute.strideInBytes).toBe(4);
+
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        setDynamicVaryingsId,
+        setDynamicVaryingsVSId,
         setDynamicVaryingsSignature,
         ["    v_temperature = attributes.temperature;"]
       );
+      ShaderBuilderTester.expectHasFragmentFunction(
+        shaderBuilder,
+        setDynamicVaryingsFSId,
+        setDynamicVaryingsSignature,
+        ["    attributes.temperature = v_temperature;"]
+      );
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec2 v_temperature;",
+        "varying vec3 v_positionEC;",
+        "varying vec3 v_positionMC;",
+        "varying vec3 v_positionWC;",
+      ]);
       ShaderBuilderTester.expectHasAttributes(
         shaderBuilder,
         "attribute vec3 a_positionMC;",

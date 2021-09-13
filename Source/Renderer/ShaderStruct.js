@@ -24,10 +24,9 @@
  *
  * @private
  */
-export default function ShaderStruct(name, destination) {
+export default function ShaderStruct(name) {
   this.name = name;
   this.fields = [];
-  this.destination = destination;
 }
 
 /**
