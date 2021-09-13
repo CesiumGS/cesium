@@ -1,3 +1,5 @@
+import Check from "../Core/Check.js";
+
 /**
  * A utility for dynamically-generating a GLSL struct.
  *
@@ -6,7 +8,6 @@
  *
  * @see {@link ShaderBuilder}
  * @param {String} name The name of the struct as it will appear in the shader.
- * @param {ShaderDestination} destination Whether this struct will appear in the vertex shader, the fragment shader, or both.
  * @example
  * // Generate the struct:
  * //
@@ -25,6 +26,9 @@
  * @private
  */
 export default function ShaderStruct(name) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("name", name);
+  //>>includeEnd('debug');
   this.name = name;
   this.fields = [];
 }
@@ -35,6 +39,10 @@ export default function ShaderStruct(name) {
  * @param {String} identifier The identifier of the struct field
  */
 ShaderStruct.prototype.addField = function (type, identifier) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
   var field = "    " + type + " " + identifier + ";";
   this.fields.push(field);
 };
