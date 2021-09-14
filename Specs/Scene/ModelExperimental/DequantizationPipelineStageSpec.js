@@ -87,7 +87,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
         dequantizationFunctionId,
         dequantizationSignature,
         [
-          "    attributes.normal = czm_octDecode(a_encoded_normal.xy, model_normalizationRange_normal).zxy;",
+          "    attributes.normal = czm_octDecode(a_encoded_normal, model_normalizationRange_normal).zxy;",
           "    attributes.positionMC = model_quantizedVolumeOffset_positionMC + a_encoded_positionMC * model_quantizedVolumeStepSize_positionMC;",
         ]
       );
