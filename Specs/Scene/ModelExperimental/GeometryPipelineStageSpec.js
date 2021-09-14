@@ -60,7 +60,12 @@ describe(
     var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    var dracoMilkTruck =
+      "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
 
+    var initializeAttributesFunctionId = "initializeAttributes";
+    var initializeAttributesSignature =
+      "void initializeAttributes(out ProcessedAttributes attributes)";
     var setDynamicVaryingsVSId = "setDynamicVaryingsVS";
     var setDynamicVaryingsFSId = "setDynamicVaryingsFS";
     var setDynamicVaryingsSignature =
@@ -131,6 +136,31 @@ describe(
       expect(positionAttribute.offsetInBytes).toBe(0);
       expect(positionAttribute.strideInBytes).toBe(12);
 
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        initializeAttributesFunctionId,
+        initializeAttributesSignature,
+        ["    attributes.positionMC = a_positionMC;"]
+      );
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        setDynamicVaryingsVSId,
+        setDynamicVaryingsSignature,
+        []
+      );
+      ShaderBuilderTester.expectHasFragmentFunction(
+        shaderBuilder,
+        setDynamicVaryingsFSId,
+        setDynamicVaryingsSignature,
+        []
+      );
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec3 v_positionEC;",
+        "varying vec3 v_positionMC;",
+        "varying vec3 v_positionWC;",
+      ]);
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasAttributes(
         shaderBuilder,
         "attribute vec3 a_positionMC;",
@@ -186,6 +216,16 @@ describe(
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
 
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normal = a_normal;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           setDynamicVaryingsVSId,
@@ -281,6 +321,18 @@ describe(
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normal = a_normal;",
+            "    attributes.tangent = a_tangent.xyz;",
+            "    attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
           setDynamicVaryingsVSId,
           setDynamicVaryingsSignature,
           ["    v_texCoord_0 = attributes.texCoord_0;"]
@@ -370,6 +422,16 @@ describe(
         expect(texCoord1Attribute.offsetInBytes).toBe(0);
         expect(texCoord1Attribute.strideInBytes).toBe(8);
 
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+            "    attributes.texCoord_1 = a_texCoord_1;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           setDynamicVaryingsVSId,
@@ -471,6 +533,17 @@ describe(
 
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normal = a_normal;",
+            "    attributes.color_0 = a_color_0;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
           setDynamicVaryingsVSId,
           setDynamicVaryingsSignature,
           [
@@ -553,6 +626,15 @@ describe(
 
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
+        initializeAttributesFunctionId,
+        initializeAttributesSignature,
+        [
+          "    attributes.positionMC = a_positionMC;",
+          "    attributes.temperature = a_temperature;",
+        ]
+      );
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
         setDynamicVaryingsVSId,
         setDynamicVaryingsSignature,
         ["    v_temperature = attributes.temperature;"]
@@ -614,6 +696,26 @@ describe(
         expect(normalAttribute.offsetInBytes).toBe(0);
         expect(normalAttribute.strideInBytes).toBe(12);
 
+        var featureId0Attribute = attributes[2];
+        expect(featureId0Attribute.index).toEqual(2);
+        expect(featureId0Attribute.vertexBuffer).toBeDefined();
+        expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
+        expect(featureId0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(featureId0Attribute.offsetInBytes).toBe(0);
+        expect(featureId0Attribute.strideInBytes).toBe(4);
+
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normal = a_normal;",
+            "    attributes.featureId_0 = a_featureId_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
           "attribute vec3 a_positionMC;",
@@ -627,16 +729,6 @@ describe(
           "HAS_FEATURE_ID_0",
           "HAS_NORMALS",
         ]);
-
-        var featureId0Attribute = attributes[2];
-        expect(featureId0Attribute.index).toEqual(2);
-        expect(featureId0Attribute.vertexBuffer).toBeDefined();
-        expect(featureId0Attribute.componentsPerAttribute).toEqual(1);
-        expect(featureId0Attribute.componentDatatype).toEqual(
-          ComponentDatatype.FLOAT
-        );
-        expect(featureId0Attribute.offsetInBytes).toBe(0);
-        expect(featureId0Attribute.strideInBytes).toBe(4);
       });
     });
 
@@ -678,6 +770,15 @@ describe(
         expect(featureId0Attribute.offsetInBytes).toBe(0);
         expect(featureId0Attribute.strideInBytes).toBe(4);
 
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.featureId_0 = a_featureId_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
           "attribute vec3 a_positionMC;",
@@ -690,6 +791,80 @@ describe(
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_FEATURE_ID_0",
           "PRIMITIVE_TYPE_POINTS",
+        ]);
+      });
+    });
+
+    it("prepares Draco model for dequantization stage", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+      };
+
+      return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(3);
+
+        var normalAttribute = attributes[0];
+        expect(normalAttribute.index).toEqual(1);
+        expect(normalAttribute.vertexBuffer).toBeDefined();
+        expect(normalAttribute.componentsPerAttribute).toEqual(2);
+        expect(normalAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).not.toBeDefined();
+
+        var positionAttribute = attributes[1];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).not.toBeDefined();
+
+        var texCoord0Attribute = attributes[2];
+        expect(texCoord0Attribute.index).toEqual(2);
+        expect(texCoord0Attribute.vertexBuffer).toBeDefined();
+        expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
+        expect(texCoord0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).not.toBeDefined();
+
+        // Initialization is skipped for dequantized attributes
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          initializeAttributesFunctionId,
+          initializeAttributesSignature,
+          []
+        );
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_encoded_positionMC;",
+          [
+            "attribute vec2 a_encoded_normal;",
+            "attribute vec2 a_encoded_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
         ]);
       });
     });
