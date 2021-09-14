@@ -82,6 +82,16 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.attributeIndex = 1;
 
   /**
+   * The set index to assign to feature ID vertex attribute(s) created from the constant/divisor in the feature ID attribute.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.featureIdVertexAttributeSetIndex = 0;
+
+  /**
    * The number of instances. Default is 0, if instancing is not used.
    *
    * @type {Number}

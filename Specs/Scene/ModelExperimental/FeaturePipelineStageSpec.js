@@ -195,10 +195,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         renderResources.shaderBuilder._vertexShaderParts.uniformLines;
       var fragmentUniformLines =
         renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
-      var vertexVaryingLines =
-        renderResources.shaderBuilder._vertexShaderParts.varyingLines;
-      var fragmentVaryingLines =
-        renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
 
       expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
       expect(vertexDefineLines[1]).toEqual(

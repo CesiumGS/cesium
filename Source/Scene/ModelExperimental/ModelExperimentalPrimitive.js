@@ -108,13 +108,13 @@ function initialize(runtimePrimitive) {
     node.instances.featureIdAttributes.length > 0
   ) {
     var featureIdAttributes = node.instances.featureIdAttributes;
-    if (defined(featureIdAttributes[featureIdAttributeIndex].setIndex)) {
+    if (defined(featureIdAttributes[featureIdAttributeIndex])) {
       hasInstancedFeatureIds = true;
     }
   }
 
   var hasFeatureIds =
-    defined(primitive.featureIdAttributes[featureIdAttributeIndex].setIndex) ||
+    defined(primitive.featureIdAttributes[featureIdAttributeIndex]) ||
     defined(primitive.featureIdTextures[featureIdTextureIndex]);
   if (hasInstancedFeatureIds || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);

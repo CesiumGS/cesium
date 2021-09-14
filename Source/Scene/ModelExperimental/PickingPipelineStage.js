@@ -79,47 +79,6 @@ function processPickTexture(renderResources, primitive, context) {
     primitive.featureIdAttributes[featureIdAttributeIndex];
   var featureTable = model.featureTables[featureIdAttribute.featureTableId];
 
-  // If the Feature ID attribute does not have a vertex attribute, it needs to be created
-  // from the constant and divisor properties.
-  if (!defined(featureIdAttribute.setIndex)) {
-    var buffer;
-
-    if (featureIdAttribute.divisor !== 0) {
-      var typedArray = generateFeatureIdTypedArray(
-        featureIdAttribute,
-        featureTable.featuresLength
-      );
-      buffer = Buffer.createVertexBuffer({
-        context: context,
-        typedArray: typedArray,
-        usage: BufferUsage.STATIC_DRAW,
-      });
-      buffer.vertexArrayDestroyable = false;
-      model._resources.push(buffer);
-    }
-
-    var vertexAttribute = {
-      index: renderResources.attributeIndex++,
-      vertexBuffer: buffer,
-      componentsPerAttribute: 4,
-      componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-      normalize: true,
-      offsetInBytes: 0,
-      strideInBytes: 0,
-      instanceDivisor: 1,
-      value: !defined(buffer) ? featureIdAttribute.constant : undefined,
-    };
-
-    renderResources.featureTableId = featureIdAttribute.featureTableId;
-    renderResources.attributes.push(vertexAttribute);
-    renderResources.shaderBuilder.addAttribute("float", "a_featureId_1");
-    renderResources.shaderBuilder.addDefine(
-      "FEATURE_ID_ATTRIBUTE",
-      "a_featureId_1",
-      ShaderDestination.VERTEX
-    );
-  }
-
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addUniform(
     "sampler2D",
@@ -141,22 +100,6 @@ function processPickTexture(renderResources, primitive, context) {
   // The feature ID  is ignored if it is greater than the number of features.
   renderResources.pickId =
     "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))";
-}
-
-function generateFeatureIdTypedArray(featureIdAttribute, count) {
-  var constant = featureIdAttribute.constant;
-  var divisor = featureIdAttribute.divisor;
-
-  var typedArray = new Uint32Array(count);
-  if (divisor === 0) {
-    typedArray.fill(constant);
-  } else {
-    for (var i = 0; i < count; i++) {
-      typedArray[i] = constant + i / divisor;
-    }
-  }
-
-  return typedArray;
 }
 
 function processInstancedPickIds(renderResources, instances, context) {

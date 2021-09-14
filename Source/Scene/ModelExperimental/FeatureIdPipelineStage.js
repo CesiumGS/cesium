@@ -1,6 +1,11 @@
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The feature ID pipeline stage is responsible for handling features in the model.
@@ -29,7 +34,6 @@ FeatureIdPipelineStage.process = function (
   frameState
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
-  var uniformMap = renderResources.uniformMap;
   var model = renderResources.model;
 
   shaderBuilder.addDefine("HAS_FEATURES", undefined, ShaderDestination.BOTH);
@@ -37,76 +41,163 @@ FeatureIdPipelineStage.process = function (
   // Handle feature attribution: through feature ID texture or feature ID vertex attribute.
   var featureIdTextures = primitive.featureIdTextures;
   if (featureIdTextures.length > 0) {
-    var featureIdTextureIndex = renderResources.model.featureIdTextureIndex;
-    var featureIdTexture = featureIdTextures[featureIdTextureIndex];
-    renderResources.featureTableId = featureIdTexture.featureTableId;
-
-    var featureIdTextureReader = featureIdTexture.textureReader;
-
-    var featureIdTextureUniformName =
-      "u_featureIdTexture_" + featureIdTextureIndex;
-    shaderBuilder.addDefine(
-      "FEATURE_ID_TEXTURE",
-      featureIdTextureUniformName,
-      ShaderDestination.BOTH
-    );
-    shaderBuilder.addUniform(
-      "sampler2D",
-      featureIdTextureUniformName,
-      ShaderDestination.BOTH
-    );
-    uniformMap[featureIdTextureUniformName] = function () {
-      return defaultValue(
-        featureIdTextureReader.texture,
-        frameState.context.defaultTexture
-      );
-    };
-
-    shaderBuilder.addDefine(
-      "FEATURE_ID_TEXCOORD",
-      "a_texCoord_" + featureIdTextureReader.texCoord,
-      ShaderDestination.VERTEX
-    );
-    shaderBuilder.addDefine(
-      "FEATURE_ID_TEXCOORD",
-      "v_texCoord_" + featureIdTextureReader.texCoord,
-      ShaderDestination.FRAGMENT
-    );
-
-    shaderBuilder.addDefine(
-      "FEATURE_ID_CHANNEL",
-      featureIdTextureReader.channels,
-      ShaderDestination.FRAGMENT
-    );
+    processFeatureIdTextures(renderResources, frameState, featureIdTextures);
   } else {
     var featureIdAttributeIndex = model.featureIdAttributeIndex;
     var instances = renderResources.runtimeNode.node.instances;
-    var featureIdAttribute;
-    var featureIdAttributeVariableName;
 
-    // Set the FEATURE_ID_ATTRIBUTE to the instanced feature ID vertex attribute, if available.
+    var featureIdCount;
+    var featureIdAttribute;
+    var featureIdInstanceDivisor = 0;
+    var featureIdAttributePrefix;
+    var featureIdAttributeSetIndex;
+
+    // Get Feature ID attribute,from the instancing or primitive extension.
     if (defined(instances)) {
       featureIdAttribute =
         instances.featureIdAttributes[featureIdAttributeIndex];
-      renderResources.featureTableId = featureIdAttribute.featureTableId;
-      featureIdAttributeVariableName =
-        "a_instanceFeatureId_" + featureIdAttribute.setIndex;
+      featureIdCount = instances.attributes[0].count;
+      featureIdAttributePrefix = "a_instanceFeatureId_";
+      featureIdInstanceDivisor = 1;
     } else {
       featureIdAttribute =
         primitive.featureIdAttributes[featureIdAttributeIndex];
-      renderResources.featureTableId = featureIdAttribute.featureTableId;
-      featureIdAttributeVariableName =
-        "a_featureId_" + featureIdAttribute.setIndex;
+      var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION
+      );
+      featureIdCount = positionAttribute.count;
+      featureIdAttributePrefix = "a_featureId_";
+    }
+
+    var featureTableId = featureIdAttribute.featureTableId;
+    renderResources.featureTableId = featureTableId;
+
+    // Check if the Feature ID attribute references an existing vertex attribute.
+    if (defined(featureIdAttribute.setIndex)) {
+      featureIdAttributeSetIndex = featureIdAttribute.setIndex;
+    } else {
+      // If a constant and/or divisor are used, a new vertex attribute will need to be created.
+      var value;
+      var vertexBuffer;
+
+      featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
+
+      if (featureIdAttribute.divisor === 0) {
+        value = featureIdAttribute.constant;
+      } else {
+        var typedArray = generateFeatureIdTypedArray(
+          featureIdAttribute,
+          featureIdCount
+        );
+        vertexBuffer = Buffer.createVertexBuffer({
+          context: frameState.context,
+          typedArray: typedArray,
+          usage: BufferUsage.STATIC_DRAW,
+        });
+        vertexBuffer.vertexArrayDestroyable = false;
+        model._resources.push(vertexBuffer);
+      }
+
+      var generatedFeatureIdAttribute = {
+        index: renderResources.attributeIndex++,
+        instanceDivisor: featureIdInstanceDivisor,
+        value: value,
+        vertexBuffer: vertexBuffer,
+        normalize: false,
+        componentsPerAttribute: 1,
+        componentDatatype: ComponentDatatype.FLOAT,
+        strideInBytes: ComponentDatatype.getSizeInBytes(
+          ComponentDatatype.FLOAT
+        ),
+        offsetInBytes: 0,
+      };
+
+      renderResources.attributes.push(generatedFeatureIdAttribute);
+
+      shaderBuilder.addAttribute(
+        "float",
+        featureIdAttributePrefix + featureIdAttributeSetIndex
+      );
     }
 
     shaderBuilder.addDefine(
       "FEATURE_ID_ATTRIBUTE",
-      featureIdAttributeVariableName,
+      featureIdAttributePrefix + featureIdAttributeSetIndex,
       ShaderDestination.VERTEX
     );
     shaderBuilder.addVarying("float", "model_featureId");
     shaderBuilder.addVarying("vec2", "model_featureSt");
   }
 };
+
+/**
+ * Processes feature ID textures.
+ */
+function processFeatureIdTextures(
+  renderResources,
+  frameState,
+  featureIdTextures
+) {
+  var shaderBuilder = renderResources.shaderBuilder;
+  var uniformMap = renderResources.uniformMap;
+  var featureIdTextureIndex = renderResources.model.featureIdTextureIndex;
+  var featureIdTexture = featureIdTextures[featureIdTextureIndex];
+
+  renderResources.featureTableId = featureIdTexture.featureTableId;
+
+  var featureIdTextureReader = featureIdTexture.textureReader;
+
+  var featureIdTextureUniformName =
+    "u_featureIdTexture_" + featureIdTextureIndex;
+  shaderBuilder.addDefine(
+    "FEATURE_ID_TEXTURE",
+    featureIdTextureUniformName,
+    ShaderDestination.BOTH
+  );
+  shaderBuilder.addUniform(
+    "sampler2D",
+    featureIdTextureUniformName,
+    ShaderDestination.BOTH
+  );
+  uniformMap[featureIdTextureUniformName] = function () {
+    return defaultValue(
+      featureIdTextureReader.texture,
+      frameState.context.defaultTexture
+    );
+  };
+
+  shaderBuilder.addDefine(
+    "FEATURE_ID_TEXCOORD",
+    "a_texCoord_" + featureIdTextureReader.texCoord,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addDefine(
+    "FEATURE_ID_TEXCOORD",
+    "v_texCoord_" + featureIdTextureReader.texCoord,
+    ShaderDestination.FRAGMENT
+  );
+
+  shaderBuilder.addDefine(
+    "FEATURE_ID_CHANNEL",
+    featureIdTextureReader.channels,
+    ShaderDestination.FRAGMENT
+  );
+}
+
+/**
+ * Generates typed array based on the constant and divisor of the feature ID attribute.
+ */
+function generateFeatureIdTypedArray(featureIdAttribute, count) {
+  var constant = featureIdAttribute.constant;
+  var divisor = featureIdAttribute.divisor;
+
+  var typedArray = new Float32Array(count);
+  for (var i = 0; i < count; i++) {
+    typedArray[i] = constant + i / divisor;
+  }
+
+  return typedArray;
+}
 
 export default FeatureIdPipelineStage;
