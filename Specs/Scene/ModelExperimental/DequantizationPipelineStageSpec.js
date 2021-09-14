@@ -14,6 +14,8 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
+  var boxUncompressed =
+    "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
   var boxWithLines =
     "./Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf";
   var milkTruck =
@@ -147,6 +149,37 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       };
 
       expect(uniformValues).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+  });
+
+  it("skips non-quantized attributes", function () {
+    var uniformMap = {};
+    var shaderBuilder = new ShaderBuilder();
+    var renderResources = {
+      uniformMap: uniformMap,
+      shaderBuilder: shaderBuilder,
+    };
+
+    return loadGltf(boxUncompressed).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[1].primitives[0];
+      DequantizationPipelineStage.process(renderResources, primitive);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+      expect(uniformMap).toEqual({});
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "USE_DEQUANTIZATION",
+      ]);
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        dequantizationFunctionId,
+        dequantizationSignature,
+        []
+      );
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      expect(shaderBuilder._fragmentShaderParts.functionIds).toEqual([]);
     });
   });
 });

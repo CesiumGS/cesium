@@ -117,7 +117,7 @@ function generateOctDecodeLine(variableName, quantization) {
     structField +
     " = czm_octDecode(" +
     encodedAttribute +
-    ".xy, " +
+    ", " +
     normalizationRange +
     ")" +
     swizzle +
