@@ -1,10 +1,12 @@
 import {
+  AlphaMode,
   AttributeType,
   CustomShader,
   CustomShaderStage,
   LightingModel,
   ModelAlphaOptions,
   ModelLightingOptions,
+  Pass,
   ShaderBuilder,
   UniformType,
   VaryingType,
@@ -182,6 +184,49 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
     expect(renderResources.lightingOptions.lightingModel).toBe(
       LightingModel.PBR
     );
+  });
+
+  it("sets alpha options", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        vertexShaderText: emptyVertexShader,
+        fragmentShaderText: emptyFragmentShader,
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    expect(renderResources.alphaOptions.pass).not.toBeDefined();
+    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.OPAQUE);
+  });
+
+  it("sets alpha options for translucent custom shader", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        vertexShaderText: emptyVertexShader,
+        fragmentShaderText: emptyFragmentShader,
+        isTranslucent: true,
+      }),
+    };
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
+    };
+
+    CustomShaderStage.process(renderResources, primitive);
+
+    expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
+    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
   });
 
   it("generates shader code from built-in attributes", function () {
