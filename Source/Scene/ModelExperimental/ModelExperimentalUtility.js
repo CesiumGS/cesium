@@ -125,7 +125,7 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
   var isQuantized = defined(attribute.quantization);
   var quantizedGlslType;
   if (isQuantized) {
-    quantizedGlslType = AttributeType.getGlslType(attributeType);
+    quantizedGlslType = AttributeType.getGlslType(attribute.quantization.type);
   }
 
   return {
