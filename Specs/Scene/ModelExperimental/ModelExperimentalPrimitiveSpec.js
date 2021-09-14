@@ -2,7 +2,7 @@ import {
   AlphaPipelineStage,
   CustomShader,
   CustomShaderMode,
-  CustomShaderStage,
+  CustomShaderPipelineStage,
   DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
@@ -120,7 +120,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ]);
@@ -141,7 +141,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ]);
@@ -162,7 +162,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ]);

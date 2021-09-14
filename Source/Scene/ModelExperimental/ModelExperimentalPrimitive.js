@@ -1,7 +1,7 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import CustomShaderStage from "./CustomShaderStage.js";
+import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
@@ -89,7 +89,7 @@ function initialize(runtimePrimitive) {
   }
 
   if (hasCustomShader) {
-    pipelineStages.push(CustomShaderStage);
+    pipelineStages.push(CustomShaderPipelineStage);
   }
 
   pipelineStages.push(LightingPipelineStage);

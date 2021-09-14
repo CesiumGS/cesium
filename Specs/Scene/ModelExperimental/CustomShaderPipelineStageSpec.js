@@ -2,7 +2,7 @@ import {
   AlphaMode,
   AttributeType,
   CustomShader,
-  CustomShaderStage,
+  CustomShaderPipelineStage,
   LightingModel,
   ModelAlphaOptions,
   ModelLightingOptions,
@@ -15,7 +15,7 @@ import {
 } from "../../../Source/Cesium.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe("Scene/ModelExperimental/CustomShaderStage", function () {
+describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   var primitive = {
     attributes: [
       {
@@ -79,7 +79,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "HAS_CUSTOM_VERTEX_SHADER",
@@ -118,7 +118,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
       "uniform bool u_enableAnimation;",
@@ -155,7 +155,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
       "varying float v_distanceFromCenter;",
@@ -179,7 +179,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.lightingOptions.lightingModel).toBe(
       LightingModel.PBR
@@ -201,7 +201,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.alphaOptions.pass).not.toBeDefined();
     expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.OPAQUE);
@@ -223,7 +223,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
     expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
@@ -258,7 +258,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
@@ -335,7 +335,10 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
+    CustomShaderPipelineStage.process(
+      renderResources,
+      primitiveWithCustomAttributes
+    );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
@@ -409,7 +412,10 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitiveWithCustomAttributes);
+    CustomShaderPipelineStage.process(
+      renderResources,
+      primitiveWithCustomAttributes
+    );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
@@ -463,7 +469,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.structIds).toEqual([
       attributesVSStructId,
@@ -499,7 +505,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -531,7 +537,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
       "COMPUTE_POSITION_WC",
@@ -612,7 +618,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
@@ -679,12 +685,12 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    spyOn(CustomShaderStage, "_oneTimeWarning");
+    spyOn(CustomShaderPipelineStage, "_oneTimeWarning");
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     // once for the vertex shader, once for the fragment shader
-    expect(CustomShaderStage._oneTimeWarning.calls.count()).toBe(2);
+    expect(CustomShaderPipelineStage._oneTimeWarning.calls.count()).toBe(2);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
@@ -705,7 +711,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
@@ -735,7 +741,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       uniformMap: {},
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.defineLines).toEqual([
       "HAS_CUSTOM_VERTEX_SHADER",
@@ -762,7 +768,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       uniformMap: {},
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     // Essentially the shader stage is skipped, so nothing should be updated
     expect(shaderBuilder).toEqual(new ShaderBuilder());
@@ -789,7 +795,7 @@ describe("Scene/ModelExperimental/CustomShaderStage", function () {
       alphaOptions: new ModelAlphaOptions(),
     };
 
-    CustomShaderStage.process(renderResources, primitive);
+    CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "COMPUTE_POSITION_WC",
