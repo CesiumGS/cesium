@@ -3,6 +3,7 @@ import {
   CustomShader,
   CustomShaderMode,
   CustomShaderStage,
+  DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
@@ -74,6 +75,32 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+  });
+
+  it("Configures dequantization", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        attributes: [
+          {
+            semantic: "POSITION",
+          },
+          {
+            semantic: "NORMAL",
+            quantization: {},
+          },
+        ],
+      },
+      model: mockModel,
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      DequantizationPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      PickingPipelineStage,
       AlphaPipelineStage,
     ]);
   });
