@@ -6,6 +6,9 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import FeatureStageCommon from "../../Shaders/ModelExperimental/FeatureStageCommon.js";
+import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
+import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
 
 /**
  * The feature ID pipeline stage is responsible for handling features in the model.
@@ -35,6 +38,8 @@ FeatureIdPipelineStage.process = function (
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
   var model = renderResources.model;
+
+  renderResources.hasFeatureIds = true;
 
   shaderBuilder.addDefine("HAS_FEATURES", undefined, ShaderDestination.BOTH);
 
@@ -128,7 +133,12 @@ FeatureIdPipelineStage.process = function (
     );
     shaderBuilder.addVarying("float", "model_featureId");
     shaderBuilder.addVarying("vec2", "model_featureSt");
+    shaderBuilder.addVertexLines([FeatureStageCommon]);
+    shaderBuilder.addVertexLines([FeatureStageVS]);
   }
+
+  shaderBuilder.addFragmentLines([FeatureStageCommon]);
+  shaderBuilder.addFragmentLines([FeatureStageFS]);
 };
 
 /**

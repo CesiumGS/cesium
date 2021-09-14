@@ -1,7 +1,4 @@
 import combine from "../../Core/combine.js";
-import FeatureStageCommon from "../../Shaders/ModelExperimental/FeatureStageCommon.js";
-import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
-import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -75,12 +72,6 @@ BatchTexturePipelineStage.process = function (
     batchTextureUniforms,
     renderResources.uniformMap
   );
-
-  shaderBuilder.addVertexLines([FeatureStageCommon]);
-  shaderBuilder.addVertexLines([FeatureStageVS]);
-
-  shaderBuilder.addFragmentLines([FeatureStageCommon]);
-  shaderBuilder.addFragmentLines([FeatureStageFS]);
 };
 
 export default BatchTexturePipelineStage;

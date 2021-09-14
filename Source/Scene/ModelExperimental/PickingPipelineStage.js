@@ -1,11 +1,9 @@
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
-import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -38,15 +36,13 @@ PickingPipelineStage.process = function (
   var runtimeNode = renderResources.runtimeNode;
   var shaderBuilder = renderResources.shaderBuilder;
   var model = renderResources.model;
-  var featureTables = model.featureTables;
-
   var instances = runtimeNode.node.instances;
-  if (defined(instances)) {
+
+  if (renderResources.hasFeatureIds) {
+    processPickTexture(renderResources, primitive, instances, context);
+  } else if (defined(instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
     processInstancedPickIds(renderResources, instances, context);
-  } else if (defined(featureTables)) {
-    // For models with features, the pick texture is used.
-    processPickTexture(renderResources, primitive, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
     var pickObject = {
@@ -72,11 +68,20 @@ PickingPipelineStage.process = function (
   }
 };
 
-function processPickTexture(renderResources, primitive, context) {
+function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
+  var featureIdAttribute;
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
-  var featureIdAttribute =
-    primitive.featureIdAttributes[featureIdAttributeIndex];
+
+  if (defined(instances)) {
+    featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+  } else if (primitive.featureIdTextures.length > 0) {
+    var featureIdTextureIndex = model.featureIdTextureIndex;
+    featureIdAttribute = primitive.featureIdTextures[featureIdTextureIndex];
+  } else {
+    featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+  }
+
   var featureTable = model.featureTables[featureIdAttribute.featureTableId];
 
   var shaderBuilder = renderResources.shaderBuilder;
@@ -108,47 +113,15 @@ function processInstancedPickIds(renderResources, instances, context) {
   var pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
   var model = renderResources.model;
-  var modelFeatureTables = model.featureTables;
 
   var modelResources = model._resources;
   for (var i = 0; i < instanceCount; i++) {
-    var pickObject;
-
-    if (defined(modelFeatureTables)) {
-      // Process per-instance Feature IDs.
-      var featureIdAttributeIndex = model.featureIdAttributeIndex;
-      var featureIdAttribute =
-        instances.featureIdAttributes[featureIdAttributeIndex];
-      var featureTable = modelFeatureTables[featureIdAttribute.featureTableId];
-
-      if (defined(featureIdAttribute) && defined(featureIdAttribute.setIndex)) {
-        // Process Feature ID vertex attribute.
-        var featureIdAttributeSetIndex = featureIdAttribute.setIndex;
-        var featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-          instances,
-          InstanceAttributeSemantic.FEATURE_ID,
-          featureIdAttributeSetIndex
-        );
-        pickObject = featureTable.getFeature(
-          featureIdVertexAttribute.typedArray[i]
-        );
-      } else {
-        //  Process Feature ID vertex attribute.
-        var constant = featureIdAttribute.constant;
-        var divisor = featureIdAttribute.divisor;
-
-        var featureId = divisor === 0 ? constant : constant + i / divisor;
-        pickObject = featureTable.getFeature(featureId);
-      }
-    } else {
-      // Process per-instance Feature ID vertex attribute.
-      pickObject = {
-        model: renderResources.model,
-        node: renderResources.runtimeNode,
-        primitive: renderResources.runtimePrimitive,
-        instanceId: i,
-      };
-    }
+    var pickObject = {
+      model: renderResources.model,
+      node: renderResources.runtimeNode,
+      primitive: renderResources.runtimePrimitive,
+      instanceId: i,
+    };
 
     var pickId = context.createPickId(pickObject);
     modelResources.push(pickId);
