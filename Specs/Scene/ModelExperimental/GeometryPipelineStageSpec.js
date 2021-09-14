@@ -63,6 +63,9 @@ describe(
     var dracoMilkTruck =
       "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
 
+    var attributesStructVSId = "ProcessedAttributesVS";
+    var attributesStructFSId = "ProcessedAttributesFS";
+    var attributesStructName = "ProcessedAttributes";
     var initializeAttributesFunctionId = "initializeAttributes";
     var initializeAttributesSignature =
       "void initializeAttributes(out ProcessedAttributes attributes)";
@@ -136,6 +139,18 @@ describe(
       expect(positionAttribute.offsetInBytes).toBe(0);
       expect(positionAttribute.strideInBytes).toBe(12);
 
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        attributesStructVSId,
+        attributesStructName,
+        ["    vec3 positionMC;"]
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        attributesStructFSId,
+        attributesStructName,
+        ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
+      );
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
         initializeAttributesFunctionId,
@@ -216,6 +231,24 @@ describe(
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normal;",
+            "    vec2 texCoord_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           initializeAttributesFunctionId,
@@ -319,6 +352,32 @@ describe(
         expect(positionAttribute.offsetInBytes).toBe(0);
         expect(positionAttribute.strideInBytes).toBe(12);
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 normal;",
+            "    vec3 tangent;",
+            "    vec3 bitangent;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normal;",
+            "    vec3 tangent;",
+            "    vec3 bitangent;",
+            "    vec2 texCoord_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           initializeAttributesFunctionId,
@@ -422,6 +481,28 @@ describe(
         expect(texCoord1Attribute.offsetInBytes).toBe(0);
         expect(texCoord1Attribute.strideInBytes).toBe(8);
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec2 texCoord_0;",
+            "    vec2 texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec2 texCoord_0;",
+            "    vec2 texCoord_1;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           initializeAttributesFunctionId,
@@ -531,6 +612,30 @@ describe(
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 normal;",
+            "    vec4 color_0;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normal;",
+            "    vec4 color_0;",
+            "    vec2 texCoord_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           initializeAttributesFunctionId,
@@ -624,6 +729,23 @@ describe(
       expect(customAttribute.offsetInBytes).toBe(0);
       expect(customAttribute.strideInBytes).toBe(4);
 
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        attributesStructVSId,
+        attributesStructName,
+        ["    vec3 positionMC;", "    vec2 temperature;"]
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        attributesStructFSId,
+        attributesStructName,
+        [
+          "    vec3 positionMC;",
+          "    vec3 positionWC;",
+          "    vec3 positionEC;",
+          "    vec2 temperature;",
+        ]
+      );
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
         initializeAttributesFunctionId,
@@ -706,6 +828,24 @@ describe(
         expect(featureId0Attribute.offsetInBytes).toBe(0);
         expect(featureId0Attribute.strideInBytes).toBe(4);
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          ["    vec3 positionMC;", "    vec3 normal;", "    float featureId_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normal;",
+            "    float featureId_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           initializeAttributesFunctionId,
@@ -770,6 +910,23 @@ describe(
         expect(featureId0Attribute.offsetInBytes).toBe(0);
         expect(featureId0Attribute.strideInBytes).toBe(4);
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          ["    vec3 positionMC;", "    float featureId_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    float featureId_0;",
+          ]
+        );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           initializeAttributesFunctionId,
@@ -843,6 +1000,24 @@ describe(
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).not.toBeDefined();
 
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          attributesStructVSId,
+          attributesStructName,
+          ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          attributesStructFSId,
+          attributesStructName,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normal;",
+            "    vec2 texCoord_0;",
+          ]
+        );
         // Initialization is skipped for dequantized attributes
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
