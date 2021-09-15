@@ -118,18 +118,11 @@ function initialize(runtimePrimitive) {
     defined(primitive.featureIdTextures[featureIdTextureIndex]);
   if (hasInstancedFeatureIds || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
+    pipelineStages.push(BatchTexturePipelineStage);
   }
 
   if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
-  }
-
-  var content = model.content;
-  var hasFeatureTables =
-    defined(model.featureTables) ||
-    (defined(content) && defined(content.featureTables));
-  if (hasFeatureTables) {
-    pipelineStages.push(BatchTexturePipelineStage);
   }
 
   pipelineStages.push(AlphaPipelineStage);

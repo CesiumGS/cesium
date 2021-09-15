@@ -10,11 +10,17 @@ import {
   PickingPipelineStage,
   ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
+import BatchTexturePipelineStage from "../../../Source/Scene/ModelExperimental/BatchTexturePipelineStage.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
-  var mockPrimitive = {};
+  var mockPrimitive = {
+    featureIdAttributes: [],
+    featureIdTextures: [],
+  };
+  var mockNode = {};
   var mockModel = {
     allowPicking: true,
+    featureIdAttributeIndex: 0,
   };
 
   var emptyVertexShader =
@@ -26,6 +32,17 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
         primitive: undefined,
+        node: mockNode,
+        model: mockModel,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws for undefined node", function () {
+    expect(function () {
+      return new ModelExperimentalPrimitive({
+        primitive: mockPrimitive,
+        node: undefined,
         model: mockModel,
       });
     }).toThrowDeveloperError();
@@ -34,7 +51,8 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("throws for undefined model", function () {
     expect(function () {
       return new ModelExperimentalPrimitive({
-        primitive: {},
+        primitive: mockPrimitive,
+        node: mockNode,
         model: undefined,
       });
     }).toThrowDeveloperError();
@@ -43,16 +61,19 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("constructs", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: mockNode,
       model: mockModel,
     });
 
     expect(primitive.primitive).toBe(mockPrimitive);
+    expect(primitive.node).toBe(mockNode);
     expect(primitive.model).toBe(mockModel);
   });
 
-  it("configures the pipeline stages", function () {
+  it("configures the pipeline stages for model picking", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: mockNode,
       model: mockModel,
     });
 
@@ -66,6 +87,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: mockNode,
       model: {
         allowPicking: false,
       },
@@ -79,25 +101,69 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     ]);
   });
 
-  it("configures the pipeline stages for feature picking", function () {
+  it("configures the pipeline stages for instance feature picking", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: {
+        instances: {
+          featureIdAttributes: [{}],
+        },
+      },
+      model: mockModel,
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      FeatureIdPipelineStage,
+      BatchTexturePipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+  });
+
+  it("configures the pipeline stages for feature picking", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [{}, {}],
+        featureIdTextures: [],
+      },
+      node: {},
       model: {
-        customShader: new CustomShader({
-          vertexShaderText: emptyVertexShader,
-          fragmentShaderText: emptyFragmentShader,
-        }),
         allowPicking: true,
-        featureTable: {},
+        featureIdAttributeIndex: 1,
       },
     });
 
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
       LightingPipelineStage,
       FeatureIdPipelineStage,
+      BatchTexturePipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+
+    primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [{}, {}],
+      },
+      node: {},
+      model: {
+        allowPicking: true,
+        featureIdTextureIndex: 1,
+      },
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      FeatureIdPipelineStage,
+      BatchTexturePipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ]);
@@ -106,6 +172,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages for custom shaders", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: mockNode,
       model: {
         customShader: new CustomShader({
           vertexShaderText: emptyVertexShader,
@@ -127,6 +194,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: mockNode,
       model: {
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
@@ -148,6 +216,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("does not disable the material stage if the custom shader has no fragment shader", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
+      node: mockNode,
       model: {
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
