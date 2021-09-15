@@ -12,7 +12,7 @@ import {
 } from "../../../Source/Cesium.js";
 import BatchTexturePipelineStage from "../../../Source/Scene/ModelExperimental/BatchTexturePipelineStage.js";
 
-fdescribe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
+describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {
     featureIdAttributes: [],
     featureIdTextures: [],
@@ -189,13 +189,15 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
   it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
@@ -212,12 +214,14 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    var expectedStages = [
       GeometryPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
   it("does not disable the material stage if the custom shader has no fragment shader", function () {
@@ -233,12 +237,14 @@ fdescribe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
       CustomShaderStage,
       LightingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 });
