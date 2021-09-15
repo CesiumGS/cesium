@@ -9,7 +9,6 @@ import {
   _shadersFeatureStageFS,
   _shadersFeatureStageVS,
 } from "../../../Source/Cesium.js";
-import Buffer from "../../../Source/Renderer/Buffer.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
