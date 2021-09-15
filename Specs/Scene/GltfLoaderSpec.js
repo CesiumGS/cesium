@@ -944,7 +944,7 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
 
-        expect(primitive.featureIdAttributes.length).toBe(1);
+        expect(primitive.featureIdAttributes.length).toBe(2);
         expect(primitive.featureIdTextures.length).toBe(0);
         expect(primitive.featureTextureIds.length).toBe(0);
 
@@ -1177,10 +1177,10 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeUndefined();
-        expect(featureIdAttribute.buffer).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
+        expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(featureIdAttribute.byteStride).toBe(4);
+        expect(rotationAttribute.byteStride).toBeUndefined();
 
         expect(instances.featureIdAttributes.length).toBe(2);
 
