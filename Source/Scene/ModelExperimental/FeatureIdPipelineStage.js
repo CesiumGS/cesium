@@ -75,8 +75,7 @@ FeatureIdPipelineStage.process = function (
       featureIdAttributePrefix = "a_featureId_";
     }
 
-    var featureTableId = featureIdAttribute.featureTableId;
-    renderResources.featureTableId = featureTableId;
+    renderResources.featureTableId = featureIdAttribute.featureTableId;
 
     // Check if the Feature ID attribute references an existing vertex attribute.
     if (defined(featureIdAttribute.setIndex)) {

@@ -310,6 +310,16 @@ Gltf3DTileContent.prototype.isDestroyed = function () {
 };
 
 Gltf3DTileContent.prototype.destroy = function () {
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.destroy();
+      }
+    }
+  }
+
   this._model = this._model && this._model.destroy();
   return destroyObject(this);
 };
