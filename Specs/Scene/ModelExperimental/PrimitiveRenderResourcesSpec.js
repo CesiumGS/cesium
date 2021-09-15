@@ -35,6 +35,8 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       count: 6,
     },
     primitiveType: PrimitiveType.TRIANGLES,
+    featureIdAttributes: [],
+    featureIdTextures: [],
     attributes: [
       {
         semantic: VertexAttributeSemantic.POSITION,
@@ -49,6 +51,8 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   var primitiveWithoutIndices = {
     primitiveType: PrimitiveType.POINTS,
+    featureIdAttributes: [],
+    featureIdTextures: [],
     attributes: [
       {
         semantic: VertexAttributeSemantic.POSITION,
@@ -64,11 +68,13 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   var runtimePrimitive = new ModelExperimentalPrimitive({
     primitive: primitive,
+    node: mockNode,
     model: mockModel,
   });
 
   var runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
     primitive: primitiveWithoutIndices,
+    node: mockNode,
     model: mockModel,
   });
 
