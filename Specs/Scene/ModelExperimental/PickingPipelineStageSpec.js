@@ -97,15 +97,9 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       PickingPipelineStage.process(renderResources, primitive, frameState);
 
-      var vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
-      var fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
       var fragmentUniformLines =
         renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
 
-      expect(vertexDefineLines[0]).toEqual("USE_PICKING");
-      expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
       expect(fragmentUniformLines[0]).toEqual("uniform vec4 czm_pickColor;");
 
       var pickObject = context._pickObjects["1"];
@@ -156,18 +150,12 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       PickingPipelineStage.process(renderResources, primitive, frameState);
 
       var attributeLines = renderResources.shaderBuilder._attributeLines;
-      var vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
       var vertexVaryingLines =
         renderResources.shaderBuilder._vertexShaderParts.varyingLines;
-      var fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
       var fragmentVaryingLines =
         renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
 
       expect(attributeLines[0]).toEqual("attribute vec4 a_pickColor;");
-      expect(vertexDefineLines[0]).toEqual("USE_PICKING");
-      expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
       expect(vertexVaryingLines[0]).toEqual("varying vec4 v_pickColor;");
       expect(fragmentVaryingLines[0]).toEqual("varying vec4 v_pickColor;");
 
@@ -241,15 +229,9 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       };
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
 
-      var vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
-      var fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
       var fragmentUniformLines =
         renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
 
-      expect(vertexDefineLines[0]).toEqual("USE_PICKING");
-      expect(fragmentDefineLines[0]).toEqual("USE_PICKING");
       expect(fragmentUniformLines[0]).toEqual(
         "uniform sampler2D model_pickTexture;"
       );
