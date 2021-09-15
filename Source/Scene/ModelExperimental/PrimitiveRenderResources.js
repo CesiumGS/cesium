@@ -69,7 +69,6 @@ export default function PrimitiveRenderResources(
    * Inherited from the node render resources.
    *
    * @type {Number}
-   * @readonly
    *
    * @private
    */

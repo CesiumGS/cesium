@@ -114,11 +114,14 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     }
   }
 
-  // Load Feature ID attributes. These are loaded as typed arrays in GltfLoader
+  // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
   // because we want to expose the instance feature ID when picking.
   for (var i = 0; i < attributes.length; i++) {
     var attribute = attributes[i];
-    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
+    if (
+      attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID ||
+      !defined(attribute.setIndex)
+    ) {
       continue;
     }
 

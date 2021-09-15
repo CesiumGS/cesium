@@ -34,8 +34,9 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
-  this._featureTableId = undefined;
+  this._featureTable = undefined;
   this._featureTables = undefined;
+  this._featureTableId = undefined;
 
   initialize(this, gltf);
 }
@@ -109,7 +110,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return this._featureTables[this._featureTableId];
+      return this._featureTable;
     },
   },
 
@@ -121,7 +122,9 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
       this._groupMetadata = value;
     },
   },
-
+  /**
+   * @private
+   */
   featureTables: {
     get: function () {
       return this._featureTables;
@@ -140,6 +143,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
     },
     set: function (value) {
       this._featureTableId = value;
+      this._featureTable = this._featureTables[value];
     },
   },
 });
@@ -201,44 +205,8 @@ Gltf3DTileContent.prototype.getFeature = function (featureId) {
   return this.batchTable.getFeature(featureId);
 };
 
-Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
-  var featureTable = this._model.featureTable;
-  if (defined(featureTable)) {
-    return featureTable.hasProperty(featureId, name);
-  }
-  return false;
-};
-
 Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
-  var featureTable = this._model.featureTable;
-  if (defined(featureTable)) {
-    return featureTable.getProperty(featureId, name);
-  }
-  return undefined;
-};
-
-Gltf3DTileContent.prototype.getPropertyInherited = function (featureId, name) {
-  var featureTable = this._model.featureTable;
-  if (defined(featureTable)) {
-    return featureTable.getPropertyInherited(featureId, name);
-  }
-  return undefined;
-};
-
-Gltf3DTileContent.prototype.getPropertyNames = function (results) {
-  var featureTable = this._model.featureTable;
-  if (defined(featureTable)) {
-    return featureTable.getPropertyNames(results);
-  }
-  return undefined;
-};
-
-Gltf3DTileContent.prototype.setProperty = function (featureId, name, value) {
-  var featureTable = this._model.featureTable;
-  if (defined(featureTable)) {
-    return featureTable.setProperty(featureId, name, value);
-  }
-  return false;
+  return this.batchTable.getProperty(featureId, name);
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
