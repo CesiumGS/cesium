@@ -82,7 +82,7 @@ Object.defineProperties(ModelFeature.prototype, {
  * @returns {Boolean} Whether the feature contains this property.
  */
 ModelFeature.prototype.hasProperty = function (name) {
-  return this._owner.hasProperty(name);
+  return this._owner.hasProperty(this._featureId, name);
 };
 
 /**

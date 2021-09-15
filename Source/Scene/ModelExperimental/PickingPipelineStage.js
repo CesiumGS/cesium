@@ -38,6 +38,8 @@ PickingPipelineStage.process = function (
   var model = renderResources.model;
   var instances = runtimeNode.node.instances;
 
+  shaderBuilder.addDefine("USE_PICKING", undefined, ShaderDestination.BOTH);
+
   if (renderResources.hasFeatureIds) {
     processPickTexture(renderResources, primitive, instances, context);
   } else if (defined(instances)) {

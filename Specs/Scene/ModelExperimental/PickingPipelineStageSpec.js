@@ -201,27 +201,28 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
   });
 
   it("sets the picking variables in render resources with feature ID textures", function () {
+    var mockModelFeatureTable = {
+      batchTexture: {
+        pickTexture: "mockPickTexture",
+      },
+    };
+
     var renderResources = {
       attributeIndex: 1,
-      instanceCount: 4,
+      hasFeatureIds: true,
       pickId: undefined,
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
       model: {
+        featureIdTextureIndex: 0,
         _resources: [],
-        featureTable: {
-          batchTexture: {
-            pickTexture: "mockPickTexture",
-          },
+        featureTables: {
+          landCoverTable: mockModelFeatureTable,
         },
-      },
-      runtimePrimitive: {
-        primitive: {},
       },
       runtimeNode: {
         node: {},
       },
-      attributes: [],
     };
 
     return loadGltf(microcosm).then(function (gltfLoader) {
@@ -236,8 +237,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       PickingPipelineStage.process(renderResources, primitive, frameState);
 
       var expectedUniforms = {
-        model_pickTexture:
-          renderResources.model.featureTable.batchTexture.pickTexture,
+        model_pickTexture: mockModelFeatureTable.batchTexture.pickTexture,
       };
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
 

@@ -95,20 +95,23 @@ describe(
         scene
       ).then(function (model) {
         expect(model.ready).toEqual(true);
-        expect(model._featureTable).toBeDefined();
+        expect(model.featureTables).toBeDefined();
 
-        var modelFeatureTable = model.featureTable;
-        expect(modelFeatureTable._featuresLength).toEqual(10);
-        expect(modelFeatureTable._batchTexture).toBeDefined();
-        expect(modelFeatureTable._batchTexture._featuresLength).toEqual(10);
+        var featureTableId = "buildings";
+        var featureTable = model.featureTables[featureTableId];
+        expect(featureTable).toBeDefined();
 
-        var modelFeatures = modelFeatureTable._features;
-        for (var i = 0; i < modelFeatures.length; i++) {
-          var modelFeature = modelFeatures[i];
+        var featuresLength = featureTable.featuresLength;
+        expect(featuresLength).toEqual(10);
+        expect(featureTable.batchTexture).toBeDefined();
+        expect(featureTable.batchTexture._featuresLength).toEqual(10);
+
+        for (var i = 0; i < featuresLength; i++) {
+          var modelFeature = featureTable.getFeature(i);
           expect(modelFeature instanceof ModelFeature).toEqual(true);
           expect(modelFeature._featureId).toEqual(i);
           expect(modelFeature.primitive).toEqual(model);
-          expect(modelFeature.owner).toEqual(modelFeatureTable);
+          expect(modelFeature.owner).toEqual(featureTable);
         }
 
         expect(model._resourcesLoaded).toEqual(true);

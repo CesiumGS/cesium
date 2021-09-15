@@ -105,8 +105,8 @@ ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
 };
 
-ModelFeatureTable.prototype.hasProperty = function (propertyName) {
-  return this._featureTable.hasProperty(propertyName);
+ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
+  return this._featureTable.hasProperty(featureId, propertyName);
 };
 
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {

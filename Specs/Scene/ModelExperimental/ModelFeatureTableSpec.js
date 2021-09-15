@@ -15,15 +15,10 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     name: ["A", "B"],
   };
 
-  var mockMetadataTable = MetadataTester.createMetadataTable({
+  var mockFeatureTable = MetadataTester.createFeatureTable({
     properties: properties,
     propertyValues: propertyValues,
   });
-
-  var mockFeatureTable = {
-    count: mockMetadataTable.count,
-    _metadataTable: mockMetadataTable,
-  };
 
   it("hasProperty works", function () {
     var table = new ModelFeatureTable({
@@ -41,7 +36,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
     });
-    expect(table._featuresLength).toEqual(mockMetadataTable.count);
+    expect(table._featuresLength).toEqual(mockFeatureTable.count);
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
       var feature = table.getFeature(i);
@@ -54,7 +49,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
     });
-    expect(table._featuresLength).toEqual(mockMetadataTable.count);
+    expect(table._featuresLength).toEqual(mockFeatureTable.count);
     var modelFeatures = table._features;
 
     for (var propertyName in properties) {
@@ -73,7 +68,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
     });
-    expect(table._featuresLength).toEqual(mockMetadataTable.count);
+    expect(table._featuresLength).toEqual(mockFeatureTable.count);
     var modelFeatures = table._features;
 
     for (var propertyName in properties) {
