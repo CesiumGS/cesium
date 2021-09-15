@@ -58,7 +58,7 @@ BatchTexturePipelineStage.process = function (
     ShaderDestination.VERTEX
   );
   batchTextureUniforms.model_batchTexture = function () {
-    return batchTexture;
+    return batchTexture.batchTexture;
   };
 
   // Batch texture step size
