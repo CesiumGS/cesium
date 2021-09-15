@@ -82,7 +82,14 @@ function processPickTexture(renderResources, primitive, instances) {
     featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
   }
 
-  var featureTable = model.featureTables[featureIdAttribute.featureTableId];
+  var featureTable;
+
+  var content = model.content;
+  if (defined(content)) {
+    featureTable = content.featureTables[featureIdAttribute.featureTableId];
+  } else {
+    featureTable = model.featureTables[featureIdAttribute.featureTableId];
+  }
 
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addUniform(

@@ -11,6 +11,7 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
+import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -93,6 +94,50 @@ export default function ModelExperimental(options) {
   initialize(this);
 }
 
+function createContentFeatureTables(content, featureMetadata) {
+  var contentFeatureTables = {};
+
+  var featureTables = featureMetadata.featureTables;
+  for (var featureTableId in featureTables) {
+    if (featureTables.hasOwnProperty(featureTableId)) {
+      var featureTable = featureTables[featureTableId];
+      var contentFeatureTable = new Cesium3DTileContentFeatureTable({
+        content: content,
+        featureTable: featureTable,
+      });
+
+      if (contentFeatureTable.featuresLength > 0) {
+        contentFeatureTables[featureTableId] = contentFeatureTable;
+      }
+    }
+  }
+
+  return contentFeatureTables;
+}
+
+function createModelFeatureTables(model, featureMetadata) {
+  var modelFeatureTables = {};
+
+  var featureTables = featureMetadata.featureTables;
+  for (var featureTableId in featureTables) {
+    if (featureTables.hasOwnProperty(featureTableId)) {
+      var featureTable = featureTables[featureTableId];
+      var modelfeatureTable = new ModelFeatureTable({
+        model: model,
+        featureTable: featureTable,
+        content: model._content,
+      });
+
+      if (modelfeatureTable.featuresLength > 0) {
+        modelFeatureTables[featureTableId] = modelfeatureTable;
+        model._resources.push(modelfeatureTable);
+      }
+    }
+  }
+
+  return modelFeatureTables;
+}
+
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
@@ -102,24 +147,18 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
+      var content = model._content;
       var featureMetadata = loader.components.featureMetadata;
+
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
-        var modelFeatureTables = {};
-        var featureTables = featureMetadata._featureTables;
-        var featureTableKeys = Object.keys(featureTables);
-
-        for (var i = 0; i < featureTableKeys.length; i++) {
-          var key = featureTableKeys[i];
-          var featureTable = new ModelFeatureTable({
-            model: model,
-            featureTable: featureTables[key],
-            content: model._content,
-          });
-
-          modelFeatureTables[key] = featureTable;
-          model._resources.push(featureTable);
+        var featureTables;
+        if (defined(content)) {
+          featureTables = createContentFeatureTables(content, featureMetadata);
+          content.featureTables = featureTables;
+        } else {
+          featureTables = createModelFeatureTables(model, featureMetadata);
+          model._featureTables = featureTables;
         }
-        model._featureTables = modelFeatureTables;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({

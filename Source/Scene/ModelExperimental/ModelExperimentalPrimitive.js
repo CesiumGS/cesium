@@ -123,7 +123,12 @@ function initialize(runtimePrimitive) {
   if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
   }
-  if (defined(model._featureTables)) {
+
+  var content = model.content;
+  var hasFeatureTables =
+    defined(model.featureTables) ||
+    (defined(content) && defined(content.featureTables));
+  if (hasFeatureTables) {
     pipelineStages.push(BatchTexturePipelineStage);
   }
 

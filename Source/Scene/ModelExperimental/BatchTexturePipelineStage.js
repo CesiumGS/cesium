@@ -1,4 +1,5 @@
 import combine from "../../Core/combine.js";
+import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -29,7 +30,14 @@ BatchTexturePipelineStage.process = function (
   var batchTextureUniforms = {};
 
   var model = renderResources.model;
-  var featureTable = model.featureTables[renderResources.featureTableId];
+  var featureTable;
+
+  var content = model.content;
+  if (defined(content)) {
+    featureTable = content.featureTables[renderResources.featureTableId];
+  } else {
+    featureTable = model.featureTables[renderResources.featureTableId];
+  }
 
   // Number of features in the feature table.
   var featuresLength = featureTable.featuresLength;

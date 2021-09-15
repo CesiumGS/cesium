@@ -34,6 +34,9 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
+  this._featureTableId = undefined;
+  this._featureTables = undefined;
+
   initialize(this, gltf);
 }
 
@@ -106,7 +109,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return undefined;
+      return this._featureTables[this._featureTableId];
     },
   },
 
@@ -116,6 +119,27 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
     },
     set: function (value) {
       this._groupMetadata = value;
+    },
+  },
+
+  featureTables: {
+    get: function () {
+      return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
+    },
+  },
+
+  /**
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
     },
   },
 });
@@ -174,11 +198,7 @@ function initialize(content, gltf) {
 }
 
 Gltf3DTileContent.prototype.getFeature = function (featureId) {
-  var featureTable = this._model.featureTable;
-  if (defined(featureTable)) {
-    return featureTable.getFeature(featureId);
-  }
-  return undefined;
+  return this.batchTable.getFeature(featureId);
 };
 
 Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
@@ -270,6 +290,16 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
     model._clippingPlanes !== tilesetClippingPlanes
   ) {
     model._clippingPlanes = tilesetClippingPlanes;
+  }
+
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.update(frameState);
+      }
+    }
   }
 
   model.update(frameState);

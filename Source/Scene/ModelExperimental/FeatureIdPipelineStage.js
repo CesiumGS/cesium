@@ -137,6 +137,11 @@ FeatureIdPipelineStage.process = function (
     shaderBuilder.addVertexLines([FeatureStageVS]);
   }
 
+  var content = model.content;
+  if (defined(content)) {
+    content.featureTableId = renderResources.featureTableId;
+  }
+
   shaderBuilder.addFragmentLines([FeatureStageCommon]);
   shaderBuilder.addFragmentLines([FeatureStageFS]);
 };
@@ -163,12 +168,12 @@ function processFeatureIdTextures(
   shaderBuilder.addDefine(
     "FEATURE_ID_TEXTURE",
     featureIdTextureUniformName,
-    ShaderDestination.BOTH
+    ShaderDestination.FRAGMENT
   );
   shaderBuilder.addUniform(
     "sampler2D",
     featureIdTextureUniformName,
-    ShaderDestination.BOTH
+    ShaderDestination.FRAGMENT
   );
   uniformMap[featureIdTextureUniformName] = function () {
     return defaultValue(
