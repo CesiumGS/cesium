@@ -175,7 +175,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
-      expect(vertexBuffer).toBeInstanceOf(Buffer);
       expect(vertexBuffer.vertexArrayDestroyable).toBe(false);
 
       var vertexAttribute = renderResources.attributes[0];
@@ -307,7 +306,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
-      expect(vertexBuffer).toBeInstanceOf(Buffer);
       expect(vertexBuffer.vertexArrayDestroyable).toBe(false);
 
       var vertexAttribute = renderResources.attributes[0];
