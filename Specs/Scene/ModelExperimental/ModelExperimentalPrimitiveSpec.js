@@ -12,7 +12,7 @@ import {
 } from "../../../Source/Cesium.js";
 import BatchTexturePipelineStage from "../../../Source/Scene/ModelExperimental/BatchTexturePipelineStage.js";
 
-describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
+fdescribe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {
     featureIdAttributes: [],
     featureIdTextures: [],
@@ -27,6 +27,13 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
+
+  function verifyExpectedStages(stages, expectedStages) {
+    expect(stages.length, expectedStages.stages);
+    for (var i = 0; i < stages.length; i++) {
+      expect(expectedStages[i].name).toEqual(stages[i].name);
+    }
+  }
 
   it("throws for undefined primitive", function () {
     expect(function () {
@@ -77,13 +84,15 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: mockModel,
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
     primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
@@ -93,12 +102,14 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
   it("configures the pipeline stages for instance feature picking", function () {
@@ -112,7 +123,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: mockModel,
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
@@ -120,7 +131,9 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       BatchTexturePipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
   it("configures the pipeline stages for feature picking", function () {
@@ -136,7 +149,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
-    expect(primitive.pipelineStages).toEqual([
+    var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
       LightingPipelineStage,
@@ -144,7 +157,9 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       BatchTexturePipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
-    ]);
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
 
     primitive = new ModelExperimentalPrimitive({
       primitive: {
@@ -158,15 +173,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
     });
 
-    expect(primitive.pipelineStages).toEqual([
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      LightingPipelineStage,
-      FeatureIdPipelineStage,
-      BatchTexturePipelineStage,
-      PickingPipelineStage,
-      AlphaPipelineStage,
-    ]);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
   it("configures the pipeline stages for custom shaders", function () {
