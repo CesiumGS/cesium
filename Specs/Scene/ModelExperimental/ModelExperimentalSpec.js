@@ -111,7 +111,7 @@ describe(
           expect(modelFeature instanceof ModelFeature).toEqual(true);
           expect(modelFeature._featureId).toEqual(i);
           expect(modelFeature.primitive).toEqual(model);
-          expect(modelFeature.owner).toEqual(featureTable);
+          expect(modelFeature.featureTable).toEqual(featureTable);
         }
 
         expect(model._resourcesLoaded).toEqual(true);

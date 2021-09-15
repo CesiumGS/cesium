@@ -125,7 +125,6 @@ function createModelFeatureTables(model, featureMetadata) {
       var modelfeatureTable = new ModelFeatureTable({
         model: model,
         featureTable: featureTable,
-        content: model._content,
       });
 
       if (modelfeatureTable.featuresLength > 0) {

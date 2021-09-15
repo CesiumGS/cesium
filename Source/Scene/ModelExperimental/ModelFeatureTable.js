@@ -10,7 +10,6 @@ import ModelFeature from "./ModelFeature.js";
  * @param {Object} options An object containing the following options:
  * @param {ModelExperimental} options.model The model that owns this feature table.
  * @param {FeatureTable} options.featureTable The feature table from the model used to initialize the model.
- * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to.
  *
  * @alias ModelFeatureTable
  * @constructor
@@ -21,7 +20,6 @@ import ModelFeature from "./ModelFeature.js";
 export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
   this._model = options.model;
-  this._content = options.content;
   this._features = undefined;
   this._featuresLength = 0;
 
@@ -75,9 +73,7 @@ function initialize(modelFeatureTable) {
     features[i] = new ModelFeature({
       model: modelFeatureTable._model,
       featureId: i,
-      owner: defined(modelFeatureTable._content)
-        ? modelFeatureTable._content
-        : modelFeatureTable,
+      featureTable: modelFeatureTable,
     });
   }
 

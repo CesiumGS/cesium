@@ -8,7 +8,7 @@
  * </p>
  * <p>
  * Do not construct this directly. Access it through {@link ModelFeatureTable#getFeature}, {@link Cesium3DTileContent#getFeature} or
- * picking using {@link Scene#pick} and {@link Scene#pickPosition}.
+ * picking using {@link Scene#pick}.
  * </p>
  *
  * @alias ModelFeature
@@ -17,7 +17,7 @@
  * @param {Object} options Object with the following properties:
  * @param {ModelExperimental} options.model The model the feature belongs to.
  * @param {Number} options.featureId The unique integral identifier for this feature.
- * @param {Cesium3DTileContent|ModelFeatureTable} options.owner The owner of this feature. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
+ * @param {ModelFeatureTable} options.featureTable The {@link ModelFeatureTable} that this feature belongs to.
  *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
@@ -33,7 +33,7 @@
  */
 export default function ModelFeature(options) {
   this._model = options.model;
-  this._owner = options.owner;
+  this._featureTable = options.featureTable;
   this._featureId = options.featureId;
 }
 
@@ -56,40 +56,34 @@ Object.defineProperties(ModelFeature.prototype, {
   },
 
   /**
-   * Gets the owner of this feature. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
+   *  The {@link ModelFeatureTable} that this feature belongs to.
    *
    * @memberof ModelFeature.prototype
    *
-   * @type {Cesium3DTileContent|ModelFeatureTable}
+   * @type {ModelFeatureTable}
    *
    * @readonly
    * @private
    */
-  owner: {
+  featureTable: {
     get: function () {
-      return this._owner;
+      return this._featureTable;
     },
   },
 });
 
 /**
- * Returns whether the feature contains this property. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ * Returns whether the feature contains this property.
  *
  * @param {String} name The case-sensitive name of the property.
  * @returns {Boolean} Whether the feature contains this property.
  */
 ModelFeature.prototype.hasProperty = function (name) {
-  return this._owner.hasProperty(this._featureId, name);
+  return this._featureTable.hasProperty(this._featureId, name);
 };
 
 /**
- * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ * Returns a copy of the value of the feature's property with the given name.
  *
  * @param {String} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
@@ -104,39 +98,17 @@ ModelFeature.prototype.hasProperty = function (name) {
  * }
  */
 ModelFeature.prototype.getProperty = function (name) {
-  return this._owner.getProperty(this._featureId, name);
+  return this._featureTable.getProperty(this._featureId, name);
 };
 
 /**
- * Returns an array of property names for the feature. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+ * Returns an array of property names for the feature.
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The names of the feature's properties.
  */
 ModelFeature.prototype.getPropertyNames = function (results) {
-  return this._owner.getPropertyNames(results);
-};
-
-/**
- * Returns a copy of the value of the feature's property with the given name.
- * If the feature is contained within a tileset that uses the
- * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
- * inherited.
- * <p>
- * To resolve name conflicts, this method resolves names from most specific to
- * least specific by metadata granularity in the order: feature, tile, group,
- * tileset. Within each granularity, semantics are resolved first, then other
- * properties.
- * </p>
- * @param {String} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
- * @private
- */
-ModelFeature.prototype.getPropertyInherited = function (name) {
-  return this._owner.getPropertyInherited(this._featureId, name);
+  return this._featureTable.getPropertyNames(results);
 };
 
 /**
@@ -161,5 +133,5 @@ ModelFeature.prototype.getPropertyInherited = function (name) {
  * }
  */
 ModelFeature.prototype.setProperty = function (name, value) {
-  return this._owner.setProperty(this._featureId, name, value);
+  return this._featureTable.setProperty(this._featureId, name, value);
 };

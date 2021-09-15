@@ -64,25 +64,6 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     }
   });
 
-  it("getPropertyInherited works", function () {
-    var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
-    });
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
-    var modelFeatures = table._features;
-
-    for (var propertyName in properties) {
-      if (properties.hasOwnProperty(propertyName)) {
-        for (var i = 0; i < modelFeatures.length; i++) {
-          var feature = modelFeatures[i];
-          expect(feature.getPropertyInherited(propertyName)).toEqual(
-            propertyValues[propertyName][i]
-          );
-        }
-      }
-    }
-  });
-
   it("getPropertyNames works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
