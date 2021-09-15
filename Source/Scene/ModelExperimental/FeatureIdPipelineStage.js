@@ -147,6 +147,7 @@ FeatureIdPipelineStage.process = function (
 
 /**
  * Processes feature ID textures.
+ * @private
  */
 function processFeatureIdTextures(
   renderResources,
@@ -201,6 +202,7 @@ function processFeatureIdTextures(
 
 /**
  * Generates typed array based on the constant and divisor of the feature ID attribute.
+ * @private
  */
 function generateFeatureIdTypedArray(featureIdAttribute, count) {
   var constant = featureIdAttribute.constant;
