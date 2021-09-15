@@ -38,8 +38,6 @@ PickingPipelineStage.process = function (
   var model = renderResources.model;
   var instances = runtimeNode.node.instances;
 
-  shaderBuilder.addDefine("USE_PICKING", undefined, ShaderDestination.BOTH);
-
   if (renderResources.hasFeatureIds) {
     processPickTexture(renderResources, primitive, instances, context);
   } else if (defined(instances)) {
@@ -166,6 +164,7 @@ function processInstancedPickIds(renderResources, instances, context) {
   renderResources.attributes.push(pickIdsVertexAttribute);
 
   var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("USE_PICKING", undefined, ShaderDestination.BOTH);
   shaderBuilder.addAttribute("vec4", "a_pickColor");
   shaderBuilder.addVarying("vec4", "v_pickColor");
   renderResources.pickId = "v_pickColor";
