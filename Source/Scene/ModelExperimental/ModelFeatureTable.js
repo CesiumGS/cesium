@@ -1,5 +1,4 @@
 import BatchTexture from "../BatchTexture.js";
-import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
 
