@@ -202,11 +202,17 @@ function initialize(content, gltf) {
 }
 
 Gltf3DTileContent.prototype.getFeature = function (featureId) {
-  return this.batchTable.getFeature(featureId);
+  if (defined(this.batchTable)) {
+    return this.batchTable.getFeature(featureId);
+  }
+  return undefined;
 };
 
-Gltf3DTileContent.prototype.getProperty = function (featureId, name) {
-  return this.batchTable.getProperty(featureId, name);
+Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
+  if (defined(this.batchTable)) {
+    return this.batchTable.hasProperty(featureId, name);
+  }
+  return false;
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {

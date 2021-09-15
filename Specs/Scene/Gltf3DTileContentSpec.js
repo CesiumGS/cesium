@@ -1,6 +1,9 @@
 import {
   Cartesian3,
+  Cesium3DTileContentFeatureTable,
+  Cesium3DTileFeature,
   Cesium3DTilePass,
+  ExperimentalFeatures,
   ClippingPlane,
   ClippingPlaneCollection,
   HeadingPitchRange,
@@ -8,8 +11,6 @@ import {
   GroupMetadata,
   Model,
 } from "../../Source/Cesium.js";
-import ExperimentalFeatures from "../../Source/Core/ExperimentalFeatures.js";
-import Gltf3DTileContent from "../../Source/Scene/Gltf3DTileContent.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -209,13 +210,16 @@ describe(
         ExperimentalFeatures.enableModelExperimental = false;
       });
 
-      it("assigns model feature table", function () {
+      it("assigns feature table as batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           buildingsMetadataUrl
         ).then(function (tileset) {
           var content = tileset.root.content;
-          expect(content._model.featureTable).toBeDefined();
+          expect(content.batchTable).toBeDefined();
+          expect(content.batchTable).toBeInstanceOf(
+            Cesium3DTileContentFeatureTable
+          );
         });
       });
 
@@ -225,13 +229,11 @@ describe(
           buildingsMetadataUrl
         ).then(function (tileset) {
           var content = tileset.root.content;
-          var featureTable = content._model.featureTable;
+          var featureTable = content.batchTable;
           expect(featureTable).toBeDefined();
-          var modelFeatures = featureTable._features;
-          for (var i = 0; i < modelFeatures.length; i++) {
-            var feature = modelFeatures[i];
-            expect(feature.hasProperty("height")).toEqual(true);
-            expect(feature.hasProperty("width")).toEqual(false);
+          for (var i = 0; i < featureTable.featuresLength; i++) {
+            expect(content.hasProperty(i, "height")).toEqual(true);
+            expect(content.hasProperty(i, "width")).toEqual(false);
           }
         });
       });
@@ -242,82 +244,12 @@ describe(
           buildingsMetadataUrl
         ).then(function (tileset) {
           var content = tileset.root.content;
-          var featureTable = content._model.featureTable;
+          var featureTable = content.batchTable;
           expect(featureTable).toBeDefined();
-          var modelFeatures = featureTable._features;
-          for (var i = 0; i < modelFeatures.length; i++) {
+          for (var i = 0; i < featureTable.featuresLength; i++) {
             var feature = content.getFeature(i);
-            expect(feature).toEqual(modelFeatures[i]);
-            expect(feature.owner).toBeInstanceOf(Gltf3DTileContent);
+            expect(feature).toBeInstanceOf(Cesium3DTileFeature);
           }
-        });
-      });
-
-      it("getProperty works", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          var featureTable = content._model.featureTable;
-          expect(featureTable).toBeDefined();
-          var modelFeatures = featureTable._features;
-          for (var i = 0; i < modelFeatures.length; i++) {
-            var feature = modelFeatures[i];
-            expect(feature.getProperty("id")).toEqual(feature._featureId);
-            expect(feature.getProperty("xid")).toEqual(undefined);
-          }
-        });
-      });
-
-      it("getPropertyInherited works", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          var featureTable = content._model.featureTable;
-          expect(featureTable).toBeDefined();
-          var modelFeatures = featureTable._features;
-          for (var i = 0; i < modelFeatures.length; i++) {
-            var feature = modelFeatures[i];
-            expect(feature.getPropertyInherited("id")).toEqual(
-              feature._featureId
-            );
-            expect(feature.getPropertyInherited("xid")).toEqual(undefined);
-          }
-        });
-      });
-
-      it("getPropertyNames works", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          var featureTable = content._model.featureTable;
-          expect(featureTable).toBeDefined();
-          var modelFeatures = featureTable._features;
-          for (var i = 0; i < modelFeatures.length; i++) {
-            var feature = modelFeatures[i];
-            var results = [];
-            expect(feature.getPropertyNames(results)).toEqual(["height", "id"]);
-          }
-        });
-      });
-
-      it("setProperty works", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          var featureTable = content._model.featureTable;
-          expect(featureTable).toBeDefined();
-          var feature = featureTable._features[0];
-          expect(feature.getProperty("height")).not.toEqual(1.0);
-          expect(feature.setProperty("height", 3.0)).toEqual(true);
-          expect(feature.getProperty("height")).toEqual(3.0);
         });
       });
     });

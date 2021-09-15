@@ -93,9 +93,10 @@ Cesium3DTileContentFeatureTable.prototype.getFeature = function (featureId) {
 };
 
 Cesium3DTileContentFeatureTable.prototype.hasProperty = function (
+  featureId,
   propertyName
 ) {
-  return this._featureTable.hasProperty(propertyName);
+  return this._featureTable.hasProperty(featureId, propertyName);
 };
 
 Cesium3DTileContentFeatureTable.prototype.getProperty = function (
