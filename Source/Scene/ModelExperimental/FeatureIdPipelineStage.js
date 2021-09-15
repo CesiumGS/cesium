@@ -17,6 +17,7 @@ import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
  * @private
  */
 var FeatureIdPipelineStage = {};
+FeatureIdPipelineStage.name = "FeatureIdPipelineStage"; // Helps with debugging
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:

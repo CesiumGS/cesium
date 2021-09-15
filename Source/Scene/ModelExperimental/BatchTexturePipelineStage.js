@@ -9,6 +9,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 var BatchTexturePipelineStage = {};
+BatchTexturePipelineStage.name = "BatchTexturePipelineStage"; // Helps with debugging
 
 /**
  * Processes a primitive. This modifies the following parts of the render resources:
