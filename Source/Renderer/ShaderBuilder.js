@@ -197,7 +197,7 @@ ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
 
 /**
  * Add a new dynamically-generated function to the shader.
- * @param {String} functionName The name of the function. This will be used to identify the function in {@link ShaderBuilder#addFunctionLine}.
+ * @param {String} functionName The name of the function. This will be used to identify the function in {@link ShaderBuilder#addFunctionLines}.
  * @param {String} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
  * @example
@@ -231,22 +231,26 @@ ShaderBuilder.prototype.addFunction = function (
 /**
  * Add a line to a dynamically-generated function
  * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
- * @param {String} line The line of GLSL code to add to the function body. Do not include any whitespace at either end, but do include the semicolon
+ * @param {String} lines An array of lines of GLSL code to add to the function body. Do not include any whitespace at the ends of each line, but do include the semicolon.
  * @example
  * // generates the following function in the vertex shader
  * // vec3 testFunction(float parameter)
  * // {
- * //   return vec3(parameter);
+ * //   float signed = 2.0 * parameter - 1.0;
+ * //   return vec3(signed, 0.0, 0.0);
  * // }
  * shaderBuilder.addStruct("testFunction", "vec3 testFunction(float parameter)", ShaderDestination.VERTEX);
- * shaderBuilder.addFunctionLine("testFunction", "return vec3(parameter);")
+ * shaderBuilder.addFunctionLines("testFunction", [
+ *   "float signed = 2.0 * parameter - 1.0;",
+ *   "return vec3(parameter);"
+ * ]);
  */
-ShaderBuilder.prototype.addFunctionLine = function (functionName, line) {
+ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("functionName", functionName);
-  Check.typeOf.string("line", line);
+  Check.typeOf.object("lines", lines);
   //>>includeEnd('debug');
-  this._functions[functionName].addLine(line);
+  this._functions[functionName].addLines(lines);
 };
 
 /**

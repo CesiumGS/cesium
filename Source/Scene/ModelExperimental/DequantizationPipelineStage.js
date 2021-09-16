@@ -99,7 +99,7 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
     line = generateDequantizeLine(variableName);
   }
 
-  shaderBuilder.addFunctionLine(dequantizationFunctionId, line);
+  shaderBuilder.addFunctionLines(dequantizationFunctionId, [line]);
 }
 
 function generateOctDecodeLine(variableName, quantization) {

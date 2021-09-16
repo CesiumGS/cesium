@@ -14,27 +14,25 @@ describe("Renderer/ShaderFunction", function () {
     }).toThrowDeveloperError();
   });
 
-  it("addLine adds lines to the function body", function () {
+  it("addLines adds lines to the function body", function () {
     var func = new ShaderFunction("TestStruct");
-    func.addLine("v_color = a_color;");
-    func.addLine("return vec3(0.0, 0.0, 1.0);");
+    func.addLines(["v_color = a_color;", "return vec3(0.0, 0.0, 1.0);"]);
     expect(func.body).toEqual([
       "    v_color = a_color;",
       "    return vec3(0.0, 0.0, 1.0);",
     ]);
   });
 
-  it("addLine throws for undefined line", function () {
+  it("addLines throws for undefined lines", function () {
     var func = new ShaderFunction(signature);
     expect(function () {
-      return func.addLine(undefined);
+      return func.addLines(undefined);
     }).toThrowDeveloperError();
   });
 
   it("generateGlslLines generates a struct definition", function () {
     var func = new ShaderFunction(signature);
-    func.addLine("v_color = a_color;");
-    func.addLine("return vec3(0.0, 0.0, 1.0);");
+    func.addLines(["v_color = a_color;", "return vec3(0.0, 0.0, 1.0);"]);
     expect(func.generateGlslLines()).toEqual([
       signature,
       "{",

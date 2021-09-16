@@ -248,15 +248,13 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
 
   var functionId = initializeAttributesFunctionId;
   var variableName = attributeInfo.variableName;
+  var line;
   if (variableName === "tangent") {
-    shaderBuilder.addFunctionLine(
-      functionId,
-      "attributes.tangent = a_tangent.xyz;"
-    );
+    line = "attributes.tangent = a_tangent.xyz;";
   } else {
-    var line = "attributes." + variableName + " = a_" + variableName + ";";
-    shaderBuilder.addFunctionLine(functionId, line);
+    line = "attributes." + variableName + " = a_" + variableName + ";";
   }
+  shaderBuilder.addFunctionLines(functionId, [line]);
 }
 
 function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
@@ -273,13 +271,13 @@ function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
   var functionId = setDynamicVaryingsVSFunctionId;
   var variableName = attributeInfo.variableName;
   var line = "v_" + variableName + " = attributes." + variableName + ";";
-  shaderBuilder.addFunctionLine(functionId, line);
+  shaderBuilder.addFunctionLines(functionId, [line]);
 
   // In the fragment shader, we do the opposite:
   // attributes.texCoord_1 = v_texCoord_1;
   functionId = setDynamicVaryingsFSFunctionId;
   line = "attributes." + variableName + " = v_" + variableName + ";";
-  shaderBuilder.addFunctionLine(functionId, line);
+  shaderBuilder.addFunctionLines(functionId, [line]);
 }
 
 function handleBitangents(shaderBuilder, attributes) {
@@ -302,10 +300,9 @@ function handleBitangents(shaderBuilder, attributes) {
   shaderBuilder.addDefine("HAS_BITANGENTS");
 
   // compute the bitangent according to the formula in the glTF spec
-  shaderBuilder.addFunctionLine(
-    initializeAttributesFunctionId,
-    "attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);"
-  );
+  shaderBuilder.addFunctionLines(initializeAttributesFunctionId, [
+    "attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);",
+  ]);
 
   shaderBuilder.addVarying("vec3", "v_bitangent");
   shaderBuilder.addStructField(attributesStructVSId, "vec3", "bitangent");

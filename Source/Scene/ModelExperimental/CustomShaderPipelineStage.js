@@ -483,10 +483,7 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   );
 
   var initializationLines = vertexLines.initializationLines;
-  for (i = 0; i < initializationLines.length; i++) {
-    var line = initializationLines[i];
-    shaderBuilder.addFunctionLine(functionId, line);
-  }
+  shaderBuilder.addFunctionLines(functionId, initializationLines);
 }
 
 function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
@@ -531,10 +528,7 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   );
 
   var initializationLines = fragmentLines.initializationLines;
-  for (i = 0; i < initializationLines.length; i++) {
-    var line = initializationLines[i];
-    shaderBuilder.addFunctionLine(functionId, line);
-  }
+  shaderBuilder.addFunctionLines(functionId, initializationLines);
 }
 
 function addLinesToShader(shaderBuilder, customShader, generatedCode) {

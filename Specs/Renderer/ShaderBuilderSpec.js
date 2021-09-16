@@ -387,7 +387,7 @@ describe(
       checkFragmentShader(shaderProgram, [], [signature, "{", "}"]);
     });
 
-    it("addFunctionLine throws for undefined functionName", function () {
+    it("addFunctionLines throws for undefined functionName", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addFunction(
         "testFunctionVS",
@@ -395,11 +395,11 @@ describe(
         ShaderDestination.VERTEX
       );
       expect(function () {
-        return shaderBuilder.addFunctionLine(undefined, "return 1.0;");
+        return shaderBuilder.addFunctionLines(undefined, "return 1.0;");
       }).toThrowDeveloperError();
     });
 
-    it("addFunctionLine throws for invalid functionName", function () {
+    it("addFunctionLines throws for invalid functionName", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addFunction(
         "testFunctionVS",
@@ -407,11 +407,11 @@ describe(
         ShaderDestination.VERTEX
       );
       expect(function () {
-        return shaderBuilder.addFunctionLine(-1, "return 1.0;");
+        return shaderBuilder.addFunctionLines(-1, "return 1.0;");
       }).toThrowDeveloperError();
     });
 
-    it("addFunctionLine throws for undefined line", function () {
+    it("addFunctionLines throws for undefined lines", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addFunction(
         "testFunctionVS",
@@ -419,11 +419,11 @@ describe(
         ShaderDestination.VERTEX
       );
       expect(function () {
-        return shaderBuilder.addFunctionLine("testFunctionVS", undefined);
+        return shaderBuilder.addFunctionLines("testFunctionVS", undefined);
       }).toThrowDeveloperError();
     });
 
-    it("addFunctionLine throws for invalid line", function () {
+    it("addFunctionLines throws for invalid lines", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addFunction(
         "testFunctionVS",
@@ -431,11 +431,11 @@ describe(
         ShaderDestination.VERTEX
       );
       expect(function () {
-        return shaderBuilder.addFunctionLine("testFunctionVS", -1);
+        return shaderBuilder.addFunctionLines("testFunctionVS", -1);
       }).toThrowDeveloperError();
     });
 
-    it("addFunctionLine adds a line to the body of a function", function () {
+    it("addFunctionLines adds lines to the body of a function", function () {
       var shaderBuilder = new ShaderBuilder();
       shaderBuilder.addFunction(
         "testFunctionVS",
@@ -448,17 +448,19 @@ describe(
         ShaderDestination.FRAGMENT
       );
 
-      shaderBuilder.addFunctionLine("testFunctionVS", "return 1.0;");
-      shaderBuilder.addFunctionLine(
-        "testFunctionFS",
-        "return 1.0 - step(0.3, radius);"
-      );
+      shaderBuilder.addFunctionLines("testFunctionVS", [
+        "v_color = vec3(0.0);",
+        "return 1.0;",
+      ]);
+      shaderBuilder.addFunctionLines("testFunctionFS", [
+        "return 1.0 - step(0.3, radius);",
+      ]);
 
       var shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        [signature, "{", "    return 1.0;", "}"]
+        [signature, "{", "    v_color = vec3(0.0);", "    return 1.0;", "}"]
       );
       checkFragmentShader(
         shaderProgram,
