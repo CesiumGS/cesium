@@ -115,11 +115,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "FEATURE_ID_ATTRIBUTE a_featureId_0"
       );
 
-      expect(vertexVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
-      expect(fragmentVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
       expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
       expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
@@ -186,11 +186,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "FEATURE_ID_ATTRIBUTE a_featureId_1"
       );
 
-      expect(vertexVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
-      expect(fragmentVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
       expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
       expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
@@ -244,11 +244,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_0"
       );
 
-      expect(vertexVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
-      expect(fragmentVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
       expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
       expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
@@ -319,11 +319,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_1"
       );
 
-      expect(vertexVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
-      expect(fragmentVaryingLines[0]).toEqual("varying float model_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 model_featureSt;");
+      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
+      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
 
       expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
       expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);

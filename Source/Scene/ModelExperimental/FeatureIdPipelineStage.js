@@ -52,29 +52,16 @@ FeatureIdPipelineStage.process = function (
     var featureIdAttributeIndex = model.featureIdAttributeIndex;
     var instances = renderResources.runtimeNode.node.instances;
 
-    var featureIdCount;
-    var featureIdAttribute;
-    var featureIdInstanceDivisor = 0;
-    var featureIdAttributePrefix;
-    var featureIdAttributeSetIndex;
+    var featureIdAttributeInfo = getFeatureIdAttributeInfo(
+      featureIdAttributeIndex,
+      primitive,
+      instances
+    );
 
-    // Get Feature ID attribute,from the instancing or primitive extension.
-    if (defined(instances)) {
-      featureIdAttribute =
-        instances.featureIdAttributes[featureIdAttributeIndex];
-      featureIdCount = instances.attributes[0].count;
-      featureIdAttributePrefix = "a_instanceFeatureId_";
-      featureIdInstanceDivisor = 1;
-    } else {
-      featureIdAttribute =
-        primitive.featureIdAttributes[featureIdAttributeIndex];
-      var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.POSITION
-      );
-      featureIdCount = positionAttribute.count;
-      featureIdAttributePrefix = "a_featureId_";
-    }
+    var featureIdAttribute = featureIdAttributeInfo.attribute;
+    var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
+
+    var featureIdAttributeSetIndex;
 
     renderResources.featureTableId = featureIdAttribute.featureTableId;
 
@@ -82,47 +69,12 @@ FeatureIdPipelineStage.process = function (
     if (defined(featureIdAttribute.setIndex)) {
       featureIdAttributeSetIndex = featureIdAttribute.setIndex;
     } else {
-      // If a constant and/or divisor are used, a new vertex attribute will need to be created.
-      var value;
-      var vertexBuffer;
-
       featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
-
-      if (featureIdAttribute.divisor === 0) {
-        value = featureIdAttribute.constant;
-      } else {
-        var typedArray = generateFeatureIdTypedArray(
-          featureIdAttribute,
-          featureIdCount
-        );
-        vertexBuffer = Buffer.createVertexBuffer({
-          context: frameState.context,
-          typedArray: typedArray,
-          usage: BufferUsage.STATIC_DRAW,
-        });
-        vertexBuffer.vertexArrayDestroyable = false;
-        model._resources.push(vertexBuffer);
-      }
-
-      var generatedFeatureIdAttribute = {
-        index: renderResources.attributeIndex++,
-        instanceDivisor: featureIdInstanceDivisor,
-        value: value,
-        vertexBuffer: vertexBuffer,
-        normalize: false,
-        componentsPerAttribute: 1,
-        componentDatatype: ComponentDatatype.FLOAT,
-        strideInBytes: ComponentDatatype.getSizeInBytes(
-          ComponentDatatype.FLOAT
-        ),
-        offsetInBytes: 0,
-      };
-
-      renderResources.attributes.push(generatedFeatureIdAttribute);
-
-      shaderBuilder.addAttribute(
-        "float",
-        featureIdAttributePrefix + featureIdAttributeSetIndex
+      generateFeatureIdAttribute(
+        featureIdAttributeInfo,
+        featureIdAttributeSetIndex,
+        frameState,
+        renderResources
       );
     }
 
@@ -131,10 +83,9 @@ FeatureIdPipelineStage.process = function (
       featureIdAttributePrefix + featureIdAttributeSetIndex,
       ShaderDestination.VERTEX
     );
-    shaderBuilder.addVarying("float", "model_featureId");
-    shaderBuilder.addVarying("vec2", "model_featureSt");
-    shaderBuilder.addVertexLines([FeatureStageCommon]);
-    shaderBuilder.addVertexLines([FeatureStageVS]);
+    shaderBuilder.addVarying("float", "v_featureId");
+    shaderBuilder.addVarying("vec2", "v_featureSt");
+    shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
   }
 
   var content = model.content;
@@ -142,9 +93,45 @@ FeatureIdPipelineStage.process = function (
     content.featureTableId = renderResources.featureTableId;
   }
 
-  shaderBuilder.addFragmentLines([FeatureStageCommon]);
-  shaderBuilder.addFragmentLines([FeatureStageFS]);
+  shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
 };
+
+/**
+ * Generates an object containing information about the Feature ID attribute.
+ * @private
+ */
+function getFeatureIdAttributeInfo(
+  featureIdAttributeIndex,
+  primitive,
+  instances
+) {
+  var featureIdCount;
+  var featureIdAttribute;
+  var featureIdAttributePrefix;
+  var featureIdInstanceDivisor = 0;
+
+  if (defined(instances)) {
+    featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+    featureIdCount = instances.attributes[0].count;
+    featureIdAttributePrefix = "a_instanceFeatureId_";
+    featureIdInstanceDivisor = 1;
+  } else {
+    featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+    var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.POSITION
+    );
+    featureIdCount = positionAttribute.count;
+    featureIdAttributePrefix = "a_featureId_";
+  }
+
+  return {
+    count: featureIdCount,
+    attribute: featureIdAttribute,
+    prefix: featureIdAttributePrefix,
+    instanceDivisor: featureIdInstanceDivisor,
+  };
+}
 
 /**
  * Processes feature ID textures.
@@ -202,6 +189,61 @@ function processFeatureIdTextures(
 }
 
 /**
+ * Generates a Feature ID attribute from constant/divisor and adds it to the render resources.
+ * @private
+ */
+function generateFeatureIdAttribute(
+  featureIdAttributeInfo,
+  featureIdAttributeSetIndex,
+  frameState,
+  renderResources
+) {
+  var model = renderResources.model;
+  var shaderBuilder = renderResources.shaderBuilder;
+  var featureIdAttribute = featureIdAttributeInfo.attribute;
+  var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
+
+  // If a constant and/or divisor are used, a new vertex attribute will need to be created.
+  var value;
+  var vertexBuffer;
+
+  if (featureIdAttribute.divisor === 0) {
+    value = featureIdAttribute.constant;
+  } else {
+    var typedArray = generateFeatureIdTypedArray(
+      featureIdAttribute,
+      featureIdAttributeInfo.count
+    );
+    vertexBuffer = Buffer.createVertexBuffer({
+      context: frameState.context,
+      typedArray: typedArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    vertexBuffer.vertexArrayDestroyable = false;
+    model._resources.push(vertexBuffer);
+  }
+
+  var generatedFeatureIdAttribute = {
+    index: renderResources.attributeIndex++,
+    instanceDivisor: featureIdAttributeInfo.instanceDivisor,
+    value: value,
+    vertexBuffer: vertexBuffer,
+    normalize: false,
+    componentsPerAttribute: 1,
+    componentDatatype: ComponentDatatype.FLOAT,
+    strideInBytes: ComponentDatatype.getSizeInBytes(ComponentDatatype.FLOAT),
+    offsetInBytes: 0,
+  };
+
+  renderResources.attributes.push(generatedFeatureIdAttribute);
+
+  shaderBuilder.addAttribute(
+    "float",
+    featureIdAttributePrefix + featureIdAttributeSetIndex
+  );
+}
+
+/**
  * Generates typed array based on the constant and divisor of the feature ID attribute.
  * @private
  */
@@ -211,7 +253,7 @@ function generateFeatureIdTypedArray(featureIdAttribute, count) {
 
   var typedArray = new Float32Array(count);
   for (var i = 0; i < count; i++) {
-    typedArray[i] = constant + i / divisor;
+    typedArray[i] = constant + Math.floor(i / divisor);
   }
 
   return typedArray;
