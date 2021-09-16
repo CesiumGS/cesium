@@ -24,6 +24,22 @@ import CustomShaderMode from "./CustomShaderMode.js";
 var CustomShaderPipelineStage = {};
 CustomShaderPipelineStage.name = "CustomShaderPipelineStage"; // Helps with debugging
 
+CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS = "AttributesVS";
+CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS = "AttributesFS";
+CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES = "Attributes";
+CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT = "VertexInput";
+CustomShaderPipelineStage.STRUCT_NAME_VERTEX_INPUT = "VertexInput";
+CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT = "FragmentInput";
+CustomShaderPipelineStage.STRUCT_NAME_FRAGMENT_INPUT = "FragmentInput";
+CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS =
+  "initializeInputStructVS";
+CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS =
+  "void initializeInputStruct(out VertexInput vsInput, ProcessedAttributes attributes)";
+CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS =
+  "initializeInputStructFS";
+CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS =
+  "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)";
+
 /**
  * Process a primitive. This modifies the following parts of the render
  * resources:
@@ -456,8 +472,12 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   // Vertex Lines ---------------------------------------------------------
 
   var i;
-  var structId = "AttributesVS";
-  shaderBuilder.addStruct(structId, "Attributes", ShaderDestination.VERTEX);
+  var structId = CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS;
+  shaderBuilder.addStruct(
+    structId,
+    CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
+    ShaderDestination.VERTEX
+  );
 
   var attributeFields = vertexLines.attributeFields;
   for (i = 0; i < attributeFields.length; i++) {
@@ -469,16 +489,23 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
 
   // This could be hard-coded, but the symmetry with other structs makes unit
   // tests more convenient
-  structId = "VertexInput";
-  shaderBuilder.addStruct(structId, "VertexInput", ShaderDestination.VERTEX);
-  shaderBuilder.addStructField(structId, "Attributes", "attributes");
+  structId = CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT;
+  shaderBuilder.addStruct(
+    structId,
+    CustomShaderPipelineStage.STRUCT_NAME_VERTEX_INPUT,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addStructField(
+    structId,
+    CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
+    "attributes"
+  );
 
-  var functionId = "initializeInputStructVS";
-  var functionSignature =
-    "void initializeInputStruct(out VertexInput vsInput, ProcessedAttributes attributes)";
+  var functionId =
+    CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS;
   shaderBuilder.addFunction(
     functionId,
-    functionSignature,
+    CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
     ShaderDestination.VERTEX
   );
 
@@ -488,8 +515,12 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
 
 function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   var i;
-  var structId = "AttributesFS";
-  shaderBuilder.addStruct(structId, "Attributes", ShaderDestination.FRAGMENT);
+  var structId = CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS;
+  shaderBuilder.addStruct(
+    structId,
+    CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
+    ShaderDestination.FRAGMENT
+  );
 
   var field;
   var glslType;
@@ -502,13 +533,17 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     shaderBuilder.addStructField(structId, glslType, variableName);
   }
 
-  structId = "FragmentInput";
+  structId = CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT;
   shaderBuilder.addStruct(
     structId,
-    "FragmentInput",
+    CustomShaderPipelineStage.STRUCT_NAME_FRAGMENT_INPUT,
     ShaderDestination.FRAGMENT
   );
-  shaderBuilder.addStructField(structId, "Attributes", "attributes");
+  shaderBuilder.addStructField(
+    structId,
+    CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
+    "attributes"
+  );
 
   var fragmentInputFields = fragmentLines.fragmentInputFields;
   for (i = 0; i < fragmentInputFields.length; i++) {
@@ -518,12 +553,11 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     shaderBuilder.addStructField(structId, glslType, variableName);
   }
 
-  var functionId = "initializeInputStructFS";
-  var functionSignature =
-    "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)";
+  var functionId =
+    CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS;
   shaderBuilder.addFunction(
     functionId,
-    functionSignature,
+    CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
     ShaderDestination.FRAGMENT
   );
 

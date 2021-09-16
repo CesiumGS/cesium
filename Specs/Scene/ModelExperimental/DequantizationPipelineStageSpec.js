@@ -63,10 +63,6 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     return waitForLoaderProcess(gltfLoader, scene);
   }
 
-  var dequantizationFunctionId = "dequantizationStage";
-  var dequantizationSignature =
-    "void dequantizationStage(inout ProcessedAttributes attributes)";
-
   it("adds a dequantization function", function () {
     var uniformMap = {};
     var shaderBuilder = new ShaderBuilder();
@@ -84,8 +80,8 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       ]);
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        dequantizationFunctionId,
-        dequantizationSignature,
+        DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
+        DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
         [
           "    attributes.normal = czm_octDecode(a_quantized_normal, model_normalizationRange_normal).zxy;",
           "    attributes.positionMC = model_quantizedVolumeOffset_positionMC + a_quantized_positionMC * model_quantizedVolumeStepSize_positionMC;",
@@ -174,8 +170,8 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       ]);
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        dequantizationFunctionId,
-        dequantizationSignature,
+        DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
+        DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
         []
       );
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);

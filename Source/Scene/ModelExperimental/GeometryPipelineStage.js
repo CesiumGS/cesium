@@ -17,11 +17,21 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 var GeometryPipelineStage = {};
 GeometryPipelineStage.name = "GeometryPipelineStage"; // Helps with debugging
 
-var attributesStructVSId = "ProcessedAttributesVS";
-var attributesStructFSId = "ProcessedAttributesFS";
-var initializeAttributesFunctionId = "initializeAttributes";
-var setDynamicVaryingsVSFunctionId = "setDynamicVaryingsVS";
-var setDynamicVaryingsFSFunctionId = "setDynamicVaryingsFS";
+GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS =
+  "ProcessedAttributesVS";
+GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS =
+  "ProcessedAttributesFS";
+GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES = "ProcessedAttributes";
+GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES =
+  "initializeAttributes";
+GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES =
+  "void initializeAttributes(out ProcessedAttributes attributes)";
+GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS =
+  "setDynamicVaryingsVS";
+GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS =
+  "setDynamicVaryingsFS";
+GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
+  "void setDynamicVaryings(inout ProcessedAttributes attributes)";
 
 /**
  * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,
@@ -44,12 +54,12 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
   shaderBuilder.addStruct(
-    attributesStructVSId,
+    GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
     "ProcessedAttributes",
     ShaderDestination.VERTEX
   );
   shaderBuilder.addStruct(
-    attributesStructFSId,
+    GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "ProcessedAttributes",
     ShaderDestination.FRAGMENT
   );
@@ -58,28 +68,36 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   // it assigns the non-quantized attribute struct fields from the
   // physical attributes
   shaderBuilder.addFunction(
-    initializeAttributesFunctionId,
-    "void initializeAttributes(out ProcessedAttributes attributes)",
+    GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+    GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
     ShaderDestination.VERTEX
   );
 
   // Positions in other coordinate systems need more variables
   shaderBuilder.addVarying("vec3", "v_positionWC");
   shaderBuilder.addVarying("vec3", "v_positionEC");
-  shaderBuilder.addStructField(attributesStructFSId, "vec3", "positionWC");
-  shaderBuilder.addStructField(attributesStructFSId, "vec3", "positionEC");
+  shaderBuilder.addStructField(
+    GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+    "vec3",
+    "positionWC"
+  );
+  shaderBuilder.addStructField(
+    GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+    "vec3",
+    "positionEC"
+  );
 
   // Though they have identical signatures, the implementation is different
   // between vertex and fragment shaders. The VS stores attributes in
   // varyings, while the FS unpacks the varyings for use by other stages.
   shaderBuilder.addFunction(
-    setDynamicVaryingsVSFunctionId,
-    "void setDynamicVaryings(inout ProcessedAttributes attributes)",
+    GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+    GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
     ShaderDestination.VERTEX
   );
   shaderBuilder.addFunction(
-    setDynamicVaryingsFSFunctionId,
-    "void setDynamicVaryings(inout ProcessedAttributes attributes)",
+    GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+    GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
     ShaderDestination.FRAGMENT
   );
 
@@ -214,8 +232,8 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo) {
 }
 
 function updateAttributesStruct(shaderBuilder, attributeInfo) {
-  var vsStructId = attributesStructVSId;
-  var fsStructId = attributesStructFSId;
+  var vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
+  var fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
   var variableName = attributeInfo.variableName;
   if (variableName === "color") {
     // Always declare color as a vec4, even if it was a vec3
@@ -246,7 +264,7 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
     return;
   }
 
-  var functionId = initializeAttributesFunctionId;
+  var functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   var variableName = attributeInfo.variableName;
   var line;
   if (variableName === "tangent") {
@@ -268,14 +286,14 @@ function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
 
   // In the vertex shader, we want things like
   // v_texCoord_1 = attributes.texCoord_1;
-  var functionId = setDynamicVaryingsVSFunctionId;
+  var functionId = GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS;
   var variableName = attributeInfo.variableName;
   var line = "v_" + variableName + " = attributes." + variableName + ";";
   shaderBuilder.addFunctionLines(functionId, [line]);
 
   // In the fragment shader, we do the opposite:
   // attributes.texCoord_1 = v_texCoord_1;
-  functionId = setDynamicVaryingsFSFunctionId;
+  functionId = GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS;
   line = "attributes." + variableName + " = v_" + variableName + ";";
   shaderBuilder.addFunctionLines(functionId, [line]);
 }
@@ -300,13 +318,24 @@ function handleBitangents(shaderBuilder, attributes) {
   shaderBuilder.addDefine("HAS_BITANGENTS");
 
   // compute the bitangent according to the formula in the glTF spec
-  shaderBuilder.addFunctionLines(initializeAttributesFunctionId, [
-    "attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);",
-  ]);
+  shaderBuilder.addFunctionLines(
+    GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+    [
+      "attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);",
+    ]
+  );
 
   shaderBuilder.addVarying("vec3", "v_bitangent");
-  shaderBuilder.addStructField(attributesStructVSId, "vec3", "bitangent");
-  shaderBuilder.addStructField(attributesStructFSId, "vec3", "bitangent");
+  shaderBuilder.addStructField(
+    GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+    "vec3",
+    "bitangent"
+  );
+  shaderBuilder.addStructField(
+    GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+    "vec3",
+    "bitangent"
+  );
 }
 
 export default GeometryPipelineStage;

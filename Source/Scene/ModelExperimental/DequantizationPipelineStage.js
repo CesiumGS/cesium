@@ -13,7 +13,10 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 var DequantizationPipelineStage = {};
 DequantizationPipelineStage.name = "DequantizationPipelineStage"; // Helps with debugging
 
-var dequantizationFunctionId = "dequantizationStage";
+DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS =
+  "dequantizationStage";
+DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS =
+  "void dequantizationStage(inout ProcessedAttributes attributes)";
 
 /**
  * Process a primitive with quantized attributes. This stage modifies the
@@ -30,10 +33,11 @@ var dequantizationFunctionId = "dequantizationStage";
  */
 DequantizationPipelineStage.process = function (renderResources, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
-  var functionId = "dequantizationStage";
-  var signature =
-    "void dequantizationStage(inout ProcessedAttributes attributes)";
-  shaderBuilder.addFunction(functionId, signature, ShaderDestination.VERTEX);
+  shaderBuilder.addFunction(
+    DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
+    DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
+    ShaderDestination.VERTEX
+  );
 
   shaderBuilder.addDefine(
     "USE_DEQUANTIZATION",
@@ -99,7 +103,10 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
     line = generateDequantizeLine(variableName);
   }
 
-  shaderBuilder.addFunctionLines(dequantizationFunctionId, [line]);
+  shaderBuilder.addFunctionLines(
+    DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
+    [line]
+  );
 }
 
 function generateOctDecodeLine(variableName, quantization) {

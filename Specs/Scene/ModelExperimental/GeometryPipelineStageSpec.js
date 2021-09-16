@@ -63,17 +63,6 @@ describe(
     var dracoMilkTruck =
       "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
 
-    var attributesStructVSId = "ProcessedAttributesVS";
-    var attributesStructFSId = "ProcessedAttributesFS";
-    var attributesStructName = "ProcessedAttributes";
-    var initializeAttributesFunctionId = "initializeAttributes";
-    var initializeAttributesSignature =
-      "void initializeAttributes(out ProcessedAttributes attributes)";
-    var setDynamicVaryingsVSId = "setDynamicVaryingsVS";
-    var setDynamicVaryingsFSId = "setDynamicVaryingsFS";
-    var setDynamicVaryingsSignature =
-      "void setDynamicVaryings(inout ProcessedAttributes attributes)";
-
     var scene;
     var gltfLoaders = [];
 
@@ -141,32 +130,32 @@ describe(
 
       ShaderBuilderTester.expectHasVertexStruct(
         shaderBuilder,
-        attributesStructVSId,
-        attributesStructName,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
         ["    vec3 positionMC;"]
       );
       ShaderBuilderTester.expectHasFragmentStruct(
         shaderBuilder,
-        attributesStructFSId,
-        attributesStructName,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
         ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
       );
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        initializeAttributesFunctionId,
-        initializeAttributesSignature,
+        GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
         ["    attributes.positionMC = a_positionMC;"]
       );
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        setDynamicVaryingsVSId,
-        setDynamicVaryingsSignature,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
         []
       );
       ShaderBuilderTester.expectHasFragmentFunction(
         shaderBuilder,
-        setDynamicVaryingsFSId,
-        setDynamicVaryingsSignature,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
         []
       );
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -233,14 +222,14 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -251,8 +240,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
             "    attributes.normal = a_normal;",
@@ -261,14 +250,14 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsVSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    v_texCoord_0 = attributes.texCoord_0;"]
         );
         ShaderBuilderTester.expectHasFragmentFunction(
           shaderBuilder,
-          setDynamicVaryingsFSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    attributes.texCoord_0 = v_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -354,8 +343,8 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 normal;",
@@ -366,8 +355,8 @@ describe(
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -380,8 +369,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
             "    attributes.normal = a_normal;",
@@ -392,14 +381,14 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsVSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    v_texCoord_0 = attributes.texCoord_0;"]
         );
         ShaderBuilderTester.expectHasFragmentFunction(
           shaderBuilder,
-          setDynamicVaryingsFSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    attributes.texCoord_0 = v_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -483,8 +472,8 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec2 texCoord_0;",
@@ -493,8 +482,8 @@ describe(
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -505,8 +494,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
             "    attributes.texCoord_0 = a_texCoord_0;",
@@ -515,8 +504,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsVSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           [
             "    v_texCoord_0 = attributes.texCoord_0;",
             "    v_texCoord_1 = attributes.texCoord_1;",
@@ -524,8 +513,8 @@ describe(
         );
         ShaderBuilderTester.expectHasFragmentFunction(
           shaderBuilder,
-          setDynamicVaryingsFSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           [
             "    attributes.texCoord_0 = v_texCoord_0;",
             "    attributes.texCoord_1 = v_texCoord_1;",
@@ -614,8 +603,8 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 normal;",
@@ -625,8 +614,8 @@ describe(
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -638,8 +627,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
             "    attributes.normal = a_normal;",
@@ -649,8 +638,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          setDynamicVaryingsVSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           [
             "    v_color_0 = attributes.color_0;",
             "    v_texCoord_0 = attributes.texCoord_0;",
@@ -658,8 +647,8 @@ describe(
         );
         ShaderBuilderTester.expectHasFragmentFunction(
           shaderBuilder,
-          setDynamicVaryingsFSId,
-          setDynamicVaryingsSignature,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           [
             "    attributes.color_0 = v_color_0;",
             "    attributes.texCoord_0 = v_texCoord_0;",
@@ -731,14 +720,14 @@ describe(
 
       ShaderBuilderTester.expectHasVertexStruct(
         shaderBuilder,
-        attributesStructVSId,
-        attributesStructName,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
         ["    vec3 positionMC;", "    vec2 temperature;"]
       );
       ShaderBuilderTester.expectHasFragmentStruct(
         shaderBuilder,
-        attributesStructFSId,
-        attributesStructName,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
         [
           "    vec3 positionMC;",
           "    vec3 positionWC;",
@@ -748,8 +737,8 @@ describe(
       );
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        initializeAttributesFunctionId,
-        initializeAttributesSignature,
+        GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
         [
           "    attributes.positionMC = a_positionMC;",
           "    attributes.temperature = a_temperature;",
@@ -757,14 +746,14 @@ describe(
       );
       ShaderBuilderTester.expectHasVertexFunction(
         shaderBuilder,
-        setDynamicVaryingsVSId,
-        setDynamicVaryingsSignature,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
         ["    v_temperature = attributes.temperature;"]
       );
       ShaderBuilderTester.expectHasFragmentFunction(
         shaderBuilder,
-        setDynamicVaryingsFSId,
-        setDynamicVaryingsSignature,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
         ["    attributes.temperature = v_temperature;"]
       );
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -830,14 +819,14 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           ["    vec3 positionMC;", "    vec3 normal;", "    float featureId_0;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -848,8 +837,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
             "    attributes.normal = a_normal;",
@@ -912,14 +901,14 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           ["    vec3 positionMC;", "    float featureId_0;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -929,8 +918,8 @@ describe(
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
             "    attributes.featureId_0 = a_featureId_0;",
@@ -1002,14 +991,14 @@ describe(
 
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
-          attributesStructVSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
-          attributesStructFSId,
-          attributesStructName,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
             "    vec3 positionWC;",
@@ -1021,8 +1010,8 @@ describe(
         // Initialization is skipped for dequantized attributes
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
-          initializeAttributesFunctionId,
-          initializeAttributesSignature,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           []
         );
         ShaderBuilderTester.expectHasAttributes(

@@ -56,17 +56,6 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     fragmentShaderText: emptyFragmentShader,
   });
 
-  var attributesVSStructId = "AttributesVS";
-  var attributesFSStructId = "AttributesFS";
-  var vertexInputStructId = "VertexInput";
-  var fragmentInputStructId = "FragmentInput";
-  var initializeVSFunctionId = "initializeInputStructVS";
-  var initializeFSFunctionId = "initializeInputStructFS";
-  var initializeVSSignature =
-    "void initializeInputStruct(out VertexInput vsInput, ProcessedAttributes attributes)";
-  var initializeFSSignature =
-    "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)";
-
   it("sets defines in the shader", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
@@ -262,34 +251,34 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      attributesVSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      attributesFSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      vertexInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
       ["    Attributes attributes;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       ["    Attributes attributes;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
       shaderBuilder,
-      initializeVSFunctionId,
-      initializeVSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       [
         "    vsInput.attributes.positionMC = attributes.positionMC;",
         "    vsInput.attributes.normal = attributes.normal;",
@@ -298,8 +287,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     );
     ShaderBuilderTester.expectHasFragmentFunction(
       shaderBuilder,
-      initializeFSFunctionId,
-      initializeFSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       [
         "    fsInput.attributes.positionMC = attributes.positionMC;",
         "    fsInput.attributes.normal = attributes.normal;",
@@ -342,34 +331,34 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      attributesVSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec3 positionMC;", "    float temperature;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      attributesFSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec3 positionMC;", "    float temperature;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      vertexInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
       ["    Attributes attributes;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       ["    Attributes attributes;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
       shaderBuilder,
-      initializeVSFunctionId,
-      initializeVSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       [
         "    vsInput.attributes.positionMC = attributes.positionMC;",
         "    vsInput.attributes.temperature = attributes.temperature;",
@@ -377,8 +366,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     );
     ShaderBuilderTester.expectHasFragmentFunction(
       shaderBuilder,
-      initializeFSFunctionId,
-      initializeFSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       [
         "    fsInput.attributes.positionMC = attributes.positionMC;",
         "    fsInput.attributes.temperature = attributes.temperature;",
@@ -419,40 +408,40 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      attributesVSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec3 positionMC;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      attributesFSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    float temperature;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      vertexInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
       ["    Attributes attributes;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       ["    Attributes attributes;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
       shaderBuilder,
-      initializeVSFunctionId,
-      initializeVSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       ["    vsInput.attributes.positionMC = attributes.positionMC;"]
     );
     ShaderBuilderTester.expectHasFragmentFunction(
       shaderBuilder,
-      initializeFSFunctionId,
-      initializeFSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       ["    fsInput.attributes.temperature = attributes.temperature;"]
     );
   });
@@ -472,12 +461,12 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(shaderBuilder._vertexShaderParts.structIds).toEqual([
-      attributesVSStructId,
-      vertexInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
     ]);
     expect(shaderBuilder._fragmentShaderParts.structIds).toEqual([
-      attributesFSStructId,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
     ]);
 
     ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -509,7 +498,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       ["    Attributes attributes;"]
     );
@@ -546,26 +535,26 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      attributesVSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       []
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      attributesFSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       []
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      vertexInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
       ["    Attributes attributes;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       [
         "    Attributes attributes;",
@@ -577,14 +566,14 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexFunction(
       shaderBuilder,
-      initializeVSFunctionId,
-      initializeVSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       []
     );
     ShaderBuilderTester.expectHasFragmentFunction(
       shaderBuilder,
-      initializeFSFunctionId,
-      initializeFSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       [
         "    fsInput.positionMC = attributes.positionMC;",
         "    fsInput.positionWC = attributes.positionWC;",
@@ -622,40 +611,40 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      attributesVSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec2 texCoord_1;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      attributesFSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       ["    vec3 tangent;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
-      vertexInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
       ["    Attributes attributes;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       ["    Attributes attributes;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
       shaderBuilder,
-      initializeVSFunctionId,
-      initializeVSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       ["    vsInput.attributes.texCoord_1 = vec2(0.0);"]
     );
     ShaderBuilderTester.expectHasFragmentFunction(
       shaderBuilder,
-      initializeFSFunctionId,
-      initializeFSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       ["    fsInput.attributes.tangent = vec3(1.0, 0.0, 0.0);"]
     );
   });
@@ -804,14 +793,14 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     expect(shaderBuilder._vertexShaderParts.structIds).toEqual([]);
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      attributesFSStructId,
-      "Attributes",
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
       []
     );
 
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
-      fragmentInputStructId,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
       ["    Attributes attributes;", "    vec3 positionWC;"]
     );
@@ -819,8 +808,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);
     ShaderBuilderTester.expectHasFragmentFunction(
       shaderBuilder,
-      initializeFSFunctionId,
-      initializeFSSignature,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       ["    fsInput.positionWC = attributes.positionWC;"]
     );
   });
