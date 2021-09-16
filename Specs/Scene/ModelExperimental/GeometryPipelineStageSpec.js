@@ -1027,10 +1027,10 @@ describe(
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_encoded_positionMC;",
+          "attribute vec3 a_quantized_positionMC;",
           [
-            "attribute vec2 a_encoded_normal;",
-            "attribute vec2 a_encoded_texCoord_0;",
+            "attribute vec2 a_quantized_normal;",
+            "attribute vec2 a_quantized_texCoord_0;",
           ]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [

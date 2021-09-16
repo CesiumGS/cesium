@@ -105,7 +105,7 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
 function generateOctDecodeLine(variableName, quantization) {
   var structField = "attributes." + variableName;
 
-  var encodedAttribute = "a_encoded_" + variableName;
+  var quantizedAttribute = "a_quantized_" + variableName;
   var normalizationRange = "model_normalizationRange_" + variableName;
 
   // Draco stores things as .zxy instead of xyz, so be explicit about the
@@ -113,11 +113,11 @@ function generateOctDecodeLine(variableName, quantization) {
   var swizzle = quantization.octEncodedZXY ? ".zxy" : ".xyz";
 
   // This generates lines such as:
-  // attributes.normal = czm_octDecode(a_encoded_normal, model_normalizationRange_normal).zxy;
+  // attributes.normal = czm_octDecode(a_quantized_normal, model_normalizationRange_normal).zxy;
   return (
     structField +
     " = czm_octDecode(" +
-    encodedAttribute +
+    quantizedAttribute +
     ", " +
     normalizationRange +
     ")" +
@@ -128,18 +128,18 @@ function generateOctDecodeLine(variableName, quantization) {
 
 function generateDequantizeLine(variableName) {
   var structField = "attributes." + variableName;
-  var encodedAttribute = "a_encoded_" + variableName;
+  var quantizedAttribute = "a_quantized_" + variableName;
   var offset = "model_quantizedVolumeOffset_" + variableName;
   var stepSize = "model_quantizedVolumeStepSize_" + variableName;
 
   // This generates lines such as:
-  // attributes.texCoord_0 = model_quantizedVolumeOffset_texCoord_0 + a_encoded_texCoord_0 * model_quantizedVolumeStepSize;
+  // attributes.texCoord_0 = model_quantizedVolumeOffset_texCoord_0 + a_quantized_texCoord_0 * model_quantizedVolumeStepSize;
   return (
     structField +
     " = " +
     offset +
     " + " +
-    encodedAttribute +
+    quantizedAttribute +
     " * " +
     stepSize +
     ";"

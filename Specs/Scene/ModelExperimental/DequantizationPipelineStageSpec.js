@@ -87,8 +87,8 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
         dequantizationFunctionId,
         dequantizationSignature,
         [
-          "    attributes.normal = czm_octDecode(a_encoded_normal, model_normalizationRange_normal).zxy;",
-          "    attributes.positionMC = model_quantizedVolumeOffset_positionMC + a_encoded_positionMC * model_quantizedVolumeStepSize_positionMC;",
+          "    attributes.normal = czm_octDecode(a_quantized_normal, model_normalizationRange_normal).zxy;",
+          "    attributes.positionMC = model_quantizedVolumeOffset_positionMC + a_quantized_positionMC * model_quantizedVolumeStepSize_positionMC;",
         ]
       );
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);

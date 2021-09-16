@@ -199,7 +199,7 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo) {
   var attributeName;
   var glslType;
   if (attributeInfo.isQuantized) {
-    attributeName = "a_encoded_" + variableName;
+    attributeName = "a_quantized_" + variableName;
     glslType = attributeInfo.quantizedGlslType;
   } else {
     attributeName = "a_" + variableName;
