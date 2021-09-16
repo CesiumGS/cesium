@@ -30,7 +30,7 @@ describe("Renderer/ShaderFunction", function () {
     }).toThrowDeveloperError();
   });
 
-  it("generateGlslLines generates a struct definition", function () {
+  it("generateGlslLines generates a function", function () {
     var func = new ShaderFunction(signature);
     func.addLines(["v_color = a_color;", "return vec3(0.0, 0.0, 1.0);"]);
     expect(func.generateGlslLines()).toEqual([

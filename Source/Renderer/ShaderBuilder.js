@@ -144,6 +144,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
  * @param {String} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
  * @param {String} structName The name of the struct as it will appear in the shader.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
+ *
  * @example
  * // generates the following struct in the fragment shader
  * // struct TestStruct
@@ -176,6 +177,8 @@ ShaderBuilder.prototype.addStruct = function (
  * @param {String} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
  * @param {String} type The GLSL type of the field
  * @param {String} identifier The identifier of the field.
+ *
+ * @example
  * // generates the following struct in the fragment shader
  * // struct TestStruct
  * // {
@@ -229,9 +232,10 @@ ShaderBuilder.prototype.addFunction = function (
 };
 
 /**
- * Add a line to a dynamically-generated function
+ * Add lines to a dynamically-generated function
  * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
  * @param {String} lines An array of lines of GLSL code to add to the function body. Do not include any whitespace at the ends of each line, but do include the semicolon.
+ *
  * @example
  * // generates the following function in the vertex shader
  * // vec3 testFunction(float parameter)
@@ -378,6 +382,7 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
  * Appends lines of GLSL code to the vertex shader
  *
  * @param {String[]} lines The lines to add to the end of the vertex shader source
+ *
  * @example
  * shaderBuilder.addVertexLines([
  *  "void main()",
@@ -399,6 +404,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  * Appends lines of GLSL code to the fragment shader
  *
  * @param {String[]} lines The lines to add to the end of the fragment shader source
+ *
  * @example
  * shaderBuilder.addFragmentLines([
  *  "void main()",

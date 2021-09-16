@@ -98,7 +98,7 @@ ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
 };
 
 /**
- * @param {ModelComponents.attribute} attribute
+ * @param {ModelComponents.Attribute} attribute
  *
  * @private
  */
