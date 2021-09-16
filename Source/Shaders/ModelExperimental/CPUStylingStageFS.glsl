@@ -1,14 +1,20 @@
+float featureId;
+vec2 featureSt;
+
 vec4 cpuStylingStage(vec4 color)
 {
-    #if !defined(FEATURE_ID_TEXTURE) && !defined(FEATURE_ID_ATTRIBUTE)
+    #ifdef FEATURE_ID_TEXTURE
+    // Read color from the batch texture.
     vec4 featureProperties = texture2D(model_batchTexture, featureSt);
+    // Discard, if show is false.
     float show = ceil(featureProperties.a);
     if (show == 0.0) {
         discard;
     }
+    color = featureProperties;
 
     #elif defined(FEATURE_ID_ATTRIBUTE)
-    color = model_featureColor;
+    color = v_featureColor;
     #else
     
     color.rgb = mix(color.rgb, model_color.rgb, model_colorBlend);

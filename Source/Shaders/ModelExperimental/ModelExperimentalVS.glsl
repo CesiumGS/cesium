@@ -16,7 +16,7 @@ void main()
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
     featureStage();
         #ifdef USE_CPU_STYLING
-        cpuStylingStage();
+        cpuStylingStage(position);
         #endif
     #endif
     

@@ -125,6 +125,13 @@ function processAttribute(
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
     varyingName = "v_" + variableName;
 
+    if (
+      semantic === VertexAttributeSemantic.FEATURE_ID &&
+      setIndex >= renderResources.featureIdVertexAttributeSetIndex
+    ) {
+      renderResources.featureIdVertexAttributeSetIndex = attribute.setIndex + 1;
+    }
+
     switch (semantic) {
       case VertexAttributeSemantic.NORMAL:
         shaderBuilder.addDefine("HAS_NORMALS");

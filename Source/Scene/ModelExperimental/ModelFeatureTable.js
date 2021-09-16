@@ -1,7 +1,4 @@
 import BatchTexture from "../BatchTexture.js";
-import Color from "../../Core/Color.js";
-import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
 
@@ -9,10 +6,9 @@ import ModelFeature from "./ModelFeature.js";
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
  * Extracts the properties from a {@link FeatureTable}.
  *
- * @param {Object} options:
+ * @param {Object} options An object containing the following options:
  * @param {ModelExperimental} options.model The model that owns this feature table.
  * @param {FeatureTable} options.featureTable The feature table from the model used to initialize the model.
- * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to.
  *
  * @alias ModelFeatureTable
  * @constructor
@@ -23,14 +19,10 @@ import ModelFeature from "./ModelFeature.js";
 export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
   this._model = options.model;
-  this._content = options.content;
   this._features = undefined;
   this._featuresLength = 0;
 
   this._batchTexture = undefined;
-
-  // At the moment, only the metadata table is supported.
-  this._table = options.featureTable._metadataTable;
 
   initialize(this);
 }
@@ -51,6 +43,22 @@ Object.defineProperties(ModelFeatureTable.prototype, {
       return this._batchTexture;
     },
   },
+
+  /**
+   * The number of features in this table.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  featuresLength: {
+    get: function () {
+      return this._featuresLength;
+    },
+  },
 });
 
 function initialize(modelFeatureTable) {
@@ -64,9 +72,7 @@ function initialize(modelFeatureTable) {
     features[i] = new ModelFeature({
       model: modelFeatureTable._model,
       featureId: i,
-      owner: defined(modelFeatureTable._content)
-        ? modelFeatureTable._content
-        : modelFeatureTable,
+      featureTable: modelFeatureTable,
     });
   }
 
@@ -94,24 +100,24 @@ ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
 };
 
-ModelFeatureTable.prototype.hasProperty = function (propertyName) {
-  return this._table.hasProperty(propertyName);
+ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
+  return this._featureTable.hasProperty(featureId, propertyName);
 };
 
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
-  return this._table.getProperty(featureId, name);
+  return this._featureTable.getProperty(featureId, name);
 };
 
 ModelFeatureTable.prototype.getPropertyInherited = function (featureId, name) {
-  return this._table.getProperty(featureId, name);
+  return this._featureTable.getProperty(featureId, name);
 };
 
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
-  return this._table.getPropertyIds(results);
+  return this._featureTable.getPropertyIds(results);
 };
 
 ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
-  return this._table.setProperty(featureId, name, value);
+  return this._featureTable.setProperty(featureId, name, value);
 };
 
 /**
@@ -150,60 +156,4 @@ ModelFeatureTable.prototype.isDestroyed = function () {
 ModelFeatureTable.prototype.destroy = function () {
   this._batchTexture.destroy();
   destroyObject(this);
-};
-
-ModelFeatureTable.prototype.setShow = function (featureId, show) {
-  this._batchTexture.setShow(featureId, show);
-};
-
-ModelFeatureTable.prototype.setAllShow = function (show) {
-  this._batchTexture.setAllShow(show);
-};
-
-ModelFeatureTable.prototype.getShow = function (featureId) {
-  return this._batchTexture.getShow(featureId);
-};
-
-ModelFeatureTable.prototype.setColor = function (featureId, color) {
-  this._batchTexture.setColor(featureId, color);
-};
-
-ModelFeatureTable.prototype.setAllColor = function (color) {
-  this._batchTexture.setAllColor(color);
-};
-
-ModelFeatureTable.prototype.getColor = function (featureId, result) {
-  return this._batchTexture.getColor(featureId, result);
-};
-
-var scratchColor = new Color();
-ModelFeatureTable.prototype.applyStyle = function (style) {
-  var model = this._model;
-
-  if (!defined(style)) {
-    model._hasStyle = false;
-    this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
-    this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);
-    return;
-  }
-
-  for (var i = 0; i < this._featuresLength; i++) {
-    var feature = this.getFeature(i);
-    var color = defined(style.color)
-      ? defaultValue(
-          style.color.evaluateColor(feature, scratchColor),
-          BatchTexture.DEFAULT_COLOR_VALUE
-        )
-      : BatchTexture.DEFAULT_COLOR_VALUE;
-    var show = defined(style.show)
-      ? defaultValue(
-          style.show.evaluate(feature),
-          BatchTexture.DEFAULT_SHOW_VALUE
-        )
-      : BatchTexture.DEFAULT_SHOW_VALUE;
-    this.setColor(i, color);
-    this.setShow(i, show);
-  }
-
-  model.resetDrawCommands();
 };

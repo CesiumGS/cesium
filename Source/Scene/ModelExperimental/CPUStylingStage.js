@@ -1,17 +1,15 @@
 import ColorBlendMode from "../ColorBlendMode.js";
 import combine from "../../Core/combine.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
 
 var CPUStylingStage = {};
 
 CPUStylingStage.process = function (renderResources, model, frameState) {
   var shaderBuilder = renderResources.shaderBuilder;
-  shaderBuilder.addDefine(
-    "USE_CPU_STYLING",
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
+  shaderBuilder.addDefine("USE_CPU_STYLING", undefined, ShaderDestination.BOTH);
+  shaderBuilder.addVertexLines([CPUStylingStageVS]);
   shaderBuilder.addFragmentLines([CPUStylingStageFS]);
 
   if (model._hasStyle) {

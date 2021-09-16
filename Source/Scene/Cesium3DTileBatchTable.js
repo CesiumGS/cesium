@@ -66,12 +66,11 @@ function Cesium3DTileBatchTable(
 
   this._content = content;
 
-  var tileset = content._tileset;
   this._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
     owner: content,
-    statistics: defined(tileset) ? tileset._statistics : undefined,
+    statistics: content.tileset.statistics,
   });
 }
 

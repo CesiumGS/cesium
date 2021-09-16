@@ -1,6 +1,3 @@
-float featureId;
-vec2 featureSt;
-
 void featureStage()
 {
     #ifdef FEATURE_ID_TEXTURE
@@ -9,12 +6,17 @@ void featureStage()
     {
         featureSt = computeSt(featureId);
     }
+    // Floating point comparisons can be unreliable in GLSL, so we
+    // increment the v_featureId to make sure it's always greater
+    // then the model_featuresLength - a condition we check for in the
+    // pick ID, to avoid sampling the pick texture if the feature ID is
+    // greater than the number of features.
     else
     {
         featureId = model_featuresLength + 1.0;
     }
     #else
-    featureId = model_featureId;
-    featureSt = model_featureSt;
+    featureId = v_featureId;
+    featureSt = v_featureSt;
     #endif
 }

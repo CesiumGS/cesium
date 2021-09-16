@@ -116,6 +116,20 @@ Object.defineProperties(FeatureMetadata.prototype, {
       return this._featureTableCount;
     },
   },
+
+  /**
+   * The feature tables in the metadata.
+   *
+   * @memberof FeatureMetadata.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  featureTables: {
+    get: function () {
+      return this._featureTables;
+    },
+  },
 });
 
 /**
