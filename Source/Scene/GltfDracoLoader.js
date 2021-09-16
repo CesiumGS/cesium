@@ -179,9 +179,9 @@ GltfDracoLoader.prototype.process = function (frameState) {
 
   var decodeOptions = {
     // Need to make a copy of the typed array otherwise the underlying
-    // ArrayBuffer may be accessed on both the worker and the main thread and
-    // throw an error like "ArrayBuffer at index 0 is already detached".
-    // Look into SharedArrayBuffer at some point to get around this.
+    // ArrayBuffer may be accessed on both the worker and the main thread. This
+    // leads to errors such as "ArrayBuffer at index 0 is already detached".
+    // PERFORMANCE_IDEA: Look into SharedArrayBuffer to get around this.
     array: new Uint8Array(this._bufferViewTypedArray),
     bufferView: bufferView,
     compressedAttributes: compressedAttributes,

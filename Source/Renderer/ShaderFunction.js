@@ -3,7 +3,7 @@ import Check from "../Core/Check.js";
 /**
  * A utility for dynamically-generating a GLSL function
  *
- * @alias ShaderStruct
+ * @alias ShaderFunction
  * @constructor
  *
  * @see {@link ShaderBuilder}

@@ -3,7 +3,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
- * The dequantization stage generates shader code to dequantize properties
+ * The dequantization stage generates shader code to dequantize attributes
  * in the fragment shader
  *
  * @namespace DequantizationPipelineStage
@@ -16,12 +16,11 @@ DequantizationPipelineStage.name = "DequantizationPipelineStage"; // Helps with 
 var dequantizationFunctionId = "dequantizationStage";
 
 /**
- * Process a primitive with quantized properties. This stage modifies the
+ * Process a primitive with quantized attributes. This stage modifies the
  * following parts of the render resources:
  * <ul>
- *  <li> adds attribute and varying declarations for the vertex attributes in the vertex and fragment shaders
- *  <li> creates the objects required to create VertexArrays
- *  <li> sets the flag for point primitive types
+ *  <li>generates dequantization function and adds it to the shader</li>
+ *  <li>adds any uniforms needed for dequantization to the shader and uniform map</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
@@ -113,6 +112,8 @@ function generateOctDecodeLine(variableName, quantization) {
   // swizzle to avoid confusion
   var swizzle = quantization.octEncodedZXY ? ".zxy" : ".xyz";
 
+  // This generates lines such as:
+  // attributes.normal = czm_octDecode(a_encoded_normal, model_normalizationRange_normal).zxy;
   return (
     structField +
     " = czm_octDecode(" +
@@ -129,7 +130,10 @@ function generateDequantizeLine(variableName) {
   var structField = "attributes." + variableName;
   var encodedAttribute = "a_encoded_" + variableName;
   var offset = "model_quantizedVolumeOffset_" + variableName;
-  var dimensions = "model_quantizedVolumeStepSize_" + variableName;
+  var stepSize = "model_quantizedVolumeStepSize_" + variableName;
+
+  // This generates lines such as:
+  // attributes.texCoord_0 = model_quantizedVolumeOffset_texCoord_0 + a_encoded_texCoord_0 * model_quantizedVolumeStepSize;
   return (
     structField +
     " = " +
@@ -137,7 +141,7 @@ function generateDequantizeLine(variableName) {
     " + " +
     encodedAttribute +
     " * " +
-    dimensions +
+    stepSize +
     ";"
   );
 }

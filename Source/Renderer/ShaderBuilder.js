@@ -144,6 +144,12 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
  * @param {String} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
  * @param {String} structName The name of the struct as it will appear in the shader.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
+ * @example
+ * // generates the following struct in the fragment shader
+ * // struct TestStruct
+ * // {
+ * // };
+ * shaderBuilder.addStruct("testStructId", "TestStruct", ShaderDestination.FRAGMENT);
  */
 ShaderBuilder.prototype.addStruct = function (
   structId,
@@ -170,6 +176,15 @@ ShaderBuilder.prototype.addStruct = function (
  * @param {String} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
  * @param {String} type The GLSL type of the field
  * @param {String} identifier The identifier of the field.
+ * // generates the following struct in the fragment shader
+ * // struct TestStruct
+ * // {
+ * //    float minimum;
+ * //    float maximum;
+ * // };
+ * shaderBuilder.addStruct("testStructId", "TestStruct", ShaderDestination.FRAGMENT);
+ * shaderBuilder.addStructField("testStructId", "float", "maximum");
+ * shaderBuilder.addStructField("testStructId", "float", "minimum");
  */
 ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
   //>>includeStart('debug', pragmas.debug);
@@ -185,6 +200,12 @@ ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
  * @param {String} functionName The name of the function. This will be used to identify the function in {@link ShaderBuilder#addFunctionLine}.
  * @param {String} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
+ * @example
+ * // generates the following function in the vertex shader
+ * // vec3 testFunction(float parameter)
+ * // {
+ * // }
+ * shaderBuilder.addStruct("testFunction", "vec3 testFunction(float parameter)", ShaderDestination.VERTEX);
  */
 ShaderBuilder.prototype.addFunction = function (
   functionName,
@@ -211,6 +232,14 @@ ShaderBuilder.prototype.addFunction = function (
  * Add a line to a dynamically-generated function
  * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
  * @param {String} line The line of GLSL code to add to the function body. Do not include any whitespace at either end, but do include the semicolon
+ * @example
+ * // generates the following function in the vertex shader
+ * // vec3 testFunction(float parameter)
+ * // {
+ * //   return vec3(parameter);
+ * // }
+ * shaderBuilder.addStruct("testFunction", "vec3 testFunction(float parameter)", ShaderDestination.VERTEX);
+ * shaderBuilder.addFunctionLine("testFunction", "return vec3(parameter);")
  */
 ShaderBuilder.prototype.addFunctionLine = function (functionName, line) {
   //>>includeStart('debug', pragmas.debug);
