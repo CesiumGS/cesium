@@ -127,11 +127,7 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   var shaderBuilder = renderResources.shaderBuilder;
   var attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
 
-  addAttributeToAttributesArray(
-    renderResources.attributes,
-    attribute,
-    attributeIndex
-  );
+  addAttributeToRenderResources(renderResources, attribute, attributeIndex);
   addAttributeDeclaration(shaderBuilder, attributeInfo);
   addVaryingDeclaration(shaderBuilder, attributeInfo);
 
@@ -164,8 +160,8 @@ function addSemanticDefine(shaderBuilder, attribute) {
   }
 }
 
-function addAttributeToAttributesArray(
-  attributesArray,
+function addAttributeToRenderResources(
+  renderResources,
   attribute,
   attributeIndex
 ) {
@@ -191,7 +187,7 @@ function addAttributeToAttributesArray(
     normalize: attribute.normalized,
   };
 
-  attributesArray.push(vertexAttribute);
+  renderResources.attributes.push(vertexAttribute);
 }
 
 function addVaryingDeclaration(shaderBuilder, attributeInfo) {
