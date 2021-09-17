@@ -42,7 +42,6 @@ import TextureManager from "./TextureManager.js";
  * Variable sets parsed from the user-defined fragment shader text.
  * @typedef {Object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
- * @property {VariableSet} positionSet A set of all position variables like positionWC or positionEC used in the fragment shader via the <code>fsInput</code> struct
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -219,7 +218,6 @@ export default function CustomShader(options) {
    * @private
    */
   this.usedVariablesFragment = {
-    positionSet: {},
     attributeSet: {},
     materialSet: {},
   };
@@ -300,10 +298,6 @@ function findUsedVariables(customShader) {
   if (defined(fragmentShaderText)) {
     attributeSet = customShader.usedVariablesFragment.attributeSet;
     getVariables(fragmentShaderText, attributeRegex, attributeSet);
-
-    var positionRegex = /fsInput\.(position\w+)/g;
-    var positionSet = customShader.usedVariablesFragment.positionSet;
-    getVariables(fragmentShaderText, positionRegex, positionSet);
 
     var materialRegex = /material\.(\w+)/g;
     var materialSet = customShader.usedVariablesFragment.materialSet;

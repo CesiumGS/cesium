@@ -83,7 +83,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
         DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
         DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
         [
-          "    attributes.normal = czm_octDecode(a_quantized_normal, model_normalizationRange_normal).zxy;",
+          "    attributes.normalMC = czm_octDecode(a_quantized_normalMC, model_normalizationRange_normalMC).zxy;",
           "    attributes.positionMC = model_quantizedVolumeOffset_positionMC + a_quantized_positionMC * model_quantizedVolumeStepSize_positionMC;",
         ]
       );
@@ -106,7 +106,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       DequantizationPipelineStage.process(renderResources, primitive);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-        "uniform float model_normalizationRange_normal;",
+        "uniform float model_normalizationRange_normalMC;",
         "uniform vec2 model_quantizedVolumeOffset_texCoord_0;",
         "uniform vec2 model_quantizedVolumeStepSize_texCoord_0;",
         "uniform vec3 model_quantizedVolumeOffset_positionMC;",
@@ -115,7 +115,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
 
       var uniformValues = {
-        normalRange: uniformMap.model_normalizationRange_normal(),
+        normalRange: uniformMap.model_normalizationRange_normalMC(),
         positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
         positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
         texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),

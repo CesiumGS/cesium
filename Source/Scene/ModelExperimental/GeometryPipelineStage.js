@@ -195,10 +195,17 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   var varyingName = "v_" + variableName;
 
   var glslType;
-  if (variableName === "tangent") {
+  if (variableName === "normalMC") {
+    // though the attribute is in model coordinates, the varying is
+    // in eye coordinates.
+    varyingName = "v_normalEC";
+    glslType = attributeInfo.glslType;
+  } else if (variableName === "tangentMC") {
     // Tangent's glslType is vec4, but in the shader it is split into
     // vec3 tangent and vec3 bitangent
     glslType = "vec3";
+    // like normalMC, the varying is converted to eye coordinates
+    varyingName = "v_tangentEC";
   } else {
     glslType = attributeInfo.glslType;
   }
@@ -235,11 +242,17 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
     // Always declare color as a vec4, even if it was a vec3
     shaderBuilder.addStructField(vsStructId, "vec4", "color");
     shaderBuilder.addStructField(fsStructId, "vec4", "color");
-  } else if (variableName === "tangent") {
+  } else if (variableName === "tangentMC") {
     // declare tangent as vec3, the w component is only used for computing
-    // the bitangent
-    shaderBuilder.addStructField(vsStructId, "vec3", "tangent");
-    shaderBuilder.addStructField(fsStructId, "vec3", "tangent");
+    // the bitangent. Also, the tangent is in model coordinates in the vertex
+    // shader but in eye space in the fragment coordinates
+    shaderBuilder.addStructField(vsStructId, "vec3", "tangentMC");
+    shaderBuilder.addStructField(fsStructId, "vec3", "tangentEC");
+  } else if (variableName === "normalMC") {
+    // Normals are in model coordinates in the vertex shader but in eye
+    // coordinates in the fragment shader
+    shaderBuilder.addStructField(vsStructId, "vec3", "normalMC");
+    shaderBuilder.addStructField(fsStructId, "vec3", "normalEC");
   } else {
     shaderBuilder.addStructField(
       vsStructId,
@@ -263,8 +276,8 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
   var functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   var variableName = attributeInfo.variableName;
   var line;
-  if (variableName === "tangent") {
-    line = "attributes.tangent = a_tangent.xyz;";
+  if (variableName === "tangentMC") {
+    line = "attributes.tangentMC = a_tangentMC.xyz;";
   } else {
     line = "attributes." + variableName + " = a_" + variableName + ";";
   }
@@ -317,20 +330,20 @@ function handleBitangents(shaderBuilder, attributes) {
   shaderBuilder.addFunctionLines(
     GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
     [
-      "attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);",
+      "attributes.bitangentMC = normalize(cross(a_normalMC, a_tangentMC.xyz) * a_tangentMC.w);",
     ]
   );
 
-  shaderBuilder.addVarying("vec3", "v_bitangent");
+  shaderBuilder.addVarying("vec3", "v_bitangentEC");
   shaderBuilder.addStructField(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
     "vec3",
-    "bitangent"
+    "bitangentMC"
   );
   shaderBuilder.addStructField(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "vec3",
-    "bitangent"
+    "bitangentEC"
   );
 }
 

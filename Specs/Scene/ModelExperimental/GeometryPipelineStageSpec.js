@@ -224,7 +224,7 @@ describe(
           shaderBuilder,
           GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
           GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
-          ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
+          ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
@@ -234,7 +234,7 @@ describe(
             "    vec3 positionMC;",
             "    vec3 positionWC;",
             "    vec3 positionEC;",
-            "    vec3 normal;",
+            "    vec3 normalEC;",
             "    vec2 texCoord_0;",
           ]
         );
@@ -244,7 +244,7 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
-            "    attributes.normal = a_normal;",
+            "    attributes.normalMC = a_normalMC;",
             "    attributes.texCoord_0 = a_texCoord_0;",
           ]
         );
@@ -261,7 +261,7 @@ describe(
           ["    attributes.texCoord_0 = v_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normal;",
+          "varying vec3 v_normalEC;",
           "varying vec2 v_texCoord_0;",
           "varying vec3 v_positionEC;",
           "varying vec3 v_positionMC;",
@@ -278,7 +278,7 @@ describe(
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
           "attribute vec3 a_positionMC;",
-          ["attribute vec3 a_normal;", "attribute vec2 a_texCoord_0;"]
+          ["attribute vec3 a_normalMC;", "attribute vec2 a_texCoord_0;"]
         );
       });
     });
@@ -347,9 +347,9 @@ describe(
           GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
-            "    vec3 normal;",
-            "    vec3 tangent;",
-            "    vec3 bitangent;",
+            "    vec3 normalMC;",
+            "    vec3 tangentMC;",
+            "    vec3 bitangentMC;",
             "    vec2 texCoord_0;",
           ]
         );
@@ -361,9 +361,9 @@ describe(
             "    vec3 positionMC;",
             "    vec3 positionWC;",
             "    vec3 positionEC;",
-            "    vec3 normal;",
-            "    vec3 tangent;",
-            "    vec3 bitangent;",
+            "    vec3 normalEC;",
+            "    vec3 tangentEC;",
+            "    vec3 bitangentEC;",
             "    vec2 texCoord_0;",
           ]
         );
@@ -373,9 +373,9 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
-            "    attributes.normal = a_normal;",
-            "    attributes.tangent = a_tangent.xyz;",
-            "    attributes.bitangent = normalize(cross(a_normal, a_tangent.xyz) * a_tangent.w);",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.tangentMC = a_tangentMC.xyz;",
+            "    attributes.bitangentMC = normalize(cross(a_normalMC, a_tangentMC.xyz) * a_tangentMC.w);",
             "    attributes.texCoord_0 = a_texCoord_0;",
           ]
         );
@@ -392,9 +392,9 @@ describe(
           ["    attributes.texCoord_0 = v_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normal;",
-          "varying vec3 v_tangent;",
-          "varying vec3 v_bitangent;",
+          "varying vec3 v_normalEC;",
+          "varying vec3 v_tangentEC;",
+          "varying vec3 v_bitangentEC;",
           "varying vec2 v_texCoord_0;",
           "varying vec3 v_positionEC;",
           "varying vec3 v_positionMC;",
@@ -416,8 +416,8 @@ describe(
           shaderBuilder,
           "attribute vec3 a_positionMC;",
           [
-            "attribute vec3 a_normal;",
-            "attribute vec4 a_tangent;",
+            "attribute vec3 a_normalMC;",
+            "attribute vec4 a_tangentMC;",
             "attribute vec2 a_texCoord_0;",
           ]
         );
@@ -607,7 +607,7 @@ describe(
           GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
           [
             "    vec3 positionMC;",
-            "    vec3 normal;",
+            "    vec3 normalMC;",
             "    vec4 color_0;",
             "    vec2 texCoord_0;",
           ]
@@ -620,7 +620,7 @@ describe(
             "    vec3 positionMC;",
             "    vec3 positionWC;",
             "    vec3 positionEC;",
-            "    vec3 normal;",
+            "    vec3 normalEC;",
             "    vec4 color_0;",
             "    vec2 texCoord_0;",
           ]
@@ -631,7 +631,7 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
-            "    attributes.normal = a_normal;",
+            "    attributes.normalMC = a_normalMC;",
             "    attributes.color_0 = a_color_0;",
             "    attributes.texCoord_0 = a_texCoord_0;",
           ]
@@ -655,7 +655,7 @@ describe(
           ]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normal;",
+          "varying vec3 v_normalEC;",
           "varying vec4 v_color_0;",
           "varying vec2 v_texCoord_0;",
           "varying vec3 v_positionEC;",
@@ -676,7 +676,7 @@ describe(
           shaderBuilder,
           "attribute vec3 a_positionMC;",
           [
-            "attribute vec3 a_normal;",
+            "attribute vec3 a_normalMC;",
             "attribute vec4 a_color_0;",
             "attribute vec2 a_texCoord_0;",
           ]
@@ -821,7 +821,11 @@ describe(
           shaderBuilder,
           GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
           GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
-          ["    vec3 positionMC;", "    vec3 normal;", "    float featureId_0;"]
+          [
+            "    vec3 positionMC;",
+            "    vec3 normalMC;",
+            "    float featureId_0;",
+          ]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
@@ -831,7 +835,7 @@ describe(
             "    vec3 positionMC;",
             "    vec3 positionWC;",
             "    vec3 positionEC;",
-            "    vec3 normal;",
+            "    vec3 normalEC;",
             "    float featureId_0;",
           ]
         );
@@ -841,14 +845,14 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
           [
             "    attributes.positionMC = a_positionMC;",
-            "    attributes.normal = a_normal;",
+            "    attributes.normalMC = a_normalMC;",
             "    attributes.featureId_0 = a_featureId_0;",
           ]
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
           "attribute vec3 a_positionMC;",
-          ["attribute float a_featureId_0;", "attribute vec3 a_normal;"]
+          ["attribute float a_featureId_0;", "attribute vec3 a_normalMC;"]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_FEATURE_ID_0",
@@ -993,7 +997,7 @@ describe(
           shaderBuilder,
           GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
           GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
-          ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
+          ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
@@ -1003,7 +1007,7 @@ describe(
             "    vec3 positionMC;",
             "    vec3 positionWC;",
             "    vec3 positionEC;",
-            "    vec3 normal;",
+            "    vec3 normalEC;",
             "    vec2 texCoord_0;",
           ]
         );
@@ -1018,7 +1022,7 @@ describe(
           shaderBuilder,
           "attribute vec3 a_quantized_positionMC;",
           [
-            "attribute vec2 a_quantized_normal;",
+            "attribute vec2 a_quantized_normalMC;",
             "attribute vec2 a_quantized_texCoord_0;",
           ]
         );

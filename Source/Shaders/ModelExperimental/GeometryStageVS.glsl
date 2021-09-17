@@ -19,15 +19,15 @@ void geometryStage(inout ProcessedAttributes attributes)
     #endif
 
     #ifdef HAS_NORMALS
-    v_normal = czm_normal * attributes.normal;
+    v_normalEC = czm_normal * attributes.normalMC;
     #endif
 
     #ifdef HAS_TANGENTS
-    v_tangent = attributes.tangent;    
+    v_tangentEC = normalize(czm_normal * attributes.tangentMC);    
     #endif
 
     #ifdef HAS_BITANGENTS
-    v_bitangent = attributes.bitangent;
+    v_bitangentEC = normalize(czm_normal * attributes.bitangentMC);
     #endif
 
     // All other varyings need to be dynamically generated in

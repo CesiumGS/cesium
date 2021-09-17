@@ -143,7 +143,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
       attribute: attribute,
       isQuantized: true,
-      variableName: "normal",
+      variableName: "normalMC",
       hasSemantic: true,
       glslType: "vec3",
       quantizedGlslType: "vec2",

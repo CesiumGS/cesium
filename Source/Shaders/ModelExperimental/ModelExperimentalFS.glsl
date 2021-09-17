@@ -11,7 +11,7 @@ czm_modelMaterial defaultModelMaterial()
     material.specular = vec3(0.04); // dielectric (non-metal)
     material.roughness = 0.0;
     material.occlusion = 1.0;
-    material.normal = vec3(0.0, 0.0, 1.0);
+    material.normalEC = vec3(0.0, 0.0, 1.0);
     material.emissive = vec3(0.0);
     material.alpha = 1.0;
     return material;

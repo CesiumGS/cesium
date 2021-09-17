@@ -18,7 +18,7 @@ vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
 vec3 computeNormal(ProcessedAttributes attributes)
 {
     // Geometry normal. This is already normalized 
-    vec3 ng = attributes.normal;
+    vec3 ng = attributes.normalEC;
 
     vec3 normal = ng;
     #ifdef HAS_NORMAL_TEXTURE
@@ -29,8 +29,8 @@ vec3 computeNormal(ProcessedAttributes attributes)
 
         // If HAS_BITANGENTS is set, then HAS_TANGENTS is also set
         #ifdef HAS_BITANGENTS
-        vec3 t = attributes.tangent;
-        vec3 b = attributes.bitangent;
+        vec3 t = attributes.tangentEC;
+        vec3 b = attributes.bitangentEC;
         mat3 tbn = mat3(t, b, ng);
         vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
         normal = normalize(tbn * (2.0 * n - 1.0));
@@ -58,7 +58,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
 {
 
     #ifdef HAS_NORMALS
-    material.normal = computeNormal(attributes);
+    material.normalEC = computeNormal(attributes);
     #endif
 
     vec4 baseColorWithAlpha = vec4(1.0);

@@ -4,7 +4,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The dequantization stage generates shader code to dequantize attributes
- * in the fragment shader
+ * in the vertex shader
  *
  * @namespace DequantizationPipelineStage
  *

@@ -189,22 +189,24 @@ function generateAttributeField(name, attribute) {
 
 // GLSL types of standard attribute types when uniquely defined
 var attributeTypeLUT = {
-  positionMC: "vec3",
+  position: "vec3",
   normal: "vec3",
   tangent: "vec3",
   bitangent: "vec3",
   texCoord: "vec2",
+  color: "vec3",
   joints: "ivec4",
   weights: "vec4",
 };
 
 // Corresponding attribute values
 var attributeDefaultValueLUT = {
-  positionMC: "vec3(0.0)",
+  position: "vec3(0.0)",
   normal: "vec3(0.0, 0.0, 1.0)",
   tangent: "vec3(1.0, 0.0, 0.0)",
   bitangent: "vec3(0.0, 1.0, 0.0)",
   texCoord: "vec2(0.0)",
+  color: "vec4(1.0)",
   joints: "ivec4(0)",
   weights: "vec4(0.0)",
 };
@@ -212,11 +214,12 @@ var attributeDefaultValueLUT = {
 function inferAttributeDefaults(attributeName) {
   // remove trailing set indices. E.g. "texCoord_0" -> "texCoord"
   var trimmed = attributeName.replace(/_[0-9]+$/, "");
+  // also remove the MC/EC since they will have the same default value
+  trimmed = trimmed.replace(/(MC|EC)$/, "");
+
   var glslType = attributeTypeLUT[trimmed];
   var value = attributeDefaultValueLUT[trimmed];
 
-  // Return undefined for other cases that cannot be easily inferred:
-  // - COLOR_x is either a vec3 or vec4
   // - _CUSTOM_ATTRIBUTE has an unknown type.
   if (!defined(glslType)) {
     return undefined;
@@ -231,7 +234,8 @@ function inferAttributeDefaults(attributeName) {
 function generateVertexShaderLines(customShader, namedAttributes, vertexLines) {
   var categories = partitionAttributes(
     namedAttributes,
-    customShader.usedVariablesVertex.attributeSet
+    customShader.usedVariablesVertex.attributeSet,
+    false
   );
   var addToShader = categories.addToShader;
   var needsDefault = categories.missingAttributes;
@@ -290,31 +294,32 @@ function generateVertexShaderLines(customShader, namedAttributes, vertexLines) {
 }
 
 function generatePositionBuiltins(customShader) {
-  var fragmentInputFields = [];
+  var attributeFields = [];
   var initializationLines = [];
-  var usedVariables = customShader.usedVariablesFragment.positionSet;
+  var usedVariables = customShader.usedVariablesFragment.attributeSet;
 
-  // Model space position is the same position as in the glTF accessor.
-  if (usedVariables.hasOwnProperty("positionMC")) {
-    fragmentInputFields.push(["vec3", "positionMC"]);
-    initializationLines.push("fsInput.positionMC = attributes.positionMC;");
-  }
+  // Model space position is the same position as in the glTF accessor,
+  // this is already added to the shader with other attributes.
 
   // World coordinates in ECEF coordinates. Note that this is
   // low precision (32-bit floats) on the GPU.
   if (usedVariables.hasOwnProperty("positionWC")) {
-    fragmentInputFields.push(["vec3", "positionWC"]);
-    initializationLines.push("fsInput.positionWC = attributes.positionWC;");
+    attributeFields.push(["vec3", "positionWC"]);
+    initializationLines.push(
+      "fsInput.attributes.positionWC = attributes.positionWC;"
+    );
   }
 
   // position in eye coordinates
   if (usedVariables.hasOwnProperty("positionEC")) {
-    fragmentInputFields.push(["vec3", "positionEC"]);
-    initializationLines.push("fsInput.positionEC = attributes.positionEC;");
+    attributeFields.push(["vec3", "positionEC"]);
+    initializationLines.push(
+      "fsInput.attributes.positionEC = attributes.positionEC;"
+    );
   }
 
   return {
-    fragmentInputFields: fragmentInputFields,
+    attributeFields: attributeFields,
     initializationLines: initializationLines,
   };
 }
@@ -326,7 +331,8 @@ function generateFragmentShaderLines(
 ) {
   var categories = partitionAttributes(
     namedAttributes,
-    customShader.usedVariablesFragment.attributeSet
+    customShader.usedVariablesFragment.attributeSet,
+    true
   );
   var addToShader = categories.addToShader;
   var needsDefault = categories.missingAttributes;
@@ -338,6 +344,7 @@ function generateFragmentShaderLines(
   for (variableName in addToShader) {
     if (addToShader.hasOwnProperty(variableName)) {
       var attribute = addToShader[variableName];
+
       var attributeField = generateAttributeField(variableName, attribute);
       attributeFields.push(attributeField);
 
@@ -384,41 +391,78 @@ function generateFragmentShaderLines(
   var positionBuiltins = generatePositionBuiltins(customShader);
 
   fragmentLines.enabled = true;
-  fragmentLines.attributeFields = attributeFields;
-  fragmentLines.fragmentInputFields = positionBuiltins.fragmentInputFields;
+  fragmentLines.attributeFields = attributeFields.concat(
+    positionBuiltins.attributeFields
+  );
   fragmentLines.initializationLines = positionBuiltins.initializationLines.concat(
     initializationLines
   );
 }
 
-function partitionAttributes(primitiveAttributes, shaderAttributeSet) {
+// computed positions should be treated like regular attributes for
+var builtinAttributes = {
+  positionWC: true,
+  positionEC: true,
+};
+
+function partitionAttributes(
+  primitiveAttributes,
+  shaderAttributeSet,
+  isFragmentShader
+) {
   // shaderAttributes = set of all attributes used in the shader
   // primitiveAttributes = set of all the primitive's attributes
   // partition into three categories:
   // - addToShader = shaderAttributes intersect primitiveAttributes
-  // - missingAttributes = shaderAttributes - primitiveAttributes
-  // - unneededAttributes = primitive-attributes - shaderAttributes
+  // - missingAttributes = shaderAttributes - primitiveAttributes - builtinAttributes
+  // - unneededAttributes = (primitiveAttributes - shaderAttributes) U builtinAttributes
   //
   // addToShader are attributes that should be added to the shader.
   // missingAttributes are attributes for which we need to provide a default value
   // unneededAttributes are other attributes that can be skipped.
 
+  var renamed;
   var attributeName;
   var addToShader = {};
   for (attributeName in primitiveAttributes) {
     if (primitiveAttributes.hasOwnProperty(attributeName)) {
       var attribute = primitiveAttributes[attributeName];
 
-      if (shaderAttributeSet.hasOwnProperty(attributeName)) {
-        addToShader[attributeName] = attribute;
+      // normals and tangents are in model coordinates in the attributes but
+      // in eye coordinates in the fragment shader.
+      renamed = attributeName;
+      if (isFragmentShader && attributeName === "normalMC") {
+        renamed = "normalEC";
+      } else if (isFragmentShader && attributeName === "tangentMC") {
+        renamed = "tangentEC";
+      }
+
+      if (shaderAttributeSet.hasOwnProperty(renamed)) {
+        addToShader[renamed] = attribute;
       }
     }
   }
 
   var missingAttributes = [];
   for (attributeName in shaderAttributeSet) {
-    if (!primitiveAttributes.hasOwnProperty(attributeName)) {
-      missingAttributes.push(attributeName);
+    if (shaderAttributeSet.hasOwnProperty(attributeName)) {
+      if (builtinAttributes.hasOwnProperty(attributeName)) {
+        // Builtins are handled separately from attributes, so skip them here
+        continue;
+      }
+
+      // normals and tangents are in model coordinates in the attributes but
+      // in eye coordinates in the fragment shader.
+      renamed = attributeName;
+      if (isFragmentShader && attributeName === "normalEC") {
+        renamed = "normalMC";
+      } else if (isFragmentShader && attributeName === "tangentEC") {
+        renamed = "tangentMC";
+      }
+
+      if (!primitiveAttributes.hasOwnProperty(renamed)) {
+        missingAttributes.push(attributeName);
+      }
     }
   }
 
@@ -452,9 +496,9 @@ function generateShaderLines(customShader, primitive) {
   // for use in the fragmentShader. However, this can be skipped if:
   // - positionWC isn't used in the fragment shader
   // - or the fragment shader is disabled
+  var attributeSetFS = customShader.usedVariablesFragment.attributeSet;
   var shouldComputePositionWC =
-    "positionWC" in customShader.usedVariablesFragment.positionSet &&
-    fragmentLines.enabled;
+    attributeSetFS.hasOwnProperty("positionWC") && fragmentLines.enabled;
 
   // Return any generated shader code along with some flags to indicate which
   // defines should be added.
@@ -544,14 +588,6 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
     "attributes"
   );
-
-  var fragmentInputFields = fragmentLines.fragmentInputFields;
-  for (i = 0; i < fragmentInputFields.length; i++) {
-    field = fragmentInputFields[i];
-    glslType = field[0];
-    variableName = field[1];
-    shaderBuilder.addStructField(structId, glslType, variableName);
-  }
 
   var functionId =
     CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS;

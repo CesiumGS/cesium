@@ -9,15 +9,15 @@ void geometryStage(out ProcessedAttributes attributes)
 
   #ifdef HAS_NORMALS
   // renormalize after interpolation
-  attributes.normal = normalize(v_normal);
+  attributes.normalEC = normalize(v_normalEC);
   #endif
 
   #ifdef HAS_TANGENTS
-  attributes.tangent = normalize(v_tangent);
+  attributes.tangentEC = normalize(v_tangentEC);
   #endif
 
   #ifdef HAS_BITANGENTS
-  attributes.bitangent = normalize(v_bitangent);
+  attributes.bitangentEC = normalize(v_bitangentEC);
   #endif
 
   // Everything else is dynamically generated in GeometryPipelineStage
