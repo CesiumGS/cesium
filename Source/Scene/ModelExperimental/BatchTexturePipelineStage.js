@@ -1,6 +1,5 @@
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The batch texture stage is responsible for setting up the batch texture for the primitive.

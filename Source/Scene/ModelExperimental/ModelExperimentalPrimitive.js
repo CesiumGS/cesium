@@ -94,7 +94,6 @@ function initialize(runtimePrimitive) {
     primitive.attributes
   );
 
-  var pipelineStages = runtimePrimitive.pipelineStages;
   pipelineStages.push(GeometryPipelineStage);
 
   if (hasQuantization) {
