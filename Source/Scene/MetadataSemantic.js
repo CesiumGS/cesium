@@ -63,7 +63,7 @@ var MetadataSemantic = {
    * @constant
    * @private
    */
-  TILE_MAXIMUM_HEIGHT: "TILE_MINIMUM_HEIGHT",
+  TILE_MAXIMUM_HEIGHT: "TILE_MAXIMUM_HEIGHT",
   /**
    * The horizon occlusion point for a tile, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
    *
@@ -113,7 +113,7 @@ var MetadataSemantic = {
    * @constant
    * @private
    */
-  CONTENT_MAXIMUM_HEIGHT: "CONTENT_MINIMUM_HEIGHT",
+  CONTENT_MAXIMUM_HEIGHT: "CONTENT_MAXIMUM_HEIGHT",
   /**
    * The horizon occlusion point for the content of a tile, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
    *
