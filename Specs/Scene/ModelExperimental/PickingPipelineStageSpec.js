@@ -7,6 +7,7 @@ import {
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/PickingPipelineStage", function () {
@@ -97,10 +98,10 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       PickingPipelineStage.process(renderResources, primitive, frameState);
 
-      var fragmentUniformLines =
-        renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
-
-      expect(fragmentUniformLines[0]).toEqual("uniform vec4 czm_pickColor;");
+      var shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform vec4 czm_pickColor;",
+      ]);
 
       var pickObject = context._pickObjects["1"];
       expect(pickObject).toBeDefined();
@@ -149,15 +150,13 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
       PickingPipelineStage.process(renderResources, primitive, frameState);
 
-      var attributeLines = renderResources.shaderBuilder._attributeLines;
-      var vertexVaryingLines =
-        renderResources.shaderBuilder._vertexShaderParts.varyingLines;
-      var fragmentVaryingLines =
-        renderResources.shaderBuilder._fragmentShaderParts.varyingLines;
-
-      expect(attributeLines[0]).toEqual("attribute vec4 a_pickColor;");
-      expect(vertexVaryingLines[0]).toEqual("varying vec4 v_pickColor;");
-      expect(fragmentVaryingLines[0]).toEqual("varying vec4 v_pickColor;");
+      var shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute vec4 a_pickColor;",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec4 v_pickColor;",
+      ]);
 
       var i = 0;
       for (var key in context._pickObjects) {
@@ -229,12 +228,10 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       };
       expectUniformMap(renderResources.uniformMap, expectedUniforms);
 
-      var fragmentUniformLines =
-        renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
-
-      expect(fragmentUniformLines[0]).toEqual(
-        "uniform sampler2D model_pickTexture;"
-      );
+      var shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform sampler2D model_pickTexture;",
+      ]);
 
       expect(renderResources.pickId).toEqual(
         "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))"

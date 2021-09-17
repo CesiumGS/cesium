@@ -177,9 +177,11 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
-  it("Configures dequantization", function () {
+  it("configures dequantization", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [],
         attributes: [
           {
             semantic: "POSITION",
@@ -190,6 +192,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
           },
         ],
       },
+      node: mockNode,
       model: mockModel,
     });
 

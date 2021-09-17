@@ -42,22 +42,14 @@ BatchTexturePipelineStage.process = function (
 
   // Number of features in the feature table.
   var featuresLength = featureTable.featuresLength;
-  shaderBuilder.addUniform(
-    "float",
-    "model_featuresLength",
-    ShaderDestination.BOTH
-  );
+  shaderBuilder.addUniform("float", "model_featuresLength");
   batchTextureUniforms.model_featuresLength = function () {
     return featuresLength;
   };
 
   // Batch texture
   var batchTexture = featureTable.batchTexture;
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "model_batchTexture",
-    ShaderDestination.VERTEX
-  );
+  shaderBuilder.addUniform("sampler2D", "model_batchTexture");
   batchTextureUniforms.model_batchTexture = function () {
     return batchTexture.batchTexture;
   };

@@ -172,11 +172,6 @@ function processFeatureIdTextures(
 
   shaderBuilder.addDefine(
     "FEATURE_ID_TEXCOORD",
-    "a_texCoord_" + featureIdTextureReader.texCoord,
-    ShaderDestination.VERTEX
-  );
-  shaderBuilder.addDefine(
-    "FEATURE_ID_TEXCOORD",
     "v_texCoord_" + featureIdTextureReader.texCoord,
     ShaderDestination.FRAGMENT
   );
