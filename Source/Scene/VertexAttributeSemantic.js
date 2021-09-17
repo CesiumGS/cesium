@@ -78,7 +78,7 @@ var VertexAttributeSemantic = {
 function semanticToVariableName(semantic) {
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
-      return "position";
+      return "positionMC";
     case VertexAttributeSemantic.NORMAL:
       return "normal";
     case VertexAttributeSemantic.TANGENT:

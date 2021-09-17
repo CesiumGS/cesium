@@ -46,22 +46,19 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
 }
 #endif
 
-
-czm_modelMaterial lightingStage(czm_modelMaterial inputMaterial)
+void lightingStage(inout czm_modelMaterial material)
 {
     // Even though the lighting will only set the diffuse color,
-    // pass all other properties too so further stages have access to them.
-    czm_modelMaterial outputMaterial = inputMaterial;
+    // pass all other properties so further stages have access to them.
     vec3 color = vec3(0.0);
 
     #ifdef LIGHTING_PBR
-    color = computePbrLighting(inputMaterial);
+    color = computePbrLighting(material);
     #else // unlit
-    color = inputMaterial.diffuse;
+    color = material.diffuse;
     #endif
 
     color = LINEARtoSRGB(color);
 
-    outputMaterial.diffuse = color;
-    return outputMaterial;
+    material.diffuse = color;
 }

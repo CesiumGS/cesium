@@ -117,7 +117,7 @@ export default function CustomShader(options) {
 
   /**
    * A value determining how the custom shader interacts with the overall
-   * fragment shader. This is used by {@link CustomShaderStage}
+   * fragment shader. This is used by {@link CustomShaderPipelineStage}
    *
    * @type {CustomShaderMode}
    * @readonly
@@ -126,7 +126,7 @@ export default function CustomShader(options) {
   this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
   /**
    * The lighting model to use when using the custom shader.
-   * This is used by {@link CustomShaderStage}
+   * This is used by {@link CustomShaderPipelineStage}
    *
    * @type {LightingModel}
    * @readonly
@@ -143,7 +143,7 @@ export default function CustomShader(options) {
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
   /**
    * Additional varyings as declared by the user.
-   * This is used by {@link CustomShaderStage}
+   * This is used by {@link CustomShaderPipelineStage}
    *
    * @type {Object.<String, VaryingType>}
    * @readonly
@@ -205,7 +205,7 @@ export default function CustomShader(options) {
 
   /**
    * A collection of variables used in <code>vertexShaderText</code>. This
-   * is used only for optimizations in {@link CustomShaderStage}.
+   * is used only for optimizations in {@link CustomShaderPipelineStage}.
    * @type {VertexVariableSets}
    * @private
    */
@@ -214,7 +214,7 @@ export default function CustomShader(options) {
   };
   /**
    * A collection of variables used in <code>fragmentShaderText</code>. This
-   * is used only for optimizations in {@link CustomShaderStage}.
+   * is used only for optimizations in {@link CustomShaderPipelineStage}.
    * @type {FragmentVariableSets}
    * @private
    */
