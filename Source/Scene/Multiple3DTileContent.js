@@ -111,7 +111,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * @memberof Multiple3DTileContent.prototype
    * @private
    */
-   features: {
+  features: {
     get: function () {
       return [];
     },
