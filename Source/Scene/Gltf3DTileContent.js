@@ -38,6 +38,12 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
 }
 
 Object.defineProperties(Gltf3DTileContent.prototype, {
+  features: {
+    get: function () {
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return 0;

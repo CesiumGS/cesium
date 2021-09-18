@@ -62,6 +62,16 @@ function Instanced3DModel3DTileContent(
 Instanced3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
 Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
+  features: {
+    get: function () {
+      if (defined(this._batchTable)) {
+        createFeatures(this);
+        return this._features;
+      }
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return this._batchTable.featuresLength;

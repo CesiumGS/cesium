@@ -48,6 +48,16 @@ function Geometry3DTileContent(
 }
 
 Object.defineProperties(Geometry3DTileContent.prototype, {
+  features: {
+    get: function () {
+      if (defined(this._batchTable)) {
+        createFeatures(this);
+        return this._features;
+      }
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return defined(this._batchTable) ? this._batchTable.featuresLength : 0;

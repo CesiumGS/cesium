@@ -27,6 +27,12 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
 }
 
 Object.defineProperties(Tileset3DTileContent.prototype, {
+  features: {
+    get: function () {
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return 0;

@@ -57,6 +57,16 @@ function PointCloud3DTileContent(
 }
 
 Object.defineProperties(PointCloud3DTileContent.prototype, {
+  features: {
+    get: function () {
+      if (defined(this._batchTable)) {
+        createFeatures(this);
+        return this._features;
+      }
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       if (defined(this._batchTable)) {

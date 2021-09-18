@@ -30,7 +30,7 @@ function Cesium3DTileContent() {
 }
 
 Object.defineProperties(Cesium3DTileContent.prototype, {
-    /**
+  /**
    * Gets the features in the tile.
    *
    * @memberof Cesium3DTileContent.prototype

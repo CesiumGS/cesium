@@ -57,6 +57,16 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
 }
 
 Object.defineProperties(Vector3DTileContent.prototype, {
+  features: {
+    get: function () {
+      if (defined(this._batchTable)) {
+        createFeatures(this);
+        return this._features;
+      }
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return defined(this._batchTable) ? this._batchTable.featuresLength : 0;

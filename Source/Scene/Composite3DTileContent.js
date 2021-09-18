@@ -60,6 +60,17 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+   * always returns <code>[]</code>.  Instead call <code>features</code> for the features in the composite.
+   * @memberof Composite3DTileContent.prototype
+   */
+   features: {
+    get: function () {
+      return [];
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
    * @memberof Composite3DTileContent.prototype
    */

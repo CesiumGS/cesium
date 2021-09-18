@@ -22,6 +22,12 @@ function Empty3DTileContent(tileset, tile) {
 }
 
 Object.defineProperties(Empty3DTileContent.prototype, {
+  features: {
+    get: function () {
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return 0;

@@ -107,6 +107,18 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
+   * always returns <code>[]</code>.  Instead call <code>features</code> for the features inner content.
+   * @memberof Multiple3DTileContent.prototype
+   * @private
+   */
+   features: {
+    get: function () {
+      return [];
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private

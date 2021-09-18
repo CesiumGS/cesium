@@ -73,6 +73,12 @@ export default function Implicit3DTileContent(
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
+  features: {
+    get: function () {
+      return [];
+    },
+  },
+
   featuresLength: {
     get: function () {
       return 0;
