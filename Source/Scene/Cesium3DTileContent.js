@@ -30,6 +30,21 @@ function Cesium3DTileContent() {
 }
 
 Object.defineProperties(Cesium3DTileContent.prototype, {
+    /**
+   * Gets the features in the tile.
+   *
+   * @memberof Cesium3DTileContent.prototype
+   *
+   * @type {Cesium3DTileFeature[]} The corresponding {@link Cesium3DTileFeature} object.
+   * @readonly
+   */
+  features: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+  },
+  
   /**
    * Gets the number of features in the tile.
    *
