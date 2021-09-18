@@ -63,7 +63,7 @@ Object.defineProperties(Composite3DTileContent.prototype, {
    * always returns <code>[]</code>.  Instead call <code>features</code> for the features in the composite.
    * @memberof Composite3DTileContent.prototype
    */
-   features: {
+  features: {
     get: function () {
       return [];
     },
