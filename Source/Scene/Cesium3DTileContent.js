@@ -44,7 +44,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
       DeveloperError.throwInstantiationError();
     },
   },
-  
+
   /**
    * Gets the number of features in the tile.
    *
