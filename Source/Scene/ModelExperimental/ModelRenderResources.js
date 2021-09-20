@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import defined from "../../Core/defined.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 
 /**
@@ -34,4 +35,15 @@ export default function ModelRenderResources(model) {
    * @private
    */
   this.model = model;
+  /**
+   * The feature table ID to use for determining features within the model.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.featureTableId = defined(model.content)
+    ? model.content.featureTableId
+    : model.featureTableId;
 }

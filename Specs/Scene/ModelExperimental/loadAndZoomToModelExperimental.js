@@ -11,6 +11,8 @@ function loadAndZoomToModelExperimental(options, scene) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
   });
 
   scene.primitives.add(model);

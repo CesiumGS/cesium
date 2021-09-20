@@ -21,6 +21,10 @@ void main()
         #endif
     #endif
 
+    #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
+    featureStage();
+    #endif
+    
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     customShaderStage(attributes);
     #endif
@@ -30,6 +34,6 @@ void main()
     geometryStage(attributes);    
 
     #ifdef PRIMITIVE_TYPE_POINTS
-    processPoints();
+    pointStage();
     #endif
 }

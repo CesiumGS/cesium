@@ -176,6 +176,15 @@ function addAttributeToRenderResources(
     componentDatatype = attribute.componentDatatype;
   }
 
+  var semantic = attribute.semantic;
+  var setIndex = attribute.setIndex;
+  if (
+    semantic === VertexAttributeSemantic.FEATURE_ID &&
+    setIndex >= renderResources.featureIdVertexAttributeSetIndex
+  ) {
+    renderResources.featureIdVertexAttributeSetIndex = setIndex + 1;
+  }
+
   var vertexAttribute = {
     index: attributeIndex,
     value: defined(attribute.buffer) ? undefined : attribute.constant,

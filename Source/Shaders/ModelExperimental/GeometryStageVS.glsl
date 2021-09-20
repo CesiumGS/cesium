@@ -1,4 +1,4 @@
-void processPoints()
+void pointStage()
 {
     gl_PointSize = 4.0;
 }

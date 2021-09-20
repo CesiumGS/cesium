@@ -69,7 +69,8 @@ function Cesium3DTileBatchTable(
   this._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
-    content: content,
+    owner: content,
+    statistics: content.tileset.statistics,
   });
 }
 
