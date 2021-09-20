@@ -2,7 +2,8 @@ import {
   AlphaPipelineStage,
   CustomShader,
   CustomShaderMode,
-  CustomShaderStage,
+  CustomShaderPipelineStage,
+  DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
@@ -78,6 +79,32 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     ]);
   });
 
+  it("Configures dequantization", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        attributes: [
+          {
+            semantic: "POSITION",
+          },
+          {
+            semantic: "NORMAL",
+            quantization: {},
+          },
+        ],
+      },
+      model: mockModel,
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      DequantizationPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+  });
+
   it("configures the pipeline stages for custom shaders", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
@@ -93,7 +120,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ]);
@@ -114,7 +141,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ]);
@@ -135,7 +162,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expect(primitive.pipelineStages).toEqual([
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ]);

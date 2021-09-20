@@ -14,7 +14,7 @@ import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/CustomShader", function () {
   var emptyVertexShader =
-    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
+    "void vertexMain(VertexInput vsInput, inout vec3 positionMC) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
@@ -164,17 +164,17 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   it("detects input variables in the shader text", function () {
     var customShader = new CustomShader({
       vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout vec3 position)",
+        "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
         "{",
-        "    positon += vsInput.attributes.expansion * vsInput.attributes.normal;",
+        "    positionMC += vsInput.attributes.expansion * vsInput.attributes.normalMC;",
         "}",
       ].join("\n"),
       fragmentShaderText: [
         "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
         "{",
-        "    material.normal = normalize(fsInput.attributes.normal);",
+        "    material.normalEC = normalize(fsInput.attributes.normalEC);",
         "    material.diffuse = fsInput.attributes.color_0;",
-        "    material.specular = fsInput.positionWC / 1.0e6;",
+        "    material.specular = fsInput.attributes.positionWC / 1.0e6;",
         "}",
       ].join("\n"),
     });
@@ -182,19 +182,17 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     var expectedVertexVariables = {
       attributeSet: {
         expansion: true,
-        normal: true,
+        normalMC: true,
       },
     };
     var expectedFragmentVariables = {
       attributeSet: {
-        normal: true,
+        normalEC: true,
         color_0: true,
-      },
-      positionSet: {
         positionWC: true,
       },
       materialSet: {
-        normal: true,
+        normalEC: true,
         diffuse: true,
         specular: true,
       },
