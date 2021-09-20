@@ -273,6 +273,9 @@ describe(
     });
 
     it("selects feature table for instanced feature ID attributes", function () {
+      if (webglStub) {
+        return;
+      }
       return loadAndZoomToModelExperimental(
         {
           gltf: boxInstanced,
@@ -280,9 +283,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        if (!webglStub) {
-          expect(model.featureTableId).toEqual("sectionTable");
-        }
+        expect(model.featureTableId).toEqual("sectionTable");
       });
     });
 
