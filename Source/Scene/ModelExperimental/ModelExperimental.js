@@ -334,7 +334,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Number}
+   * @type {String}
    * @readonly
    *
    * @private
