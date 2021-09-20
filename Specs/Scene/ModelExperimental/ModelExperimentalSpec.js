@@ -29,6 +29,8 @@ describe(
     var boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
     var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    var boxInstanced =
+      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
 
     var scene;
 
@@ -267,6 +269,40 @@ describe(
         expect(scene).toPickAndCall(function (result) {
           expect(result).toBeUndefined();
         });
+      });
+    });
+
+    it("selects feature table for instanced feature ID attributes", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxInstanced,
+          featureIdAttributeIndex: 1,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureTableId).toEqual("sectionTable");
+      });
+    });
+
+    it("selects feature table for feature ID textures", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: microcosm,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureTableId).toEqual("landCoverTable");
+      });
+    });
+
+    it("selects feature table for feature ID attributes", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureTableId).toEqual("buildings");
       });
     });
 

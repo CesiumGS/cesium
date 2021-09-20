@@ -138,38 +138,42 @@ function createModelFeatureTables(model, featureMetadata) {
   return modelFeatureTables;
 }
 
-function selectFeatureTableId(components, model, content) {
+function selectFeatureTableId(components, model) {
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
   var featureIdTextureIndex = model._featureIdTextureIndex;
 
-  var i;
+  var i, j;
   var featureIdAttribute;
   var featureIdTexture;
 
+  var node;
   // Scan the nodes till we find one with instances, get the feature table ID
   // if the feature ID attribute of the user-selected index is present.
   for (i = 0; i < components.nodes.length; i++) {
-    var node = components.nodes[i];
+    node = components.nodes[i];
     if (defined(node.instances)) {
       featureIdAttribute =
         node.instances.featureIdAttributes[featureIdAttributeIndex];
-      if (defined(node.instances) && defined(featureIdAttribute)) {
+      if (defined(featureIdAttribute)) {
         return featureIdAttribute.featureTableId;
       }
-    } else {
-      // Scan the primitives till we find one with textures or attributes, get the feature table ID
-      // if the feature ID attribute/texture of the user-selected index is present.
-      for (i = 0; i < node.primitives.length; i++) {
-        var primitive = node.primitives[i];
-        featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
-        featureIdAttribute =
-          primitive.featureIdAttributes[featureIdAttributeIndex];
+    }
+  }
 
-        if (defined(featureIdTexture)) {
-          return featureIdTexture.featureTableId;
-        } else if (defined(featureIdAttribute)) {
-          return featureIdAttribute.featureTableId;
-        }
+  // Scan the primitives till we find one with textures or attributes, get the feature table ID
+  // if the feature ID attribute/texture of the user-selected index is present.
+  for (i = 0; i < components.nodes.length; i++) {
+    node = components.nodes[i];
+    for (j = 0; j < node.primitives.length; j++) {
+      var primitive = node.primitives[j];
+      featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+      featureIdAttribute =
+        primitive.featureIdAttributes[featureIdAttributeIndex];
+
+      if (defined(featureIdTexture)) {
+        return featureIdTexture.featureTableId;
+      } else if (defined(featureIdAttribute)) {
+        return featureIdAttribute.featureTableId;
       }
     }
   }
@@ -199,7 +203,7 @@ function initialize(model) {
         }
       }
 
-      var featureTableId = selectFeatureTableId(components, model, content);
+      var featureTableId = selectFeatureTableId(components, model);
 
       if (defined(content)) {
         content.featureTableId = featureTableId;
