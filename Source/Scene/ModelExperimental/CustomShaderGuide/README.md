@@ -202,7 +202,7 @@ An automatically-generated GLSL struct that contains attributes.
 // this struct represents the raw attribute values.
 struct Attributes {
     // required semantics
-    vec3 position; // model space position. Always present.
+    vec3 positionMC; // model space position. Always present.
 
     // optional semantics (added if available in the 3D model file)
     vec3 normal; // corresponds to attribute with semantic "NORMAL"
@@ -217,7 +217,7 @@ struct Attributes {
 struct VertexInput {
     // raw attribute values
     Attributes attributes;
-    // in the future we may add another struct for derived attributes (e.g. positionEC)
+    // in the future we may add another struct for derived attributes
 };
 ```
 
@@ -231,7 +231,7 @@ variables for positions in various coordinate spaces.
 // varyings required to make this work are handled automatically.
 struct Attributes {
     // required semantics
-    vec3 position; // Raw model space position. always present as POSITION is required
+    vec3 positionMC; // Raw model space position. always present as POSITION is required
 
     // optional semantics (added if available in the 3D model file)
     vec3 normal; // corresponds to attribute with semantic "NORMAL"

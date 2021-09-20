@@ -2,6 +2,7 @@ import {
   BatchTexturePipelineStage,
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
   function expectUniformMap(uniformMap, expected) {
@@ -27,26 +28,27 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
   }
 
   function verifyBatchTextureShaders(shaderBuilder) {
-    var vertexDefineLines = shaderBuilder._vertexShaderParts.defineLines;
-    var vertexUniformLines = shaderBuilder._vertexShaderParts.uniformLines;
-    var fragmentUniformLines = shaderBuilder._fragmentShaderParts.uniformLines;
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+      "MULTILINE_BATCH_TEXTURE",
+    ]);
 
-    expect(vertexDefineLines[0]).toEqual("MULTILINE_BATCH_TEXTURE");
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+      "MULTILINE_BATCH_TEXTURE",
+    ]);
 
-    expect(vertexUniformLines[0]).toEqual(
-      "uniform float model_featuresLength;"
-    );
-    expect(fragmentUniformLines[0]).toEqual(
-      "uniform float model_featuresLength;"
-    );
+    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+      "uniform float model_featuresLength;",
+      "uniform sampler2D model_batchTexture;",
+      "uniform vec4 model_textureStep;",
+      "uniform vec2 model_textureDimensions;",
+    ]);
 
-    expect(vertexUniformLines[1]).toEqual(
-      "uniform sampler2D model_batchTexture;"
-    );
-    expect(vertexUniformLines[2]).toEqual("uniform vec4 model_textureStep;");
-    expect(vertexUniformLines[3]).toEqual(
-      "uniform vec2 model_textureDimensions;"
-    );
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+      "uniform float model_featuresLength;",
+      "uniform sampler2D model_batchTexture;",
+      "uniform vec4 model_textureStep;",
+      "uniform vec2 model_textureDimensions;",
+    ]);
   }
 
   it("sets up batch textures from ModelExperimental", function () {

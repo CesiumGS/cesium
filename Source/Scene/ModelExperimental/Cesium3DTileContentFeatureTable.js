@@ -11,7 +11,7 @@ import destroyObject from "../../Core/destroyObject.js";
  * The properties for a feature are extracted from a {@link FeatureTable}.
  *
  * @param {Object} options An object containing the following options:
- * @param {Cesium3DTileContent} options.content The tile content this features in this table belong to.
+ * @param {Cesium3DTileContent} options.content The tile content the features in this table belong to.
  * @param {FeatureTable} options.featureTable The feature table from the model belonging to the content.
  *
  * @alias Cesium3DTileContentFeatureTable

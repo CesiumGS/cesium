@@ -257,10 +257,7 @@ function processFeatureIdAttributes(
   // because we want to expose the instance feature ID when picking.
   for (var i = 0; i < attributes.length; i++) {
     var attribute = attributes[i];
-    if (
-      attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID ||
-      !defined(attribute.setIndex)
-    ) {
+    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
       continue;
     }
 
@@ -295,13 +292,6 @@ function processFeatureIdAttributes(
       "float",
       "a_instanceFeatureId_" + attribute.setIndex
     );
-  }
-
-  var featureIdAttributes = instances.featureIdAttributes;
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
-  if (featureIdAttributeIndex < featureIdAttributes.length) {
-    renderResources.featureTableId =
-      featureIdAttributes[featureIdAttributeIndex].featureTableId;
   }
 }
 

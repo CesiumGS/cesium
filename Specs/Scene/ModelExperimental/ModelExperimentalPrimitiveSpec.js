@@ -2,8 +2,9 @@ import {
   AlphaPipelineStage,
   CustomShader,
   CustomShaderMode,
-  CustomShaderStage,
   FeatureIdPipelineStage,
+  CustomShaderPipelineStage,
+  DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
@@ -176,6 +177,35 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
+  it("configures dequantization", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [],
+        attributes: [
+          {
+            semantic: "POSITION",
+          },
+          {
+            semantic: "NORMAL",
+            quantization: {},
+          },
+        ],
+      },
+      node: mockNode,
+      model: mockModel,
+    });
+
+    expect(primitive.pipelineStages).toEqual([
+      GeometryPipelineStage,
+      DequantizationPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+    ]);
+  });
+
   it("configures the pipeline stages for custom shaders", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: mockPrimitive,
@@ -192,7 +222,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -216,7 +246,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     var expectedStages = [
       GeometryPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -240,7 +270,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderStage,
+      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];

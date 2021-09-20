@@ -930,7 +930,7 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
             (semantic === InstanceAttributeSemantic.TRANSLATION ||
               semantic === InstanceAttributeSemantic.ROTATION ||
               semantic === InstanceAttributeSemantic.SCALE)) ||
-          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) > 0;
+          semantic.indexOf(InstanceAttributeSemantic.FEATURE_ID) >= 0;
 
         var accessorId = attributes[semantic];
         instances.attributes.push(

@@ -88,7 +88,8 @@ export default function PrimitiveRenderResources(
   this.hasFeatureIds = false;
 
   /**
-   * The ID of the feature table to use for picking and styling. Inherited from the node render resources.
+   * The ID of the feature table to use for picking and styling. Inherited from the node
+   * render resources.
    *
    * @type {String}
    * @readonly

@@ -10,6 +10,7 @@ import {
   _shadersFeatureStageVS,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
@@ -97,34 +98,29 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       expect(renderResources.hasFeatureIds).toBe(true);
 
       var shaderBuilder = renderResources.shaderBuilder;
-      var vertexDefineLines = shaderBuilder._vertexShaderParts.defineLines;
-      var vertexShaderLines = shaderBuilder._vertexShaderParts.shaderLines;
-      var vertexVaryingLines = shaderBuilder._vertexShaderParts.varyingLines;
 
-      var fragmentDefineLines = shaderBuilder._fragmentShaderParts.defineLines;
-      var fragmentShaderLines = shaderBuilder._fragmentShaderParts.shaderLines;
-      var fragmentVaryingLines =
-        shaderBuilder._fragmentShaderParts.varyingLines;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_featureId_0",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
-      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_FEATURES",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying float v_featureId;",
+        "varying vec2 v_featureSt;",
+      ]);
 
-      expect(renderResources.featureTableId).toEqual("buildings");
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageVS,
+      ]);
 
-      expect(vertexDefineLines[1]).toEqual(
-        "FEATURE_ID_ATTRIBUTE a_featureId_0"
-      );
-
-      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
-      expect(fragmentShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(fragmentShaderLines[1]).toEqual(_shadersFeatureStageFS);
+      ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageFS,
+      ]);
     });
   });
 
@@ -157,20 +153,34 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       expect(renderResources.hasFeatureIds).toBe(true);
 
       var shaderBuilder = renderResources.shaderBuilder;
-      var attributeLines = shaderBuilder._attributeLines;
-      var vertexDefineLines = shaderBuilder._vertexShaderParts.defineLines;
-      var vertexShaderLines = shaderBuilder._vertexShaderParts.shaderLines;
-      var vertexVaryingLines = shaderBuilder._vertexShaderParts.varyingLines;
 
-      var fragmentDefineLines = shaderBuilder._fragmentShaderParts.defineLines;
-      var fragmentShaderLines = shaderBuilder._fragmentShaderParts.shaderLines;
-      var fragmentVaryingLines =
-        shaderBuilder._fragmentShaderParts.varyingLines;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_featureId_1",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
-      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_FEATURES",
+      ]);
 
-      expect(renderResources.featureTableId).toEqual("buildings");
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute float a_featureId_1;",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying float v_featureId;",
+        "varying vec2 v_featureSt;",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageVS,
+      ]);
+
+      ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageFS,
+      ]);
+
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
@@ -179,23 +189,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       var vertexAttribute = renderResources.attributes[0];
       expect(vertexAttribute.instanceDivisor).toEqual(0);
       expect(vertexAttribute.vertexBuffer).toBe(vertexBuffer);
-
-      expect(attributeLines[0]).toEqual("attribute float a_featureId_1;");
-
-      expect(vertexDefineLines[1]).toEqual(
-        "FEATURE_ID_ATTRIBUTE a_featureId_1"
-      );
-
-      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
-      expect(fragmentShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(fragmentShaderLines[1]).toEqual(_shadersFeatureStageFS);
     });
   });
 
@@ -226,34 +219,30 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       expect(renderResources.hasFeatureIds).toBe(true);
 
       var shaderBuilder = renderResources.shaderBuilder;
-      var vertexDefineLines = shaderBuilder._vertexShaderParts.defineLines;
-      var vertexShaderLines = shaderBuilder._vertexShaderParts.shaderLines;
-      var vertexVaryingLines = shaderBuilder._vertexShaderParts.varyingLines;
 
-      var fragmentDefineLines = shaderBuilder._fragmentShaderParts.defineLines;
-      var fragmentShaderLines = shaderBuilder._fragmentShaderParts.shaderLines;
-      var fragmentVaryingLines =
-        shaderBuilder._fragmentShaderParts.varyingLines;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_0",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
-      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_FEATURES",
+      ]);
 
-      expect(renderResources.featureTableId).toEqual("sectionTable");
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying float v_featureId;",
+        "varying vec2 v_featureSt;",
+      ]);
 
-      expect(vertexDefineLines[1]).toEqual(
-        "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_0"
-      );
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageVS,
+      ]);
 
-      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
-      expect(fragmentShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(fragmentShaderLines[1]).toEqual(_shadersFeatureStageFS);
+      ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageFS,
+      ]);
     });
   });
 
@@ -288,20 +277,34 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       expect(renderResources.hasFeatureIds).toBe(true);
 
       var shaderBuilder = renderResources.shaderBuilder;
-      var attributeLines = shaderBuilder._attributeLines;
-      var vertexDefineLines = shaderBuilder._vertexShaderParts.defineLines;
-      var vertexShaderLines = shaderBuilder._vertexShaderParts.shaderLines;
-      var vertexVaryingLines = shaderBuilder._vertexShaderParts.varyingLines;
 
-      var fragmentDefineLines = shaderBuilder._fragmentShaderParts.defineLines;
-      var fragmentShaderLines = shaderBuilder._fragmentShaderParts.shaderLines;
-      var fragmentVaryingLines =
-        shaderBuilder._fragmentShaderParts.varyingLines;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_1",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
-      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_FEATURES",
+      ]);
 
-      expect(renderResources.featureTableId).toEqual("boxTable");
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute float a_instanceFeatureId_1;",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying float v_featureId;",
+        "varying vec2 v_featureSt;",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageVS,
+      ]);
+
+      ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageFS,
+      ]);
+
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
@@ -310,25 +313,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       var vertexAttribute = renderResources.attributes[0];
       expect(vertexAttribute.instanceDivisor).toEqual(1);
       expect(vertexAttribute.vertexBuffer).toBe(vertexBuffer);
-
-      expect(attributeLines[0]).toEqual(
-        "attribute float a_instanceFeatureId_1;"
-      );
-
-      expect(vertexDefineLines[1]).toEqual(
-        "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_1"
-      );
-
-      expect(vertexVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(vertexVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(fragmentVaryingLines[0]).toEqual("varying float v_featureId;");
-      expect(fragmentVaryingLines[1]).toEqual("varying vec2 v_featureSt;");
-
-      expect(vertexShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(vertexShaderLines[1]).toEqual(_shadersFeatureStageVS);
-      expect(fragmentShaderLines[0]).toEqual(_shadersFeatureStageCommon);
-      expect(fragmentShaderLines[1]).toEqual(_shadersFeatureStageFS);
     });
   });
 
@@ -355,30 +339,21 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       FeatureIdPipelineStage.process(renderResources, primitive, frameState);
       expect(renderResources.hasFeatureIds).toBe(true);
 
-      var vertexDefineLines =
-        renderResources.shaderBuilder._vertexShaderParts.defineLines;
-      var fragmentDefineLines =
-        renderResources.shaderBuilder._fragmentShaderParts.defineLines;
-      var fragmentUniformLines =
-        renderResources.shaderBuilder._fragmentShaderParts.uniformLines;
+      var shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_FEATURES",
+      ]);
 
-      expect(vertexDefineLines[0]).toEqual("HAS_FEATURES");
-      expect(fragmentDefineLines[0]).toEqual("HAS_FEATURES");
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_FEATURES",
+        "FEATURE_ID_TEXTURE u_featureIdTexture_0",
+        "FEATURE_ID_TEXCOORD v_texCoord_0",
+        "FEATURE_ID_CHANNEL r",
+      ]);
 
-      expect(renderResources.featureTableId).toEqual("landCoverTable");
-
-      expect(fragmentDefineLines[1]).toEqual(
-        "FEATURE_ID_TEXTURE u_featureIdTexture_0"
-      );
-      expect(vertexDefineLines[1]).toEqual("FEATURE_ID_TEXCOORD a_texCoord_0");
-      expect(fragmentDefineLines[2]).toEqual(
-        "FEATURE_ID_TEXCOORD v_texCoord_0"
-      );
-      expect(fragmentDefineLines[3]).toEqual("FEATURE_ID_CHANNEL r");
-
-      expect(fragmentUniformLines[0]).toEqual(
-        "uniform sampler2D u_featureIdTexture_0;"
-      );
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform sampler2D u_featureIdTexture_0;",
+      ]);
 
       var expectedUniforms = {
         u_featureIdTexture_0:

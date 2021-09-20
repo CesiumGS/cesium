@@ -187,7 +187,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     ];
 
     var expectedVariableName = [
-      "position",
+      "positionMC",
       "normal",
       "tangent",
       "texCoord",
