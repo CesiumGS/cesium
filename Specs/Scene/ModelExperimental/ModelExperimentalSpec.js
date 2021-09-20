@@ -280,7 +280,9 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("sectionTable");
+        if (!webglStub) {
+          expect(model.featureTableId).toEqual("sectionTable");
+        }
       });
     });
 
