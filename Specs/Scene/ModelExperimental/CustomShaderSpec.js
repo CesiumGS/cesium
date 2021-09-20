@@ -196,6 +196,36 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         diffuse: true,
         specular: true,
       },
+      metadataSet: {},
+    };
+
+    expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
+    expect(customShader.usedVariablesFragment).toEqual(
+      expectedFragmentVariables
+    );
+  });
+
+  it("detects metadata properties used in the fragment shader", function () {
+    var customShader = new CustomShader({
+      fragmentShaderText: [
+        "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+        "{",
+        "    material.diffuse = fsInput.metadata.intensity * vec3(1.0, 0.0, 0.0);",
+        "}",
+      ].join("\n"),
+    });
+
+    var expectedVertexVariables = {
+      attributeSet: {},
+    };
+    var expectedFragmentVariables = {
+      attributeSet: {},
+      materialSet: {
+        diffuse: true,
+      },
+      metadataSet: {
+        intensity: true,
+      },
     };
 
     expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
