@@ -257,10 +257,7 @@ function processFeatureIdAttributes(
   // because we want to expose the instance feature ID when picking.
   for (var i = 0; i < attributes.length; i++) {
     var attribute = attributes[i];
-    if (
-      attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID ||
-      !defined(attribute.setIndex)
-    ) {
+    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
       continue;
     }
 

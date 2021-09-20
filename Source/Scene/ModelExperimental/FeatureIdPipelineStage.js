@@ -69,6 +69,9 @@ FeatureIdPipelineStage.process = function (
     if (defined(featureIdAttribute.setIndex)) {
       featureIdAttributeSetIndex = featureIdAttribute.setIndex;
     } else {
+      // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
+      // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
+      // is incremented every time a Feature ID vertex attribute is added.
       featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
       generateFeatureIdAttribute(
         featureIdAttributeInfo,

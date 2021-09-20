@@ -70,25 +70,32 @@ PickingPipelineStage.process = function (
 
 function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
+  var featureTableId;
   var featureIdAttribute;
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
 
   if (defined(instances)) {
+    // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+    featureTableId = featureIdAttribute.featureTableId;
   } else if (primitive.featureIdTextures.length > 0) {
+    // Extract the Feature Table ID from the instanced Feature ID textures.
     var featureIdTextureIndex = model.featureIdTextureIndex;
-    featureIdAttribute = primitive.featureIdTextures[featureIdTextureIndex];
+    var featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+    featureTableId = featureIdTexture.featureTableId;
   } else {
+    // Extract the Feature Table ID from the primitive Feature ID attributes.
     featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+    featureTableId = featureIdAttribute.featureTableId;
   }
 
   var featureTable;
 
   var content = model.content;
   if (defined(content)) {
-    featureTable = content.featureTables[featureIdAttribute.featureTableId];
+    featureTable = content.featureTables[featureTableId];
   } else {
-    featureTable = model.featureTables[featureIdAttribute.featureTableId];
+    featureTable = model.featureTables[featureTableId];
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
