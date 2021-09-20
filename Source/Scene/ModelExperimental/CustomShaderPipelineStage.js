@@ -399,7 +399,8 @@ function generateFragmentShaderLines(
   );
 }
 
-// computed positions should be treated like regular attributes for
+// These attributes are derived from positionMC, and are handled separately
+// from other attributes
 var builtinAttributes = {
   positionWC: true,
   positionEC: true,

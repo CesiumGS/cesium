@@ -263,9 +263,6 @@ in the model would become `fsInput.attributes.surface_temperature` in the shader
 
 ## `czm_modelMaterial` struct
 
-https://github.com/CesiumGS/cesium/tree/main/Source/Scene/ModelExperimental/CustomShaderGuide
-../../../
-
 This one is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
