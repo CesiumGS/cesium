@@ -293,13 +293,6 @@ function processFeatureIdAttributes(
       "a_instanceFeatureId_" + attribute.setIndex
     );
   }
-
-  var featureIdAttributes = instances.featureIdAttributes;
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
-  if (featureIdAttributeIndex < featureIdAttributes.length) {
-    renderResources.featureTableId =
-      featureIdAttributes[featureIdAttributeIndex].featureTableId;
-  }
 }
 
 function processMatrixAttributes(node, count, renderResources, frameState) {

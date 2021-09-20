@@ -21,7 +21,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
 
   // Properties inherited from the ModelRenderResources.
   /**
-   * A reference to the model Inherited from the model render resources.
+   * A reference to the model. Inherited from the model render resources.
    *
    * @type {ModelExperimental}
    * @readonly
@@ -39,6 +39,17 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
+
+  /**
+   * The ID of the feature table to use for picking and styling. Inherited from the model
+   * render resources.
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  this.featureTableId = modelRenderResources.featureTableId;
 
   // other properties
   /**
@@ -120,14 +131,4 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.instancingTranslationMin = undefined;
-
-  /**
-   * The ID of the feature table to use for picking and styling.
-   *
-   * @type {String}
-   * @readonly
-   *
-   * @private
-   */
-  this.featureTableId = undefined;
 }

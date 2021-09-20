@@ -63,8 +63,6 @@ FeatureIdPipelineStage.process = function (
 
     var featureIdAttributeSetIndex;
 
-    renderResources.featureTableId = featureIdAttribute.featureTableId;
-
     // Check if the Feature ID attribute references an existing vertex attribute.
     if (defined(featureIdAttribute.setIndex)) {
       featureIdAttributeSetIndex = featureIdAttribute.setIndex;
@@ -89,11 +87,6 @@ FeatureIdPipelineStage.process = function (
     shaderBuilder.addVarying("float", "v_featureId");
     shaderBuilder.addVarying("vec2", "v_featureSt");
     shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
-  }
-
-  var content = model.content;
-  if (defined(content)) {
-    content.featureTableId = renderResources.featureTableId;
   }
 
   shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
@@ -149,8 +142,6 @@ function processFeatureIdTextures(
   var uniformMap = renderResources.uniformMap;
   var featureIdTextureIndex = renderResources.model.featureIdTextureIndex;
   var featureIdTexture = featureIdTextures[featureIdTextureIndex];
-
-  renderResources.featureTableId = featureIdTexture.featureTableId;
 
   var featureIdTextureReader = featureIdTexture.textureReader;
 

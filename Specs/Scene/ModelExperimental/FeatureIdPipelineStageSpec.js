@@ -181,7 +181,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageFS,
       ]);
 
-      expect(renderResources.featureTableId).toEqual("buildings");
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
@@ -244,7 +243,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageCommon,
         _shadersFeatureStageFS,
       ]);
-      expect(renderResources.featureTableId).toEqual("sectionTable");
     });
   });
 
@@ -307,7 +305,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageFS,
       ]);
 
-      expect(renderResources.featureTableId).toEqual("boxTable");
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
@@ -346,8 +343,6 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_FEATURES",
       ]);
-
-      expect(renderResources.featureTableId).toEqual("landCoverTable");
 
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_FEATURES",

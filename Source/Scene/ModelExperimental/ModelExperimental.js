@@ -79,6 +79,7 @@ export default function ModelExperimental(options) {
   );
   this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
   this._featureTables = undefined;
+  this._featureTableId = undefined;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -137,6 +138,43 @@ function createModelFeatureTables(model, featureMetadata) {
   return modelFeatureTables;
 }
 
+function selectFeatureTableId(components, model, content) {
+  var featureIdAttributeIndex = model._featureIdAttributeIndex;
+  var featureIdTextureIndex = model._featureIdTextureIndex;
+
+  var i;
+  var featureIdAttribute;
+  var featureIdTexture;
+
+  // Scan the nodes till we find one with instances, get the feature table ID
+  // if the feature ID attribute of the user-selected index is present.
+  for (i = 0; i < components.nodes.length; i++) {
+    var node = components.nodes[i];
+    if (defined(node.instances)) {
+      featureIdAttribute =
+        node.instances.featureIdAttributes[featureIdAttributeIndex];
+      if (defined(node.instances) && defined(featureIdAttribute)) {
+        return featureIdAttribute.featureTableId;
+      }
+    } else {
+      // Scan the primitives till we find one with textures or attributes, get the feature table ID
+      // if the feature ID attribute/texture of the user-selected index is present.
+      for (i = 0; i < node.primitives.length; i++) {
+        var primitive = node.primitives[i];
+        featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+        featureIdAttribute =
+          primitive.featureIdAttributes[featureIdAttributeIndex];
+
+        if (defined(featureIdTexture)) {
+          return featureIdTexture.featureTableId;
+        } else if (defined(featureIdAttribute)) {
+          return featureIdAttribute.featureTableId;
+        }
+      }
+    }
+  }
+}
+
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
@@ -146,8 +184,9 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
+      var components = loader.components;
       var content = model._content;
-      var featureMetadata = loader.components.featureMetadata;
+      var featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         var featureTables;
@@ -160,9 +199,17 @@ function initialize(model) {
         }
       }
 
+      var featureTableId = selectFeatureTableId(components, model, content);
+
+      if (defined(content)) {
+        content.featureTableId = featureTableId;
+      } else {
+        model.featureTableId = featureTableId;
+      }
+
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
-        modelComponents: loader.components,
+        modelComponents: components,
         modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
@@ -275,6 +322,25 @@ Object.defineProperties(ModelExperimental.prototype, {
   content: {
     get: function () {
       return this._content;
+    },
+  },
+
+  /**
+   * The ID for the feature table to use for picking and styling in this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
     },
   },
 
