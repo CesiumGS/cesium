@@ -5,26 +5,9 @@
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/specification/Metadata/Semantics|Cesium Metadata Semantic Reference}
  */
 var MetadataSemantic = {
-  /**
-   * The horizon occlusion point for horizon culling, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
-   *
-   * @see {https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  HORIZON_OCCLUSION_POINT: "HORIZON_OCCLUSION_POINT",
-  /**
-   * A bounding sphere, stored as an <code>ARRAY</code> of 4 <code>FLOAT32</code> or a <code>FLOAT64</code> components. The components represent <code>[x, y, z, radius]</code>, i.e. the center and radius of the bounding sphere.
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  BOUNDING_SPHERE: "BOUNDING_SPHERE",
   /**
    * A name, stored as a <code>STRING</code>. This does not have to be unique
    *
@@ -80,7 +63,17 @@ var MetadataSemantic = {
    * @constant
    * @private
    */
-  TILE_MAXIMUM_HEIGHT: "TILE_MINIMUM_HEIGHT",
+  TILE_MAXIMUM_HEIGHT: "TILE_MAXIMUM_HEIGHT",
+  /**
+   * The horizon occlusion point for a tile, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
+   *
+   * @see {@link https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  TILE_HORIZON_OCCLUSION_POINT: "TILE_HORIZON_OCCLUSION_POINT",
   /**
    * A bounding box for the content of a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
@@ -120,7 +113,17 @@ var MetadataSemantic = {
    * @constant
    * @private
    */
-  CONTENT_MAXIMUM_HEIGHT: "CONTENT_MINIMUM_HEIGHT",
+  CONTENT_MAXIMUM_HEIGHT: "CONTENT_MAXIMUM_HEIGHT",
+  /**
+   * The horizon occlusion point for the content of a tile, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
+   *
+   * @see {@link https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  CONTENT_HORIZON_OCCLUSION_POINT: "CONTENT_HORIZON_OCCLUSION_POINT",
 };
 
 export default Object.freeze(MetadataSemantic);

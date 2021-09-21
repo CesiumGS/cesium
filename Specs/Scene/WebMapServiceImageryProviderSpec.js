@@ -133,7 +133,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.something).toEqual("foo");
         expect(params.another).toEqual("false");
         expect(params.version).toEqual("1.3.0");
@@ -167,7 +167,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.crs).toEqual("CRS:27");
         expect(params.version).toEqual("1.3.0");
 
@@ -200,7 +200,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.0");
 
@@ -233,7 +233,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.srs).toEqual("IAU2000:30118");
         expect(params.version).toEqual("1.1.0");
 
@@ -350,7 +350,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         expect(questionMarkCount).toEqual(1);
 
         var uri = new Uri(url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.foo).toEqual("bar");
 
         // Don't need to actually load image, but satisfy the request.
@@ -379,7 +379,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       ) {
         var url = request.url;
         var uri = new Uri(url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.version).toEqual("1.1.1");
 
         // Don't need to actually load image, but satisfy the request.
@@ -460,7 +460,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:3857");
         expect(params.version).toEqual("1.1.1");
@@ -515,7 +515,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("EPSG:3857");
         expect(params.version).toEqual("1.3.0");
@@ -567,7 +567,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.1");
@@ -622,7 +622,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.0");
@@ -677,7 +677,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("CRS:84");
         expect(params.version).toEqual("1.3.0");
@@ -732,7 +732,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("CRS:84");
         expect(params.version).toEqual("1.3.1");
@@ -774,7 +774,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         expect(params.format).toEqual("foo");
         expect(params.format).not.toEqual("image/jpeg");

@@ -127,6 +127,25 @@ describe(
       return waitForLoaderProcess(gltfLoader, scene);
     }
 
+    function loadGltfFromJson(gltfPath, options) {
+      return Resource.fetchJson({
+        url: gltfPath,
+      }).then(function (gltf) {
+        var loaderOptions = combine(options, {
+          gltf: gltf,
+          gltfResource: new Resource({
+            url: gltfPath,
+          }),
+          incrementallyLoadTextures: false,
+        });
+        var gltfLoader = new GltfLoader(loaderOptions);
+        gltfLoaders.push(gltfLoader);
+        gltfLoader.load();
+
+        return waitForLoaderProcess(gltfLoader, scene);
+      });
+    }
+
     function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
       return Resource.fetchJson({
         url: gltfPath,
@@ -925,7 +944,7 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
 
-        expect(primitive.featureIdAttributes.length).toBe(1);
+        expect(primitive.featureIdAttributes.length).toBe(2);
         expect(primitive.featureIdTextures.length).toBe(0);
         expect(primitive.featureTextureIds.length).toBe(0);
 
@@ -1158,10 +1177,10 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeUndefined();
-        expect(featureIdAttribute.buffer).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
+        expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(featureIdAttribute.byteStride).toBe(4);
+        expect(rotationAttribute.byteStride).toBeUndefined();
 
         expect(instances.featureIdAttributes.length).toBe(2);
 
@@ -1758,6 +1777,28 @@ describe(
 
         // Does not load metallic roughness textures
         expect(textureCreate.calls.count()).toBe(5);
+      });
+    });
+
+    it("loads model from parsed JSON object", function () {
+      return loadGltfFromJson(triangle).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var primitive = rootNode.primitives[0];
+        var attributes = primitive.attributes;
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(primitive.indices).toBeDefined();
+        expect(primitive.indices.indexDatatype).toBe(
+          IndexDatatype.UNSIGNED_SHORT
+        );
+        expect(primitive.indices.count).toBe(3);
+        expect(primitive.indices.buffer).toBeDefined();
       });
     });
 

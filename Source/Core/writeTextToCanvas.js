@@ -87,7 +87,7 @@ function measureText(context2D, textString, font, stroke, fill) {
   }
 
   return {
-    width: 0,
+    width: metrics.width,
     height: 0,
     ascent: 0,
     descent: 0,

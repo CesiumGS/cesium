@@ -42,7 +42,6 @@ import TextureManager from "./TextureManager.js";
  * Variable sets parsed from the user-defined fragment shader text.
  * @typedef {Object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
- * @property {VariableSet} positionSet A set of all position variables like positionWC or positionEC used in the fragment shader via the <code>fsInput</code> struct
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -117,7 +116,7 @@ export default function CustomShader(options) {
 
   /**
    * A value determining how the custom shader interacts with the overall
-   * fragment shader. This is used by {@link CustomShaderStage}
+   * fragment shader. This is used by {@link CustomShaderPipelineStage}
    *
    * @type {CustomShaderMode}
    * @readonly
@@ -126,7 +125,7 @@ export default function CustomShader(options) {
   this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
   /**
    * The lighting model to use when using the custom shader.
-   * This is used by {@link CustomShaderStage}
+   * This is used by {@link CustomShaderPipelineStage}
    *
    * @type {LightingModel}
    * @readonly
@@ -143,7 +142,7 @@ export default function CustomShader(options) {
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
   /**
    * Additional varyings as declared by the user.
-   * This is used by {@link CustomShaderStage}
+   * This is used by {@link CustomShaderPipelineStage}
    *
    * @type {Object.<String, VaryingType>}
    * @readonly
@@ -205,7 +204,7 @@ export default function CustomShader(options) {
 
   /**
    * A collection of variables used in <code>vertexShaderText</code>. This
-   * is used only for optimizations in {@link CustomShaderStage}.
+   * is used only for optimizations in {@link CustomShaderPipelineStage}.
    * @type {VertexVariableSets}
    * @private
    */
@@ -214,12 +213,11 @@ export default function CustomShader(options) {
   };
   /**
    * A collection of variables used in <code>fragmentShaderText</code>. This
-   * is used only for optimizations in {@link CustomShaderStage}.
+   * is used only for optimizations in {@link CustomShaderPipelineStage}.
    * @type {FragmentVariableSets}
    * @private
    */
   this.usedVariablesFragment = {
-    positionSet: {},
     attributeSet: {},
     materialSet: {},
   };
@@ -300,10 +298,6 @@ function findUsedVariables(customShader) {
   if (defined(fragmentShaderText)) {
     attributeSet = customShader.usedVariablesFragment.attributeSet;
     getVariables(fragmentShaderText, attributeRegex, attributeSet);
-
-    var positionRegex = /fsInput\.(position\w+)/g;
-    var positionSet = customShader.usedVariablesFragment.positionSet;
-    getVariables(fragmentShaderText, positionRegex, positionSet);
 
     var materialRegex = /material\.(\w+)/g;
     var materialSet = customShader.usedVariablesFragment.materialSet;

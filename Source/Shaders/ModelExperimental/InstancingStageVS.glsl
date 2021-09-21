@@ -1,4 +1,4 @@
-vec3 instancingStage(vec3 position) 
+void instancingStage(inout vec3 positionMC) 
 {
     mat4 instancingTransform;
 
@@ -28,5 +28,5 @@ vec3 instancingStage(vec3 position)
     ); 
     #endif
 
-    return (instancingTransform * vec4(position, 1.0)).xyz;
+    positionMC = (instancingTransform * vec4(positionMC, 1.0)).xyz;
 }

@@ -70,10 +70,11 @@ function getAuthority(url) {
   uri.normalize();
 
   // Removes username:password@ so we just have host[:port]
-  var authority = uri.getAuthority();
-  if (!defined(authority)) {
+  var authority = uri.authority();
+  if (authority.length === 0) {
     return undefined; // Relative URL
   }
+  uri.authority(authority);
 
   if (authority.indexOf("@") !== -1) {
     var parts = authority.split("@");
@@ -82,8 +83,8 @@ function getAuthority(url) {
 
   // If the port is missing add one based on the scheme
   if (authority.indexOf(":") === -1) {
-    var scheme = uri.getScheme();
-    if (!defined(scheme)) {
+    var scheme = uri.scheme();
+    if (scheme.length === 0) {
       scheme = window.location.protocol;
       scheme = scheme.substring(0, scheme.length - 1);
     }
