@@ -1,8 +1,9 @@
-import Color from "../../Core/Color.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import Color from "../../Core/Color.js";
+import combine from "../../Core/combine.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
@@ -23,7 +24,7 @@ PickingPipelineStage.name = "PickingPipelineStage"; // Helps with debugging
  *  <li>creates the pick ID objects in the context</li>
  * </ul>
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
- * @param {ModelComponents.Primitive} node The primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
  */
 PickingPipelineStage.process = function (
@@ -34,15 +35,16 @@ PickingPipelineStage.process = function (
   var context = frameState.context;
   var runtimeNode = renderResources.runtimeNode;
   var shaderBuilder = renderResources.shaderBuilder;
+  var model = renderResources.model;
+  var instances = runtimeNode.node.instances;
 
-  shaderBuilder.addDefine("USE_PICKING");
-
-  if (defined(runtimeNode.node.instances)) {
+  if (renderResources.hasFeatureIds) {
+    processPickTexture(renderResources, primitive, instances, context);
+  } else if (defined(instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
-    processInstancedPickIds(renderResources, context);
+    processInstancedPickIds(renderResources, instances, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
-    var model = renderResources.model;
     var pickObject = {
       model: model,
       node: renderResources.runtimeNode,
@@ -66,12 +68,67 @@ PickingPipelineStage.process = function (
   }
 };
 
-function processInstancedPickIds(renderResources, context) {
+function processPickTexture(renderResources, primitive, instances) {
+  var model = renderResources.model;
+  var featureTableId;
+  var featureIdAttribute;
+  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+
+  if (defined(instances)) {
+    // Extract the Feature Table ID from the instanced Feature ID attributes.
+    featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+    featureTableId = featureIdAttribute.featureTableId;
+  } else if (primitive.featureIdTextures.length > 0) {
+    // Extract the Feature Table ID from the instanced Feature ID textures.
+    var featureIdTextureIndex = model.featureIdTextureIndex;
+    var featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+    featureTableId = featureIdTexture.featureTableId;
+  } else {
+    // Extract the Feature Table ID from the primitive Feature ID attributes.
+    featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+    featureTableId = featureIdAttribute.featureTableId;
+  }
+
+  var featureTable;
+
+  var content = model.content;
+  if (defined(content)) {
+    featureTable = content.featureTables[featureTableId];
+  } else {
+    featureTable = model.featureTables[featureTableId];
+  }
+
+  var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addUniform(
+    "sampler2D",
+    "model_pickTexture",
+    ShaderDestination.FRAGMENT
+  );
+
+  var pickingUniforms = {
+    model_pickTexture: function () {
+      return featureTable.batchTexture.pickTexture;
+    },
+  };
+
+  renderResources.uniformMap = combine(
+    pickingUniforms,
+    renderResources.uniformMap
+  );
+
+  // The feature ID  is ignored if it is greater than the number of features.
+  renderResources.pickId =
+    "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))";
+}
+
+function processInstancedPickIds(renderResources, instances, context) {
   var instanceCount = renderResources.instanceCount;
   var pickIds = new Array(instanceCount);
   var pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
-  var modelResources = renderResources.model._resources;
+  var model = renderResources.model;
+
+  var modelResources = model._resources;
   for (var i = 0; i < instanceCount; i++) {
     var pickObject = {
       model: renderResources.model,
@@ -114,6 +171,7 @@ function processInstancedPickIds(renderResources, context) {
   renderResources.attributes.push(pickIdsVertexAttribute);
 
   var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addDefine("USE_PICKING", undefined, ShaderDestination.BOTH);
   shaderBuilder.addAttribute("vec4", "a_pickColor");
   shaderBuilder.addVarying("vec4", "v_pickColor");
   renderResources.pickId = "v_pickColor";

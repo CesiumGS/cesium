@@ -152,6 +152,13 @@
                   "featureIds": {
                     "attribute": "_FEATURE_ID_0"
                   }
+                },
+                {
+                  "featureTable": "buildings",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 24
+                  }
                 }
               ]
             }

@@ -16,7 +16,7 @@ import defined from "../Core/defined.js";
  * </p>
  * <p>
  * Do not construct this directly.  Access it through {@link Cesium3DTileContent#getFeature}
- * or picking using {@link Scene#pick} and {@link Scene#pickPosition}.
+ * or picking using {@link Scene#pick}.
  * </p>
  *
  * @alias Cesium3DTileFeature
