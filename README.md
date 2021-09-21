@@ -17,11 +17,7 @@ CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web bro
 Visit the [Downloads page](https://cesium.com/downloads/) or install the [npm package](https://www.npmjs.com/package/cesium):
 
 ```sh
-// with npm
 npm install cesium
-
-// with yarn
-yarn add cesium
 ```
 
 Have questions? Ask them on the [community forum](https://community.cesium.com/).
