@@ -4805,6 +4805,196 @@ describe("DataSources/KmlDataSource", function () {
     );
   });
 
+  it("NetworkLinkUpdate: Create nodes", function () {
+    var href = Resource.DEFAULT.getDerivedResource({
+      url: "Data/KML/simple.kml",
+    }).url;
+
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+        <NetworkLinkControl>\
+          <Update>\
+            <targetHref>' +
+      href +
+      '</targetHref>\
+            <Create>\
+              <Document targetId="test-doc">\
+                <Placemark id="pm2">\
+                  <Point>\
+                    <coordinates>2,3,4</coordinates>\
+                  </Point>\
+                </Placemark>\
+                <Placemark id="pm3">\
+                  <Point>\
+                    <coordinates>5,6,7</coordinates>\
+                  </Point>\
+                </Placemark>\
+              </Document>\
+            </Create>\
+          </Update>\
+        </NetworkLinkControl>';
+
+    return KmlDataSource.load("Data/KML/networkLink.kml", options).then(
+      function (dataSource) {
+        KmlDataSource.load(
+          parser.parseFromString(kml, "text/xml"),
+          options
+        ).then(function () {
+          expect(dataSource.entities.values.length).toEqual(3);
+          expect(dataSource.entities.getById("pm1")).toBeDefined();
+          expect(dataSource.entities.getById("pm2")).toBeDefined();
+          expect(dataSource.entities.getById("pm3")).toBeDefined();
+        });
+        return dataSource;
+      }
+    );
+  });
+
+  it("NetworkLinkUpdate: Change nodes", function () {
+    var href = Resource.DEFAULT.getDerivedResource({
+      url: "Data/KML/multiPoint.kml",
+    }).url;
+
+    var name1 = "PM1";
+    var name3 = "PM3";
+    var updatedNameSuffix = " (update)";
+    var updatedCoords = [20, 20, 100];
+
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLinkControl>\
+            <Update>\
+              <targetHref>' +
+      href +
+      '</targetHref>\
+              <Change>\
+                <Placemark targetId="pm1">\
+                  <name>' +
+      name1 +
+      updatedNameSuffix +
+      '</name>\
+                  <unknown-prop>This element should be ignored</unknown-prop>\
+                </Placemark>\
+                <Placemark targetId="pm3">\
+                  <name>' +
+      name3 +
+      updatedNameSuffix +
+      "</name>\
+                  <Point>\
+                    <coordinates>" +
+      updatedCoords[0] +
+      "," +
+      updatedCoords[1] +
+      "," +
+      updatedCoords[2] +
+      '</coordinates>\
+                  </Point>\
+                </Placemark>\
+                <Placemark targetId="unknown">\
+                  This element should be ignored\
+                </Placemark>\
+              </Change>\
+            </Update>\
+          </NetworkLinkControl>';
+
+    return KmlDataSource.load(
+      "Data/KML/multiPointNetworkLink.kml",
+      options
+    ).then(function (dataSource) {
+      KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(
+        function () {
+          var p1 = dataSource.entities.getById("pm1");
+          expect(p1.name).toBe(name1 + updatedNameSuffix);
+          expect(p1["unknown-prop"]).not.toBeDefined();
+
+          var p3 = dataSource.entities.getById("pm3");
+          expect(p3.name).toBe(name3 + updatedNameSuffix);
+          expect(p3.position.getValue(new Date())).toEqual(
+            Cartesian3.fromDegrees(
+              updatedCoords[0],
+              updatedCoords[1],
+              updatedCoords[2]
+            )
+          );
+        }
+      );
+      return dataSource;
+    });
+  });
+
+  it("NetworkLinkUpdate: Delete nodes", function () {
+    var href = Resource.DEFAULT.getDerivedResource({
+      url: "Data/KML/multiPoint.kml",
+    }).url;
+
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLinkControl>\
+            <Update>\
+              <targetHref>' +
+      href +
+      '</targetHref>\
+              <Delete>\
+                <Placemark targetId="pm1"></Placemark>\
+                <Placemark targetId="pm3"></Placemark>\
+                <Placemark targetId="unknown">This element should be ignored</Placemark>\
+              </Delete>\
+            </Update>\
+          </NetworkLinkControl>';
+
+    return KmlDataSource.load(
+      "Data/KML/multiPointNetworkLink.kml",
+      options
+    ).then(function (dataSource) {
+      KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(
+        function () {
+          expect(dataSource.entities.values.length).toEqual(1);
+          expect(dataSource.entities.getById("pm2")).toBeDefined();
+        }
+      );
+      return dataSource;
+    });
+  });
+
+  it("NetworkLinkUpdate: Remove link on destroy", function () {
+    var href = Resource.DEFAULT.getDerivedResource({
+      url: "Data/KML/simple.kml",
+    }).url;
+
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+        <NetworkLinkControl>\
+          <Update>\
+            <targetHref>' +
+      href +
+      '</targetHref>\
+            <Create>\
+              <Document targetId="test-doc">\
+                <Placemark id="pm2">\
+                  <Point>\
+                    <coordinates>2,3,4</coordinates>\
+                  </Point>\
+                </Placemark>\
+              </Document>\
+            </Create>\
+          </Update>\
+        </NetworkLinkControl>';
+
+    return KmlDataSource.load("Data/KML/networkLink.kml", options).then(
+      function (dataSource) {
+        dataSource.destroy();
+        KmlDataSource.load(
+          parser.parseFromString(kml, "text/xml"),
+          options
+        ).then(function () {
+          // pm2 should not have been added after destroy.
+          expect(dataSource.entities.getById("pm2")).toBeUndefined();
+        });
+        return dataSource;
+      }
+    );
+  });
+
   it("can load a KML file with explicit namespaces", function () {
     return KmlDataSource.load("Data/KML/namespaced.kml", options).then(
       function (dataSource) {

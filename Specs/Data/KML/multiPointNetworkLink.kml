@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <NetworkLink id="link">
 	<Link>
-		<href>simple.kml</href>
+		<href>multiPoint.kml</href>
 	</Link>
 </NetworkLink>

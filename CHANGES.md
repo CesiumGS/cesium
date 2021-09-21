@@ -1,5 +1,11 @@
 # Change Log
 
+### NEXT RELEASE
+
+##### Additions :tada:
+
+- Added support for NetworkLinkControl Updates (Change, Create, and Delete elements). [#9647](https://github.com/CesiumGS/cesium/pull/9647)
+
 ### 1.85 - 2021-09-01
 
 ##### Breaking Changes :mega:

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="test-doc">
+	<Placemark id="pm1">
+		<name>PM1</name>
+		<Point>
+			<coordinates>1,2,3</coordinates>
+		</Point>
+	</Placemark>
+    <Placemark id="pm2">
+		<name>PM2</name>
+		<Point>
+			<coordinates>4,5,6</coordinates>
+		</Point>
+	</Placemark>
+    <Placemark id="pm3">
+		<name>PM3</name>
+		<Point>
+			<coordinates>7,8,9</coordinates>
+		</Point>
+	</Placemark>
+</Document>
+</kml>

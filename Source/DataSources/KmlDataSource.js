@@ -65,6 +65,7 @@ import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionProperty from "./TimeIntervalCollectionProperty.js";
 import WallGraphics from "./WallGraphics.js";
+import NetworkLinkUpdateMgr from "./NetworkLinkUpdateMgr.js";
 
 //This is by no means an exhaustive list of MIME types.
 //The purpose of this list is to be able to accurately identify content embedded
@@ -184,6 +185,8 @@ var featureTypes = {
   ScreenOverlay: processUnsupportedFeature,
   Tour: processTour,
 };
+
+var updateMgr = new NetworkLinkUpdateMgr();
 
 function DeferredLoading(dataSource) {
   this._dataSource = dataSource;
@@ -2953,6 +2956,17 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
           }
           entities.resumeEvents();
 
+          updateMgr.addLink(href, rootElement.ownerDocument, dataSource);
+
+          var nlc = queryFirstNode(
+            rootElement,
+            "NetworkLinkControl",
+            namespaces.kml
+          );
+          if (nlc) {
+            processNetworkLinkControlUpdate(nlc);
+          }
+
           // Add network links to a list if we need they will need to be updated
           var refreshMode = queryStringValue(
             link,
@@ -3080,10 +3094,27 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
   }
 }
 
+function processNetworkLinkControlUpdate(_ds, node) {
+  var updateNode = queryFirstNode(node, "Update", namespaces.kml);
+  if (updateNode) {
+    updateMgr.processUpdate(updateNode);
+  }
+}
+
+function isNetworkLinkControlUpdate(node) {
+  return (
+    node.localName === "NetworkLinkControl" &&
+    queryFirstNode(node, "Update", namespaces.kml)
+  );
+}
+
 function processFeatureNode(dataSource, node, processingData, deferredLoading) {
   var featureProcessor = featureTypes[node.localName];
   if (defined(featureProcessor)) {
     return featureProcessor(dataSource, node, processingData, deferredLoading);
+  }
+  if (isNetworkLinkControlUpdate(node)) {
+    return processNetworkLinkControlUpdate(dataSource, node);
   }
 
   return processUnsupportedFeature(
@@ -3164,7 +3195,7 @@ function loadKml(
     });
 }
 
-function loadKmz(dataSource, entityCollection, blob, sourceResource) {
+function loadKmz(dataSource, entityCollection, blob, sourceResource, context) {
   var reader = new zip.ZipReader(new zip.BlobReader(blob));
   return when(reader.getEntries()).then(function (entries) {
     var promises = [];
@@ -3208,7 +3239,8 @@ function loadKmz(dataSource, entityCollection, blob, sourceResource) {
         entityCollection,
         uriResolver.kml,
         sourceResource,
-        uriResolver
+        uriResolver,
+        context
       );
     });
   });
@@ -3246,7 +3278,13 @@ function load(dataSource, entityCollection, data, options) {
       if (dataToLoad instanceof Blob) {
         return isZipFile(dataToLoad).then(function (isZip) {
           if (isZip) {
-            return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
+            return loadKmz(
+              dataSource,
+              entityCollection,
+              dataToLoad,
+              sourceUri,
+              context
+            );
           }
           return readBlobAsText(dataToLoad).then(function (text) {
             //There's no official way to validate if a parse was successful.
@@ -3681,6 +3719,13 @@ KmlDataSource.prototype.load = function (data, options) {
       console.log(error);
       return when.reject(error);
     });
+};
+
+/**
+ * Cleans up unused resources.
+ */
+KmlDataSource.prototype.destroy = function () {
+  updateMgr.removeLink(this);
 };
 
 function mergeAvailabilityWithParent(child) {
