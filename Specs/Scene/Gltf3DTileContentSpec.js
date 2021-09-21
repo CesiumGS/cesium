@@ -210,6 +210,23 @@ describe(
         ExperimentalFeatures.enableModelExperimental = false;
       });
 
+      it("renders glTF content with metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          buildingsMetadataUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+      });
+
+      it("renders glTF content without metadata", function () {
+        return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
+          function (tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+          }
+        );
+      });
+
       it("assigns feature table as batch table", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
