@@ -11,6 +11,7 @@ import {
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(
   "Scene/ModelExperimental/GeometryPipelineStage",
@@ -59,6 +60,8 @@ describe(
     var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    var dracoMilkTruck =
+      "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
 
     var scene;
     var gltfLoaders = [];
@@ -124,8 +127,48 @@ describe(
       );
       expect(positionAttribute.offsetInBytes).toBe(0);
       expect(positionAttribute.strideInBytes).toBe(12);
-      expect(shaderBuilder._positionAttributeLine).toEqual(
-        "attribute vec3 a_position;"
+
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+        ["    vec3 positionMC;"]
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+        ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
+      );
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+        ["    attributes.positionMC = a_positionMC;"]
+      );
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+        []
+      );
+      ShaderBuilderTester.expectHasFragmentFunction(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+        []
+      );
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec3 v_positionEC;",
+        "varying vec3 v_positionMC;",
+        "varying vec3 v_positionWC;",
+      ]);
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasAttributes(
+        shaderBuilder,
+        "attribute vec3 a_positionMC;",
+        []
       );
     });
 
@@ -156,15 +199,6 @@ describe(
         );
         expect(normalAttribute.offsetInBytes).toBe(0);
         expect(normalAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec3 a_normal;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_NORMALS"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_NORMALS"
-        );
 
         var positionAttribute = attributes[1];
         expect(positionAttribute.index).toEqual(0);
@@ -175,9 +209,6 @@ describe(
         );
         expect(positionAttribute.offsetInBytes).toBe(288);
         expect(positionAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._positionAttributeLine).toEqual(
-          "attribute vec3 a_position;"
-        );
 
         var texCoord0Attribute = attributes[2];
         expect(texCoord0Attribute.index).toEqual(2);
@@ -188,30 +219,67 @@ describe(
         );
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
-        expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec2 a_texCoord_0;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_TEXCOORD_0"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_TEXCOORD_0"
-        );
 
-        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
-          "HAS_SET_INDEXED_ATTRIBUTES"
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
         );
-        var expectedSetIndexedAttributedInitializationLines = [
-          "void initializeSetIndexedAttributes()",
-          "{",
-          "    #ifdef HAS_TEXCOORD_0",
-          "    v_texCoord_0 = a_texCoord_0;",
-          "    #endif",
-          "}",
-        ];
-        expect(
-          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 6)
-        ).toEqual(expectedSetIndexedAttributedInitializationLines);
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    v_texCoord_0 = attributes.texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    attributes.texCoord_0 = v_texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normalEC;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute vec3 a_normalMC;", "attribute vec2 a_texCoord_0;"]
+        );
       });
     });
 
@@ -242,15 +310,6 @@ describe(
         );
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
-        expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec2 a_texCoord_0;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_TEXCOORD_0"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_TEXCOORD_0"
-        );
 
         var normalAttribute = attributes[1];
         expect(normalAttribute.index).toEqual(2);
@@ -261,15 +320,6 @@ describe(
         );
         expect(normalAttribute.offsetInBytes).toBe(0);
         expect(normalAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec3 a_normal;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_NORMALS"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_NORMALS"
-        );
 
         var tangentAttribute = attributes[2];
         expect(tangentAttribute.index).toEqual(3);
@@ -280,15 +330,6 @@ describe(
         );
         expect(tangentAttribute.offsetInBytes).toBe(0);
         expect(tangentAttribute.strideInBytes).toBe(16);
-        expect(shaderBuilder._attributeLines[2]).toEqual(
-          "attribute vec4 a_tangent;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
-          "HAS_TANGENTS"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[2]).toEqual(
-          "HAS_TANGENTS"
-        );
 
         var positionAttribute = attributes[3];
         expect(positionAttribute.index).toEqual(0);
@@ -299,24 +340,87 @@ describe(
         );
         expect(positionAttribute.offsetInBytes).toBe(0);
         expect(positionAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._positionAttributeLine).toEqual(
-          "attribute vec3 a_position;"
-        );
 
-        expect(shaderBuilder._vertexShaderParts.defineLines[3]).toEqual(
-          "HAS_SET_INDEXED_ATTRIBUTES"
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 normalMC;",
+            "    vec3 tangentMC;",
+            "    vec3 bitangentMC;",
+            "    vec2 texCoord_0;",
+          ]
         );
-        var expectedSetIndexedAttributedInitializationLines = [
-          "void initializeSetIndexedAttributes()",
-          "{",
-          "    #ifdef HAS_TEXCOORD_0",
-          "    v_texCoord_0 = a_texCoord_0;",
-          "    #endif",
-          "}",
-        ];
-        expect(
-          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 6)
-        ).toEqual(expectedSetIndexedAttributedInitializationLines);
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    vec3 tangentEC;",
+            "    vec3 bitangentEC;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.tangentMC = a_tangentMC.xyz;",
+            "    attributes.bitangentMC = normalize(cross(a_normalMC, a_tangentMC.xyz) * a_tangentMC.w);",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    v_texCoord_0 = attributes.texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    attributes.texCoord_0 = v_texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normalEC;",
+          "varying vec3 v_tangentEC;",
+          "varying vec3 v_bitangentEC;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_BITANGENTS",
+          "HAS_NORMALS",
+          "HAS_TANGENTS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_BITANGENTS",
+          "HAS_NORMALS",
+          "HAS_TANGENTS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          [
+            "attribute vec3 a_normalMC;",
+            "attribute vec4 a_tangentMC;",
+            "attribute vec2 a_texCoord_0;",
+          ]
+        );
       });
     });
 
@@ -345,9 +449,6 @@ describe(
         expect(positionAttribute.componentDatatype).toEqual(
           ComponentDatatype.FLOAT
         );
-        expect(shaderBuilder._positionAttributeLine).toEqual(
-          "attribute vec3 a_position;"
-        );
 
         var texCoord0Attribute = attributes[1];
         expect(texCoord0Attribute.index).toEqual(1);
@@ -358,15 +459,6 @@ describe(
         );
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
-        expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec2 a_texCoord_0;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_TEXCOORD_0"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_TEXCOORD_0"
-        );
 
         var texCoord1Attribute = attributes[2];
         expect(texCoord1Attribute.index).toEqual(2);
@@ -377,32 +469,77 @@ describe(
         );
         expect(texCoord1Attribute.offsetInBytes).toBe(0);
         expect(texCoord1Attribute.strideInBytes).toBe(8);
-        expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec2 a_texCoord_1;"
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec2 texCoord_0;",
+            "    vec2 texCoord_1;",
+          ]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_TEXCOORD_1"
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec2 texCoord_0;",
+            "    vec2 texCoord_1;",
+          ]
         );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_TEXCOORD_1"
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+            "    attributes.texCoord_1 = a_texCoord_1;",
+          ]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
-          "HAS_SET_INDEXED_ATTRIBUTES"
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    v_texCoord_0 = attributes.texCoord_0;",
+            "    v_texCoord_1 = attributes.texCoord_1;",
+          ]
         );
-        var expectedSetIndexedAttributedInitializationLines = [
-          "void initializeSetIndexedAttributes()",
-          "{",
-          "    #ifdef HAS_TEXCOORD_0",
-          "    v_texCoord_0 = a_texCoord_0;",
-          "    #endif",
-          "    #ifdef HAS_TEXCOORD_1",
-          "    v_texCoord_1 = a_texCoord_1;",
-          "    #endif",
-          "}",
-        ];
-        expect(
-          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 9)
-        ).toEqual(expectedSetIndexedAttributedInitializationLines);
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    attributes.texCoord_0 = v_texCoord_0;",
+            "    attributes.texCoord_1 = v_texCoord_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec2 v_texCoord_0;",
+          "varying vec2 v_texCoord_1;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_TEXCOORD_0",
+          "HAS_TEXCOORD_1",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_TEXCOORD_0",
+          "HAS_TEXCOORD_1",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute vec2 a_texCoord_0;", "attribute vec2 a_texCoord_1;"]
+        );
       });
     });
 
@@ -433,15 +570,6 @@ describe(
         );
         expect(color0Attribute.offsetInBytes).toBe(0);
         expect(color0Attribute.strideInBytes).toBe(16);
-        expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec4 a_color_0;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_COLOR_0"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_COLOR_0"
-        );
 
         var normalAttribute = attributes[1];
         expect(normalAttribute.index).toEqual(2);
@@ -452,15 +580,6 @@ describe(
         );
         expect(normalAttribute.offsetInBytes).toBe(0);
         expect(normalAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute vec3 a_normal;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_NORMALS"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_NORMALS"
-        );
 
         var positionAttribute = attributes[2];
         expect(positionAttribute.index).toEqual(0);
@@ -471,9 +590,6 @@ describe(
         );
         expect(positionAttribute.offsetInBytes).toBe(0);
         expect(positionAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._positionAttributeLine).toEqual(
-          "attribute vec3 a_position;"
-        );
 
         var texCoord0Attribute = attributes[3];
         expect(texCoord0Attribute.index).toEqual(3);
@@ -484,32 +600,87 @@ describe(
         );
         expect(texCoord0Attribute.offsetInBytes).toBe(0);
         expect(texCoord0Attribute.strideInBytes).toBe(8);
-        expect(shaderBuilder._attributeLines[2]).toEqual(
-          "attribute vec2 a_texCoord_0;"
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 normalMC;",
+            "    vec4 color_0;",
+            "    vec2 texCoord_0;",
+          ]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
-          "HAS_TEXCOORD_0"
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    vec4 color_0;",
+            "    vec2 texCoord_0;",
+          ]
         );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[2]).toEqual(
-          "HAS_TEXCOORD_0"
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.color_0 = a_color_0;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+          ]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[3]).toEqual(
-          "HAS_SET_INDEXED_ATTRIBUTES"
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    v_color_0 = attributes.color_0;",
+            "    v_texCoord_0 = attributes.texCoord_0;",
+          ]
         );
-        var expectedSetIndexedAttributedInitializationLines = [
-          "void initializeSetIndexedAttributes()",
-          "{",
-          "    #ifdef HAS_COLOR_0",
-          "    v_color_0 = a_color_0;",
-          "    #endif",
-          "    #ifdef HAS_TEXCOORD_0",
-          "    v_texCoord_0 = a_texCoord_0;",
-          "    #endif",
-          "}",
-        ];
-        expect(
-          shaderBuilder._vertexShaderParts.shaderLines.slice(0, 9)
-        ).toEqual(expectedSetIndexedAttributedInitializationLines);
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    attributes.color_0 = v_color_0;",
+            "    attributes.texCoord_0 = v_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normalEC;",
+          "varying vec4 v_color_0;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_COLOR_0",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_COLOR_0",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          [
+            "attribute vec3 a_normalMC;",
+            "attribute vec4 a_color_0;",
+            "attribute vec2 a_texCoord_0;",
+          ]
+        );
       });
     });
 
@@ -536,9 +707,6 @@ describe(
       );
       expect(positionAttribute.offsetInBytes).toBe(0);
       expect(positionAttribute.strideInBytes).toBe(12);
-      expect(shaderBuilder._positionAttributeLine).toEqual(
-        "attribute vec3 a_position;"
-      );
 
       var customAttribute = attributes[1];
       expect(customAttribute.index).toEqual(1);
@@ -549,14 +717,55 @@ describe(
       );
       expect(customAttribute.offsetInBytes).toBe(0);
       expect(customAttribute.strideInBytes).toBe(4);
-      expect(shaderBuilder._vertexShaderParts.shaderLines.slice(0, 4)).toEqual([
-        "void initializeCustomAttributes()",
-        "{",
-        "    v_temperature = a_temperature;",
-        "}",
+
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+        ["    vec3 positionMC;", "    vec2 temperature;"]
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+        GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+        [
+          "    vec3 positionMC;",
+          "    vec3 positionWC;",
+          "    vec3 positionEC;",
+          "    vec2 temperature;",
+        ]
+      );
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+        [
+          "    attributes.positionMC = a_positionMC;",
+          "    attributes.temperature = a_temperature;",
+        ]
+      );
+      ShaderBuilderTester.expectHasVertexFunction(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+        ["    v_temperature = attributes.temperature;"]
+      );
+      ShaderBuilderTester.expectHasFragmentFunction(
+        shaderBuilder,
+        GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+        GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+        ["    attributes.temperature = v_temperature;"]
+      );
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying vec2 v_temperature;",
+        "varying vec3 v_positionEC;",
+        "varying vec3 v_positionMC;",
+        "varying vec3 v_positionWC;",
       ]);
-      expect(shaderBuilder._attributeLines[0]).toEqual(
-        "attribute vec2 a_temperature;"
+      ShaderBuilderTester.expectHasAttributes(
+        shaderBuilder,
+        "attribute vec3 a_positionMC;",
+        ["attribute vec2 a_temperature;"]
       );
     });
 
@@ -587,9 +796,6 @@ describe(
         );
         expect(positionAttribute.offsetInBytes).toBe(0);
         expect(positionAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._positionAttributeLine).toEqual(
-          "attribute vec3 a_position;"
-        );
 
         var normalAttribute = attributes[1];
         expect(normalAttribute.index).toEqual(1);
@@ -600,15 +806,6 @@ describe(
         );
         expect(normalAttribute.offsetInBytes).toBe(0);
         expect(normalAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute vec3 a_normal;"
-        );
-        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_NORMALS"
-        );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_NORMALS"
-        );
 
         var featureId0Attribute = attributes[2];
         expect(featureId0Attribute.index).toEqual(2);
@@ -619,15 +816,52 @@ describe(
         );
         expect(featureId0Attribute.offsetInBytes).toBe(0);
         expect(featureId0Attribute.strideInBytes).toBe(4);
-        expect(shaderBuilder._attributeLines[1]).toEqual(
-          "attribute float a_featureId_0;"
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 normalMC;",
+            "    float featureId_0;",
+          ]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_FEATURE_ID_0"
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    float featureId_0;",
+          ]
         );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "HAS_FEATURE_ID_0"
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.featureId_0 = a_featureId_0;",
+          ]
         );
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute float a_featureId_0;", "attribute vec3 a_normalMC;"]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_FEATURE_ID_0",
+          "HAS_NORMALS",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_FEATURE_ID_0",
+          "HAS_NORMALS",
+        ]);
       });
     });
 
@@ -658,9 +892,6 @@ describe(
         );
         expect(positionAttribute.offsetInBytes).toBe(0);
         expect(positionAttribute.strideInBytes).toBe(12);
-        expect(shaderBuilder._positionAttributeLine).toEqual(
-          "attribute vec3 a_position;"
-        );
 
         var featureId0Attribute = attributes[1];
         expect(featureId0Attribute.index).toEqual(1);
@@ -671,24 +902,138 @@ describe(
         );
         expect(featureId0Attribute.offsetInBytes).toBe(0);
         expect(featureId0Attribute.strideInBytes).toBe(4);
-        expect(shaderBuilder._attributeLines[0]).toEqual(
-          "attribute float a_featureId_0;"
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    float featureId_0;"]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[0]).toEqual(
-          "HAS_FEATURE_ID_0"
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    float featureId_0;",
+          ]
         );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[0]).toEqual(
-          "HAS_FEATURE_ID_0"
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.featureId_0 = a_featureId_0;",
+          ]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[1]).toEqual(
-          "HAS_SET_INDEXED_ATTRIBUTES"
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute float a_featureId_0;"]
         );
-        expect(shaderBuilder._vertexShaderParts.defineLines[2]).toEqual(
-          "PRIMITIVE_TYPE_POINTS"
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_FEATURE_ID_0",
+          "PRIMITIVE_TYPE_POINTS",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_FEATURE_ID_0",
+          "PRIMITIVE_TYPE_POINTS",
+        ]);
+      });
+    });
+
+    it("prepares Draco model for dequantization stage", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+      };
+
+      return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(3);
+
+        var normalAttribute = attributes[0];
+        expect(normalAttribute.index).toEqual(1);
+        expect(normalAttribute.vertexBuffer).toBeDefined();
+        expect(normalAttribute.componentsPerAttribute).toEqual(2);
+        expect(normalAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
         );
-        expect(shaderBuilder._fragmentShaderParts.defineLines[1]).toEqual(
-          "PRIMITIVE_TYPE_POINTS"
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).not.toBeDefined();
+
+        var positionAttribute = attributes[1];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
         );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).not.toBeDefined();
+
+        var texCoord0Attribute = attributes[2];
+        expect(texCoord0Attribute.index).toEqual(2);
+        expect(texCoord0Attribute.vertexBuffer).toBeDefined();
+        expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
+        expect(texCoord0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).not.toBeDefined();
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        // Initialization is skipped for dequantized attributes
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          []
+        );
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_quantized_positionMC;",
+          [
+            "attribute vec2 a_quantized_normalMC;",
+            "attribute vec2 a_quantized_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
       });
     });
   },

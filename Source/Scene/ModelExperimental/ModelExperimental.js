@@ -10,6 +10,8 @@ import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
+import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -29,7 +31,10 @@ import Matrix4 from "../../Core/Matrix4.js";
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+ * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -59,6 +64,7 @@ export default function ModelExperimental(options) {
   this._ready = false;
   this._readyPromise = when.defer();
   this._customShader = options.customShader;
+  this._content = options.content;
 
   this._texturesLoaded = false;
 
@@ -66,6 +72,14 @@ export default function ModelExperimental(options) {
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._show = defaultValue(options.show, true);
+
+  this._featureIdAttributeIndex = defaultValue(
+    options.featureIdAttributeIndex,
+    0
+  );
+  this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
+  this._featureTables = undefined;
+  this._featureTableId = undefined;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -81,6 +95,90 @@ export default function ModelExperimental(options) {
   initialize(this);
 }
 
+function createContentFeatureTables(content, featureMetadata) {
+  var contentFeatureTables = {};
+
+  var featureTables = featureMetadata.featureTables;
+  for (var featureTableId in featureTables) {
+    if (featureTables.hasOwnProperty(featureTableId)) {
+      var featureTable = featureTables[featureTableId];
+      var contentFeatureTable = new Cesium3DTileContentFeatureTable({
+        content: content,
+        featureTable: featureTable,
+      });
+
+      if (contentFeatureTable.featuresLength > 0) {
+        contentFeatureTables[featureTableId] = contentFeatureTable;
+      }
+    }
+  }
+
+  return contentFeatureTables;
+}
+
+function createModelFeatureTables(model, featureMetadata) {
+  var modelFeatureTables = {};
+
+  var featureTables = featureMetadata.featureTables;
+  for (var featureTableId in featureTables) {
+    if (featureTables.hasOwnProperty(featureTableId)) {
+      var featureTable = featureTables[featureTableId];
+      var modelfeatureTable = new ModelFeatureTable({
+        model: model,
+        featureTable: featureTable,
+      });
+
+      if (modelfeatureTable.featuresLength > 0) {
+        modelFeatureTables[featureTableId] = modelfeatureTable;
+        model._resources.push(modelfeatureTable);
+      }
+    }
+  }
+
+  return modelFeatureTables;
+}
+
+function selectFeatureTableId(components, model) {
+  var featureIdAttributeIndex = model._featureIdAttributeIndex;
+  var featureIdTextureIndex = model._featureIdTextureIndex;
+
+  var i, j;
+  var featureIdAttribute;
+  var featureIdTexture;
+
+  var node;
+  // Scan the nodes till we find one with instances, get the feature table ID
+  // if the feature ID attribute of the user-selected index is present.
+  for (i = 0; i < components.nodes.length; i++) {
+    node = components.nodes[i];
+    if (defined(node.instances)) {
+      featureIdAttribute =
+        node.instances.featureIdAttributes[featureIdAttributeIndex];
+      if (defined(featureIdAttribute)) {
+        return featureIdAttribute.featureTableId;
+      }
+    }
+  }
+
+  // Scan the primitives till we find one with textures or attributes, get the feature table ID
+  // if the feature ID attribute/texture of the user-selected index is present.
+  for (i = 0; i < components.nodes.length; i++) {
+    node = components.nodes[i];
+    for (j = 0; j < node.primitives.length; j++) {
+      var primitive = node.primitives[j];
+      featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+      featureIdAttribute =
+        primitive.featureIdAttributes[featureIdAttributeIndex];
+
+      if (defined(featureIdTexture)) {
+        return featureIdTexture.featureTableId;
+      } else if (defined(featureIdAttribute)) {
+        return featureIdAttribute.featureTableId;
+      }
+    }
+  }
+}
+
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
@@ -90,9 +188,32 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
+      var components = loader.components;
+      var content = model._content;
+      var featureMetadata = components.featureMetadata;
+
+      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
+        var featureTables;
+        if (defined(content)) {
+          featureTables = createContentFeatureTables(content, featureMetadata);
+          content.featureTables = featureTables;
+        } else {
+          featureTables = createModelFeatureTables(model, featureMetadata);
+          model._featureTables = featureTables;
+        }
+      }
+
+      var featureTableId = selectFeatureTableId(components, model);
+
+      if (defined(content)) {
+        content.featureTableId = featureTableId;
+      } else {
+        model.featureTableId = featureTableId;
+      }
+
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
-        modelComponents: loader.components,
+        modelComponents: components,
         modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
@@ -175,8 +296,9 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._opaquePass;
     },
   },
+
   /**
-   * The model's custom shader if it exists
+   * The model's custom shader, if it exists.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -188,6 +310,57 @@ Object.defineProperties(ModelExperimental.prototype, {
   customShader: {
     get: function () {
       return this._customShader;
+    },
+  },
+
+  /**
+   * The tile content this model belongs to, if it is loaded as part of a {@link Cesium3DTileset}.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cesium3DTileContent}
+   * @readonly
+   *
+   * @private
+   */
+  content: {
+    get: function () {
+      return this._content;
+    },
+  },
+
+  /**
+   * The ID for the feature table to use for picking and styling in this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {String}
+   * @readonly
+   *
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
+    },
+  },
+
+  /**
+   * The feature tables for this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Object.<String,ModelFeatureTable>}
+   * @readonly
+   *
+   * @private
+   */
+  featureTables: {
+    get: function () {
+      return this._featureTables;
     },
   },
 
@@ -293,6 +466,36 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._show = value;
     },
   },
+
+  /**
+   * The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0
+   */
+  featureIdAttributeIndex: {
+    get: function () {
+      return this._featureIdAttributeIndex;
+    },
+  },
+
+  /**
+   * The index of the feature ID texture to use for picking features per-primitive.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0
+   */
+  featureIdTextureIndex: {
+    get: function () {
+      return this._featureIdTextureIndex;
+    },
+  },
 });
 
 /**
@@ -334,6 +537,16 @@ ModelExperimental.prototype.update = function (frameState) {
       model._ready = true;
       model._readyPromise.resolve(model);
     });
+  }
+
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.update(frameState);
+      }
+    }
   }
 
   if (this._debugShowBoundingVolumeDirty) {
@@ -416,7 +629,10 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+ * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
  * @returns {ModelExperimental} The newly created model.
  *
@@ -463,7 +679,10 @@ ModelExperimental.fromGltf = function (options) {
     opaquePass: options.opaquePass,
     allowPicking: options.allowPicking,
     customShader: options.customShader,
+    content: options.content,
     show: options.show,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
   };
   var model = new ModelExperimental(modelOptions);
 
