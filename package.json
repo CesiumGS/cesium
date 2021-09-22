@@ -68,7 +68,7 @@
     "gulp-tap": "^2.0.0",
     "gulp-uglify": "^3.0.2",
     "gulp-zip": "^5.1.0",
-    "husky": "^7.0.0",
+    "husky": "^7.0.2",
     "jasmine-core": "^3.7.1",
     "jsdoc": "^3.6.7",
     "jsep": "^0.3.1",
