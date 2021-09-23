@@ -4,7 +4,8 @@
 
 ##### Fixes :wrench:
 
-- Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values.
+- Fixed incorrect behavior in `CameraFlightPath` when using Columbus View. [#9192](https://github.com/CesiumGS/cesium/pull/9192)
+- Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values. [#9717](https://github.com/CesiumGS/cesium/pull/9717)
 
 ### 1.85 - 2021-09-01
 
