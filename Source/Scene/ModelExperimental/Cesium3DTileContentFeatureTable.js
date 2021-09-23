@@ -207,13 +207,13 @@ Cesium3DTileContentFeatureTable.prototype.applyStyle = function (style) {
   var model = this._content.model;
 
   if (!defined(style)) {
-    model._hasStyle = false;
+    model.hasStyle = false;
     this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
     this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);
     return;
   }
 
-  model._hasStyle = true;
+  model.hasStyle = true;
   for (var i = 0; i < this._featuresLength; i++) {
     var feature = this.getFeature(i);
     var color = defined(style.color)
@@ -231,6 +231,4 @@ Cesium3DTileContentFeatureTable.prototype.applyStyle = function (style) {
     this.setColor(i, color);
     this.setShow(i, show);
   }
-
-  model.resetDrawCommands();
 };

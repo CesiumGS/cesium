@@ -99,35 +99,17 @@ FeatureIdPipelineStage.process = function (
       featureIdAttributePrefix + featureIdAttributeSetIndex,
       ShaderDestination.BOTH
     );
-
-    shaderBuilder.addVarying("float", "v_featureId");
-    shaderBuilder.addVarying("vec2", "v_featureSt");
-
-    shaderBuilder.addFunction(
-      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
-      FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS,
-      ShaderDestination.VERTEX
-    );
-    shaderBuilder.addFunctionLines(
-      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
-      ["v_featureId = feature.id;", "v_featureSt = feature.st;"]
-    );
-    shaderBuilder.addFunction(
-      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
-      FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addFunctionLines(
-      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
-      ["feature.id = v_featureId;", "feature.st = v_featureSt;"]
-    );
-
+    setupFeatureIdentificationVaryings(shaderBuilder);
     shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
   }
 
   shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
 };
 
+/**
+ * Sets up the FeatureIdentification struct.
+ * @private
+ */
 function setupFeatureIdentificationStruct(shaderBuilder) {
   // The struct is always needed by the Fragment Shader.
   shaderBuilder.addStruct(
@@ -145,11 +127,6 @@ function setupFeatureIdentificationStruct(shaderBuilder) {
     "vec2",
     "st"
   );
-  shaderBuilder.addStruct(
-    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
-    FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
-    ShaderDestination.VERTEX
-  );
 
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
@@ -160,6 +137,34 @@ function setupFeatureIdentificationStruct(shaderBuilder) {
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
     "vec2",
     "st"
+  );
+}
+
+/**
+ * Sets up the varyings to initialize the FeatureIdentification struct.
+ * @private
+ */
+function setupFeatureIdentificationVaryings(shaderBuilder) {
+  shaderBuilder.addVarying("float", "v_featureId");
+  shaderBuilder.addVarying("vec2", "v_featureSt");
+
+  shaderBuilder.addFunction(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
+    FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
+    ["v_featureId = feature.id;", "v_featureSt = feature.st;"]
+  );
+  shaderBuilder.addFunction(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
+    FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS,
+    ShaderDestination.FRAGMENT
+  );
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
+    ["feature.id = v_featureId;", "feature.st = v_featureSt;"]
   );
 }
 

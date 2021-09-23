@@ -357,6 +357,29 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._color = value;
     },
   },
+
+  /**
+   * Whether or not this model has a style applied to it.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Boolean}
+   * @default false
+   *
+   * @private
+   */
+  hasStyle: {
+    get: function () {
+      return this._hasStyle;
+    },
+    set: function (value) {
+      if (value !== this._hasStyle) {
+        this.resetDrawCommands();
+      }
+      this._hasStyle = value;
+    },
+  },
+
   /** The ID for the feature table to use for picking and styling in this model.
    *
    * @memberof ModelExperimental.prototype
@@ -594,6 +617,11 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 };
 
+/**
+ * Resets the draw commands for this model.
+ *
+ * @private
+ */
 ModelExperimental.prototype.resetDrawCommands = function () {
   this._drawCommandsBuilt = false;
   this._sceneGraph._drawCommands = [];

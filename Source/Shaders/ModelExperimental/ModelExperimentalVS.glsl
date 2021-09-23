@@ -24,9 +24,11 @@ void main()
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
     FeatureIdentification feature;
     featureStage(feature);
+
         #ifdef USE_CPU_STYLING
         cpuStylingStage(attributes.positionMC, feature);
         #endif
+        
     setFeatureIdentificationVaryings(feature);
     #endif
     

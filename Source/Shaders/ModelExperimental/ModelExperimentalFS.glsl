@@ -31,7 +31,10 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 }
 
+// This struct is declared outside the main function because it is accessed
+// by the picking function.
 FeatureIdentification feature;
+
 void main() 
 {
     czm_modelMaterial material = defaultModelMaterial();
