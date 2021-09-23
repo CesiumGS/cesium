@@ -9,6 +9,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
@@ -314,7 +315,21 @@ function Context(canvas, options) {
     "WEBGL_compressed_texture_pvrtc",
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
+  this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
+  this._etc = !!getExtension(gl, ["WEBG_compressed_texture_etc"]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+  this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
+
+  // It is necessary to pass supported formats to loadKTX2
+  // because imagery layers don't have access to the context.
+  loadKTX2.setKTX2SupportedFormats(
+    this._s3tc,
+    this._pvrtc,
+    this._astc,
+    this._etc,
+    this._etc1,
+    this._bc7
+  );
 
   var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
     ? getExtension(gl, [
@@ -458,7 +473,12 @@ function Context(canvas, options) {
 
   this._defaultPassState = ps;
   this._defaultRenderState = rs;
+  // default texture has a value of (1, 1, 1)
+  // default emissive texture has a value of (0, 0, 0)
+  // default normal texture is +z which is encoded as (0.5, 0.5, 1)
   this._defaultTexture = undefined;
+  this._defaultEmissiveTexture = undefined;
+  this._defaultNormalTexture = undefined;
   this._defaultCubeMap = undefined;
 
   this._us = us;
@@ -665,7 +685,7 @@ Object.defineProperties(Context.prototype, {
    * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
    * @memberof Context.prototype
    * @type {Boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/}
    */
   halfFloatingPointTexture: {
     get: function () {
@@ -716,7 +736,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_s3tc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_s3tc is supported.  This extension provides
    * access to DXT compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -729,7 +749,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_pvrtc is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_pvrtc is supported.  This extension provides
    * access to PVR compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -742,7 +762,33 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * <code>true</code> if WEBGL_texture_compression_etc1 is supported.  This extension provides
+   * <code>true</code> if WEBGL_compressed_texture_astc is supported.  This extension provides
+   * access to ASTC compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_astc/}
+   */
+  astc: {
+    get: function () {
+      return this._astc;
+    },
+  },
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc is supported.  This extension provides
+   * access to ETC compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc/}
+   */
+  etc: {
+    get: function () {
+      return this._etc;
+    },
+  },
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc1 is supported.  This extension provides
    * access to ETC1 compressed textures.
    * @memberof Context.prototype
    * @type {Boolean}
@@ -751,6 +797,37 @@ Object.defineProperties(Context.prototype, {
   etc1: {
     get: function () {
       return this._etc1;
+    },
+  },
+
+  /**
+   * <code>true</code> if EXT_texture_compression_bptc is supported.  This extension provides
+   * access to BC7 compressed textures.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/}
+   */
+  bc7: {
+    get: function () {
+      return this._bc7;
+    },
+  },
+
+  /**
+   * <code>true</code> if S3TC, PVRTC, ASTC, ETC, ETC1, or BC7 compression is supported.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   */
+  supportsBasis: {
+    get: function () {
+      return (
+        this._s3tc ||
+        this._pvrtc ||
+        this._astc ||
+        this._etc ||
+        this._etc1 ||
+        this._bc7
+      );
     },
   },
 
@@ -883,6 +960,57 @@ Object.defineProperties(Context.prototype, {
       }
 
       return this._defaultTexture;
+    },
+  },
+  /**
+   * A 1x1 RGB texture initialized to [0, 0, 0] representing a material that is
+   * not emissive. This can be used as a placeholder texture for emissive
+   * textures while other textures are downloaded.
+   * @memberof Context.prototype
+   * @type {Texture}
+   */
+  defaultEmissiveTexture: {
+    get: function () {
+      if (this._defaultEmissiveTexture === undefined) {
+        this._defaultEmissiveTexture = new Texture({
+          context: this,
+          pixelFormat: PixelFormat.RGB,
+          source: {
+            width: 1,
+            height: 1,
+            arrayBufferView: new Uint8Array([0, 0, 0]),
+          },
+          flipY: false,
+        });
+      }
+
+      return this._defaultEmissiveTexture;
+    },
+  },
+  /**
+   * A 1x1 RGBA texture initialized to [128, 128, 255] to encode a tangent
+   * space normal pointing in the +z direction, i.e. (0, 0, 1). This can
+   * be used as a placeholder normal texture while other textures are
+   * downloaded.
+   * @memberof Context.prototype
+   * @type {Texture}
+   */
+  defaultNormalTexture: {
+    get: function () {
+      if (this._defaultNormalTexture === undefined) {
+        this._defaultNormalTexture = new Texture({
+          context: this,
+          pixelFormat: PixelFormat.RGB,
+          source: {
+            width: 1,
+            height: 1,
+            arrayBufferView: new Uint8Array([128, 128, 255]),
+          },
+          flipY: false,
+        });
+      }
+
+      return this._defaultNormalTexture;
     },
   },
 
@@ -1446,6 +1574,10 @@ Context.prototype.destroy = function () {
   this._shaderCache = this._shaderCache.destroy();
   this._textureCache = this._textureCache.destroy();
   this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+  this._defaultEmissiveTexture =
+    this._defaultEmissiveTexture && this._defaultEmissiveTexture.destroy();
+  this._defaultNormalTexture =
+    this._defaultNormalTexture && this._defaultNormalTexture.destroy();
   this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
 
   return destroyObject(this);

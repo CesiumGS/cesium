@@ -228,6 +228,20 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("does not render pointPrimitive if show is false", function () {
+      pointPrimitives.add({
+        position: Cartesian3.ZERO,
+        translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        color: Color.LIME,
+      });
+
+      camera.position = new Cartesian3(2.0, 0.0, 0.0);
+      expect(scene).toRender([0, 255, 0, 255]);
+
+      pointPrimitives.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("throws scaleByDistance with nearDistance === farDistance", function () {
       var p = pointPrimitives.add();
       var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);

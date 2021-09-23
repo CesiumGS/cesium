@@ -2,9 +2,9 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
-import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
+import addToArray from "./GltfPipeline/addToArray.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -17,11 +17,11 @@ function processModelMaterialsCommon(gltf, options) {
     return;
   }
 
-  if (!hasExtension(gltf, "KHR_materials_common")) {
+  if (!usesExtension(gltf, "KHR_materials_common")) {
     return;
   }
 
-  if (!hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (!usesExtension(gltf, "KHR_techniques_webgl")) {
     if (!defined(gltf.extensions)) {
       gltf.extensions = {};
     }
@@ -288,7 +288,7 @@ function generateTechnique(
   // Add techniques
   var techniqueUniforms = {
     u_modelViewMatrix: {
-      semantic: hasExtension(gltf, "CESIUM_RTC")
+      semantic: usesExtension(gltf, "CESIUM_RTC")
         ? "CESIUM_RTC_MODELVIEW"
         : "MODELVIEW",
       type: WebGLConstants.FLOAT_MAT4,

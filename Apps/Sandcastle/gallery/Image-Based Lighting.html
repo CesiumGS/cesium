@@ -66,58 +66,62 @@
         }
 
         var environmentMapURL =
-          "https://cesium.com/assets/kiara_6_afternoon_2k_ibl.ktx";
+          "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
         var modelURL = "../../SampleData/models/Pawns/Pawns.glb";
 
-        // This environment map was processed using Google's Filament project. To process your own:
+        // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
+        // 1 - Download and build the Khronos glTF IBL Sampler (https://github.com/KhronosGroup/glTF-IBL-Sampler).
+        // 2 - Run `cli -inputPath /path/to/image.hdr -outCubeMap /path/to/output.ktx2`. Run `cli -h` for all options.
+
+        // To generate the spherical harmonic coefficients below, use Google's Filament project:
         // 1 - Download the Filament release (https://github.com/google/filament/releases).
         // 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hdr`. Other formats are also supported. Run `cmgen --help` for all options.
-        // 3 - Take the generated coefficients and the KTX file and load them in CesiumJS as shown below.
+        // 3 - Take the generated coefficients and load them in CesiumJS as shown below.
 
         var L00 = new Cesium.Cartesian3(
-          0.170455150831422,
-          0.163151083190219,
-          0.196966760289763
+          1.234709620475769,
+          1.221461296081543,
+          1.273156881332397
         );
         var L1_1 = new Cesium.Cartesian3(
-          -0.066550267689383,
-          -0.022088055746048,
-          0.078835009246127
+          1.135921120643616,
+          1.171217799186707,
+          1.287644743919373
         );
         var L10 = new Cesium.Cartesian3(
-          0.038364097478591,
-          0.045714300098753,
-          0.063498904606215
+          1.245193719863892,
+          1.245591878890991,
+          1.282818794250488
         );
         var L11 = new Cesium.Cartesian3(
-          -0.01436536331281,
-          -0.026490613715151,
-          -0.05018940406602
+          -1.106930732727051,
+          -1.112522482872009,
+          -1.153198838233948
         );
         var L2_2 = new Cesium.Cartesian3(
-          -0.05153278691789,
-          -0.050777795729986,
-          -0.056449044453032
+          -1.086226940155029,
+          -1.079731941223145,
+          -1.101912498474121
         );
         var L2_1 = new Cesium.Cartesian3(
-          0.043454596136534,
-          0.046672590104157,
-          0.05753010764661
+          1.189834713935852,
+          1.185906887054443,
+          1.214385271072388
         );
         var L20 = new Cesium.Cartesian3(
-          -0.00164046627411,
-          0.001286638231156,
-          0.007228908989616
+          0.01778045296669,
+          0.02013735473156,
+          0.025313569232821
         );
         var L21 = new Cesium.Cartesian3(
-          -0.042260855700641,
-          -0.046394335094707,
-          -0.057562936365585
+          -1.086826920509338,
+          -1.084611177444458,
+          -1.111204028129578
         );
         var L22 = new Cesium.Cartesian3(
-          -0.004953478914091,
-          -0.000479681664876,
-          0.008508150106928
+          -0.05241484940052,
+          -0.048303380608559,
+          -0.041960217058659
         );
         var coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 

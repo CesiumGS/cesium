@@ -270,6 +270,11 @@ function combineShader(shaderSource, isFragmentShader, context) {
     result += "#define OES_texture_float_linear\n\n";
   }
 
+  // Define a constant for the OES_texture_float extension since WebGL does not.
+  if (context.floatingPointTexture) {
+    result += "#define OES_texture_float\n\n";
+  }
+
   // append built-ins
   if (shaderSource.includeBuiltIns) {
     result += getBuiltinsAndAutomaticUniforms(combinedSources);

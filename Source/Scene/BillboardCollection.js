@@ -2,6 +2,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -111,6 +112,7 @@ var attributeLocationsInstanced = {
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the billboards in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
@@ -199,6 +201,14 @@ function BillboardCollection(options) {
   this._boundingVolumeDirty = false;
 
   this._colorCommands = [];
+
+  /**
+   * Determines if billboards in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -462,13 +472,13 @@ function destroyBillboards(billboards) {
  * @see BillboardCollection#removeAll
  */
 BillboardCollection.prototype.add = function (options) {
-  var b = new Billboard(options, this);
-  b._index = this._billboards.length;
+  var billboard = new Billboard(options, this);
+  billboard._index = this._billboards.length;
 
-  this._billboards.push(b);
+  this._billboards.push(billboard);
   this._createVertexArray = true;
 
-  return b;
+  return billboard;
 };
 
 /**
@@ -496,7 +506,7 @@ BillboardCollection.prototype.add = function (options) {
  */
 BillboardCollection.prototype.remove = function (billboard) {
   if (this.contains(billboard)) {
-    this._billboards[billboard._index] = null; // Removed later
+    this._billboards[billboard._index] = undefined; // Removed later
     this._billboardsRemoved = true;
     this._createVertexArray = true;
     billboard._destroy();
@@ -542,7 +552,7 @@ function removeBillboards(billboardCollection) {
     var length = billboards.length;
     for (var i = 0, j = 0; i < length; ++i) {
       var billboard = billboards[i];
-      if (billboard) {
+      if (defined(billboard)) {
         billboard._index = j++;
         newBillboards.push(billboard);
       }
@@ -604,9 +614,7 @@ BillboardCollection.prototype.contains = function (billboard) {
  */
 BillboardCollection.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(index)) {
-    throw new DeveloperError("index is required.");
-  }
+  Check.typeOf.number("index", index);
   //>>includeEnd('debug');
 
   removeBillboards(this);
@@ -1809,6 +1817,11 @@ var scratchWriterArray = [];
  */
 BillboardCollection.prototype.update = function (frameState) {
   removeBillboards(this);
+
+  if (!this.show) {
+    return;
+  }
+
   var billboards = this._billboards;
   var billboardsLength = billboards.length;
 

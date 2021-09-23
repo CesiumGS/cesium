@@ -3,6 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -255,9 +256,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.bool("value", value);
       //>>includeEnd('debug');
 
       if (this._show !== value) {
@@ -278,9 +277,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var position = this._position;
@@ -305,9 +302,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       var heightReference = this._heightReference;
@@ -341,9 +336,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var pixelOffset = this._pixelOffset;
@@ -382,10 +375,13 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far <= value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance."
+          );
+        }
       }
       //>>includeEnd('debug');
 
@@ -425,10 +421,13 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far <= value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance."
+          );
+        }
       }
       //>>includeEnd('debug');
 
@@ -472,10 +471,13 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far <= value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance."
+          );
+        }
       }
       //>>includeEnd('debug');
 
@@ -518,9 +520,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var eyeOffset = this._eyeOffset;
@@ -551,9 +551,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       if (this._horizontalOrigin !== value) {
@@ -583,9 +581,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       if (this._verticalOrigin !== value) {
@@ -615,9 +611,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       if (this._scale !== value) {
@@ -660,9 +654,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var color = this._color;
@@ -684,9 +676,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
       if (this._rotation !== value) {
@@ -723,9 +713,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value is required.");
-      }
+      Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
       var alignedAxis = this._alignedAxis;
@@ -746,6 +734,11 @@ Object.defineProperties(Billboard.prototype, {
       return defaultValue(this._width, this._imageWidth);
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("value", value);
+      }
+      //>>includeEnd('debug');
       if (this._width !== value) {
         this._width = value;
         makeDirty(this, IMAGE_INDEX_INDEX);
@@ -763,6 +756,11 @@ Object.defineProperties(Billboard.prototype, {
       return defaultValue(this._height, this._imageHeight);
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("value", value);
+      }
+      //>>includeEnd('debug');
       if (this._height !== value) {
         this._height = value;
         makeDirty(this, IMAGE_INDEX_INDEX);
@@ -782,6 +780,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._sizeInMeters;
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
       if (this._sizeInMeters !== value) {
         this._sizeInMeters = value;
         makeDirty(this, COLOR_INDEX);
@@ -804,10 +805,13 @@ Object.defineProperties(Billboard.prototype, {
         !DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)
       ) {
         //>>includeStart('debug', pragmas.debug);
-        if (defined(value) && value.far <= value.near) {
-          throw new DeveloperError(
-            "far distance must be greater than near distance."
-          );
+        if (defined(value)) {
+          Check.typeOf.object("value", value);
+          if (value.far <= value.near) {
+            throw new DeveloperError(
+              "far distance must be greater than near distance."
+            );
+          }
         }
         //>>includeEnd('debug');
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
@@ -830,14 +834,17 @@ Object.defineProperties(Billboard.prototype, {
       return this._disableDepthTestDistance;
     },
     set: function (value) {
-      if (this._disableDepthTestDistance !== value) {
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(value) && value < 0.0) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("value", value);
+        if (value < 0.0) {
           throw new DeveloperError(
             "disableDepthTestDistance must be greater than or equal to 0.0."
           );
         }
-        //>>includeEnd('debug');
+      }
+      //>>includeEnd('debug');
+      if (this._disableDepthTestDistance !== value) {
         this._disableDepthTestDistance = value;
         makeDirty(this, DISABLE_DEPTH_DISTANCE);
       }

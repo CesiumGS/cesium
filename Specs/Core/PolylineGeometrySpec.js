@@ -1,4 +1,4 @@
-import { ArcType } from "../../Source/Cesium.js";
+import { ArcType, defaultValue } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -239,6 +239,252 @@ describe("Core/PolylineGeometry", function () {
         geometryPosition,
         positions[1],
         CesiumMath.EPSILON7
+      )
+    ).toBe(true);
+  });
+
+  it("createGeometry removes duplicate positions", function () {
+    var positions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+    ];
+
+    var line = PolylineGeometry.createGeometry(
+      new PolylineGeometry({
+        positions: positions,
+        width: 10.0,
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        arcType: ArcType.NONE,
+      })
+    );
+
+    var numVertices = expectedPositions.length * 4 - 4;
+    expect(line.attributes.position.values.length).toEqual(numVertices * 3);
+    expect(line.attributes.prevPosition.values.length).toEqual(numVertices * 3);
+    expect(line.attributes.nextPosition.values.length).toEqual(numVertices * 3);
+  });
+
+  function attributeArrayEqualsColorArray(
+    attributeArray,
+    colorArray,
+    colorsPerVertex
+  ) {
+    colorsPerVertex = defaultValue(colorsPerVertex, false);
+    var i;
+    var j;
+    var color;
+    var color2;
+    var reconstructedColor = new Color();
+    var attrArrayIndex;
+    var length = colorsPerVertex ? colorArray.length - 1 : colorArray.length;
+    for (i = 0; i < length; i++) {
+      color = colorArray[i];
+      color2 = colorArray[i + 1];
+
+      attrArrayIndex = 16 * i;
+      for (j = 0; j < 4; j++) {
+        reconstructedColor.red = attributeArray[attrArrayIndex + 4 * j] / 255;
+        reconstructedColor.green =
+          attributeArray[attrArrayIndex + 4 * j + 1] / 255;
+        reconstructedColor.blue =
+          attributeArray[attrArrayIndex + 4 * j + 2] / 255;
+        reconstructedColor.alpha =
+          attributeArray[attrArrayIndex + 4 * j + 3] / 255;
+        if (colorsPerVertex && j > 1) {
+          if (!reconstructedColor.equalsEpsilon(color2, CesiumMath.EPSILON2)) {
+            return false;
+          }
+        } else if (
+          !reconstructedColor.equalsEpsilon(color, CesiumMath.EPSILON2)
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  it("createGeometry removes segment colors corresponding to duplicate positions", function () {
+    var positions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+    ];
+
+    var colors = [
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(1.0, 0.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(1.0, 0.0, 0.0, 1.0),
+      new Color(1.0, 0.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+    ];
+
+    var expectedColors = [
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+    ];
+
+    var line = PolylineGeometry.createGeometry(
+      new PolylineGeometry({
+        positions: positions,
+        colors: colors,
+        width: 10.0,
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        arcType: ArcType.NONE,
+      })
+    );
+
+    var numVertices = expectedPositions.length * 4 - 4;
+    expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    expect(
+      attributeArrayEqualsColorArray(
+        line.attributes.color.values,
+        expectedColors
+      )
+    ).toBe(true);
+  });
+
+  it("createGeometry removes per-vertex colors corresponding to duplicate positions", function () {
+    var positions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+      new Cartesian3(6.0, 2.0, 3.0),
+    ];
+
+    var colors = [
+      new Color(1.0, 0.0, 0.0, 1.0),
+      new Color(1.0, 0.5, 0.0, 1.0),
+      new Color(0.0, 0.0, 0.0, 1.0),
+      new Color(1.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 0.0, 1.0),
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 1.0, 1.0, 1.0),
+      new Color(0.0, 0.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+      new Cartesian3(4.0, 2.0, 3.0),
+      new Cartesian3(5.0, 2.0, 3.0),
+      new Cartesian3(6.0, 2.0, 3.0),
+    ];
+
+    var expectedColors = [
+      new Color(1.0, 0.0, 0.0, 1.0),
+      new Color(1.0, 0.5, 0.0, 1.0),
+      new Color(1.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 1.0, 1.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+    ];
+
+    var line = PolylineGeometry.createGeometry(
+      new PolylineGeometry({
+        positions: positions,
+        colors: colors,
+        colorsPerVertex: true,
+        width: 10.0,
+        vertexFormat: VertexFormat.DEFAULT,
+        arcType: ArcType.NONE,
+      })
+    );
+
+    var numVertices = expectedPositions.length * 4 - 4;
+    expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    expect(
+      attributeArrayEqualsColorArray(
+        line.attributes.color.values,
+        expectedColors,
+        true
+      )
+    ).toBe(true);
+  });
+
+  it("createGeometry removes first color corresponding to endpoint with duplicate position", function () {
+    var positions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+    ];
+
+    var colors = [
+      new Color(0.0, 0.0, 0.0, 1.0),
+      new Color(1.0, 1.0, 1.0, 1.0),
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+    ];
+
+    var expectedPositions = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(2.0, 2.0, 3.0),
+      new Cartesian3(3.0, 2.0, 3.0),
+    ];
+
+    var expectedColors = [
+      new Color(1.0, 1.0, 1.0, 1.0),
+      new Color(0.0, 1.0, 0.0, 1.0),
+      new Color(0.0, 0.0, 1.0, 1.0),
+    ];
+
+    var line = PolylineGeometry.createGeometry(
+      new PolylineGeometry({
+        positions: positions,
+        colors: colors,
+        colorsPerVertex: true,
+        width: 10.0,
+        vertexFormat: VertexFormat.DEFAULT,
+        arcType: ArcType.NONE,
+      })
+    );
+
+    var numVertices = expectedPositions.length * 4 - 4;
+    expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    expect(
+      attributeArrayEqualsColorArray(
+        line.attributes.color.values,
+        expectedColors,
+        true
       )
     ).toBe(true);
   });

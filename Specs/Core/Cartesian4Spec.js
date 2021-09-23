@@ -1084,20 +1084,53 @@ describe("Core/Cartesian4", function () {
   });
 
   it("packs and unpacks floating point values for representation as uint8 4-vectors", function () {
-    var float = 123.456;
-    var packedFloat = Cartesian4.packFloat(float);
-    expect(0 <= packedFloat.x && packedFloat.x <= 255).toBe(true);
-    expect(0 <= packedFloat.y && packedFloat.y <= 255).toBe(true);
-    expect(0 <= packedFloat.z && packedFloat.z <= 255).toBe(true);
-    expect(0 <= packedFloat.w && packedFloat.w <= 255).toBe(true);
+    function testFloat(float) {
+      var packedFloat = Cartesian4.packFloat(float);
+      expect(0 <= packedFloat.x && packedFloat.x <= 255).toBe(true);
+      expect(0 <= packedFloat.y && packedFloat.y <= 255).toBe(true);
+      expect(0 <= packedFloat.z && packedFloat.z <= 255).toBe(true);
+      expect(0 <= packedFloat.w && packedFloat.w <= 255).toBe(true);
 
-    var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
-    expect(
-      CesiumMath.equalsEpsilon(float, unpackedFloat, CesiumMath.EPSILON7)
-    ).toBe(true);
+      var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+      expect(unpackedFloat).toEqual(float);
+    }
 
-    var packedZero = Cartesian4.packFloat(0);
-    expect(packedZero).toEqual(Cartesian4.ZERO);
+    function testFloatNaN(float) {
+      expect(float).toBeNaN();
+      var packedFloat = Cartesian4.packFloat(float);
+      var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+      expect(unpackedFloat).toBeNaN();
+    }
+
+    function testFloatOutOfRange(float) {
+      var packedFloat = Cartesian4.packFloat(float);
+      var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+      expect(unpackedFloat).toEqual(CesiumMath.sign(float) * Infinity);
+    }
+
+    testFloat(0.0);
+    testFloat(-1.0);
+    testFloat(+1.0);
+    testFloat(123.5);
+    testFloat(16777216);
+
+    testFloat(+Infinity); // 64-bit infinity -> 32-bit infinity
+    testFloat(-Infinity); // 64-bit infinity -> 32-bit infinity
+    testFloatNaN(NaN); // 64-bit NaN -> 32bit NaN
+
+    testFloatOutOfRange(+Number.MAX_VALUE);
+    testFloatOutOfRange(-Number.MAX_VALUE);
+
+    var f32 = new Float32Array(1);
+
+    f32[0] = +Infinity;
+    testFloat(f32[0]); // 32-bit infinity
+
+    f32[0] = -Infinity;
+    testFloat(f32[0]); // 32-bit infinity
+
+    f32[0] = NaN;
+    testFloatNaN(f32[0]); // 32-bit NaN
   });
 
   createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);

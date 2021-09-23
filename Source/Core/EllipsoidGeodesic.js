@@ -171,7 +171,7 @@ function vincentyInverseFormula(
 
     cosineTwiceSigmaMidpoint = cosineSigma - (2.0 * ss) / cosineSquaredAlpha;
 
-    if (isNaN(cosineTwiceSigmaMidpoint)) {
+    if (!isFinite(cosineTwiceSigmaMidpoint)) {
       cosineTwiceSigmaMidpoint = 0.0;
     }
 

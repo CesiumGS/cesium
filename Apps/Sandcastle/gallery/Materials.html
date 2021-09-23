@@ -218,17 +218,25 @@
           });
         }
 
-        function applyCompressedTextureMaterial(primitive, scene) {
-          Sandcastle.declare(applyCompressedTextureMaterial); // For highlighting in Sandcastle.
+        function applyETC1SCompressedTextureMaterial(primitive, scene) {
+          Sandcastle.declare(applyETC1SCompressedTextureMaterial); // For highlighting in Sandcastle.
 
-          var compressedImageUrl;
-          if (scene.getCompressedTextureFormatSupported("s3tc")) {
-            compressedImageUrl = "../images/LogoDXT1.ktx";
-          } else if (scene.getCompressedTextureFormatSupported("etc1")) {
-            compressedImageUrl = "../images/LogoETC1.ktx";
-          } else if (scene.getCompressedTextureFormatSupported("pvrtc")) {
-            compressedImageUrl = "../images/LogoPVR.ktx";
-          }
+          var compressedImageUrl = "../images/Cesium_Logo_ETC1S.ktx2";
+
+          primitive.appearance.material = new Cesium.Material({
+            fabric: {
+              type: "Image",
+              uniforms: {
+                image: compressedImageUrl,
+              },
+            },
+          });
+        }
+
+        function applyUASTCCompressedTextureMaterial(primitive, scene) {
+          Sandcastle.declare(applyUASTCCompressedTextureMaterial); // For highlighting in Sandcastle.
+
+          var compressedImageUrl = "../images/Cesium_Logo_UASTC.ktx2";
 
           primitive.appearance.material = new Cesium.Material({
             fabric: {
@@ -357,11 +365,29 @@
               },
             },
             {
-              text: "Compressed Image",
+              text: "ETC1S Compressed Image",
               onselect: function () {
+                if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+                  window.alert(
+                    "This browser does not support Basis Universal compressed textures"
+                  );
+                }
                 toggleRectangleVisibility();
-                applyCompressedTextureMaterial(rectangle, scene);
-                Sandcastle.highlight(applyCompressedTextureMaterial);
+                applyETC1SCompressedTextureMaterial(rectangle, scene);
+                Sandcastle.highlight(applyETC1SCompressedTextureMaterial);
+              },
+            },
+            {
+              text: "UASTC Compressed Image",
+              onselect: function () {
+                if (!Cesium.FeatureDetection.supportsBasis(scene)) {
+                  window.alert(
+                    "This browser does not support Basis Universal compressed textures"
+                  );
+                }
+                toggleRectangleVisibility();
+                applyUASTCCompressedTextureMaterial(rectangle, scene);
+                Sandcastle.highlight(applyUASTCCompressedTextureMaterial);
               },
             },
           ]);

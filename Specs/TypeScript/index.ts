@@ -11,8 +11,8 @@ import {
   CheckerboardMaterialProperty,
   CircleGeometry,
   CircleOutlineGeometry,
-  ColorMaterialProperty,
   Color,
+  ColorMaterialProperty,
   CompositeMaterialProperty,
   CompositePositionProperty,
   CompositeProperty,
@@ -97,6 +97,7 @@ import {
   WallOutlineGeometry,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
+  writeTextToCanvas,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -151,9 +152,10 @@ terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
 let dataSource: DataSource;
 dataSource = new CzmlDataSource();
 dataSource = new GeoJsonDataSource();
+let canvasElement = document.createElement("canvas");
 dataSource = new KmlDataSource({
-  canvas: document.createElement("canvas"),
-  camera: new Camera(new Scene()),
+  canvas: canvasElement,
+  camera: new Camera(new Scene({ canvas: canvasElement })),
 });
 dataSource = new CustomDataSource();
 
@@ -384,3 +386,5 @@ geometryInstance = new GeometryInstance({
     positions: [],
   }),
 });
+
+const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");

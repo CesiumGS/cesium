@@ -266,7 +266,18 @@
               disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
           });
-          viewer.zoomTo(viewer.entities);
+          viewer.scene.camera.setView({
+            destination: new Cesium.Cartesian3(
+              -2357576.243142461,
+              -3744417.5604860787,
+              4581807.855903771
+            ),
+            orientation: new Cesium.HeadingPitchRoll(
+              5.9920811504170475,
+              -0.6032820429886212,
+              6.28201303164098
+            ),
+          });
         }
 
         Sandcastle.addToolbarMenu([

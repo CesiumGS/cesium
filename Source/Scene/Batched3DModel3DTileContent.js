@@ -1,12 +1,14 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
+import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -17,13 +19,14 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ClassificationModel from "./ClassificationModel.js";
 import Model from "./Model.js";
-import ModelUtility from "./ModelUtility.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
+import ModelExperimental from "./ModelExperimental/ModelExperimental.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Batched3DModel|Batched 3D Model}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel|Batched 3D Model}
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -47,6 +50,10 @@ function Batched3DModel3DTileContent(
   this._batchTable = undefined;
   this._features = undefined;
 
+  this._classificationType = tileset.vectorClassificationOnly
+    ? undefined
+    : tileset.classificationType;
+
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
   this._diffuseAttributeOrUniformName = {};
@@ -55,6 +62,7 @@ function Batched3DModel3DTileContent(
   this._contentModelMatrix = undefined;
 
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -71,7 +79,7 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   pointsLength: {
     get: function () {
-      return 0;
+      return this._model.pointsLength;
     },
   },
 
@@ -134,6 +142,15 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
       return this._batchTable;
     },
   },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
+    },
+  },
 });
 
 var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
@@ -161,7 +178,7 @@ function getBatchIdAttributeName(gltf) {
 function getVertexShaderCallback(content) {
   return function (vs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -183,7 +200,7 @@ function getVertexShaderCallback(content) {
 function getFragmentShaderCallback(content) {
   return function (fs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -193,7 +210,8 @@ function getFragmentShaderCallback(content) {
     }
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
-      content._diffuseAttributeOrUniformName[programId]
+      content._diffuseAttributeOrUniformName[programId],
+      false
     );
     return defined(callback) ? callback(fs) : fs;
   };
@@ -274,7 +292,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     featureTableBinaryByteLength = 0;
     Batched3DModel3DTileContent._deprecationWarning(
       "b3dm-legacy-header",
-      "This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Batched3DModel."
+      "This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel."
     );
   } else if (batchTableBinaryByteLength >= 570425344) {
     // Second legacy check
@@ -286,7 +304,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     featureTableBinaryByteLength = 0;
     Batched3DModel3DTileContent._deprecationWarning(
       "b3dm-legacy-header",
-      "This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Batched3DModel."
+      "This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel."
     );
   }
 
@@ -296,12 +314,11 @@ function initialize(content, arrayBuffer, byteOffset) {
       BATCH_LENGTH: defaultValue(batchLength, 0),
     };
   } else {
-    var featureTableString = getStringFromTypedArray(
+    featureTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       featureTableJsonByteLength
     );
-    featureTableJson = JSON.parse(featureTableString);
     byteOffset += featureTableJsonByteLength;
   }
 
@@ -328,12 +345,11 @@ function initialize(content, arrayBuffer, byteOffset) {
     //
     // We could also make another request for it, but that would make the property set/get
     // API async, and would double the number of numbers in some cases.
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJsonByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -350,7 +366,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 
   var colorChangedCallback;
-  if (defined(tileset.classificationType)) {
+  if (defined(content._classificationType)) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
@@ -405,39 +421,52 @@ function initialize(content, arrayBuffer, byteOffset) {
     new Matrix4()
   );
 
-  if (!defined(tileset.classificationType)) {
-    // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-    // The pick shader still needs to be patched.
-    content._model = new Model({
+  if (!defined(content._classificationType)) {
+    var modelOptions = {
       gltf: gltfView,
       cull: false, // The model is already culled by 3D Tiles
       releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
       opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
       basePath: resource,
-      requestType: RequestType.TILES3D,
       modelMatrix: content._contentModelMatrix,
       upAxis: tileset._gltfUpAxis,
       forwardAxis: Axis.X,
-      shadows: tileset.shadows,
-      debugWireframe: tileset.debugWireframe,
       incrementallyLoadTextures: false,
-      vertexShaderLoaded: getVertexShaderCallback(content),
-      fragmentShaderLoaded: getFragmentShaderCallback(content),
-      uniformMapLoaded: batchTable.getUniformMapCallback(),
-      pickIdLoaded: getPickIdCallback(content),
-      addBatchIdToGeneratedShaders: batchLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
-      pickObject: pickObject,
-      imageBasedLightingFactor: tileset.imageBasedLightingFactor,
-      lightColor: tileset.lightColor,
-      luminanceAtZenith: tileset.luminanceAtZenith,
-      sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: tileset.specularEnvironmentMaps,
-      backFaceCulling: tileset.backFaceCulling,
-    });
-    content._model.readyPromise.then(function (model) {
-      model.activeAnimations.addAll({
-        loop: ModelAnimationLoop.REPEAT,
+    };
+
+    if (ExperimentalFeatures.enableModelExperimental) {
+      modelOptions.customShader = tileset.customShader;
+      content._model = ModelExperimental.fromGltf(modelOptions);
+    } else {
+      modelOptions = combine(modelOptions, {
+        requestType: RequestType.TILES3D,
+        shadows: tileset.shadows,
+        debugWireframe: tileset.debugWireframe,
+        vertexShaderLoaded: getVertexShaderCallback(content),
+        fragmentShaderLoaded: getFragmentShaderCallback(content),
+        uniformMapLoaded: batchTable.getUniformMapCallback(),
+        pickIdLoaded: getPickIdCallback(content),
+        addBatchIdToGeneratedShaders: batchLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
+        pickObject: pickObject,
+        imageBasedLightingFactor: tileset.imageBasedLightingFactor,
+        lightColor: tileset.lightColor,
+        luminanceAtZenith: tileset.luminanceAtZenith,
+        sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
+        specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+        backFaceCulling: tileset.backFaceCulling,
+        showOutline: tileset.showOutline,
       });
+      // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+      // The pick shader still needs to be patched.
+      content._model = new Model(modelOptions);
+    }
+
+    content._model.readyPromise.then(function (model) {
+      if (defined(model.activeAnimations)) {
+        model.activeAnimations.addAll({
+          loop: ModelAnimationLoop.REPEAT,
+        });
+      }
     });
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -457,7 +486,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      classificationType: tileset._classificationType,
+      classificationType: content._classificationType,
       batchTable: batchTable,
     });
   }
@@ -522,36 +551,40 @@ Batched3DModel3DTileContent.prototype.applyStyle = function (style) {
 Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   var commandStart = frameState.commandList.length;
 
+  var model = this._model;
+  var tile = this._tile;
+  var batchTable = this._batchTable;
+
   // In the PROCESSING state we may be calling update() to move forward
   // the content's resource loading.  In the READY state, it will
   // actually generate commands.
-  this._batchTable.update(tileset, frameState);
+  batchTable.update(tileset, frameState);
 
   this._contentModelMatrix = Matrix4.multiply(
-    this._tile.computedTransform,
+    tile.computedTransform,
     this._rtcCenterTransform,
     this._contentModelMatrix
   );
-  this._model.modelMatrix = this._contentModelMatrix;
+  model.modelMatrix = this._contentModelMatrix;
 
-  this._model.shadows = this._tileset.shadows;
-  this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
-  this._model.lightColor = this._tileset.lightColor;
-  this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
-  this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
-  this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
-  this._model.backFaceCulling = this._tileset.backFaceCulling;
-  this._model.debugWireframe = this._tileset.debugWireframe;
+  model.shadows = tileset.shadows;
+  model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
+  model.lightColor = tileset.lightColor;
+  model.luminanceAtZenith = tileset.luminanceAtZenith;
+  model.sphericalHarmonicCoefficients = tileset.sphericalHarmonicCoefficients;
+  model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
+  model.backFaceCulling = tileset.backFaceCulling;
+  model.debugWireframe = tileset.debugWireframe;
 
   // Update clipping planes
-  var tilesetClippingPlanes = this._tileset.clippingPlanes;
-  this._model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
-  if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
+  var tilesetClippingPlanes = tileset.clippingPlanes;
+  model.referenceMatrix = tileset.clippingPlanesOriginMatrix;
+  if (defined(tilesetClippingPlanes) && tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.
     // Link/Dereference directly to avoid ownership checks.
     // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
-    this._model._clippingPlanes =
-      tilesetClippingPlanes.enabled && this._tile._isClipped
+    model._clippingPlanes =
+      tilesetClippingPlanes.enabled && tile._isClipped
         ? tilesetClippingPlanes
         : undefined;
   }
@@ -560,22 +593,22 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
   if (
     defined(tilesetClippingPlanes) &&
-    defined(this._model._clippingPlanes) &&
-    this._model._clippingPlanes !== tilesetClippingPlanes
+    defined(model._clippingPlanes) &&
+    model._clippingPlanes !== tilesetClippingPlanes
   ) {
-    this._model._clippingPlanes = tilesetClippingPlanes;
+    model._clippingPlanes = tilesetClippingPlanes;
   }
 
-  this._model.update(frameState);
+  model.update(frameState);
 
   // If any commands were pushed, add derived commands
   var commandEnd = frameState.commandList.length;
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick) &&
-    !defined(tileset.classificationType)
+    !defined(this._classificationType)
   ) {
-    this._batchTable.addDerivedCommands(frameState, commandStart);
+    batchTable.addDerivedCommands(frameState, commandStart);
   }
 };
 

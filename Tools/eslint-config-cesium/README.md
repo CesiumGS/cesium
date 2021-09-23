@@ -1,4 +1,4 @@
-The official [shareable ESLint config](http://eslint.org/docs/developer-guide/shareable-configs) for the [Cesium](https://cesiumjs.org/) ecosystem.
+The official [shareable ESLint config](http://eslint.org/docs/developer-guide/shareable-configs) for the [Cesium](https://cesium.com/) ecosystem.
 
 ## Usage
 

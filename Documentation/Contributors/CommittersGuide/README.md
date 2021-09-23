@@ -2,8 +2,8 @@
 
 ## Developing
 
-- Make changes on a new branch, and open a pull request to merge into master.
-- Sparingly, trivial changes such as rewording CHANGES.md or fixing a typo in a comment can be committed directly to master.
+- Make changes on a new branch, and open a pull request to merge into main.
+- Sparingly, trivial changes such as rewording CHANGES.md or fixing a typo in a comment can be committed directly to main.
 
 ## Reviewing
 

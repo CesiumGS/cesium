@@ -1,6 +1,7 @@
 import when from "../ThirdParty/when.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
+import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -11,6 +12,7 @@ import CesiumMath from "./Math.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
+import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
@@ -182,48 +184,54 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
   },
 });
 
-var taskProcessor = new TaskProcessor("createVerticesFromHeightmap");
+var createMeshTaskName = "createVerticesFromHeightmap";
+var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
+var createMeshTaskProcessorThrottle = new TaskProcessor(
+  createMeshTaskName,
+  TerrainData.maximumAsynchronousTasks
+);
 
 /**
  * Creates a {@link TerrainMesh} from this terrain data.
  *
  * @private
  *
- * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
- * @param {Number} x The X coordinate of the tile for which to create the terrain data.
- * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
- * @param {Number} level The level of the tile for which to create the terrain data.
- * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Object} options Object with the following properties:
+ * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+ * @param {Number} options.x The X coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.level The level of the tile for which to create the terrain data.
+ * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
  */
-HeightmapTerrainData.prototype.createMesh = function (
-  tilingScheme,
-  x,
-  y,
-  level,
-  exaggeration
-) {
+HeightmapTerrainData.prototype.createMesh = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(tilingScheme)) {
-    throw new DeveloperError("tilingScheme is required.");
-  }
-  if (!defined(x)) {
-    throw new DeveloperError("x is required.");
-  }
-  if (!defined(y)) {
-    throw new DeveloperError("y is required.");
-  }
-  if (!defined(level)) {
-    throw new DeveloperError("level is required.");
-  }
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
   //>>includeEnd('debug');
+
+  var tilingScheme = options.tilingScheme;
+  var x = options.x;
+  var y = options.y;
+  var level = options.level;
+  var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var exaggerationRelativeHeight = defaultValue(
+    options.exaggerationRelativeHeight,
+    0.0
+  );
+  var throttle = defaultValue(options.throttle, true);
 
   var ellipsoid = tilingScheme.ellipsoid;
   var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
   var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
-  exaggeration = defaultValue(exaggeration, 1.0);
 
   // Compute the center of the tile for RTC rendering.
   var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
@@ -238,7 +246,11 @@ HeightmapTerrainData.prototype.createMesh = function (
   var thisLevelMaxError = levelZeroMaxError / (1 << level);
   this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 
-  var verticesPromise = taskProcessor.scheduleTask({
+  var createMeshTaskProcessor = throttle
+    ? createMeshTaskProcessorThrottle
+    : createMeshTaskProcessorNoThrottle;
+
+  var verticesPromise = createMeshTaskProcessor.scheduleTask({
     heightmap: this._buffer,
     structure: structure,
     includeWebMercatorT: true,
@@ -251,6 +263,7 @@ HeightmapTerrainData.prototype.createMesh = function (
     skirtHeight: this._skirtHeight,
     isGeographic: tilingScheme.projection instanceof GeographicProjection,
     exaggeration: exaggeration,
+    exaggerationRelativeHeight: exaggerationRelativeHeight,
     encoding: this._encoding,
   });
 
@@ -291,7 +304,6 @@ HeightmapTerrainData.prototype.createMesh = function (
       result.numberOfAttributes,
       OrientedBoundingBox.clone(result.orientedBoundingBox),
       TerrainEncoding.clone(result.encoding),
-      exaggeration,
       indicesAndEdges.westIndicesSouthToNorth,
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
@@ -305,34 +317,37 @@ HeightmapTerrainData.prototype.createMesh = function (
 };
 
 /**
+ * @param {Object} options Object with the following properties:
+ * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+ * @param {Number} options.x The X coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.level The level of the tile for which to create the terrain data.
+ * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ *
  * @private
  */
-HeightmapTerrainData.prototype._createMeshSync = function (
-  tilingScheme,
-  x,
-  y,
-  level,
-  exaggeration
-) {
+HeightmapTerrainData.prototype._createMeshSync = function (options) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(tilingScheme)) {
-    throw new DeveloperError("tilingScheme is required.");
-  }
-  if (!defined(x)) {
-    throw new DeveloperError("x is required.");
-  }
-  if (!defined(y)) {
-    throw new DeveloperError("y is required.");
-  }
-  if (!defined(level)) {
-    throw new DeveloperError("level is required.");
-  }
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
   //>>includeEnd('debug');
+
+  var tilingScheme = options.tilingScheme;
+  var x = options.x;
+  var y = options.y;
+  var level = options.level;
+  var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var exaggerationRelativeHeight = defaultValue(
+    options.exaggerationRelativeHeight,
+    0.0
+  );
 
   var ellipsoid = tilingScheme.ellipsoid;
   var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
   var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
-  exaggeration = defaultValue(exaggeration, 1.0);
 
   // Compute the center of the tile for RTC rendering.
   var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
@@ -360,6 +375,7 @@ HeightmapTerrainData.prototype._createMeshSync = function (
     skirtHeight: this._skirtHeight,
     isGeographic: tilingScheme.projection instanceof GeographicProjection,
     exaggeration: exaggeration,
+    exaggerationRelativeHeight: exaggerationRelativeHeight,
   });
 
   // Free memory received from server after mesh is created.
@@ -382,7 +398,7 @@ HeightmapTerrainData.prototype._createMeshSync = function (
 
   // No need to clone here (as we do in the async version) because the result
   // is not coming from a web worker.
-  return new TerrainMesh(
+  this._mesh = new TerrainMesh(
     center,
     result.vertices,
     indicesAndEdges.indices,
@@ -392,15 +408,16 @@ HeightmapTerrainData.prototype._createMeshSync = function (
     result.maximumHeight,
     result.boundingSphere3D,
     result.occludeePointInScaledSpace,
-    result.encoding.getStride(),
+    result.encoding.stride,
     result.orientedBoundingBox,
     result.encoding,
-    exaggeration,
     indicesAndEdges.westIndicesSouthToNorth,
     indicesAndEdges.southIndicesEastToWest,
     indicesAndEdges.eastIndicesNorthToSouth,
     indicesAndEdges.northIndicesWestToEast
   );
+
+  return this._mesh;
 };
 
 /**
@@ -429,11 +446,20 @@ HeightmapTerrainData.prototype.interpolateHeight = function (
   var heightOffset = structure.heightOffset;
   var heightScale = structure.heightScale;
 
+  var isMeshCreated = defined(this._mesh);
+  var isLERCEncoding = this._encoding === HeightmapEncoding.LERC;
+  var isInterpolationImpossible = !isMeshCreated && isLERCEncoding;
+  if (isInterpolationImpossible) {
+    // We can't interpolate using the buffer because it's LERC encoded
+    //  so please call createMesh() first and interpolate using the mesh;
+    //  as mesh creation will decode the LERC buffer
+    return undefined;
+  }
+
   var heightSample;
-  if (defined(this._mesh)) {
+  if (isMeshCreated) {
     var buffer = this._mesh.vertices;
     var encoding = this._mesh.encoding;
-    var exaggeration = this._mesh.exaggeration;
     heightSample = interpolateMeshHeight(
       buffer,
       encoding,
@@ -443,8 +469,7 @@ HeightmapTerrainData.prototype.interpolateHeight = function (
       width,
       height,
       longitude,
-      latitude,
-      exaggeration
+      latitude
     );
   } else {
     heightSample = interpolateHeight(
@@ -544,7 +569,6 @@ HeightmapTerrainData.prototype.upsample = function (
 
   var heightOffset = structure.heightOffset;
   var heightScale = structure.heightScale;
-  var exaggeration = meshData.exaggeration;
 
   var elementsPerHeight = structure.elementsPerHeight;
   var elementMultiplier = structure.elementMultiplier;
@@ -573,8 +597,7 @@ HeightmapTerrainData.prototype.upsample = function (
         width,
         height,
         longitude,
-        latitude,
-        exaggeration
+        latitude
       );
 
       // Use conditionals here instead of Math.min and Math.max so that an undefined
@@ -758,8 +781,7 @@ function interpolateMeshHeight(
   width,
   height,
   longitude,
-  latitude,
-  exaggeration
+  latitude
 ) {
   // returns a height encoded according to the structure's heightScale and heightOffset.
   var fromWest =
@@ -790,23 +812,19 @@ function interpolateMeshHeight(
   northInteger = height - 1 - northInteger;
 
   var southwestHeight =
-    (encoding.decodeHeight(buffer, southInteger * width + westInteger) /
-      exaggeration -
+    (encoding.decodeHeight(buffer, southInteger * width + westInteger) -
       heightOffset) /
     heightScale;
   var southeastHeight =
-    (encoding.decodeHeight(buffer, southInteger * width + eastInteger) /
-      exaggeration -
+    (encoding.decodeHeight(buffer, southInteger * width + eastInteger) -
       heightOffset) /
     heightScale;
   var northwestHeight =
-    (encoding.decodeHeight(buffer, northInteger * width + westInteger) /
-      exaggeration -
+    (encoding.decodeHeight(buffer, northInteger * width + westInteger) -
       heightOffset) /
     heightScale;
   var northeastHeight =
-    (encoding.decodeHeight(buffer, northInteger * width + eastInteger) /
-      exaggeration -
+    (encoding.decodeHeight(buffer, northInteger * width + eastInteger) -
       heightOffset) /
     heightScale;
 

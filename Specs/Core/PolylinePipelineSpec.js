@@ -182,7 +182,7 @@ describe("Core/PolylinePipeline", function () {
     var newPositions = PolylinePipeline.generateRhumbArc({
       positions: Cartesian3.fromDegreesArray([0, 0, 10, 0, 10, 5]),
     });
-    for (let i = 0; i < newPositions.length; i++) {
+    for (var i = 0; i < newPositions.length; i++) {
       expect(newPositions[i]).toBeDefined();
     }
   });

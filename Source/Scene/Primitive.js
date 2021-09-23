@@ -132,18 +132,19 @@ import ShadowMode from "./ShadowMode.js";
  * // 3. Create the geometry on the main thread.
  * scene.primitives.add(new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
- *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
- *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
- *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
- *       })),
- *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
- *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
- *       id : 'ellipsoid',
- *       attributes : {
- *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
- *       }
+ *     geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
+ *       radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
+ *       vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
+ *     })),
+ *     modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+ *       Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
+ *     id : 'ellipsoid',
+ *     attributes : {
+ *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+ *     }
  *   }),
- *   appearance : new Cesium.PerInstanceColorAppearance()
+ *   appearance : new Cesium.PerInstanceColorAppearance(),
+ *   asynchronous : false
  * }));
  *
  * @see GeometryInstance
@@ -1202,10 +1203,7 @@ var numberOfCreationWorkers = Math.max(
   1
 );
 var createGeometryTaskProcessors;
-var combineGeometryTaskProcessor = new TaskProcessor(
-  "combineGeometry",
-  Number.POSITIVE_INFINITY
-);
+var combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
 
 function loadAsynchronous(primitive, frameState) {
   var instances;
@@ -1244,10 +1242,7 @@ function loadAsynchronous(primitive, frameState) {
     if (!defined(createGeometryTaskProcessors)) {
       createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
       for (i = 0; i < numberOfCreationWorkers; i++) {
-        createGeometryTaskProcessors[i] = new TaskProcessor(
-          "createGeometry",
-          Number.POSITIVE_INFINITY
-        );
+        createGeometryTaskProcessors[i] = new TaskProcessor("createGeometry");
       }
     }
 

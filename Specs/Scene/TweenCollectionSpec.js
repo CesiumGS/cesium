@@ -22,7 +22,7 @@ describe(
         stopObject: stopObject,
         duration: 1.0,
         delay: 0.5,
-        easingFunction: EasingFunction.QUADRACTIC_IN,
+        easingFunction: EasingFunction.QUADRATIC_IN,
         update: update,
         complete: complete,
         cancel: cancel,
@@ -32,7 +32,7 @@ describe(
       expect(tween.stopObject).toEqual(stopObject);
       expect(tween.duration).toEqual(1.0);
       expect(tween.delay).toEqual(0.5);
-      expect(tween.easingFunction).toEqual(EasingFunction.QUADRACTIC_IN);
+      expect(tween.easingFunction).toEqual(EasingFunction.QUADRATIC_IN);
       expect(tween.update).toBe(update);
       expect(tween.complete).toBe(complete);
       expect(tween.cancel).toBe(cancel);

@@ -54,7 +54,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     var level = 1;
     provider.requestImage(tilecol, tilerow, level);
     var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    var queryObject = queryToObject(uri.query);
+    var queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -72,7 +72,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
     uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    queryObject = queryToObject(uri.query);
+    queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -84,6 +84,59 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
+  });
+
+  it("generates expected tile urls for subdomains", function () {
+    var options = {
+      url: "http://wmts{s}.invalid",
+      format: "image/png",
+      layer: "someLayer",
+      style: "someStyle",
+      tileMatrixSetID: "someTMS",
+      tileMatrixLabels: ["first", "second", "third"],
+    };
+
+    var provider = new WebMapTileServiceImageryProvider(options);
+
+    spyOn(ImageryProvider, "loadImage");
+
+    var tilecol = 12;
+    var tilerow = 5;
+    var level = 1;
+    provider.requestImage(tilecol, tilerow, level);
+    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    var queryObject = queryToObject(uri.query());
+
+    expect(queryObject.request).toEqual("GetTile");
+    expect(queryObject.service).toEqual("WMTS");
+    expect(queryObject.version).toEqual("1.0.0");
+    expect(queryObject.format).toEqual(options.format);
+    expect(queryObject.layer).toEqual(options.layer);
+    expect(queryObject.style).toEqual(options.style);
+    expect(parseInt(queryObject.tilecol, 10)).toEqual(tilecol);
+    expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
+    expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
+    expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
+    expect(uri.authority()).toEqual("wmtsa.invalid");
+
+    tilecol = 2;
+    tilerow = 3;
+    level = 2;
+    provider.requestImage(tilecol, tilerow, level);
+    uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    queryObject = queryToObject(uri.query());
+
+    expect(queryObject.request).toEqual("GetTile");
+    expect(queryObject.service).toEqual("WMTS");
+    expect(queryObject.version).toEqual("1.0.0");
+    expect(queryObject.format).toEqual(options.format);
+    expect(queryObject.layer).toEqual(options.layer);
+    expect(queryObject.style).toEqual(options.style);
+    expect(parseInt(queryObject.tilecol, 10)).toEqual(tilecol);
+    expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
+    expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
+    expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
+    expect(uri.authority()).toEqual("wmtsb.invalid");
   });
 
   it("supports subdomains string urls", function () {
@@ -719,7 +772,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Verify request is correct
-        uri.query = objectToQuery(query);
+        uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
         expect(provider._reload.calls.count()).toEqual(0);
 
@@ -733,7 +786,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Verify request changed
-        uri.query = objectToQuery(query);
+        uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
       });
   });

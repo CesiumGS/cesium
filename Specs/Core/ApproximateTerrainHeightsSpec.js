@@ -25,11 +25,11 @@ describe("Core/ApproximateTerrainHeights", function () {
     );
     expect(result.minimumTerrainHeight).toEqualEpsilon(
       -476.12571188755,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON8
     );
     expect(result.maximumTerrainHeight).toEqualEpsilon(
       -28.53,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON8
     );
   });
 
@@ -60,11 +60,11 @@ describe("Core/ApproximateTerrainHeights", function () {
         -5403772.559109628,
         1154581.5821590829
       ),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON8
     );
     expect(result.radius).toEqualEpsilon(
       77884.16321007285,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON8
     );
   });
 

@@ -1184,7 +1184,10 @@ function processShapePacketData(
       CompositeProperty
     );
   } else {
-    if (defined(packetData.cartesian)) {
+    if (defined(packetData.cartesian2)) {
+      packetData.array = Cartesian2.unpackArray(packetData.cartesian2);
+    } else if (defined(packetData.cartesian)) {
+      // for backwards compatibility, also accept `cartesian`
       packetData.array = Cartesian2.unpackArray(packetData.cartesian);
     }
 

@@ -59,17 +59,7 @@ TerrainFillMesh.prototype.update = function (
 };
 
 TerrainFillMesh.prototype.destroy = function (vertexArraysToDestroy) {
-  if (defined(this.vertexArray)) {
-    if (defined(vertexArraysToDestroy)) {
-      vertexArraysToDestroy.push(this.vertexArray);
-    } else {
-      GlobeSurfaceTile._freeVertexArray(
-        this.vertexArray,
-        vertexArraysToDestroy
-      );
-    }
-    this.vertexArray = undefined;
-  }
+  this._destroyVertexArray(vertexArraysToDestroy);
 
   if (defined(this.waterMaskTexture)) {
     --this.waterMaskTexture.referenceCount;
@@ -80,6 +70,19 @@ TerrainFillMesh.prototype.destroy = function (vertexArraysToDestroy) {
   }
 
   return undefined;
+};
+
+TerrainFillMesh.prototype._destroyVertexArray = function (
+  vertexArraysToDestroy
+) {
+  if (defined(this.vertexArray)) {
+    if (defined(vertexArraysToDestroy)) {
+      vertexArraysToDestroy.push(this.vertexArray);
+    } else {
+      GlobeSurfaceTile._freeVertexArray(this.vertexArray);
+    }
+    this.vertexArray = undefined;
+  }
 };
 
 var traversalQueueScratch = new Queue();
@@ -800,6 +803,7 @@ var heightRangeScratch = {
   maximumHeight: 0.0,
 };
 
+var scratchCenter = new Cartesian3();
 var swVertexScratch = new HeightAndNormal();
 var seVertexScratch = new HeightAndNormal();
 var nwVertexScratch = new HeightAndNormal();
@@ -807,6 +811,14 @@ var neVertexScratch = new HeightAndNormal();
 var heightmapBuffer =
   typeof Uint8Array !== "undefined" ? new Uint8Array(9 * 9) : undefined;
 
+var scratchCreateMeshSyncOptions = {
+  tilingScheme: undefined,
+  x: 0,
+  y: 0,
+  level: 0,
+  exaggeration: 1.0,
+  exaggerationRelativeHeight: 0.0,
+};
 function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   GlobeSurfaceTile.initialize(
     tile,
@@ -817,6 +829,10 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   var surfaceTile = tile.data;
   var fill = surfaceTile.fill;
   var rectangle = tile.rectangle;
+
+  var exaggeration = frameState.terrainExaggeration;
+  var exaggerationRelativeHeight = frameState.terrainExaggerationRelativeHeight;
+  var hasExaggeration = exaggeration !== 1.0;
 
   var ellipsoid = tile.tilingScheme.ellipsoid;
 
@@ -973,30 +989,38 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         heightOffset: maximumHeight,
       },
     });
-    fill.mesh = terrainData._createMeshSync(
-      tile.tilingScheme,
-      tile.x,
-      tile.y,
-      tile.level,
-      1.0
-    );
+
+    var createMeshSyncOptions = scratchCreateMeshSyncOptions;
+    createMeshSyncOptions.tilingScheme = tile.tilingScheme;
+    createMeshSyncOptions.x = tile.x;
+    createMeshSyncOptions.y = tile.y;
+    createMeshSyncOptions.level = tile.level;
+    createMeshSyncOptions.exaggeration = exaggeration;
+    createMeshSyncOptions.exaggerationRelativeHeight = exaggerationRelativeHeight;
+
+    fill.mesh = terrainData._createMeshSync(createMeshSyncOptions);
   } else {
+    var hasGeodeticSurfaceNormals = hasExaggeration;
+    var centerCartographic = Rectangle.center(
+      rectangle,
+      centerCartographicScratch
+    );
+    centerCartographic.height = middleHeight;
+    var center = ellipsoid.cartographicToCartesian(
+      centerCartographic,
+      scratchCenter
+    );
     var encoding = new TerrainEncoding(
+      center,
       undefined,
       undefined,
       undefined,
       undefined,
       true,
-      true
-    );
-
-    var centerCartographic = centerCartographicScratch;
-    centerCartographic.longitude = (rectangle.east + rectangle.west) * 0.5;
-    centerCartographic.latitude = (rectangle.north + rectangle.south) * 0.5;
-    centerCartographic.height = middleHeight;
-    encoding.center = ellipsoid.cartographicToCartesian(
-      centerCartographic,
-      encoding.center
+      true,
+      hasGeodeticSurfaceNormals,
+      exaggeration,
+      exaggerationRelativeHeight
     );
 
     // At _most_, we have vertices for the 4 corners, plus 1 center, plus every adjacent edge vertex.
@@ -1030,7 +1054,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     heightRange.minimumHeight = minimumHeight;
     heightRange.maximumHeight = maximumHeight;
 
-    var stride = encoding.getStride();
+    var stride = encoding.stride;
     var typedArray = new Float32Array(maxVertexCount * stride);
 
     var nextIndex = 0;
@@ -1160,12 +1184,12 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         southMercatorY) *
       oneOverMercatorHeight;
 
-    ellipsoid.geodeticSurfaceNormalCartographic(
+    var geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
       cartographicScratch,
       normalScratch
     );
     var centerEncodedNormal = AttributeCompression.octEncode(
-      normalScratch,
+      geodeticSurfaceNormal,
       octEncodedNormalScratch
     );
 
@@ -1177,7 +1201,8 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       Cartesian2.fromElements(0.5, 0.5, uvScratch),
       middleHeight,
       centerEncodedNormal,
-      centerWebMercatorT
+      centerWebMercatorT,
+      geodeticSurfaceNormal
     );
     ++nextIndex;
 
@@ -1256,10 +1281,9 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         minimumHeight,
         maximumHeight
       ),
-      encoding.getStride(),
+      encoding.stride,
       obb,
       encoding,
-      frameState.terrainExaggeration,
       westIndicesSouthToNorth,
       southIndicesEastToWest,
       eastIndicesNorthToSouth,
@@ -1269,13 +1293,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
 
   var context = frameState.context;
 
-  if (defined(fill.vertexArray)) {
-    if (defined(vertexArraysToDestroy)) {
-      vertexArraysToDestroy.push(fill.vertexArray);
-    } else {
-      GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
-    }
-  }
+  fill._destroyVertexArray(vertexArraysToDestroy);
 
   fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
     context,
@@ -1337,18 +1355,27 @@ function addVertexWithComputedPosition(
     cartesianScratch
   );
 
+  var geodeticSurfaceNormal;
+  if (encoding.hasGeodeticSurfaceNormals) {
+    geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
+      position,
+      normalScratch
+    );
+  }
+
   var uv = uvScratch2;
   uv.x = u;
   uv.y = v;
 
   encoding.encode(
     buffer,
-    index * encoding.getStride(),
+    index * encoding.stride,
     position,
     uv,
     height,
     encodedNormal,
-    webMercatorT
+    webMercatorT,
+    geodeticSurfaceNormal
   );
 
   heightRange.minimumHeight = Math.min(heightRange.minimumHeight, height);
@@ -1825,7 +1852,7 @@ function addEdgeMesh(
   var targetTile = terrainFillMesh.tile;
   var sourceEncoding = edgeMesh.encoding;
   var sourceVertices = edgeMesh.vertices;
-  var targetStride = encoding.getStride();
+  var targetStride = encoding.stride;
 
   var southMercatorY;
   var oneOverMercatorHeight;
@@ -1912,6 +1939,14 @@ function addEdgeMesh(
         oneOverMercatorHeight;
     }
 
+    var geodeticSurfaceNormal;
+    if (encoding.hasGeodeticSurfaceNormals) {
+      geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
+        position,
+        normalScratch
+      );
+    }
+
     encoding.encode(
       typedArray,
       nextIndex * targetStride,
@@ -1919,7 +1954,8 @@ function addEdgeMesh(
       uv,
       height,
       normal,
-      webMercatorT
+      webMercatorT,
+      geodeticSurfaceNormal
     );
 
     heightRange.minimumHeight = Math.min(heightRange.minimumHeight, height);

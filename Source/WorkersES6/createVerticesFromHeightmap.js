@@ -3,7 +3,7 @@ import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import HeightmapTessellator from "../Core/HeightmapTessellator.js";
 import Rectangle from "../Core/Rectangle.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Lerc from "../ThirdParty/LercDecode.js";
+import Lerc from "../ThirdParty/lerc.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 function createVerticesFromHeightmap(parameters, transferableObjects) {
@@ -35,7 +35,7 @@ function createVerticesFromHeightmap(parameters, transferableObjects) {
 
   return {
     vertices: vertices.buffer,
-    numberOfAttributes: statistics.encoding.getStride(),
+    numberOfAttributes: statistics.encoding.stride,
     minimumHeight: statistics.minimumHeight,
     maximumHeight: statistics.maximumHeight,
     gridWidth: parameters.width,

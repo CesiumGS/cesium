@@ -15,6 +15,9 @@ Object.defineProperties(Cesium3DTileStyleEngine.prototype, {
       return this._style;
     },
     set: function (value) {
+      if (value === this._style) {
+        return;
+      }
       this._style = value;
       this._styleDirty = true;
     },
@@ -25,7 +28,11 @@ Cesium3DTileStyleEngine.prototype.makeDirty = function () {
   this._styleDirty = true;
 };
 
-Cesium3DTileStyleEngine.prototype.applyStyle = function (tileset, passOptions) {
+Cesium3DTileStyleEngine.prototype.resetDirty = function () {
+  this._styleDirty = false;
+};
+
+Cesium3DTileStyleEngine.prototype.applyStyle = function (tileset) {
   if (!tileset.ready) {
     return;
   }
@@ -35,11 +42,6 @@ Cesium3DTileStyleEngine.prototype.applyStyle = function (tileset, passOptions) {
   }
 
   var styleDirty = this._styleDirty;
-
-  if (passOptions.isRender) {
-    // Don't reset until the render pass
-    this._styleDirty = false;
-  }
 
   if (styleDirty) {
     // Increase "time", so the style is applied to all visible tiles

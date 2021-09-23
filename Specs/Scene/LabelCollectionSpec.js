@@ -650,6 +650,22 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("does not render label if show is false", function () {
+      labels.add({
+        position: Cartesian3.ZERO,
+        text: solidBox,
+        horizontalOrigin: HorizontalOrigin.CENTER,
+        verticalOrigin: VerticalOrigin.CENTER,
+        scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+      });
+
+      camera.position = new Cartesian3(2.0, 0.0, 0.0);
+      expect(scene).toRender([255, 255, 255, 255]);
+
+      labels.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("throws new label with invalid distanceDisplayCondition (near >= far)", function () {
       var dc = new DistanceDisplayCondition(100.0, 10.0);
       expect(function () {
@@ -1987,6 +2003,18 @@ describe(
           scene.renderForSpecs();
 
           expect(label.text).toEqual(text);
+        });
+
+        it("filters out soft hyphens from input strings", function () {
+          var softHyphen = String.fromCharCode(0xad);
+          var text = "test string" + softHyphen;
+          var label = labels.add({
+            text: text,
+          });
+          scene.renderForSpecs();
+
+          expect(label.text).toEqual(text);
+          expect(label._renderedText).toEqual("test string");
         });
       },
       "WebGL"
