@@ -41,14 +41,14 @@ describe(
     var result = new Color();
 
     var mockTileset = {
-      _statistics: {
+      statistics: {
         texturesByteLength: 0,
       },
       getFeature: function (batchId) {
         return { batchId: batchId };
       },
     };
-    mockTileset._tileset = mockTileset;
+    mockTileset.tileset = mockTileset;
 
     beforeAll(function () {
       scene = createScene();

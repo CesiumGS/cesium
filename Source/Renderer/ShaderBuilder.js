@@ -1,10 +1,13 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
+import ShaderStruct from "./ShaderStruct.js";
+import ShaderFunction from "./ShaderFunction.js";
 
 /**
  * An object that makes it easier to build the text of a {@link ShaderProgram}. This tracks GLSL code for both the vertex shader and the fragment shader.
@@ -58,17 +61,28 @@ export default function ShaderBuilder() {
   this._attributeLocations = {};
   this._attributeLines = [];
 
+  // Dynamically-generated structs and functions
+  // these are dictionaries of id -> ShaderStruct or ShaderFunction respectively
+  this._structs = {};
+  this._functions = {};
+
   this._vertexShaderParts = {
     defineLines: [],
     uniformLines: [],
     shaderLines: [],
     varyingLines: [],
+    // identifiers of structs/functions to include, listed in insertion order
+    structIds: [],
+    functionIds: [],
   };
   this._fragmentShaderParts = {
     defineLines: [],
     uniformLines: [],
     shaderLines: [],
     varyingLines: [],
+    // identifiers of structs/functions to include, listed in insertion order
+    structIds: [],
+    functionIds: [],
   };
 }
 
@@ -123,6 +137,124 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   if (ShaderDestination.includesFragmentShader(destination)) {
     this._fragmentShaderParts.defineLines.push(line);
   }
+};
+
+/**
+ * Add a new dynamically-generated struct to the shader
+ * @param {String} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
+ * @param {String} structName The name of the struct as it will appear in the shader.
+ * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
+ *
+ * @example
+ * // generates the following struct in the fragment shader
+ * // struct TestStruct
+ * // {
+ * // };
+ * shaderBuilder.addStruct("testStructId", "TestStruct", ShaderDestination.FRAGMENT);
+ */
+ShaderBuilder.prototype.addStruct = function (
+  structId,
+  structName,
+  destination
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("structId", structId);
+  Check.typeOf.string("structName", structName);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
+  this._structs[structId] = new ShaderStruct(structName);
+  if (ShaderDestination.includesVertexShader(destination)) {
+    this._vertexShaderParts.structIds.push(structId);
+  }
+
+  if (ShaderDestination.includesFragmentShader(destination)) {
+    this._fragmentShaderParts.structIds.push(structId);
+  }
+};
+
+/**
+ * Add a field to a dynamically-generated struct.
+ * @param {String} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
+ * @param {String} type The GLSL type of the field
+ * @param {String} identifier The identifier of the field.
+ *
+ * @example
+ * // generates the following struct in the fragment shader
+ * // struct TestStruct
+ * // {
+ * //    float minimum;
+ * //    float maximum;
+ * // };
+ * shaderBuilder.addStruct("testStructId", "TestStruct", ShaderDestination.FRAGMENT);
+ * shaderBuilder.addStructField("testStructId", "float", "maximum");
+ * shaderBuilder.addStructField("testStructId", "float", "minimum");
+ */
+ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("structId", structId);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", "identifier");
+  //>>includeEnd('debug');
+  this._structs[structId].addField(type, identifier);
+};
+
+/**
+ * Add a new dynamically-generated function to the shader.
+ * @param {String} functionName The name of the function. This will be used to identify the function in {@link ShaderBuilder#addFunctionLines}.
+ * @param {String} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
+ * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
+ * @example
+ * // generates the following function in the vertex shader
+ * // vec3 testFunction(float parameter)
+ * // {
+ * // }
+ * shaderBuilder.addStruct("testFunction", "vec3 testFunction(float parameter)", ShaderDestination.VERTEX);
+ */
+ShaderBuilder.prototype.addFunction = function (
+  functionName,
+  signature,
+  destination
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("functionName", functionName);
+  Check.typeOf.string("signature", signature);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
+  this._functions[functionName] = new ShaderFunction(signature);
+
+  if (ShaderDestination.includesVertexShader(destination)) {
+    this._vertexShaderParts.functionIds.push(functionName);
+  }
+
+  if (ShaderDestination.includesFragmentShader(destination)) {
+    this._fragmentShaderParts.functionIds.push(functionName);
+  }
+};
+
+/**
+ * Add lines to a dynamically-generated function
+ * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
+ * @param {String} lines An array of lines of GLSL code to add to the function body. Do not include any whitespace at the ends of each line, but do include the semicolon.
+ *
+ * @example
+ * // generates the following function in the vertex shader
+ * // vec3 testFunction(float parameter)
+ * // {
+ * //   float signed = 2.0 * parameter - 1.0;
+ * //   return vec3(signed, 0.0, 0.0);
+ * // }
+ * shaderBuilder.addStruct("testFunction", "vec3 testFunction(float parameter)", ShaderDestination.VERTEX);
+ * shaderBuilder.addFunctionLines("testFunction", [
+ *   "float signed = 2.0 * parameter - 1.0;",
+ *   "return vec3(parameter);"
+ * ]);
+ */
+ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("functionName", functionName);
+  Check.typeOf.object("lines", lines);
+  //>>includeEnd('debug');
+  this._functions[functionName].addLines(lines);
 };
 
 /**
@@ -250,6 +382,7 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
  * Appends lines of GLSL code to the vertex shader
  *
  * @param {String[]} lines The lines to add to the end of the vertex shader source
+ *
  * @example
  * shaderBuilder.addVertexLines([
  *  "void main()",
@@ -271,6 +404,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  * Appends lines of GLSL code to the fragment shader
  *
  * @param {String[]} lines The lines to add to the end of the fragment shader source
+ *
  * @example
  * shaderBuilder.addFragmentLines([
  *  "void main()",
@@ -310,6 +444,9 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
     ? [this._positionAttributeLine]
     : [];
 
+  var structLines = generateStructLines(this);
+  var functionLines = generateFunctionLines(this);
+
   // Lines are joined here so the ShaderSource
   // generates a single #line 0 directive
   var vertexLines = positionAttribute
@@ -317,6 +454,8 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
       this._attributeLines,
       this._vertexShaderParts.uniformLines,
       this._vertexShaderParts.varyingLines,
+      structLines.vertexLines,
+      functionLines.vertexLines,
       this._vertexShaderParts.shaderLines
     )
     .join("\n");
@@ -328,6 +467,8 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
   var fragmentLines = this._fragmentShaderParts.uniformLines
     .concat(
       this._fragmentShaderParts.varyingLines,
+      structLines.fragmentLines,
+      functionLines.fragmentLines,
       this._fragmentShaderParts.shaderLines
     )
     .join("\n");
@@ -343,3 +484,67 @@ ShaderBuilder.prototype.buildShaderProgram = function (context) {
     attributeLocations: this._attributeLocations,
   });
 };
+
+ShaderBuilder.prototype.clone = function () {
+  return clone(this, true);
+};
+
+function generateStructLines(shaderBuilder) {
+  var vertexLines = [];
+  var fragmentLines = [];
+
+  var i;
+  var structIds = shaderBuilder._vertexShaderParts.structIds;
+  var structId;
+  var struct;
+  var structLines;
+  for (i = 0; i < structIds.length; i++) {
+    structId = structIds[i];
+    struct = shaderBuilder._structs[structId];
+    structLines = struct.generateGlslLines();
+    vertexLines.push.apply(vertexLines, structLines);
+  }
+
+  structIds = shaderBuilder._fragmentShaderParts.structIds;
+  for (i = 0; i < structIds.length; i++) {
+    structId = structIds[i];
+    struct = shaderBuilder._structs[structId];
+    structLines = struct.generateGlslLines();
+    fragmentLines.push.apply(fragmentLines, structLines);
+  }
+
+  return {
+    vertexLines: vertexLines,
+    fragmentLines: fragmentLines,
+  };
+}
+
+function generateFunctionLines(shaderBuilder) {
+  var vertexLines = [];
+  var fragmentLines = [];
+
+  var i;
+  var functionIds = shaderBuilder._vertexShaderParts.functionIds;
+  var functionId;
+  var func;
+  var functionLines;
+  for (i = 0; i < functionIds.length; i++) {
+    functionId = functionIds[i];
+    func = shaderBuilder._functions[functionId];
+    functionLines = func.generateGlslLines();
+    vertexLines.push.apply(vertexLines, functionLines);
+  }
+
+  functionIds = shaderBuilder._fragmentShaderParts.functionIds;
+  for (i = 0; i < functionIds.length; i++) {
+    functionId = functionIds[i];
+    func = shaderBuilder._functions[functionId];
+    functionLines = func.generateGlslLines();
+    fragmentLines.push.apply(fragmentLines, functionLines);
+  }
+
+  return {
+    vertexLines: vertexLines,
+    fragmentLines: fragmentLines,
+  };
+}

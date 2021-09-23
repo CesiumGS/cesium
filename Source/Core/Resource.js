@@ -14,6 +14,7 @@ import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
+import CesiumMath from "./Math.js";
 import objectToQuery from "./objectToQuery.js";
 import queryToObject from "./queryToObject.js";
 import Request from "./Request.js";
@@ -45,8 +46,8 @@ var xhrBlobSupported = (function () {
  * @private
  */
 function parseQuery(uri, resource, merge, preserveQueryParameters) {
-  var queryString = uri.query;
-  if (!defined(queryString) || queryString.length === 0) {
+  var queryString = uri.query();
+  if (queryString.length === 0) {
     return {};
   }
 
@@ -69,7 +70,7 @@ function parseQuery(uri, resource, merge, preserveQueryParameters) {
   } else {
     resource._queryParameters = query;
   }
-  uri.query = undefined;
+  uri.search("");
 }
 
 /**
@@ -87,9 +88,9 @@ function stringifyQuery(uri, resource) {
 
   // We have 1 key with an undefined value, so this is just a string, not key/value pairs
   if (keys.length === 1 && !defined(queryObject[keys[0]])) {
-    uri.query = keys[0];
+    uri.search(keys[0]);
   } else {
-    uri.query = objectToQuery(queryObject);
+    uri.search(objectToQuery(queryObject));
   }
 }
 
@@ -314,7 +315,7 @@ function Resource(options) {
   parseQuery(uri, this, true, true);
 
   // Remove the fragment as it's not sent with a request
-  uri.fragment = undefined;
+  uri.fragment("");
 
   this._url = uri.toString();
 }
@@ -453,7 +454,7 @@ Object.defineProperties(Resource.prototype, {
       parseQuery(uri, this, false);
 
       // Remove the fragment as it's not sent with a request
-      uri.fragment = undefined;
+      uri.fragment("");
 
       this._url = uri.toString();
     },
@@ -653,9 +654,15 @@ Resource.prototype.getDerivedResource = function (options) {
     parseQuery(uri, resource, true, preserveQueryParameters);
 
     // Remove the fragment as it's not sent with a request
-    uri.fragment = undefined;
+    uri.fragment("");
 
-    resource._url = uri.resolve(new Uri(getAbsoluteUri(this._url))).toString();
+    if (uri.scheme() !== "") {
+      resource._url = uri.toString();
+    } else {
+      resource._url = uri
+        .absoluteTo(new Uri(getAbsoluteUri(this._url)))
+        .toString();
+    }
   }
 
   if (defined(options.queryParameters)) {
@@ -1258,7 +1265,8 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   //generate a unique function name
   var functionName;
   do {
-    functionName = "loadJsonp" + Math.random().toString().substring(2, 8);
+    functionName =
+      "loadJsonp" + CesiumMath.nextRandomNumber().toString().substring(2, 8);
   } while (defined(window[functionName]));
 
   return fetchJsonp(this, callbackParameterName, functionName);

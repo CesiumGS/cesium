@@ -22,7 +22,7 @@ function getExtensionFromUri(uri) {
 
   var uriObject = new Uri(uri);
   uriObject.normalize();
-  var path = uriObject.path;
+  var path = uriObject.path();
   var index = path.lastIndexOf("/");
   if (index !== -1) {
     path = path.substr(index + 1);

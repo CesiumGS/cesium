@@ -11,7 +11,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Initialization options for the CorridorGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the corridor.
- * @property {Property | Cartesian3} [positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
+ * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
  * @property {Property | number} [width] A numeric Property specifying the distance between the edges of the corridor.
  * @property {Property | number} [height=0] A numeric Property specifying the altitude of the corridor relative to the ellipsoid surface.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.

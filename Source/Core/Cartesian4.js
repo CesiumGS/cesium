@@ -785,6 +785,14 @@ Cartesian4.equalsEpsilon = function (
 Cartesian4.ZERO = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
 /**
+ * An immutable Cartesian4 instance initialized to (1.0, 1.0, 1.0, 1.0).
+ *
+ * @type {Cartesian4}
+ * @constant
+ */
+Cartesian4.ONE = Object.freeze(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+
+/**
  * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
  *
  * @type {Cartesian4}

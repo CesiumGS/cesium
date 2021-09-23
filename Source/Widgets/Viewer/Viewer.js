@@ -499,7 +499,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       : bottomContainer,
     creditViewport: options.creditViewport,
     scene3DOnly: scene3DOnly,
-    terrainExaggeration: options.terrainExaggeration,
     shadows: options.shadows,
     terrainShadows: options.terrainShadows,
     mapMode2D: options.mapMode2D,

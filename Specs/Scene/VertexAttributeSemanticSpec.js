@@ -187,9 +187,9 @@ describe("Scene/VertexAttributeSemantic", function () {
     ];
 
     var expectedVariableName = [
-      "position",
-      "normal",
-      "tangent",
+      "positionMC",
+      "normalMC",
+      "tangentMC",
       "texCoord",
       "color",
       "joints",
@@ -211,7 +211,7 @@ describe("Scene/VertexAttributeSemantic", function () {
         VertexAttributeSemantic.FEATURE_ID,
         0
       )
-    ).toBe("featureId0");
+    ).toBe("featureId_0");
   });
 
   it("getVariableName throws if semantic is undefined", function () {

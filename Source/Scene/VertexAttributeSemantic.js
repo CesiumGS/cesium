@@ -78,11 +78,11 @@ var VertexAttributeSemantic = {
 function semanticToVariableName(semantic) {
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
-      return "position";
+      return "positionMC";
     case VertexAttributeSemantic.NORMAL:
-      return "normal";
+      return "normalMC";
     case VertexAttributeSemantic.TANGENT:
-      return "tangent";
+      return "tangentMC";
     case VertexAttributeSemantic.TEXCOORD:
       return "texCoord";
     case VertexAttributeSemantic.COLOR:
@@ -267,7 +267,7 @@ VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
 
   var variableName = semanticToVariableName(semantic);
   if (defined(setIndex)) {
-    variableName += setIndex;
+    variableName += "_" + setIndex;
   }
   return variableName;
 };

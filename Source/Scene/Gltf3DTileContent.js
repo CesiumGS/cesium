@@ -6,11 +6,14 @@ import Pass from "../Renderer/Pass.js";
 import Axis from "./Axis.js";
 import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
+import ModelExperimental from "./ModelExperimental/ModelExperimental.js";
+import combine from "../Core/combine.js";
 
 /**
- * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
+ * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf|3DTILES_content_gltf} extension.
  * <p>
- * This class does not yet support the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension}.
+ * This class does not yet support the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}.
  * </p>
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
@@ -30,6 +33,10 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
 
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
+
+  this._featureTable = undefined;
+  this._featureTables = undefined;
+  this._featureTableId = undefined;
 
   initialize(this, gltf);
 }
@@ -103,7 +110,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return undefined;
+      return this._featureTable;
     },
   },
 
@@ -113,6 +120,30 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
     },
     set: function (value) {
       this._groupMetadata = value;
+    },
+  },
+  /**
+   * @private
+   */
+  featureTables: {
+    get: function () {
+      return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
+    },
+  },
+
+  /**
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
+      this._featureTable = this._featureTables[value];
     },
   },
 });
@@ -127,42 +158,61 @@ function initialize(content, gltf) {
     primitive: tileset,
   };
 
-  content._model = new Model({
+  var modelOptions = {
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
     basePath: resource,
-    requestType: RequestType.TILES3D,
     modelMatrix: tile.computedTransform,
     upAxis: tileset._gltfUpAxis,
     forwardAxis: Axis.X,
-    shadows: tileset.shadows,
-    debugWireframe: tileset.debugWireframe,
     incrementallyLoadTextures: false,
-    addBatchIdToGeneratedShaders: false,
-    pickObject: pickObject,
-    imageBasedLightingFactor: tileset.imageBasedLightingFactor,
-    lightColor: tileset.lightColor,
-    luminanceAtZenith: tileset.luminanceAtZenith,
-    sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-    specularEnvironmentMaps: tileset.specularEnvironmentMaps,
-    backFaceCulling: tileset.backFaceCulling,
-    showOutline: tileset.showOutline,
-  });
-  content._model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
+  };
+
+  if (ExperimentalFeatures.enableModelExperimental) {
+    modelOptions.customShader = tileset.customShader;
+    modelOptions.content = content;
+    content._model = ModelExperimental.fromGltf(modelOptions);
+  } else {
+    modelOptions = combine(modelOptions, {
+      requestType: RequestType.TILES3D,
+      shadows: tileset.shadows,
+      debugWireframe: tileset.debugWireframe,
+      addBatchIdToGeneratedShaders: false,
+      pickObject: pickObject,
+      imageBasedLightingFactor: tileset.imageBasedLightingFactor,
+      lightColor: tileset.lightColor,
+      luminanceAtZenith: tileset.luminanceAtZenith,
+      sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
+      specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      backFaceCulling: tileset.backFaceCulling,
+      showOutline: tileset.showOutline,
     });
+    content._model = new Model(modelOptions);
+  }
+
+  content._model.readyPromise.then(function (model) {
+    if (defined(model.activeAnimations)) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
+    }
   });
 }
 
-Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return false;
+Gltf3DTileContent.prototype.getFeature = function (featureId) {
+  if (defined(this.batchTable)) {
+    return this.batchTable.getFeature(featureId);
+  }
+  return undefined;
 };
 
-Gltf3DTileContent.prototype.getFeature = function (batchId) {
-  return undefined;
+Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
+  if (defined(this.batchTable)) {
+    return this.batchTable.hasProperty(featureId, name);
+  }
+  return false;
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
@@ -216,6 +266,16 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
     model._clippingPlanes = tilesetClippingPlanes;
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.update(frameState);
+      }
+    }
+  }
+
   model.update(frameState);
 };
 
@@ -224,6 +284,16 @@ Gltf3DTileContent.prototype.isDestroyed = function () {
 };
 
 Gltf3DTileContent.prototype.destroy = function () {
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.destroy();
+      }
+    }
+  }
+
   this._model = this._model && this._model.destroy();
   return destroyObject(this);
 };
