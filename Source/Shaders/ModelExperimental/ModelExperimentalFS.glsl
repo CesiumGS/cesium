@@ -31,6 +31,7 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 }
 
+FeatureIdentification feature;
 void main() 
 {
     czm_modelMaterial material = defaultModelMaterial();
@@ -51,11 +52,11 @@ void main()
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
     #ifdef HAS_FEATURES
-    featureStage();
+    featureStage(feature);
     #endif
 
     #ifdef USE_CPU_STYLING
-    color = cpuStylingStage(color);
+    cpuStylingStage(color, feature);
     #endif
 
     gl_FragColor = color;

@@ -162,6 +162,11 @@ ShaderBuilder.prototype.addStruct = function (
   Check.typeOf.string("structName", structName);
   Check.typeOf.number("destination", destination);
   //>>includeEnd('debug');
+
+  if (defined(this._structs[structId])) {
+    return;
+  }
+
   this._structs[structId] = new ShaderStruct(structName);
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.structIds.push(structId);
@@ -220,6 +225,10 @@ ShaderBuilder.prototype.addFunction = function (
   Check.typeOf.string("signature", signature);
   Check.typeOf.number("destination", destination);
   //>>includeEnd('debug');
+  if (defined(this._functions[functionName])) {
+    return;
+  }
+
   this._functions[functionName] = new ShaderFunction(signature);
 
   if (ShaderDestination.includesVertexShader(destination)) {

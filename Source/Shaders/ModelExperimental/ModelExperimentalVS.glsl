@@ -22,10 +22,12 @@ void main()
     #endif
 
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
-    featureStage();
+    FeatureIdentification feature;
+    featureStage(feature);
         #ifdef USE_CPU_STYLING
-        cpuStylingStage(position);
+        cpuStylingStage(attributes.positionMC, feature);
         #endif
+    setFeatureIdentificationVaryings(feature);
     #endif
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER

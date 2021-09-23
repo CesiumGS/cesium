@@ -33,6 +33,13 @@ GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS =
 GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS =
   "void setDynamicVaryings(inout ProcessedAttributes attributes)";
 
+GeometryPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS =
+  "FeatureIdentificationVS";
+GeometryPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS =
+  "FeatureIdentificationFS";
+GeometryPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION =
+  "FeatureIdentification";
+
 /**
  * This pipeline stage processes the vertex attributes of a primitive, adding the attribute declarations to the shaders,
  * the attribute objects to the render resources and setting the flags as needed.
@@ -55,12 +62,23 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
   // additional fields.
   shaderBuilder.addStruct(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
-    "ProcessedAttributes",
+    GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
     ShaderDestination.VERTEX
   );
   shaderBuilder.addStruct(
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
-    "ProcessedAttributes",
+    GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+    ShaderDestination.FRAGMENT
+  );
+
+  shaderBuilder.addStruct(
+    GeometryPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
+    GeometryPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addStruct(
+    GeometryPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS,
+    GeometryPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
     ShaderDestination.FRAGMENT
   );
 

@@ -1,4 +1,5 @@
 import combine from "../../Core/combine.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 
 /**
@@ -50,7 +51,7 @@ BatchTexturePipelineStage.process = function (
   var batchTexture = featureTable.batchTexture;
   shaderBuilder.addUniform("sampler2D", "model_batchTexture");
   batchTextureUniforms.model_batchTexture = function () {
-    return batchTexture.batchTexture;
+    return defaultValue(batchTexture.batchTexture, batchTexture.defaultTexture);
   };
 
   // Batch texture step size

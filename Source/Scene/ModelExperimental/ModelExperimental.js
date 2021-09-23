@@ -207,21 +207,16 @@ function initialize(model) {
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         var featureTables;
+        var featureTableId = selectFeatureTableId(components, model);
         if (defined(content)) {
           featureTables = createContentFeatureTables(content, featureMetadata);
           content.featureTables = featureTables;
+          content.featureTableId = featureTableId;
         } else {
           featureTables = createModelFeatureTables(model, featureMetadata);
           model._featureTables = featureTables;
+          model.featureTableId = featureTableId;
         }
-      }
-
-      var featureTableId = selectFeatureTableId(components, model);
-
-      if (defined(content)) {
-        content.featureTableId = featureTableId;
-      } else {
-        model.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({

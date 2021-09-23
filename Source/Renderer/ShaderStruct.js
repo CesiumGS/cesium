@@ -26,9 +26,6 @@ import Check from "../Core/Check.js";
  * @private
  */
 export default function ShaderStruct(name) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("name", name);
-  //>>includeEnd('debug');
   this.name = name;
   this.fields = [];
 }

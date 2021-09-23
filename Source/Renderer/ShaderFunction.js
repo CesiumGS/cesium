@@ -25,9 +25,6 @@ import Check from "../Core/Check.js";
  * @private
  */
 export default function ShaderFunction(signature) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("signature", signature);
-  //>>includeEnd('debug');
   this.signature = signature;
   this.body = [];
 }

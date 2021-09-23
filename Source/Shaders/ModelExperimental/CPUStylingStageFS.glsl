@@ -1,20 +1,20 @@
-float featureId;
-vec2 featureSt;
-
-vec4 cpuStylingStage(vec4 color)
+void cpuStylingStage(inout vec4 color, inout FeatureIdentification feature)
 {
     #ifdef FEATURE_ID_TEXTURE
+
     // Read color from the batch texture.
-    vec4 featureProperties = texture2D(model_batchTexture, featureSt);
+    vec4 featureColor = texture2D(model_batchTexture, feature.st);
     // Discard, if show is false.
-    float show = ceil(featureProperties.a);
+    float show = ceil(featureColor.a);
     if (show == 0.0) {
         discard;
     }
-    color = featureProperties;
+    color = featureColor;
 
     #elif defined(FEATURE_ID_ATTRIBUTE)
-    color = v_featureColor;
+
+    color = feature.color;
+
     #else
     
     color.rgb = mix(color.rgb, model_color.rgb, model_colorBlend);
@@ -23,6 +23,4 @@ vec4 cpuStylingStage(vec4 color)
     color.a *= model_color.a;
     
     #endif
-
-    return color;
 }

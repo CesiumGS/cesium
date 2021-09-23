@@ -1,8 +1,9 @@
-void cpuStylingStage(inout vec3 position)
+void cpuStylingStage(inout vec3 positionMC, inout FeatureIdentification feature)
 {
-    vec4 featureProperties = texture2D(model_batchTexture, v_featureSt);
-    float show = ceil(featureProperties.a);
-    position *= show;
+    vec4 featureColor = texture2D(model_batchTexture, feature.st);
 
-    v_featureColor = featureProperties;
+    float show = ceil(featureColor.a);
+    positionMC *= show;
+
+    feature.color = featureColor;
 }

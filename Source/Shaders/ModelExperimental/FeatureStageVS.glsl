@@ -1,12 +1,12 @@
 // This stage is only applied for Feature ID vertex attributes.
 // If Feature ID textures are present, those are used in the fragment shader.
-void featureStage()
+void featureStage(inout FeatureIdentification feature)
 {
     float featureId = FEATURE_ID_ATTRIBUTE;
     if (featureId < model_featuresLength)
     {
-        v_featureId = featureId;
-        v_featureSt = computeSt(featureId);
+        feature.id = featureId;
+        feature.st = computeSt(featureId);
     }
     // Floating point comparisons can be unreliable in GLSL, so we
     // increment the v_featureId to make sure it's always greater
@@ -15,6 +15,6 @@ void featureStage()
     // greater than the number of features.
     else
     {
-        v_featureId = model_featuresLength + 1.0;
+        feature.id = model_featuresLength + 1.0;
     }
 }

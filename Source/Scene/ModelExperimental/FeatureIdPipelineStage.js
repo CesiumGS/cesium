@@ -19,6 +19,19 @@ import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
 var FeatureIdPipelineStage = {};
 FeatureIdPipelineStage.name = "FeatureIdPipelineStage"; // Helps with debugging
 
+FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS =
+  "FeatureIdentificationVS";
+FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS =
+  "FeatureIdentificationFS";
+FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION =
+  "FeatureIdentification";
+FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS =
+  "setFeatureIdentificationVaryingsVS";
+FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS =
+  "setFeatureIdentificationVaryingsFS";
+FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS =
+  "void setFeatureIdentificationVaryings(inout FeatureIdentification feature)";
+
 /**
  * Process a primitive. This modifies the following parts of the render resources:
  * <ul>
@@ -43,6 +56,8 @@ FeatureIdPipelineStage.process = function (
   renderResources.hasFeatureIds = true;
 
   shaderBuilder.addDefine("HAS_FEATURES", undefined, ShaderDestination.BOTH);
+
+  setupFeatureIdentificationStruct(shaderBuilder);
 
   // Handle feature attribution: through feature ID texture or feature ID vertex attribute.
   var featureIdTextures = primitive.featureIdTextures;
@@ -84,12 +99,69 @@ FeatureIdPipelineStage.process = function (
       featureIdAttributePrefix + featureIdAttributeSetIndex,
       ShaderDestination.BOTH
     );
+
     shaderBuilder.addVarying("float", "v_featureId");
+    shaderBuilder.addVarying("vec2", "v_featureSt");
+
+    shaderBuilder.addFunction(
+      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
+      FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS,
+      ShaderDestination.VERTEX
+    );
+    shaderBuilder.addFunctionLines(
+      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
+      ["v_featureId = feature.id;", "v_featureSt = feature.st;"]
+    );
+    shaderBuilder.addFunction(
+      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
+      FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(
+      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
+      ["feature.id = v_featureId;", "feature.st = v_featureSt;"]
+    );
+
     shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
   }
 
   shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
 };
+
+function setupFeatureIdentificationStruct(shaderBuilder) {
+  // The struct is always needed by the Fragment Shader.
+  shaderBuilder.addStruct(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS,
+    FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
+    ShaderDestination.FRAGMENT
+  );
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS,
+    "float",
+    "id"
+  );
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS,
+    "vec2",
+    "st"
+  );
+  shaderBuilder.addStruct(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
+    FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
+    ShaderDestination.VERTEX
+  );
+
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
+    "float",
+    "id"
+  );
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
+    "vec2",
+    "st"
+  );
+}
 
 /**
  * Generates an object containing information about the Feature ID attribute.
