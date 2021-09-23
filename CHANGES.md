@@ -4,7 +4,7 @@
 
 ##### Fixes :wrench:
 
-- Fixed incorrect behavior in `Scene.CameraFlightPath` when using Columbus View. [#9192](https://github.com/CesiumGS/cesium/pull/9192)
+- Fixed incorrect behavior in `CameraFlightPath` when using Columbus View. [#9192](https://github.com/CesiumGS/cesium/pull/9192)
 
 ### 1.85 - 2021-09-01
 
