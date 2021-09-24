@@ -138,7 +138,12 @@ function createModelFeatureTables(model, featureMetadata) {
   return modelFeatureTables;
 }
 
-function selectFeatureTableId(components, model) {
+function selectFeatureTableId(components, model, content) {
+  // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
+  if (defined(content.featureMetadata)) {
+    return "_batchTable";
+  }
+
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
   var featureIdTextureIndex = model._featureIdTextureIndex;
 
@@ -190,10 +195,14 @@ function initialize(model) {
     .then(function (loader) {
       var components = loader.components;
       var content = model._content;
-      var featureMetadata = components.featureMetadata;
+
+      // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
+      var featureMetadata = defined(content.featureMetadata)
+        ? content.featureMetadata
+        : components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
-        var featureTableId = selectFeatureTableId(components, model);
+        var featureTableId = selectFeatureTableId(components, model, content);
         var featureTables;
         if (defined(content)) {
           featureTables = createContentFeatureTables(content, featureMetadata);

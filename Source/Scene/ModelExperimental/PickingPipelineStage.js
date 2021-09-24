@@ -3,6 +3,7 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -70,11 +71,15 @@ PickingPipelineStage.process = function (
 
 function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
+  var content = model.content;
   var featureTableId;
   var featureIdAttribute;
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
 
-  if (defined(instances)) {
+  if (defined(content)) {
+    // Extract the Feature Table ID from the Cesium3DTileContent.
+    featureTableId = content.featureTableId;
+  } else if (defined(instances)) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
     featureTableId = featureIdAttribute.featureTableId;
@@ -91,7 +96,6 @@ function processPickTexture(renderResources, primitive, instances) {
 
   var featureTable;
 
-  var content = model.content;
   if (defined(content)) {
     featureTable = content.featureTables[featureTableId];
   } else {
@@ -105,9 +109,13 @@ function processPickTexture(renderResources, primitive, instances) {
     ShaderDestination.FRAGMENT
   );
 
+  var batchTexture = featureTable.batchTexture;
   var pickingUniforms = {
     model_pickTexture: function () {
-      return featureTable.batchTexture.pickTexture;
+      return defaultValue(
+        batchTexture.pickTexture,
+        batchTexture.defaultTexture
+      );
     },
   };
 

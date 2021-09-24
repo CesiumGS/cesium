@@ -82,6 +82,7 @@ function initialize(runtimePrimitive) {
   var primitive = runtimePrimitive.primitive;
   var node = runtimePrimitive.node;
   var model = runtimePrimitive.model;
+  var content = model.content;
   var customShader = model.customShader;
 
   var hasCustomShader = defined(customShader);
@@ -126,7 +127,8 @@ function initialize(runtimePrimitive) {
 
   var hasFeatureIds =
     defined(primitive.featureIdAttributes[featureIdAttributeIndex]) ||
-    defined(primitive.featureIdTextures[featureIdTextureIndex]);
+    defined(primitive.featureIdTextures[featureIdTextureIndex]) ||
+    defined(content.featureMetadata);
   if (hasInstancedFeatureIds || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
