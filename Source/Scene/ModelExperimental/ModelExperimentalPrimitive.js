@@ -125,10 +125,11 @@ function initialize(runtimePrimitive) {
     }
   }
 
+  var hasContentMetadata = defined(content) && defined(content.featureMetadata);
   var hasFeatureIds =
     defined(primitive.featureIdAttributes[featureIdAttributeIndex]) ||
     defined(primitive.featureIdTextures[featureIdTextureIndex]) ||
-    defined(content.featureMetadata);
+    hasContentMetadata;
   if (hasInstancedFeatureIds || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);

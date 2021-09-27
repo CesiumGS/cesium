@@ -140,7 +140,7 @@ function createModelFeatureTables(model, featureMetadata) {
 
 function selectFeatureTableId(components, model, content) {
   // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
-  if (defined(content.featureMetadata)) {
+  if (defined(content) && defined(content.featureMetadata)) {
     return "_batchTable";
   }
 
@@ -197,22 +197,23 @@ function initialize(model) {
       var content = model._content;
 
       // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
-      var featureMetadata = defined(content.featureMetadata)
+      // Otherwise, the metadata is owned by ModelExperimental.
+      var hasContent = defined(content);
+      var featureTableOwner = hasContent ? content : model;
+      var featureMetadata = defined(featureTableOwner.featureMetadata)
         ? content.featureMetadata
         : components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         var featureTableId = selectFeatureTableId(components, model, content);
         var featureTables;
-        if (defined(content)) {
+        if (hasContent) {
           featureTables = createContentFeatureTables(content, featureMetadata);
-          content.featureTables = featureTables;
-          content.featureTableId = featureTableId;
         } else {
           featureTables = createModelFeatureTables(model, featureMetadata);
-          model._featureTables = featureTables;
-          model.featureTableId = featureTableId;
         }
+        featureTableOwner.featureTables = featureTables;
+        featureTableOwner.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -365,6 +366,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   featureTables: {
     get: function () {
       return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
     },
   },
 
