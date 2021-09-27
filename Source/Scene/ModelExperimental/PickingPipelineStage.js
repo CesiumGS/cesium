@@ -45,11 +45,7 @@ PickingPipelineStage.process = function (
     processInstancedPickIds(renderResources, instances, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
-    var pickObject = {
-      model: model,
-      node: renderResources.runtimeNode,
-      primitive: renderResources.runtimePrimitive,
-    };
+    var pickObject = buildPickObject(renderResources);
 
     var pickId = context.createPickId(pickObject);
     model._resources.push(pickId);
@@ -67,6 +63,45 @@ PickingPipelineStage.process = function (
     renderResources.pickId = "czm_pickColor";
   }
 };
+
+/**
+ * @private
+ */
+function buildPickObject(renderResources, instanceId) {
+  var model = renderResources.model;
+
+  var detailPickObject = {
+    model: model,
+    node: renderResources.runtimeNode,
+    primitive: renderResources.runtimePrimitive,
+  };
+
+  var content = model.content;
+  var pickObject;
+
+  if (defined(content)) {
+    // For 3D Tiles, the pick object's content and primitive are set to the Cesium3DTileContent that owns the model
+    // and the tileset it belongs to, respectively. The detail pick object is returned under the detail key.
+    pickObject = {
+      content: content,
+      primitive: content.tileset,
+      detail: detailPickObject,
+    };
+  } else {
+    // For models, the model itself is returned as the primitive, with the detail pick object under the detail key.
+    pickObject = {
+      primitive: model,
+      detail: detailPickObject,
+    };
+  }
+
+  if (defined(instanceId)) {
+    // For instanced models, an instanceId property is added to the pick object.
+    pickObject.instanceId = instanceId;
+  }
+
+  return pickObject;
+}
 
 function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
@@ -130,12 +165,7 @@ function processInstancedPickIds(renderResources, instances, context) {
 
   var modelResources = model._resources;
   for (var i = 0; i < instanceCount; i++) {
-    var pickObject = {
-      model: renderResources.model,
-      node: renderResources.runtimeNode,
-      primitive: renderResources.runtimePrimitive,
-      instanceId: i,
-    };
+    var pickObject = buildPickObject(renderResources, i);
 
     var pickId = context.createPickId(pickObject);
     modelResources.push(pickId);
