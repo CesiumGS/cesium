@@ -3,12 +3,14 @@ import {
   Cartesian3,
   Cartesian4,
   parseBatchTable,
+  MetadataClass,
   MetadataType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
   var batchTableJson = {};
   var count = 3;
+  var className = MetadataClass._batchTableClassName;
 
   it("throws without count", function () {
     expect(function () {
@@ -54,7 +56,7 @@ describe("Scene/parseBatchTable", function () {
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    var featureTable = metadata.getFeatureTable(className);
 
     expect(featureTable.getProperty(0, "height")).toBe(10.0);
     expect(featureTable.getProperty(1, "height")).toBe(15.0);
@@ -115,7 +117,7 @@ describe("Scene/parseBatchTable", function () {
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var properties = metadata.schema.classes._batchTable.properties;
+    var properties = metadata.schema.classes[className].properties;
 
     expect(properties.uint8Property.type).toBe(MetadataType.UINT8);
     expect(properties.uint16Property.type).toBe(MetadataType.UINT16);
@@ -126,7 +128,7 @@ describe("Scene/parseBatchTable", function () {
     expect(properties.floatProperty.type).toBe(MetadataType.FLOAT32);
     expect(properties.doubleProperty.type).toBe(MetadataType.FLOAT64);
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    var featureTable = metadata.getFeatureTable(className);
     expect(featureTable.getProperty(0, "uint8Property")).toBe(0);
     expect(featureTable.getProperty(0, "uint16Property")).toBe(0);
     expect(featureTable.getProperty(0, "uint32Property")).toBe(0);
@@ -163,7 +165,7 @@ describe("Scene/parseBatchTable", function () {
       batchTable: vectorBatchTable,
       binaryBody: binaryBody,
     });
-    var properties = metadata.schema.classes._batchTable.properties;
+    var properties = metadata.schema.classes[className].properties;
 
     expect(properties.vec2Property.type).toBe(MetadataType.ARRAY);
     expect(properties.uvec3Property.type).toBe(MetadataType.ARRAY);
@@ -175,7 +177,7 @@ describe("Scene/parseBatchTable", function () {
     expect(properties.uvec3Property.componentCount).toBe(3);
     expect(properties.dvec4Property.componentCount).toBe(4);
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    var featureTable = metadata.getFeatureTable(className);
     expect(featureTable.getProperty(0, "vec2Property")).toEqual(
       new Cartesian2(0.0, 0.0)
     );
@@ -212,10 +214,10 @@ describe("Scene/parseBatchTable", function () {
       batchTable: jsonBatchTable,
     });
 
-    var properties = metadata.schema.classes._batchTable.properties;
+    var properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    var featureTable = metadata.getFeatureTable(className);
     expect(featureTable.getProperty(0, "location")).toEqual(
       jsonBatchTable.location[0]
     );
@@ -277,10 +279,10 @@ describe("Scene/parseBatchTable", function () {
 
     expect(warn).toHaveBeenCalled();
 
-    var properties = metadata.schema.classes._batchTable.properties;
+    var properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    var featureTable = metadata.getFeatureTable(className);
     expect(featureTable.getProperty(0, "tire_location")).toBe("front_left");
     expect(featureTable.getProperty(0, "color")).toBe("blue");
     expect(featureTable.getProperty(0, "type")).toBe("sedan");
@@ -314,10 +316,10 @@ describe("Scene/parseBatchTable", function () {
       batchTable: oldHierarchyBatchTable,
     });
 
-    var properties = metadata.schema.classes._batchTable.properties;
+    var properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable("_batchTable");
+    var featureTable = metadata.getFeatureTable(className);
     expect(featureTable.getProperty(0, "tire_location")).toBe("front_left");
     expect(featureTable.getProperty(0, "color")).toBe("blue");
     expect(featureTable.getProperty(0, "type")).toBe("sedan");

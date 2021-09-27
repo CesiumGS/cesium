@@ -12,6 +12,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
+import MetadataClass from "../MetadataClass.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -141,7 +142,7 @@ function createModelFeatureTables(model, featureMetadata) {
 function selectFeatureTableId(components, model, content) {
   // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
   if (defined(content) && defined(content.featureMetadata)) {
-    return "_batchTable";
+    return MetadataClass._batchTableClassName;
   }
 
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
