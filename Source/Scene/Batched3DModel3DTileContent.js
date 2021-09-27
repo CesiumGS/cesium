@@ -487,6 +487,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     };
 
     if (ExperimentalFeatures.enableModelExperimental) {
+      modelOptions.content = content;
       modelOptions.customShader = tileset.customShader;
       modelOptions.content = content;
       content._model = ModelExperimental.fromGltf(modelOptions);
