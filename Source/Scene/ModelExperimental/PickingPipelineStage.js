@@ -81,7 +81,7 @@ function buildPickObject(renderResources, instanceId) {
 
   if (defined(content)) {
     // For 3D Tiles, the pick object's content and primitive are set to the Cesium3DTileContent that owns the model
-    //and the parent tileset it belongs to, respectively. The detail pick object is returned under the detail key.
+    // and the tileset it belongs to, respectively. The detail pick object is returned under the detail key.
     pickObject = {
       content: content,
       primitive: content.tileset,
@@ -96,7 +96,7 @@ function buildPickObject(renderResources, instanceId) {
   }
 
   if (defined(instanceId)) {
-    // For instanced models, an instanceId property is attached.
+    // For instanced models, an instanceId property is added to the pick object.
     pickObject.instanceId = instanceId;
   }
 

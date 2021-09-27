@@ -105,6 +105,8 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        // Setting the content property here makes PickingPipelineStage handle this
+        // as part of a tileset.
         content: {
           tileset: {},
         },
