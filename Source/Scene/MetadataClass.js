@@ -162,6 +162,6 @@ Object.defineProperties(MetadataClass.prototype, {
  *
  * @private
  */
-MetadataClass._batchTableClassName = "_batchTable";
+MetadataClass.BATCH_TABLE_CLASS_NAME = "_batchTable";
 
 export default MetadataClass;

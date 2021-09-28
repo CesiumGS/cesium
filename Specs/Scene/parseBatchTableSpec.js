@@ -10,7 +10,7 @@ import {
 describe("Scene/parseBatchTable", function () {
   var batchTableJson = {};
   var count = 3;
-  var className = MetadataClass._batchTableClassName;
+  var className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
   it("throws without count", function () {
     expect(function () {

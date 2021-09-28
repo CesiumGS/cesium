@@ -47,7 +47,7 @@ export default function parseBatchTable(options) {
 
   var hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
 
-  var className = MetadataClass._batchTableClassName;
+  var className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
   var binaryResults = transcodeBinaryProperties(
     featureCount,
