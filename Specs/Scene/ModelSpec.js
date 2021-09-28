@@ -38,7 +38,7 @@ import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
 import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
 
-fdescribe(
+describe(
   "Scene/Model",
   function () {
     var boxUrl = "./Data/Models/Box/CesiumBoxTest.gltf";

@@ -25,7 +25,7 @@ import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
-fdescribe(
+describe(
   "Scene/PointCloud3DTileContent",
   function () {
     var scene;
