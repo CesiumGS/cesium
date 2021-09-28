@@ -413,7 +413,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 
   var batchTable;
-  if (ExperimentalFeatures.enableModelExperimental) {
+  if (ExperimentalFeatures.enableModelExperimental && batchLength > 0) {
     var featureMetadata = parseBatchTable({
       count: batchLength,
       batchTable: batchTableJson,
