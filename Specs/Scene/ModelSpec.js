@@ -38,7 +38,7 @@ import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
 import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
 
-describe(
+fdescribe(
   "Scene/Model",
   function () {
     var boxUrl = "./Data/Models/Box/CesiumBoxTest.gltf";
@@ -3240,7 +3240,7 @@ describe(
       });
     });
 
-    it("loads a draco compressed glTF and dequantizes in the shader", function () {
+    xit("loads a draco compressed glTF and dequantizes in the shader", function () {
       return loadModel(dracoCompressedModelUrl, {
         dequantizeInShader: true,
       }).then(function (m) {
@@ -3256,7 +3256,7 @@ describe(
       });
     });
 
-    it("loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes", function () {
+    xit("loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes", function () {
       return loadModel(dracoCompressedModelWithAnimationUrl, {
         dequantizeInShader: true,
         forwardAxis: Axis.X,

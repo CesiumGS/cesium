@@ -381,25 +381,17 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-async function downloadAndWriteFile(url, path) {
-  return new Promise(function (resolve, reject) {
-    request(url)
-      .pipe(fs.createWriteStream(path))
-      .on("error", reject)
-      .on("finish", resolve);
-  });
-}
-
-// Downloads Draco3D files from gstatic servers
-gulp.task("prepare", async function () {
-  await downloadAndWriteFile(
-    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js",
-    "Source/ThirdParty/Workers/draco_wasm_wrapper.js"
+// Copy Draco3D files from node_modules folder
+gulp.task("postinstall", function (done) {
+  fs.copyFileSync(
+    "node_modules/draco3d/draco_decoder_nodejs.js",
+    "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
   );
-  await downloadAndWriteFile(
-    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm",
+  fs.copyFileSync(
+    "node_modules/draco3d/draco_decoder.wasm",
     "Source/ThirdParty/draco_decoder.wasm"
   );
+  done();
 });
 
 //Builds the documentation
@@ -442,15 +434,15 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
-    // Remove prepare step from package.json to avoid redownloading Draco3d files
-    delete packageJson.scripts.prepare;
+    // Remove postinstall step from package.json to avoid redownloading Draco3d files
+    delete packageJson.scripts.postinstall;
     fs.writeFileSync(
-      "./Build/package.noprepare.json",
+      "./Build/package.nopostinstall.json",
       JSON.stringify(packageJson, null, 2)
     );
 
     const packageJsonSrc = gulp
-      .src("Build/package.noprepare.json")
+      .src("Build/package.nopostinstall.json")
       .pipe(gulpRename("package.json"));
 
     const builtSrc = gulp.src(
@@ -504,7 +496,7 @@ gulp.task(
       .pipe(gulpZip("Cesium-" + version + ".zip"))
       .pipe(gulp.dest("."))
       .on("finish", function () {
-        rimraf.sync("./Build/package.noprepare.json");
+        rimraf.sync("./Build/package.nopostinstall.json");
       });
   })
 );

@@ -29,7 +29,7 @@ Source/ThirdParty/bitmap-sdf.js
 Source/ThirdParty/dompurify.js
 Source/ThirdParty/earcut.js
 Source/ThirdParty/draco_decoder.wasm
-Source/ThirdParty/Workers/draco_wasm_wrapper.js
+Source/ThirdParty/Workers/draco_decoder_nodejs.js
 Source/ThirdParty/grapheme-splitter.js
 Source/ThirdParty/jsep.js
 Source/ThirdParty/kdbush.js
