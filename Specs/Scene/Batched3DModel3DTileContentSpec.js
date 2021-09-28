@@ -470,12 +470,21 @@ describe(
         ExperimentalFeatures.enableModelExperimental = false;
       });
 
-      it("renders B3DM content", function () {
+      it("renders B3DM content with batch table", function () {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
           }
         );
+      });
+
+      it("renders B3DM content without batch table", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withoutBatchTableUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRender(scene, tileset);
+        });
       });
 
       it("assigns feature table as batch table", function () {
