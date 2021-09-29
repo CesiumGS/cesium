@@ -75,6 +75,14 @@ var MetadataSemantic = {
    */
   TILE_HORIZON_OCCLUSION_POINT: "TILE_HORIZON_OCCLUSION_POINT",
   /**
+   * The geometric error for a tile, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to override the geometric error implicitly calculated in <code>3DTILES_implicit_tiling</code>.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  TILE_GEOMETRIC_ERROR: "TILE_GEOMETRIC_ERROR",
+  /**
    * A bounding box for the content of a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
