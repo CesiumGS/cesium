@@ -13,6 +13,7 @@ import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import hasExtension from "./hasExtension.js";
+import MetadataSemantic from "./MetadataSemantic.js";
 import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
 
 /**
@@ -346,6 +347,18 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
   };
 }
 
+function getGeometricError(tileMetadata, implicitTileset, implicitCoordinates) {
+  var semantic = MetadataSemantic.TILE_GEOMETRIC_ERROR;
+
+  if (defined(tileMetadata) && tileMetadata.hasPropertyBySemantic(semantic)) {
+    return tileMetadata.getPropertyBySemantic(semantic);
+  }
+
+  return (
+    implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level)
+  );
+}
+
 /**
  * Given a parent tile and information about which child to create, derive
  * the properties of the child tile implicitly.
@@ -456,8 +469,11 @@ function deriveChildTile(
     }
   }
 
-  var childGeometricError =
-    implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
+  var childGeometricError = getGeometricError(
+    tileMetadata,
+    implicitTileset,
+    implicitCoordinates
+  );
 
   var tileJson = {
     boundingVolume: boundingVolume,
@@ -854,8 +870,16 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
     false,
     parentTile
   );
-  var childGeometricError =
-    implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
+
+  // Ignore tile metadata when computing geometric error for the placeholder tile
+  // since the child subtree's metadata hasn't been loaded yet.
+  // The actual geometric error will be computed in deriveChildTile.
+  var childGeometricError = getGeometricError(
+    undefined,
+    implicitTileset,
+    implicitCoordinates
+  );
+
   var childContentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
     templateValues: implicitCoordinates.getTemplateValues(),
   }).url;
