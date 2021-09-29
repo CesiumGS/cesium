@@ -390,8 +390,21 @@ async function downloadAndWriteFile(url, path) {
   });
 }
 
-// Downloads Draco3D files from gstatic servers
 gulp.task("prepare", async function () {
+  // Copy pako and zip.js worker files to Source/ThirdParty
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_inflate.min.js",
+    "Source/ThirdParty/Workers/pako_inflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_deflate.min.js",
+    "Source/ThirdParty/Workers/pako_deflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
+    "Source/ThirdParty/Workers/z-worker-pako.js"
+  );
+  // Download Draco3D files from gstatic servers
   await downloadAndWriteFile(
     "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js",
     "Source/ThirdParty/Workers/draco_wasm_wrapper.js"
@@ -442,7 +455,7 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
-    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    // Remove prepare and post install steps from package.json to avoid redownloading Draco3d files
     delete packageJson.scripts.prepare;
     fs.writeFileSync(
       "./Build/package.noprepare.json",
