@@ -3162,9 +3162,7 @@ function executeCommandsInViewport(
     scene.frameState.commandList.length = 0;
   }
 
-  if (!renderTranslucentDepthForPick) {
-    updateAndRenderPrimitives(scene);
-  }
+  updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
 
