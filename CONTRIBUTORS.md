@@ -299,3 +299,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yuki Noda](https://github.com/yukinoda)
 - [Robin Danielsson](https://github.com/robdan7)
 - [Oskar Havo](https://github.com/OskarHavo)
+- [Ugnius Malukas](https://github.com/ugnelis)
