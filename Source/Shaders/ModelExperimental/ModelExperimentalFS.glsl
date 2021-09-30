@@ -31,6 +31,16 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 }
 
+/*
+vec2 computePropertySt(float featureId, float propertyOffset, float textureSize) {
+    // TODO: Handle multiline features.
+    // TODO: Also feature offset.
+    float x = (propertyOffset + featureId + 0.5) / textureSize;
+    float y = 0.5;
+    return vec2(x, y);
+}
+*/
+
 void main() 
 {
     czm_modelMaterial material = defaultModelMaterial();
@@ -42,8 +52,31 @@ void main()
     materialStage(material, attributes);
     #endif
 
+    Metadata metadata;
+
+    //float x = (propertyOffset + featureId + 0.5) / textureSize;
+    //float y = 0.5;
+
+/*
+    metadata.windVelocity = texture2D(
+      u_featureTable_0_float,
+      vec2((attributes.featureId_0 + 2000.0 + 0.5) / 3000.0, 0.5)
+      computePropertySt(
+        attributes.featureId_0,
+        2000.0,
+        3.0 * 1000.0
+      )
+    ).rgb; */
+    metadataStage(attributes, metadata);
+    //gl_FragColor = vec4(metadata.windVelocity, 1.0);
+    
+
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-    customShaderStage(material, attributes);
+        //ifdef HAS_METADATA
+        customShaderStage(material, attributes, metadata);
+        //#else
+        //customShaderStage(material, attributes);
+        //endif
     #endif
 
     lightingStage(material);

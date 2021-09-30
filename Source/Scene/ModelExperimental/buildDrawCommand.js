@@ -45,6 +45,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     modelMatrix: primitiveRenderResources.modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
+    owner: "me",
     vertexArray: vertexArray,
     shaderProgram: shaderProgram,
     cull: model.cull,

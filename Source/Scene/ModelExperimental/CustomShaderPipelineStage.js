@@ -589,6 +589,7 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
     "attributes"
   );
+  shaderBuilder.addStructField(structId, "Metadata", "metadata");
 
   var functionId =
     CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS;

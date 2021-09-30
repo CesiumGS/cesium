@@ -171,6 +171,9 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
           primitive: node.primitives[i],
           node: node,
           model: sceneGraph._model,
+          // TODO: I don't think this is the best place to pass it in, this is
+          // just for prototyping.
+          featureMetadata: sceneGraph._modelComponents.featureMetadata,
         })
       );
     }

@@ -10,6 +10,7 @@ import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 
@@ -73,6 +74,9 @@ export default function ModelExperimentalPrimitive(options) {
    */
   this.pipelineStages = [];
 
+  // TODO: temporary for prototyping.
+  this.featureMetadata = options.featureMetadata;
+
   initialize(this);
 }
 
@@ -103,6 +107,10 @@ function initialize(runtimePrimitive) {
 
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);
+  }
+
+  if (defined(runtimePrimitive.featureMetadata)) {
+    pipelineStages.push(MetadataPipelineStage);
   }
 
   if (hasCustomShader) {
