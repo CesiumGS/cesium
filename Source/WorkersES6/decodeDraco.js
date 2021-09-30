@@ -272,16 +272,36 @@ function decodePointCloud(parameters) {
   return result;
 }
 
+function findQuantizationTransform(array, numComponents) {
+  var min = [];
+  var max = [];
+  var i, j;
+  for (i = 0; i < numComponents; ++i) {
+    min.push(array[i]);
+    max.push(array[i]);
+  }
+  for (i = 0; i < array.length; i += numComponents) {
+    for (j = 0; j < numComponents; ++j) {
+      min[j] = Math.min(array[i + j], min[j]);
+      max[j] = Math.max(array[i + j], max[j]);
+    }
+  }
+  var range = max[0] - min[0];
+  for (i = 1; i < numComponents; ++i) {
+    range = Math.max(max[i] - min[i], range);
+  }
+  return {
+    min: min,
+    range: range,
+  };
+}
+
 function decodePrimitive(parameters) {
   var dracoDecoder = new draco.Decoder();
 
-  // Skip all parameter types except generic
-  // var attributesToSkip = ["POSITION", "NORMAL", "COLOR", "TEX_COORD"];
-  // if (parameters.dequantizeInShader) {
-  //   for (var i = 0; i < attributesToSkip.length; ++i) {
-  //     dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
-  //   }
-  // }
+  if (parameters.dequantizeInShader) {
+    dracoDecoder.SkipAttributeTransform(draco["NORMAL"]);
+  }
 
   var bufferView = parameters.bufferView;
   var buffer = new draco.DecoderBuffer();
@@ -317,6 +337,32 @@ function decodePrimitive(parameters) {
         dracoDecoder,
         dracoAttribute
       );
+      if (parameters.dequantizeInShader && attributeName !== "NORMAL") {
+        var data = attributeData[attributeName].data;
+        var minMax = findQuantizationTransform(
+          attributeData[attributeName].array,
+          data.componentsPerAttribute
+        );
+        var range = minMax.range;
+        var length = attributeData[attributeName].array.length;
+        var quantizedArray = new Uint16Array(length);
+        for (var i = 0; i < length; i += data.componentsPerAttribute) {
+          for (var j = 0; j < data.componentsPerAttribute; ++j) {
+            var value = attributeData[attributeName].array[i + j];
+            quantizedArray[i + j] = ((value - minMax.min[j]) / range) * 65535;
+          }
+        }
+        attributeData[attributeName].array = quantizedArray;
+        attributeData[attributeName].data.byteStride /= 2;
+        attributeData[attributeName].data.componentDatatype =
+          ComponentDatatype.UNSIGNED_SHORT;
+        attributeData[attributeName].data.quantization = {
+          octEncoded: false,
+          quantizationBits: 16,
+          minValues: minMax.min,
+          range: minMax.range,
+        };
+      }
     }
   }
 
