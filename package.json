@@ -51,6 +51,7 @@
     "cloc": "^2.8.0",
     "compression": "^1.7.4",
     "dompurify": "^2.2.2",
+    "draco3d": "^1.4.1",
     "earcut": "^2.2.2",
     "eslint": "^7.29.0",
     "eslint-config-prettier": "^8.3.0",
