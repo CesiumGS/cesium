@@ -944,7 +944,7 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
 
-        expect(primitive.featureIdAttributes.length).toBe(1);
+        expect(primitive.featureIdAttributes.length).toBe(2);
         expect(primitive.featureIdTextures.length).toBe(0);
         expect(primitive.featureTextureIds.length).toBe(0);
 
@@ -1177,10 +1177,10 @@ describe(
         expect(featureIdAttribute.max).toBeUndefined();
         expect(featureIdAttribute.constant).toBe(0);
         expect(featureIdAttribute.quantization).toBeUndefined();
-        expect(featureIdAttribute.typedArray).toBeUndefined();
-        expect(featureIdAttribute.buffer).toBeDefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
+        expect(featureIdAttribute.buffer).toBeUndefined();
         expect(featureIdAttribute.byteOffset).toBe(0);
-        expect(featureIdAttribute.byteStride).toBe(4);
+        expect(rotationAttribute.byteStride).toBeUndefined();
 
         expect(instances.featureIdAttributes.length).toBe(2);
 
@@ -1601,9 +1601,6 @@ describe(
           VertexAttributeSemantic.TEXCOORD,
           0
         );
-        var positionQuantization = positionAttribute.quantization;
-        var normalQuantization = normalAttribute.quantization;
-        var texcoordQuantization = texcoordAttribute.quantization;
 
         var indices = primitive.indices;
 
@@ -1637,28 +1634,6 @@ describe(
         expect(positionAttribute.buffer).toBeDefined();
         expect(positionAttribute.byteOffset).toBe(0);
         expect(positionAttribute.byteStride).toBeUndefined();
-        expect(positionQuantization.octEncoded).toBe(false);
-        expect(positionQuantization.normalizationRange).toEqual(
-          new Cartesian3(2047, 2047, 2047)
-        );
-        expect(positionQuantization.quantizedVolumeOffset).toEqual(
-          new Cartesian3(
-            -69.29850006103516,
-            9.929369926452637,
-            -61.32819747924805
-          )
-        );
-        expect(positionQuantization.quantizedVolumeDimensions).toEqual(
-          new Cartesian3(
-            165.4783935546875,
-            165.4783935546875,
-            165.4783935546875
-          )
-        );
-        expect(positionQuantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
-        );
-        expect(positionQuantization.type).toBe(AttributeType.VEC3);
 
         expect(normalAttribute.name).toBe("NORMAL");
         expect(normalAttribute.semantic).toBe(VertexAttributeSemantic.NORMAL);
@@ -1686,14 +1661,6 @@ describe(
         expect(normalAttribute.buffer).toBeDefined();
         expect(normalAttribute.byteOffset).toBe(0);
         expect(normalAttribute.byteStride).toBeUndefined();
-        expect(normalQuantization.octEncoded).toBe(true);
-        expect(normalQuantization.normalizationRange).toBe(255);
-        expect(normalQuantization.quantizedVolumeOffset).toBeUndefined();
-        expect(normalQuantization.quantizedVolumeDimensions).toBeUndefined();
-        expect(normalQuantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_BYTE
-        );
-        expect(normalQuantization.type).toBe(AttributeType.VEC2);
 
         expect(texcoordAttribute.name).toBe("TEXCOORD_0");
         expect(texcoordAttribute.semantic).toBe(
@@ -1717,20 +1684,6 @@ describe(
         expect(texcoordAttribute.buffer).toBeDefined();
         expect(texcoordAttribute.byteOffset).toBe(0);
         expect(texcoordAttribute.byteStride).toBeUndefined();
-        expect(texcoordQuantization.octEncoded).toBe(false);
-        expect(texcoordQuantization.normalizationRange).toEqual(
-          new Cartesian2(1023, 1023)
-        );
-        expect(texcoordQuantization.quantizedVolumeOffset).toEqual(
-          new Cartesian2(0.026409000158309937, 0.01996302604675293)
-        );
-        expect(texcoordQuantization.quantizedVolumeDimensions).toEqual(
-          new Cartesian2(0.9600739479064941, 0.9600739479064941)
-        );
-        expect(texcoordQuantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
-        );
-        expect(texcoordQuantization.type).toBe(AttributeType.VEC2);
 
         expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
         expect(indices.count).toBe(12636);
@@ -1740,9 +1693,9 @@ describe(
         expect(positionAttribute.buffer).not.toBe(normalAttribute.buffer);
         expect(positionAttribute.buffer).not.toBe(texcoordAttribute.buffer);
 
-        expect(positionAttribute.buffer.sizeInBytes).toBe(14394);
-        expect(normalAttribute.buffer.sizeInBytes).toBe(4798);
-        expect(texcoordAttribute.buffer.sizeInBytes).toBe(9596);
+        expect(positionAttribute.buffer.sizeInBytes).toBe(28788);
+        expect(normalAttribute.buffer.sizeInBytes).toBe(28788);
+        expect(texcoordAttribute.buffer.sizeInBytes).toBe(19192);
       });
     });
 

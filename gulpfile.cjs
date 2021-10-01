@@ -394,25 +394,17 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-async function downloadAndWriteFile(url, path) {
-  return new Promise(function (resolve, reject) {
-    request(url)
-      .pipe(fs.createWriteStream(path))
-      .on("error", reject)
-      .on("finish", resolve);
-  });
-}
-
-// Downloads Draco3D files from gstatic servers
-gulp.task("prepare", async function () {
-  await downloadAndWriteFile(
-    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_wasm_wrapper.js",
-    "Source/ThirdParty/Workers/draco_wasm_wrapper.js"
+// Copy Draco3D files from node_modules into Source
+gulp.task("prepare", function (done) {
+  fs.copyFileSync(
+    "node_modules/draco3d/draco_decoder_nodejs.js",
+    "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
   );
-  await downloadAndWriteFile(
-    "https://www.gstatic.com/draco/versioned/decoders/1.3.5/draco_decoder.wasm",
+  fs.copyFileSync(
+    "node_modules/draco3d/draco_decoder.wasm",
     "Source/ThirdParty/draco_decoder.wasm"
   );
+  done();
 });
 
 //Builds the documentation

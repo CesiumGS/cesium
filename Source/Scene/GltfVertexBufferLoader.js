@@ -197,6 +197,7 @@ function getQuantizationInformation(
 ) {
   var quantizationBits = dracoQuantization.quantizationBits;
   var normalizationRange = (1 << quantizationBits) - 1;
+  var normalizationDivisor = 1.0 / normalizationRange;
 
   var quantization = new ModelComponents.Quantization();
   quantization.componentDatatype = componentDatatype;
@@ -210,19 +211,31 @@ function getQuantizationInformation(
   } else {
     var MathType = AttributeType.getMathType(type);
     if (MathType === Number) {
+      var dimensions = dracoQuantization.range;
       quantization.quantizedVolumeOffset = dracoQuantization.minValues[0];
-      quantization.quantizedVolumeDimensions = dracoQuantization.range;
+      quantization.quantizedVolumeDimensions = dimensions;
       quantization.normalizationRange = normalizationRange;
+      quantization.quantizedVolumeStepSize = dimensions * normalizationDivisor;
     } else {
       quantization.quantizedVolumeOffset = MathType.unpack(
         dracoQuantization.minValues
       );
-      quantization.quantizedVolumeDimensions = MathType.unpack(
-        arrayFill(new Array(componentCount), dracoQuantization.range)
-      );
       quantization.normalizationRange = MathType.unpack(
         arrayFill(new Array(componentCount), normalizationRange)
       );
+      var packedDimensions = arrayFill(
+        new Array(componentCount),
+        dracoQuantization.range
+      );
+      quantization.quantizedVolumeDimensions = MathType.unpack(
+        packedDimensions
+      );
+
+      // Computing the step size
+      var packedSteps = packedDimensions.map(function (dimension) {
+        return dimension * normalizationDivisor;
+      });
+      quantization.quantizedVolumeStepSize = MathType.unpack(packedSteps);
     }
   }
 

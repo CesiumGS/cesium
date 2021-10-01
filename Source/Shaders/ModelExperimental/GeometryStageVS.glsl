@@ -1,32 +1,36 @@
-void processPoints()
+void pointStage()
 {
     gl_PointSize = 4.0;
 }
 
-vec3 processGeometry(vec3 position) 
-{  
-    position = a_position;
-    v_position = position;
-    v_positionEC = (czm_modelView * vec4(position, 1.0)).xyz;
+void geometryStage(inout ProcessedAttributes attributes) 
+{
+    // Compute positions in different coordinate systems
+    vec3 positionMC = attributes.positionMC;
+    v_positionMC = positionMC;
+    v_positionEC = (czm_modelView * vec4(positionMC, 1.0)).xyz;
+    gl_Position = czm_modelViewProjection * vec4(positionMC, 1.0);
+
+    // Sometimes the fragment shader needs this (e.g. custom shaders)
+    #ifdef COMPUTE_POSITION_WC
+    // Note that this is a 32-bit position which may result in jitter on small
+    // scales.
+    v_positionWC = (czm_model * vec4(positionMC, 1.0)).xyz;
+    #endif
 
     #ifdef HAS_NORMALS
-    v_normal = czm_normal * a_normal;
+    v_normalEC = czm_normal * attributes.normalMC;
     #endif
 
     #ifdef HAS_TANGENTS
-    v_tangent.xyz = czm_normal * a_tangent.xyz;
-    v_tangent.w = a_tangent.w;
+    v_tangentEC = normalize(czm_normal * attributes.tangentMC);    
     #endif
 
-    // This function is defined in GeometryPipelineStage
-    #ifdef HAS_SET_INDEXED_ATTRIBUTES
-    initializeSetIndexedAttributes();
+    #ifdef HAS_BITANGENTS
+    v_bitangentEC = normalize(czm_normal * attributes.bitangentMC);
     #endif
 
-    // This function is defined in GeometryPipelineStage
-    #ifdef HAS_CUSTOM_ATTRIBUTES
-    initializeCustomAttributes();
-    #endif
-
-    return position;
+    // All other varyings need to be dynamically generated in
+    // GeometryPipelineStage
+    setDynamicVaryings(attributes);
 }

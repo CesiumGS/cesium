@@ -34,6 +34,10 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
+  this._featureTable = undefined;
+  this._featureTables = undefined;
+  this._featureTableId = undefined;
+
   initialize(this, gltf);
 }
 
@@ -106,7 +110,7 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return undefined;
+      return this._featureTable;
     },
   },
 
@@ -116,6 +120,30 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
     },
     set: function (value) {
       this._groupMetadata = value;
+    },
+  },
+  /**
+   * @private
+   */
+  featureTables: {
+    get: function () {
+      return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
+    },
+  },
+
+  /**
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
+      this._featureTable = this._featureTables[value];
     },
   },
 });
@@ -144,6 +172,7 @@ function initialize(content, gltf) {
 
   if (ExperimentalFeatures.enableModelExperimental) {
     modelOptions.customShader = tileset.customShader;
+    modelOptions.content = content;
     content._model = ModelExperimental.fromGltf(modelOptions);
   } else {
     modelOptions = combine(modelOptions, {
@@ -172,12 +201,18 @@ function initialize(content, gltf) {
   });
 }
 
-Gltf3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return false;
+Gltf3DTileContent.prototype.getFeature = function (featureId) {
+  if (defined(this.batchTable)) {
+    return this.batchTable.getFeature(featureId);
+  }
+  return undefined;
 };
 
-Gltf3DTileContent.prototype.getFeature = function (batchId) {
-  return undefined;
+Gltf3DTileContent.prototype.hasProperty = function (featureId, name) {
+  if (defined(this.batchTable)) {
+    return this.batchTable.hasProperty(featureId, name);
+  }
+  return false;
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
@@ -231,6 +266,16 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
     model._clippingPlanes = tilesetClippingPlanes;
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.update(tileset, frameState);
+      }
+    }
+  }
+
   model.update(frameState);
 };
 
@@ -239,6 +284,16 @@ Gltf3DTileContent.prototype.isDestroyed = function () {
 };
 
 Gltf3DTileContent.prototype.destroy = function () {
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var featureTableId in featureTables) {
+      if (featureTables.hasOwnProperty(featureTableId)) {
+        var featureTable = featureTables[featureTableId];
+        featureTable.destroy();
+      }
+    }
+  }
+
   this._model = this._model && this._model.destroy();
   return destroyObject(this);
 };

@@ -959,6 +959,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
       var implicitContentBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset.json";
+      var implicitGeometricErrorSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
 
       var metadataClass = new MetadataClass({
         id: "test",
@@ -1197,6 +1199,32 @@ describe(
             ).toBe(true);
             expect(tile.contentBoundingVolume).not.toBe(tile.boundingVolume);
           });
+        });
+      });
+
+      it("uses geometric error from metadata semantics if present", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitGeometricErrorSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          // This tileset defines the geometric error in a
+          // property with metadata semantic TILE_GEOMETRIC_ERROR.
+          // Check that each tile has the right geometric error.
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          var geometricErrors = tiles.map(function (tile) {
+            return tile.geometricError;
+          });
+          // prettier-ignore
+          var expectedGeometricErrors = [
+            300, 203, 112, 113, 114, 115, 201, 104, 105, 106,
+            107, 202, 108, 109, 110, 111, 200, 103, 101, 102, 100
+          ];
+          expect(geometricErrors).toEqual(expectedGeometricErrors);
         });
       });
     });

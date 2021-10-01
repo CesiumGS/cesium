@@ -12,6 +12,7 @@ import {
   HeadingPitchRange,
   when,
   ShaderProgram,
+  ModelFeature,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -23,9 +24,13 @@ describe(
 
     var boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+    var buildingsMetadata =
+      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     var boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
     var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    var boxInstanced =
+      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
 
     var scene;
 
@@ -83,6 +88,35 @@ describe(
           expect(model._resourcesLoaded).toEqual(true);
           verifyRender(model, true);
         });
+      });
+    });
+
+    it("initializes feature table", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model.featureTables).toBeDefined();
+
+        var featureTableId = "buildings";
+        var featureTable = model.featureTables[featureTableId];
+        expect(featureTable).toBeDefined();
+
+        var featuresLength = featureTable.featuresLength;
+        expect(featuresLength).toEqual(10);
+        expect(featureTable.batchTexture).toBeDefined();
+        expect(featureTable.batchTexture._featuresLength).toEqual(10);
+
+        for (var i = 0; i < featuresLength; i++) {
+          var modelFeature = featureTable.getFeature(i);
+          expect(modelFeature instanceof ModelFeature).toEqual(true);
+          expect(modelFeature._featureId).toEqual(i);
+          expect(modelFeature.primitive).toEqual(model);
+          expect(modelFeature.featureTable).toEqual(featureTable);
+        }
+
+        expect(model._resourcesLoaded).toEqual(true);
       });
     });
 
@@ -214,7 +248,8 @@ describe(
         scene
       ).then(function (model) {
         expect(scene).toPickAndCall(function (result) {
-          expect(result.model).toEqual(model);
+          expect(result.primitive).toBeInstanceOf(ModelExperimental);
+          expect(result.primitive).toEqual(model);
         });
       });
     });
@@ -235,6 +270,43 @@ describe(
         expect(scene).toPickAndCall(function (result) {
           expect(result).toBeUndefined();
         });
+      });
+    });
+
+    it("selects feature table for instanced feature ID attributes", function () {
+      if (webglStub) {
+        return;
+      }
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxInstanced,
+          featureIdAttributeIndex: 1,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureTableId).toEqual("sectionTable");
+      });
+    });
+
+    it("selects feature table for feature ID textures", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: microcosm,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureTableId).toEqual("landCoverTable");
+      });
+    });
+
+    it("selects feature table for feature ID attributes", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureTableId).toEqual("buildings");
       });
     });
 
