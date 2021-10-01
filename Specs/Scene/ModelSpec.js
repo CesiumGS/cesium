@@ -3240,7 +3240,7 @@ describe(
       });
     });
 
-    xit("loads a draco compressed glTF and dequantizes in the shader", function () {
+    it("loads a draco compressed glTF and dequantizes in the shader", function () {
       return loadModel(dracoCompressedModelUrl, {
         dequantizeInShader: true,
       }).then(function (m) {
@@ -3256,7 +3256,7 @@ describe(
       });
     });
 
-    xit("loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes", function () {
+    it("loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes", function () {
       return loadModel(dracoCompressedModelWithAnimationUrl, {
         dequantizeInShader: true,
         forwardAxis: Axis.X,

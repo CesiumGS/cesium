@@ -279,7 +279,7 @@ describe(
       });
     });
 
-    xit("renders point cloud with draco encoded positions, normals, colors, and batch table properties", function () {
+    it("renders point cloud with draco encoded positions, normals, colors, and batch table properties", function () {
       return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(
         function (tileset) {
           Cesium3DTilesTester.expectRender(scene, tileset);
@@ -305,7 +305,7 @@ describe(
       });
     });
 
-    xit("renders point cloud with draco encoded positions, colors, and batch ids", function () {
+    it("renders point cloud with draco encoded positions, colors, and batch ids", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         pointCloudDracoBatchedUrl
