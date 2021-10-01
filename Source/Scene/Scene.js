@@ -2922,9 +2922,7 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
 
   updateAndClearFramebuffers(scene, passState, backgroundColor);
 
-  if (!renderTranslucentDepthForPick) {
-    updateAndRenderPrimitives(scene);
-  }
+  updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
 
