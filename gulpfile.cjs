@@ -381,8 +381,8 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-// Copy Draco3D files from node_modules folder
-gulp.task("postinstall", function (done) {
+// Copy Draco3D files from node_modules into Source
+gulp.task("prepare", function (done) {
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
     "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
@@ -434,15 +434,15 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
-    // Remove postinstall step from package.json to avoid redownloading Draco3d files
-    delete packageJson.scripts.postinstall;
+    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    delete packageJson.scripts.prepare;
     fs.writeFileSync(
-      "./Build/package.nopostinstall.json",
+      "./Build/package.noprepare.json",
       JSON.stringify(packageJson, null, 2)
     );
 
     const packageJsonSrc = gulp
-      .src("Build/package.nopostinstall.json")
+      .src("Build/package.noprepare.json")
       .pipe(gulpRename("package.json"));
 
     const builtSrc = gulp.src(
@@ -496,7 +496,7 @@ gulp.task(
       .pipe(gulpZip("Cesium-" + version + ".zip"))
       .pipe(gulp.dest("."))
       .on("finish", function () {
-        rimraf.sync("./Build/package.nopostinstall.json");
+        rimraf.sync("./Build/package.noprepare.json");
       });
   })
 );
