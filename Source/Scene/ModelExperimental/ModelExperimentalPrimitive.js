@@ -126,7 +126,10 @@ function initialize(runtimePrimitive) {
 
   var hasFeatureIds =
     defined(primitive.featureIdAttributes[featureIdAttributeIndex]) ||
-    defined(primitive.featureIdTextures[featureIdTextureIndex]);
+    defined(
+      primitive.featureIdTextures[featureIdTextureIndex] ||
+        defined(model.content._featureMetadata)
+    );
   if (hasInstancedFeatureIds || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);

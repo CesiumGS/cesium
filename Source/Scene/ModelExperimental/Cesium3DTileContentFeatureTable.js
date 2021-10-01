@@ -130,8 +130,15 @@ Cesium3DTileContentFeatureTable.prototype.setProperty = function (
   return this._featureTable.setProperty(featureId, name, value);
 };
 
-Cesium3DTileContentFeatureTable.prototype.update = function (frameState) {
-  this._batchTexture.update(this._content.tileset, frameState);
+Cesium3DTileContentFeatureTable.prototype.update = function (
+  tileset,
+  frameState
+) {
+  this._batchTexture.update(tileset, frameState);
+};
+
+Cesium3DTileContentFeatureTable.prototype.getPickColor = function (featureId) {
+  return this._batchTexture.getPickColor(featureId);
 };
 
 /**

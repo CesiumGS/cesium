@@ -203,11 +203,15 @@ function initialize(model) {
     .then(function (loader) {
       var components = loader.components;
       var content = model._content;
-      var featureMetadata = components.featureMetadata;
+      var featureMetadata = defined(content)
+        ? content._featureMetadata
+        : components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
         var featureTables;
-        var featureTableId = selectFeatureTableId(components, model);
+        var featureTableId = defined(content._featureMetadata)
+          ? "_batchTable"
+          : selectFeatureTableId(components, model);
         if (defined(content)) {
           featureTables = createContentFeatureTables(content, featureMetadata);
           content.featureTables = featureTables;
@@ -355,6 +359,50 @@ Object.defineProperties(ModelExperimental.prototype, {
         this.resetDrawCommands();
       }
       this._color = value;
+    },
+  },
+
+  /**
+   * Defines how the color blends with the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ColorBlendMode}
+   * @default ColorBlendMode.HIGHLIGHT
+   *
+   * @private
+   */
+  colorBlendMode: {
+    get: function () {
+      return this._colorBlendMode;
+    },
+    set: function (value) {
+      if (value !== this._colorBlendMode) {
+        this.resetDrawCommands();
+      }
+      this._colorBlendMode = value;
+    },
+  },
+
+  /**
+   * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   * @default 0.5
+   *
+   * @private
+   */
+  colorBlendAmount: {
+    get: function () {
+      return this._colorBlendAmount;
+    },
+    set: function (value) {
+      if (value !== this._color) {
+        this.resetDrawCommands();
+      }
+      this._colorBlendAmount = value;
     },
   },
 

@@ -3,6 +3,7 @@ import combine from "../../Core/combine.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
+import Pass from "../../Renderer/Pass.js";
 
 /**
  * The CPU styling pipeline stage processes the style for a model using the Batch Texture.
@@ -45,9 +46,14 @@ CPUStylingStage.process = function (renderResources, model, frameState) {
   } else {
     var modelStylingUniforms = {};
 
+    var color = model.color;
+    if (color.alpha > 0.0 && color.alpha < 1.0) {
+      renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+    }
+
     shaderBuilder.addUniform("vec4", "model_color", ShaderDestination.FRAGMENT);
     modelStylingUniforms.model_color = function () {
-      return model._color;
+      return color;
     };
 
     shaderBuilder.addUniform(
@@ -57,8 +63,8 @@ CPUStylingStage.process = function (renderResources, model, frameState) {
     );
     modelStylingUniforms.model_colorBlend = function () {
       return ColorBlendMode.getColorBlend(
-        model._colorBlendMode,
-        model._colorBlendAmount
+        model.colorBlendMode,
+        model.colorBlendAmount
       );
     };
 

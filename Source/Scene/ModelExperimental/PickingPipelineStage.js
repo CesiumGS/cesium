@@ -70,11 +70,14 @@ PickingPipelineStage.process = function (
 
 function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
+  var content = model.content;
   var featureTableId;
   var featureIdAttribute;
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
 
-  if (defined(instances)) {
+  if (defined(content) && defined(content._featureMetadata)) {
+    featureTableId = content.featureTableId;
+  } else if (defined(instances)) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
     featureTableId = featureIdAttribute.featureTableId;
@@ -91,7 +94,6 @@ function processPickTexture(renderResources, primitive, instances) {
 
   var featureTable;
 
-  var content = model.content;
   if (defined(content)) {
     featureTable = content.featureTables[featureTableId];
   } else {

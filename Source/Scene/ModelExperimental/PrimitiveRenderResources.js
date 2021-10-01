@@ -141,6 +141,17 @@ export default function PrimitiveRenderResources(
   this.uniformMap = clone(nodeRenderResources.uniformMap);
 
   /**
+   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the node
+   * render resources.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = clone(nodeRenderResources.alphaOptions);
+
+  /**
    * A reference to the runtime node
    *
    * @type {ModelExperimentalPrimitive}
@@ -213,15 +224,6 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
-  /**
-   * Options for configuring the alpha stage such as pass and alpha mode.
-   *
-   * @type {ModelAlphaOptions}
-   * @readonly
-   *
-   * @private
-   */
-  this.alphaOptions = new ModelAlphaOptions();
 
   /**
    * The shader variable to use for picking.

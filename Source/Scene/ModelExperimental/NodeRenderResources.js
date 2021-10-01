@@ -63,6 +63,17 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.featureTableId = modelRenderResources.featureTableId;
 
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the model
+   * render resources.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = clone(modelRenderResources.alphaOptions);
+
   // other properties
   /**
    * A reference to the runtime node
