@@ -299,6 +299,16 @@ function findQuantizationTransform(array, numComponents) {
 function decodePrimitive(parameters) {
   var dracoDecoder = new draco.Decoder();
 
+  // Skip all parameter types except generic
+  var attributesToSkip = ["POSITION", "NORMAL", "COLOR", "TEX_COORD"];
+  if (parameters.dequantizeInShader) {
+    for (var i = 0; i < attributesToSkip.length; ++i) {
+      dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
+    }
+  }
+
+  // SkipAttributeTransform appears to work on "NORMAL" but not on other attributes.
+  // See https://github.com/google/draco/issues/742.
   if (parameters.dequantizeInShader) {
     dracoDecoder.SkipAttributeTransform(draco["NORMAL"]);
   }
@@ -324,6 +334,9 @@ function decodePrimitive(parameters) {
 
   var attributeData = {};
 
+  // Skip "NORMAL" because we called SkipAttributeTransform(draco["NORMAL"])
+  var attributesToQuantize = ["POSITION", "COLOR", "TEX_COORD"];
+
   var compressedAttributes = parameters.compressedAttributes;
   for (var attributeName in compressedAttributes) {
     if (compressedAttributes.hasOwnProperty(attributeName)) {
@@ -337,7 +350,10 @@ function decodePrimitive(parameters) {
         dracoDecoder,
         dracoAttribute
       );
-      if (parameters.dequantizeInShader && attributeName !== "NORMAL") {
+      if (
+        parameters.dequantizeInShader &&
+        attributesToQuantize.includes(attributeName)
+      ) {
         var data = attributeData[attributeName].data;
         var minMax = findQuantizationTransform(
           attributeData[attributeName].array,
