@@ -7,7 +7,7 @@ void customShaderStage(inout czm_modelMaterial material, ProcessedAttributes att
     fragmentMain(fsInput, material);
 }
 
-//#ifdef HAS_METADATA
+#ifdef HAS_METADATA
 void customShaderStage(inout czm_modelMaterial material, ProcessedAttributes attributes, inout Metadata metadata)
 {
     FragmentInput fsInput;
@@ -15,4 +15,4 @@ void customShaderStage(inout czm_modelMaterial material, ProcessedAttributes att
     initializeInputStruct(fsInput, attributes);
     fragmentMain(fsInput, material);
 }
-//#endif
+#endif

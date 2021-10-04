@@ -9,7 +9,7 @@ vec2 computePropertySt(float featureId, float propertyOffset, float textureSize)
 void metadataStage(ProcessedAttributes attributes, inout Metadata metadata) {
     // TODO: should we use attributes or a FeatureId struct?
     metadata.airTemperature = texture2D(
-      u_featureTable_0_float,
+      u_featureTable_weatherTable_float,
       computePropertySt(
         attributes.featureId_0,
         0.0, // property offset
@@ -17,7 +17,7 @@ void metadataStage(ProcessedAttributes attributes, inout Metadata metadata) {
       )
     ).r;
     metadata.airPressure = texture2D(
-      u_featureTable_0_float,
+      u_featureTable_weatherTable_float,
       computePropertySt(
         attributes.featureId_0,
         1000.0,
@@ -25,7 +25,7 @@ void metadataStage(ProcessedAttributes attributes, inout Metadata metadata) {
       )
     ).r;
     metadata.windVelocity = texture2D(
-      u_featureTable_0_float,
+      u_featureTable_weatherTable_float,
       computePropertySt(
         attributes.featureId_0,
         2000.0,

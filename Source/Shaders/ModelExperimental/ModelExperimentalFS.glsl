@@ -48,11 +48,11 @@ void main()
     #endif 
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-        ifdef HAS_METADATA
+        #ifdef HAS_METADATA
         customShaderStage(material, attributes, metadata);
         #else
         customShaderStage(material, attributes);
-        endif
+        #endif
     #endif
 
     lightingStage(material);
