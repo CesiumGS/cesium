@@ -74,6 +74,7 @@ MetadataPipelineStage.process = function (
     }
   };
   */
+
   var airTemperatureArray = weatherTable.getPropertyTypedArray(
     "airTemperature"
   );
@@ -86,13 +87,13 @@ MetadataPipelineStage.process = function (
   }
 
   for (i = 0; i < 1000; i++) {
-    featureTableArray[1000 + 3 * i] = airPressureArray[i];
+    featureTableArray[3 * 1000 + 3 * i] = airPressureArray[i];
   }
 
   for (i = 0; i < 1000; i++) {
-    featureTableArray[2000 + 3 * i] = windVelocityArray[3 * i];
-    featureTableArray[2000 + 3 * i + 1] = windVelocityArray[3 * i + 1];
-    featureTableArray[2000 + 3 * i + 2] = windVelocityArray[3 * i + 2];
+    featureTableArray[3 * 2000 + 3 * i] = windVelocityArray[3 * i];
+    featureTableArray[3 * 2000 + 3 * i + 1] = windVelocityArray[3 * i + 1];
+    featureTableArray[3 * 2000 + 3 * i + 2] = windVelocityArray[3 * i + 2];
   }
 
   var featureTableTexture = new Texture({
@@ -110,7 +111,7 @@ MetadataPipelineStage.process = function (
 
   var uniformName = "u_featureTable_0_float";
   renderResources.uniformMap[uniformName] = function () {
-    return featureTableTexture; //frameState.context.defaultTexture;//featureTableTexture;
+    return featureTableTexture;
   };
 
   shaderBuilder.addDefine(

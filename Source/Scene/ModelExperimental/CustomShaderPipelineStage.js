@@ -38,7 +38,7 @@ CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS =
 CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS =
   "initializeInputStructFS";
 CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS =
-  "void initializeInputStruct(out FragmentInput fsInput, ProcessedAttributes attributes)";
+  "void initializeInputStruct(inout FragmentInput fsInput, ProcessedAttributes attributes)";
 
 /**
  * Process a primitive. This modifies the following parts of the render
