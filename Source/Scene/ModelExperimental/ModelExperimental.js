@@ -362,9 +362,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._color;
     },
     set: function (value) {
-      if (value !== this._color) {
-        this.resetDrawCommands();
-      }
       this._color = value;
     },
   },
@@ -384,9 +381,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._colorBlendMode;
     },
     set: function (value) {
-      if (value !== this._colorBlendMode) {
-        this.resetDrawCommands();
-      }
       this._colorBlendMode = value;
     },
   },
@@ -406,9 +400,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._colorBlendAmount;
     },
     set: function (value) {
-      if (value !== this._color) {
-        this.resetDrawCommands();
-      }
       this._colorBlendAmount = value;
     },
   },
@@ -752,6 +743,9 @@ ModelExperimental.prototype.destroy = function () {
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
@@ -801,6 +795,9 @@ ModelExperimental.fromGltf = function (options) {
     allowPicking: options.allowPicking,
     customShader: options.customShader,
     content: options.content,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
     show: options.show,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,

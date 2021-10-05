@@ -1,10 +1,10 @@
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
-import ColorBlendMode from "../ColorBlendMode.js";
 import Cesium3DTileColorBlendMode from "../Cesium3DTileColorBlendMode.js";
 import CesiumMath from "../../Core/Math.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import defined from "../../Core/defined.js";
 
 /**
  * The CPU styling pipeline stage processes the style for a model using the Batch Texture.
@@ -39,15 +39,25 @@ CPUStylingStage.STYLE_COLOR_BLEND_UNIFORM_NAME = "model_styleColorBlend";
  */
 CPUStylingStage.process = function (renderResources, primitive, frameState) {
   var shaderBuilder = renderResources.shaderBuilder;
+  var model = renderResources.model;
+  var content = model.content;
 
   shaderBuilder.addDefine("USE_CPU_STYLING", undefined, ShaderDestination.BOTH);
   shaderBuilder.addFragmentLines([CPUStylingStageFS]);
   shaderBuilder.addVertexLines([CPUStylingStageVS]);
 
-  // Set the color blend mode from the tileset.
-  var tileset = renderResources.model.content.tileset;
-  var colorBlendMode = tileset.colorBlendMode;
-  var colorBlendAmount = tileset.colorBlendAmount;
+  var colorBlendAmount;
+  var colorBlendMode;
+
+  if (defined(content)) {
+    // Set the color blend mode from the tileset.
+    var tileset = content.tileset;
+    colorBlendMode = tileset.colorBlendMode;
+    colorBlendAmount = tileset.colorBlendAmount;
+  } else {
+    colorBlendMode = model.colorBlendMode;
+    colorBlendAmount = model.colorBlendAmount;
+  }
 
   renderResources.uniformMap[
     CPUStylingStage.STYLE_COLOR_BLEND_UNIFORM_NAME

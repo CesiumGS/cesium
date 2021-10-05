@@ -232,12 +232,16 @@ Gltf3DTileContent.prototype.applyStyle = function (style) {
     return;
   }
 
+  var tileset = this._tileset;
+
   var hasColorStyle = defined(style) && defined(style.color);
   var hasShowStyle = defined(style) && defined(style.show);
   this._model.color = hasColorStyle
     ? style.color.evaluateColor(undefined, this._model.color)
     : Color.clone(Color.WHITE, this._model.color);
   this._model.show = hasShowStyle ? style.show.evaluate(undefined) : true;
+  this._model.colorBlendMode = tileset.colorBlendMode;
+  this._model.colorBlendAmount = tileset.colorBlendAmount;
 };
 
 Gltf3DTileContent.prototype.update = function (tileset, frameState) {
