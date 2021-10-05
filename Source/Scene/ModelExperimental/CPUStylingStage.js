@@ -1,9 +1,10 @@
-import ColorBlendMode from "../ColorBlendMode.js";
-import combine from "../../Core/combine.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
-import Pass from "../../Renderer/Pass.js";
+import ColorBlendMode from "../ColorBlendMode.js";
+import Cesium3DTileColorBlendMode from "../Cesium3DTileColorBlendMode.js";
+import CesiumMath from "../../Core/Math.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 
 /**
  * The CPU styling pipeline stage processes the style for a model using the Batch Texture.
@@ -15,11 +16,13 @@ CPUStylingStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS = "FeatureIdentificationVS";
 CPUStylingStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS = "FeatureIdentificationFS";
 CPUStylingStage.STRUCT_NAME_FEATURE_IDENTIFICATION = "FeatureIdentification";
 CPUStylingStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS =
-  "setFeatureIdentificationVaryingsVS";
+  "updateFeatureIdStructVS";
 CPUStylingStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS =
-  "setFeatureIdentificationVaryingsFS";
+  "updateFeatureIdStructFS";
 CPUStylingStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS =
-  "void setFeatureIdentificationVaryings(inout FeatureIdentification feature)";
+  "void updateFeatureIdStruct(inout FeatureIdentification feature)";
+
+CPUStylingStage.STYLE_COLOR_BLEND_UNIFORM_NAME = "model_styleColorBlend";
 
 /**
  * This pipeline stage processes the show, color and style properties of a model.
@@ -30,50 +33,48 @@ CPUStylingStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS =
  *  <li> adds the shader code to set up the feature or model color</li>
  * </ul>
  *
- * @param {ModelRenderResources} renderResources The render resources for this model.
- * @param {ModelExperimental} model The model.
+ * @param {PrimitiveRenderResources} renderResources The render resources for this model.
+ * @param {ModelComponents.Primitive} primitive The model.
  * @param {FrameState} frameState The frame state.
  */
-CPUStylingStage.process = function (renderResources, model, frameState) {
+CPUStylingStage.process = function (renderResources, primitive, frameState) {
   var shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine("USE_CPU_STYLING", undefined, ShaderDestination.BOTH);
   shaderBuilder.addFragmentLines([CPUStylingStageFS]);
+  shaderBuilder.addVertexLines([CPUStylingStageVS]);
 
-  if (model.hasStyle) {
-    shaderBuilder.addVertexLines([CPUStylingStageVS]);
-    setupShaderForFeatureStyling(shaderBuilder);
-  } else {
-    var modelStylingUniforms = {};
+  // Set the color blend mode from the tileset.
+  var tileset = renderResources.model.content.tileset;
+  var colorBlendMode = tileset.colorBlendMode;
+  var colorBlendAmount = tileset.colorBlendAmount;
 
-    var color = model.color;
-    if (color.alpha > 0.0 && color.alpha < 1.0) {
-      renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
-    }
+  renderResources.uniformMap[
+    CPUStylingStage.STYLE_COLOR_BLEND_UNIFORM_NAME
+  ] = function () {
+    return getColorBlend(colorBlendMode, colorBlendAmount);
+  };
 
-    shaderBuilder.addUniform("vec4", "model_color", ShaderDestination.FRAGMENT);
-    modelStylingUniforms.model_color = function () {
-      return color;
-    };
-
-    shaderBuilder.addUniform(
-      "float",
-      "model_colorBlend",
-      ShaderDestination.FRAGMENT
-    );
-    modelStylingUniforms.model_colorBlend = function () {
-      return ColorBlendMode.getColorBlend(
-        model.colorBlendMode,
-        model.colorBlendAmount
-      );
-    };
-
-    renderResources.uniformMap = combine(
-      modelStylingUniforms,
-      renderResources.uniformMap
-    );
-  }
+  setupShaderForFeatureStyling(shaderBuilder);
 };
+
+function getColorBlend(colorBlendMode, colorBlendAmount) {
+  if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
+    return 0.0;
+  }
+  if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
+    return 1.0;
+  }
+  if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
+    // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
+    return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
+  }
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    'Invalid color blend mode "' + colorBlendMode + '".'
+  );
+  //>>includeEnd('debug');
+}
 
 /**
  * Adds the color property to the FeatureIdentification struct and sets up the
@@ -88,6 +89,11 @@ function setupShaderForFeatureStyling(shaderBuilder) {
     ShaderDestination.FRAGMENT
   );
 
+  shaderBuilder.addUniform(
+    "float",
+    CPUStylingStage.STYLE_COLOR_BLEND_UNIFORM_NAME
+  );
+
   shaderBuilder.addStruct(
     CPUStylingStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
     CPUStylingStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
@@ -110,7 +116,7 @@ function setupShaderForFeatureStyling(shaderBuilder) {
     "vec4",
     "color"
   );
-  shaderBuilder.addVarying("vec4", "v_featureColor");
+  shaderBuilder.addVarying("vec4", "v_activeFeatureColor");
 
   shaderBuilder.addFunction(
     CPUStylingStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
@@ -119,7 +125,7 @@ function setupShaderForFeatureStyling(shaderBuilder) {
   );
   shaderBuilder.addFunctionLines(
     CPUStylingStage.FUNCTION_ID_FEATURE_IDENTIFICATION_VS,
-    ["v_featureColor = feature.color;"]
+    ["v_activeFeatureColor = feature.color;"]
   );
   shaderBuilder.addFunction(
     CPUStylingStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
@@ -128,7 +134,7 @@ function setupShaderForFeatureStyling(shaderBuilder) {
   );
   shaderBuilder.addFunctionLines(
     CPUStylingStage.FUNCTION_ID_FEATURE_IDENTIFICATION_FS,
-    ["feature.color = v_featureColor;"]
+    ["feature.color = v_activeFeatureColor;"]
   );
 }
 

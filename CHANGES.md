@@ -1,5 +1,15 @@
 # Change Log
 
+### 1.86 - 2021-10-01
+
+##### Breaking Changes :mega:
+
+- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [9847](https://github.com/CesiumGS/cesium/issues/9847)
+
+##### Fixes :wrench:
+
+- Fixed incorrect behavior in `CameraFlightPath` when using Columbus View. [#9192](https://github.com/CesiumGS/cesium/pull/9192)
+
 ### 1.85 - 2021-09-01
 
 ##### Breaking Changes :mega:

@@ -16,9 +16,13 @@ void featureStage(inout FeatureIdentification feature)
     {
         feature.id = model_featuresLength + 1.0;
     }
+
+    vec4 featureColor = texture2D(model_batchTexture, feature.st);
+    feature.color = featureColor;
+
     #else
-    // The FeatureIdentification struct is populated by the varyings set in the vertex shader if the feature ID
-    // vertex attribute is used.
-    setFeatureIdentificationVaryings(feature);
+    // In the case of Feature ID vertex attributes, the id and st (and possibly color) are set in the vertex shader.
+    // This function populated the FeatureIdentification struct with the info set in the vertex shader.
+    updateFeatureIdStruct(feature);
     #endif
 }

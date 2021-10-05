@@ -48,7 +48,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   };
 
   var emptyVertexShader =
-    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
+    "void vertexMain(VertexInput vsInput, inout vec3 positionMC) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
   var emptyShader = new CustomShader({
@@ -223,18 +223,18 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
           "{",
-          "    vec3 normal = vsInput.attributes.normal;",
+          "    vec3 normalMC = vsInput.attributes.normalMC;",
           "    vec2 texCoord = vsInput.attributes.texCoord_0;",
-          "    position = vsInput.attributes.positionMC;",
+          "    positionMC = vsInput.attributes.positionMC;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
           "    vec3 positionMC = fsInput.attributes.positionMC;",
-          "    vec3 normal = fsInput.attributes.normal;",
+          "    vec3 normalEC = fsInput.attributes.normalEC;",
           "    vec2 texCoord = fsInput.attributes.texCoord_0;",
           "}",
         ].join("\n"),
@@ -253,13 +253,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
+      ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    vec3 normal;", "    vec2 texCoord_0;"]
+      ["    vec3 positionMC;", "    vec3 normalEC;", "    vec2 texCoord_0;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -281,7 +281,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       [
         "    vsInput.attributes.positionMC = attributes.positionMC;",
-        "    vsInput.attributes.normal = attributes.normal;",
+        "    vsInput.attributes.normalMC = attributes.normalMC;",
         "    vsInput.attributes.texCoord_0 = attributes.texCoord_0;",
       ]
     );
@@ -291,7 +291,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       [
         "    fsInput.attributes.positionMC = attributes.positionMC;",
-        "    fsInput.attributes.normal = attributes.normal;",
+        "    fsInput.attributes.normalEC = attributes.normalEC;",
         "    fsInput.attributes.texCoord_0 = attributes.texCoord_0;",
       ]
     );
@@ -302,10 +302,10 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
           "{",
           "    float temperature = vsInput.attributes.temperature;",
-          "    position = vsInput.attributes.positionMC;",
+          "    positionMC = vsInput.attributes.positionMC;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -380,9 +380,9 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
           "{",
-          "    position = 2.0 * vsInput.attributes.positionMC - 1.0;",
+          "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -512,9 +512,9 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse = fsInput.positionMC;",
-          "    material.specular = fsInput.positionWC;",
-          "    material.normal = fsInput.positionEC;",
+          "    material.diffuse = fsInput.attributes.positionMC;",
+          "    material.specular = fsInput.attributes.positionWC;",
+          "    material.normal = fsInput.attributes.positionEC;",
           "}",
         ].join("\n"),
       }),
@@ -543,7 +543,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      []
+      ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -556,12 +556,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      [
-        "    Attributes attributes;",
-        "    vec3 positionMC;",
-        "    vec3 positionWC;",
-        "    vec3 positionEC;",
-      ]
+      ["    Attributes attributes;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -575,9 +570,9 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       [
-        "    fsInput.positionMC = attributes.positionMC;",
-        "    fsInput.positionWC = attributes.positionWC;",
-        "    fsInput.positionEC = attributes.positionEC;",
+        "    fsInput.attributes.positionMC = attributes.positionMC;",
+        "    fsInput.attributes.positionWC = attributes.positionWC;",
+        "    fsInput.attributes.positionEC = attributes.positionEC;",
       ]
     );
   });
@@ -587,7 +582,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
           "{",
           "    vec2 texCoords = vsInput.attributes.texCoord_1;",
           "}",
@@ -595,7 +590,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse = vec3(fsInput.attributes.tangent);",
+          "    material.diffuse = vec3(fsInput.attributes.tangentEC);",
           "}",
         ].join("\n"),
       }),
@@ -619,7 +614,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 tangent;"]
+      ["    vec3 tangentEC;"]
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -645,7 +640,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
-      ["    fsInput.attributes.tangent = vec3(1.0, 0.0, 0.0);"]
+      ["    fsInput.attributes.tangentEC = vec3(1.0, 0.0, 0.0);"]
     );
   });
 
@@ -654,15 +649,15 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 position)",
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
           "{",
-          "    vec3 texCoords = vsInput.attributes.color_0;",
+          "    vec3 texCoords = vsInput.attributes.notAnAttribute;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse *= fsInput.attributes.notAnAttribute;",
+          "    material.diffuse *= fsInput.attributes.alsoNotAnAttribute;",
           "}",
         ].join("\n"),
       }),
@@ -772,7 +767,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse = fsInput.positionWC;",
+          "    material.diffuse = fsInput.attributes.positionWC;",
           "}",
         ].join("\n"),
       }),
@@ -795,14 +790,14 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      []
+      ["    vec3 positionWC;"]
     );
 
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;", "    vec3 positionWC;"]
+      ["    Attributes attributes;"]
     );
 
     expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);
@@ -810,7 +805,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
-      ["    fsInput.positionWC = attributes.positionWC;"]
+      ["    fsInput.attributes.positionWC = attributes.positionWC;"]
     );
   });
 });

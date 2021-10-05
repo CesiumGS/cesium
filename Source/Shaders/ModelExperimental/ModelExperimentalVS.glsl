@@ -29,7 +29,7 @@ void main()
         cpuStylingStage(attributes.positionMC, feature);
         #endif
         
-    setFeatureIdentificationVaryings(feature);
+    updateFeatureIdStruct(feature);
     #endif
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER

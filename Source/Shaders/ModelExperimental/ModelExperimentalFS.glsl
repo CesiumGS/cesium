@@ -11,7 +11,7 @@ czm_modelMaterial defaultModelMaterial()
     material.specular = vec3(0.04); // dielectric (non-metal)
     material.roughness = 0.0;
     material.occlusion = 1.0;
-    material.normal = vec3(0.0, 0.0, 1.0);
+    material.normalEC = vec3(0.0, 0.0, 1.0);
     material.emissive = vec3(0.0);
     material.alpha = 1.0;
     return material;
@@ -41,26 +41,31 @@ void main()
 
     ProcessedAttributes attributes;
     geometryStage(attributes);
+    
+    #ifdef HAS_FEATURES
+    featureStage(feature);
+    #endif
 
     #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
-    materialStage(material, attributes);
+    materialStage(material, attributes, feature);
     #endif
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
     customShaderStage(material, attributes);
     #endif
 
+    #ifdef HAS_MODEL_COLOR
+    modelColorStage(material.diffuse, material.alpha);
+    #endif
+
+    #ifdef USE_CPU_STYLING
+    cpuStylingStage(material.diffuse, material.alpha, feature);
+    #endif
+
     lightingStage(material);
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
-    #ifdef HAS_FEATURES
-    featureStage(feature);
-    #endif
-
-    #ifdef USE_CPU_STYLING
-    cpuStylingStage(color, feature);
-    #endif
 
     gl_FragColor = color;
 }

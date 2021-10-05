@@ -42,7 +42,6 @@ import TextureManager from "./TextureManager.js";
  * Variable sets parsed from the user-defined fragment shader text.
  * @typedef {Object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
- * @property {VariableSet} positionSet A set of all position variables like positionWC or positionEC used in the fragment shader via the <code>fsInput</code> struct
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -219,12 +218,12 @@ export default function CustomShader(options) {
    * @private
    */
   this.usedVariablesFragment = {
-    positionSet: {},
     attributeSet: {},
     materialSet: {},
   };
 
   findUsedVariables(this);
+  validateBuiltinVariables(this);
 }
 
 function buildUniformMap(customShader) {
@@ -301,14 +300,81 @@ function findUsedVariables(customShader) {
     attributeSet = customShader.usedVariablesFragment.attributeSet;
     getVariables(fragmentShaderText, attributeRegex, attributeSet);
 
-    var positionRegex = /fsInput\.(position\w+)/g;
-    var positionSet = customShader.usedVariablesFragment.positionSet;
-    getVariables(fragmentShaderText, positionRegex, positionSet);
-
     var materialRegex = /material\.(\w+)/g;
     var materialSet = customShader.usedVariablesFragment.materialSet;
     getVariables(fragmentShaderText, materialRegex, materialSet);
   }
+}
+
+function expandCoordinateAbbreviations(variableName) {
+  var modelCoordinatesRegex = /^.*MC$/;
+  var worldCoordinatesRegex = /^.*WC$/;
+  var eyeCoordinatesRegex = /^.*EC$/;
+
+  if (modelCoordinatesRegex.test(variableName)) {
+    return variableName + " (model coordinates)";
+  }
+
+  if (worldCoordinatesRegex.test(variableName)) {
+    return variableName + " (Cartesian world coordinates)";
+  }
+
+  if (eyeCoordinatesRegex.test(variableName)) {
+    return variableName + " (eye coordinates)";
+  }
+
+  return variableName;
+}
+
+function validateVariableUsage(
+  variableSet,
+  incorrectVariable,
+  correctVariable,
+  vertexOrFragment
+) {
+  if (variableSet.hasOwnProperty(incorrectVariable)) {
+    var message =
+      expandCoordinateAbbreviations(incorrectVariable) +
+      " is not available in the " +
+      vertexOrFragment +
+      " shader. Did you mean " +
+      expandCoordinateAbbreviations(correctVariable) +
+      " instead?";
+    throw new DeveloperError(message);
+  }
+}
+
+function validateBuiltinVariables(customShader) {
+  var attributesVS = customShader.usedVariablesVertex.attributeSet;
+
+  // names without MC/WC/EC are ambiguous
+  validateVariableUsage(attributesVS, "position", "positionMC", "vertex");
+  validateVariableUsage(attributesVS, "normal", "normalMC", "vertex");
+  validateVariableUsage(attributesVS, "tangent", "tangentMC", "vertex");
+  validateVariableUsage(attributesVS, "bitangent", "bitangentMC", "vertex");
+
+  // world and eye coordinate positions are only available in the fragment shader.
+  validateVariableUsage(attributesVS, "positionWC", "positionMC", "vertex");
+  validateVariableUsage(attributesVS, "positionEC", "positionMC", "vertex");
+
+  // normal, tangent and bitangent are in model coordinates in the vertex shader
+  validateVariableUsage(attributesVS, "normalEC", "normalMC", "vertex");
+  validateVariableUsage(attributesVS, "tangentEC", "tangentMC", "vertex");
+  validateVariableUsage(attributesVS, "bitangentEC", "bitangentMC", "vertex");
+
+  var attributesFS = customShader.usedVariablesFragment.attributeSet;
+
+  // names without MC/WC/EC are ambiguous
+  validateVariableUsage(attributesFS, "position", "positionEC", "fragment");
+  validateVariableUsage(attributesFS, "normal", "normalEC", "fragment");
+  validateVariableUsage(attributesFS, "tangent", "tangentEC", "fragment");
+  validateVariableUsage(attributesFS, "bitangent", "bitangentEC", "fragment");
+
+  // normal, tangent, and bitangent are in eye coordinates in the fragment
+  // shader.
+  validateVariableUsage(attributesFS, "normalMC", "normalEC", "fragment");
+  validateVariableUsage(attributesFS, "tangentMC", "tangentEC", "fragment");
+  validateVariableUsage(attributesFS, "bitangentMC", "bitangentEC", "fragment");
 }
 
 /**

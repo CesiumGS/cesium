@@ -65,6 +65,7 @@ function Batched3DModel3DTileContent(
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
+  this._featureMetadata = undefined;
   this._featureTables = [];
   this._featureTableId = undefined;
   this._featureTable = undefined;
@@ -78,9 +79,7 @@ Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
 Object.defineProperties(Batched3DModel3DTileContent.prototype, {
   featuresLength: {
     get: function () {
-      return defined(this._featureTable)
-        ? this._featureTable.featuresLength
-        : 0;
+      return defined(this.batchTable) ? this.batchTable.featuresLength : 0;
     },
   },
 
@@ -110,7 +109,7 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return 0;
+      return defined(this.batchTable) ? this.batchTable.memorySizeInBytes : 0;
     },
   },
 
@@ -146,20 +145,21 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return defined(this._featureTable)
+      return ExperimentalFeatures.enableModelExperimental
         ? this._featureTable
         : this._batchTable;
     },
   },
 
-  groupMetadata: {
+  /**
+   * @private
+   */
+  featureMetadata: {
     get: function () {
-      return this._groupMetadata;
-    },
-    set: function (value) {
-      this._groupMetadata = value;
+      return this._featureMetadata;
     },
   },
+
   /**
    * @private
    */
@@ -182,6 +182,15 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
     set: function (value) {
       this._featureTableId = value;
       this._featureTable = this._featureTables[value];
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });
@@ -403,14 +412,18 @@ function initialize(content, arrayBuffer, byteOffset) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
-  var featureMetadata;
   var batchTable;
-  if (ExperimentalFeatures.enableModelExperimental) {
-    featureMetadata = parseBatchTable({
+  if (
+    ExperimentalFeatures.enableModelExperimental &&
+    batchLength > 0 &&
+    defined(batchTableJson)
+  ) {
+    var featureMetadata = parseBatchTable({
       count: batchLength,
       batchTable: batchTableJson,
       binaryBody: batchTableBinary,
     });
+    content._featureMetadata = featureMetadata;
   } else {
     batchTable = new Cesium3DTileBatchTable(
       content,
@@ -479,8 +492,9 @@ function initialize(content, arrayBuffer, byteOffset) {
     };
 
     if (ExperimentalFeatures.enableModelExperimental) {
-      content._featureMetadata = featureMetadata;
+      modelOptions.content = content;
       modelOptions.customShader = tileset.customShader;
+      modelOptions.content = content;
       content._model = ModelExperimental.fromGltf(modelOptions);
     } else {
       modelOptions = combine(modelOptions, {
@@ -549,16 +563,17 @@ function createFeatures(content) {
 }
 
 Batched3DModel3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return this._batchTable.hasProperty(batchId, name);
+  return this.batchTable.hasProperty(batchId, name);
 };
 
 Batched3DModel3DTileContent.prototype.getFeature = function (batchId) {
   if (
     ExperimentalFeatures.enableModelExperimental &&
-    defined(this._batchTable)
+    defined(this.batchTable)
   ) {
-    return this._batchTable.getFeature(batchId);
+    return this.batchTable.getFeature(batchId);
   }
+
   //>>includeStart('debug', pragmas.debug);
   var featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
@@ -604,22 +619,12 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
 
   var model = this._model;
   var tile = this._tile;
-  var batchTable = this._batchTable;
+  var batchTable = this.batchTable;
 
-  if (ExperimentalFeatures.enableModelExperimental) {
-    var featureTables = this._featureTables;
-    if (defined(featureTables)) {
-      for (var featureTableId in featureTables) {
-        if (featureTables.hasOwnProperty(featureTableId)) {
-          var featureTable = featureTables[featureTableId];
-          featureTable.update(frameState);
-        }
-      }
-    }
-  } else {
-    // In the PROCESSING state we may be calling update() to move forward
-    // the content's resource loading.  In the READY state, it will
-    // actually generate commands.
+  // In the PROCESSING state we may be calling update() to move forward
+  // the content's resource loading.  In the READY state, it will
+  // actually generate commands.
+  if (defined(batchTable)) {
     batchTable.update(tileset, frameState);
   }
 

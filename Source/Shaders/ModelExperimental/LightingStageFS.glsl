@@ -30,7 +30,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     #ifdef HAS_NORMALS
     color = czm_pbrLighting(
         v_positionEC,
-        inputMaterial.normal,
+        inputMaterial.normalEC,
         czm_lightDirectionEC,
         lightColorHdr,
         pbrParameters

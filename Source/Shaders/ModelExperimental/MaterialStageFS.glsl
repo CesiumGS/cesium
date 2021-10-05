@@ -14,11 +14,24 @@ vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
     return vec2(textureTransform * vec3(texCoord, 1.0));
 }
 
+// If the style color is white, it implies the feature has not been styled.
+bool isDefaultStyleColor(vec3 color)
+{
+    return all(greaterThan(color, vec3(1.0 - czm_epsilon3)));
+}
+
+vec3 blend(vec3 sourceColor, vec3 styleColor, float styleColorBlend)
+{
+    vec3 blendColor = mix(sourceColor, styleColor, styleColorBlend);
+    vec3 color = isDefaultStyleColor(styleColor.rgb) ? sourceColor : blendColor;
+    return color;
+}
+
 #ifdef HAS_NORMALS
 vec3 computeNormal(ProcessedAttributes attributes)
 {
     // Geometry normal. This is already normalized 
-    vec3 ng = attributes.normal;
+    vec3 ng = attributes.normalEC;
 
     vec3 normal = ng;
     #ifdef HAS_NORMAL_TEXTURE
@@ -29,8 +42,8 @@ vec3 computeNormal(ProcessedAttributes attributes)
 
         // If HAS_BITANGENTS is set, then HAS_TANGENTS is also set
         #ifdef HAS_BITANGENTS
-        vec3 t = attributes.tangent;
-        vec3 b = attributes.bitangent;
+        vec3 t = attributes.tangentEC;
+        vec3 b = attributes.bitangentEC;
         mat3 tbn = mat3(t, b, ng);
         vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
         normal = normalize(tbn * (2.0 * n - 1.0));
@@ -54,11 +67,11 @@ vec3 computeNormal(ProcessedAttributes attributes)
 }
 #endif
 
-void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes)
+void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes, FeatureIdentification feature)
 {
 
     #ifdef HAS_NORMALS
-    material.normal = computeNormal(attributes);
+    material.normalEC = computeNormal(attributes);
     #endif
 
     vec4 baseColorWithAlpha = vec4(1.0);
@@ -85,6 +98,10 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
 
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
+
+    #ifdef USE_CPU_STYLING
+    material.diffuse = blend(material.diffuse, feature.color.rgb, model_styleColorBlend);
+    #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
     vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;

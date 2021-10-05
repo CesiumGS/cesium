@@ -27,7 +27,7 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
   shaderBuilder.addUniform(
     "bool",
     "model_commandTranslucent",
-    ShaderDestination.VERTEX
+    ShaderDestination.BOTH
   );
   uniformMap["model_commandTranslucent"] = function () {
     return alphaOptions.pass === Pass.TRANSLUCENT;

@@ -1,7 +1,7 @@
 import buildDrawCommand from "./buildDrawCommand.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
-import CPUStylingStage from "./CPUStylingStage.js";
+import ModelColorStage from "./ModelColorStage.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -197,8 +197,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   }
 
   var modelRenderResources = new ModelRenderResources(model);
-  if (model.hasStyle || defined(model.color)) {
-    this._pipelineStages.push(CPUStylingStage);
+  if (defined(model.color)) {
+    this._pipelineStages.push(ModelColorStage);
   }
 
   var i, j, k;

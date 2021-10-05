@@ -80,9 +80,9 @@ function semanticToVariableName(semantic) {
     case VertexAttributeSemantic.POSITION:
       return "positionMC";
     case VertexAttributeSemantic.NORMAL:
-      return "normal";
+      return "normalMC";
     case VertexAttributeSemantic.TANGENT:
-      return "tangent";
+      return "tangentMC";
     case VertexAttributeSemantic.TEXCOORD:
       return "texCoord";
     case VertexAttributeSemantic.COLOR:

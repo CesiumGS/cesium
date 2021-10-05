@@ -12,6 +12,7 @@ import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
+import CPUStylingStage from "./CPUStylingStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -82,6 +83,7 @@ function initialize(runtimePrimitive) {
   var primitive = runtimePrimitive.primitive;
   var node = runtimePrimitive.node;
   var model = runtimePrimitive.model;
+  var content = model.content;
   var customShader = model.customShader;
 
   var hasCustomShader = defined(customShader);
@@ -124,15 +126,18 @@ function initialize(runtimePrimitive) {
     }
   }
 
+  var hasContentMetadata = defined(content) && defined(content.featureMetadata);
   var hasFeatureIds =
     defined(primitive.featureIdAttributes[featureIdAttributeIndex]) ||
-    defined(
-      primitive.featureIdTextures[featureIdTextureIndex] ||
-        defined(model.content._featureMetadata)
-    );
+    defined(primitive.featureIdTextures[featureIdTextureIndex]) ||
+    hasContentMetadata;
   if (hasInstancedFeatureIds || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
+
+    if (defined(model.hasStyle)) {
+      pipelineStages.push(CPUStylingStage);
+    }
   }
 
   if (model.allowPicking) {

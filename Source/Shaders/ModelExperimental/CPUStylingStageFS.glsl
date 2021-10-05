@@ -1,26 +1,38 @@
-void cpuStylingStage(inout vec4 color, inout FeatureIdentification feature)
+void filterByPassType(vec4 featureColor)
 {
-    #ifdef FEATURE_ID_TEXTURE
+    bool styleTranslucent = (featureColor.a != 1.0);
 
-    vec4 featureColor = texture2D(model_batchTexture, feature.st);
-    color = featureColor;
-
-    // Used to show/hide the feature.
-    float show = ceil(featureColor.a);
-    if (show == 0.0) {
-        discard;
+    if (czm_pass == czm_passTranslucent)
+    {
+        // Only render translucent features in the translucent pass (if the style or the original command has trasnlucency).
+        if (!styleTranslucent && !model_commandTranslucent)
+        {
+            discard;
+        }
     }
-    
-    #elif defined(FEATURE_ID_ATTRIBUTE)
+    else
+    {
+        // Only render opaque featuers in the opaque pass.
+        if (styleTranslucent)
+        {
+            discard;
+        }
+    }
+}
 
-    color = feature.color;
-
-    #else
-    
-    color.rgb = mix(color.rgb, model_color.rgb, model_colorBlend);
-    float highlight = ceil(model_colorBlend);
-    color.rgb *= mix(model_color.rgb, vec3(1.0), highlight);
-    color.a *= model_color.a;
-    
+void cpuStylingStage(inout vec3 diffuse, inout float alpha, FeatureIdentification feature)
+{
+    #ifndef FEATURE_ID_ATTRIBUTE
+    // Filter rendering of features by translucency.
+    filterByPassType(feature.color);
+    // Blend model color with style color.
     #endif
+
+    if (model_styleColorBlend == 0.0)
+    {
+        feature.color = czm_gammaCorrect(feature.color);
+        alpha *= feature.color.a;
+        float highlight = ceil(model_styleColorBlend);
+        diffuse *= mix(feature.color.rgb, vec3(1.0), highlight);
+    }
 }

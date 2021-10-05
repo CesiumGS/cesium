@@ -20,6 +20,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   };
   var mockNode = {};
   var mockModel = {
+    content: {},
     allowPicking: true,
     featureIdAttributeIndex: 0,
   };
@@ -100,6 +101,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         allowPicking: false,
+        content: {},
       },
     });
 
@@ -147,6 +149,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         allowPicking: true,
         featureIdAttributeIndex: 1,
+        content: {},
       },
     });
 
@@ -171,6 +174,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         allowPicking: true,
         featureIdTextureIndex: 1,
+        content: {},
       },
     });
 
@@ -211,6 +215,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        content: {},
         customShader: new CustomShader({
           vertexShaderText: emptyVertexShader,
           fragmentShaderText: emptyFragmentShader,
@@ -235,6 +240,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        content: {},
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
           vertexShaderText: emptyVertexShader,
@@ -259,6 +265,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        content: {},
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
           vertexShaderText: emptyVertexShader,

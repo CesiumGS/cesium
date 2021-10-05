@@ -13,6 +13,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
+import MetadataClass from "../MetadataClass.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -151,7 +152,12 @@ function createModelFeatureTables(model, featureMetadata) {
   return modelFeatureTables;
 }
 
-function selectFeatureTableId(components, model) {
+function selectFeatureTableId(components, model, content) {
+  // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
+  if (defined(content) && defined(content.featureMetadata)) {
+    return MetadataClass.BATCH_TABLE_CLASS_NAME;
+  }
+
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
   var featureIdTextureIndex = model._featureIdTextureIndex;
 
@@ -203,24 +209,25 @@ function initialize(model) {
     .then(function (loader) {
       var components = loader.components;
       var content = model._content;
-      var featureMetadata = defined(content)
-        ? content._featureMetadata
+
+      // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
+      // Otherwise, the metadata is owned by ModelExperimental.
+      var hasContent = defined(content);
+      var featureTableOwner = hasContent ? content : model;
+      var featureMetadata = defined(featureTableOwner.featureMetadata)
+        ? content.featureMetadata
         : components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
+        var featureTableId = selectFeatureTableId(components, model, content);
         var featureTables;
-        var featureTableId = defined(content._featureMetadata)
-          ? "_batchTable"
-          : selectFeatureTableId(components, model);
-        if (defined(content)) {
+        if (hasContent) {
           featureTables = createContentFeatureTables(content, featureMetadata);
-          content.featureTables = featureTables;
-          content.featureTableId = featureTableId;
         } else {
           featureTables = createModelFeatureTables(model, featureMetadata);
-          model._featureTables = featureTables;
-          model.featureTableId = featureTableId;
         }
+        featureTableOwner.featureTables = featureTables;
+        featureTableOwner.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -480,6 +487,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   featureTables: {
     get: function () {
       return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
     },
   },
 

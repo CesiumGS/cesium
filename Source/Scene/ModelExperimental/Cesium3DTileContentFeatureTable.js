@@ -66,6 +66,11 @@ Object.defineProperties(Cesium3DTileContentFeatureTable.prototype, {
       return this._featuresLength;
     },
   },
+  memorySizeInBytes: {
+    get: function () {
+      return this._batchTexture.memorySizeInBytes;
+    },
+  },
 });
 
 function initialize(contentFeatureTable) {
