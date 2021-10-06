@@ -67,6 +67,18 @@ function Quantization() {
   this.quantizedVolumeDimensions = undefined;
 
   /**
+   * The step size of the quantization volume, equal to
+   * quantizedVolumeDimensions / quantizedVolumeOffset (component-wise).
+   * Not applicable for oct encoded attributes.
+   * The type should match the attribute type - e.g. if the attribute type
+   * is AttributeType.VEC4 the dimensions should be a Cartesian4.
+   *
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @private
+   */
+  this.quantizedVolumeStepSize = undefined;
+
+  /**
    * The component data type of the quantized attribute, e.g. ComponentDatatype.UNSIGNED_SHORT.
    *
    * <p>

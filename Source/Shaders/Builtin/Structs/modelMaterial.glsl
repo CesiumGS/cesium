@@ -11,7 +11,7 @@
  * @property {float} alpha Alpha of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  * @property {vec3} specular Color of reflected light at normal incidence in PBR materials. This is sometimes referred to as f0 in the literature.
  * @property {float} roughness A number from 0.0 to 1.0 representing how rough the surface is. Values near 0.0 produce glossy surfaces, while values near 1.0 produce rough surfaces.
- * @property {vec3} normal Surface's normal in eye coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
+ * @property {vec3} normalEC Surface's normal in eye coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
  * @property {float} occlusion Ambient occlusion recieved at this point on the material. 1.0 means fully lit, 0.0 means fully occluded.
  * @property {vec3} emissive Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
  */
@@ -20,7 +20,7 @@ struct czm_modelMaterial {
     float alpha;
     vec3 specular;
     float roughness;
-    vec3 normal;
+    vec3 normalEC;
     float occlusion;
     vec3 emissive;
 };

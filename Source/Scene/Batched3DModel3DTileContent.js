@@ -22,6 +22,7 @@ import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 import ModelExperimental from "./ModelExperimental/ModelExperimental.js";
 import ModelUtility from "./ModelUtility.js";
+import parseBatchTable from "./parseBatchTable.js";
 
 /**
  * Represents the contents of a
@@ -64,6 +65,11 @@ function Batched3DModel3DTileContent(
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
+  this._featureMetadata = undefined;
+  this._featureTables = [];
+  this._featureTableId = undefined;
+  this._featureTable = undefined;
+
   initialize(this, arrayBuffer, byteOffset);
 }
 
@@ -73,7 +79,7 @@ Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
 Object.defineProperties(Batched3DModel3DTileContent.prototype, {
   featuresLength: {
     get: function () {
-      return this._batchTable.featuresLength;
+      return defined(this.batchTable) ? this.batchTable.featuresLength : 0;
     },
   },
 
@@ -103,7 +109,7 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   batchTableByteLength: {
     get: function () {
-      return this._batchTable.memorySizeInBytes;
+      return defined(this.batchTable) ? this.batchTable.memorySizeInBytes : 0;
     },
   },
 
@@ -139,7 +145,43 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return this._batchTable;
+      return ExperimentalFeatures.enableModelExperimental
+        ? this._featureTable
+        : this._batchTable;
+    },
+  },
+
+  /**
+   * @private
+   */
+  featureMetadata: {
+    get: function () {
+      return this._featureMetadata;
+    },
+  },
+
+  /**
+   * @private
+   */
+  featureTables: {
+    get: function () {
+      return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
+    },
+  },
+
+  /**
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
+      this._featureTable = this._featureTables[value];
     },
   },
 
@@ -370,14 +412,28 @@ function initialize(content, arrayBuffer, byteOffset) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
-  var batchTable = new Cesium3DTileBatchTable(
-    content,
-    batchLength,
-    batchTableJson,
-    batchTableBinary,
-    colorChangedCallback
-  );
-  content._batchTable = batchTable;
+  var batchTable;
+  if (
+    ExperimentalFeatures.enableModelExperimental &&
+    batchLength > 0 &&
+    defined(batchTableJson)
+  ) {
+    var featureMetadata = parseBatchTable({
+      count: batchLength,
+      batchTable: batchTableJson,
+      binaryBody: batchTableBinary,
+    });
+    content._featureMetadata = featureMetadata;
+  } else {
+    batchTable = new Cesium3DTileBatchTable(
+      content,
+      batchLength,
+      batchTableJson,
+      batchTableBinary,
+      colorChangedCallback
+    );
+    content._batchTable = batchTable;
+  }
 
   var gltfByteLength = byteStart + byteLength - byteOffset;
   if (gltfByteLength === 0) {
@@ -435,7 +491,9 @@ function initialize(content, arrayBuffer, byteOffset) {
     };
 
     if (ExperimentalFeatures.enableModelExperimental) {
+      modelOptions.content = content;
       modelOptions.customShader = tileset.customShader;
+      modelOptions.content = content;
       content._model = ModelExperimental.fromGltf(modelOptions);
     } else {
       modelOptions = combine(modelOptions, {
@@ -504,10 +562,17 @@ function createFeatures(content) {
 }
 
 Batched3DModel3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return this._batchTable.hasProperty(batchId, name);
+  return this.batchTable.hasProperty(batchId, name);
 };
 
 Batched3DModel3DTileContent.prototype.getFeature = function (batchId) {
+  if (
+    ExperimentalFeatures.enableModelExperimental &&
+    defined(this.batchTable)
+  ) {
+    return this.batchTable.getFeature(batchId);
+  }
+
   //>>includeStart('debug', pragmas.debug);
   var featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
@@ -553,12 +618,14 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
 
   var model = this._model;
   var tile = this._tile;
-  var batchTable = this._batchTable;
+  var batchTable = this.batchTable;
 
   // In the PROCESSING state we may be calling update() to move forward
   // the content's resource loading.  In the READY state, it will
   // actually generate commands.
-  batchTable.update(tileset, frameState);
+  if (defined(batchTable)) {
+    batchTable.update(tileset, frameState);
+  }
 
   this._contentModelMatrix = Matrix4.multiply(
     tile.computedTransform,
@@ -601,14 +668,16 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
 
   model.update(frameState);
 
-  // If any commands were pushed, add derived commands
-  var commandEnd = frameState.commandList.length;
-  if (
-    commandStart < commandEnd &&
-    (frameState.passes.render || frameState.passes.pick) &&
-    !defined(this._classificationType)
-  ) {
-    batchTable.addDerivedCommands(frameState, commandStart);
+  if (!ExperimentalFeatures.enableModelExperimental) {
+    // If any commands were pushed, add derived commands
+    var commandEnd = frameState.commandList.length;
+    if (
+      commandStart < commandEnd &&
+      (frameState.passes.render || frameState.passes.pick) &&
+      !defined(this._classificationType)
+    ) {
+      batchTable.addDerivedCommands(frameState, commandStart);
+    }
   }
 };
 

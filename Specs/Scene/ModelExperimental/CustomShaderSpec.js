@@ -14,7 +14,7 @@ import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/CustomShader", function () {
   var emptyVertexShader =
-    "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
+    "void vertexMain(VertexInput vsInput, inout vec3 positionMC) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
@@ -164,17 +164,17 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   it("detects input variables in the shader text", function () {
     var customShader = new CustomShader({
       vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout vec3 position)",
+        "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
         "{",
-        "    positon += vsInput.attributes.expansion * vsInput.attributes.normal;",
+        "    positionMC += vsInput.attributes.expansion * vsInput.attributes.normalMC;",
         "}",
       ].join("\n"),
       fragmentShaderText: [
         "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
         "{",
-        "    material.normal = normalize(fsInput.attributes.normal);",
+        "    material.normalEC = normalize(fsInput.attributes.normalEC);",
         "    material.diffuse = fsInput.attributes.color_0;",
-        "    material.specular = fsInput.positionWC / 1.0e6;",
+        "    material.specular = fsInput.attributes.positionWC / 1.0e6;",
         "}",
       ].join("\n"),
     });
@@ -182,19 +182,17 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     var expectedVertexVariables = {
       attributeSet: {
         expansion: true,
-        normal: true,
+        normalMC: true,
       },
     };
     var expectedFragmentVariables = {
       attributeSet: {
-        normal: true,
+        normalEC: true,
         color_0: true,
-      },
-      positionSet: {
         positionWC: true,
       },
       materialSet: {
-        normal: true,
+        normalEC: true,
         diffuse: true,
         specular: true,
       },
@@ -204,6 +202,124 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     expect(customShader.usedVariablesFragment).toEqual(
       expectedFragmentVariables
     );
+  });
+
+  describe("variable validation", function () {
+    function makeSingleVariableVS(variableName) {
+      return new CustomShader({
+        vertexShaderText: [
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "{",
+          "    positionMC = vsInput.attributes." + variableName + ";",
+          "}",
+        ].join("\n"),
+      });
+    }
+
+    function makeSingleVariableFS(variableName) {
+      return new CustomShader({
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    material.diffuse = fsInput.attributes." + variableName + ";",
+          "}",
+        ].join("\n"),
+      });
+    }
+
+    it("validates position", function () {
+      expect(function () {
+        return makeSingleVariableVS("position");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("positionMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("positionWC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("positionEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("position");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("positionMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("positionWC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("positionEC");
+      }).not.toThrowDeveloperError();
+    });
+
+    it("validates normal", function () {
+      expect(function () {
+        return makeSingleVariableVS("normal");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("normalMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("normalEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("normal");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("normalMC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("normalEC");
+      }).not.toThrowDeveloperError();
+    });
+
+    it("validates tangent", function () {
+      expect(function () {
+        return makeSingleVariableVS("tangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("tangentMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("tangentEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("tangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("tangentMC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("tangentEC");
+      }).not.toThrowDeveloperError();
+    });
+
+    it("validates bitangent", function () {
+      expect(function () {
+        return makeSingleVariableVS("bitangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("bitangentMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("bitangentEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("bitangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("bitangentMC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("bitangentEC");
+      }).not.toThrowDeveloperError();
+    });
   });
 
   // asynchronous code is only needed if texture uniforms are used.

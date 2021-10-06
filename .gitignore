@@ -28,6 +28,8 @@ Source/ThirdParty/Autolinker.js
 Source/ThirdParty/bitmap-sdf.js
 Source/ThirdParty/dompurify.js
 Source/ThirdParty/earcut.js
+Source/ThirdParty/draco_decoder.wasm
+Source/ThirdParty/Workers/draco_decoder_nodejs.js
 Source/ThirdParty/grapheme-splitter.js
 Source/ThirdParty/jsep.js
 Source/ThirdParty/kdbush.js
@@ -41,6 +43,7 @@ Source/ThirdParty/protobufjs.js
 Source/ThirdParty/rbush.js
 Source/ThirdParty/topojson.js
 Source/ThirdParty/Tween.js
+Source/ThirdParty/Uri.js
 Source/ThirdParty/when.js
 Source/ThirdParty/zip.js
 

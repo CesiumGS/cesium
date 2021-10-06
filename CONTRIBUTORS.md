@@ -296,3 +296,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Ren Jianqiang](https://github.com/renjianqiang)
 - [Yang Puxiao](https://github.com/puxiao)
 - [Brendan Smith](https://github.com/tantricllama)
+- [Ivan Ludvig](https://github.com/IvanLudvig)
+- [Yuki Noda](https://github.com/yukinoda)
+- [Robin Danielsson](https://github.com/robdan7)
+- [Oskar Havo](https://github.com/OskarHavo)

@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Color,
+  ExperimentalFeatures,
   HeadingPitchRange,
   HeadingPitchRoll,
   Matrix4,
@@ -9,6 +10,8 @@ import {
   Cesium3DTilePass,
   ClippingPlane,
   ClippingPlaneCollection,
+  Cesium3DTileFeature,
+  Cesium3DTileContentFeatureTable,
   MetadataClass,
   GroupMetadata,
   Model,
@@ -456,6 +459,73 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
+    });
+
+    describe("ModelExperimental", function () {
+      beforeEach(function () {
+        ExperimentalFeatures.enableModelExperimental = true;
+      });
+
+      afterEach(function () {
+        ExperimentalFeatures.enableModelExperimental = false;
+      });
+
+      it("renders B3DM content with batch table", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+          }
+        );
+      });
+
+      it("renders B3DM content without batch table", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withoutBatchTableUrl
+        ).then(function (tileset) {
+          Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+      });
+
+      it("assigns feature table as batch table", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            expect(content.batchTable).toBeDefined();
+            expect(content.batchTable).toBeInstanceOf(
+              Cesium3DTileContentFeatureTable
+            );
+          }
+        );
+      });
+
+      it("hasProperty works", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            var featureTable = content.batchTable;
+            expect(featureTable).toBeDefined();
+            for (var i = 0; i < featureTable.featuresLength; i++) {
+              expect(content.hasProperty(i, "Height")).toEqual(true);
+              expect(content.hasProperty(i, "Width")).toEqual(false);
+            }
+          }
+        );
+      });
+
+      it("getFeature works", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            var featureTable = content.batchTable;
+            expect(featureTable).toBeDefined();
+            for (var i = 0; i < featureTable.featuresLength; i++) {
+              var feature = content.getFeature(i);
+              expect(feature).toBeInstanceOf(Cesium3DTileFeature);
+            }
+          }
+        );
+      });
     });
 
     describe("3DTILES_metadata", function () {
