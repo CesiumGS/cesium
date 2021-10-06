@@ -192,9 +192,6 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
 ) {
   var model = this._model;
-  if (!model.show) {
-    return;
-  }
 
   var modelRenderResources = new ModelRenderResources(model);
   if (defined(model.color)) {

@@ -47,7 +47,7 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
       "ALPHA_MODE_OPAQUE",
     ]);
-    expect(renderResources.uniformMap).toEqual({});
+    expect(renderResources.uniformMap.model_commandTransluscent).toBeDefined();
     expect(renderResources.renderStateOptions.blending).toEqual(
       BlendingState.DISABLED
     );
