@@ -9,6 +9,29 @@ import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
+ * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
+ *
+ * @type {number[]}
+ */
+var includesReverseAxis = [
+  3034, // ETRS89-extended / LCC Europe
+  3035, // ETRS89-extended / LAEA Europe
+  3042, // ETRS89 / UTM zone 30N (N-E)
+  3043, // ETRS89 / UTM zone 31N (N-E)
+  3044, // ETRS89 / UTM zone 32N (N-E)
+];
+
+/**
+ * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
+ *
+ * @type {number[]}
+ */
+var excludesReverseAxis = [
+  4471, // Mayotte
+  4559, // French Antilles
+];
+
+/**
  * @typedef {Object} WebMapServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapServiceImageryProvider constructor
@@ -248,19 +271,7 @@ function WebMapServiceImageryProvider(options) {
     // in the capabilities document reflect the inverse axe orders for EPSG codes between 4000 and 5000.
     //  - Taken from Section 9.1.3 of https://download.osgeo.org/mapserver/docs/MapServer-56.pdf
     var parts = parameters.crs.split(":");
-    if (parts[0] === "EPSG") {
-      var includesReverseAxis = [
-        3034, // ETRS89-extended / LCC Europe
-        3035, // ETRS89-extended / LAEA Europe
-        3042, // ETRS89 / UTM zone 30N (N-E)
-        3043, // ETRS89 / UTM zone 31N (N-E)
-        3044, // ETRS89 / UTM zone 32N (N-E)
-      ];
-      var excludesReverseAxis = [
-        4471, // Mayotte
-        4559, // French Antilles
-      ];
-
+    if (parts[0] === "EPSG" && parts.length === 2) {
       var code = Number(parts[1]);
       if (
         (code >= 4000 && code < 5000 && !excludesReverseAxis.includes(code)) ||
