@@ -105,6 +105,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ]);
 
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "FEATURE_ID_ATTRIBUTE a_featureId_0",
         "HAS_FEATURES",
       ]);
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -161,6 +162,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_featureId_1",
       ]);
 
       ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
@@ -227,6 +229,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_0",
       ]);
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
@@ -285,6 +288,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_instanceFeatureId_1",
       ]);
 
       ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [

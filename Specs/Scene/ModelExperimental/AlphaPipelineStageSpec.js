@@ -47,7 +47,12 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
       "ALPHA_MODE_OPAQUE",
     ]);
-    expect(renderResources.uniformMap.model_commandTransluscent).toBeDefined();
+    expect(shaderBuilder._fragmentShaderParts.uniformLines).toEqual([
+      "uniform bool model_commandTranslucent;",
+    ]);
+    expect(renderResources.uniformMap.model_commandTranslucent()).toEqual(
+      false
+    );
     expect(renderResources.renderStateOptions.blending).toEqual(
       BlendingState.DISABLED
     );
@@ -74,9 +79,11 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
     ]);
 
     expect(shaderBuilder._fragmentShaderParts.uniformLines).toEqual([
+      "uniform bool model_commandTranslucent;",
       "uniform float u_alphaCutoff;",
     ]);
 
+    expect(renderResources.uniformMap.model_commandTranslucent()).toEqual(true);
     expect(renderResources.uniformMap.u_alphaCutoff()).toBe(cutoff);
     expect(renderResources.renderStateOptions.blending).toEqual(
       BlendingState.ALPHA_BLEND
@@ -100,7 +107,11 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([
       "ALPHA_MODE_BLEND",
     ]);
-    expect(renderResources.uniformMap).toEqual({});
+    expect(shaderBuilder._fragmentShaderParts.uniformLines).toEqual([
+      "uniform bool model_commandTranslucent;",
+    ]);
+
+    expect(renderResources.uniformMap.model_commandTranslucent()).toEqual(true);
     expect(renderResources.renderStateOptions.blending).toEqual(
       BlendingState.ALPHA_BLEND
     );

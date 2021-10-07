@@ -3,7 +3,6 @@ import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
-import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 

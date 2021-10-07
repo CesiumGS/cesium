@@ -74,7 +74,11 @@ FeatureIdPipelineStage.process = function (
  * @private
  */
 function setupFeatureIdentificationStruct(shaderBuilder) {
-  // The struct is always needed by the Fragment Shader.
+  shaderBuilder.addStruct(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
+    FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
+    ShaderDestination.VERTEX
+  );
   shaderBuilder.addStruct(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_FS,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDENTIFICATION,
@@ -90,7 +94,6 @@ function setupFeatureIdentificationStruct(shaderBuilder) {
     "vec2",
     "st"
   );
-
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDENTIFICATION_VS,
     "float",
