@@ -5,7 +5,7 @@ import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
 //       inflate: ["../../Source/ThirdParty/Workers/z-worker-pako.js", "./pako_inflate.min.js"]
 //   }
 // });
-zip.configure({
-  useWebWorkers: false
-});
+// zip.configure({
+//   useWebWorkers: false
+// });
 export { zip as default };
