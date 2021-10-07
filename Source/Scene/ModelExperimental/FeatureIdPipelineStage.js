@@ -38,7 +38,6 @@ FeatureIdPipelineStage.process = function (
   frameState
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
-  var model = renderResources.model;
 
   renderResources.hasFeatureIds = true;
 
@@ -49,44 +48,7 @@ FeatureIdPipelineStage.process = function (
   if (featureIdTextures.length > 0) {
     processFeatureIdTextures(renderResources, frameState, featureIdTextures);
   } else {
-    var featureIdAttributeIndex = model.featureIdAttributeIndex;
-    var instances = renderResources.runtimeNode.node.instances;
-
-    var featureIdAttributeInfo = getFeatureIdAttributeInfo(
-      featureIdAttributeIndex,
-      primitive,
-      instances
-    );
-
-    var featureIdAttribute = featureIdAttributeInfo.attribute;
-    var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
-
-    var featureIdAttributeSetIndex;
-
-    // Check if the Feature ID attribute references an existing vertex attribute.
-    if (defined(featureIdAttribute.setIndex)) {
-      featureIdAttributeSetIndex = featureIdAttribute.setIndex;
-    } else {
-      // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
-      // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
-      // is incremented every time a Feature ID vertex attribute is added.
-      featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
-      generateFeatureIdAttribute(
-        featureIdAttributeInfo,
-        featureIdAttributeSetIndex,
-        frameState,
-        renderResources
-      );
-    }
-
-    shaderBuilder.addDefine(
-      "FEATURE_ID_ATTRIBUTE",
-      featureIdAttributePrefix + featureIdAttributeSetIndex,
-      ShaderDestination.VERTEX
-    );
-    shaderBuilder.addVarying("float", "v_featureId");
-    shaderBuilder.addVarying("vec2", "v_featureSt");
-    shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
+    processFeatureIdAttributes(renderResources, frameState, primitive);
   }
 
   shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
@@ -127,6 +89,63 @@ function getFeatureIdAttributeInfo(
     prefix: featureIdAttributePrefix,
     instanceDivisor: featureIdInstanceDivisor,
   };
+}
+
+/**
+ * Processes feature ID vertex attributes.
+ * @private
+ */
+function processFeatureIdAttributes(renderResources, frameState, primitive) {
+  var shaderBuilder = renderResources.shaderBuilder;
+  var model = renderResources.model;
+
+  var featureIdAttributePrefix;
+  var featureIdAttributeSetIndex;
+
+  // For 3D Tiles 1.0, the FEATURE_ID vertex attribute is present but the Feature ID attribute is not.
+  // The featureMetadata is owned by the Cesium3DTileContent for the legacy formats.
+  var content = model.content;
+  if (defined(content) && defined(content.featureMetadata)) {
+    featureIdAttributePrefix = "a_featureId";
+    featureIdAttributeSetIndex = "";
+  } else {
+    var featureIdAttributeIndex = model.featureIdAttributeIndex;
+    var instances = renderResources.runtimeNode.node.instances;
+
+    var featureIdAttributeInfo = getFeatureIdAttributeInfo(
+      featureIdAttributeIndex,
+      primitive,
+      instances
+    );
+
+    var featureIdAttribute = featureIdAttributeInfo.attribute;
+    featureIdAttributePrefix = featureIdAttributeInfo.prefix;
+
+    // Check if the Feature ID attribute references an existing vertex attribute.
+    if (defined(featureIdAttribute.setIndex)) {
+      featureIdAttributeSetIndex = featureIdAttribute.setIndex;
+    } else {
+      // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
+      // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
+      // is incremented every time a Feature ID vertex attribute is added.
+      featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
+      generateFeatureIdAttribute(
+        featureIdAttributeInfo,
+        featureIdAttributeSetIndex,
+        frameState,
+        renderResources
+      );
+    }
+  }
+
+  shaderBuilder.addDefine(
+    "FEATURE_ID_ATTRIBUTE",
+    featureIdAttributePrefix + featureIdAttributeSetIndex,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addVarying("float", "v_activeFeatureId");
+  shaderBuilder.addVarying("vec2", "v_activeFeatureSt");
+  shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
 }
 
 /**

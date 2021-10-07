@@ -248,7 +248,8 @@ describe(
         scene
       ).then(function (model) {
         expect(scene).toPickAndCall(function (result) {
-          expect(result.model).toEqual(model);
+          expect(result.primitive).toBeInstanceOf(ModelExperimental);
+          expect(result.primitive).toEqual(model);
         });
       });
     });

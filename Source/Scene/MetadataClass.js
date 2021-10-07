@@ -156,4 +156,12 @@ Object.defineProperties(MetadataClass.prototype, {
   },
 });
 
+/**
+ * The class name given to the metadata class when a batch
+ * table is loaded from 3D Tiles 1.0 formats.
+ *
+ * @private
+ */
+MetadataClass.BATCH_TABLE_CLASS_NAME = "_batchTable";
+
 export default MetadataClass;

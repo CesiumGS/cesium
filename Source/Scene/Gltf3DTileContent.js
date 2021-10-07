@@ -271,7 +271,7 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
     for (var featureTableId in featureTables) {
       if (featureTables.hasOwnProperty(featureTableId)) {
         var featureTable = featureTables[featureTableId];
-        featureTable.update(frameState);
+        featureTable.update(tileset, frameState);
       }
     }
   }
