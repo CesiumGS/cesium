@@ -22,6 +22,12 @@ void filterByPassType(vec4 featureColor)
 
 void cpuStylingStage(inout vec3 diffuse, inout float alpha, FeatureIdentification feature)
 {
+
+    if (feature.color.a == 0.0)
+    {
+        discard;
+    }
+    
     #ifndef FEATURE_ID_ATTRIBUTE
     // Filter rendering of features by translucency.
     filterByPassType(feature.color);

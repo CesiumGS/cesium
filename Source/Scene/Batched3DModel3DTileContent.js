@@ -151,6 +151,12 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
     },
   },
 
+  model: {
+    get: function () {
+      return this._model;
+    },
+  },
+
   /**
    * @private
    */
@@ -610,7 +616,7 @@ Batched3DModel3DTileContent.prototype.applyStyle = function (style) {
       : Color.clone(Color.WHITE, this._model.color);
     this._model.show = hasShowStyle ? style.show.evaluate(undefined) : true;
   } else {
-    this._batchTable.applyStyle(style);
+    this.batchTable.applyStyle(style);
   }
 };
 
