@@ -300,7 +300,8 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick) &&
-    !defined(this._classificationType)
+    !defined(this._classificationType) &&
+    defined(this._featureTable)
   ) {
     this._featureTable.addDerivedCommands(frameState, commandStart);
   }

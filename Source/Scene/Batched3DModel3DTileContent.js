@@ -625,13 +625,14 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
 
   var model = this._model;
   var tile = this._tile;
-  var batchTable = this.batchTable;
+
+  var hasBatchTable = defined(this.batchTable);
 
   // In the PROCESSING state we may be calling update() to move forward
   // the content's resource loading.  In the READY state, it will
   // actually generate commands.
-  if (defined(batchTable)) {
-    batchTable.update(tileset, frameState);
+  if (hasBatchTable) {
+    this.batchTable.update(tileset, frameState);
   }
 
   this._contentModelMatrix = Matrix4.multiply(
@@ -680,7 +681,8 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick) &&
-    !defined(this._classificationType)
+    !defined(this._classificationType) &&
+    hasBatchTable
   ) {
     this.batchTable.addDerivedCommands(frameState, commandStart);
   }
