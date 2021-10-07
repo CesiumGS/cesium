@@ -675,16 +675,14 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
 
   model.update(frameState);
 
-  if (!ExperimentalFeatures.enableModelExperimental) {
-    // If any commands were pushed, add derived commands
-    var commandEnd = frameState.commandList.length;
-    if (
-      commandStart < commandEnd &&
-      (frameState.passes.render || frameState.passes.pick) &&
-      !defined(this._classificationType)
-    ) {
-      batchTable.addDerivedCommands(frameState, commandStart);
-    }
+  // If any commands were pushed, add derived commands
+  var commandEnd = frameState.commandList.length;
+  if (
+    commandStart < commandEnd &&
+    (frameState.passes.render || frameState.passes.pick) &&
+    !defined(this._classificationType)
+  ) {
+    this.batchTable.addDerivedCommands(frameState, commandStart);
   }
 };
 

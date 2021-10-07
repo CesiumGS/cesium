@@ -245,6 +245,8 @@ Gltf3DTileContent.prototype.applyStyle = function (style) {
 };
 
 Gltf3DTileContent.prototype.update = function (tileset, frameState) {
+  var commandStart = frameState.commandList.length;
+
   var model = this._model;
   var tile = this._tile;
 
@@ -292,6 +294,16 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
   }
 
   model.update(frameState);
+
+  // If any commands were pushed, add derived commands
+  var commandEnd = frameState.commandList.length;
+  if (
+    commandStart < commandEnd &&
+    (frameState.passes.render || frameState.passes.pick) &&
+    !defined(this._classificationType)
+  ) {
+    this._featureTable.addDerivedCommands(frameState, commandStart);
+  }
 };
 
 Gltf3DTileContent.prototype.isDestroyed = function () {
