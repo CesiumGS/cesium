@@ -268,6 +268,8 @@ function cancelMouseEvent(
     modifier
   );
 
+  var clientXY = Cartesian2.fromElements(event.clientX, event.clientY);
+
   if (defined(action) || defined(clickAction)) {
     var position = getPosition(
       screenSpaceEventHandler,
@@ -277,7 +279,7 @@ function cancelMouseEvent(
 
     if (defined(action)) {
       Cartesian2.clone(position, mouseUpEvent.position);
-
+      mouseUpEvent.clientXY = clientXY;
       action(mouseUpEvent);
     }
 
@@ -291,7 +293,7 @@ function cancelMouseEvent(
         )
       ) {
         Cartesian2.clone(position, mouseClickEvent.position);
-
+        mouseClickEvent.clientXY = clientXY;
         clickAction(mouseClickEvent);
       }
     }
