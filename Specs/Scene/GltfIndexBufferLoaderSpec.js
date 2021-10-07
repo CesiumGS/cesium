@@ -416,6 +416,7 @@ describe(
         expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
+        expect(indexBufferLoader.typedArray).toBeUndefined();
       });
     });
 
@@ -441,6 +442,35 @@ describe(
         expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
+      });
+    });
+
+    it("loads as typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(Buffer, "createIndexBuffer").and.callThrough();
+
+      var indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: true,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray.byteLength).toBe(
+          indicesUint16.byteLength
+        );
+        expect(indexBufferLoader.indexBuffer).toBeUndefined();
+        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
       });
     });
 

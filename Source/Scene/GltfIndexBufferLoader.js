@@ -28,6 +28,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {Boolean} [loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
  *
  * @private
  */
@@ -41,6 +42,7 @@ export default function GltfIndexBufferLoader(options) {
   var draco = options.draco;
   var cacheKey = options.cacheKey;
   var asynchronous = defaultValue(options.asynchronous, true);
+  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -61,6 +63,7 @@ export default function GltfIndexBufferLoader(options) {
   this._draco = draco;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
+  this._loadAsTypedArray = loadAsTypedArray;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._typedArray = undefined;
@@ -104,7 +107,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
     },
   },
   /**
-   * The index buffer.
+   * The index buffer. This is only defined when <code>loadAsTypedArray</code> is false.
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
@@ -115,6 +118,20 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
   indexBuffer: {
     get: function () {
       return this._indexBuffer;
+    },
+  },
+  /**
+   * The typed array containing indices. This is only defined when <code>loadAsTypedArray</code> is true.
+   *
+   * @memberof GltfIndexBufferLoader.prototype
+   *
+   * @type {Uint8Array|Uint16Array|Uint32Array}
+   * @readonly
+   * @private
+   */
+  typedArray: {
+    get: function () {
+      return this._typedArray;
     },
   },
 });
@@ -277,6 +294,13 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
+  if (this._state === ResourceLoaderState.READY) {
+    return;
+  }
+
+  var typedArray = this._typedArray;
+  var indexDatatype = this._indexDatatype;
+
   if (defined(this._dracoLoader)) {
     this._dracoLoader.process(frameState);
   }
@@ -285,13 +309,19 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     this._bufferViewLoader.process(frameState);
   }
 
-  if (defined(this._indexBuffer)) {
-    // Already created index buffer
+  if (!defined(typedArray)) {
+    // Buffer view hasn't been loaded yet
     return;
   }
 
-  if (!defined(this._typedArray)) {
-    // Not ready to create index buffer
+  if (this._loadAsTypedArray) {
+    // Unload everything except the typed array
+    this.unload();
+
+    this._typedArray = typedArray;
+    this._state = ResourceLoaderState.READY;
+    this._promise.resolve(this);
+
     return;
   }
 
@@ -299,11 +329,7 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
 
   if (this._asynchronous) {
     var indexBufferJob = scratchIndexBufferJob;
-    indexBufferJob.set(
-      this._typedArray,
-      this._indexDatatype,
-      frameState.context
-    );
+    indexBufferJob.set(typedArray, indexDatatype, frameState.context);
     var jobScheduler = frameState.jobScheduler;
     if (!jobScheduler.execute(indexBufferJob, JobType.BUFFER)) {
       // Job scheduler is full. Try again next frame.
@@ -312,8 +338,8 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     indexBuffer = indexBufferJob.indexBuffer;
   } else {
     indexBuffer = createIndexBuffer(
-      this._typedArray,
-      this._indexDatatype,
+      typedArray,
+      indexDatatype,
       frameState.context
     );
   }

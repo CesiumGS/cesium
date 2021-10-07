@@ -20,7 +20,7 @@ describe(
       attributes: [
         {
           semantic: VertexAttributeSemantic.POSITION,
-          buffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
+          vertexBuffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
           type: AttributeType.VEC3,
           componentDatatype: ComponentDatatype.FLOAT,
           byteOffset: 0,
@@ -33,7 +33,7 @@ describe(
       attributes: [
         {
           semantic: VertexAttributeSemantic.POSITION,
-          buffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
+          vertexBuffer: new Float32Array([0, 1, 2, 3, 4, 5]).buffer,
           type: AttributeType.VEC3,
           componentDatatype: ComponentDatatype.FLOAT,
           byteOffset: 0,
@@ -41,7 +41,7 @@ describe(
         },
         {
           name: "_TEMPERATURE",
-          buffer: new Uint32Array([0, 1, 2, 3, 4, 5]).buffer,
+          vertexBuffer: new Uint32Array([0, 1, 2, 3, 4, 5]).buffer,
           type: AttributeType.VEC2,
           componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
           byteOffset: 0,

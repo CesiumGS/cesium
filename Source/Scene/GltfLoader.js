@@ -69,6 +69,7 @@ var GltfLoaderState = {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
  *
  * @private
  */
@@ -85,6 +86,7 @@ export default function GltfLoader(options) {
   );
   var upAxis = defaultValue(options.upAxis, Axis.Y);
   var forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
+  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -101,6 +103,7 @@ export default function GltfLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
+  this._loadAsTypedArray = loadAsTypedArray;
 
   this._gltfJsonLoader = undefined;
   this._state = GltfLoaderState.UNLOADED;
@@ -330,7 +333,8 @@ function loadVertexBuffer(
   accessorId,
   semantic,
   draco,
-  dequantize
+  dequantize,
+  loadAsTypedArray
 ) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
@@ -345,6 +349,7 @@ function loadVertexBuffer(
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
     dequantize: dequantize,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
   loader._geometryLoaders.push(vertexBufferLoader);
@@ -352,7 +357,7 @@ function loadVertexBuffer(
   return vertexBufferLoader;
 }
 
-function loadIndexBuffer(loader, gltf, accessorId, draco) {
+function loadIndexBuffer(loader, gltf, accessorId, draco, loadAsTypedArray) {
   var indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
@@ -360,6 +365,7 @@ function loadIndexBuffer(loader, gltf, accessorId, draco) {
     baseResource: loader._baseResource,
     draco: draco,
     asynchronous: loader._asynchronous,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
   loader._geometryLoaders.push(indexBufferLoader);
@@ -380,7 +386,7 @@ function loadBufferView(loader, gltf, bufferViewId) {
   return bufferViewLoader;
 }
 
-function getAccessorTypedArray(gltf, accessor, bufferViewTypedArray) {
+function getPackedValues(gltf, accessor, bufferViewTypedArray) {
   var byteOffset = accessor.byteOffset;
   var byteStride = getAccessorByteStride(gltf, accessor);
   var count = accessor.count;
@@ -478,12 +484,22 @@ function getSetIndex(gltfSemantic) {
   return undefined;
 }
 
-function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
+function loadAttribute(
+  loader,
+  gltf,
+  accessorId,
+  semanticType,
+  gltfSemantic,
+  draco,
+  dequantize,
+  loadAsTypedArray,
+  loadAsTypedArrayPacked
+) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
 
   var name = gltfSemantic;
-  var semantic = VertexAttributeSemantic.fromGltfSemantic(gltfSemantic);
+  var semantic = semanticType.fromGltfSemantic(gltfSemantic);
   var setIndex = defined(semantic) ? getSetIndex(gltfSemantic) : undefined;
 
   var attribute = createAttribute(gltf, accessorId, name, semantic, setIndex);
@@ -498,14 +514,26 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
     accessorId,
     gltfSemantic,
     draco,
-    false
+    dequantize,
+    loadAsTypedArray
   );
   vertexBufferLoader.promise.then(function (vertexBufferLoader) {
     if (loader.isDestroyed()) {
       return;
     }
 
-    attribute.buffer = vertexBufferLoader.vertexBuffer;
+    if (loadAsTypedArrayPacked) {
+      // The accessor's byteOffset and byteStride should be ignored since values
+      // are tightly packed in a typed array
+      var bufferViewTypedArray = vertexBufferLoader.typedArray;
+      attribute.values = getPackedValues(gltf, accessor, bufferViewTypedArray);
+      attribute.byteOffset = 0;
+      attribute.byteStride = undefined;
+    } else if (loadAsTypedArray) {
+      attribute.vertexBufferTypedArray = vertexBufferLoader.typedArray;
+    } else {
+      attribute.vertexBuffer = vertexBufferLoader.vertexBuffer;
+    }
 
     if (
       defined(draco) &&
@@ -523,67 +551,39 @@ function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
   return attribute;
 }
 
+function loadVertexAttribute(loader, gltf, accessorId, gltfSemantic, draco) {
+  return loadAttribute(
+    loader,
+    gltf,
+    accessorId,
+    VertexAttributeSemantic,
+    gltfSemantic,
+    draco,
+    false,
+    loader._loadAsTypedArray,
+    false
+  );
+}
+
 function loadInstancedAttribute(
   loader,
   gltf,
   accessorId,
   gltfSemantic,
-  loadAsTypedArray,
-  frameState
+  loadAsTypedArrayPacked
 ) {
-  var accessor = gltf.accessors[accessorId];
-  var bufferViewId = accessor.bufferView;
-
-  var name = gltfSemantic;
-  var semantic = InstanceAttributeSemantic.fromGltfSemantic(gltfSemantic);
-  var setIndex = defined(semantic) ? getSetIndex(gltfSemantic) : undefined;
-
-  var attribute = createAttribute(gltf, accessorId, name, semantic, setIndex);
-
-  if (!defined(bufferViewId)) {
-    return attribute;
-  }
-
-  if (!loadAsTypedArray && frameState.context.instancedArrays) {
-    // Only create a GPU buffer if the browser supports WebGL instancing
-    // Don't pass in draco object since instanced attributes can't be draco compressed
-    var vertexBufferLoader = loadVertexBuffer(
-      loader,
-      gltf,
-      accessorId,
-      gltfSemantic,
-      undefined,
-      true
-    );
-    vertexBufferLoader.promise.then(function (vertexBufferLoader) {
-      if (loader.isDestroyed()) {
-        return;
-      }
-      attribute.buffer = vertexBufferLoader.vertexBuffer;
-    });
-    return attribute;
-  }
-
-  var bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
-  bufferViewLoader.promise.then(function (bufferViewLoader) {
-    if (loader.isDestroyed()) {
-      return;
-    }
-    var bufferViewTypedArray = bufferViewLoader.typedArray;
-    var accessorTypedArray = getAccessorTypedArray(
-      gltf,
-      accessor,
-      bufferViewTypedArray
-    );
-    attribute.typedArray = accessorTypedArray;
-
-    // The accessor's byteOffset and byteStride should be ignored since values
-    // are tightly packed in a typed array
-    attribute.byteOffset = 0;
-    attribute.byteStride = undefined;
-  });
-
-  return attribute;
+  // Don't pass in draco object since instanced attributes can't be draco compressed
+  return loadAttribute(
+    loader,
+    gltf,
+    accessorId,
+    InstanceAttributeSemantic,
+    gltfSemantic,
+    undefined,
+    true,
+    loadAsTypedArrayPacked,
+    loadAsTypedArrayPacked
+  );
 }
 
 function loadIndices(loader, gltf, accessorId, draco) {
@@ -598,12 +598,26 @@ function loadIndices(loader, gltf, accessorId, draco) {
   indices.indexDatatype = accessor.componentType;
   indices.count = accessor.count;
 
-  var indexBufferLoader = loadIndexBuffer(loader, gltf, accessorId, draco);
+  var loadAsTypedArray = loader._loadAsTypedArray;
+
+  var indexBufferLoader = loadIndexBuffer(
+    loader,
+    gltf,
+    accessorId,
+    draco,
+    loadAsTypedArray
+  );
+
   indexBufferLoader.promise.then(function (indexBufferLoader) {
     if (loader.isDestroyed()) {
       return;
     }
-    indices.buffer = indexBufferLoader.indexBuffer;
+
+    if (loadAsTypedArray) {
+      indices.indexBufferTypedArray = indexBufferLoader.typedArray;
+    } else {
+      indices.indexBuffer = indexBufferLoader.indexBuffer;
+    }
   });
 
   return indices;
@@ -924,8 +938,10 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
         // attributes as typed arrays, so the values can be used for computing
         // an accurate bounding volume. Feature ID attributes are also loaded as
         // typed arrays because we want to be able to add the instance's feature ID to
-        // the pick object.
-        var loadAsTypedArray =
+        // the pick object. Load as typed arrays if GPU instancing is not supported.
+        var loadAsTypedArrayPacked =
+          loader._loadAsTypedArray ||
+          !frameState.context.instancedArrays ||
           ((hasRotation || !hasTranslationMinMax) &&
             (semantic === InstanceAttributeSemantic.TRANSLATION ||
               semantic === InstanceAttributeSemantic.ROTATION ||
@@ -939,8 +955,7 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
             gltf,
             accessorId,
             semantic,
-            loadAsTypedArray,
-            frameState
+            loadAsTypedArrayPacked
           )
         );
       }
@@ -988,14 +1003,14 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
           return;
         }
         var bufferViewTypedArray = bufferViewLoader.typedArray;
-        var accessorTypedArray = getAccessorTypedArray(
+        var packedValues = getPackedValues(
           gltf,
           accessor,
           bufferViewTypedArray
         );
         var inverseBindMatrices = new Array(jointsLength);
         for (var i = 0; i < jointsLength; ++i) {
-          inverseBindMatrices[i] = Matrix4.unpack(accessorTypedArray, i * 16);
+          inverseBindMatrices[i] = Matrix4.unpack(packedValues, i * 16);
         }
         skin.inverseBindMatrices = inverseBindMatrices;
       });

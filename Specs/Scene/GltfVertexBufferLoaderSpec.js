@@ -415,6 +415,7 @@ describe(
         expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
           positions.byteLength
         );
+        expect(vertexBufferLoader.typedArray).toBeUndefined();
       });
     });
 
@@ -441,6 +442,36 @@ describe(
         expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
           positions.byteLength
         );
+      });
+    });
+
+    it("loads as typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(Buffer, "createVertexBuffer").and.callThrough();
+
+      var vertexBufferLoader = new GltfVertexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadAsTypedArray: true,
+      });
+
+      vertexBufferLoader.load();
+
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.typedArray.byteLength).toBe(
+          positions.byteLength
+        );
+        expect(vertexBufferLoader.vertexBuffer).toBeUndefined();
+        expect(Buffer.createVertexBuffer.calls.count()).toBe(0);
       });
     });
 

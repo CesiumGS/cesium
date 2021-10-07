@@ -70,7 +70,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     if (defined(translationAttribute)) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
-        vertexBuffer: translationAttribute.buffer,
+        vertexBuffer: translationAttribute.vertexBuffer,
         componentsPerAttribute: AttributeType.getNumberOfComponents(
           translationAttribute.type
         ),
@@ -96,7 +96,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     if (defined(scaleAttribute)) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
-        vertexBuffer: scaleAttribute.buffer,
+        vertexBuffer: scaleAttribute.vertexBuffer,
         componentsPerAttribute: AttributeType.getNumberOfComponents(
           scaleAttribute.type
         ),
@@ -165,16 +165,16 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
 
   // Translations get initialized to (0, 0, 0).
   var translationTypedArray = hasTranslation
-    ? translationAttribute.typedArray
+    ? translationAttribute.values
     : new Float32Array(count * 3);
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   var rotationTypedArray = hasRotation
-    ? rotationAttribute.typedArray
+    ? rotationAttribute.values
     : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
   var scaleTypedArray;
   if (hasScale) {
-    scaleTypedArray = scaleAttribute.typedArray;
+    scaleTypedArray = scaleAttribute.values;
   } else {
     scaleTypedArray = new Float32Array(count * 3);
     scaleTypedArray.fill(1);
@@ -269,7 +269,7 @@ function processFeatureIdAttributes(
 
     var vertexBuffer = Buffer.createVertexBuffer({
       context: frameState.context,
-      typedArray: attribute.typedArray,
+      typedArray: attribute.values,
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;

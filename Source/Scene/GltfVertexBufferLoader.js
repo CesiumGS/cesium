@@ -36,6 +36,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {Boolean} [loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
@@ -56,6 +57,7 @@ export default function GltfVertexBufferLoader(options) {
   var cacheKey = options.cacheKey;
   var asynchronous = defaultValue(options.asynchronous, true);
   var dequantize = defaultValue(options.dequantize, false);
+  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -93,7 +95,6 @@ export default function GltfVertexBufferLoader(options) {
   }
   //>>includeEnd('debug');
 
-  this._dequantize = dequantize;
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
@@ -104,6 +105,8 @@ export default function GltfVertexBufferLoader(options) {
   this._accessorId = accessorId;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
+  this._dequantize = dequantize;
+  this._loadAsTypedArray = loadAsTypedArray;
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._quantization = undefined;
@@ -148,7 +151,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
     },
   },
   /**
-   * The vertex buffer.
+   * The vertex buffer. This is only defined when <code>loadAsTypedArray</code> is false.
    *
    * @memberof GltfVertexBufferLoader.prototype
    *
@@ -159,6 +162,20 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   vertexBuffer: {
     get: function () {
       return this._vertexBuffer;
+    },
+  },
+  /**
+   * The typed array containing vertex buffer data. This is only defined when <code>loadAsTypedArray</code> is true.
+   *
+   * @memberof GltfVertexBufferLoader.prototype
+   *
+   * @type {Uint8Array}
+   * @readonly
+   * @private
+   */
+  typedArray: {
+    get: function () {
+      return this._typedArray;
     },
   },
   /**
@@ -401,6 +418,13 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
+  if (this._state === ResourceLoaderState.READY) {
+    return;
+  }
+
+  var typedArray = this._typedArray;
+  var dequantize = this._dequantize;
+
   if (defined(this._dracoLoader)) {
     this._dracoLoader.process(frameState);
   }
@@ -409,13 +433,19 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     this._bufferViewLoader.process(frameState);
   }
 
-  if (defined(this._vertexBuffer)) {
-    // Already created vertex buffer
+  if (!defined(typedArray)) {
+    // Buffer view hasn't been loaded yet
     return;
   }
 
-  if (!defined(this._typedArray)) {
-    // Not ready to create vertex buffer
+  if (this._loadAsTypedArray) {
+    // Unload everything except the typed array
+    this.unload();
+
+    this._typedArray = typedArray;
+    this._state = ResourceLoaderState.READY;
+    this._promise.resolve(this);
+
     return;
   }
 
@@ -426,8 +456,8 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
   if (this._asynchronous) {
     var vertexBufferJob = scratchVertexBufferJob;
     vertexBufferJob.set(
-      this._typedArray,
-      this._dequantize,
+      typedArray,
+      dequantize,
       accessor.componentType,
       accessor.type,
       accessor.count,
@@ -441,8 +471,8 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
     vertexBuffer = vertexBufferJob.vertexBuffer;
   } else {
     vertexBuffer = createVertexBuffer(
-      this._typedArray,
-      this._dequantize,
+      typedArray,
+      dequantize,
       accessor.componentType,
       accessor.type,
       accessor.count,
