@@ -200,7 +200,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.crs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.3.0");
         expect(params.bbox).toEqual("-90,-180,90,0");
@@ -234,7 +234,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.crs).toEqual("EPSG:4321");
         expect(params.version).toEqual("1.3.0");
         expect(params.bbox).toEqual("-90,-180,90,0");
@@ -268,7 +268,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.crs).toEqual("EPSG:3035");
         expect(params.version).toEqual("1.3.0");
         expect(params.bbox).toEqual("-90,-180,90,0");
@@ -302,7 +302,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.crs).toEqual("EPSG:4559");
         expect(params.version).toEqual("1.3.0");
         expect(params.bbox).toEqual("-180,-90,0,90");
@@ -402,7 +402,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.0");
         expect(params.bbox).toEqual("-180,-90,0,90");
