@@ -25,16 +25,16 @@ CPUStylingStage.FUNCTION_SIGNATURE_SET_FEATURE_IDENTIFICATION_VARYINGS =
 CPUStylingStage.STYLE_COLOR_BLEND_UNIFORM_NAME = "model_styleColorBlend";
 
 /**
- * This pipeline stage processes the show, color and style properties of a model.
+ * This pipeline stage applies the show, color and style properties of the model to a primitive with features.
  *
- * Processes a model. This stage modifies the following parts of the render resources:
+ * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
  *  <li> sets up the struct for feature identification</li>
- *  <li> adds the shader code to set up the feature or model color</li>
+ *  <li> adds the shader code to set up the feature color</li>
  * </ul>
  *
- * @param {PrimitiveRenderResources} renderResources The render resources for this model.
- * @param {ModelComponents.Primitive} primitive The model.
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
  */
 CPUStylingStage.process = function (renderResources, primitive, frameState) {
