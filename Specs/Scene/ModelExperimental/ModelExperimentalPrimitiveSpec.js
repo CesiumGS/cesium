@@ -1,5 +1,7 @@
 import {
   AlphaPipelineStage,
+  BatchTexturePipelineStage,
+  CPUStylingStage,
   CustomShader,
   CustomShaderMode,
   FeatureIdPipelineStage,
@@ -11,7 +13,6 @@ import {
   PickingPipelineStage,
   ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
-import BatchTexturePipelineStage from "../../../Source/Scene/ModelExperimental/BatchTexturePipelineStage.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {
@@ -279,6 +280,35 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       MaterialPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures the pipeline stages for cpu styling", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [{}, {}],
+        featureIdTextures: [],
+      },
+      node: {},
+      model: {
+        allowPicking: true,
+        featureIdAttributeIndex: 1,
+        content: {},
+        hasStyle: true,
+      },
+    });
+
+    var expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      FeatureIdPipelineStage,
+      BatchTexturePipelineStage,
+      CPUStylingStage,
+      PickingPipelineStage,
       AlphaPipelineStage,
     ];
 
