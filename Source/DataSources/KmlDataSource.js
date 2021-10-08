@@ -35,6 +35,7 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
+import zip from "../Core/zipPakoConfig.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
@@ -42,7 +43,6 @@ import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
-import zip from "../ThirdParty/zip.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import DataSource from "./DataSource.js";
@@ -3166,13 +3166,6 @@ function loadKml(
 }
 
 function loadKmz(dataSource, entityCollection, blob, sourceResource) {
-  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
-  zip.configure({
-    workerScripts: {
-      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
-      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
-    },
-  });
   var reader = new zip.ZipReader(new zip.BlobReader(blob));
   return when(reader.getEntries()).then(function (entries) {
     var promises = [];
