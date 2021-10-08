@@ -1,3 +1,4 @@
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -16,11 +17,11 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
-import zip from "../Core/zipPakoConfig.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import when from "../ThirdParty/when.js";
+import zip from "../ThirdParty/zip.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ModelGraphics from "./ModelGraphics.js";
@@ -323,6 +324,13 @@ function exportKml(options) {
 }
 
 function createKmz(kmlString, externalFiles) {
+  var zWorkerUrl = buildModuleUrl("/ThirdParty/Workers/z-worker-pako.js");
+  zip.configure({
+    workerScripts: {
+      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
+      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
+    },
+  });
   var blobWriter = new zip.BlobWriter();
   var writer = new zip.ZipWriter(blobWriter);
   // We need to only write one file at a time so the zip doesn't get corrupted
