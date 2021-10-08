@@ -1454,7 +1454,7 @@ describe("Core/Resource", function () {
         });
     });
 
-    it("correctly ignores gamma color profile when ImageBitmapOptions are supported", function () {
+    xit("correctly ignores gamma color profile when ImageBitmapOptions are supported", function () {
       if (!supportsImageBitmapOptions) {
         return;
       }
@@ -1511,7 +1511,7 @@ describe("Core/Resource", function () {
         });
     });
 
-    it("correctly ignores custom color profile when ImageBitmapOptions are supported", function () {
+    xit("correctly ignores custom color profile when ImageBitmapOptions are supported", function () {
       if (!supportsImageBitmapOptions) {
         return;
       }
