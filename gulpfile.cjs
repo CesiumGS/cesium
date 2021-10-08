@@ -447,7 +447,7 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
-    // Remove prepare step from package.json to avoid copying extra files
+    // Remove prepare step from package.json to avoid running "prepare" an extra time.
     delete packageJson.scripts.prepare;
     fs.writeFileSync(
       "./Build/package.noprepare.json",

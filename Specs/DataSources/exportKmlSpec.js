@@ -487,7 +487,7 @@ describe("DataSources/exportKml", function () {
       });
     });
 
-    fit("Billboard with a Canvas image as KMZ", function () {
+    it("Billboard with a Canvas image as KMZ", function () {
       var entity1 = createEntity({
         billboard: {
           image: document.createElement("canvas"),
