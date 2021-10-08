@@ -324,7 +324,7 @@ function exportKml(options) {
 }
 
 function createKmz(kmlString, externalFiles) {
-  var zWorkerUrl = buildModuleUrl("/ThirdParty/Workers/z-worker-pako.js");
+  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
   zip.configure({
     workerScripts: {
       deflate: [zWorkerUrl, "./pako_deflate.min.js"],

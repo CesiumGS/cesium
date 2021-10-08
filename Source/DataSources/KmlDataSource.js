@@ -3166,7 +3166,7 @@ function loadKml(
 }
 
 function loadKmz(dataSource, entityCollection, blob, sourceResource) {
-  var zWorkerUrl = buildModuleUrl("/ThirdParty/Workers/z-worker-pako.js");
+  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
   zip.configure({
     workerScripts: {
       deflate: [zWorkerUrl, "./pako_deflate.min.js"],
