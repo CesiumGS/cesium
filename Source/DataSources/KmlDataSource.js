@@ -1,6 +1,5 @@
 import ArcType from "../Core/ArcType.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
-import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
