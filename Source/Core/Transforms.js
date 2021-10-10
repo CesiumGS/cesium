@@ -1111,6 +1111,7 @@ Transforms.wgs84To2DModelMatrix = function (projection, center, result) {
     center,
     scratchCartographic
   );
+  if (cartographic == undefined) cartographic = new Cartographic(0, 0, 0);
   var projectedPosition = projection.project(
     cartographic,
     scratchCartesian3Projection
