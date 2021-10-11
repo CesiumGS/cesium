@@ -8,6 +8,7 @@ import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
+import ConstantProperty from "./ConstantProperty.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -15,6 +16,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
+import getElement from "../Widgets/getElement.js";
 import getExtensionFromUri from "../Core/getExtensionFromUri.js";
 import getFilenameFromUri from "../Core/getFilenameFromUri.js";
 import getTimestamp from "../Core/getTimestamp.js";
@@ -181,7 +183,7 @@ var featureTypes = {
   NetworkLink: processNetworkLink,
   GroundOverlay: processGroundOverlay,
   PhotoOverlay: processUnsupportedFeature,
-  ScreenOverlay: processUnsupportedFeature,
+  ScreenOverlay: processScreenOverlay,
   Tour: processTour,
 };
 
@@ -2489,6 +2491,157 @@ function processLookAt(featureNode, entity, ellipsoid) {
   }
 }
 
+function processScreenOverlay(
+  dataSource,
+  screenOverlayNode,
+  processingData,
+  deferredLoading
+) {
+  var r = processFeature(dataSource, screenOverlayNode, processingData);
+  var entity = r.entity;
+
+  var screenOverlay = processingData.screenOverlayContainer;
+  if (!defined(screenOverlay)) {
+    return undefined;
+  }
+
+  var sourceResource = processingData.sourceResource;
+  var uriResolver = processingData.uriResolver;
+
+  var iconNode = queryFirstNode(screenOverlayNode, "Icon", namespaces.kml);
+  var icon = getIconHref(
+    iconNode,
+    dataSource,
+    sourceResource,
+    uriResolver,
+    false
+  );
+
+  if (!defined(icon)) {
+    return undefined;
+  }
+
+  var img = document.createElement("img");
+  img.src = icon.url;
+
+  var screenXY = queryFirstNode(screenOverlayNode, "screenXY", namespaces.kml);
+  var overlayXY = queryFirstNode(
+    screenOverlayNode,
+    "overlayXY",
+    namespaces.kml
+  );
+  var rotationXY = queryFirstNode(
+    screenOverlayNode,
+    "rotationXY",
+    namespaces.kml
+  );
+  var size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
+  var rotation = queryFirstNode(screenOverlayNode, "rotation", namespaces.kml);
+
+  var styles = ["position: absolute"];
+
+  if (defined(size)) {
+    var x = queryNumericAttribute(size, "x");
+    var y = queryNumericAttribute(size, "y");
+    var xUnit = queryStringAttribute(size, "xunits");
+    var yUnit = queryStringAttribute(size, "yunits");
+
+    var xStyle = "";
+    var yStyle = "";
+
+    if (defined(x) && x !== -1 && x !== 0) {
+      if (xUnit === "fraction") {
+        xStyle = "width: " + Math.floor(x * 100) + "%";
+      } else if (xUnit === "pixels") {
+        xStyle = "width: " + x + "px";
+      }
+    }
+
+    if (defined(y) && y !== -1 && y !== 0) {
+      if (yUnit === "fraction") {
+        yStyle = "height: " + Math.floor(y * 100) + "%";
+      } else if (yUnit === "pixels") {
+        yStyle = "height: " + y + "px";
+      }
+    }
+  }
+
+  styles.push(xStyle);
+  styles.push(yStyle);
+
+  var imgWidth = img.naturalWidth;
+  var imgHeight = img.naturalHeight;
+
+  var xOrigin = 0;
+  var yOrigin = imgHeight;
+
+  if (defined(overlayXY)) {
+    var x = queryNumericAttribute(overlayXY, "x");
+    var y = queryNumericAttribute(overlayXY, "y");
+    var xUnit = queryStringAttribute(overlayXY, "xunits");
+    var yUnit = queryStringAttribute(overlayXY, "yunits");
+
+    if (defined(x)) {
+      if (xUnit === "fraction") {
+        xOrigin = x * imgWidth;
+      } else if (xUnit === "pixels") {
+        xOrigin = x;
+      } else if (xUnit === "insetPixels") {
+        xOrigin = imgWidth - x;
+      }
+    }
+
+    if (defined(y)) {
+      if (yUnit === "fraction") {
+        yOrigin = y * imgHeight;
+      } else if (yUnit === "pixels") {
+        yOrigin = y;
+      } else if (yUnit === "insetPixels") {
+        yOrigin = imgHeight - y;
+      }
+    }
+  }
+
+  if (defined(screenXY)) {
+    var x = queryNumericAttribute(screenXY, "x");
+    var y = queryNumericAttribute(screenXY, "y");
+    var xUnit = queryStringAttribute(screenXY, "xunits");
+    var yUnit = queryStringAttribute(screenXY, "yunits");
+
+    var xStyle = "";
+    var yStyle = "";
+
+    if (defined(x)) {
+      if (xUnit === "fraction") {
+        xStyle =
+          "left: " + "calc(" + Math.floor(x * 100) + "% - " + xOrigin + "px)";
+      } else if (xUnit === "pixels") {
+        xStyle = "left: " + (x - xOrigin) + "px";
+      } else if (xUnit === "insetPixels") {
+        xStyle = "right: " + (x - xOrigin) + "px";
+      }
+
+      styles.push(xStyle);
+    }
+
+    if (defined(y)) {
+      if (yUnit === "fraction") {
+        yStyle =
+          "bottom: " + "calc(" + Math.floor(y * 100) + "% - " + yOrigin + "px)";
+      } else if (yUnit === "pixels") {
+        yStyle = "bottom: " + (y - yOrigin) + "px";
+      } else if (yUnit === "insetPixels") {
+        yStyle = "top: " + (y - yOrigin) + "px";
+      }
+
+      styles.push(yStyle);
+    }
+  }
+
+  img.style = styles.join(";");
+  screenOverlay.appendChild(img);
+}
+
 function processGroundOverlay(
   dataSource,
   groundOverlay,
@@ -2935,6 +3088,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
         sourceUri: newSourceUri,
         uriResolver: uriResolver,
         context: networkEntity.id,
+        screenOverlayContainer: processingData.screenOverlayContainer,
       };
       var networkLinkCollection = new EntityCollection();
       var promise = load(dataSource, networkLinkCollection, href, options)
@@ -3100,6 +3254,7 @@ function loadKml(
   kml,
   sourceResource,
   uriResolver,
+  screenOverlayContainer,
   context
 ) {
   entityCollection.removeAll();
@@ -3152,6 +3307,7 @@ function loadKml(
         sourceResource: sourceResource,
         uriResolver: uriResolver,
         context: context,
+        screenOverlayContainer: screenOverlayContainer,
       };
 
       entityCollection.suspendEvents();
@@ -3164,7 +3320,13 @@ function loadKml(
     });
 }
 
-function loadKmz(dataSource, entityCollection, blob, sourceResource) {
+function loadKmz(
+  dataSource,
+  entityCollection,
+  blob,
+  sourceResource,
+  screenOverlayContainer
+) {
   var reader = new zip.ZipReader(new zip.BlobReader(blob));
   return when(reader.getEntries()).then(function (entries) {
     var promises = [];
@@ -3208,7 +3370,8 @@ function loadKmz(dataSource, entityCollection, blob, sourceResource) {
         entityCollection,
         uriResolver.kml,
         sourceResource,
-        uriResolver
+        uriResolver,
+        screenOverlayContainer
       );
     });
   });
@@ -3219,6 +3382,7 @@ function load(dataSource, entityCollection, data, options) {
   var sourceUri = options.sourceUri;
   var uriResolver = options.uriResolver;
   var context = options.context;
+  var screenOverlayContainer = options.screenOverlayContainer;
 
   var promise = data;
   if (typeof data === "string" || data instanceof Resource) {
@@ -3241,12 +3405,22 @@ function load(dataSource, entityCollection, data, options) {
 
   sourceUri = Resource.createIfNeeded(sourceUri);
 
+  if (defined(screenOverlayContainer)) {
+    screenOverlayContainer = getElement(screenOverlayContainer);
+  }
+
   return when(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return isZipFile(dataToLoad).then(function (isZip) {
           if (isZip) {
-            return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
+            return loadKmz(
+              dataSource,
+              entityCollection,
+              dataToLoad,
+              sourceUri,
+              screenOverlayContainer
+            );
           }
           return readBlobAsText(dataToLoad).then(function (text) {
             //There's no official way to validate if a parse was successful.
@@ -3293,6 +3467,7 @@ function load(dataSource, entityCollection, data, options) {
               kml,
               sourceUri,
               uriResolver,
+              screenOverlayContainer,
               context
             );
           });
@@ -3304,6 +3479,7 @@ function load(dataSource, entityCollection, data, options) {
         dataToLoad,
         sourceUri,
         uriResolver,
+        screenOverlayContainer,
         context
       );
     })
@@ -3325,6 +3501,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @properties {String} [screenOverlayContainer] A container for ScreenOverlay images.
  */
 
 /**
@@ -3598,6 +3775,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @param {String} [options.screenOverlayContainer] Specifies a container for ScreenOverlay images.
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
@@ -3964,7 +4142,10 @@ KmlDataSource.prototype.update = function (time) {
           ellipsoid
         );
 
-        load(that, newEntityCollection, href, { context: entity.id })
+        load(that, newEntityCollection, href, {
+          context: entity.id,
+          screenOverlayContainer: "foo",
+        })
           .then(
             getNetworkLinkUpdateCallback(
               that,
