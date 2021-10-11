@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.86.1 - 2021-10-15
+
+##### Fixes :wrench:
+
+- Fixed zip.js configurations causing CesiumJS to not work with Node 16. [#9861](https://github.com/CesiumGS/cesium/pull/9861)
+
 ### 1.86 - 2021-10-01
 
 ##### Breaking Changes :mega:

@@ -381,8 +381,8 @@ function combineRelease() {
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-// Copy Draco3D files from node_modules into Source
 gulp.task("prepare", function (done) {
+  // Copy Draco3D files from node_modules into Source
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
     "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
@@ -390,6 +390,19 @@ gulp.task("prepare", function (done) {
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder.wasm",
     "Source/ThirdParty/draco_decoder.wasm"
+  );
+  // Copy pako and zip.js worker files to Source/ThirdParty
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_inflate.min.js",
+    "Source/ThirdParty/Workers/pako_inflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_deflate.min.js",
+    "Source/ThirdParty/Workers/pako_deflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
+    "Source/ThirdParty/Workers/z-worker-pako.js"
   );
   done();
 });
@@ -434,7 +447,7 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
-    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    // Remove prepare step from package.json to avoid running "prepare" an extra time.
     delete packageJson.scripts.prepare;
     fs.writeFileSync(
       "./Build/package.noprepare.json",
