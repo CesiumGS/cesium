@@ -3409,6 +3409,12 @@ function load(dataSource, entityCollection, data, options) {
     screenOverlayContainer = getElement(screenOverlayContainer);
   }
 
+  if (defined(screenOverlayContainer)) {
+    while (screenOverlayContainer.firstChild) {
+      screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
+    }
+  }
+
   return when(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
@@ -4144,7 +4150,6 @@ KmlDataSource.prototype.update = function (time) {
 
         load(that, newEntityCollection, href, {
           context: entity.id,
-          screenOverlayContainer: "foo",
         })
           .then(
             getNetworkLinkUpdateCallback(

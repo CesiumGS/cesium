@@ -1270,7 +1270,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  fit("ScreenOverlay: Multiple overlay images created", function () {
+  it("ScreenOverlay: Multiple overlay images created", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <Document>\
@@ -1367,6 +1367,20 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.style.bottom).toEqual("219px");
       expect(child.style.right).toEqual("");
       expect(child.style.left).toEqual("53px");
+    });
+  });
+
+  it("ScreenOverlay: KML load clears overlay", function () {
+    screenOverlayContainer.appendChild(document.createElement("img"));
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document></Document>';
+
+    return KmlDataSource.load(
+      parser.parseFromString(kml, "text/xml"),
+      options
+    ).then(function (dataSource) {
+      expect(screenOverlayContainer.children.length).toEqual(0);
     });
   });
 
