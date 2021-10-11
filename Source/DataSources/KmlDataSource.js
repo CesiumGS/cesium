@@ -9,7 +9,6 @@ import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
-import ConstantProperty from "./ConstantProperty.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -2498,8 +2497,7 @@ function processScreenOverlay(
   processingData,
   deferredLoading
 ) {
-  var r = processFeature(dataSource, screenOverlayNode, processingData);
-  var entity = r.entity;
+  processFeature(dataSource, screenOverlayNode, processingData);
 
   var screenOverlay = processingData.screenOverlayContainer;
   if (!defined(screenOverlay)) {
@@ -2531,24 +2529,21 @@ function processScreenOverlay(
     "overlayXY",
     namespaces.kml
   );
-  var rotationXY = queryFirstNode(
-    screenOverlayNode,
-    "rotationXY",
-    namespaces.kml
-  );
   var size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
-  var rotation = queryFirstNode(screenOverlayNode, "rotation", namespaces.kml);
 
   var styles = ["position: absolute"];
+  var x, y;
+  var xUnit, yUnit;
+  var xStyle, yStyle;
 
   if (defined(size)) {
-    var x = queryNumericAttribute(size, "x");
-    var y = queryNumericAttribute(size, "y");
-    var xUnit = queryStringAttribute(size, "xunits");
-    var yUnit = queryStringAttribute(size, "yunits");
+    x = queryNumericAttribute(size, "x");
+    y = queryNumericAttribute(size, "y");
+    xUnit = queryStringAttribute(size, "xunits");
+    yUnit = queryStringAttribute(size, "yunits");
 
-    var xStyle = "";
-    var yStyle = "";
+    xStyle = "";
+    yStyle = "";
 
     if (defined(x) && x !== -1 && x !== 0) {
       if (xUnit === "fraction") {
@@ -2565,10 +2560,10 @@ function processScreenOverlay(
         yStyle = "height: " + y + "px";
       }
     }
-  }
 
-  styles.push(xStyle);
-  styles.push(yStyle);
+    styles.push(xStyle);
+    styles.push(yStyle);
+  }
 
   var imgWidth = img.naturalWidth;
   var imgHeight = img.naturalHeight;
@@ -2577,10 +2572,10 @@ function processScreenOverlay(
   var yOrigin = imgHeight;
 
   if (defined(overlayXY)) {
-    var x = queryNumericAttribute(overlayXY, "x");
-    var y = queryNumericAttribute(overlayXY, "y");
-    var xUnit = queryStringAttribute(overlayXY, "xunits");
-    var yUnit = queryStringAttribute(overlayXY, "yunits");
+    x = queryNumericAttribute(overlayXY, "x");
+    y = queryNumericAttribute(overlayXY, "y");
+    xUnit = queryStringAttribute(overlayXY, "xunits");
+    yUnit = queryStringAttribute(overlayXY, "yunits");
 
     if (defined(x)) {
       if (xUnit === "fraction") {
@@ -2604,13 +2599,13 @@ function processScreenOverlay(
   }
 
   if (defined(screenXY)) {
-    var x = queryNumericAttribute(screenXY, "x");
-    var y = queryNumericAttribute(screenXY, "y");
-    var xUnit = queryStringAttribute(screenXY, "xunits");
-    var yUnit = queryStringAttribute(screenXY, "yunits");
+    x = queryNumericAttribute(screenXY, "x");
+    y = queryNumericAttribute(screenXY, "y");
+    xUnit = queryStringAttribute(screenXY, "xunits");
+    yUnit = queryStringAttribute(screenXY, "yunits");
 
-    var xStyle = "";
-    var yStyle = "";
+    xStyle = "";
+    yStyle = "";
 
     if (defined(x)) {
       if (xUnit === "fraction") {
@@ -3516,7 +3511,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @properties {String} [screenOverlayContainer] A container for ScreenOverlay images.
+ * @property {String} [screenOverlayContainer] A container for ScreenOverlay images.
  */
 
 /**

@@ -536,7 +536,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return dataSource.load("Data/KML/unsupported.kml").then(function () {
       var nodeNames = ["PhotoOverlay"];
-      expect(spy.calls.count()).toEqual(2);
+      expect(spy.calls.count()).toEqual(1);
       for (var i = 0; i < nodeNames.length; i++) {
         var args = spy.calls.argsFor(i);
         expect(args.length).toEqual(7);
