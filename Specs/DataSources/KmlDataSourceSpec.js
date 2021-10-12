@@ -1244,7 +1244,7 @@ describe("DataSources/KmlDataSource", function () {
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
           <Icon>\
-            <href>http://invalid.url</href>\
+            <href>http://invalid.url/</href>\
           </Icon>\
           <screenXY x="0" y="1" xunits="fraction" yunits="fraction" />\
           <overlayXY x="0" y="1" xunits="fraction" yunits="fraction" />\
@@ -1260,13 +1260,16 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.tagName).toEqual("IMG");
       expect(child.getAttribute("src")).toEqual("http://invalid.url/");
 
+      child.onload();
       expect(child.style.position).toEqual("absolute");
       expect(child.style.width).toEqual("");
       expect(child.style.height).toEqual("");
       expect(child.style.top).toEqual("");
-      expect(child.style.bottom).toEqual("calc(100% + 0px)");
+      expect(["calc(100% + 0px)", "calc(100% - 0px)"]).toContain(
+        child.style.bottom
+      );
       expect(child.style.right).toEqual("");
-      expect(child.style.left).toEqual("calc(0% + 0px)");
+      expect(["calc(0% + 0px)", "calc(0% - 0px)"]).toContain(child.style.left);
     });
   });
 
@@ -1313,7 +1316,7 @@ describe("DataSources/KmlDataSource", function () {
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
           <Icon>\
-            <href>http://invalid.url</href>\
+            <href>http://invalid.url/</href>\
           </Icon>\
           <screenXY x=".3" y=".5" xunits="fraction" yunits="fraction" />\
           <overlayXY x="10" y="25" xunits="pixels" yunits="pixels" />\
@@ -1329,6 +1332,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.tagName).toEqual("IMG");
       expect(child.getAttribute("src")).toEqual("http://invalid.url/");
 
+      child.onload();
       expect(child.style.position).toEqual("absolute");
       expect(child.style.width).toEqual("");
       expect(child.style.height).toEqual("");
@@ -1344,7 +1348,7 @@ describe("DataSources/KmlDataSource", function () {
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
           <Icon>\
-            <href>http://invalid.url</href>\
+            <href>http://invalid.url/</href>\
           </Icon>\
           <screenXY x="100" y="250" xunits="pixels" yunits="pixels" />\
           <overlayXY x="47" y="31" xunits="pixels" yunits="pixels" />\
@@ -1360,6 +1364,7 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.tagName).toEqual("IMG");
       expect(child.getAttribute("src")).toEqual("http://invalid.url/");
 
+      child.onload();
       expect(child.style.position).toEqual("absolute");
       expect(child.style.width).toEqual("");
       expect(child.style.height).toEqual("");
@@ -1367,20 +1372,6 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.style.bottom).toEqual("219px");
       expect(child.style.right).toEqual("");
       expect(child.style.left).toEqual("53px");
-    });
-  });
-
-  it("ScreenOverlay: KML load clears overlay", function () {
-    screenOverlayContainer.appendChild(document.createElement("img"));
-    var kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
-        <Document></Document>';
-
-    return KmlDataSource.load(
-      parser.parseFromString(kml, "text/xml"),
-      options
-    ).then(function (dataSource) {
-      expect(screenOverlayContainer.children.length).toEqual(0);
     });
   });
 
