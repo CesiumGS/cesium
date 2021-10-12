@@ -125,7 +125,9 @@ describe("DataSources/KmlDataSource", function () {
   beforeEach(function () {
     // Reset camera - x value will change during onStop tests
     options.camera.positionWC.x = 0.0;
+  });
 
+  afterEach(function () {
     // Clear all screen overlay elements
     while (screenOverlayContainer.firstChild) {
       screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
