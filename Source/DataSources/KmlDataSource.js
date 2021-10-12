@@ -16,7 +16,6 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
-import getElement from "../Widgets/getElement.js";
 import getExtensionFromUri from "../Core/getExtensionFromUri.js";
 import getFilenameFromUri from "../Core/getFilenameFromUri.js";
 import getTimestamp from "../Core/getTimestamp.js";
@@ -44,6 +43,7 @@ import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import zip from "../ThirdParty/zip.js";
+import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import DataSource from "./DataSource.js";
@@ -2497,8 +2497,6 @@ function processScreenOverlay(
   processingData,
   deferredLoading
 ) {
-  processFeature(dataSource, screenOverlayNode, processingData);
-
   var screenOverlay = processingData.screenOverlayContainer;
   if (!defined(screenOverlay)) {
     return undefined;
@@ -2581,7 +2579,6 @@ function processScreenOverlay(
       yUnit = queryStringAttribute(overlayXY, "yunits");
 
       if (defined(x)) {
-        console.log("x val", x, img.width);
         if (xUnit === "fraction") {
           xOrigin = x * img.width;
         } else if (xUnit === "pixels") {
@@ -2592,7 +2589,6 @@ function processScreenOverlay(
       }
 
       if (defined(y)) {
-        console.log("y val", y, img.height);
         if (yUnit === "fraction") {
           yOrigin = y * img.height;
         } else if (yUnit === "pixels") {
@@ -3788,7 +3784,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {String} [options.screenOverlayContainer] Specifies a container for ScreenOverlay images.
+ * @param {String} [options.screenOverlayContainer] Specifies a container for ScreenOverlay images. Note: this container is not managed, the caller is responsible for styling and removing unused overlay images.
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */

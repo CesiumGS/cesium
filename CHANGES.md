@@ -6,8 +6,6 @@
 
 - Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
 
-- Added `CloudCollection` and `CumulusCloud` for adding procedurally generated clouds to a scene. [#9737](https://github.com/CesiumGS/cesium/pull/9737)
-
 ##### Fixes :wrench:
 
 - Fixed zip.js configurations causing CesiumJS to not work with Node 16. [#9861](https://github.com/CesiumGS/cesium/pull/9861)
