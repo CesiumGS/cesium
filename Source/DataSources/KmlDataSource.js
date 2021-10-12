@@ -3422,14 +3422,6 @@ function load(dataSource, entityCollection, data, options) {
     screenOverlayContainer = getElement(screenOverlayContainer);
   }
 
-  /*
-  if (defined(screenOverlayContainer)) {
-    while (screenOverlayContainer.firstChild) {
-      screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
-    }
-  }
-  */
-
   return when(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
@@ -3522,7 +3514,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {String} [screenOverlayContainer] A container for ScreenOverlay images.
+ * @property {String} [screenOverlayContainer] A container for ScreenOverlay images. Note: this container is not managed, the caller is responsible for styling and removing unused overlay images.
  */
 
 /**
