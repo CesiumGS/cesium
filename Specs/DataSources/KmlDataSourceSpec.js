@@ -1375,6 +1375,38 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
+  it("ScreenOverlay: Screen insetPixel offset", function () {
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+        <ScreenOverlay>\
+          <Icon>\
+            <href>http://invalid.url/</href>\
+          </Icon>\
+          <screenXY x="100" y="250" xunits="pixels" yunits="insetPixels" />\
+          <overlayXY x="47" y="31" xunits="pixels" yunits="pixels" />\
+          <size x="-1" y="-1" xunits="pixels" yunits="pixels" />\
+        </ScreenOverlay>';
+
+    return KmlDataSource.load(
+      parser.parseFromString(kml, "text/xml"),
+      options
+    ).then(function (dataSource) {
+      expect(screenOverlayContainer.children.length).toEqual(1);
+      var child = screenOverlayContainer.children[0];
+      expect(child.tagName).toEqual("IMG");
+      expect(child.getAttribute("src")).toEqual("http://invalid.url/");
+
+      child.onload();
+      expect(child.style.position).toEqual("absolute");
+      expect(child.style.width).toEqual("");
+      expect(child.style.height).toEqual("");
+      expect(child.style.top).toEqual("219px");
+      expect(child.style.bottom).toEqual("");
+      expect(child.style.right).toEqual("");
+      expect(child.style.left).toEqual("53px");
+    });
+  });
+
   it("Styles: supports local styles with styleUrl", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\

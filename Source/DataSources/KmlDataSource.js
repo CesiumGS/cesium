@@ -2587,7 +2587,7 @@ function processScreenOverlay(
         } else if (xUnit === "pixels") {
           xOrigin = x;
         } else if (xUnit === "insetPixels") {
-          xOrigin = img.width - x;
+          xOrigin = x;
         }
       }
 
@@ -2598,7 +2598,7 @@ function processScreenOverlay(
         } else if (yUnit === "pixels") {
           yOrigin = y;
         } else if (yUnit === "insetPixels") {
-          yOrigin = img.height - y;
+          yOrigin = y;
         }
       }
     }
