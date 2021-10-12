@@ -2522,119 +2522,128 @@ function processScreenOverlay(
 
   var img = document.createElement("img");
   img.src = icon.url;
+  img.onload = function () {
+    var styles = ["position: absolute"];
 
-  var screenXY = queryFirstNode(screenOverlayNode, "screenXY", namespaces.kml);
-  var overlayXY = queryFirstNode(
-    screenOverlayNode,
-    "overlayXY",
-    namespaces.kml
-  );
-  var size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
+    var screenXY = queryFirstNode(
+      screenOverlayNode,
+      "screenXY",
+      namespaces.kml
+    );
+    var overlayXY = queryFirstNode(
+      screenOverlayNode,
+      "overlayXY",
+      namespaces.kml
+    );
+    var size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
 
-  var styles = ["position: absolute"];
-  var x, y;
-  var xUnit, yUnit;
-  var xStyle, yStyle;
+    var x, y;
+    var xUnit, yUnit;
+    var xStyle, yStyle;
 
-  if (defined(size)) {
-    x = queryNumericAttribute(size, "x");
-    y = queryNumericAttribute(size, "y");
-    xUnit = queryStringAttribute(size, "xunits");
-    yUnit = queryStringAttribute(size, "yunits");
+    if (defined(size)) {
+      x = queryNumericAttribute(size, "x");
+      y = queryNumericAttribute(size, "y");
+      xUnit = queryStringAttribute(size, "xunits");
+      yUnit = queryStringAttribute(size, "yunits");
 
-    xStyle = "";
-    yStyle = "";
+      if (defined(x) && x !== -1 && x !== 0) {
+        if (xUnit === "fraction") {
+          xStyle = "width: " + Math.floor(x * 100) + "%";
+        } else if (xUnit === "pixels") {
+          xStyle = "width: " + x + "px";
+        }
 
-    if (defined(x) && x !== -1 && x !== 0) {
-      if (xUnit === "fraction") {
-        xStyle = "width: " + Math.floor(x * 100) + "%";
-      } else if (xUnit === "pixels") {
-        xStyle = "width: " + x + "px";
+        styles.push(xStyle);
+      }
+
+      if (defined(y) && y !== -1 && y !== 0) {
+        if (yUnit === "fraction") {
+          yStyle = "height: " + Math.floor(y * 100) + "%";
+        } else if (yUnit === "pixels") {
+          yStyle = "height: " + y + "px";
+        }
+
+        styles.push(yStyle);
       }
     }
 
-    if (defined(y) && y !== -1 && y !== 0) {
-      if (yUnit === "fraction") {
-        yStyle = "height: " + Math.floor(y * 100) + "%";
-      } else if (yUnit === "pixels") {
-        yStyle = "height: " + y + "px";
+    // set the interim style so the width/height properties get calculated
+    img.style = styles.join(";");
+
+    var xOrigin = 0;
+    var yOrigin = img.height;
+
+    if (defined(overlayXY)) {
+      x = queryNumericAttribute(overlayXY, "x");
+      y = queryNumericAttribute(overlayXY, "y");
+      xUnit = queryStringAttribute(overlayXY, "xunits");
+      yUnit = queryStringAttribute(overlayXY, "yunits");
+
+      if (defined(x)) {
+        console.log("x val", x, img.width);
+        if (xUnit === "fraction") {
+          xOrigin = x * img.width;
+        } else if (xUnit === "pixels") {
+          xOrigin = x;
+        } else if (xUnit === "insetPixels") {
+          xOrigin = img.width - x;
+        }
+      }
+
+      if (defined(y)) {
+        console.log("y val", y, img.height);
+        if (yUnit === "fraction") {
+          yOrigin = y * img.height;
+        } else if (yUnit === "pixels") {
+          yOrigin = y;
+        } else if (yUnit === "insetPixels") {
+          yOrigin = img.height - y;
+        }
       }
     }
 
-    styles.push(xStyle);
-    styles.push(yStyle);
-  }
+    if (defined(screenXY)) {
+      x = queryNumericAttribute(screenXY, "x");
+      y = queryNumericAttribute(screenXY, "y");
+      xUnit = queryStringAttribute(screenXY, "xunits");
+      yUnit = queryStringAttribute(screenXY, "yunits");
 
-  var imgWidth = img.naturalWidth;
-  var imgHeight = img.naturalHeight;
+      if (defined(x)) {
+        if (xUnit === "fraction") {
+          xStyle =
+            "left: " + "calc(" + Math.floor(x * 100) + "% - " + xOrigin + "px)";
+        } else if (xUnit === "pixels") {
+          xStyle = "left: " + (x - xOrigin) + "px";
+        } else if (xUnit === "insetPixels") {
+          xStyle = "right: " + (x - xOrigin) + "px";
+        }
 
-  var xOrigin = 0;
-  var yOrigin = imgHeight;
+        styles.push(xStyle);
+      }
 
-  if (defined(overlayXY)) {
-    x = queryNumericAttribute(overlayXY, "x");
-    y = queryNumericAttribute(overlayXY, "y");
-    xUnit = queryStringAttribute(overlayXY, "xunits");
-    yUnit = queryStringAttribute(overlayXY, "yunits");
+      if (defined(y)) {
+        if (yUnit === "fraction") {
+          yStyle =
+            "bottom: " +
+            "calc(" +
+            Math.floor(y * 100) +
+            "% - " +
+            yOrigin +
+            "px)";
+        } else if (yUnit === "pixels") {
+          yStyle = "bottom: " + (y - yOrigin) + "px";
+        } else if (yUnit === "insetPixels") {
+          yStyle = "top: " + (y - yOrigin) + "px";
+        }
 
-    if (defined(x)) {
-      if (xUnit === "fraction") {
-        xOrigin = x * imgWidth;
-      } else if (xUnit === "pixels") {
-        xOrigin = x;
-      } else if (xUnit === "insetPixels") {
-        xOrigin = imgWidth - x;
+        styles.push(yStyle);
       }
     }
 
-    if (defined(y)) {
-      if (yUnit === "fraction") {
-        yOrigin = y * imgHeight;
-      } else if (yUnit === "pixels") {
-        yOrigin = y;
-      } else if (yUnit === "insetPixels") {
-        yOrigin = imgHeight - y;
-      }
-    }
-  }
+    img.style = styles.join(";");
+  };
 
-  if (defined(screenXY)) {
-    x = queryNumericAttribute(screenXY, "x");
-    y = queryNumericAttribute(screenXY, "y");
-    xUnit = queryStringAttribute(screenXY, "xunits");
-    yUnit = queryStringAttribute(screenXY, "yunits");
-
-    xStyle = "";
-    yStyle = "";
-
-    if (defined(x)) {
-      if (xUnit === "fraction") {
-        xStyle =
-          "left: " + "calc(" + Math.floor(x * 100) + "% - " + xOrigin + "px)";
-      } else if (xUnit === "pixels") {
-        xStyle = "left: " + (x - xOrigin) + "px";
-      } else if (xUnit === "insetPixels") {
-        xStyle = "right: " + (x - xOrigin) + "px";
-      }
-
-      styles.push(xStyle);
-    }
-
-    if (defined(y)) {
-      if (yUnit === "fraction") {
-        yStyle =
-          "bottom: " + "calc(" + Math.floor(y * 100) + "% - " + yOrigin + "px)";
-      } else if (yUnit === "pixels") {
-        yStyle = "bottom: " + (y - yOrigin) + "px";
-      } else if (yUnit === "insetPixels") {
-        yStyle = "top: " + (y - yOrigin) + "px";
-      }
-
-      styles.push(yStyle);
-    }
-  }
-
-  img.style = styles.join(";");
   screenOverlay.appendChild(img);
 }
 
@@ -3413,11 +3422,13 @@ function load(dataSource, entityCollection, data, options) {
     screenOverlayContainer = getElement(screenOverlayContainer);
   }
 
+  /*
   if (defined(screenOverlayContainer)) {
     while (screenOverlayContainer.firstChild) {
       screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
     }
   }
+  */
 
   return when(promise)
     .then(function (dataToLoad) {
