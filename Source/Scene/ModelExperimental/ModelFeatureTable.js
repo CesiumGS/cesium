@@ -1,6 +1,8 @@
 import BatchTexture from "../BatchTexture.js";
+import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
+import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -62,6 +64,9 @@ Object.defineProperties(ModelFeatureTable.prototype, {
 });
 
 function initialize(modelFeatureTable) {
+  var content = modelFeatureTable._model.content;
+  var hasContent = defined(content);
+
   var featuresLength = modelFeatureTable._featureTable.count;
   if (featuresLength === 0) {
     return;
@@ -69,19 +74,26 @@ function initialize(modelFeatureTable) {
 
   var features = new Array(featuresLength);
   for (var i = 0; i < featuresLength; i++) {
-    features[i] = new ModelFeature({
-      model: modelFeatureTable._model,
-      featureId: i,
-      featureTable: modelFeatureTable,
-    });
+    if (hasContent) {
+      features[i] = new Cesium3DTileFeature(content, i);
+    } else {
+      features[i] = new ModelFeature({
+        model: modelFeatureTable._model,
+        featureId: i,
+        featureTable: modelFeatureTable,
+      });
+    }
   }
 
   modelFeatureTable._features = features;
   modelFeatureTable._featuresLength = featuresLength;
+
   modelFeatureTable._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     owner: modelFeatureTable,
-    statistics: modelFeatureTable._statistics,
+    statistics: hasContent
+      ? content.tileset.statistics
+      : modelFeatureTable._statistics,
   });
 }
 

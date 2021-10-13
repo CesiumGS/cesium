@@ -53,6 +53,6 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
-    debugShowBoundingVolume: model.debugShowBoundingVolume,
+    debugShowBoundingVolume: true,
   });
 }

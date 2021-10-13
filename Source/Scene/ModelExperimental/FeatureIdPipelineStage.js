@@ -4,6 +4,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import MetadataClass from "../MetadataClass.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import FeatureStageCommon from "../../Shaders/ModelExperimental/FeatureStageCommon.js";
@@ -103,9 +104,7 @@ function processFeatureIdAttributes(renderResources, frameState, primitive) {
   var featureIdAttributeSetIndex;
 
   // For 3D Tiles 1.0, the FEATURE_ID vertex attribute is present but the Feature ID attribute is not.
-  // The featureMetadata is owned by the Cesium3DTileContent for the legacy formats.
-  var content = model.content;
-  if (defined(content) && defined(content.featureMetadata)) {
+  if (model.featureTableId === MetadataClass.BATCH_TABLE_CLASS_NAME) {
     featureIdAttributePrefix = "a_featureId";
     featureIdAttributeSetIndex = "";
   } else {

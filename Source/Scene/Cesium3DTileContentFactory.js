@@ -18,6 +18,15 @@ import ModelExperimental3DTileContent from "./ModelExperimental/ModelExperimenta
  */
 var Cesium3DTileContentFactory = {
   b3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    if (ExperimentalFeatures.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromB3dm(
+        tileset,
+        tile,
+        resource,
+        arrayBuffer,
+        byteOffset
+      );
+    }
     return new Batched3DModel3DTileContent(
       tileset,
       tile,

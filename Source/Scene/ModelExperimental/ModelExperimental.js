@@ -11,8 +11,8 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
-import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
 import MetadataClass from "../MetadataClass.js";
+import B3dmLoader from "./B3dmLoader.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -96,27 +96,6 @@ export default function ModelExperimental(options) {
   initialize(this);
 }
 
-function createContentFeatureTables(content, featureMetadata) {
-  var contentFeatureTables = {};
-
-  var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
-      var contentFeatureTable = new Cesium3DTileContentFeatureTable({
-        content: content,
-        featureTable: featureTable,
-      });
-
-      if (contentFeatureTable.featuresLength > 0) {
-        contentFeatureTables[featureTableId] = contentFeatureTable;
-      }
-    }
-  }
-
-  return contentFeatureTables;
-}
-
 function createModelFeatureTables(model, featureMetadata) {
   var modelFeatureTables = {};
 
@@ -139,9 +118,11 @@ function createModelFeatureTables(model, featureMetadata) {
   return modelFeatureTables;
 }
 
-function selectFeatureTableId(components, model, content) {
+function selectFeatureTableId(components, model) {
+  var content = model._content;
+
   // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
-  if (defined(content) && defined(content.featureMetadata)) {
+  if (defined(content)) {
     return MetadataClass.BATCH_TABLE_CLASS_NAME;
   }
 
@@ -196,25 +177,16 @@ function initialize(model) {
     .then(function (loader) {
       var components = loader.components;
       var content = model._content;
-
-      // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
-      // Otherwise, the metadata is owned by ModelExperimental.
-      var hasContent = defined(content);
-      var featureTableOwner = hasContent ? content : model;
-      var featureMetadata = defined(featureTableOwner.featureMetadata)
-        ? content.featureMetadata
-        : components.featureMetadata;
+      var featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
-        var featureTableId = selectFeatureTableId(components, model, content);
-        var featureTables;
-        if (hasContent) {
-          featureTables = createContentFeatureTables(content, featureMetadata);
-        } else {
-          featureTables = createModelFeatureTables(model, featureMetadata);
-        }
-        featureTableOwner.featureTables = featureTables;
-        featureTableOwner.featureTableId = featureTableId;
+        model._featureTables = createModelFeatureTables(model, featureMetadata);
+        // Select the feature table based on the user-defined featureIdAttribute/featureIdTexture index properties.
+        model._featureTableId = selectFeatureTableId(
+          components,
+          model,
+          content
+        );
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -695,6 +667,37 @@ ModelExperimental.fromGltf = function (options) {
   };
   var model = new ModelExperimental(modelOptions);
 
+  return model;
+};
+
+ModelExperimental.fromB3dm = function (options) {
+  var loaderOptions = {
+    b3dmResource: options.resource,
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+    releaseGltfJson: options.releaseGltfJson,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+  };
+
+  var loader = new B3dmLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.b3dmResource,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+  var model = new ModelExperimental(modelOptions);
   return model;
 };
 
