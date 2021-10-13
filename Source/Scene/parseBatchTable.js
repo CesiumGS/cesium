@@ -67,7 +67,7 @@ export default function parseBatchTable(options) {
 
   var featureTable = new FeatureTable({
     id: 0,
-    name: "B3DM Batch Table",
+    name: "Batch Table",
     count: featureTableJson.count,
     metadataTable: metadataTable,
     jsonMetadataTable: jsonMetadataTable,
