@@ -3512,7 +3512,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {String} [screenOverlayContainer] A container for ScreenOverlay images. Note: this container is not managed, the caller is responsible for styling and removing unused overlay images.
+ * @property {String} [screenOverlayContainer] A container for ScreenOverlay images. Note: this container is not managed, the caller is responsible for styling and removing unused overlay images by calling `cleanup`.
  */
 
 /**
@@ -3788,7 +3788,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {String} [options.screenOverlayContainer] Specifies a container for ScreenOverlay images. Note: this container is not managed, the caller is responsible for styling and removing unused overlay images.
+ * @param {String} [options.screenOverlayContainer] Specifies a container for ScreenOverlay images. Note: this container is not managed, the caller is responsible for styling and removing unused overlay images by calling `cleanup`.
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
@@ -3874,6 +3874,10 @@ KmlDataSource.prototype.load = function (data, options) {
     });
 };
 
+/**
+ * Cleans up any non-entity elements created by the data source. Currently this only ScreenOverlay elements.
+ *
+ */
 KmlDataSource.prototype.cleanup = function () {
   while (this._screenOverlays.length > 0) {
     var elem = this._screenOverlays.pop();
