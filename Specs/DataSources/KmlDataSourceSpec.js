@@ -1426,7 +1426,7 @@ describe("DataSources/KmlDataSource", function () {
       options
     ).then(function (dataSource) {
       expect(screenOverlayContainer.children.length).toEqual(1);
-      dataSource.cleanup();
+      dataSource.destroy();
       expect(screenOverlayContainer.children.length).toEqual(0);
     });
   });
