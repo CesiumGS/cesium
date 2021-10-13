@@ -3,9 +3,9 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
 /**
- * A feature table for use with the <code>EXT_feature_metadata</code> glTF
- * extension. It also includes some options to be compatible with the older
- * 3D Tiles 1.0 batch table.
+ * A feature table for use with the <code>EXT_mesh_features</code> extension or
+ * older <code>EXT_feature_metadata</code> glTF extension. It also includes some
+ * options to be compatible with the older 3D Tiles 1.0 batch table.
  * <p>
  * For batch tables, properties are resolved in the following order:
  * </p>
@@ -15,10 +15,12 @@ import defined from "../Core/defined.js";
  *   <li>batch table hierarchy properties from options.batchTableHierarchy</li>
  * </ol>
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
+ * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
  * @param {Number} options.count The number of features in the table.
  * @param {MetadataTable} [options.metadataTable] A table of binary properties.
  * @param {JsonMetadataTable} [options.jsonMetadataTable] For compatibility with the old batch table, free-form JSON properties can be passed in.
@@ -39,6 +41,7 @@ function FeatureTable(options) {
   Check.typeOf.number("options.count", options.count);
   //>>includeEnd('debug');
 
+  this._id = options.id;
   this._count = options.count;
   this._extras = options.extras;
   this._extensions = options.extensions;
@@ -48,6 +51,19 @@ function FeatureTable(options) {
 }
 
 Object.defineProperties(FeatureTable.prototype, {
+  /**
+   * An identifier for this texture. Useful for debugging.
+   *
+   * @memberof FeatureTexture.prototype
+   * @type {String|Number}
+   * @readonly
+   * @private
+   */
+  id: {
+    get: function () {
+      return this._id;
+    },
+  },
   /**
    * The number of features in the table.
    *

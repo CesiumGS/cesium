@@ -168,7 +168,7 @@ describe(
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: undefined,
-          extension: extension,
+          extensionLegacy: extension,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
@@ -176,11 +176,12 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if extension is undefined", function () {
+    it("throws if neither extension nor extensionLegacy is defined", function () {
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,
           extension: undefined,
+          extensionLegacy: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
@@ -192,7 +193,7 @@ describe(
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,
-          extension: extension,
+          extensionLegacy: extension,
           gltfResource: undefined,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
@@ -204,7 +205,7 @@ describe(
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,
-          extension: extension,
+          extensionLegacy: extension,
           gltfResource: gltfResource,
           baseResource: undefined,
           supportedImageFormats: new SupportedImageFormats(),
@@ -216,7 +217,7 @@ describe(
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,
-          extension: extension,
+          extensionLegacy: extension,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: undefined,
@@ -236,7 +237,7 @@ describe(
 
       var featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
-        extension: extension,
+        extensionLegacy: extension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
@@ -267,7 +268,7 @@ describe(
 
       var featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
-        extension: extension,
+        extensionLegacy: extension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
@@ -302,7 +303,7 @@ describe(
 
       var featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltfSchemaUri,
-        extension: extensionSchemaUri,
+        extensionLegacy: extensionSchemaUri,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
@@ -332,7 +333,7 @@ describe(
 
       var featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
-        extension: extension,
+        extensionLegacy: extension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
@@ -345,10 +346,14 @@ describe(
       ) {
         loaderProcess(featureMetadataLoader, scene); // Check that calling process after load doesn't break anything
         var featureMetadata = featureMetadataLoader.featureMetadata;
-        var buildingsTable = featureMetadata.getFeatureTable("buildings");
-        var treesTable = featureMetadata.getFeatureTable("trees");
-        var mapTexture = featureMetadata.getFeatureTexture("mapTexture");
-        var orthoTexture = featureMetadata.getFeatureTexture("orthoTexture");
+        var buildingsTable = featureMetadata.getFeatureTable(0);
+        expect(buildingsTable.id).toBe("buildings");
+        var treesTable = featureMetadata.getFeatureTable(1);
+        expect(treesTable.id).toBe("trees");
+        var mapTexture = featureMetadata.getFeatureTexture(0);
+        expect(mapTexture.id).toBe("mapTexture");
+        var orthoTexture = featureMetadata.getFeatureTexture(1);
+        expect(orthoTexture.id).toBe("orthoTexture");
 
         expect(buildingsTable.getProperty(0, "name")).toBe("House");
         expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
@@ -449,7 +454,7 @@ describe(
 
       var featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
-        extension: extension,
+        extensionLegacy: extension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
@@ -503,7 +508,7 @@ describe(
       // promises resolve even if the feature metadata loader is destroyed
       var featureMetadataLoaderCopy = new GltfFeatureMetadataLoader({
         gltf: gltf,
-        extension: extension,
+        extensionLegacy: extension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
@@ -525,7 +530,7 @@ describe(
 
           var featureMetadataLoader = new GltfFeatureMetadataLoader({
             gltf: gltfSchemaUri,
-            extension: extensionSchemaUri,
+            extensionLegacy: extensionSchemaUri,
             gltfResource: gltfResource,
             baseResource: gltfResource,
             supportedImageFormats: new SupportedImageFormats(),

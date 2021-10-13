@@ -761,13 +761,25 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
   return material;
 }
 
-function loadFeatureIdAttribute(gltfFeatureIdAttribute) {
+// for EXT_mesh_features
+function loadFeatureIdAttribute(featureIds, featureTableId) {
+  var featureIdAttribute = new FeatureIdAttribute();
+  featureIdAttribute.featureTableId = featureTableId;
+  featureIdAttribute.setIndex = featureIds.attribute;
+  featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
+  featureIdAttribute.repeat = defaultValue(featureIds.repeat, 0);
+  return featureIdAttribute;
+}
+
+// for backwards compatibility with EXT_feature_metadata
+function loadFeatureIdAttributeLegacy(gltfFeatureIdAttribute) {
   var featureIdAttribute = new FeatureIdAttribute();
   var featureIds = gltfFeatureIdAttribute.featureIds;
   featureIdAttribute.featureTableId = gltfFeatureIdAttribute.featureTable;
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
-  featureIdAttribute.constant = defaultValue(featureIds.constant, 0);
-  featureIdAttribute.divisor = defaultValue(featureIds.divisor, 0);
+  // constant/divisor was renamed to offset/repeat
+  featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
+  featureIdAttribute.repeat = defaultValue(featureIds.divisor, 0);
   return featureIdAttribute;
 }
 
@@ -818,8 +830,6 @@ function loadPrimitive(
   morphWeights,
   supportedImageFormats
 ) {
-  var i;
-
   var primitive = new Primitive();
 
   var materialId = gltfPrimitive.material;
@@ -837,7 +847,6 @@ function loadPrimitive(
     defaultValue.EMPTY_OBJECT
   );
   var draco = extensions.KHR_draco_mesh_compression;
-  var featureMetadata = extensions.EXT_feature_metadata;
 
   var attributes = gltfPrimitive.attributes;
   if (defined(attributes)) {
@@ -854,7 +863,7 @@ function loadPrimitive(
   var targets = gltfPrimitive.targets;
   if (defined(targets)) {
     var targetsLength = targets.length;
-    for (i = 0; i < targetsLength; ++i) {
+    for (var i = 0; i < targetsLength; ++i) {
       primitive.morphTargets.push(loadMorphTarget(loader, gltf, targets[i]));
     }
     primitive.morphWeights = defined(morphWeights)
@@ -867,38 +876,25 @@ function loadPrimitive(
     primitive.indices = loadIndices(loader, gltf, indices, draco);
   }
 
+  var featureMetadata = extensions.EXT_mesh_features;
+  var featureMetadataLegacy = extensions.EXT_feature_metadata;
+
   if (defined(featureMetadata)) {
-    // Feature ID Attributes
-    var featureIdAttributes = featureMetadata.featureIdAttributes;
-    if (defined(featureIdAttributes)) {
-      var featureIdAttributesLength = featureIdAttributes.length;
-      for (i = 0; i < featureIdAttributesLength; ++i) {
-        primitive.featureIdAttributes.push(
-          loadFeatureIdAttribute(featureIdAttributes[i])
-        );
-      }
-    }
-
-    // Feature ID Textures
-    var featureIdTextures = featureMetadata.featureIdTextures;
-    if (defined(featureIdTextures)) {
-      var featureIdTexturesLength = featureIdTextures.length;
-      for (i = 0; i < featureIdTexturesLength; ++i) {
-        primitive.featureIdTextures.push(
-          loadFeatureIdTexture(
-            loader,
-            gltf,
-            featureIdTextures[i],
-            supportedImageFormats
-          )
-        );
-      }
-    }
-
-    // Feature Textures
-    if (defined(featureMetadata.featureTextures)) {
-      primitive.featureTextureIds = featureMetadata.featureTextures;
-    }
+    loadPrimitiveMetadata(
+      loader,
+      gltf,
+      primitive,
+      featureMetadata,
+      supportedImageFormats
+    );
+  } else if (defined(featureMetadataLegacy)) {
+    loadPrimitiveMetadataLegacy(
+      loader,
+      gltf,
+      primitive,
+      featureMetadataLegacy,
+      supportedImageFormats
+    );
   }
 
   primitive.primitiveType = gltfPrimitive.mode;
@@ -906,7 +902,114 @@ function loadPrimitive(
   return primitive;
 }
 
-function loadInstances(loader, gltf, instancingExtension, frameState) {
+function loadPrimitiveMetadata(
+  loader,
+  gltf,
+  primitive,
+  metadataExtension,
+  supportedImageFormats
+) {
+  // Partition feature ID attributes and textures
+  var i;
+  var featureIdAttributes = [];
+  var featureIdTextures = [];
+  var featureIdsArray = metadataExtension.featureIds;
+
+  for (i = 0; i < featureIdsArray.length; i++) {
+    var featureIds = featureIdsArray[i];
+    if (defined(featureIds.channels)) {
+      featureIdTextures.push(featureIds);
+    } else {
+      featureIdAttributes.push(featureIds);
+    }
+  }
+
+  // Feature ID Attributes
+  if (defined(featureIdAttributes)) {
+    var featureIdAttributesLength = featureIdAttributes.length;
+    for (i = 0; i < featureIdAttributesLength; ++i) {
+      primitive.featureIdAttributes.push(
+        loadFeatureIdAttribute(featureIdAttributes[i])
+      );
+    }
+  }
+
+  // Feature ID Textures
+  if (defined(featureIdTextures)) {
+    var featureIdTexturesLength = featureIdTextures.length;
+    for (i = 0; i < featureIdTexturesLength; ++i) {
+      primitive.featureIdTextures.push(
+        loadFeatureIdTexture(
+          loader,
+          gltf,
+          featureIdTextures[i],
+          supportedImageFormats
+        )
+      );
+    }
+  }
+
+  // Feature Textures
+  if (defined(metadataExtension.featureTextures)) {
+    primitive.featureTextureIds = metadataExtension.propertyTextures;
+  }
+}
+
+function loadPrimitiveMetadataLegacy(
+  loader,
+  gltf,
+  primitive,
+  metadataExtension,
+  supportedImageFormats
+) {
+  var i;
+
+  // Feature ID Attributes
+  var featureIdAttributes = metadataExtension.featureIdAttributes;
+  if (defined(featureIdAttributes)) {
+    var featureIdAttributesLength = featureIdAttributes.length;
+    for (i = 0; i < featureIdAttributesLength; ++i) {
+      primitive.featureIdAttributes.push(
+        loadFeatureIdAttributeLegacy(featureIdAttributes[i])
+      );
+    }
+  }
+
+  // Feature ID Textures
+  var featureIdTextures = metadataExtension.featureIdTextures;
+  if (defined(featureIdTextures)) {
+    var featureIdTexturesLength = featureIdTextures.length;
+    for (i = 0; i < featureIdTexturesLength; ++i) {
+      primitive.featureIdTextures.push(
+        loadFeatureIdTexture(
+          loader,
+          gltf,
+          featureIdTextures[i],
+          supportedImageFormats
+        )
+      );
+    }
+  }
+
+  // Feature Textures
+  if (defined(metadataExtension.featureTextures)) {
+    var extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
+    var allFeatureTextureIds = extensions.EXT_feature_metadata.featureTextures;
+    var sortedFeatureTextureIds = Object.keys(allFeatureTextureIds).sort();
+    // feature textures are now identified by an integer index. To convert the
+    // string IDs to integers, find their place in the sorted list of feature
+    // table names
+    primitive.featureTextureIds = metadataExtension.featureTextures.map(
+      function (id) {
+        return sortedFeatureTextureIds.indexOf(id);
+      }
+    );
+  }
+}
+
+function loadInstances(loader, gltf, nodeExtensions, frameState) {
+  var instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
+
   var instances = new Instances();
   var attributes = instancingExtension.attributes;
   if (defined(attributes)) {
@@ -947,23 +1050,51 @@ function loadInstances(loader, gltf, instancingExtension, frameState) {
     }
   }
 
-  var extensions = defaultValue(
+  var extensionExtensions = defaultValue(
     instancingExtension.extensions,
     defaultValue.EMPTY_OBJECT
   );
-  var featureMetadata = extensions.EXT_feature_metadata;
+  var featureMetadata = nodeExtensions.EXT_mesh_features;
+  var featureMetadataLegacy = extensionExtensions.EXT_feature_metadata;
+
   if (defined(featureMetadata)) {
-    var featureIdAttributes = featureMetadata.featureIdAttributes;
-    if (defined(featureIdAttributes)) {
-      var featureIdAttributesLength = featureIdAttributes.length;
-      for (var i = 0; i < featureIdAttributesLength; ++i) {
-        instances.featureIdAttributes.push(
-          loadFeatureIdAttribute(featureIdAttributes[i])
-        );
-      }
+    loadInstanceMetadata(instances, featureMetadata);
+  } else if (defined(featureMetadataLegacy)) {
+    loadInstanceMetadataLegacy(instances, featureMetadataLegacy);
+  }
+
+  return instances;
+}
+
+// For EXT_mesh_features
+function loadInstanceMetadata(instances, metadataExtension) {
+  // feature IDs are required in EXT_mesh_features
+  var featureIdAttributes = metadataExtension.featureIds;
+  var propertyTables = defined(metadataExtension.propertyTables)
+    ? metadataExtension.propertyTables
+    : [];
+
+  var featureIdAttributesLength = featureIdAttributes.length;
+  for (var i = 0; i < featureIdAttributesLength; i++) {
+    var featureIds = featureIdAttributes[i];
+    var propertyTableId = propertyTables[i];
+    instances.featureIdAttributes.push(
+      loadFeatureIdAttribute(featureIds, propertyTableId)
+    );
+  }
+}
+
+// For backwards-compatibility with EXT_feature_metadata
+function loadInstanceMetadataLegacy(instances, metadataExtension) {
+  var featureIdAttributes = metadataExtension.featureIdAttributes;
+  if (defined(featureIdAttributes)) {
+    var featureIdAttributesLength = featureIdAttributes.length;
+    for (var i = 0; i < featureIdAttributesLength; ++i) {
+      instances.featureIdAttributes.push(
+        loadFeatureIdAttributeLegacy(featureIdAttributes[i])
+      );
     }
   }
-  return instances;
 }
 
 function loadSkin(loader, gltf, gltfSkin, nodes) {
@@ -1037,15 +1168,14 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     }
   }
 
-  var extensions = defaultValue(gltfNode.extensions, defaultValue.EMPTY_OBJECT);
-  var instancingExtension = extensions.EXT_mesh_gpu_instancing;
+  var nodeExtensions = defaultValue(
+    gltfNode.extensions,
+    defaultValue.EMPTY_OBJECT
+  );
+  var instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
+
   if (defined(instancingExtension)) {
-    node.instances = loadInstances(
-      loader,
-      gltf,
-      instancingExtension,
-      frameState
-    );
+    node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
   }
 
   return node;
@@ -1087,10 +1217,17 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
   return nodes;
 }
 
-function loadFeatureMetadata(loader, gltf, extension, supportedImageFormats) {
+function loadFeatureMetadata(
+  loader,
+  gltf,
+  extension,
+  extensionLegacy,
+  supportedImageFormats
+) {
   var featureMetadataLoader = new GltfFeatureMetadataLoader({
     gltf: gltf,
     extension: extension,
+    extensionLegacy: extensionLegacy,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
     supportedImageFormats: supportedImageFormats,
@@ -1138,12 +1275,17 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
 
   // Load feature metadata (feature tables and feature textures)
   var extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
-  var featureMetadataExtension = extensions.EXT_feature_metadata;
-  if (defined(featureMetadataExtension)) {
+  var featureMetadataExtension = extensions.EXT_mesh_features;
+  var featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
+  if (
+    defined(featureMetadataExtension) ||
+    defined(featureMetadataExtensionLegacy)
+  ) {
     var featureMetadataLoader = loadFeatureMetadata(
       loader,
       gltf,
       featureMetadataExtension,
+      featureMetadataExtensionLegacy,
       supportedImageFormats
     );
     featureMetadataLoader.promise.then(function (featureMetadataLoader) {

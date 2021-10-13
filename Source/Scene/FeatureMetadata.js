@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 
 /**
  * An object containing feature metadata.
@@ -10,8 +9,8 @@ import defined from "../Core/defined.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
- * @param {Object.<String, FeatureTable>} [options.featureTables] A dictionary mapping feature table IDs to feature table objects.
- * @param {Object.<String, FeatureTexture>} [options.featureTextures] A dictionary mapping feature texture IDs to feature texture objects.
+ * @param {FeatureTable[]} [options.featureTables] An array of feature table objects. For the older EXT_feature_metadata extension, this is sorted by the key in the featureTables dictionary
+ * @param {FeatureTexture[]} [options.featureTextures] An array of feature texture objects. For the older EXT_feature_metadata extension, this is sorted by the key in the featureTextures dictionary
  * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
@@ -24,18 +23,13 @@ import defined from "../Core/defined.js";
  */
 function FeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.schema", options.schema);
   //>>includeEnd('debug');
 
   this._schema = options.schema;
-  var featureTableCount = 0;
   var featureTables = options.featureTables;
-  if (defined(featureTables)) {
-    featureTableCount = Object.keys(featureTables).length;
-  }
-  this._featureTableCount = featureTableCount;
+  this._featureTableCount = featureTables.length;
   this._featureTables = featureTables;
   this._featureTextures = options.featureTextures;
   this._statistics = options.statistics;
@@ -121,7 +115,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * The feature tables in the metadata.
    *
    * @memberof FeatureMetadata.prototype
-   * @type {Object}
+   * @type {FeatureTable[]}
    * @readonly
    * @private
    */
@@ -134,29 +128,37 @@ Object.defineProperties(FeatureMetadata.prototype, {
 
 /**
  * Gets the feature table with the given ID.
+ * <p>
+ * For the older EXT_feature_metadata, textures are stored in an array sorted
+ * by the key in the featureTables dictionary.
+ * </p>
  *
- * @param {String} featureTableId The feature table ID.
+ * @param {Number} featureTableId The feature table ID.
  * @returns {FeatureTable} The feature table.
  * @private
  */
 FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("featureTableId", featureTableId);
+  Check.typeOf.number("featureTableId", featureTableId);
   //>>includeEnd('debug');
 
   return this._featureTables[featureTableId];
 };
 
 /**
- * Gets the feature texture with the given ID.
+ * Gets the feature texture with the given index.
+ * <p>
+ * For the older EXT_feature_metadata, textures are stored in an array sorted
+ * by the key in the featureTextures dictionary.
+ * </p>
  *
- * @param {String} featureTextureId The feature texture ID.
+ * @param {Number} featureTextureId The index into the feature textures array.
  * @returns {FeatureTexture} The feature texture.
  * @private
  */
 FeatureMetadata.prototype.getFeatureTexture = function (featureTextureId) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("featureTextureId", featureTextureId);
+  Check.typeOf.number("featureTextureId", featureTextureId);
   //>>includeEnd('debug');
 
   return this._featureTextures[featureTextureId];

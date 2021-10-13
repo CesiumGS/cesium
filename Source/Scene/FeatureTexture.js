@@ -6,10 +6,12 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
 /**
  * A feature texture.
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
+ * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
  * @param {Object} options.featureTexture The feature texture JSON.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
@@ -22,6 +24,7 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
  */
 function FeatureTexture(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var id = options.id;
   var featureTexture = options.featureTexture;
   var classDefinition = options.class;
   var textures = options.textures;
@@ -48,6 +51,7 @@ function FeatureTexture(options) {
     }
   }
 
+  this._id = id;
   this._class = classDefinition;
   this._properties = properties;
   this._extras = extras;
@@ -55,6 +59,19 @@ function FeatureTexture(options) {
 }
 
 Object.defineProperties(FeatureTexture.prototype, {
+  /**
+   * An identifier for this texture. Useful for debugging.
+   *
+   * @memberof FeatureTexture.prototype
+   * @type {String|Number}
+   * @readonly
+   * @private
+   */
+  id: {
+    get: function () {
+      return this._id;
+    },
+  },
   /**
    * The class that properties conform to.
    *

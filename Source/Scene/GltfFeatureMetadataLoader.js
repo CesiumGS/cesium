@@ -1,14 +1,16 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import parseFeatureMetadata from "./parseFeatureMetadata.js";
+import parseFeatureMetadataLegacy from "./parseFeatureMetadataLegacy.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
 /**
- * Loads glTF feature metadata.
+ * Loads glTF feature metadata
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
@@ -19,7 +21,8 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {String} options.extension The feature metadata extension object.
+ * @param {String} [options.extension] The EXT_mesh_features extension object. If this is undefined, then extensionLegacy must be defined.
+ * @param {String} [options.extensionLegacy] The older EXT_feature_metadata extension for backwards compatibility.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
@@ -33,6 +36,7 @@ export default function GltfFeatureMetadataLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var extension = options.extension;
+  var extensionLegacy = options.extensionLegacy;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var supportedImageFormats = options.supportedImageFormats;
@@ -41,16 +45,22 @@ export default function GltfFeatureMetadataLoader(options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.object("options.extension", extension);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+
+  if (!defined(options.extension) && !defined(options.extensionLegacy)) {
+    throw new DeveloperError(
+      "One of options.extension or options.extensionLegacy must be specified"
+    );
+  }
   //>>includeEnd('debug');
 
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._gltf = gltf;
   this._extension = extension;
+  this._extensionLegacy = extensionLegacy;
   this._supportedImageFormats = supportedImageFormats;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
@@ -136,12 +146,21 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       var textures = results[1];
       var schema = results[2];
 
-      that._featureMetadata = parseFeatureMetadata({
-        extension: that._extension,
-        schema: schema,
-        bufferViews: bufferViews,
-        textures: textures,
-      });
+      if (defined(that._extension)) {
+        that._featureMetadata = parseFeatureMetadata({
+          extension: that._extension,
+          schema: schema,
+          bufferViews: bufferViews,
+          textures: textures,
+        });
+      } else {
+        that._featureMetadata = parseFeatureMetadataLegacy({
+          extension: that._extensionLegacy,
+          schema: schema,
+          bufferViews: bufferViews,
+          textures: textures,
+        });
+      }
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
     })
@@ -157,7 +176,10 @@ GltfFeatureMetadataLoader.prototype.load = function () {
 };
 
 function loadBufferViews(featureMetadataLoader) {
-  var extension = featureMetadataLoader._extension;
+  var extension = defaultValue(
+    featureMetadataLoader._extension,
+    featureMetadataLoader._extensionLegacy
+  );
   var featureTables = extension.featureTables;
 
   // Gather the used buffer views
@@ -227,7 +249,10 @@ function loadBufferViews(featureMetadataLoader) {
 }
 
 function loadTextures(featureMetadataLoader) {
-  var extension = featureMetadataLoader._extension;
+  var extension = defaultValue(
+    featureMetadataLoader._extension,
+    featureMetadataLoader._extensionLegacy
+  );
   var featureTextures = extension.featureTextures;
 
   var gltf = featureMetadataLoader._gltf;
@@ -289,7 +314,10 @@ function loadTextures(featureMetadataLoader) {
 }
 
 function loadSchema(featureMetadataLoader) {
-  var extension = featureMetadataLoader._extension;
+  var extension = defaultValue(
+    featureMetadataLoader._extension,
+    featureMetadataLoader._extensionLegacy
+  );
 
   var schemaLoader;
   if (defined(extension.schemaUri)) {

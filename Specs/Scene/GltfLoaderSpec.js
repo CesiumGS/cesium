@@ -856,7 +856,7 @@ describe(
 
         expect(primitive.featureIdAttributes.length).toBe(0);
         expect(primitive.featureIdTextures.length).toBe(1);
-        expect(primitive.featureTextureIds).toEqual(["vegetationTexture"]);
+        expect(primitive.featureTextureIds).toEqual([0]);
 
         expect(featureIdTexture.featureTableId).toBe("landCoverTable");
         expect(featureIdTexture.textureReader.channels).toBe("r");
@@ -874,7 +874,8 @@ describe(
         expect(properties.color.componentType).toBe(MetadataType.UINT8);
         expect(properties.color.componentCount).toBe(3);
 
-        var featureTable = featureMetadata.getFeatureTable("landCoverTable");
+        var featureTable = featureMetadata.getFeatureTable(0);
+        expect(featureTable.id).toEqual("landCoverTable");
         expect(featureTable.count).toBe(256);
         expect(featureTable.class).toBe(classDefinition);
         expect(featureTable.getProperty(0, "name")).toBe("Grassland");
@@ -886,9 +887,8 @@ describe(
           new Cartesian3(194, 194, 194)
         );
 
-        var featureTexture = featureMetadata.getFeatureTexture(
-          "vegetationTexture"
-        );
+        var featureTexture = featureMetadata.getFeatureTexture(0);
+        expect(featureTexture.id).toEqual("vegetationTexture");
         var vegetationProperty = featureTexture.getProperty(
           "vegetationDensity"
         );
@@ -951,15 +951,16 @@ describe(
         var featureIdAttributeMapping = primitive.featureIdAttributes[0];
         expect(featureIdAttributeMapping.featureTableId).toBe("buildings");
         expect(featureIdAttributeMapping.setIndex).toBe(0);
-        expect(featureIdAttributeMapping.constant).toBe(0);
-        expect(featureIdAttributeMapping.divisor).toBe(0);
+        expect(featureIdAttributeMapping.offset).toBe(0);
+        expect(featureIdAttributeMapping.repeat).toBe(0);
 
         var classDefinition = featureMetadata.schema.classes.building;
         var properties = classDefinition.properties;
         expect(properties.height.type).toBe(MetadataType.FLOAT32);
         expect(properties.id.type).toBe(MetadataType.INT32);
 
-        var featureTable = featureMetadata.getFeatureTable("buildings");
+        var featureTable = featureMetadata.getFeatureTable(0);
+        expect(featureTable.id).toBe("buildings");
         expect(featureTable.count).toBe(10);
         expect(featureTable.class).toBe(classDefinition);
         expect(featureTable.getProperty(0, "height")).toBe(78.15579986572266);
@@ -999,14 +1000,14 @@ describe(
         var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
         expect(featureIdAttributeMapping0.featureTableId).toBe("weatherTable");
         expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
-        expect(featureIdAttributeMapping0.constant).toBe(0);
-        expect(featureIdAttributeMapping0.divisor).toBe(1);
+        expect(featureIdAttributeMapping0.offset).toBe(0);
+        expect(featureIdAttributeMapping0.repeat).toBe(1);
 
         var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
         expect(featureIdAttributeMapping1.featureTableId).toBe("townTable");
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
-        expect(featureIdAttributeMapping1.constant).toBe(0);
-        expect(featureIdAttributeMapping1.divisor).toBe(0);
+        expect(featureIdAttributeMapping1.offset).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).toBe(0);
 
         var weatherClass = featureMetadata.schema.classes.weather;
         var weatherProperties = weatherClass.properties;
@@ -1021,7 +1022,8 @@ describe(
         expect(townProperties.name.type).toBe(MetadataType.STRING);
         expect(townProperties.population.type).toBe(MetadataType.UINT16);
 
-        var weatherTable = featureMetadata.getFeatureTable("weatherTable");
+        var weatherTable = featureMetadata.getFeatureTable(1);
+        expect(weatherTable.id).toBe("weatherTable");
         expect(weatherTable.count).toBe(1000);
         expect(weatherTable.class).toBe(weatherClass);
         expect(weatherTable.getProperty(0, "airTemperature")).toBe(
@@ -1043,7 +1045,8 @@ describe(
           new Cartesian3(1, 0.07490774989128113, 0.0022833053953945637)
         );
 
-        var townTable = featureMetadata.getFeatureTable("townTable");
+        var townTable = featureMetadata.getFeatureTable(0);
+        expect(townTable.id).toBe("townTable");
         expect(townTable.count).toBe(3);
         expect(townTable.class).toBe(townClass);
         expect(townTable.getProperty(0, "name")).toBe("Old Town");
@@ -1187,14 +1190,14 @@ describe(
         var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
         expect(featureIdAttributeMapping0.featureTableId).toBe("boxTable");
         expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
-        expect(featureIdAttributeMapping0.constant).toBe(0);
-        expect(featureIdAttributeMapping0.divisor).toBe(1);
+        expect(featureIdAttributeMapping0.offset).toBe(0);
+        expect(featureIdAttributeMapping0.repeat).toBe(1);
 
         var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
         expect(featureIdAttributeMapping1.featureTableId).toBe("sectionTable");
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
-        expect(featureIdAttributeMapping1.constant).toBe(0);
-        expect(featureIdAttributeMapping1.divisor).toBe(0);
+        expect(featureIdAttributeMapping1.offset).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).toBe(0);
 
         var boxClass = featureMetadata.schema.classes.box;
         var boxProperties = boxClass.properties;
@@ -1206,7 +1209,8 @@ describe(
         expect(sectionProperties.name.type).toBe(MetadataType.STRING);
         expect(sectionProperties.id.type).toBe(MetadataType.UINT16);
 
-        var boxTable = featureMetadata.getFeatureTable("boxTable");
+        var boxTable = featureMetadata.getFeatureTable(0);
+        expect(boxTable.id).toBe("boxTable");
         expect(boxTable.count).toBe(4);
         expect(boxTable.class).toBe(boxClass);
         expect(boxTable.getProperty(0, "name")).toBe("top left");
@@ -1218,7 +1222,8 @@ describe(
         expect(boxTable.getProperty(3, "name")).toBe("top right");
         expect(boxTable.getProperty(3, "volume")).toBe(0.4320000112056732);
 
-        var sectionTable = featureMetadata.getFeatureTable("sectionTable");
+        var sectionTable = featureMetadata.getFeatureTable(1);
+        expect(sectionTable.id).toBe("sectionTable");
         expect(sectionTable.count).toBe(2);
         expect(sectionTable.class).toBe(sectionClass);
         expect(sectionTable.getProperty(0, "name")).toBe("left");
