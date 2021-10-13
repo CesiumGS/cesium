@@ -130,6 +130,7 @@ function main() {
       loadPromise = KmlDataSource.load(source, {
         camera: scene.camera,
         canvas: scene.canvas,
+        screenOverlayContainer: "cesiumContainer",
       });
     } else {
       showLoadError(source, "Unknown format.");
