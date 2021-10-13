@@ -20,6 +20,7 @@ import defined from "../Core/defined.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
+ * @param {String} options.name Optional human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
  * @param {Number} options.count The number of features in the table.
  * @param {MetadataTable} [options.metadataTable] A table of binary properties.
@@ -41,6 +42,7 @@ function FeatureTable(options) {
   Check.typeOf.number("options.count", options.count);
   //>>includeEnd('debug');
 
+  this._name = options.name;
   this._id = options.id;
   this._count = options.count;
   this._extras = options.extras;
@@ -52,9 +54,22 @@ function FeatureTable(options) {
 
 Object.defineProperties(FeatureTable.prototype, {
   /**
-   * An identifier for this texture. Useful for debugging.
+   * A human-readable name for this table
    *
-   * @memberof FeatureTexture.prototype
+   * @memberof FeatureTable.prototype
+   * @type {String}
+   * @readonly
+   * @private
+   */
+  name: {
+    get: function () {
+      return this._name;
+    },
+  },
+  /**
+   * An identifier for this table. Useful for debugging.
+   *
+   * @memberof FeatureTable.prototype
    * @type {String|Number}
    * @readonly
    * @private

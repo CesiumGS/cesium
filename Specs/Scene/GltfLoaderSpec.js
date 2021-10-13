@@ -65,6 +65,8 @@ describe(
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+    var weatherLegacy =
+      "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
     var boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
     var boxInstancedInterleaved =
@@ -972,6 +974,96 @@ describe(
 
     it("loads Weather", function () {
       return loadGltf(weather).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var primitive = rootNode.primitives[0];
+        var attributes = primitive.attributes;
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var featureIdAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.FEATURE_ID,
+          0
+        );
+        var featureMetadata = components.featureMetadata;
+
+        expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
+
+        expect(positionAttribute).toBeDefined();
+        expect(featureIdAttribute).toBeDefined();
+
+        expect(primitive.featureIdAttributes.length).toBe(2);
+        expect(primitive.featureIdTextures.length).toBe(0);
+        expect(primitive.featureTextureIds.length).toBe(0);
+
+        var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
+        expect(featureIdAttributeMapping0.featureTableId).toBe(1);
+        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
+        expect(featureIdAttributeMapping0.offset).toBe(0);
+        expect(featureIdAttributeMapping0.repeat).toBe(1);
+
+        var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
+        expect(featureIdAttributeMapping1.featureTableId).toBe(0);
+        expect(featureIdAttributeMapping1.setIndex).toBe(0);
+        expect(featureIdAttributeMapping1.offset).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).toBe(0);
+
+        var weatherClass = featureMetadata.schema.classes.weather;
+        var weatherProperties = weatherClass.properties;
+        expect(weatherProperties.airTemperature.type).toBe(
+          MetadataType.FLOAT32
+        );
+        expect(weatherProperties.airPressure.type).toBe(MetadataType.FLOAT32);
+        expect(weatherProperties.windVelocity.type).toBe(MetadataType.ARRAY);
+
+        var townClass = featureMetadata.schema.classes.town;
+        var townProperties = townClass.properties;
+        expect(townProperties.name.type).toBe(MetadataType.STRING);
+        expect(townProperties.population.type).toBe(MetadataType.UINT16);
+
+        var weatherTable = featureMetadata.getFeatureTable(1);
+        expect(weatherTable.id).toBe(1);
+        expect(weatherTable.name).toBe("Weather");
+        expect(weatherTable.count).toBe(1000);
+        expect(weatherTable.class).toBe(weatherClass);
+        expect(weatherTable.getProperty(0, "airTemperature")).toBe(
+          22.120203018188477
+        );
+        expect(weatherTable.getProperty(0, "airPressure")).toBe(
+          1.170711874961853
+        );
+        expect(weatherTable.getProperty(0, "windVelocity")).toEqual(
+          new Cartesian3(1, 0.2964223027229309, 0.23619766533374786)
+        );
+        expect(weatherTable.getProperty(999, "airTemperature")).toBe(
+          24.308320999145508
+        );
+        expect(weatherTable.getProperty(999, "airPressure")).toBe(
+          1.1136815547943115
+        );
+        expect(weatherTable.getProperty(999, "windVelocity")).toEqual(
+          new Cartesian3(1, 0.07490774989128113, 0.0022833053953945637)
+        );
+
+        var townTable = featureMetadata.getFeatureTable(0);
+        expect(townTable.id).toBe(0);
+        expect(townTable.name).toBe("Town");
+        expect(townTable.count).toBe(3);
+        expect(townTable.class).toBe(townClass);
+        expect(townTable.getProperty(0, "name")).toBe("Old Town");
+        expect(townTable.getProperty(0, "population")).toBe(452);
+        expect(townTable.getProperty(1, "name")).toBe("New Town");
+        expect(townTable.getProperty(1, "population")).toBe(5234);
+        expect(townTable.getProperty(2, "name")).toBe("Newer Town");
+        expect(townTable.getProperty(2, "population")).toBe(34245);
+      });
+    });
+
+    it("loads Weather with EXT_feature_metadata", function () {
+      return loadGltf(weatherLegacy).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var scene = components.scene;
         var rootNode = scene.nodes[0];

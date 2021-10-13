@@ -34,37 +34,38 @@ export default function parseFeatureMetadata(options) {
 
   var i;
   var featureTables = [];
-  if (defined(extension.featureTables)) {
-    for (i = 0; i < extension.featureTables.length; i++) {
-      var featureTable = extension.featureTables[i];
-      var classDefinition = schema.classes[featureTable.class];
+  if (defined(extension.propertyTables)) {
+    for (i = 0; i < extension.propertyTables.length; i++) {
+      var propertyTable = extension.propertyTables[i];
+      var classDefinition = schema.classes[propertyTable.class];
       var metadataTable = new MetadataTable({
-        count: featureTable.count,
-        properties: featureTable.properties,
+        count: propertyTable.count,
+        properties: propertyTable.properties,
         class: classDefinition,
         bufferViews: options.bufferViews,
       });
       featureTables.push(
         new FeatureTable({
           id: i,
-          count: featureTable.count,
+          name: propertyTable.name,
+          count: propertyTable.count,
           metadataTable: metadataTable,
-          extras: featureTable.extras,
-          extensions: featureTable.extensions,
+          extras: propertyTable.extras,
+          extensions: propertyTable.extensions,
         })
       );
     }
   }
 
   var featureTextures = [];
-  if (defined(extension.featureTextures)) {
-    for (i = 0; i < extension.featureTextures.length; i++) {
-      var featureTexture = extension.featureTextures[i];
+  if (defined(extension.propertyTextures)) {
+    for (i = 0; i < extension.propertyTextures.length; i++) {
+      var propertyTexture = extension.propertyTextures[i];
       featureTextures.push(
         new FeatureTexture({
           id: i,
-          featureTexture: featureTexture,
-          class: schema.classes[featureTexture.class],
+          featureTexture: propertyTexture,
+          class: schema.classes[propertyTexture.class],
           textures: options.textures,
         })
       );

@@ -914,6 +914,7 @@ function loadPrimitiveMetadata(
   var featureIdAttributes = [];
   var featureIdTextures = [];
   var featureIdsArray = metadataExtension.featureIds;
+  var propertyTablesArray = metadataExtension.propertyTables;
 
   for (i = 0; i < featureIdsArray.length; i++) {
     var featureIds = featureIdsArray[i];
@@ -929,7 +930,7 @@ function loadPrimitiveMetadata(
     var featureIdAttributesLength = featureIdAttributes.length;
     for (i = 0; i < featureIdAttributesLength; ++i) {
       primitive.featureIdAttributes.push(
-        loadFeatureIdAttribute(featureIdAttributes[i])
+        loadFeatureIdAttribute(featureIdAttributes[i], propertyTablesArray[i])
       );
     }
   }

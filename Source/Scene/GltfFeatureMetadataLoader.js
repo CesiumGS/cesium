@@ -175,12 +175,43 @@ GltfFeatureMetadataLoader.prototype.load = function () {
     });
 };
 
-function loadBufferViews(featureMetadataLoader) {
-  var extension = defaultValue(
-    featureMetadataLoader._extension,
-    featureMetadataLoader._extensionLegacy
-  );
-  var featureTables = extension.featureTables;
+function gatherBufferViewIdsFromProperties(properties, bufferViewIds) {
+  for (var propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      var property = properties[propertyId];
+      var bufferView = property.bufferView;
+      var arrayOffsetBufferView = property.arrayOffsetBufferView;
+      var stringOffsetBufferView = property.stringOffsetBufferView;
+      if (defined(bufferView)) {
+        bufferViewIds[bufferView] = true;
+      }
+      if (defined(arrayOffsetBufferView)) {
+        bufferViewIds[arrayOffsetBufferView] = true;
+      }
+      if (defined(stringOffsetBufferView)) {
+        bufferViewIds[stringOffsetBufferView] = true;
+      }
+    }
+  }
+}
+
+function gatherUsedBufferViewIds(extension) {
+  var propertyTables = extension.propertyTables;
+  var bufferViewIds = {};
+  if (defined(propertyTables)) {
+    for (var i = 0; i < propertyTables.length; i++) {
+      var propertyTable = propertyTables[i];
+      var properties = propertyTable.properties;
+      if (defined(properties)) {
+        gatherBufferViewIdsFromProperties(properties, bufferViewIds);
+      }
+    }
+  }
+  return bufferViewIds;
+}
+
+function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
+  var featureTables = extensionLegacy.featureTables;
 
   // Gather the used buffer views
   var bufferViewIds = {};
@@ -190,26 +221,22 @@ function loadBufferViews(featureMetadataLoader) {
         var featureTable = featureTables[featureTableId];
         var properties = featureTable.properties;
         if (defined(properties)) {
-          for (var propertyId in properties) {
-            if (properties.hasOwnProperty(propertyId)) {
-              var property = properties[propertyId];
-              var bufferView = property.bufferView;
-              var arrayOffsetBufferView = property.arrayOffsetBufferView;
-              var stringOffsetBufferView = property.stringOffsetBufferView;
-              if (defined(bufferView)) {
-                bufferViewIds[bufferView] = true;
-              }
-              if (defined(arrayOffsetBufferView)) {
-                bufferViewIds[arrayOffsetBufferView] = true;
-              }
-              if (defined(stringOffsetBufferView)) {
-                bufferViewIds[stringOffsetBufferView] = true;
-              }
-            }
-          }
+          gatherBufferViewIdsFromProperties(properties, bufferViewIds);
         }
       }
     }
+  }
+  return bufferViewIds;
+}
+
+function loadBufferViews(featureMetadataLoader) {
+  var bufferViewIds;
+  if (defined(featureMetadataLoader._extension)) {
+    bufferViewIds = gatherUsedBufferViewIds(featureMetadataLoader._extension);
+  } else {
+    bufferViewIds = gatherUsedBufferViewIdsLegacy(
+      featureMetadataLoader._extensionLegacy
+    );
   }
 
   // Load the buffer views
