@@ -60,10 +60,10 @@ describe("Scene/FeatureMetadata", function () {
   });
 
   it("creates feature metadata", function () {
-    var mockFeatureTables = {
-      buildings: {},
-      trees: {},
-    };
+    var mockFeatureTables = [
+      { id: 0, name: "Buildings" },
+      { id: 1, name: "Trees" },
+    ];
     var metadata = new FeatureMetadata({
       schema: new MetadataSchema(featureTablesSchema),
       featureTables: mockFeatureTables,
@@ -77,11 +77,11 @@ describe("Scene/FeatureMetadata", function () {
     expect(buildingClass.id).toBe("building");
     expect(treeClass.id).toBe("tree");
 
-    var buildingsTable = metadata.getFeatureTable("buildings");
-    var treesTable = metadata.getFeatureTable("trees");
+    var buildingsTable = metadata.getFeatureTable(0);
+    var treesTable = metadata.getFeatureTable(1);
 
-    expect(buildingsTable).toBe(mockFeatureTables.buildings);
-    expect(treesTable).toBe(mockFeatureTables.trees);
+    expect(buildingsTable).toBe(mockFeatureTables[0]);
+    expect(treesTable).toBe(mockFeatureTables[1]);
   });
 
   it("creates feature metadata with feature textures", function () {
@@ -89,14 +89,18 @@ describe("Scene/FeatureMetadata", function () {
     var mapClass = schema.classes.map;
     var orthoClass = schema.classes.ortho;
 
-    var mockTextures = {
-      mapTexture: {
+    var mockTextures = [
+      {
+        id: 0,
+        name: "Map Texture",
         class: mapClass,
       },
-      orthoTexture: {
+      {
+        id: 1,
+        name: "Ortho Texture",
         class: orthoClass,
       },
-    };
+    ];
 
     var metadata = new FeatureMetadata({
       schema: schema,
@@ -106,10 +110,14 @@ describe("Scene/FeatureMetadata", function () {
     expect(mapClass.id).toBe("map");
     expect(orthoClass.id).toBe("ortho");
 
-    var mapTexture = metadata.getFeatureTexture("mapTexture");
-    var orthoTexture = metadata.getFeatureTexture("orthoTexture");
+    var mapTexture = metadata.getFeatureTexture(0);
+    var orthoTexture = metadata.getFeatureTexture(1);
 
+    expect(mapTexture.id).toBe(0);
+    expect(mapTexture.name).toBe("Map Texture");
     expect(mapTexture.class).toBe(mapClass);
+    expect(orthoTexture.id).toBe(1);
+    expect(orthoTexture.name).toBe("Ortho Texture");
     expect(orthoTexture.class).toBe(orthoClass);
   });
 
