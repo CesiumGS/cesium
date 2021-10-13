@@ -4,7 +4,11 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import Matrix2 from "../Core/Matrix2.js";
+import Matrix3 from "../Core/Matrix3.js";
+import Matrix4 from "../Core/Matrix4.js";
 import MetadataType from "./MetadataType.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}
@@ -34,13 +38,18 @@ function MetadataClassProperty(options) {
     enumType = options.enums[property.enumType];
   }
 
-  var type = MetadataType[property.type];
-  var componentType = MetadataType[property.componentType];
-  var valueType = getValueType(type, componentType, enumType);
+  var type = defaultValue(MetadataType[property.type], MetadataType.SINGLE);
+  var componentType = MetadataComponentType[property.componentType];
+  if (MetadataComponentType.hasOwnProperty(type)) {
+    // in EXT_feature_metadata, single values were part of type, not
+    // componentType. Transcode to the newer format.
+    type = MetadataType.SINGLE;
+    componentType = MetadataComponentType[property.type];
+  }
+  var valueType = getValueType(componentType, enumType);
 
   var normalized =
-    !defined(enumType) &&
-    MetadataType.isIntegerType(valueType) &&
+    MetadataComponentType.isIntegerType(componentType) &&
     defaultValue(property.normalized, false);
 
   this._id = id;
@@ -48,8 +57,8 @@ function MetadataClassProperty(options) {
   this._description = property.description;
   this._type = type;
   this._enumType = enumType;
-  this._componentType = componentType;
   this._valueType = valueType;
+  this._componentType = componentType;
   this._componentCount = property.componentCount;
   this._normalized = normalized;
   this._min = property.min;
@@ -105,7 +114,9 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The type of the property.
+   * The type of the property. Each type holds one (SINGLE) or more components
+   * (ARRAY, VECN, MATN).
+   *
    *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
@@ -133,10 +144,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The component type of the property. Only defined when type is ARRAY.
+   * The component type of the property. These are
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {MetadataType}
+   * @type {MetadataComponentType}
    * @readonly
    * @private
    */
@@ -147,12 +158,13 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The data type of property values.
+   * The datatype used for storing each component of the property. This
+   * is usually the same as componentType except for ENUM, where this
+   * returns an integer type
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {MetadataType}
+   * @type {MetadataComponentType}
    * @readonly
-   *
    * @private
    */
   valueType: {
@@ -315,76 +327,59 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
 };
 
 /**
- * Unpack array values into {@link Cartesian2}, {@link Cartesian3}, or
- * {@link Cartesian4} if this property is an <code>ARRAY</code> of length 2, 3,
- * or 4, respectively. All other values (including arrays of other sizes) are
- * passed through unaltered.
+ * Unpack VECN values into {@link Cartesian2}, {@link Cartesian3}, or
+ * {@link Cartesian4} depending on N. All other values (including arrays of
+ * other sizes) are passed through unaltered.
  *
  * @param {*} value the original, normalized values.
  * @returns {*} The appropriate vector type if the value is a vector type. Otherwise, the value is returned unaltered.
  * @private
  */
-MetadataClassProperty.prototype.unpackVectorTypes = function (value) {
-  var type = this._type;
-  var componentCount = this._componentCount;
-
-  if (
-    type !== MetadataType.ARRAY ||
-    !defined(componentCount) ||
-    !MetadataType.isVectorCompatible(this._componentType)
-  ) {
-    return value;
+MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
+  switch (this._type) {
+    case MetadataType.VEC2:
+      return Cartesian2.unpack(value);
+    case MetadataType.VEC3:
+      return Cartesian3.unpack(value);
+    case MetadataType.VEC4:
+      return Cartesian4.unpack(value);
+    case MetadataType.MAT2:
+      return Matrix2.unpack(value);
+    case MetadataType.MAT3:
+      return Matrix3.unpack(value);
+    case MetadataType.MAT4:
+      return Matrix4.unpack(value);
+    default:
+      return value;
   }
-
-  if (componentCount === 2) {
-    return Cartesian2.unpack(value);
-  }
-
-  if (componentCount === 3) {
-    return Cartesian3.unpack(value);
-  }
-
-  if (componentCount === 4) {
-    return Cartesian4.unpack(value);
-  }
-
-  return value;
 };
 
 /**
  * Pack a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} into an
- * array if this property is an <code>ARRAY</code> of length 2, 3, or 4, respectively.
+ * array if this property is an <code>VECN</code>
  * All other values (including arrays of other sizes) are passed through unaltered.
  *
  * @param {*} value The value of this property
  * @returns {*} An array of the appropriate length if the property is a vector type. Otherwise, the value is returned unaltered.
  * @private
  */
-MetadataClassProperty.prototype.packVectorTypes = function (value) {
-  var type = this._type;
-  var componentCount = this._componentCount;
-
-  if (
-    type !== MetadataType.ARRAY ||
-    !defined(componentCount) ||
-    !MetadataType.isVectorCompatible(this._componentType)
-  ) {
-    return value;
+MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
+  switch (this._type) {
+    case MetadataType.VEC2:
+      return Cartesian2.pack(value, []);
+    case MetadataType.VEC3:
+      return Cartesian3.pack(value, []);
+    case MetadataType.VEC4:
+      return Cartesian4.pack(value, []);
+    case MetadataType.MAT2:
+      return Matrix2.pack(value, []);
+    case MetadataType.MAT3:
+      return Matrix3.pack(value, []);
+    case MetadataType.MAT4:
+      return Matrix4.pack(value, []);
+    default:
+      return value;
   }
-
-  if (componentCount === 2) {
-    return Cartesian2.pack(value, []);
-  }
-
-  if (componentCount === 3) {
-    return Cartesian3.pack(value, []);
-  }
-
-  if (componentCount === 4) {
-    return Cartesian4.pack(value, []);
-  }
-
-  return value;
 };
 
 /**
@@ -395,53 +390,66 @@ MetadataClassProperty.prototype.packVectorTypes = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
-  var message;
   var type = this._type;
-  if (type === MetadataType.ARRAY) {
-    var componentCount = this._componentCount;
+  var componentType = this._componentType;
 
-    // arrays of length 2, 3, and 4 are implicitly converted to CartesianN
-    if (
-      defined(componentCount) &&
-      componentCount >= 2 &&
-      componentCount <= 4 &&
-      MetadataType.isVectorCompatible(this._componentType)
-    ) {
-      return validateVector(value, componentCount);
-    }
+  if (MetadataType.isVectorType(type) || MetadataType.isMatrixType(type)) {
+    return validateVectorOrMatrix(value, type, componentType);
+  } else if (type === MetadataType.ARRAY) {
+    return validateArray(value, this._componentCount);
+  }
 
-    if (!Array.isArray(value)) {
-      return getTypeErrorMessage(value, type);
-    }
-    var length = value.length;
-    if (defined(componentCount) && componentCount !== length) {
-      return "Array length does not match componentCount";
-    }
-    for (var i = 0; i < length; ++i) {
-      message = checkValue(this, value[i]);
-      if (defined(message)) {
-        return message;
-      }
-    }
-  } else {
-    message = checkValue(this, value);
+  return checkValue(this, value);
+};
+
+function validateArray(value, componentCount) {
+  if (!Array.isArray(value)) {
+    return getTypeErrorMessage(value, MetadataType.ARRAY);
+  }
+  var length = value.length;
+  if (defined(componentCount) && componentCount !== length) {
+    return "Array length does not match componentCount";
+  }
+  for (var i = 0; i < length; ++i) {
+    var message = checkValue(this, value[i]);
     if (defined(message)) {
       return message;
     }
   }
-};
+}
 
-function validateVector(value, componentCount) {
-  if (componentCount === 2 && !(value instanceof Cartesian2)) {
+function validateVectorOrMatrix(value, type, componentType) {
+  if (!MetadataComponentType.isVectorCompatible(componentType)) {
+    var message = type + " has an incompatible componentType " + componentType;
+    if (MetadataType.isVectorType) {
+      return "vector value " + message;
+    }
+
+    return "matrix value " + message;
+  }
+
+  if (type === MetadataType.VEC2 && !(value instanceof Cartesian2)) {
     return "vector value " + value + " must be a Cartesian2";
   }
 
-  if (componentCount === 3 && !(value instanceof Cartesian3)) {
+  if (type === MetadataType.VEC3 && !(value instanceof Cartesian3)) {
     return "vector value " + value + " must be a Cartesian3";
   }
 
-  if (componentCount === 4 && !(value instanceof Cartesian4)) {
+  if (type === MetadataType.VEC4 && !(value instanceof Cartesian4)) {
     return "vector value " + value + " must be a Cartesian4";
+  }
+
+  if (type === MetadataType.MAT2 && !(value instanceof Matrix2)) {
+    return "matrix value " + value + " must be a Matrix2";
+  }
+
+  if (type === MetadataType.MAT3 && !(value instanceof Matrix3)) {
+    return "matrix value " + value + " must be a Matrix3";
+  }
+
+  if (type === MetadataType.MAT4 && !(value instanceof Matrix4)) {
+    return "matrix value " + value + " must be a Matrix4";
   }
 }
 
@@ -457,21 +465,23 @@ function getOutOfRangeErrorMessage(value, type, normalized) {
   return errorMessage;
 }
 
-function checkInRange(value, type, normalized) {
+function checkInRange(value, componentType, normalized) {
   if (normalized) {
-    var min = MetadataType.isUnsignedIntegerType(type) ? 0.0 : -1.0;
+    var min = MetadataComponentType.isUnsignedIntegerType(componentType)
+      ? 0.0
+      : -1.0;
     var max = 1.0;
     if (value < min || value > max) {
-      return getOutOfRangeErrorMessage(value, type, normalized);
+      return getOutOfRangeErrorMessage(value, componentType, normalized);
     }
     return;
   }
 
   if (
-    value < MetadataType.getMinimum(type) ||
-    value > MetadataType.getMaximum(type)
+    value < MetadataComponentType.getMinimum(componentType) ||
+    value > MetadataComponentType.getMaximum(componentType)
   ) {
-    return getOutOfRangeErrorMessage(value, type, normalized);
+    return getOutOfRangeErrorMessage(value, componentType, normalized);
   }
 }
 
@@ -533,32 +543,34 @@ function checkValue(classProperty, value) {
 }
 
 function normalize(classProperty, value, normalizeFunction) {
+  var normalized = classProperty._normalized;
+  if (!normalized) {
+    return value;
+  }
+
   var type = classProperty._type;
   var valueType = classProperty._valueType;
-  var normalized = classProperty._normalized;
 
-  if (normalized) {
-    if (type === MetadataType.ARRAY) {
-      var length = value.length;
-      for (var i = 0; i < length; ++i) {
-        value[i] = normalizeFunction(value[i], valueType);
-      }
-    } else {
-      value = normalizeFunction(value, valueType);
+  if (type === MetadataType.ARRAY) {
+    var length = value.length;
+    for (var i = 0; i < length; ++i) {
+      value[i] = normalizeFunction(value[i], valueType);
     }
+  } else if (MetadataType.isVectorType(type)) {
+    throw "TODO: Normalize vector types";
+  } else if (MetadataType.isMatrixType(type)) {
+    throw "TODO: Normalize matrix types";
+  } else {
+    value = normalizeFunction(value, valueType);
   }
-  return value;
 }
 
-function getValueType(type, componentType, enumType) {
-  if (type === MetadataType.ARRAY) {
-    type = componentType;
-  }
-  if (type === MetadataType.ENUM) {
-    type = enumType.valueType;
+function getValueType(componentType, enumType) {
+  if (componentType === MetadataComponentType.ENUM) {
+    return enumType.valueType;
   }
 
-  return type;
+  return componentType;
 }
 
 export default MetadataClassProperty;

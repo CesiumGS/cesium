@@ -10,6 +10,7 @@ import JsonMetadataTable from "./JsonMetadataTable.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -225,17 +226,16 @@ function transcodePropertyType(property) {
   var propertyType = property.type;
   if (propertyType === "SCALAR") {
     return {
-      type: componentType,
+      type: "SINGLE",
+      componentType: componentType,
     };
   }
 
-  // propertyType is one of VEC2, VEC3, or VEC4
-  var componentCount = parseInt(propertyType.charAt(3));
-
   return {
-    type: "ARRAY",
-    componentType: componentType,
-    componentCount: componentCount,
+    // propertyType is one of VEC2, VEC3 or VEC4, the same names as
+    // EXT_mesh_features uses.
+    type: propertyType,
+    componentType: MetadataComponentType.FLOAT32,
   };
 }
 

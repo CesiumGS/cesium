@@ -50,6 +50,7 @@ export default function parseFeatureMetadataLegacy(options) {
         properties: featureTable.properties,
         class: classDefinition,
         bufferViews: options.bufferViews,
+        isLegacyExtension: true,
       });
 
       featureTables.push(

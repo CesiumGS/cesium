@@ -10,11 +10,11 @@ describe("Scene/MetadataEntity", function () {
     class: {
       properties: {
         name: {
-          type: "STRING",
+          componentType: "STRING",
           semantic: "NAME",
         },
         height: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
           optional: true,
           default: 10.0,
         },

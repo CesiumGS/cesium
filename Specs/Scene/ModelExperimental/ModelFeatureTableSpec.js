@@ -4,10 +4,10 @@ import MetadataTester from "../../MetadataTester.js";
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   var properties = {
     height: {
-      type: "FLOAT32",
+      componentType: "FLOAT32",
     },
     name: {
-      type: "STRING",
+      componentType: "STRING",
     },
   };
   var propertyValues = {

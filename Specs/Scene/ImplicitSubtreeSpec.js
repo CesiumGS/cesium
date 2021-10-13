@@ -1245,7 +1245,7 @@ describe("Scene/ImplicitSubtree", function () {
               componentCount: 3,
             },
             buildingCount: {
-              type: "UINT16",
+              componentType: "UINT16",
             },
           },
         },

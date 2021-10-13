@@ -6,6 +6,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 
 /**
@@ -46,12 +47,12 @@ function MetadataTableProperty(options) {
   var valueType = classProperty.valueType;
   var enumType = classProperty.enumType;
 
-  var hasStrings = valueType === MetadataType.STRING;
-  var hasBooleans = valueType === MetadataType.BOOLEAN;
+  var hasStrings = valueType === MetadataComponentType.STRING;
+  var hasBooleans = valueType === MetadataComponentType.BOOLEAN;
 
   var offsetType = defaultValue(
-    MetadataType[property.offsetType],
-    MetadataType.UINT32
+    MetadataComponentType[property.offsetType],
+    MetadataComponentType.UINT32
   );
 
   var arrayOffsets;
@@ -192,7 +193,7 @@ MetadataTableProperty.prototype.get = function (index) {
 
   var value = get(this, index);
   value = this._classProperty.normalize(value);
-  return this._classProperty.unpackVectorTypes(value);
+  return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
 
 /**
@@ -214,7 +215,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   }
   //>>includeEnd('debug');
 
-  value = classProperty.packVectorTypes(value);
+  value = classProperty.packVectorAndMatrixTypes(value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
@@ -437,23 +438,23 @@ function getUint64BigIntFallback(index, values) {
   return value;
 }
 
-function getComponentDatatype(type) {
-  switch (type) {
-    case MetadataType.INT8:
+function getComponentDatatype(componentType) {
+  switch (componentType) {
+    case MetadataComponentType.INT8:
       return ComponentDatatype.BYTE;
-    case MetadataType.UINT8:
+    case MetadataComponentType.UINT8:
       return ComponentDatatype.UNSIGNED_BYTE;
-    case MetadataType.INT16:
+    case MetadataComponentType.INT16:
       return ComponentDatatype.SHORT;
-    case MetadataType.UINT16:
+    case MetadataComponentType.UINT16:
       return ComponentDatatype.UNSIGNED_SHORT;
-    case MetadataType.INT32:
+    case MetadataComponentType.INT32:
       return ComponentDatatype.INT;
-    case MetadataType.UINT32:
+    case MetadataComponentType.UINT32:
       return ComponentDatatype.UNSIGNED_INT;
-    case MetadataType.FLOAT32:
+    case MetadataComponentType.FLOAT32:
       return ComponentDatatype.FLOAT;
-    case MetadataType.FLOAT64:
+    case MetadataComponentType.FLOAT64:
       return ComponentDatatype.DOUBLE;
   }
 }
@@ -465,13 +466,13 @@ function requiresUnpackForGet(property) {
 
   var valueType = property._classProperty.valueType;
 
-  if (valueType === MetadataType.STRING) {
+  if (valueType === MetadataComponentType.STRING) {
     // Unpack since UTF-8 decoding is expensive
     return true;
   }
 
   if (
-    valueType === MetadataType.INT64 &&
+    valueType === MetadataComponentType.INT64 &&
     !FeatureDetection.supportsBigInt64Array()
   ) {
     // Unpack since the fallback INT64 getters are expensive
@@ -479,7 +480,7 @@ function requiresUnpackForGet(property) {
   }
 
   if (
-    valueType === MetadataType.UINT64 &&
+    valueType === MetadataComponentType.UINT64 &&
     !FeatureDetection.supportsBigUint64Array()
   ) {
     // Unpack since the fallback UINT64 getters are expensive
@@ -560,14 +561,14 @@ function unpackValues(property) {
   return unpackedValues;
 }
 
-function BufferView(bufferView, type, length) {
+function BufferView(bufferView, componentType, length) {
   var that = this;
 
   var typedArray;
   var getFunction;
   var setFunction;
 
-  if (type === MetadataType.INT64) {
+  if (componentType === MetadataComponentType.INT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
         "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read."
@@ -601,7 +602,7 @@ function BufferView(bufferView, type, length) {
         that.typedArray[index] = BigInt(value); // eslint-disable-line
       };
     }
-  } else if (type === MetadataType.UINT64) {
+  } else if (componentType === MetadataComponentType.UINT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
         "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read."
@@ -636,7 +637,7 @@ function BufferView(bufferView, type, length) {
       };
     }
   } else {
-    var componentDatatype = getComponentDatatype(type);
+    var componentDatatype = getComponentDatatype(componentType);
     typedArray = ComponentDatatype.createArrayBufferView(
       componentDatatype,
       bufferView.buffer,

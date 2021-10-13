@@ -18,6 +18,7 @@ import MetadataType from "./MetadataType.js";
  * @param {Object} [options.properties] A dictionary containing properties.
  * @param {MetadataClass} [options.class] The class that properties conform to.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Boolean} [isLegacyExtension=false] If true, the data types in the schema are using the older EXT_feature_metadata specification that must be transcoded.
  *
  * @alias MetadataTable
  * @constructor
