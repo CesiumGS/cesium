@@ -6,12 +6,15 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import deprecationWarning from "../../Core/deprecationWarning.js";
+import FeatureTable from "../FeatureTable.js";
+import FeatureMetadata from "../FeatureMetadata.js";
 import getJsonFromTypedArray from "../../Core/getJsonFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
 import parseBatchTable from "../parseBatchTable.js";
 import ResourceLoader from "../ResourceLoader.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import when from "../../ThirdParty/when.js";
+import MetadataClass from "../MetadataClass.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
 var B3dmLoaderState = {
@@ -465,14 +468,27 @@ function processGltfComponents(loader, components) {
   var batchLength = loader._batchLength;
   var featureTable = loader._featureTable;
 
-  // Add the feature metadata from the batch table to the model components.
+  var featureMetadata;
   if (defined(batchTable.json)) {
-    components.featureMetadata = parseBatchTable({
+    // Add the feature metadata from the batch table to the model components.
+    featureMetadata = parseBatchTable({
       count: batchLength,
       batchTable: batchTable.json,
       binaryBody: batchTable.binary,
     });
+  } else {
+    // If batch table is not defined, create a feature table without any properties.
+    var emptyFeatureTable = new FeatureTable({
+      count: batchLength,
+    });
+    var featureTables = {};
+    featureTables[MetadataClass.BATCH_TABLE_CLASS_NAME] = emptyFeatureTable;
+    featureMetadata = new FeatureMetadata({
+      schema: {},
+      featureTables: featureTables,
+    });
   }
+  components.featureMetadata = featureMetadata;
 
   // Apply the RTC Center transform, if present.
   var rtcCenter = featureTable.getGlobalProperty(

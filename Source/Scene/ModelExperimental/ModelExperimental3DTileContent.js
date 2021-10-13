@@ -1,16 +1,21 @@
 import Axis from "../Axis.js";
-import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
-import Color from "../../Core/Color.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import deprecationWarning from "../../Core/deprecationWarning.js";
 import destroyObject from "../../Core/destroyObject.js";
-import getJsonFromTypedArray from "../../Core/getJsonFromTypedArray.js";
 import ModelExperimental from "./ModelExperimental.js";
-import parseBatchTable from "../parseBatchTable.js";
 import Pass from "../../Renderer/Pass.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 
+/**
+ * Represents the contents of a glTF, glb or
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel|Batched 3D Model}
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
+ * <p>
+ * Implements the {@link Cesium3DTileContent} interface.
+ * </p>
+ * @alias ModelExperimental3DTileContent
+ * @constructor
+ * @private
+ */
 export default function ModelExperimental3DTileContent(
   tileset,
   tile,
@@ -19,37 +24,41 @@ export default function ModelExperimental3DTileContent(
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
+
+  this._model = undefined;
   this._groupMetadata = undefined;
 }
 
 Object.defineProperties(ModelExperimental3DTileContent.prototype, {
   featuresLength: {
     get: function () {
-      return 0;
+      var model = this._model;
+      var featureTable = model.featureTables[model.featureTableId];
+      return featureTable.featuresLength;
     },
   },
 
   pointsLength: {
     get: function () {
-      return this._model.pointsLength;
+      return 0;
     },
   },
 
   trianglesLength: {
     get: function () {
-      return this._model.trianglesLength;
+      return 0;
     },
   },
 
   geometryByteLength: {
     get: function () {
-      return this._model.geometryByteLength;
+      return 0;
     },
   },
 
   texturesByteLength: {
     get: function () {
-      return this._model.texturesByteLength;
+      return 0;
     },
   },
 
@@ -91,7 +100,9 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      return this._featureTable;
+      var model = this._model;
+      var featureTable = model.featureTables[model.featureTableId];
+      return featureTable;
     },
   },
 
@@ -106,28 +117,41 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 });
 
 ModelExperimental3DTileContent.prototype.getFeature = function (featureId) {
-  if (!defined(this._featureTable)) {
+  var model = this._model;
+  var featureTables = model.featureTables;
+  var featureTableId = model.featureTableId;
+  var featureTable = featureTables[featureTableId];
+
+  if (!defined(featureTable)) {
     return undefined;
   }
-  return this._featureTable.getFeature(featureId);
+  return featureTable.getFeature(featureId);
 };
 
 ModelExperimental3DTileContent.prototype.hasProperty = function (
   featureId,
   name
 ) {
-  if (!defined(this._featureTable)) {
+  var model = this._model;
+  var featureTables = model.featureTables;
+  var featureTableId = model.featureTableId;
+  var featureTable = featureTables[featureTableId];
+
+  if (!defined(featureTable)) {
     return false;
   }
-  return this._featureTable.hasProperty(featureId, name);
+  return featureTable.hasProperty(featureId, name);
 };
 
 ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
   enabled,
   color
 ) {
-  color = enabled ? color : Color.WHITE;
-  this._model.color = color;
+  return;
+};
+
+ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
+  return;
 };
 
 ModelExperimental3DTileContent.prototype.update = function (

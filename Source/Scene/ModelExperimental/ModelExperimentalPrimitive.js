@@ -111,31 +111,38 @@ function initialize(runtimePrimitive) {
 
   pipelineStages.push(LightingPipelineStage);
 
+  // The FeatureIdPipelineStage and BatchTexturePipelineStage when the primitive has features, i.e. when at least one of the following conditions exists:
+  // - the node is instanced and has feature ID attributes
+  // - the primitive has a feature ID vertex attributes
+  // - the primitive has a feature ID texture
+  // It must be noted that we check for the presence of feature ID vertex attributes, and not feature ID attributes, because it is possible to have features in a model
+  // without a feature table (for example, in 3D Tiles 1.0, where batch length > 0 but a batch table is not defined.)
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
   var featureIdTextureIndex = model.featureIdTextureIndex;
-
-  var hasInstancedFeatureIds;
+  var hasInstancedFeatureIdAttribute;
   if (
     defined(node.instances) &&
     node.instances.featureIdAttributes.length > 0
   ) {
     var featureIdAttributes = node.instances.featureIdAttributes;
     if (defined(featureIdAttributes[featureIdAttributeIndex])) {
-      hasInstancedFeatureIds = true;
+      hasInstancedFeatureIdAttribute = true;
     }
   }
-
   var hasFeatureIdVertexAttribute = defined(
     ModelExperimentalUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.FEATURE_ID
     )
   );
-
+  var hasFeatureIdTexture = defined(
+    primitive.featureIdTextures[featureIdTextureIndex]
+  );
   var hasFeatureIds =
+    hasInstancedFeatureIdAttribute ||
     hasFeatureIdVertexAttribute ||
-    defined(primitive.featureIdTextures[featureIdTextureIndex]);
-  if (hasInstancedFeatureIds || hasFeatureIds) {
+    hasFeatureIdTexture;
+  if (hasInstancedFeatureIdAttribute || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
   }

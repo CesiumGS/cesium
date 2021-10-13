@@ -1,6 +1,5 @@
 import combine from "../../Core/combine.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
 
 /**
  * The batch texture stage is responsible for setting up the batch texture for the primitive.
