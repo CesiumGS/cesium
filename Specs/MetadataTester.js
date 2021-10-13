@@ -224,6 +224,39 @@ MetadataTester.createFeatureTable = function (options) {
   });
 };
 
+// for EXT_mesh_features
+MetadataTester.createPropertyTables = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  var propertyTables = [];
+  var bufferViews = {};
+
+  for (var i = 0; i < options.propertyTables.length; i++) {
+    var propertyTable = options.propertyTables[i];
+    var tablePropertyResults = createProperties({
+      schema: options.schema,
+      classId: propertyTable.class,
+      propertyValues: propertyTable.properties,
+      bufferViews: bufferViews,
+    });
+
+    var count = tablePropertyResults.count;
+    var properties = tablePropertyResults.properties;
+    propertyTables.push({
+      name: propertyTable.name,
+      class: propertyTable.class,
+      count: count,
+      properties: properties,
+    });
+  }
+
+  return {
+    propertyTables: propertyTables,
+    bufferViews: bufferViews,
+  };
+};
+
+// For EXT_feature_metadata
 MetadataTester.createFeatureTables = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

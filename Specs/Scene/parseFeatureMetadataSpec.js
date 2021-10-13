@@ -93,7 +93,7 @@ describe(
         return;
       }
 
-      var featureTableResults = MetadataTester.createFeatureTables({
+      var featureTableResults = MetadataTester.createPropertyTables({
         schema: featureTablesSchema,
         propertyTables: [
           {
@@ -116,7 +116,7 @@ describe(
 
       var extension = {
         schema: featureTablesSchema,
-        featureTables: featureTableResults.featureTables,
+        propertyTables: featureTableResults.propertyTables,
       };
 
       var metadata = parseFeatureMetadata({
@@ -148,7 +148,7 @@ describe(
 
       expect(treesTable.count).toBe(2);
       expect(treesTable.id).toBe(1);
-      expect(treesTable.name).toBe("trees");
+      expect(treesTable.name).toBe("Trees");
       expect(treesTable.class).toBe(treeClass);
       expect(treesTable.getPropertyIds().length).toBe(1);
       expect(treesTable.getProperty(0, "species")).toBe("Oak");
