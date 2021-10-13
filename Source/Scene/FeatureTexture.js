@@ -11,6 +11,7 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
+ * @param {String} [options.name] Optional human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
  * @param {Object} options.featureTexture The feature texture JSON.
  * @param {MetadataClass} options.class The class that properties conform to.
@@ -24,7 +25,6 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
  */
 function FeatureTexture(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
   var featureTexture = options.featureTexture;
   var classDefinition = options.class;
   var textures = options.textures;
@@ -51,7 +51,8 @@ function FeatureTexture(options) {
     }
   }
 
-  this._id = id;
+  this._name = options.name;
+  this._id = options.id;
   this._class = classDefinition;
   this._properties = properties;
   this._extras = extras;
@@ -59,6 +60,19 @@ function FeatureTexture(options) {
 }
 
 Object.defineProperties(FeatureTexture.prototype, {
+  /**
+   * A human-readable name for this texture
+   *
+   * @memberof FeatureTexture.prototype
+   * @type {String}
+   * @readonly
+   * @private
+   */
+  name: {
+    get: function () {
+      return this._name;
+    },
+  },
   /**
    * An identifier for this texture. Useful for debugging.
    *

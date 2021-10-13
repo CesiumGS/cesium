@@ -62,6 +62,8 @@ describe(
       "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
     var unlitTest = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
     var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    var microcosmLegacy =
+      "./Data/Models/GltfLoader/Microcosm/glTF/microcosm_EXT_feature_metadata.gltf";
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
@@ -845,6 +847,65 @@ describe(
 
     it("loads Microcosm", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var primitive = rootNode.primitives[0];
+        var featureIdTexture = primitive.featureIdTextures[0];
+        var material = primitive.material;
+        var baseColorTexture = material.metallicRoughness.baseColorTexture;
+        var featureMetadata = components.featureMetadata;
+
+        expect(baseColorTexture.texCoord).toBe(1);
+
+        expect(primitive.featureIdAttributes.length).toBe(0);
+        expect(primitive.featureIdTextures.length).toBe(1);
+        expect(primitive.featureTextureIds).toEqual([0]);
+
+        expect(featureIdTexture.featureTableId).toBe(0);
+        expect(featureIdTexture.textureReader.channels).toBe("r");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture.width).toBe(256);
+        expect(featureIdTexture.textureReader.texture.height).toBe(256);
+        expect(featureIdTexture.textureReader.texture.sampler).toBe(
+          Sampler.NEAREST
+        );
+
+        var classDefinition = featureMetadata.schema.classes.landCover;
+        var properties = classDefinition.properties;
+        expect(properties.name.type).toBe(MetadataType.STRING);
+        expect(properties.color.type).toBe(MetadataType.ARRAY);
+        expect(properties.color.componentType).toBe(MetadataType.UINT8);
+        expect(properties.color.componentCount).toBe(3);
+
+        var featureTable = featureMetadata.getFeatureTable(0);
+        expect(featureTable.id).toEqual(0);
+        expect(featureTable.name).toEqual("Land Cover");
+        expect(featureTable.count).toBe(256);
+        expect(featureTable.class).toBe(classDefinition);
+        expect(featureTable.getProperty(0, "name")).toBe("Grassland");
+        expect(featureTable.getProperty(0, "color")).toEqual(
+          new Cartesian3(118, 163, 11)
+        );
+        expect(featureTable.getProperty(255, "name")).toBe("Building");
+        expect(featureTable.getProperty(255, "color")).toEqual(
+          new Cartesian3(194, 194, 194)
+        );
+
+        var featureTexture = featureMetadata.getFeatureTexture(0);
+        expect(featureTexture.id).toEqual(0);
+        expect(featureTexture.name).toEqual("Vegetation");
+        var vegetationProperty = featureTexture.getProperty(
+          "vegetationDensity"
+        );
+
+        expect(vegetationProperty.textureReader.texture.width).toBe(256);
+        expect(vegetationProperty.textureReader.texture.height).toBe(256);
+      });
+    });
+
+    it("loads Microcosm with EXT_feature_metadata", function () {
+      return loadGltf(microcosmLegacy).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var scene = components.scene;
         var rootNode = scene.nodes[0];

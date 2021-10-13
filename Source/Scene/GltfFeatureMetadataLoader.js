@@ -275,38 +275,66 @@ function loadBufferViews(featureMetadataLoader) {
   });
 }
 
-function loadTextures(featureMetadataLoader) {
-  var extension = defaultValue(
-    featureMetadataLoader._extension,
-    featureMetadataLoader._extensionLegacy
-  );
-  var featureTextures = extension.featureTextures;
+function gatherTextureIdsFromProperties(properties, textureIds) {
+  for (var propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      var property = properties[propertyId];
+      var textureInfo = property.texture;
+      textureIds[textureInfo.index] = textureInfo;
+    }
+  }
+}
 
-  var gltf = featureMetadataLoader._gltf;
-  var gltfResource = featureMetadataLoader._gltfResource;
-  var baseResource = featureMetadataLoader._baseResource;
-  var supportedImageFormats = featureMetadataLoader._supportedImageFormats;
-  var asynchronous = featureMetadataLoader._asynchronous;
-
+function gatherUsedTextureIds(extension) {
   // Gather the used textures
   var textureIds = {};
+  var propertyTextures = extension.propertyTextures;
+  if (defined(propertyTextures)) {
+    for (var i = 0; i < propertyTextures.length; i++) {
+      var propertyTexture = propertyTextures[i];
+      var properties = propertyTexture.properties;
+      if (defined(properties)) {
+        gatherTextureIdsFromProperties(properties, textureIds);
+      }
+    }
+  }
+  return textureIds;
+}
+
+function gatherUsedTextureIdsLegacy(extensionLegacy) {
+  // Gather the used textures
+  var textureIds = {};
+  var featureTextures = extensionLegacy.featureTextures;
   if (defined(featureTextures)) {
     for (var featureTextureId in featureTextures) {
       if (featureTextures.hasOwnProperty(featureTextureId)) {
         var featureTexture = featureTextures[featureTextureId];
         var properties = featureTexture.properties;
         if (defined(properties)) {
-          for (var propertyId in properties) {
-            if (properties.hasOwnProperty(propertyId)) {
-              var property = properties[propertyId];
-              var textureInfo = property.texture;
-              textureIds[textureInfo.index] = textureInfo;
-            }
-          }
+          gatherTextureIdsFromProperties(properties, textureIds);
         }
       }
     }
   }
+
+  return textureIds;
+}
+
+function loadTextures(featureMetadataLoader) {
+  var textureIds;
+  if (defined(featureMetadataLoader._extension)) {
+    textureIds = gatherUsedTextureIds(featureMetadataLoader._extension);
+  } else {
+    textureIds = gatherUsedTextureIdsLegacy(
+      featureMetadataLoader._extensionLegacy
+    );
+  }
+
+  var gltf = featureMetadataLoader._gltf;
+  var gltfResource = featureMetadataLoader._gltfResource;
+  var baseResource = featureMetadataLoader._baseResource;
+  var supportedImageFormats = featureMetadataLoader._supportedImageFormats;
+  var asynchronous = featureMetadataLoader._asynchronous;
 
   // Load the textures
   var texturePromises = [];

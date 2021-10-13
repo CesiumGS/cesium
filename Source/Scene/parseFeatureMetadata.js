@@ -64,6 +64,7 @@ export default function parseFeatureMetadata(options) {
       featureTextures.push(
         new FeatureTexture({
           id: i,
+          name: propertyTexture.name,
           featureTexture: propertyTexture,
           class: schema.classes[propertyTexture.class],
           textures: options.textures,

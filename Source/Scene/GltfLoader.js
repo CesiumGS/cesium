@@ -787,6 +787,37 @@ function loadFeatureIdTexture(
   loader,
   gltf,
   gltfFeatureIdTexture,
+  featureTableId,
+  supportedImageFormats
+) {
+  var featureIdTexture = new FeatureIdTexture();
+  var textureInfo = {
+    index: gltfFeatureIdTexture.index,
+    texCoord: gltfFeatureIdTexture.texCoord,
+  };
+
+  featureIdTexture.featureTableId = featureTableId;
+  featureIdTexture.textureReader = loadTexture(
+    loader,
+    gltf,
+    textureInfo,
+    supportedImageFormats,
+    Sampler.NEAREST // Feature ID textures require nearest sampling
+  );
+
+  // Though the new channel index is more future-proof, this implementation
+  // only supports RGBA textures. At least for now, the string representation
+  // is more useful for generating shader code.
+  var channelString = "rgba".charAt(gltfFeatureIdTexture.channel);
+  featureIdTexture.textureReader.channels = channelString;
+
+  return featureIdTexture;
+}
+
+function loadFeatureIdTextureLegacy(
+  loader,
+  gltf,
+  gltfFeatureIdTexture,
   supportedImageFormats
 ) {
   var featureIdTexture = new FeatureIdTexture();
@@ -918,7 +949,7 @@ function loadPrimitiveMetadata(
 
   for (i = 0; i < featureIdsArray.length; i++) {
     var featureIds = featureIdsArray[i];
-    if (defined(featureIds.channels)) {
+    if (defined(featureIds.channel)) {
       featureIdTextures.push(featureIds);
     } else {
       featureIdAttributes.push(featureIds);
@@ -944,6 +975,7 @@ function loadPrimitiveMetadata(
           loader,
           gltf,
           featureIdTextures[i],
+          propertyTablesArray[i],
           supportedImageFormats
         )
       );
@@ -951,7 +983,7 @@ function loadPrimitiveMetadata(
   }
 
   // Feature Textures
-  if (defined(metadataExtension.featureTextures)) {
+  if (defined(metadataExtension.propertyTextures)) {
     primitive.featureTextureIds = metadataExtension.propertyTextures;
   }
 }
@@ -982,7 +1014,7 @@ function loadPrimitiveMetadataLegacy(
     var featureIdTexturesLength = featureIdTextures.length;
     for (i = 0; i < featureIdTexturesLength; ++i) {
       primitive.featureIdTextures.push(
-        loadFeatureIdTexture(
+        loadFeatureIdTextureLegacy(
           loader,
           gltf,
           featureIdTextures[i],
