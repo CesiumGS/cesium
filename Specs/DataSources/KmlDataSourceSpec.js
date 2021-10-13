@@ -1409,6 +1409,28 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
+  it("ScreenOverlay: Clean up", function () {
+    var kml =
+      '<?xml version="1.0" encoding="UTF-8"?>\
+        <ScreenOverlay>\
+          <Icon>\
+            <href>http://invalid.url/</href>\
+          </Icon>\
+          <screenXY x="100" y="250" xunits="pixels" yunits="insetPixels" />\
+          <overlayXY x="47" y="31" xunits="pixels" yunits="pixels" />\
+          <size x="-1" y="-1" xunits="pixels" yunits="pixels" />\
+        </ScreenOverlay>';
+
+    return KmlDataSource.load(
+      parser.parseFromString(kml, "text/xml"),
+      options
+    ).then(function (dataSource) {
+      expect(screenOverlayContainer.children.length).toEqual(1);
+      dataSource.cleanup();
+      expect(screenOverlayContainer.children.length).toEqual(0);
+    });
+  });
+
   it("Styles: supports local styles with styleUrl", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\

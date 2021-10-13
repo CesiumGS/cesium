@@ -2519,6 +2519,8 @@ function processScreenOverlay(
   }
 
   var img = document.createElement("img");
+  dataSource._screenOverlays.push(img);
+
   img.src = icon.url;
   img.onload = function () {
     var styles = ["position: absolute"];
@@ -3605,6 +3607,8 @@ function KmlDataSource(options) {
   this._resourceCredits = [];
 
   this._kmlTours = [];
+
+  this._screenOverlays = [];
 }
 
 /**
@@ -3868,6 +3872,13 @@ KmlDataSource.prototype.load = function (data, options) {
       console.log(error);
       return when.reject(error);
     });
+};
+
+KmlDataSource.prototype.cleanup = function () {
+  while (this._screenOverlays.length > 0) {
+    var elem = this._screenOverlays.pop();
+    elem.remove();
+  }
 };
 
 function mergeAvailabilityWithParent(child) {
