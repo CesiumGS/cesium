@@ -276,9 +276,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       model: {
         featureIdTextureIndex: 0,
         _resources: [],
-        featureTables: {
-          landCoverTable: mockModelFeatureTable,
-        },
+        featureTables: [mockModelFeatureTable],
       },
       runtimeNode: {
         node: {},
