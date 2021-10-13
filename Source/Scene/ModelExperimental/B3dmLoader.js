@@ -37,6 +37,7 @@ var UINT32_BYTE_SIZE = Uint32Array.BYTES_PER_ELEMENT;
  * @alias B3dmLoader
  * @constructor
  * @augments ResourceLoader
+ * @private
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.b3dmResource The {@link Resource} containing the B3DM.
@@ -189,7 +190,9 @@ B3dmLoader.prototype.load = function () {
 
   // Parse B3DM header.
   var header = parseHeader(arrayBuffer);
+  // The length of the B3DM header.
   offset += header.headerByteLength;
+  // The byte length of the B3DM.
   var byteLength = header.byteLength;
   var batchLength = header.batchLength;
   var batchTableJsonByteLength = header.batchTableJsonByteLength;
@@ -213,18 +216,6 @@ B3dmLoader.prototype.load = function () {
   batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
   featureTable.featuresLength = batchLength;
   this._batchLength = batchLength;
-
-  // Set RTC transform.
-  var rtcTransform = Matrix4.IDENTITY;
-  var rtcCenter = featureTable.getGlobalProperty(
-    "RTC_CENTER",
-    ComponentDatatype.FLOAT,
-    3
-  );
-  if (defined(rtcCenter)) {
-    rtcTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
-    this._rtcTransform = rtcTransform;
-  }
 
   // Load batch table.
   var batchTable = loadBatchTable(
