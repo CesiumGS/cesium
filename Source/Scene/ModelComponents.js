@@ -323,7 +323,7 @@ function FeatureIdAttribute() {
    * feature IDs are used for classification, but no metadata is associated.
    *
    *
-   * @type {String}
+   * @type {Number}
    * @private
    */
   this.featureTableId = undefined;

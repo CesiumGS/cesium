@@ -923,7 +923,7 @@ describe(
         expect(primitive.featureIdTextures.length).toBe(1);
         expect(primitive.featureTextureIds).toEqual([0]);
 
-        expect(featureIdTexture.featureTableId).toBe("landCoverTable");
+        expect(featureIdTexture.featureTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
@@ -1014,7 +1014,7 @@ describe(
         expect(primitive.featureTextureIds.length).toBe(0);
 
         var featureIdAttributeMapping = primitive.featureIdAttributes[0];
-        expect(featureIdAttributeMapping.featureTableId).toBe("buildings");
+        expect(featureIdAttributeMapping.featureTableId).toBe(0);
         expect(featureIdAttributeMapping.setIndex).toBe(0);
         expect(featureIdAttributeMapping.offset).toBe(0);
         expect(featureIdAttributeMapping.repeat).toBe(0);
@@ -1153,13 +1153,13 @@ describe(
         expect(primitive.featureTextureIds.length).toBe(0);
 
         var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
-        expect(featureIdAttributeMapping0.featureTableId).toBe("weatherTable");
+        expect(featureIdAttributeMapping0.featureTableId).toBe(1);
         expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
         var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
-        expect(featureIdAttributeMapping1.featureTableId).toBe("townTable");
+        expect(featureIdAttributeMapping1.featureTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.offset).toBe(0);
         expect(featureIdAttributeMapping1.repeat).toBe(0);
@@ -1520,13 +1520,13 @@ describe(
         expect(instances.featureIdAttributes.length).toBe(2);
 
         var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
-        expect(featureIdAttributeMapping0.featureTableId).toBe("boxTable");
+        expect(featureIdAttributeMapping0.featureTableId).toBe(0);
         expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
         var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
-        expect(featureIdAttributeMapping1.featureTableId).toBe("sectionTable");
+        expect(featureIdAttributeMapping1.featureTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.offset).toBe(0);
         expect(featureIdAttributeMapping1.repeat).toBe(0);
