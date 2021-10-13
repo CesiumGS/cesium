@@ -71,6 +71,8 @@ describe(
       "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
     var boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+    var boxInstancedLegacy =
+      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced_EXT_feature_metadata.gltf";
     var boxInstancedInterleaved =
       "./Data/Models/GltfLoader/BoxInstancedInterleaved/glTF/box-instanced-interleaved.gltf";
     var boxInstancedTranslation =
@@ -1217,6 +1219,183 @@ describe(
       }
 
       return loadGltf(boxInstanced).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var scene = components.scene;
+        var rootNode = scene.nodes[0];
+        var primitive = rootNode.primitives[0];
+        var attributes = primitive.attributes;
+        var positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        var normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        var featureMetadata = components.featureMetadata;
+        var instances = rootNode.instances;
+        var instancedAttributes = instances.attributes;
+        var translationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.TRANSLATION
+        );
+        var rotationAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.ROTATION
+        );
+        var scaleAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.SCALE
+        );
+        var featureIdAttribute = getAttribute(
+          instancedAttributes,
+          InstanceAttributeSemantic.FEATURE_ID,
+          0
+        );
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+
+        expect(translationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.TRANSLATION
+        );
+        expect(translationAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(translationAttribute.type).toBe(AttributeType.VEC3);
+        expect(translationAttribute.normalized).toBe(false);
+        expect(translationAttribute.count).toBe(4);
+        expect(translationAttribute.min).toBeUndefined();
+        expect(translationAttribute.max).toBeUndefined();
+        expect(translationAttribute.constant).toEqual(Cartesian3.ZERO);
+        expect(translationAttribute.quantization).toBeUndefined();
+        expect(translationAttribute.typedArray).toEqual(
+          new Float32Array([-2, 2, 0, -2, -2, 0, 2, -2, 0, 2, 2, 0])
+        );
+        expect(translationAttribute.buffer).toBeUndefined();
+        expect(translationAttribute.byteOffset).toBe(0);
+        expect(translationAttribute.byteStride).toBeUndefined();
+
+        expect(rotationAttribute.semantic).toBe(
+          InstanceAttributeSemantic.ROTATION
+        );
+        expect(rotationAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(rotationAttribute.type).toBe(AttributeType.VEC4);
+        expect(rotationAttribute.normalized).toBe(false);
+        expect(rotationAttribute.count).toBe(4);
+        expect(rotationAttribute.min).toBeUndefined();
+        expect(rotationAttribute.max).toBeUndefined();
+        expect(rotationAttribute.constant).toEqual(Cartesian4.ZERO);
+        expect(rotationAttribute.quantization).toBeUndefined();
+        expect(rotationAttribute.typedArray).toEqual(
+          // prettier-ignore
+          new Float32Array([
+            0.3826833963394165, 0, 0, 0.9238795042037964,
+            0.3535534143447876, 0.3535534143447876, 0.1464466005563736, 0.8535534143447876,
+            0.46193981170654297, 0.19134169816970825, 0.46193981170654297, 0.7325378060340881,
+            0.5319756865501404, 0.022260000929236412, 0.43967971205711365, 0.7233173847198486,
+          ])
+        );
+        expect(rotationAttribute.buffer).toBeUndefined();
+        expect(rotationAttribute.byteOffset).toBe(0);
+        expect(rotationAttribute.byteStride).toBeUndefined();
+
+        expect(scaleAttribute.semantic).toBe(InstanceAttributeSemantic.SCALE);
+        expect(scaleAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+        expect(scaleAttribute.type).toBe(AttributeType.VEC3);
+        expect(scaleAttribute.normalized).toBe(false);
+        expect(scaleAttribute.count).toBe(4);
+        expect(scaleAttribute.min).toBeUndefined();
+        expect(scaleAttribute.max).toBeUndefined();
+        expect(scaleAttribute.constant).toEqual(Cartesian3.ZERO);
+        expect(scaleAttribute.quantization).toBeUndefined();
+        expect(scaleAttribute.typedArray).toEqual(
+          // prettier-ignore
+          new Float32Array([
+            0.6000000238418579, 0.699999988079071, 1,
+            1, 1, 0.5,
+            0.75, 0.20000000298023224, 0.5,
+            0.800000011920929, 0.6000000238418579, 0.8999999761581421,
+          ])
+        );
+        expect(scaleAttribute.buffer).toBeUndefined();
+        expect(scaleAttribute.byteOffset).toBe(0);
+        expect(scaleAttribute.byteStride).toBeUndefined();
+
+        expect(featureIdAttribute.setIndex).toBe(0);
+        expect(featureIdAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
+        expect(featureIdAttribute.normalized).toBe(false);
+        expect(featureIdAttribute.count).toBe(4);
+        expect(featureIdAttribute.min).toBeUndefined();
+        expect(featureIdAttribute.max).toBeUndefined();
+        expect(featureIdAttribute.constant).toBe(0);
+        expect(featureIdAttribute.quantization).toBeUndefined();
+        expect(featureIdAttribute.typedArray).toBeDefined();
+        expect(featureIdAttribute.buffer).toBeUndefined();
+        expect(featureIdAttribute.byteOffset).toBe(0);
+        expect(rotationAttribute.byteStride).toBeUndefined();
+
+        expect(instances.featureIdAttributes.length).toBe(2);
+
+        var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
+        expect(featureIdAttributeMapping0.featureTableId).toBe(0);
+        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
+        expect(featureIdAttributeMapping0.offset).toBe(0);
+        expect(featureIdAttributeMapping0.repeat).toBe(1);
+
+        var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
+        expect(featureIdAttributeMapping1.featureTableId).toBe(1);
+        expect(featureIdAttributeMapping1.setIndex).toBe(0);
+        expect(featureIdAttributeMapping1.offset).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).toBe(0);
+
+        var boxClass = featureMetadata.schema.classes.box;
+        var boxProperties = boxClass.properties;
+        expect(boxProperties.name.type).toBe(MetadataType.STRING);
+        expect(boxProperties.volume.type).toBe(MetadataType.FLOAT32);
+
+        var sectionClass = featureMetadata.schema.classes.section;
+        var sectionProperties = sectionClass.properties;
+        expect(sectionProperties.name.type).toBe(MetadataType.STRING);
+        expect(sectionProperties.id.type).toBe(MetadataType.UINT16);
+
+        var boxTable = featureMetadata.getFeatureTable(0);
+        expect(boxTable.id).toBe(0);
+        expect(boxTable.name).toBe("Box");
+        expect(boxTable.count).toBe(4);
+        expect(boxTable.class).toBe(boxClass);
+        expect(boxTable.getProperty(0, "name")).toBe("top left");
+        expect(boxTable.getProperty(0, "volume")).toBe(0.41999998688697815);
+        expect(boxTable.getProperty(1, "name")).toBe("bottom left");
+        expect(boxTable.getProperty(1, "volume")).toBe(0.5);
+        expect(boxTable.getProperty(2, "name")).toBe("bottom right");
+        expect(boxTable.getProperty(2, "volume")).toBe(0.07500000298023224);
+        expect(boxTable.getProperty(3, "name")).toBe("top right");
+        expect(boxTable.getProperty(3, "volume")).toBe(0.4320000112056732);
+
+        var sectionTable = featureMetadata.getFeatureTable(1);
+        expect(sectionTable.id).toBe(1);
+        expect(sectionTable.name).toBe("Section");
+        expect(sectionTable.count).toBe(2);
+        expect(sectionTable.class).toBe(sectionClass);
+        expect(sectionTable.getProperty(0, "name")).toBe("left");
+        expect(sectionTable.getProperty(0, "id")).toBe(10293);
+        expect(sectionTable.getProperty(1, "name")).toBe("right");
+        expect(sectionTable.getProperty(1, "id")).toBe(54923);
+      });
+    });
+
+    it("loads BoxInstanced with EXT_feature_metadata", function () {
+      if (!scene.context.instancedArrays) {
+        return;
+      }
+
+      return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
         var components = gltfLoader.components;
         var scene = components.scene;
         var rootNode = scene.nodes[0];
