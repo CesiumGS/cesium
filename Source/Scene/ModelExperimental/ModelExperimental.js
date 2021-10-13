@@ -12,7 +12,6 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
-import MetadataClass from "../MetadataClass.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -97,19 +96,19 @@ export default function ModelExperimental(options) {
 }
 
 function createContentFeatureTables(content, featureMetadata) {
-  var contentFeatureTables = {};
+  var contentFeatureTables = [];
 
   var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
+  for (var i = 0; i < featureTables.length; i++) {
+    {
+      var featureTable = featureTables[i];
       var contentFeatureTable = new Cesium3DTileContentFeatureTable({
         content: content,
         featureTable: featureTable,
       });
 
       if (contentFeatureTable.featuresLength > 0) {
-        contentFeatureTables[featureTableId] = contentFeatureTable;
+        contentFeatureTables.push(contentFeatureTable);
       }
     }
   }
@@ -118,21 +117,19 @@ function createContentFeatureTables(content, featureMetadata) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  var modelFeatureTables = {};
+  var modelFeatureTables = [];
 
   var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
-      var modelfeatureTable = new ModelFeatureTable({
-        model: model,
-        featureTable: featureTable,
-      });
+  for (var i = 0; i < featureTables.length; i++) {
+    var featureTable = featureTables[i];
+    var modelFeatureTable = new ModelFeatureTable({
+      model: model,
+      featureTable: featureTable,
+    });
 
-      if (modelfeatureTable.featuresLength > 0) {
-        modelFeatureTables[featureTableId] = modelfeatureTable;
-        model._resources.push(modelfeatureTable);
-      }
+    if (modelFeatureTable.featuresLength > 0) {
+      modelFeatureTables.push(modelFeatureTable);
+      model._resources.push(modelFeatureTable);
     }
   }
 
@@ -140,9 +137,9 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model, content) {
-  // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
+  // For 3D Tiles 1.0 formats, the feature table is always the first table
   if (defined(content) && defined(content.featureMetadata)) {
-    return MetadataClass.BATCH_TABLE_CLASS_NAME;
+    return 0;
   }
 
   var featureIdAttributeIndex = model._featureIdAttributeIndex;

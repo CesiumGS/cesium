@@ -13,9 +13,9 @@ import MetadataTable from "./MetadataTable.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
- * be compatible with feature metadata from the `EXT_feature_metadata` glTF extension
+ * be compatible with feature metadata from the <code>EXT_mesh_features</code> glTF extension
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -65,8 +65,9 @@ export default function parseBatchTable(options) {
     bufferViews: binaryResults.bufferViewsU8,
   });
 
-  var featureTables = {};
-  featureTables[className] = new FeatureTable({
+  var featureTable = new FeatureTable({
+    id: 0,
+    name: "B3DM Batch Table",
     count: featureTableJson.count,
     metadataTable: metadataTable,
     jsonMetadataTable: jsonMetadataTable,
@@ -75,7 +76,7 @@ export default function parseBatchTable(options) {
 
   return new FeatureMetadata({
     schema: binaryResults.transcodedSchema,
-    featureTables: featureTables,
+    featureTables: [featureTable],
     extensions: partitionResults.extensions,
     extras: partitionResults.extras,
   });
@@ -138,7 +139,7 @@ function partitionProperties(batchTable) {
 
 /**
  * Transcode the binary properties of the batch table to be compatible with
- * <code>EXT_feature_metadata</code>
+ * <code>EXT_mesh_features</code>
  *
  * @param {Number} featureCount The number of features in the batch table
  * @param {String} className The name of the metadata class to be created.
@@ -212,7 +213,7 @@ function transcodeBinaryProperties(
 
 /**
  * Given a property definition from the batch table, compute the equivalent
- * <code>EXT_feature_metadata</code> type definition
+ * <code>EXT_mesh_features</code> type definition
  *
  * @param {Object} property The batch table property definition
  * @return {Object} The corresponding feature metadata property definition
