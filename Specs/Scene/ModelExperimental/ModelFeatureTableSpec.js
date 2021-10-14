@@ -23,6 +23,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("hasProperty works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
+      model: {},
     });
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
@@ -35,6 +36,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getFeature works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
+      model: {},
     });
     expect(table._featuresLength).toEqual(mockFeatureTable.count);
     var modelFeatures = table._features;
@@ -48,6 +50,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getProperty works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
+      model: {},
     });
     expect(table._featuresLength).toEqual(mockFeatureTable.count);
     var modelFeatures = table._features;
@@ -67,6 +70,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("getPropertyNames works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
+      model: {},
     });
     var modelFeatures = table._features;
     var results;
@@ -80,6 +84,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("setProperty works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
+      model: {},
     });
     var feature = table._features[0];
     expect(feature.getProperty("height")).toEqual(1.0);
@@ -90,6 +95,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("destroy works", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
+      model: {},
     });
     var batchTexture = table._batchTexture;
     expect(batchTexture.isDestroyed()).toEqual(false);

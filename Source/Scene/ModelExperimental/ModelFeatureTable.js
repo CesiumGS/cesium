@@ -1,8 +1,9 @@
 import BatchTexture from "../BatchTexture.js";
+import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
+import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
-import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -21,6 +22,12 @@ import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
 export default function ModelFeatureTable(options) {
   this._featureTable = options.featureTable;
   this._model = options.model;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.featureTable", options.featureTable);
+  Check.typeOf.object("options.model", options.model);
+  //>>includeEnd('debug');
+
   this._features = undefined;
   this._featuresLength = 0;
 
