@@ -127,13 +127,6 @@ describe("DataSources/KmlDataSource", function () {
     options.camera.positionWC.x = 0.0;
   });
 
-  afterEach(function () {
-    // Clear all screen overlay elements
-    while (screenOverlayContainer.firstChild) {
-      screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
-    }
-  });
-
   it("default constructor has expected values", function () {
     var dataSource = new KmlDataSource(options);
     expect(dataSource.name).toBeUndefined();
@@ -1272,6 +1265,8 @@ describe("DataSources/KmlDataSource", function () {
       );
       expect(child.style.right).toEqual("");
       expect(["calc(0% + 0px)", "calc(0% - 0px)"]).toContain(child.style.left);
+
+      dataSource.destroy();
     });
   });
 

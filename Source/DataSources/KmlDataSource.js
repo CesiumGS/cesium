@@ -4115,7 +4115,6 @@ KmlDataSource.prototype.update = function (time) {
 
   var newNetworkLinks = new AssociativeArray();
   var changed = false;
-  var that = this;
   networkLinks.values.forEach(function (networkLink) {
     var entity = networkLink.entity;
     if (entitiesToIgnore.contains(entity.id)) {
