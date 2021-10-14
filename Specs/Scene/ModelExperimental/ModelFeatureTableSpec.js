@@ -1,4 +1,8 @@
-import { ModelFeatureTable, ModelFeature } from "../../../Source/Cesium.js";
+import {
+  Cesium3DTileFeature,
+  ModelFeatureTable,
+  ModelFeature,
+} from "../../../Source/Cesium.js";
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
@@ -18,6 +22,34 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   var mockFeatureTable = MetadataTester.createFeatureTable({
     properties: properties,
     propertyValues: propertyValues,
+  });
+
+  it("creates ModelFeatures when model does not have content", function () {
+    var table = new ModelFeatureTable({
+      featureTable: mockFeatureTable,
+      model: {},
+    });
+    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    var modelFeatures = table._features;
+    for (var i = 0; i < modelFeatures.length; i++) {
+      var feature = table.getFeature(i);
+      expect(feature).toBeInstanceOf(ModelFeature);
+    }
+  });
+
+  it("creates ModelFeatures when model has content", function () {
+    var table = new ModelFeatureTable({
+      featureTable: mockFeatureTable,
+      model: {
+        content: {},
+      },
+    });
+    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    var modelFeatures = table._features;
+    for (var i = 0; i < modelFeatures.length; i++) {
+      var feature = table.getFeature(i);
+      expect(feature).toBeInstanceOf(Cesium3DTileFeature);
+    }
   });
 
   it("hasProperty works", function () {
