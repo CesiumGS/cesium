@@ -98,17 +98,21 @@ function getFeatureIdAttributeInfo(
 function processFeatureIdAttributes(renderResources, frameState, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
   var model = renderResources.model;
+  var instances = renderResources.runtimeNode.node.instances;
 
   var featureIdAttributePrefix;
   var featureIdAttributeSetIndex;
 
   // For 3D Tiles 1.0, the FEATURE_ID vertex attribute is present but the Feature ID attribute is not.
-  if (primitive.featureIdAttributes.length === 0) {
+  if (
+    primitive.featureIdAttributes.length === 0 &&
+    defined(instances) &&
+    instances.featureIdAttributes.length === 0
+  ) {
     featureIdAttributePrefix = "a_featureId";
     featureIdAttributeSetIndex = "";
   } else {
     var featureIdAttributeIndex = model.featureIdAttributeIndex;
-    var instances = renderResources.runtimeNode.node.instances;
 
     var featureIdAttributeInfo = getFeatureIdAttributeInfo(
       featureIdAttributeIndex,

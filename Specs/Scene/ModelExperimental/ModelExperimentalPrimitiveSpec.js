@@ -9,18 +9,19 @@ import {
   LightingPipelineStage,
   MaterialPipelineStage,
   PickingPipelineStage,
+  VertexAttributeSemantic,
+  BatchTexturePipelineStage,
   ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
-import BatchTexturePipelineStage from "../../../Source/Scene/ModelExperimental/BatchTexturePipelineStage.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {
     featureIdAttributes: [],
     featureIdTextures: [],
+    attributes: [],
   };
   var mockNode = {};
   var mockModel = {
-    content: {},
     allowPicking: true,
     featureIdAttributeIndex: 0,
   };
@@ -144,6 +145,11 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: {
         featureIdAttributes: [{}, {}],
         featureIdTextures: [],
+        attributes: [
+          {
+            semantic: VertexAttributeSemantic.FEATURE_ID,
+          },
+        ],
       },
       node: {},
       model: {
@@ -169,6 +175,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: {
         featureIdAttributes: [],
         featureIdTextures: [{}, {}],
+        attributes: [],
       },
       node: {},
       model: {
