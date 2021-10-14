@@ -3608,6 +3608,7 @@ function KmlDataSource(options) {
 
   this._kmlTours = [];
 
+  this._screenOverlayContainer = options.screenOverlayContainer;
   this._screenOverlays = [];
 }
 
@@ -3788,7 +3789,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {Element|String} [options.screenOverlayContainer] Specifies a container for ScreenOverlay images.
+ * @param {Element|String} [options.screenOverlayContainer] A container for ScreenOverlay images.
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
@@ -3875,8 +3876,7 @@ KmlDataSource.prototype.load = function (data, options) {
 };
 
 /**
- * Cleans up any non-entity elements created by the data source. Currently this only ScreenOverlay elements.
- *
+ * Cleans up any non-entity elements created by the data source. Currently this only affects ScreenOverlay elements.
  */
 KmlDataSource.prototype.destroy = function () {
   while (this._screenOverlays.length > 0) {
@@ -4115,6 +4115,7 @@ KmlDataSource.prototype.update = function (time) {
 
   var newNetworkLinks = new AssociativeArray();
   var changed = false;
+  var that = this;
   networkLinks.values.forEach(function (networkLink) {
     var entity = networkLink.entity;
     if (entitiesToIgnore.contains(entity.id)) {
@@ -4168,6 +4169,7 @@ KmlDataSource.prototype.update = function (time) {
 
         load(that, newEntityCollection, href, {
           context: entity.id,
+          screenOverlayContainer: that._screenOverlayContainer,
         })
           .then(
             getNetworkLinkUpdateCallback(
