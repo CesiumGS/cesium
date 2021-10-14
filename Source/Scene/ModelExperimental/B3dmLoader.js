@@ -41,8 +41,8 @@ var UINT32_BYTE_SIZE = Uint32Array.BYTES_PER_ELEMENT;
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.b3dmResource The {@link Resource} containing the B3DM.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer containing the B3DM contents.
- * @param {Number} [options.byteOffset] The byte offset to the beginning of the B3DM contents in the typed array.
+ * @param {ArrayBuffer} options.arrayBuffer The array buffer of the B3DM contents.
+ * @param {Number} [options.byteOffset] The byte offset to the beginning of the B3DM contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
