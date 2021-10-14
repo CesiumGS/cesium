@@ -84,7 +84,7 @@ function MetadataTableProperty(options) {
 
   if (hasStrings || hasBooleans) {
     // STRING and BOOLEAN types need to be parsed differently than other types
-    valueType = MetadataType.UINT8;
+    valueType = MetadataComponentType.UINT8;
   }
 
   var valueCount;

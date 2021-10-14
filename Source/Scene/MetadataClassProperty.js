@@ -310,7 +310,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
  * @private
  */
 MetadataClassProperty.prototype.normalize = function (value) {
-  return normalize(this, value, MetadataType.normalize);
+  return normalize(this, value, MetadataComponentType.normalize);
 };
 
 /**
@@ -323,7 +323,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.unnormalize = function (value) {
-  return normalize(this, value, MetadataType.unnormalize);
+  return normalize(this, value, MetadataComponentType.unnormalize);
 };
 
 /**
@@ -396,13 +396,13 @@ MetadataClassProperty.prototype.validate = function (value) {
   if (MetadataType.isVectorType(type) || MetadataType.isMatrixType(type)) {
     return validateVectorOrMatrix(value, type, componentType);
   } else if (type === MetadataType.ARRAY) {
-    return validateArray(value, this._componentCount);
+    return validateArray(this, value, this._componentCount);
   }
 
   return checkValue(this, value);
 };
 
-function validateArray(value, componentCount) {
+function validateArray(classProperty, value, componentCount) {
   if (!Array.isArray(value)) {
     return getTypeErrorMessage(value, MetadataType.ARRAY);
   }
@@ -411,7 +411,7 @@ function validateArray(value, componentCount) {
     return "Array length does not match componentCount";
   }
   for (var i = 0; i < length; ++i) {
-    var message = checkValue(this, value[i]);
+    var message = checkValue(classProperty, value[i]);
     if (defined(message)) {
       return message;
     }
@@ -421,7 +421,7 @@ function validateArray(value, componentCount) {
 function validateVectorOrMatrix(value, type, componentType) {
   if (!MetadataComponentType.isVectorCompatible(componentType)) {
     var message = type + " has an incompatible componentType " + componentType;
-    if (MetadataType.isVectorType) {
+    if (MetadataType.isVectorType(type)) {
       return "vector value " + message;
     }
 
@@ -500,23 +500,23 @@ function checkValue(classProperty, value) {
   var normalized = classProperty._normalized;
 
   switch (valueType) {
-    case MetadataType.INT8:
-    case MetadataType.UINT8:
-    case MetadataType.INT16:
-    case MetadataType.UINT16:
-    case MetadataType.INT32:
-    case MetadataType.UINT32:
+    case MetadataComponentType.INT8:
+    case MetadataComponentType.UINT8:
+    case MetadataComponentType.INT16:
+    case MetadataComponentType.UINT16:
+    case MetadataComponentType.INT32:
+    case MetadataComponentType.UINT32:
       if (javascriptType !== "number") {
         return getTypeErrorMessage(value, valueType);
       }
       return checkInRange(value, valueType, normalized);
-    case MetadataType.INT64:
-    case MetadataType.UINT64:
+    case MetadataComponentType.INT64:
+    case MetadataComponentType.UINT64:
       if (javascriptType !== "number" && javascriptType !== "bigint") {
         return getTypeErrorMessage(value, valueType);
       }
       return checkInRange(value, valueType, normalized);
-    case MetadataType.FLOAT32:
+    case MetadataComponentType.FLOAT32:
       if (javascriptType !== "number") {
         return getTypeErrorMessage(value, valueType);
       }
@@ -524,17 +524,17 @@ function checkValue(classProperty, value) {
         return checkInRange(value, valueType, normalized);
       }
       break;
-    case MetadataType.FLOAT64:
+    case MetadataComponentType.FLOAT64:
       if (javascriptType !== "number") {
         return getTypeErrorMessage(value, valueType);
       }
       break;
-    case MetadataType.BOOLEAN:
+    case MetadataComponentType.BOOLEAN:
       if (javascriptType !== "boolean") {
         return getTypeErrorMessage(value, valueType);
       }
       break;
-    case MetadataType.STRING:
+    case MetadataComponentType.STRING:
       if (javascriptType !== "string") {
         return getTypeErrorMessage(value, valueType);
       }
@@ -563,6 +563,8 @@ function normalize(classProperty, value, normalizeFunction) {
   } else {
     value = normalizeFunction(value, valueType);
   }
+
+  return value;
 }
 
 function getValueType(componentType, enumType) {

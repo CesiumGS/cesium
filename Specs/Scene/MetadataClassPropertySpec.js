@@ -2,8 +2,12 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Matrix2,
+  Matrix3,
+  Matrix4,
   FeatureDetection,
   MetadataClassProperty,
+  MetadataComponentType,
   MetadataEnum,
   MetadataType,
 } from "../../Source/Cesium.js";
@@ -13,17 +17,17 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "height",
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     });
 
     expect(property.id).toBe("height");
     expect(property.name).toBeUndefined();
     expect(property.description).toBeUndefined();
-    expect(property.type).toBe(MetadataType.FLOAT32);
+    expect(property.type).toBe(MetadataType.SINGLE);
     expect(property.enumType).toBeUndefined();
-    expect(property.componentType).toBeUndefined();
-    expect(property.valueType).toBe(MetadataType.FLOAT32);
+    expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
+    expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
     expect(property.componentCount).toBeUndefined();
     expect(property.normalized).toBe(false);
     expect(property.max).toBeUndefined();
@@ -70,8 +74,8 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.description).toBe("Position (X, Y, Z)");
     expect(property.type).toBe(MetadataType.ARRAY);
     expect(property.enumType).toBeUndefined();
-    expect(property.componentType).toBe(MetadataType.INT16);
-    expect(property.valueType).toBe(MetadataType.INT16);
+    expect(property.componentType).toBe(MetadataComponentType.INT16);
+    expect(property.valueType).toBe(MetadataComponentType.INT16);
     expect(property.componentCount).toBe(3);
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
@@ -103,15 +107,16 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "color",
       property: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "color",
       },
       enums: enums,
     });
 
-    expect(property.type).toBe(MetadataType.ENUM);
+    expect(property.type).toBe(MetadataType.SINGLE);
+    expect(property.componentType).toBe(MetadataComponentType.ENUM);
     expect(property.enumType).toBe(colorEnum);
-    expect(property.valueType).toBe(MetadataType.UINT16); // default enum valueType
+    expect(property.valueType).toBe(MetadataComponentType.UINT16); // default enum valueType
   });
 
   it("constructor throws without id", function () {
@@ -139,35 +144,37 @@ describe("Scene/MetadataClassProperty", function () {
 
     var properties = {
       propertyInt8: {
-        type: "INT8",
+        type: "SINGLE",
+        componentType: "INT8",
         normalized: true,
       },
       propertyUint8: {
-        type: "UINT8",
+        // SINGLE is the default type
+        componentType: "UINT8",
         normalized: true,
       },
       propertyInt16: {
-        type: "INT16",
+        componentType: "INT16",
         normalized: true,
       },
       propertyUint16: {
-        type: "UINT16",
+        componentType: "UINT16",
         normalized: true,
       },
       propertyInt32: {
-        type: "INT32",
+        componentType: "INT32",
         normalized: true,
       },
       propertyUint32: {
-        type: "UINT32",
+        componentType: "UINT32",
         normalized: true,
       },
       propertyInt64: {
-        type: "INT64",
+        componentType: "INT64",
         normalized: true,
       },
       propertyUint64: {
-        type: "UINT64",
+        componentType: "UINT64",
         normalized: true,
       },
     };
@@ -290,7 +297,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     var properties = {
       propertyEnum: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
         normalized: true,
       },
@@ -301,11 +308,11 @@ describe("Scene/MetadataClassProperty", function () {
         normalized: true,
       },
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
         normalized: true,
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
         normalized: true,
       },
     };
@@ -336,22 +343,31 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
-  it("packVectorTypes packs vectors", function () {
+  it("packVectorAndMatrixTypes packs vectors and matrices", function () {
     var properties = {
       propertyVec2: {
-        type: "ARRAY",
+        type: "VEC2",
         componentType: "FLOAT32",
-        componentCount: 2,
       },
       propertyIVec3: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT32",
-        componentCount: 3,
       },
       propertyDVec4: {
-        type: "ARRAY",
+        type: "VEC4",
         componentType: "FLOAT64",
-        componentCount: 4,
+      },
+      propertyMat4: {
+        type: "MAT4",
+        componentType: "FLOAT32",
+      },
+      propertyIMat3: {
+        type: "MAT3",
+        componentType: "FLOAT32",
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT32",
       },
     };
 
@@ -371,6 +387,21 @@ describe("Scene/MetadataClassProperty", function () {
         new Cartesian4(0.3, 0.2, 0.1, 0.0),
         new Cartesian4(0.1, 0.2, 0.4, 0.5),
       ],
+      propertyMat4: [
+        new Matrix4(1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1),
+        new Matrix4(0, 2.5, 0, 0, 0, 0.5, 0.25, 0, 0, 0, 3.5, 0, 0, 0, 0, 1),
+        new Matrix4(1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0),
+      ],
+      propertyIMat3: [
+        new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+        new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
+        new Matrix3(1, 2, 3, 2, 3, 1, 3, 1, 2),
+      ],
+      propertyDMat2: [
+        new Matrix2(1.5, 0.0, 0.0, 2.5),
+        new Matrix2(1.0, 0.0, 0.0, 1.0),
+        new Matrix2(1.5, 2.5, 3.5, 4.5),
+      ],
     };
 
     var packedValues = {
@@ -389,6 +420,23 @@ describe("Scene/MetadataClassProperty", function () {
         [0.3, 0.2, 0.1, 0.0],
         [0.1, 0.2, 0.4, 0.5],
       ],
+      propertyMat4: [
+        // the MatrixN constructor is row-major, but internally things are
+        // stored column-major. So these are the transpose of the above
+        [1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 2.5, 0.5, 0, 0, 0, 0.25, 3.5, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0],
+      ],
+      propertyIMat3: [
+        [2, 0, 0, 0, 2, 0, 0, 0, 2],
+        [1, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 2, 3, 2, 3, 1, 3, 1, 2],
+      ],
+      propertyDMat2: [
+        [1.5, 0.0, 0.0, 2.5],
+        [1.0, 0.0, 0.0, 1.0],
+        [1.5, 3.5, 2.5, 4.5],
+      ],
     };
 
     for (var propertyId in properties) {
@@ -400,24 +448,24 @@ describe("Scene/MetadataClassProperty", function () {
         var length = propertyValues[propertyId].length;
         for (var i = 0; i < length; ++i) {
           var value = propertyValues[propertyId][i];
-          var packed = property.packVectorTypes(value);
+          var packed = property.packVectorAndMatrixTypes(value);
           expect(packed).toEqual(packedValues[propertyId][i]);
         }
       }
     }
   });
 
-  it("packVectorTypes does not affect non-vectors", function () {
+  it("packVectorAndMatrixTypes does not affect other types", function () {
     if (!FeatureDetection.supportsBigInt()) {
       return;
     }
 
     var properties = {
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
       },
       propertyArray: {
         type: "ARRAY",
@@ -455,29 +503,38 @@ describe("Scene/MetadataClassProperty", function () {
         var length = propertyValues[propertyId].length;
         for (var i = 0; i < length; ++i) {
           var value = propertyValues[propertyId][i];
-          var packed = property.packVectorTypes(value);
+          var packed = property.packVectorAndMatrixTypes(value);
           expect(packed).toEqual(value);
         }
       }
     }
   });
 
-  it("unpackVectorTypes unpacks vectors", function () {
+  it("unpackVectorAndMatrixTypes unpacks vectors and matrices", function () {
     var properties = {
       propertyVec2: {
-        type: "ARRAY",
+        type: "VEC2",
         componentType: "FLOAT32",
-        componentCount: 2,
       },
       propertyIVec3: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT32",
-        componentCount: 3,
       },
       propertyDVec4: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT64",
-        componentCount: 4,
+      },
+      propertyMat4: {
+        type: "MAT4",
+        componentType: "FLOAT32",
+      },
+      propertyIMat3: {
+        type: "MAT3",
+        componentType: "FLOAT32",
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT32",
       },
     };
 
@@ -497,6 +554,21 @@ describe("Scene/MetadataClassProperty", function () {
         new Cartesian4(0.3, 0.2, 0.1, 0.0),
         new Cartesian4(0.1, 0.2, 0.4, 0.5),
       ],
+      propertyMat4: [
+        new Matrix4(1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1),
+        new Matrix4(0, 2.5, 0, 0, 0, 0.5, 0.25, 0, 0, 0, 3.5, 0, 0, 0, 0, 1),
+        new Matrix4(1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0),
+      ],
+      propertyIMat3: [
+        new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+        new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
+        new Matrix3(1, 2, 3, 2, 3, 1, 3, 1, 2),
+      ],
+      propertyDMat2: [
+        new Matrix2(1.5, 0.0, 0.0, 2.5),
+        new Matrix2(1.0, 0.0, 0.0, 1.0),
+        new Matrix2(1.5, 2.5, 3.5, 4.5),
+      ],
     };
 
     var packedValues = {
@@ -514,6 +586,23 @@ describe("Scene/MetadataClassProperty", function () {
         [0.1, 0.2, 0.3, 0.4],
         [0.3, 0.2, 0.1, 0.0],
         [0.1, 0.2, 0.4, 0.5],
+      ],
+      propertyMat4: [
+        // the MatrixN constructor is row-major, but internally things are
+        // stored column-major. So these are the transpose of the above
+        [1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 2.5, 0.5, 0, 0, 0, 0.25, 3.5, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0],
+      ],
+      propertyIMat3: [
+        [2, 0, 0, 0, 2, 0, 0, 0, 2],
+        [1, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 2, 3, 2, 3, 1, 3, 1, 2],
+      ],
+      propertyDMat2: [
+        [1.5, 0.0, 0.0, 2.5],
+        [1.0, 0.0, 0.0, 1.0],
+        [1.5, 3.5, 2.5, 4.5],
       ],
     };
 
@@ -526,24 +615,24 @@ describe("Scene/MetadataClassProperty", function () {
         var length = propertyValues[propertyId].length;
         for (var i = 0; i < length; ++i) {
           var value = packedValues[propertyId][i];
-          var unpacked = property.unpackVectorTypes(value);
+          var unpacked = property.unpackVectorAndMatrixTypes(value);
           expect(unpacked).toEqual(propertyValues[propertyId][i]);
         }
       }
     }
   });
 
-  it("unpackVectorTypes does not affect non-vectors", function () {
+  it("unpackVectorAndMatrixTypes does not affect other types", function () {
     if (!FeatureDetection.supportsBigInt()) {
       return;
     }
 
     var properties = {
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
       },
       propertyArray: {
         type: "ARRAY",
@@ -581,7 +670,7 @@ describe("Scene/MetadataClassProperty", function () {
         var length = propertyValues[propertyId].length;
         for (var i = 0; i < length; ++i) {
           var value = propertyValues[propertyId][i];
-          var unpacked = property.unpackVectorTypes(value);
+          var unpacked = property.unpackVectorAndMatrixTypes(value);
           expect(unpacked).toEqual(value);
         }
       }
@@ -592,9 +681,8 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "position",
       property: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
       },
     });
 
@@ -618,9 +706,8 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "position",
       property: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
       },
     });
 
@@ -666,7 +753,7 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "myEnum",
       property: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
       },
       enums: {
@@ -702,7 +789,7 @@ describe("Scene/MetadataClassProperty", function () {
       var property = new MetadataClassProperty({
         id: "property",
         property: {
-          type: types[i],
+          componentType: types[i],
         },
       });
       expect(property.validate({})).toBe(
@@ -740,7 +827,7 @@ describe("Scene/MetadataClassProperty", function () {
         var property = new MetadataClassProperty({
           id: "property",
           property: {
-            type: type,
+            componentType: type,
           },
         });
         for (var i = 0; i < values.length; ++i) {
@@ -798,7 +885,7 @@ describe("Scene/MetadataClassProperty", function () {
     var propertyInt8 = new MetadataClassProperty({
       id: "property",
       property: {
-        type: "INT8",
+        componentType: "INT8",
         normalized: true,
       },
     });
@@ -806,7 +893,7 @@ describe("Scene/MetadataClassProperty", function () {
     var propertyUint8 = new MetadataClassProperty({
       id: "property",
       property: {
-        type: "UINT8",
+        componentType: "UINT8",
         normalized: true,
       },
     });

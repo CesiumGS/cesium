@@ -40,7 +40,7 @@ var MetadataType = {
    * @constant
    * @private
    */
-  VEC4: "VEC3",
+  VEC4: "VEC4",
   /**
    * A 2x2 matrix, stored in column-major format.
    *
