@@ -41,7 +41,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     var table = new ModelFeatureTable({
       featureTable: mockFeatureTable,
       model: {
-        content: {},
+        content: {
+          tileset: {},
+        },
       },
     });
     expect(table._featuresLength).toEqual(mockFeatureTable.count);
