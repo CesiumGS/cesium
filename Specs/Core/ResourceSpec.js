@@ -1456,7 +1456,13 @@ describe("Core/Resource", function () {
     });
 
     it("correctly ignores gamma color profile when ImageBitmapOptions are supported", function () {
-      if (FeatureDetection.isFirefox() || !supportsImageBitmapOptions) {
+      // On newer versions of Safari and Firefox, the colorSpaceConversion option for createImageBitmap()
+      // is unsupported. See https://github.com/CesiumGS/cesium/issues/9875 for more information.
+      if (
+        FeatureDetection.isFirefox() ||
+        FeatureDetection.isSafari() ||
+        !supportsImageBitmapOptions
+      ) {
         return;
       }
 
@@ -1513,7 +1519,13 @@ describe("Core/Resource", function () {
     });
 
     it("correctly ignores custom color profile when ImageBitmapOptions are supported", function () {
-      if (FeatureDetection.isFirefox() || !supportsImageBitmapOptions) {
+      // On newer versions of Safari and Firefox, the colorSpaceConversion option for createImageBitmap()
+      // is unsupported. See https://github.com/CesiumGS/cesium/issues/9875 for more information.
+      if (
+        FeatureDetection.isFirefox() ||
+        FeatureDetection.isSafari() ||
+        !supportsImageBitmapOptions
+      ) {
         return;
       }
 
