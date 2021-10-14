@@ -6,12 +6,13 @@
 
 - Fixed zip.js configurations causing CesiumJS to not work with Node 16. [#9861](https://github.com/CesiumGS/cesium/pull/9861)
 - Fixed a bug in `Rectangle.union` with rectangles that span the entire globe. [#9866](https://github.com/CesiumGS/cesium/pull/9866)
+- Fixed unit test failures with `Resource.supportsImageBitmapOptions` in Firefox and disabled image bitmap support in Safari. [#9874](https://github.com/CesiumGS/cesium/pull/9874/)
 
 ### 1.86 - 2021-10-01
 
 ##### Breaking Changes :mega:
 
-- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [9847](https://github.com/CesiumGS/cesium/issues/9847)
+- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [#9847](https://github.com/CesiumGS/cesium/issues/9847)
 
 ##### Fixes :wrench:
 
