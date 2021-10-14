@@ -10,12 +10,12 @@ import FeatureTable from "../FeatureTable.js";
 import FeatureMetadata from "../FeatureMetadata.js";
 import getJsonFromTypedArray from "../../Core/getJsonFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import MetadataClass from "../MetadataClass.js";
 import parseBatchTable from "../parseBatchTable.js";
 import ResourceLoader from "../ResourceLoader.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import when from "../../ThirdParty/when.js";
-import MetadataClass from "../MetadataClass.js";
-import Matrix4 from "../../Core/Matrix4.js";
 
 var B3dmLoaderState = {
   UNLOADED: 0,
@@ -83,16 +83,17 @@ function B3dmLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
 
-  // Since the 3D Tiles code handles loading of the tile contents, the B3dmLoader starts at the LOADED stage.
-  this._state = B3dmLoaderState.LOADED;
+  this._state = B3dmLoaderState.UNLOADED;
+
   this._promise = when.defer();
   this._texturesLoadedPromise = when.defer();
+
   this._gltfLoader = undefined;
 
   // Loaded results.
   this._batchLength = 0;
-  this._rtcTransform = undefined;
   this._featureTable = undefined;
+  // The batch table object contains a json and a binary component access using keys of the same name.
   this._batchTable = undefined;
   this._components = undefined;
 }
@@ -160,20 +161,6 @@ Object.defineProperties(B3dmLoader.prototype, {
   components: {
     get: function () {
       return this._components;
-    },
-  },
-  /**
-   * The RTC transform stored in the feature table.
-   *
-   * @memberof B3dmLoader.prototype
-   *
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  rtcTransform: {
-    get: function () {
-      return this._rtcTransform;
     },
   },
 });
@@ -384,11 +371,6 @@ function loadBatchTable(
   var batchTableJson;
   var batchTableBinary;
   if (batchTableJsonByteLength > 0) {
-    // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
-    // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
-    //
-    // We could also make another request for it, but that would make the property set/get
-    // API async, and would double the number of numbers in some cases.
     batchTableJson = getJsonFromTypedArray(
       typedArray,
       offset,
@@ -420,6 +402,7 @@ B3dmLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
+  this._state = B3dmLoaderState.PROCESSING;
   var gltfLoader = this._gltfLoader;
 
   // Once the components are loaded, add the feature metadata created from the batch table.
@@ -430,11 +413,13 @@ B3dmLoader.prototype.process = function (frameState) {
       return;
     }
 
-    var components = gltfLoader.components;
-    processGltfComponents(that, components);
-    that._components = components;
+    if (that._state !== B3dmLoaderState.READY) {
+      var components = gltfLoader.components;
+      processGltfComponents(that, components);
+      that._components = components;
+      that._state = B3dmLoaderState.READY;
+    }
 
-    that._state = B3dmLoader.READY;
     that._promise.resolve(that);
   });
 
