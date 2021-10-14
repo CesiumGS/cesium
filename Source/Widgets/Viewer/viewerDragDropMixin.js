@@ -270,6 +270,7 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
           camera: scene.camera,
           canvas: scene.canvas,
           clampToGround: clampToGround,
+          screenOverlay: viewer.container,
         });
       } else {
         viewer.dropError.raiseEvent(
