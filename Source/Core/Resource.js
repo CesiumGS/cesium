@@ -7,6 +7,7 @@ import combine from "./combine.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import FeatureDetection from "./FeatureDetection.js";
 import getAbsoluteUri from "./getAbsoluteUri.js";
 import getBaseUri from "./getBaseUri.js";
 import getExtensionFromUri from "./getExtensionFromUri.js";
@@ -384,7 +385,9 @@ Resource.supportsImageBitmapOptions = function () {
       });
     })
     .then(function (imageBitmap) {
-      return true;
+      // On newer versions of Safari, createImageBitmap() options like
+      // imageOrientation and colorSpaceConversion are unsupported.
+      return !FeatureDetection.isSafari();
     })
     .otherwise(function () {
       return false;
