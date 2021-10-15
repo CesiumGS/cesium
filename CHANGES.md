@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.88 - 2021-12-1
+##### Fixes :wrench:
+
+- fix the bug of ktx2 texture minfilter.
+
+
 ### 1.87 - 2021-11-1
 
 ##### Additions :tada:
