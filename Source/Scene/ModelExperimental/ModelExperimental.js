@@ -119,10 +119,10 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model) {
-  var content = model._content;
+  var featureTables = model._featureTables;
 
   // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
-  if (defined(content)) {
+  if (defined(featureTables[MetadataClass.BATCH_TABLE_CLASS_NAME])) {
     return MetadataClass.BATCH_TABLE_CLASS_NAME;
   }
 

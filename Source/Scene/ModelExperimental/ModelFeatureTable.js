@@ -115,6 +115,34 @@ ModelFeatureTable.prototype.update = function (frameState) {
   this._batchTexture.update(undefined, frameState);
 };
 
+ModelFeatureTable.prototype.setShow = function (featureId, show) {
+  this._batchTexture.setShow(featureId, show);
+};
+
+ModelFeatureTable.prototype.setAllShow = function (show) {
+  this._batchTexture.setAllShow(show);
+};
+
+ModelFeatureTable.prototype.getShow = function (featureId) {
+  return this._batchTexture.getShow(featureId);
+};
+
+ModelFeatureTable.prototype.setColor = function (featureId, color) {
+  this._batchTexture.setColor(featureId, color);
+};
+
+ModelFeatureTable.prototype.setAllColor = function (color) {
+  this._batchTexture.setAllColor(color);
+};
+
+ModelFeatureTable.prototype.getColor = function (featureId, result) {
+  return this._batchTexture.getColor(featureId, result);
+};
+
+ModelFeatureTable.prototype.getPickColor = function (featureId) {
+  return this._batchTexture.getPickColor(featureId);
+};
+
 ModelFeatureTable.prototype.getFeature = function (featureId) {
   return this._features[featureId];
 };
@@ -124,10 +152,6 @@ ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
 };
 
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
-  return this._featureTable.getProperty(featureId, name);
-};
-
-ModelFeatureTable.prototype.getPropertyInherited = function (featureId, name) {
   return this._featureTable.getProperty(featureId, name);
 };
 

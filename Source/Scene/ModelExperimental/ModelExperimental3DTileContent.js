@@ -33,8 +33,14 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
   featuresLength: {
     get: function () {
       var model = this._model;
-      var featureTable = model.featureTables[model.featureTableId];
-      return featureTable.featuresLength;
+      var featureTables = model.featureTables;
+      var featureTableId = model.featureTableId;
+
+      if (defined(featureTables) && defined(featureTables[featureTableId])) {
+        return featureTables[featureTableId].featuresLength;
+      }
+
+      return 0;
     },
   },
 
@@ -101,8 +107,14 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
   batchTable: {
     get: function () {
       var model = this._model;
-      var featureTable = model.featureTables[model.featureTableId];
-      return featureTable;
+      var featureTables = model.featureTables;
+      var featureTableId = model.featureTableId;
+
+      if (defined(featureTables) && defined(featureTables[featureTableId])) {
+        return featureTables[featureTableId];
+      }
+
+      return undefined;
     },
   },
 
