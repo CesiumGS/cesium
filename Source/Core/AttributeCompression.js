@@ -1,3 +1,4 @@
+import arrayFill from "./arrayFill.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -474,6 +475,92 @@ AttributeCompression.dequantize = function (
   }
 
   return dequantizedTypedArray;
+};
+
+/**
+ * Quantizes a floating point typed array into an quantized typed array.
+ *
+ * @param {Float32Array} typedArray The floating point typed array.
+ * @param {ComponentDatatype} componentDatatype The component datatype for the quantized data.
+ * @param {Number} componentsLength The number of components per element.
+ * @param {Number} count The number of attributes referenced in the typed array.
+ *
+ * @returns {Uint8Array|Uint16Array|Uint32Array} The quantized typed array.
+ *
+ * @exception {DeveloperError} Invalid component datatype, must be ComponentDatatype.UNSIGNED_BYTE, ComponentDatatype.UNSIGNED_SHORT, or ComponentDatatype.UNSIGNED_INT
+ */
+AttributeCompression.quantize = function (
+  typedArray,
+  componentDatatype,
+  componentsLength,
+  count
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("typedArray", typedArray);
+  Check.defined("componentDatatype", componentDatatype);
+  Check.typeOf.number("componentsLength", componentsLength);
+  Check.typeOf.number("count", count);
+  //>>includeEnd('debug');
+
+  var multiplier;
+  switch (componentDatatype) {
+    case ComponentDatatype.UNSIGNED_BYTE:
+      multiplier = 255.0;
+      break;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      multiplier = 65535.0;
+      break;
+    case ComponentDatatype.UNSIGNED_INT:
+      multiplier = 4294967295.0;
+      break;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        "Invalid component datatype, must be ComponentDatatype.UNSIGNED_BYTE, ComponentDatatype.UNSIGNED_SHORT, or ComponentDatatype.UNSIGNED_INT"
+      );
+    //>>includeEnd('debug');
+  }
+
+  var quantizedTypedArray = ComponentDatatype.createTypedArray(
+    componentDatatype,
+    count
+  );
+
+  var min = arrayFill(new Array(componentsLength), Number.POSITIVE_INFINITY);
+  var max = arrayFill(new Array(componentsLength), -Number.POSITIVE_INFINITY);
+
+  var i;
+  var j;
+
+  for (i = 0; i < count; i++) {
+    for (j = 0; j < componentsLength; j++) {
+      var index = i * componentsLength + j;
+      min[j] = Math.min(typedArray[index], min[j]);
+      max[j] = Math.max(typedArray[index], max[j]);
+    }
+  }
+
+  var range = 0.0;
+
+  for (j = 0; j < componentsLength; j++) {
+    range = Math.max(range, max[j] - min[j]);
+  }
+
+  for (i = 0; i < count; i++) {
+    for (j = 0; j < componentsLength; j++) {
+      var index = i * componentsLength + j;
+      var value = typedArray[index];
+      var normalized = (value - min[j]) / range;
+      normalized = CesiumMath.clamp(normalized, 0.0, 1.0);
+      quantizedTypedArray[index] = normalized * multiplier;
+    }
+  }
+
+  return {
+    quantizedTypedArray: quantizedTypedArray,
+    range: range,
+    min: min,
+  };
 };
 
 export default AttributeCompression;

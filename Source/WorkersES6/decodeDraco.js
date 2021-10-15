@@ -1,4 +1,5 @@
 /* global require */
+import AttributeCompression from "../Core/AttributeCompression";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -155,7 +156,12 @@ function decodeDracoTypedArray(
   return vertexArray;
 }
 
-function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
+function decodeAttribute(
+  dracoGeometry,
+  dracoDecoder,
+  dracoAttribute,
+  requantize
+) {
   var numPoints = dracoGeometry.num_points();
   var numComponents = dracoAttribute.num_components();
 
@@ -201,6 +207,26 @@ function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
       dracoAttribute,
       vertexArrayLength
     );
+
+    if (requantize) {
+      var attributeType = dracoAttribute.attribute_type();
+      var attributesToQuantize = [draco.POSITION, draco.COLOR, draco.TEX_COORD];
+      if (attributesToQuantize.indexOf(attributeType) > -1) {
+        var quantizedData = AttributeCompression.quantize(
+          vertexArray,
+          ComponentDatatype.UNSIGNED_SHORT,
+          numComponents,
+          numPoints
+        );
+        quantization = {
+          quantizationBits: 16,
+          minValues: quantizedData.min,
+          range: quantizedData.range,
+          octEncoded: false,
+        };
+        vertexArray = quantizedData.quantizedTypedArray;
+      }
+    }
   }
 
   var componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
@@ -261,7 +287,8 @@ function decodePointCloud(parameters) {
       result[propertyName] = decodeAttribute(
         dracoPointCloud,
         dracoDecoder,
-        dracoAttribute
+        dracoAttribute,
+        false
       );
     }
   }
@@ -274,6 +301,14 @@ function decodePointCloud(parameters) {
 
 function decodePrimitive(parameters) {
   var dracoDecoder = new draco.Decoder();
+
+  // Skip attribute transform for normals only until https://github.com/google/draco/issues/742 is fixed
+  var attributesToSkip = ["NORMAL"];
+  if (parameters.dequantizeInShader) {
+    for (var i = 0; i < attributesToSkip.length; ++i) {
+      dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
+    }
+  }
 
   var bufferView = parameters.bufferView;
   var buffer = new draco.DecoderBuffer();
@@ -307,7 +342,8 @@ function decodePrimitive(parameters) {
       attributeData[attributeName] = decodeAttribute(
         dracoGeometry,
         dracoDecoder,
-        dracoAttribute
+        dracoAttribute,
+        parameters.dequantizeInShader
       );
     }
   }
