@@ -139,6 +139,10 @@
             </td>
           </tr>
           <tr>
+            <td>Color</td>
+            <td><select data-bind="options: colors, value: color"></select></td>
+          </tr>
+          <tr>
             <td>Brightness</td>
             <td>
               <input
@@ -166,6 +170,9 @@
           50
         );
 
+        function getColor(colorName) {
+          return Cesium.Color[colorName.toUpperCase()];
+        }
         // These noise parameters are set to default, but can be changed
         // to produce different cloud results. However, the noise is precomputed,
         // so this cannot be changed dynamically.
@@ -186,6 +193,8 @@
           renderSlice: true, // if false, renders the entire surface of the ellipsoid
           slice: 0.36,
           brightness: 1.0,
+          color: "White",
+          colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"]
         };
 
         var cloud = clouds.add({
@@ -199,6 +208,8 @@
             cloudParameters.maximumSizeY,
             cloudParameters.maximumSizeZ
           ),
+
+          color:getColor(cloudParameters.color),
           slice: cloudParameters.renderSlice ? cloudParameters.slice : -1.0,
           brightness: cloudParameters.brightness,
         });
@@ -284,7 +295,11 @@
           .subscribe(function (newValue) {
             cloud.slice = Number(newValue);
           });
-
+        Cesium.knockout
+          .getObservable(cloudParameters, "color")
+          .subscribe(function (newValue) {
+            cloud.color = getColor(newValue);
+          });
         Cesium.knockout
           .getObservable(cloudParameters, "brightness")
           .subscribe(function (newValue) {

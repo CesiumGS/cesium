@@ -3,6 +3,7 @@ uniform float u_noiseTextureLength;
 uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
+varying vec3 v_color;
 varying float v_slice;
 varying float v_brightness;
 
@@ -176,7 +177,7 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
     float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
     float It = T(cloudPoint);                                 // texture function
     float intensity = I(Id, Is, It);
-    vec3 color = intensity * clamp(brightness, 0.1, 1.0) * vec3(1.0);
+    vec3 color = intensity * clamp(brightness, 0.1, 1.0) * v_color;
 
     vec4 noise = sampleNoiseTexture(u_noiseDetail * cloudPoint);
     float W = noise.x;

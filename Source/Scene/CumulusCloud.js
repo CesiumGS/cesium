@@ -1,6 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
@@ -57,7 +58,7 @@ function CumulusCloud(options, cloudCollection) {
   }
 
   this._slice = defaultValue(options.slice, -1.0);
-
+  this._color = defaultValue(options.color, Color.WHITE);
   this._brightness = defaultValue(options.brightness, 1.0);
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
@@ -69,7 +70,8 @@ var SCALE_INDEX = (CumulusCloud.SCALE_INDEX = 2);
 var MAXIMUM_SIZE_INDEX = (CumulusCloud.MAXIMUM_SIZE_INDEX = 3);
 var SLICE_INDEX = (CumulusCloud.SLICE_INDEX = 4);
 var BRIGHTNESS_INDEX = (CumulusCloud.BRIGHTNESS_INDEX = 5);
-CumulusCloud.NUMBER_OF_PROPERTIES = 6;
+var COLOR_INDEX = (CumulusCloud.COLOR_INDEX = 6);
+CumulusCloud.NUMBER_OF_PROPERTIES = 7;
 
 function makeDirty(cloud, propertyChanged) {
   var cloudCollection = cloud._cloudCollection;
@@ -222,7 +224,28 @@ Object.defineProperties(CumulusCloud.prototype, {
       }
     },
   },
+  /**
+   * Sets the color of the cloud
+   * @memberof CumulusCloud.prototype
+   * @type {Color}
+   * @default Color.WHITE
+   */
+  color : {
+    get : function() {
+      return this._color;
+    },
+    set : function(value) {
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
+      var color = this._color;
+      if (!Color.equals(color, value)) {
+        Color.clone(value, color);
+        makeDirty(this, COLOR_INDEX);
+      }
+    },
+  },
   /**
    * <p>Gets or sets the "slice" of the cloud that is rendered on the billboard, i.e.
    * the specific cross-section of the cloud chosen for the billboard's appearance.
