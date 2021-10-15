@@ -2,7 +2,9 @@ import {
   Cartesian3,
   defined,
   ExperimentalFeatures,
+  GroupMetadata,
   HeadingPitchRange,
+  MetadataClass,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -14,6 +16,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
     "./Data/Cesium3DTiles/Metadata/FeatureMetadata/tileset.json";
   var withBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
+  var withoutBatchTableUrl =
+    "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
 
   var scene;
   var centerLongitude = -1.31968;
@@ -144,5 +148,46 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
         });
       }
     );
+  });
+
+  it("destroys", function () {
+    return Cesium3DTilesTester.tileDestroys(scene, buildingsMetadataUrl);
+  });
+
+  describe("3DTILES_metadata", function () {
+    var metadataClass = new MetadataClass({
+      id: "test",
+      class: {
+        properties: {
+          name: {
+            type: "STRING",
+          },
+          height: {
+            type: "FLOAT32",
+          },
+        },
+      },
+    });
+    var groupMetadata = new GroupMetadata({
+      id: "testGroup",
+      group: {
+        properties: {
+          name: "Test Group",
+          height: 35.6,
+        },
+      },
+      class: metadataClass,
+    });
+
+    it("assigns groupMetadata", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
+        function (tileset) {
+          var content = tileset.root.content;
+          content.groupMetadata = groupMetadata;
+          expect(content.groupMetadata).toBe(groupMetadata);
+        }
+      );
+    });
   });
 });
