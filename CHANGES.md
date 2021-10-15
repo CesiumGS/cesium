@@ -11,7 +11,7 @@
 
 ##### Breaking Changes :mega:
 
-- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [9847](https://github.com/CesiumGS/cesium/issues/9847)
+- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [#9847](https://github.com/CesiumGS/cesium/issues/9847)
 
 ##### Fixes :wrench:
 
