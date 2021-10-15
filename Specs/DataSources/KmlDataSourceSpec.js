@@ -127,6 +127,13 @@ describe("DataSources/KmlDataSource", function () {
     options.camera.positionWC.x = 0.0;
   });
 
+  afterEach(function () {
+    // clean up screen overlays
+    while (screenOverlayContainer.firstChild) {
+      screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
+    }
+  });
+
   it("default constructor has expected values", function () {
     var dataSource = new KmlDataSource(options);
     expect(dataSource.name).toBeUndefined();
@@ -1234,7 +1241,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  it("ScreenOverlay: Single overlay image created", function () {
+  fit("ScreenOverlay: Single overlay image created", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1270,7 +1277,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  it("ScreenOverlay: Multiple overlay images created", function () {
+  fit("ScreenOverlay: Multiple overlay images created", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <Document>\
@@ -1308,7 +1315,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  it("ScreenOverlay: Overlay pixel offset", function () {
+  fit("ScreenOverlay: Overlay pixel offset", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1340,7 +1347,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  it("ScreenOverlay: Screen pixel offset", function () {
+  fit("ScreenOverlay: Screen pixel offset", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1372,7 +1379,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  it("ScreenOverlay: Screen insetPixel offset", function () {
+  fit("ScreenOverlay: Screen insetPixel offset", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1404,7 +1411,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  it("ScreenOverlay: Clean up", function () {
+  fit("ScreenOverlay: Clean up", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
