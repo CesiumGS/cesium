@@ -4167,7 +4167,6 @@ KmlDataSource.prototype.update = function (time) {
 
         load(that, newEntityCollection, href, {
           context: entity.id,
-          screenOverlayContainer: that._screenOverlayContainer,
         })
           .then(
             getNetworkLinkUpdateCallback(
