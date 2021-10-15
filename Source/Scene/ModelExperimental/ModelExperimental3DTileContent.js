@@ -130,13 +130,12 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
 ModelExperimental3DTileContent.prototype.getFeature = function (featureId) {
   var model = this._model;
-  var featureTables = model.featureTables;
   var featureTableId = model.featureTableId;
-  var featureTable = featureTables[featureTableId];
-
-  if (!defined(featureTable)) {
+  if (!defined(featureTableId)) {
     return undefined;
   }
+
+  var featureTable = model.featureTables[featureTableId];
   return featureTable.getFeature(featureId);
 };
 
@@ -145,13 +144,12 @@ ModelExperimental3DTileContent.prototype.hasProperty = function (
   name
 ) {
   var model = this._model;
-  var featureTables = model.featureTables;
   var featureTableId = model.featureTableId;
-  var featureTable = featureTables[featureTableId];
-
-  if (!defined(featureTable)) {
+  if (!defined(featureTableId)) {
     return false;
   }
+
+  var featureTable = model.featureTables[featureTableId];
   return featureTable.hasProperty(featureId, name);
 };
 

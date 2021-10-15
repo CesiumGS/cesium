@@ -91,6 +91,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(content.hasProperty(0, "id")).toBe(false);
+          expect(content.getFeature(0)).toBeUndefined();
         });
       }
     );
@@ -98,7 +100,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
 
   it("picks from B3DM", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
-    return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+    return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
       function (tileset) {
         var content = tileset.root.content;
         tileset.show = false;
@@ -108,6 +110,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(content.hasProperty(0, "id")).toBe(false);
+          expect(content.getFeature(0)).toBeDefined();
         });
       }
     );
