@@ -127,13 +127,6 @@ describe("DataSources/KmlDataSource", function () {
     options.camera.positionWC.x = 0.0;
   });
 
-  afterEach(function () {
-    // clean up screen overlays
-    while (screenOverlayContainer.firstChild) {
-      screenOverlayContainer.removeChild(screenOverlayContainer.firstChild);
-    }
-  });
-
   it("default constructor has expected values", function () {
     var dataSource = new KmlDataSource(options);
     expect(dataSource.name).toBeUndefined();
@@ -1241,7 +1234,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  fit("ScreenOverlay: Single overlay image created", function () {
+  it("ScreenOverlay: Single overlay image created", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1277,7 +1270,7 @@ describe("DataSources/KmlDataSource", function () {
     });
   });
 
-  fit("ScreenOverlay: Multiple overlay images created", function () {
+  it("ScreenOverlay: Multiple overlay images created", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <Document>\
@@ -1312,10 +1305,12 @@ describe("DataSources/KmlDataSource", function () {
       expect(screenOverlayContainer.children[1].getAttribute("src")).toEqual(
         "http://invalid.url/second"
       );
+
+      dataSource.destroy();
     });
   });
 
-  fit("ScreenOverlay: Overlay pixel offset", function () {
+  it("ScreenOverlay: Overlay pixel offset", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1344,10 +1339,12 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.style.bottom).toEqual("calc(50% - 25px)");
       expect(child.style.right).toEqual("");
       expect(child.style.left).toEqual("calc(30% - 10px)");
+
+      dataSource.destroy();
     });
   });
 
-  fit("ScreenOverlay: Screen pixel offset", function () {
+  it("ScreenOverlay: Screen pixel offset", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1376,10 +1373,12 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.style.bottom).toEqual("219px");
       expect(child.style.right).toEqual("");
       expect(child.style.left).toEqual("53px");
+
+      dataSource.destroy();
     });
   });
 
-  fit("ScreenOverlay: Screen insetPixel offset", function () {
+  it("ScreenOverlay: Screen insetPixel offset", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\
@@ -1408,10 +1407,12 @@ describe("DataSources/KmlDataSource", function () {
       expect(child.style.bottom).toEqual("");
       expect(child.style.right).toEqual("");
       expect(child.style.left).toEqual("53px");
+
+      dataSource.destroy();
     });
   });
 
-  fit("ScreenOverlay: Clean up", function () {
+  it("ScreenOverlay: Clean up", function () {
     var kml =
       '<?xml version="1.0" encoding="UTF-8"?>\
         <ScreenOverlay>\

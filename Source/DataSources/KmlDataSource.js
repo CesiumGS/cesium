@@ -3608,7 +3608,6 @@ function KmlDataSource(options) {
 
   this._kmlTours = [];
 
-  this._screenOverlayContainer = options.screenOverlayContainer;
   this._screenOverlays = [];
 }
 
