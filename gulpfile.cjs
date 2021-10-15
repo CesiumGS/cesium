@@ -14,7 +14,7 @@ const request = require("request");
 
 const globby = require("globby");
 const gulpTap = require("gulp-tap");
-const gulpUglify = require("gulp-uglify");
+const gulpTerser = require("gulp-terser");
 const open = require("open");
 const rimraf = require("rimraf");
 const glslStripComments = require("glsl-strip-comments");
@@ -34,7 +34,7 @@ const mime = require("mime");
 const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
-const rollupPluginUglify = require("rollup-plugin-uglify");
+const rollupPluginTerser = require("rollup-plugin-terser");
 const rollupCommonjs = require("@rollup/plugin-commonjs");
 const rollupResolve = require("@rollup/plugin-node-resolve").default;
 const cleanCSS = require("gulp-clean-css");
@@ -375,7 +375,7 @@ function combine() {
   const outputDirectory = path.join("Build", "CesiumUnminified");
   return combineJavaScript({
     removePragmas: false,
-    optimizer: "none",
+    minify: false,
     outputDirectory: outputDirectory,
   });
 }
@@ -387,15 +387,15 @@ function combineRelease() {
   const outputDirectory = path.join("Build", "CesiumUnminified");
   return combineJavaScript({
     removePragmas: true,
-    optimizer: "none",
+    minify: false,
     outputDirectory: outputDirectory,
   });
 }
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
 
-// Copy Draco3D files from node_modules into Source
 gulp.task("prepare", function (done) {
+  // Copy Draco3D files from node_modules into Source
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
     "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
@@ -403,6 +403,19 @@ gulp.task("prepare", function (done) {
   fs.copyFileSync(
     "node_modules/draco3d/draco_decoder.wasm",
     "Source/ThirdParty/draco_decoder.wasm"
+  );
+  // Copy pako and zip.js worker files to Source/ThirdParty
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_inflate.min.js",
+    "Source/ThirdParty/Workers/pako_inflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_deflate.min.js",
+    "Source/ThirdParty/Workers/pako_deflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
+    "Source/ThirdParty/Workers/z-worker-pako.js"
   );
   done();
 });
@@ -452,7 +465,7 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
-    // Remove prepare step from package.json to avoid redownloading Draco3d files
+    // Remove prepare step from package.json to avoid running "prepare" an extra time.
     delete packageJson.scripts.prepare;
     fs.writeFileSync(
       "./Build/package.noprepare.json",
@@ -524,7 +537,7 @@ gulp.task(
   gulp.series("build", function () {
     return combineJavaScript({
       removePragmas: false,
-      optimizer: "uglify2",
+      minify: true,
       outputDirectory: path.join("Build", "Cesium"),
     });
   })
@@ -533,7 +546,7 @@ gulp.task(
 function minifyRelease() {
   return combineJavaScript({
     removePragmas: true,
-    optimizer: "uglify2",
+    minify: true,
     outputDirectory: path.join("Build", "Cesium"),
   });
 }
@@ -1194,7 +1207,7 @@ gulp.task("convertToModules", function () {
   });
 });
 
-function combineCesium(debug, optimizer, combineOutput) {
+function combineCesium(debug, minify, combineOutput) {
   const plugins = [];
 
   if (!debug) {
@@ -1204,8 +1217,8 @@ function combineCesium(debug, optimizer, combineOutput) {
       })
     );
   }
-  if (optimizer === "uglify2") {
-    plugins.push(rollupPluginUglify.uglify());
+  if (minify) {
+    plugins.push(rollupPluginTerser.terser());
   }
 
   return rollup
@@ -1225,7 +1238,7 @@ function combineCesium(debug, optimizer, combineOutput) {
     });
 }
 
-function combineWorkers(debug, optimizer, combineOutput) {
+function combineWorkers(debug, minify, combineOutput) {
   //This is done waterfall style for concurrency reasons.
   // Copy files that are already minified
   return globby(["Source/ThirdParty/Workers/draco*.js"])
@@ -1251,7 +1264,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
           return streamToPromise(
             gulp
               .src(file)
-              .pipe(gulpUglify())
+              .pipe(gulpTerser())
               .pipe(
                 gulp.dest(
                   path.dirname(
@@ -1277,8 +1290,8 @@ function combineWorkers(debug, optimizer, combineOutput) {
           })
         );
       }
-      if (optimizer === "uglify2") {
-        plugins.push(rollupPluginUglify.uglify());
+      if (minify) {
+        plugins.push(rollupPluginTerser.terser());
       }
 
       return rollup
@@ -1311,21 +1324,25 @@ function minifyModules(outputDirectory) {
   return streamToPromise(
     gulp
       .src("Source/ThirdParty/google-earth-dbroot-parser.js")
-      .pipe(gulpUglify())
+      .pipe(gulpTerser())
       .pipe(gulp.dest(outputDirectory + "/ThirdParty/"))
   );
 }
 
 function combineJavaScript(options) {
-  const optimizer = options.optimizer;
+  const minify = options.minify;
   const outputDirectory = options.outputDirectory;
   const removePragmas = options.removePragmas;
 
-  const combineOutput = path.join("Build", "combineOutput", optimizer);
+  const combineOutput = path.join(
+    "Build",
+    "combineOutput",
+    minify ? "minified" : "combined"
+  );
 
   const promise = Promise.join(
-    combineCesium(!removePragmas, optimizer, combineOutput),
-    combineWorkers(!removePragmas, optimizer, combineOutput),
+    combineCesium(!removePragmas, minify, combineOutput),
+    combineWorkers(!removePragmas, minify, combineOutput),
     minifyModules(outputDirectory)
   );
 
@@ -1340,7 +1357,7 @@ function combineJavaScript(options) {
     promises.push(streamToPromise(stream));
 
     const everythingElse = ["Source/**", "!**/*.js", "!**/*.glsl"];
-    if (optimizer === "uglify2") {
+    if (minify) {
       promises.push(minifyCSS(outputDirectory));
       everythingElse.push("!**/*.css");
     }
@@ -1886,7 +1903,7 @@ function buildCesiumViewer() {
           rollupPluginStripPragma({
             pragmas: ["debug"],
           }),
-          rollupPluginUglify.uglify(),
+          rollupPluginTerser.terser(),
         ],
         onwarn: rollupWarning,
       })

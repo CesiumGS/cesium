@@ -1,10 +1,17 @@
 # Change Log
 
+### 1.86.1 - 2021-10-15
+
+##### Fixes :wrench:
+
+- Fixed zip.js configurations causing CesiumJS to not work with Node 16. [#9861](https://github.com/CesiumGS/cesium/pull/9861)
+- Fixed a bug in `Rectangle.union` with rectangles that span the entire globe. [#9866](https://github.com/CesiumGS/cesium/pull/9866)
+
 ### 1.86 - 2021-10-01
 
 ##### Breaking Changes :mega:
 
-- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [9847](https://github.com/CesiumGS/cesium/issues/9847)
+- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [#9847](https://github.com/CesiumGS/cesium/issues/9847)
 
 ##### Fixes :wrench:
 

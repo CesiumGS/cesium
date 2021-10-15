@@ -1,6 +1,7 @@
 import ArcType from "../Core/ArcType.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -3165,6 +3166,13 @@ function loadKml(
 }
 
 function loadKmz(dataSource, entityCollection, blob, sourceResource) {
+  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
+  zip.configure({
+    workerScripts: {
+      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
+      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
+    },
+  });
   var reader = new zip.ZipReader(new zip.BlobReader(blob));
   return when(reader.getEntries()).then(function (entries) {
     var promises = [];
