@@ -1017,7 +1017,7 @@ describe(
         expect(featureIdAttributeMapping.featureTableId).toBe(0);
         expect(featureIdAttributeMapping.setIndex).toBe(0);
         expect(featureIdAttributeMapping.offset).toBe(0);
-        expect(featureIdAttributeMapping.repeat).toBe(0);
+        expect(featureIdAttributeMapping.repeat).not.toBeDefined();
 
         var classDefinition = featureMetadata.schema.classes.building;
         var properties = classDefinition.properties;
@@ -1072,7 +1072,7 @@ describe(
         expect(featureIdAttributeMapping1.featureTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var weatherClass = featureMetadata.schema.classes.weather;
         var weatherProperties = weatherClass.properties;
@@ -1162,7 +1162,7 @@ describe(
         expect(featureIdAttributeMapping1.featureTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var weatherClass = featureMetadata.schema.classes.weather;
         var weatherProperties = weatherClass.properties;
@@ -1352,7 +1352,7 @@ describe(
         expect(featureIdAttributeMapping1.featureTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var boxClass = featureMetadata.schema.classes.box;
         var boxProperties = boxClass.properties;
@@ -1529,7 +1529,7 @@ describe(
         expect(featureIdAttributeMapping1.featureTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
         expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).toBe(0);
+        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var boxClass = featureMetadata.schema.classes.box;
         var boxProperties = boxClass.properties;
