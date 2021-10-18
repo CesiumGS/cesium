@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  MetadataClass,
-  MetadataEntity,
-} from "../../Source/Cesium.js";
+import { MetadataClass, MetadataEntity } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEntity", function () {
   var classDefinition = new MetadataClass({
@@ -206,7 +202,7 @@ describe("Scene/MetadataEntity", function () {
       properties,
       classDefinition
     );
-    expect(value).toEqual(Cartesian3.unpack(properties.position));
+    expect(value).toEqual(properties.position);
   });
 
   it("getProperty returns the default value when the property is missing", function () {

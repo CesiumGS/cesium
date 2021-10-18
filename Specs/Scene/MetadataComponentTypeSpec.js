@@ -1,6 +1,7 @@
 import {
   FeatureDetection,
   MetadataComponentType,
+  MetadataType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataComponentType", function () {
@@ -176,9 +177,7 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isNumericType(MetadataComponentType.ENUM)
     ).toBe(false);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.ARRAY)
-    ).toBe(false);
+    expect(MetadataComponentType.isNumericType(MetadataType.ARRAY)).toBe(false);
   });
 
   it("isNumericType throws without type", function () {
@@ -227,9 +226,7 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isIntegerType(MetadataComponentType.ENUM)
     ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.ARRAY)
-    ).toBe(false);
+    expect(MetadataComponentType.isIntegerType(MetadataType.ARRAY)).toBe(false);
   });
 
   it("isIntegerType throws without type", function () {
@@ -279,7 +276,7 @@ describe("Scene/MetadataComponentType", function () {
       MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.ENUM)
     ).toBe(false);
     expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.ARRAY)
+      MetadataComponentType.isUnsignedIntegerType(MetadataType.ARRAY)
     ).toBe(false);
   });
 

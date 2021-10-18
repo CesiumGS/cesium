@@ -11,7 +11,7 @@ import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
 describe(
-  "Scene/Cesium3DTileFeatureSpec",
+  "Scene/Cesium3DTileFeature",
   function () {
     describe("polylinePositions", function () {
       var vectorPolylinesWithBatchIds =
