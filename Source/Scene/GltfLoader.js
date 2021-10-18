@@ -1093,12 +1093,12 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     }
   }
 
-  var extensionExtensions = defaultValue(
+  var instancingExtExtensions = defaultValue(
     instancingExtension.extensions,
     defaultValue.EMPTY_OBJECT
   );
   var featureMetadata = nodeExtensions.EXT_mesh_features;
-  var featureMetadataLegacy = extensionExtensions.EXT_feature_metadata;
+  var featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
   if (defined(featureMetadata)) {
     loadInstanceMetadata(instances, featureMetadata);

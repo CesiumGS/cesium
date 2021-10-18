@@ -346,7 +346,7 @@ function FeatureIdAttribute() {
   this.offset = 0;
 
   /**
-   * The rate at which feature IDs repeat when setIndex is undefined.
+   * Number of times each feature ID is repeated before being incremented.
    *
    * @type {Number}
    * @default 0

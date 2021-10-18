@@ -10,8 +10,8 @@ import defined from "../Core/defined.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
- * @param {FeatureTable[]} [options.featureTables] An array of feature table objects. For the older EXT_feature_metadata extension, this is sorted by the key in the featureTables dictionary
- * @param {FeatureTexture[]} [options.featureTextures] An array of feature texture objects. For the older EXT_feature_metadata extension, this is sorted by the key in the featureTextures dictionary
+ * @param {FeatureTable[]} [options.featureTables] An array of feature table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the featureTables dictionary
+ * @param {FeatureTexture[]} [options.featureTextures] An array of feature texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the featureTextures dictionary
  * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
@@ -130,7 +130,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
 /**
  * Gets the feature table with the given ID.
  * <p>
- * For the older EXT_feature_metadata, textures are stored in an array sorted
+ * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the featureTables dictionary.
  * </p>
  *
@@ -147,9 +147,9 @@ FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
 };
 
 /**
- * Gets the feature texture with the given index.
+ * Gets the feature texture with the given ID.
  * <p>
- * For the older EXT_feature_metadata, textures are stored in an array sorted
+ * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the featureTextures dictionary.
  * </p>
  *

@@ -22,7 +22,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {String} [options.extension] The EXT_mesh_features extension object. If this is undefined, then extensionLegacy must be defined.
- * @param {String} [options.extensionLegacy] The older EXT_feature_metadata extension for backwards compatibility.
+ * @param {String} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
@@ -203,10 +203,10 @@ function gatherUsedBufferViewIds(extension) {
   if (defined(propertyTables)) {
     for (var i = 0; i < propertyTables.length; i++) {
       var propertyTable = propertyTables[i];
-      var properties = propertyTable.properties;
-      if (defined(properties)) {
-        gatherBufferViewIdsFromProperties(properties, bufferViewIdSet);
-      }
+      gatherBufferViewIdsFromProperties(
+        propertyTable.properties,
+        bufferViewIdSet
+      );
     }
   }
   return bufferViewIdSet;
@@ -215,7 +215,6 @@ function gatherUsedBufferViewIds(extension) {
 function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
   var featureTables = extensionLegacy.featureTables;
 
-  // Gather the used buffer views
   var bufferViewIdSet = {};
   if (defined(featureTables)) {
     for (var featureTableId in featureTables) {
