@@ -159,6 +159,16 @@ function Globe(ellipsoid) {
   this.enableLighting = false;
 
   /**
+   * A multiplier to adjust terrain lambert lighting
+   * This number is multiplied to the result of czm_getLambertDiffuse in globeFS.glsl
+   * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   *
+   * @type {Number}
+   * @default 0.9
+   */
+  this.lambertDiffuseMultiplier = 0.9;
+
+  /**
    * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
    * when <code>enableLighting</code> is <code>true</code>.
    *
@@ -981,6 +991,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.backFaceCulling = this.backFaceCulling;
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
+    tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
     surface.beginFrame(frameState);
   }
 };

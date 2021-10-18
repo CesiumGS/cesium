@@ -1760,6 +1760,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_undergroundColorAlphaByDistance: function () {
       return this.properties.undergroundColorAlphaByDistance;
     },
+    u_lambertDiffuseMultiplier: function () {
+      return this.properties.lambertDiffuseMultiplier;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1814,6 +1817,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       localizedTranslucencyRectangle: new Cartesian4(),
       undergroundColor: Color.clone(Color.TRANSPARENT),
       undergroundColorAlphaByDistance: new Cartesian4(),
+      lambertDiffuseMultiplier: 0.9
     },
   };
 
