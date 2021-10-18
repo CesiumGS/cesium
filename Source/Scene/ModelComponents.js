@@ -349,10 +349,9 @@ function FeatureIdAttribute() {
    * Number of times each feature ID is repeated before being incremented.
    *
    * @type {Number}
-   * @default 0
    * @private
    */
-  this.repeat = 0;
+  this.repeat = undefined;
 }
 
 /**
