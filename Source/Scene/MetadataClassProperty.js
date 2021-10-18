@@ -38,13 +38,16 @@ function MetadataClassProperty(options) {
     enumType = options.enums[property.enumType];
   }
 
-  var type = defaultValue(MetadataType[property.type], MetadataType.SINGLE);
-  var componentType = MetadataComponentType[property.componentType];
+  var type = property.type;
+  var componentType;
   if (MetadataComponentType.hasOwnProperty(type)) {
-    // in EXT_feature_metadata, single values were part of type, not
+    // For EXT_feature_metadata, single values were part of type, not
     // componentType. Transcode to the newer format.
+    componentType = MetadataComponentType[type];
     type = MetadataType.SINGLE;
-    componentType = MetadataComponentType[property.type];
+  } else {
+    type = defaultValue(MetadataType[type], MetadataType.SINGLE);
+    componentType = MetadataComponentType[property.componentType];
   }
   var valueType = getValueType(componentType, enumType);
 
