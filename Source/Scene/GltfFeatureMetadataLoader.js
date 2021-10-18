@@ -175,21 +175,23 @@ GltfFeatureMetadataLoader.prototype.load = function () {
     });
 };
 
-function gatherBufferViewIdsFromProperties(properties, bufferViewIds) {
+function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
   for (var propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       var property = properties[propertyId];
       var bufferView = property.bufferView;
       var arrayOffsetBufferView = property.arrayOffsetBufferView;
       var stringOffsetBufferView = property.stringOffsetBufferView;
+
+      // Using an object like a mathematical set
       if (defined(bufferView)) {
-        bufferViewIds[bufferView] = true;
+        bufferViewIdSet[bufferView] = true;
       }
       if (defined(arrayOffsetBufferView)) {
-        bufferViewIds[arrayOffsetBufferView] = true;
+        bufferViewIdSet[arrayOffsetBufferView] = true;
       }
       if (defined(stringOffsetBufferView)) {
-        bufferViewIds[stringOffsetBufferView] = true;
+        bufferViewIdSet[stringOffsetBufferView] = true;
       }
     }
   }
@@ -197,36 +199,36 @@ function gatherBufferViewIdsFromProperties(properties, bufferViewIds) {
 
 function gatherUsedBufferViewIds(extension) {
   var propertyTables = extension.propertyTables;
-  var bufferViewIds = {};
+  var bufferViewIdSet = {};
   if (defined(propertyTables)) {
     for (var i = 0; i < propertyTables.length; i++) {
       var propertyTable = propertyTables[i];
       var properties = propertyTable.properties;
       if (defined(properties)) {
-        gatherBufferViewIdsFromProperties(properties, bufferViewIds);
+        gatherBufferViewIdsFromProperties(properties, bufferViewIdSet);
       }
     }
   }
-  return bufferViewIds;
+  return bufferViewIdSet;
 }
 
 function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
   var featureTables = extensionLegacy.featureTables;
 
   // Gather the used buffer views
-  var bufferViewIds = {};
+  var bufferViewIdSet = {};
   if (defined(featureTables)) {
     for (var featureTableId in featureTables) {
       if (featureTables.hasOwnProperty(featureTableId)) {
         var featureTable = featureTables[featureTableId];
         var properties = featureTable.properties;
         if (defined(properties)) {
-          gatherBufferViewIdsFromProperties(properties, bufferViewIds);
+          gatherBufferViewIdsFromProperties(properties, bufferViewIdSet);
         }
       }
     }
   }
-  return bufferViewIds;
+  return bufferViewIdSet;
 }
 
 function loadBufferViews(featureMetadataLoader) {
