@@ -93,7 +93,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.attributeIndex = 1;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the constant/divisor in the feature ID attribute.
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
    *
    * @type {Number}
    * @readonly

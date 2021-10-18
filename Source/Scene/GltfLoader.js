@@ -773,7 +773,7 @@ function loadFeatureIdAttribute(featureIds, featureTableId) {
   featureIdAttribute.featureTableId = featureTableId;
   featureIdAttribute.setIndex = featureIds.attribute;
   featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
-  featureIdAttribute.repeat = defaultValue(featureIds.repeat, 0);
+  featureIdAttribute.repeat = featureIds.repeat;
   return featureIdAttribute;
 }
 
@@ -785,7 +785,9 @@ function loadFeatureIdAttributeLegacy(gltfFeatureIdAttribute, featureTableId) {
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
   // constant/divisor was renamed to offset/repeat
   featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
-  featureIdAttribute.repeat = defaultValue(featureIds.divisor, 0);
+  // The default is now undefined
+  var divisor = defaultValue(featureIds.divisor, 0);
+  featureIdAttribute.repeat = divisor === 0 ? undefined : divisor;
   return featureIdAttribute;
 }
 

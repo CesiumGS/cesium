@@ -65,7 +65,7 @@ export default function PrimitiveRenderResources(
   this.attributeIndex = nodeRenderResources.attributeIndex;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the constant/divisor in the feature ID attribute.
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
    * Inherited from the node render resources.
    *
    * @type {Number}
