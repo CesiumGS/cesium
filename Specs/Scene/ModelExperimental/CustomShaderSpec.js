@@ -204,6 +204,124 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     );
   });
 
+  describe("variable validation", function () {
+    function makeSingleVariableVS(variableName) {
+      return new CustomShader({
+        vertexShaderText: [
+          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "{",
+          "    positionMC = vsInput.attributes." + variableName + ";",
+          "}",
+        ].join("\n"),
+      });
+    }
+
+    function makeSingleVariableFS(variableName) {
+      return new CustomShader({
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    material.diffuse = fsInput.attributes." + variableName + ";",
+          "}",
+        ].join("\n"),
+      });
+    }
+
+    it("validates position", function () {
+      expect(function () {
+        return makeSingleVariableVS("position");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("positionMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("positionWC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("positionEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("position");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("positionMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("positionWC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("positionEC");
+      }).not.toThrowDeveloperError();
+    });
+
+    it("validates normal", function () {
+      expect(function () {
+        return makeSingleVariableVS("normal");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("normalMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("normalEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("normal");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("normalMC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("normalEC");
+      }).not.toThrowDeveloperError();
+    });
+
+    it("validates tangent", function () {
+      expect(function () {
+        return makeSingleVariableVS("tangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("tangentMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("tangentEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("tangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("tangentMC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("tangentEC");
+      }).not.toThrowDeveloperError();
+    });
+
+    it("validates bitangent", function () {
+      expect(function () {
+        return makeSingleVariableVS("bitangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("bitangentMC");
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableVS("bitangentEC");
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        return makeSingleVariableFS("bitangent");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("bitangentMC");
+      }).toThrowDeveloperError();
+      expect(function () {
+        return makeSingleVariableFS("bitangentEC");
+      }).not.toThrowDeveloperError();
+    });
+  });
+
   // asynchronous code is only needed if texture uniforms are used.
   describe(
     "texture uniforms",

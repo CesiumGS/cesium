@@ -1,5 +1,28 @@
 # Change Log
 
+### 1.87 - 2021-11-1
+
+##### Additions :tada:
+
+- Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
+
+### 1.86.1 - 2021-10-15
+
+##### Fixes :wrench:
+
+- Fixed zip.js configurations causing CesiumJS to not work with Node 16. [#9861](https://github.com/CesiumGS/cesium/pull/9861)
+- Fixed a bug in `Rectangle.union` with rectangles that span the entire globe. [#9866](https://github.com/CesiumGS/cesium/pull/9866)
+
+### 1.86 - 2021-10-01
+
+##### Breaking Changes :mega:
+
+- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [#9847](https://github.com/CesiumGS/cesium/issues/9847)
+
+##### Fixes :wrench:
+
+- Fixed incorrect behavior in `CameraFlightPath` when using Columbus View. [#9192](https://github.com/CesiumGS/cesium/pull/9192)
+
 ### 1.85 - 2021-09-01
 
 ##### Breaking Changes :mega:

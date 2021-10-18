@@ -108,8 +108,8 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "HAS_FEATURES",
       ]);
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying float v_featureId;",
-        "varying vec2 v_featureSt;",
+        "varying float v_activeFeatureId;",
+        "varying vec2 v_activeFeatureSt;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -167,8 +167,8 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "attribute float a_featureId_1;",
       ]);
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying float v_featureId;",
-        "varying vec2 v_featureSt;",
+        "varying float v_activeFeatureId;",
+        "varying vec2 v_activeFeatureSt;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -230,8 +230,8 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ]);
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying float v_featureId;",
-        "varying vec2 v_featureSt;",
+        "varying float v_activeFeatureId;",
+        "varying vec2 v_activeFeatureSt;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -291,8 +291,8 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "attribute float a_instanceFeatureId_1;",
       ]);
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying float v_featureId;",
-        "varying vec2 v_featureSt;",
+        "varying float v_activeFeatureId;",
+        "varying vec2 v_activeFeatureSt;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
