@@ -41,8 +41,11 @@ function MetadataTableProperty(options) {
   Check.typeOf.object("options.bufferViews", bufferViews);
   //>>includeEnd('debug');
 
-  var isArray = classProperty.type === MetadataType.ARRAY;
+  var type = classProperty.type;
+  var isArray = type === MetadataType.ARRAY;
   var isVariableSizeArray = isArray && !defined(classProperty.componentCount);
+  var isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
   var valueType = classProperty.valueType;
   var enumType = classProperty.enumType;
@@ -67,7 +70,7 @@ function MetadataTableProperty(options) {
   var componentCount;
   if (isVariableSizeArray) {
     componentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
-  } else if (isArray) {
+  } else if (isArray || isVectorOrMatrix) {
     componentCount = count * classProperty.componentCount;
   } else {
     componentCount = count;
@@ -265,7 +268,11 @@ function get(property, index) {
     return value;
   }
 
-  if (classProperty.type !== MetadataType.ARRAY) {
+  var type = classProperty.type;
+  var isArray = classProperty.type === MetadataType.ARRAY;
+  var isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  if (!isArray && !isVectorOrMatrix) {
     return property._getValue(index);
   }
 
@@ -307,7 +314,11 @@ function set(property, index, value) {
   // Values are unpacked if the length of a variable-size array changes or the
   // property has strings. No need to handle these cases below.
 
-  if (classProperty.type !== MetadataType.ARRAY) {
+  var type = classProperty.type;
+  var isArray = classProperty.type === MetadataType.ARRAY;
+  var isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  if (!isArray && !isVectorOrMatrix) {
     property._setValue(index, value);
     return;
   }

@@ -645,7 +645,7 @@ describe("Scene/MetadataTableProperty", function () {
         componentType: "INT32",
       },
       propertyUint32: {
-        coponentType: "UINT32",
+        componentType: "UINT32",
       },
       propertyInt64: {
         componentType: "INT64",
@@ -708,8 +708,8 @@ describe("Scene/MetadataTableProperty", function () {
         BigInt("4611686018427387833"), // eslint-disable-line
         BigInt("18446744073709551615"), // eslint-disable-line
       ],
-      propertyFloat32: [-2.5, -1.0, 0.0, 700.0, Number.POSITIVE_INFINITY],
-      propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Number.POSITIVE_INFINITY],
+      propertyFloat32: [-2.5, -1.0, 0.0, 700.0, 38.0],
+      propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Math.PI],
       propertyBoolean: [true, true, false, false, true],
       propertyString: ["おはようございます。😃", "a", "", "def", "0001"],
       propertyEnum: ["ValueA", "ValueB", "Other", "ValueA", "ValueA"],
@@ -877,12 +877,14 @@ describe("Scene/MetadataTableProperty", function () {
         componentCount: 3,
       },
       propertyUint32: {
-        type: "VEC3",
+        type: "ARRAY",
         componentType: "UINT32",
+        componentCount: 3,
       },
       propertyFloat32: {
-        type: "VEC3",
+        type: "ARRAY",
         componentType: "FLOAT32",
+        componentCount: 2,
       },
     };
 
@@ -912,8 +914,8 @@ describe("Scene/MetadataTableProperty", function () {
         [0, 0, 0],
       ],
       propertyFloat32: [
-        [0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0],
+        [0.0, 0.0],
+        [0.0, 0.0],
       ],
     };
 
@@ -937,6 +939,14 @@ describe("Scene/MetadataTableProperty", function () {
       propertyEnum: [
         ["ValueA", "ValueB", "Other"],
         ["ValueA", "ValueA", "ValueA"],
+      ],
+      propertyUint32: [
+        [1, 0, 0],
+        [0, 2, 0],
+      ],
+      propertyFloat32: [
+        [0.0, 0.5],
+        [0.25, 0.25],
       ],
     };
 
@@ -1244,7 +1254,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("set sets Infinity for FLOAT32 and FLOAT64", function () {
+  it("set throws if Infinity is given for FLOAT32 and FLOAT64", function () {
     var propertyFloat32 = MetadataTester.createProperty({
       property: {
         componentType: "FLOAT32",
@@ -1259,19 +1269,26 @@ describe("Scene/MetadataTableProperty", function () {
       values: [0.0, 0.0],
     });
 
-    propertyFloat32.set(0, Number.POSITIVE_INFINITY);
-    propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
-    propertyFloat64.set(0, Number.POSITIVE_INFINITY);
-    propertyFloat64.set(1, Number.NEGATIVE_INFINITY);
+    expect(function () {
+      propertyFloat32.set(0, Number.POSITIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat64.set(0, Number.POSITIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
+    }).toThrowDeveloperError();
 
-    expect(propertyFloat32.get(0)).toBe(Number.POSITIVE_INFINITY);
-    expect(propertyFloat32.get(1)).toBe(Number.NEGATIVE_INFINITY);
-    expect(propertyFloat64.get(0)).toBe(Number.POSITIVE_INFINITY);
-    expect(propertyFloat64.get(1)).toBe(Number.NEGATIVE_INFINITY);
+    expect(propertyFloat32.get(0)).toBe(0.0);
+    expect(propertyFloat32.get(1)).toBe(0.0);
+    expect(propertyFloat64.get(0)).toBe(0.0);
+    expect(propertyFloat64.get(1)).toBe(0.0);
   });
 
-  it("set sets NaN for FLOAT32 and FLOAT64", function () {
-    fail();
+  it("set throws if a NaN is given for FLOAT32 and FLOAT64", function () {
     var propertyFloat32 = MetadataTester.createProperty({
       property: {
         componentType: "FLOAT32",
@@ -1286,11 +1303,15 @@ describe("Scene/MetadataTableProperty", function () {
       values: [0.0],
     });
 
-    propertyFloat32.set(0, NaN);
-    propertyFloat64.set(0, NaN);
+    expect(function () {
+      propertyFloat32.set(0, NaN);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat64.set(0, NaN);
+    }).toThrowDeveloperError();
 
-    expect(isNaN(propertyFloat32.get(0))).toBe(true);
-    expect(isNaN(propertyFloat64.get(0))).toBe(true);
+    expect(propertyFloat32.get(0)).toBe(0.0);
+    expect(propertyFloat64.get(0)).toBe(0.0);
   });
 
   it("set sets value for normalized property", function () {

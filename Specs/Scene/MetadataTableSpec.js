@@ -356,9 +356,8 @@ describe("Scene/MetadataTable", function () {
 
     var properties = {
       position: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
         optional: true,
         default: position,
       },

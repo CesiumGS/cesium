@@ -55,6 +55,11 @@ function MetadataClassProperty(options) {
     MetadataComponentType.isIntegerType(componentType) &&
     defaultValue(property.normalized, false);
 
+  var componentCount =
+    type === MetadataType.ARRAY
+      ? property.componentCount
+      : MetadataType.getComponentCount(type);
+
   this._id = id;
   this._name = property.name;
   this._description = property.description;
@@ -62,7 +67,7 @@ function MetadataClassProperty(options) {
   this._enumType = enumType;
   this._valueType = valueType;
   this._componentType = componentType;
-  this._componentCount = property.componentCount;
+  this._componentCount = componentCount;
   this._normalized = normalized;
   this._min = property.min;
   this._max = property.max;
@@ -488,6 +493,10 @@ function checkInRange(value, componentType, normalized) {
   }
 }
 
+function getNonFiniteErrorMessage(value, type) {
+  return "value " + value + " of type " + type + " must be finite";
+}
+
 function checkValue(classProperty, value) {
   var javascriptType = typeof value;
 
@@ -526,12 +535,15 @@ function checkValue(classProperty, value) {
       if (isFinite(value)) {
         return checkInRange(value, valueType, normalized);
       }
-      break;
+      return getNonFiniteErrorMessage(value, valueType);
     case MetadataComponentType.FLOAT64:
       if (javascriptType !== "number") {
         return getTypeErrorMessage(value, valueType);
       }
-      break;
+      if (isFinite(value)) {
+        return checkInRange(value, valueType, normalized);
+      }
+      return getNonFiniteErrorMessage(value, valueType);
     case MetadataComponentType.BOOLEAN:
       if (javascriptType !== "boolean") {
         return getTypeErrorMessage(value, valueType);

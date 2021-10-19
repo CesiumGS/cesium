@@ -118,4 +118,38 @@ MetadataType.isMatrixType = function (type) {
   }
 };
 
+/**
+ * Get the number of components for a type. e.g. a VECN returns N.
+ * The only exception is the ARRAY type, whose number of components is
+ * determined separately by the componentCount property in the metadata
+ * extension.
+ *
+ * @param {MetadataType} type The type to get the component count for
+ * @return {Number} The number of components, or <code>undefined</code> for ARRAY
+ */
+MetadataType.getComponentCount = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
+
+  switch (type) {
+    case MetadataType.SINGLE:
+      return 1;
+    case MetadataType.VEC2:
+      return 2;
+    case MetadataType.VEC3:
+      return 3;
+    case MetadataType.VEC4:
+      return 4;
+    case MetadataType.MAT2:
+      return 2;
+    case MetadataType.MAT3:
+      return 9;
+    case MetadataType.MAT4:
+      return 16;
+    default:
+      return undefined;
+  }
+};
+
 export default Object.freeze(MetadataType);
