@@ -46,6 +46,9 @@ Source/ThirdParty/Tween.js
 Source/ThirdParty/Uri.js
 Source/ThirdParty/when.js
 Source/ThirdParty/zip.js
+Source/ThirdParty/Workers/pako_inflate.min.js
+Source/ThirdParty/Workers/pako_deflate.min.js
+Source/ThirdParty/Workers/z-worker-pako.js
 
 /node_modules
 npm-debug.log
