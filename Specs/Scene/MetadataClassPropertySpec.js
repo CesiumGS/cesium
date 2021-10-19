@@ -28,7 +28,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
-    expect(property.componentCount).toBeUndefined();
+    expect(property.componentCount).toBe(1);
     expect(property.normalized).toBe(false);
     expect(property.max).toBeUndefined();
     expect(property.min).toBeUndefined();

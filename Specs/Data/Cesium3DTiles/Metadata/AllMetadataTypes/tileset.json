@@ -14,7 +14,7 @@
             "properties": {
               "author": {
                 "description": "The person or entity that made the tileset",
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "AUTHOR"
               },
               "date": {
@@ -41,32 +41,32 @@
           "residential": {
             "properties": {
               "population": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               },
               "neighborhoods": {
                 "type": "ARRAY",
                 "componentType": "STRING"
               },
               "name": {
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "GROUP_NAME"
               },
               "tileCount": {
-                "type": "UINT8"
+                "componentType": "UINT8"
               }
             }
           },
           "commercial": {
             "properties": {
               "businessCount": {
-                "type": "UINT16"
+                "componentType": "UINT16"
               },
               "majorIndustries": {
                 "type": "ARRAY",
                 "componentType": "STRING"
               },
               "name": {
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "GROUP_NAME"
               }
             }
@@ -74,13 +74,12 @@
           "tile": {
             "properties": {
               "color": {
-                "type": "ARRAY",
+                "type": "VEC4",
                 "componentType": "UINT8",
-                "componentCount": 4,
                 "semantic": "COLOR"
               },
               "population": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               }
             }
           }
