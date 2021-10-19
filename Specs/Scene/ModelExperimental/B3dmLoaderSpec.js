@@ -23,11 +23,6 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/batchedWithRtcCenter.b3dm";
   var withBatchTableHierarchy =
     "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tile.b3dm";
-  var deprecated1Url =
-    "./Data/Cesium3DTiles/Batched/BatchedDeprecated1/batchedDeprecated1.b3dm";
-  var deprecated2Url =
-    "./Data/Cesium3DTiles/Batched/BatchedDeprecated2/batchedDeprecated2.b3dm";
-
   var scene;
   var b3dmLoaders = [];
 
@@ -142,34 +137,6 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
       version: 2,
     });
     Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
-  });
-
-  it("recognizes the legacy 20-byte header", function () {
-    return loadB3dm(deprecated1Url).then(function (loader) {
-      expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
-
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(10);
-    });
-  });
-
-  it("recognizes the legacy 24-byte header", function () {
-    return loadB3dm(deprecated2Url).then(function (loader) {
-      expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
-
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(10);
-    });
   });
 
   it("throws with empty gltf", function () {

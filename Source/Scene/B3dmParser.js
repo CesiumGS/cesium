@@ -25,11 +25,15 @@ var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @returns {Object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the B3DM.
  */
 B3dmParser.parse = function (arrayBuffer, byteOffset) {
+  var byteStart = defaultValue(byteOffset, 0);
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
+  Check.typeOf.number("byteOffset", byteStart);
+  if (byteStart < 0) {
+    throw new RuntimeError("byteOffset cannot be less than 0.");
+  }
   //>>includeEnd('debug');
 
-  var byteStart = defaultValue(byteOffset, 0);
   byteOffset = byteStart;
 
   var uint8Array = new Uint8Array(arrayBuffer);

@@ -41,10 +41,6 @@ describe(
       "./Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json";
     var texturedUrl =
       "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
-    var deprecated1Url =
-      "./Data/Cesium3DTiles/Batched/BatchedDeprecated1/tileset.json";
-    var deprecated2Url =
-      "./Data/Cesium3DTiles/Batched/BatchedDeprecated2/tileset.json";
     var withRtcCenterUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json";
 
@@ -78,37 +74,6 @@ describe(
         version: 2,
       });
       Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
-    });
-
-    it("recognizes the legacy 20-byte header", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
-        function (tileset) {
-          expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          var batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
-        }
-      );
-    });
-
-    it("recognizes the legacy 24-byte header", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated2Url).then(
-        function (tileset) {
-          expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          var batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
-        }
-      );
-    });
-
-    it("logs deprecation warning for use of BATCHID without prefixed underscore", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
-        function (tileset) {
-          expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
-      );
     });
 
     it("throws with empty gltf", function () {
