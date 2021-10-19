@@ -14,17 +14,16 @@
             "properties": {
               "airTemperature": {
                 "name": "Air Temperature",
-                "type": "FLOAT32"
+                "componentType": "FLOAT32"
               },
               "airPressure": {
                 "name": "Air Pressure",
-                "type": "FLOAT32"
+                "componentType": "FLOAT32"
               },
               "windVelocity": {
                 "name": "Wind Velocity",
-                "type": "ARRAY",
-                "componentType": "FLOAT32",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "FLOAT32"
               }
             }
           },
@@ -33,11 +32,11 @@
             "properties": {
               "name": {
                 "name": "Name",
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "population": {
                 "name": "Population",
-                "type": "UINT16"
+                "componentType": "UINT16"
               }
             }
           }
