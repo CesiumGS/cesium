@@ -96,6 +96,7 @@ function B3dmLoader(options) {
   // The batch table object contains a json and a binary component access using keys of the same name.
   this._batchTable = undefined;
   this._components = undefined;
+  this._rtcTransform = undefined;
 }
 
 if (defined(Object.create)) {
@@ -149,6 +150,7 @@ Object.defineProperties(B3dmLoader.prototype, {
       return undefined;
     },
   },
+
   /**
    * The loaded components.
    *
@@ -161,6 +163,22 @@ Object.defineProperties(B3dmLoader.prototype, {
   components: {
     get: function () {
       return this._components;
+    },
+  },
+
+  /**
+   * A transform from the RTC_CENTER semantic, if present in the B3DM's Feature Table.
+   * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel#global-semantics}
+   *
+   * @memberof B3dmLoader.prototype
+   *
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  rtcTransform: {
+    get: function () {
+      return this._rtcTransform;
     },
   },
 });
@@ -198,6 +216,18 @@ B3dmLoader.prototype.load = function () {
   );
   offset += featureTableJsonByteLength + featureTableBinaryByteLength;
   this._featureTable = featureTable;
+
+  // Set the RTC Center transform, if present.
+  var rtcCenter = featureTable.getGlobalProperty(
+    "RTC_CENTER",
+    ComponentDatatype.FLOAT,
+    3
+  );
+  if (defined(rtcCenter)) {
+    this._rtcTransform = Matrix4.fromTranslation(
+      Cartesian3.fromArray(rtcCenter)
+    );
+  }
 
   // Set batch length.
   batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
@@ -442,7 +472,6 @@ B3dmLoader.prototype.process = function (frameState) {
 function processGltfComponents(loader, components) {
   var batchTable = loader._batchTable;
   var batchLength = loader._batchLength;
-  var featureTable = loader._featureTable;
 
   var featureMetadata;
   if (defined(batchTable.json)) {
@@ -465,30 +494,6 @@ function processGltfComponents(loader, components) {
     });
   }
   components.featureMetadata = featureMetadata;
-
-  // Apply the RTC Center transform, if present.
-  var rtcCenter = featureTable.getGlobalProperty(
-    "RTC_CENTER",
-    ComponentDatatype.FLOAT,
-    3
-  );
-  if (defined(rtcCenter)) {
-    var rootNodes = components.scene.nodes;
-    for (var i = 0; i < rootNodes.length; i++) {
-      applyRTCTransform(rootNodes[i], rtcCenter);
-    }
-  }
-}
-
-function applyRTCTransform(node, rtcCenter) {
-  if (defined(node.matrix)) {
-    var rtcTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
-    Matrix4.multiply(node.matrix, rtcTransform, node.matrix);
-  } else if (defined(node.translation)) {
-    Cartesian3.add(rtcCenter, node.translation, node.translation);
-  } else {
-    node.translation = rtcCenter;
-  }
 }
 
 B3dmLoader.prototype.unload = function () {

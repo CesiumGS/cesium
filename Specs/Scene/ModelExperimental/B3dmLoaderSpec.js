@@ -2,6 +2,7 @@ import {
   B3dmLoader,
   Cartesian3,
   GltfLoader,
+  Matrix4,
   MetadataClass,
   Resource,
   ResourceCache,
@@ -9,6 +10,7 @@ import {
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
+
 describe("Scene/ModelExperimental/B3dmLoader", function () {
   var withBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/batchedWithBatchTable.b3dm";
@@ -48,17 +50,6 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     b3dmLoaders.length = 0;
     ResourceCache.clearForSpecs();
   });
-
-  // function loadB3dmFromArrayBuffer(arrayBuffer) {
-  //   var loader = new B3dmLoader({
-  //     b3dmResource: Resource.createIfNeeded(""),
-  //     arrayBuffer: arrayBuffer
-  //   });
-  //   b3dmLoaders.push(loader);
-  //   loader.load();
-
-  //   return waitForLoaderProcess(loader, scene);
-  // }
 
   function loadB3dm(b3dmPath) {
     var resource = Resource.createIfNeeded(b3dmPath);
@@ -125,13 +116,10 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
       );
       expect(featureTable).toBeDefined();
       expect(featureTable.count).toEqual(10);
-      var rootNodeMatrix = components.scene.nodes[0].matrix;
-      var translation = new Cartesian3(
-        rootNodeMatrix[12],
-        rootNodeMatrix[13],
-        rootNodeMatrix[14]
+
+      expect(loader.rtcTransform).toEqual(
+        Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
       );
-      expect(translation).toEqual(new Cartesian3(0.1, 0.3, -0.2));
     });
   });
 

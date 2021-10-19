@@ -175,6 +175,11 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
+      var rtcTransform = loader.rtcTransform;
+      if (defined(rtcTransform)) {
+        Matrix4.multiply(modelMatrix, rtcTransform, modelMatrix);
+      }
+
       var components = loader.components;
       var content = model._content;
       var featureMetadata = components.featureMetadata;
