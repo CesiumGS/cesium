@@ -50,7 +50,7 @@ describe("Scene/B3dmParser", function () {
   it("throws on invalid byteOffset", function () {
     expect(function () {
       B3dmParser.parse(new ArrayBuffer(1), "a");
-    }).toThrowRuntimeError();
+    }).toThrowDeveloperError();
     expect(function () {
       B3dmParser.parse(new ArrayBuffer(1), -1);
     }).toThrowRuntimeError();
