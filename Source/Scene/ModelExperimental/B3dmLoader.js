@@ -1,4 +1,5 @@
 import Axis from "../Axis.js";
+import B3dmParser from "../B3dmParser.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
@@ -8,13 +9,11 @@ import defined from "../../Core/defined.js";
 import deprecationWarning from "../../Core/deprecationWarning.js";
 import FeatureTable from "../FeatureTable.js";
 import FeatureMetadata from "../FeatureMetadata.js";
-import getJsonFromTypedArray from "../../Core/getJsonFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import MetadataClass from "../MetadataClass.js";
 import parseBatchTable from "../parseBatchTable.js";
 import ResourceLoader from "../ResourceLoader.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import when from "../../ThirdParty/when.js";
 
 var B3dmLoaderState = {
@@ -25,8 +24,6 @@ var B3dmLoaderState = {
   READY: 4,
   FAILED: 5,
 };
-
-var UINT32_BYTE_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * Loads a Batched 3D Model.
@@ -93,8 +90,9 @@ function B3dmLoader(options) {
   // Loaded results.
   this._batchLength = 0;
   this._featureTable = undefined;
+
   // The batch table object contains a json and a binary component access using keys of the same name.
-  this._batchTable = undefined;
+  this._batc = undefined;
   this._components = undefined;
   this._rtcTransform = undefined;
 }
@@ -188,35 +186,21 @@ Object.defineProperties(B3dmLoader.prototype, {
  * @private
  */
 B3dmLoader.prototype.load = function () {
-  var byteStart = this._byteOffset;
-  var offset = byteStart;
-  var arrayBuffer = this._arrayBuffer;
-  var typedArray = new Uint8Array(arrayBuffer);
+  var b3dm = B3dmParser.parse(this._arrayBuffer, this._offset);
 
-  // Parse B3DM header.
-  var header = parseHeader(arrayBuffer);
-  // The length of the B3DM header.
-  offset += header.headerByteLength;
-  // The byte length of the B3DM.
-  var byteLength = header.byteLength;
-  var batchLength = header.batchLength;
-  var batchTableJsonByteLength = header.batchTableJsonByteLength;
-  var batchTableBinaryByteLength = header.batchTableBinaryByteLength;
-  var featureTableJsonByteLength = header.featureTableJsonByteLength;
-  var featureTableBinaryByteLength = header.featureTableBinaryByteLength;
+  var batchLength = b3dm.batchLength;
+  var featureTableJson = b3dm.featureTableJson;
+  var featureTableBinary = b3dm.featureTableBinary;
+  var batchTableJson = b3dm.batchTableJson;
+  var batchTableBinary = b3dm.batchTableBinary;
 
-  // Load feature table.
-  var featureTable = loadFeatureTable(
-    arrayBuffer,
-    offset,
-    typedArray,
-    batchLength,
-    featureTableJsonByteLength,
-    featureTableBinaryByteLength
+  var featureTable = new Cesium3DTileFeatureTable(
+    featureTableJson,
+    featureTableBinary
   );
-  offset += featureTableJsonByteLength + featureTableBinaryByteLength;
-  this._featureTable = featureTable;
-
+  batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
+  // Set batch length.
+  this._batchLength = batchLength;
   // Set the RTC Center transform, if present.
   var rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
@@ -229,44 +213,14 @@ B3dmLoader.prototype.load = function () {
     );
   }
 
-  // Set batch length.
-  batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
-  featureTable.featuresLength = batchLength;
-  this._batchLength = batchLength;
-
-  // Load batch table.
-  var batchTable = loadBatchTable(
-    arrayBuffer,
-    offset,
-    typedArray,
-    batchTableJsonByteLength,
-    batchTableBinaryByteLength
-  );
-  offset += batchTableJsonByteLength + batchTableBinaryByteLength;
-  this._batchTable = batchTable;
-
-  // Load glTF.
-  var gltfByteLength = byteStart + byteLength - offset;
-  if (gltfByteLength === 0) {
-    throw new RuntimeError("glTF byte length must be greater than 0.");
-  }
-  var gltfTypedArray;
-  if (offset % 4 === 0) {
-    gltfTypedArray = new Uint8Array(arrayBuffer, offset, gltfByteLength);
-  } else {
-    // Create a copy of the glb so that it is 4-byte aligned
-    B3dmLoader._deprecationWarning(
-      "b3dm-glb-unaligned",
-      "The embedded glb is not aligned to a 4-byte boundary."
-    );
-    gltfTypedArray = new Uint8Array(
-      typedArray.subarray(offset, offset + gltfByteLength)
-    );
-  }
+  this._batchTable = {
+    json: batchTableJson,
+    binary: batchTableBinary,
+  };
 
   var gltfLoader = new GltfLoader({
     upAxis: this._upAxis,
-    typedArray: gltfTypedArray,
+    typedArray: b3dm.gltf,
     forwardAxis: this._forwardAxis,
     gltfResource: this._b3dmResource,
     baseResource: this._baseResource,
@@ -287,146 +241,6 @@ function handleError(gltfLoader, error) {
   error = gltfLoader.getError(errorMessage, error);
   gltfLoader._promise.reject(error);
 }
-
-function parseHeader(arrayBuffer) {
-  var offset = 0;
-  var dataView = new DataView(arrayBuffer);
-
-  // Skip B3DM magic.
-  offset += UINT32_BYTE_SIZE;
-  var version = dataView.getUint32(offset, true);
-  if (version !== 1) {
-    throw new RuntimeError(
-      "Only Batched 3D Model version 1 is supported. Version " +
-        version +
-        " is not."
-    );
-  }
-  offset += UINT32_BYTE_SIZE;
-
-  var byteLength = dataView.getUint32(offset, true);
-  offset += UINT32_BYTE_SIZE;
-  var featureTableJsonByteLength = dataView.getUint32(offset, true);
-  offset += UINT32_BYTE_SIZE;
-  var featureTableBinaryByteLength = dataView.getUint32(offset, true);
-  offset += UINT32_BYTE_SIZE;
-  var batchTableJsonByteLength = dataView.getUint32(offset, true);
-  offset += UINT32_BYTE_SIZE;
-  var batchTableBinaryByteLength = dataView.getUint32(offset, true);
-  offset += UINT32_BYTE_SIZE;
-
-  var batchLength;
-  // Legacy header #1: [batchLength] [batchTableByteLength]
-  // Legacy header #2: [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]
-  // Current header: [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength]
-  // If the header is in the first legacy format 'batchTableJsonByteLength' will be the start of the JSON string (a quotation mark) or the glTF magic.
-  // Accordingly its first byte will be either 0x22 or 0x67, and so the minimum uint32 expected is 0x22000000 = 570425344 = 570MB. It is unlikely that the feature table JSON will exceed this length.
-  // The check for the second legacy format is similar, except it checks 'batchTableBinaryByteLength' instead
-  if (batchTableJsonByteLength >= 570425344) {
-    // First legacy check
-    offset -= UINT32_BYTE_SIZE * 2;
-    batchLength = featureTableJsonByteLength;
-    batchTableJsonByteLength = featureTableBinaryByteLength;
-    batchTableBinaryByteLength = 0;
-    featureTableJsonByteLength = 0;
-    featureTableBinaryByteLength = 0;
-    B3dmLoader._deprecationWarning(
-      "b3dm-legacy-header",
-      "This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel."
-    );
-  } else if (batchTableBinaryByteLength >= 570425344) {
-    // Second legacy check
-    offset -= UINT32_BYTE_SIZE;
-    batchLength = batchTableJsonByteLength;
-    batchTableJsonByteLength = featureTableJsonByteLength;
-    batchTableBinaryByteLength = featureTableBinaryByteLength;
-    featureTableJsonByteLength = 0;
-    featureTableBinaryByteLength = 0;
-    B3dmLoader._deprecationWarning(
-      "b3dm-legacy-header",
-      "This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel."
-    );
-  }
-
-  return {
-    headerByteLength: offset,
-    byteLength: byteLength,
-    batchLength: batchLength,
-    batchTableJsonByteLength: batchTableJsonByteLength,
-    batchTableBinaryByteLength: batchTableBinaryByteLength,
-    featureTableJsonByteLength: featureTableJsonByteLength,
-    featureTableBinaryByteLength: featureTableBinaryByteLength,
-  };
-}
-
-function loadFeatureTable(
-  arrayBuffer,
-  offset,
-  typedArray,
-  batchLength,
-  featureTableJsonByteLength,
-  featureTableBinaryByteLength
-) {
-  var featureTableJson;
-  if (featureTableJsonByteLength === 0) {
-    featureTableJson = {
-      BATCH_LENGTH: defaultValue(batchLength, 0),
-    };
-  } else {
-    featureTableJson = getJsonFromTypedArray(
-      typedArray,
-      offset,
-      featureTableJsonByteLength
-    );
-    offset += featureTableJsonByteLength;
-  }
-
-  var featureTableBinary = new Uint8Array(
-    arrayBuffer,
-    offset,
-    featureTableBinaryByteLength
-  );
-  offset += featureTableBinaryByteLength;
-
-  return new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
-}
-
-function loadBatchTable(
-  arrayBuffer,
-  offset,
-  typedArray,
-  batchTableJsonByteLength,
-  batchTableBinaryByteLength
-) {
-  var batchTableJson;
-  var batchTableBinary;
-  if (batchTableJsonByteLength > 0) {
-    batchTableJson = getJsonFromTypedArray(
-      typedArray,
-      offset,
-      batchTableJsonByteLength
-    );
-    offset += batchTableJsonByteLength;
-
-    if (batchTableBinaryByteLength > 0) {
-      // Has a batch table binary
-      batchTableBinary = new Uint8Array(
-        arrayBuffer,
-        offset,
-        batchTableBinaryByteLength
-      );
-      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-      batchTableBinary = new Uint8Array(batchTableBinary);
-      offset += batchTableBinaryByteLength;
-    }
-  }
-
-  return {
-    json: batchTableJson,
-    binary: batchTableBinary,
-  };
-}
-
 B3dmLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);

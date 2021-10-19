@@ -1,11 +1,11 @@
 import {
+  B3dmParser,
   Cartesian3,
   Color,
   HeadingPitchRange,
   HeadingPitchRoll,
   Matrix4,
   Transforms,
-  Batched3DModel3DTileContent,
   Cesium3DTilePass,
   ClippingPlane,
   ClippingPlaneCollection,
@@ -58,7 +58,7 @@ describe(
       scene = createScene();
 
       // Keep the error from logging to the console when running tests
-      spyOn(Batched3DModel3DTileContent, "_deprecationWarning");
+      spyOn(B3dmParser, "_deprecationWarning");
     });
 
     afterAll(function () {
@@ -83,9 +83,7 @@ describe(
     it("recognizes the legacy 20-byte header", function () {
       return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
         function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
+          expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           var batchTable = tileset.root.content.batchTable;
           expect(batchTable._properties).toBeDefined();
@@ -96,9 +94,7 @@ describe(
     it("recognizes the legacy 24-byte header", function () {
       return Cesium3DTilesTester.loadTileset(scene, deprecated2Url).then(
         function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
+          expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           var batchTable = tileset.root.content.batchTable;
           expect(batchTable._properties).toBeDefined();
@@ -109,9 +105,7 @@ describe(
     it("logs deprecation warning for use of BATCHID without prefixed underscore", function () {
       return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
         function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
+          expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         }
       );

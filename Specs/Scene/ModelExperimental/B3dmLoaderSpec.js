@@ -1,5 +1,6 @@
 import {
   B3dmLoader,
+  B3dmParser,
   Cartesian3,
   GltfLoader,
   Matrix4,
@@ -33,7 +34,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   beforeAll(function () {
     scene = createScene();
     // Keep the error from logging to the console when running tests
-    spyOn(B3dmLoader, "_deprecationWarning");
+    spyOn(B3dmParser, "_deprecationWarning");
   });
 
   afterAll(function () {
@@ -145,7 +146,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("recognizes the legacy 20-byte header", function () {
     return loadB3dm(deprecated1Url).then(function (loader) {
-      expect(B3dmLoader._deprecationWarning).toHaveBeenCalled();
+      expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
 
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
@@ -159,7 +160,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("recognizes the legacy 24-byte header", function () {
     return loadB3dm(deprecated2Url).then(function (loader) {
-      expect(B3dmLoader._deprecationWarning).toHaveBeenCalled();
+      expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
 
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
