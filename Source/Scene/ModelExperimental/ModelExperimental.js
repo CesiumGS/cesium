@@ -675,6 +675,9 @@ ModelExperimental.fromGltf = function (options) {
   return model;
 };
 
+/*
+ * @private
+ */
 ModelExperimental.fromB3dm = function (options) {
   var loaderOptions = {
     b3dmResource: options.resource,

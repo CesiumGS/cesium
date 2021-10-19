@@ -111,7 +111,7 @@ function initialize(runtimePrimitive) {
 
   pipelineStages.push(LightingPipelineStage);
 
-  // The FeatureIdPipelineStage and BatchTexturePipelineStage when the primitive has features, i.e. when at least one of the following conditions exists:
+  // Add the FeatureIdPipelineStage and BatchTexturePipelineStage when the primitive has features, i.e. when at least one of the following conditions exists:
   // - the node is instanced and has feature ID attributes
   // - the primitive has a feature ID vertex attributes
   // - the primitive has a feature ID texture
