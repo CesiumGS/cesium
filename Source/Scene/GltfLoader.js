@@ -956,39 +956,37 @@ function loadPrimitiveMetadata(
   var featureIdsArray = metadataExtension.featureIds;
   var propertyTablesArray = metadataExtension.propertyTables;
 
-  for (i = 0; i < featureIdsArray.length; i++) {
-    var featureIds = featureIdsArray[i];
-    if (defined(featureIds.channel)) {
-      featureIdTextures.push(featureIds);
-    } else {
-      featureIdAttributes.push(featureIds);
+  if (defined(featureIdsArray)) {
+    for (i = 0; i < featureIdsArray.length; i++) {
+      var featureIds = featureIdsArray[i];
+      if (defined(featureIds.channel)) {
+        featureIdTextures.push(featureIds);
+      } else {
+        featureIdAttributes.push(featureIds);
+      }
     }
   }
 
   // Feature ID Attributes
-  if (defined(featureIdAttributes)) {
-    var featureIdAttributesLength = featureIdAttributes.length;
-    for (i = 0; i < featureIdAttributesLength; ++i) {
-      primitive.featureIdAttributes.push(
-        loadFeatureIdAttribute(featureIdAttributes[i], propertyTablesArray[i])
-      );
-    }
+  var featureIdAttributesLength = featureIdAttributes.length;
+  for (i = 0; i < featureIdAttributesLength; ++i) {
+    primitive.featureIdAttributes.push(
+      loadFeatureIdAttribute(featureIdAttributes[i], propertyTablesArray[i])
+    );
   }
 
   // Feature ID Textures
-  if (defined(featureIdTextures)) {
-    var featureIdTexturesLength = featureIdTextures.length;
-    for (i = 0; i < featureIdTexturesLength; ++i) {
-      primitive.featureIdTextures.push(
-        loadFeatureIdTexture(
-          loader,
-          gltf,
-          featureIdTextures[i],
-          propertyTablesArray[i],
-          supportedImageFormats
-        )
-      );
-    }
+  var featureIdTexturesLength = featureIdTextures.length;
+  for (i = 0; i < featureIdTexturesLength; ++i) {
+    primitive.featureIdTextures.push(
+      loadFeatureIdTexture(
+        loader,
+        gltf,
+        featureIdTextures[i],
+        propertyTablesArray[i],
+        supportedImageFormats
+      )
+    );
   }
 
   // Feature Textures

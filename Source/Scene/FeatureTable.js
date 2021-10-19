@@ -20,7 +20,7 @@ import defined from "../Core/defined.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} [options.name] human-readable name to describe the table
+ * @param {String} [options.name] Human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
  * @param {Number} options.count The number of features in the table.
  * @param {MetadataTable} [options.metadataTable] A table of binary properties.

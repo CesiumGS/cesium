@@ -21,7 +21,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {String} [options.extension] The EXT_mesh_features extension object. If this is undefined, then extensionLegacy must be defined.
+ * @param {String} [options.extension] The <code>EXT_mesh_features</code> extension object. If this is undefined, then extensionLegacy must be defined.
  * @param {String} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
