@@ -33,7 +33,7 @@ export default function parseFeatureMetadataLegacy(options) {
   //>>includeEnd('debug');
 
   var i;
-  var featureTables = [];
+  var propertyTables = [];
   var sortedIds;
   if (defined(extension.featureTables)) {
     // Store textures in an array sorted by the dictionary keys. This
@@ -52,7 +52,7 @@ export default function parseFeatureMetadataLegacy(options) {
         bufferViews: options.bufferViews,
       });
 
-      featureTables.push(
+      propertyTables.push(
         new PropertyTable({
           id: featureTableId,
           count: featureTable.count,
@@ -64,7 +64,7 @@ export default function parseFeatureMetadataLegacy(options) {
     }
   }
 
-  var featureTextures = [];
+  var propertyTextures = [];
   if (defined(extension.featureTextures)) {
     // Store textures in an array sorted by the dictionary keys. This
     // allows compatibility with the newer EXT_mesh_features extension
@@ -73,7 +73,7 @@ export default function parseFeatureMetadataLegacy(options) {
     for (i = 0; i < sortedIds.length; i++) {
       var featureTextureId = sortedIds[i];
       var featureTexture = extension.featureTextures[featureTextureId];
-      featureTextures.push(
+      propertyTextures.push(
         new PropertyTexture({
           id: featureTextureId,
           featureTexture: featureTexture,
@@ -86,8 +86,8 @@ export default function parseFeatureMetadataLegacy(options) {
 
   return new FeatureMetadata({
     schema: schema,
-    featureTables: featureTables,
-    featureTextures: featureTextures,
+    propertyTables: propertyTables,
+    propertyTextures: propertyTextures,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,

@@ -57,11 +57,11 @@ export default function parseFeatureMetadata(options) {
     }
   }
 
-  var featureTextures = [];
+  var propertyTextures = [];
   if (defined(extension.propertyTextures)) {
     for (i = 0; i < extension.propertyTextures.length; i++) {
       var propertyTexture = extension.propertyTextures[i];
-      featureTextures.push(
+      propertyTextures.push(
         new PropertyTexture({
           id: i,
           name: propertyTexture.name,
@@ -76,7 +76,7 @@ export default function parseFeatureMetadata(options) {
   return new FeatureMetadata({
     schema: schema,
     propertyTables: propertyTables,
-    featureTextures: featureTextures,
+    propertyTextures: propertyTextures,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,

@@ -93,7 +93,7 @@ describe(
         return;
       }
 
-      var featureTableResults = MetadataTester.createPropertyTables({
+      var featureTableResults = MetadataTester.createFeatureTables({
         schema: featureTablesSchema,
         featureTables: {
           buildings: {
@@ -230,8 +230,8 @@ describe(
       expect(mapClass.id).toBe("map");
       expect(orthoClass.id).toBe("ortho");
 
-      var mapTexture = metadata.getFeatureTexture(0);
-      var orthoTexture = metadata.getFeatureTexture(1);
+      var mapTexture = metadata.getPropertyTexture(0);
+      var orthoTexture = metadata.getPropertyTexture(1);
 
       expect(mapTexture.class).toBe(mapClass);
       expect(mapTexture.id).toBe("mapTexture");

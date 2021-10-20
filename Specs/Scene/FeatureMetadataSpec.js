@@ -23,7 +23,7 @@ describe("Scene/FeatureMetadata", function () {
     },
   };
 
-  var featureTexturesSchema = {
+  var propertyTexturesSchema = {
     classes: {
       map: {
         properties: {
@@ -85,7 +85,7 @@ describe("Scene/FeatureMetadata", function () {
   });
 
   it("creates feature metadata with feature textures", function () {
-    var schema = new MetadataSchema(featureTexturesSchema);
+    var schema = new MetadataSchema(propertyTexturesSchema);
     var mapClass = schema.classes.map;
     var orthoClass = schema.classes.ortho;
 
@@ -104,14 +104,14 @@ describe("Scene/FeatureMetadata", function () {
 
     var metadata = new FeatureMetadata({
       schema: schema,
-      featureTextures: mockTextures,
+      propertyTextures: mockTextures,
     });
 
     expect(mapClass.id).toBe("map");
     expect(orthoClass.id).toBe("ortho");
 
-    var mapTexture = metadata.getFeatureTexture(0);
-    var orthoTexture = metadata.getFeatureTexture(1);
+    var mapTexture = metadata.getPropertyTexture(0);
+    var orthoTexture = metadata.getPropertyTexture(1);
 
     expect(mapTexture.id).toBe(0);
     expect(mapTexture.name).toBe("Map Texture");
@@ -181,14 +181,14 @@ describe("Scene/FeatureMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getFeatureTexture throws without featureTextureId", function () {
+  it("getPropertyTexture throws without featureTextureId", function () {
     var metadata = new FeatureMetadata({
       extension: {},
-      schema: new MetadataSchema(featureTexturesSchema),
+      schema: new MetadataSchema(propertyTexturesSchema),
     });
 
     expect(function () {
-      metadata.getFeatureTexture();
+      metadata.getPropertyTexture();
     }).toThrowDeveloperError();
   });
 });

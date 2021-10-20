@@ -989,7 +989,7 @@ describe(
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.name).toBe("FEATURE_ID_0");
         expect(featureIdAttribute.semantic).toBe(
           VertexAttributeSemantic.FEATURE_ID
         );
@@ -1025,7 +1025,7 @@ describe(
         expect(properties.id.type).toBe(MetadataType.INT32);
 
         var propertyTable = featureMetadata.getPropertyTable(0);
-        expect(propertyTable.id).toBe("buildings");
+        expect(propertyTable.id).toBe(0);
         expect(propertyTable.count).toBe(10);
         expect(propertyTable.class).toBe(classDefinition);
         expect(propertyTable.getProperty(0, "height")).toBe(78.15579986572266);
