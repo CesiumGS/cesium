@@ -6,6 +6,7 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import jsep from "../ThirdParty/jsep.js";
 import ExpressionNodeType from "./ExpressionNodeType.js";
@@ -2013,11 +2014,14 @@ function getExpressionArray(
 
 function getVariableName(variableName, variableSubstitutionMap) {
   if (!defined(variableSubstitutionMap[variableName])) {
-    throw new RuntimeError(
+    const message =
       'Style references a property "' +
-        variableName +
-        '" that does not exist or is not styleable.'
-    );
+      variableName +
+      '" that does not exist or is not styleable. Treating as "undefined".';
+
+    oneTimeWarning(message);
+
+    return Expression.NULL_SENTINEL;
   }
 
   return variableSubstitutionMap[variableName];
