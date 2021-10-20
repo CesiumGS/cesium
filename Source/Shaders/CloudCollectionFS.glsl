@@ -22,9 +22,9 @@ vec3 wrapVec(vec3 value, float rangeLength) {
 }
 
 float noiseTextureLengthSquared = u_noiseTextureLength * u_noiseTextureLength;
-vec3 dimensions = vec3(noiseTextureLengthSquared * 0.5,
-                       u_noiseTextureLength * 2.0,
-                       u_noiseTextureLength * 0.5);
+vec3 dimensions = vec3(noiseTextureLengthSquared * 0.25,
+                       u_noiseTextureLength * 4.0,
+                       u_noiseTextureLength * 0.25);
 
 vec4 sampleNoiseTexture(vec3 position) {
     vec3 recenteredPos = position + vec3(u_noiseTextureLength / 2.0);
@@ -36,33 +36,22 @@ vec4 sampleNoiseTexture(vec3 position) {
     slice0 /= dimensions;
     slice1 /= dimensions;
 
+    float shiftSlice0 = floor(slice0.z) * 0.25;
+    float shiftSlice1 = floor(slice1.z) * 0.25;
+
     float u00 = wrap(slice0.x + slice0.z, 1.0);
     float u01 = wrap(slice0.x + slice1.z, 1.0);
     float u10 = wrap(slice1.x + slice0.z, 1.0);
     float u11 = wrap(slice1.x + slice1.z, 1.0);
-    bool shiftSlice0 = slice0.z > 1.0;
-    bool shiftSlice1 = slice1.z > 1.0;
 
-    vec2 uv000 = vec2(u00, slice0.y);
-    vec2 uv001 = vec2(u01, slice0.y);
-    vec2 uv010 = vec2(u00, slice1.y);
-    vec2 uv011 = vec2(u01, slice1.y);
-    vec2 uv100 = vec2(u10, slice0.y);
-    vec2 uv101 = vec2(u11, slice0.y);
-    vec2 uv110 = vec2(u10, slice1.y);
-    vec2 uv111 = vec2(u11, slice1.y);
-    if (shiftSlice0) {
-        uv000 += vec2(0, 0.5);
-        uv001 += vec2(0, 0.5);
-        uv100 += vec2(0, 0.5);
-        uv101 += vec2(0, 0.5);
-    }
-    if (shiftSlice1) {
-        uv010 += vec2(0, 0.5);
-        uv011 += vec2(0, 0.5);
-        uv110 += vec2(0, 0.5);
-        uv111 += vec2(0, 0.5);
-    }
+    vec2 uv000 = vec2(u00, slice0.y + shiftSlice0);
+    vec2 uv001 = vec2(u01, slice0.y + shiftSlice0);
+    vec2 uv010 = vec2(u00, slice1.y + shiftSlice1);
+    vec2 uv011 = vec2(u01, slice1.y + shiftSlice1);
+    vec2 uv100 = vec2(u10, slice0.y + shiftSlice0);
+    vec2 uv101 = vec2(u11, slice0.y + shiftSlice0);
+    vec2 uv110 = vec2(u10, slice1.y + shiftSlice1);
+    vec2 uv111 = vec2(u11, slice1.y + shiftSlice1);
 
     vec4 sample000 = texture2D(u_noiseTexture, uv000);
     vec4 sample001 = texture2D(u_noiseTexture, uv001);
