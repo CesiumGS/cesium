@@ -128,6 +128,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(content.batchTable).toBeDefined();
           expect(content.hasProperty(0, "id")).toBe(true);
           expect(content.getFeature(0)).toBeDefined();
         });
@@ -147,6 +148,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function 
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(content.batchTable).toBeDefined();
           expect(content.hasProperty(0, "id")).toBe(true);
           expect(content.getFeature(0)).toBeDefined();
         });
