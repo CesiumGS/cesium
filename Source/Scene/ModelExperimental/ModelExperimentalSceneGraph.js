@@ -192,6 +192,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   var modelRenderResources = new ModelRenderResources(this._model);
 
+  var model = this._model;
+  if (defined(model.color)) {
+    this._pipelineStages.push(ModelColorStage);
+  }
+
   var i, j, k;
   for (i = 0; i < this._runtimeNodes.length; i++) {
     var runtimeNode = this._runtimeNodes[i];
