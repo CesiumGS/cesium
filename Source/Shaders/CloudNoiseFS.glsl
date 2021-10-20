@@ -66,7 +66,7 @@ float worleyFBMNoise(vec3 p, float octaves, float scale) {
         if(i >= octaves) {
             break;
         }
-        
+
         noise += worleyNoise(p * scale, freq * scale) * persistence;
         persistence *= 0.5;
         freq *= 2.0;
@@ -74,10 +74,21 @@ float worleyFBMNoise(vec3 p, float octaves, float scale) {
     return noise;
 }
 
-void main() {   
-    float z = floor(v_position.x / u_noiseTextureLength);
+void main() {
+    // textureLength = 4
+    // position <0 -> 16, 0 -> 4>
+    // z = # of texture
+    // float x = v_position.x - z * u_noiseTextureLength;
+    // vec3 position = vec3(x, v_position.y, z);
+
+    float z = floor(v_position.x / u_noiseTextureLength) + u_noiseTextureLength * 0.5 * floor(v_position.y / u_noiseTextureLength);
     float x = v_position.x - z * u_noiseTextureLength;
-    vec3 position = vec3(x, v_position.y, z);
+    float y = v_position.y;
+    if (v_position.y > u_noiseTextureLength) {
+        x += u_noiseTextureLength * u_noiseTextureLength * 0.5;
+        y -= u_noiseTextureLength;
+    }
+    vec3 position = vec3(x, y, z);
     position /= u_noiseDetail;
     float worley0 = clamp(worleyFBMNoise(position, 3.0, 1.0), 0.0, 1.0);
     float worley1 = clamp(worleyFBMNoise(position, 3.0, 2.0), 0.0, 1.0);

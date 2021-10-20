@@ -9,6 +9,7 @@ void main()
 
     vec2 transformedPos = (position / 2.0) + vec2(0.5);
     transformedPos *= u_noiseTextureLength;
-    transformedPos.x *= u_noiseTextureLength;
+    transformedPos.x *= u_noiseTextureLength / 2.0;
+    transformedPos.y *= 2.0;
     v_position = transformedPos;
 }

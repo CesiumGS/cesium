@@ -678,8 +678,8 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
 
   that._noiseTexture = new Texture({
     context: context,
-    width: noiseTextureLength * noiseTextureLength,
-    height: noiseTextureLength,
+    width: (noiseTextureLength * noiseTextureLength) / 2,
+    height: noiseTextureLength * 2,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     pixelFormat: PixelFormat.RGBA,
     sampler: new Sampler({
