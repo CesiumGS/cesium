@@ -199,6 +199,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   }
 
   var i, j, k;
+  for (i = 0; i < this._pipelineStages.length; i++) {
+    var modelPipelineStage = this._pipelineStages[i];
+    modelPipelineStage.process(modelRenderResources, model, frameState);
+  }
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     var runtimeNode = this._runtimeNodes[i];
 

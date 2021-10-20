@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
+import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 
 /**
@@ -46,4 +47,25 @@ export default function ModelRenderResources(model) {
   this.featureTableId = defined(model.content)
     ? model.content.featureTableId
     : model.featureTableId;
+
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = {};
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = new ModelAlphaOptions();
 }

@@ -29,7 +29,11 @@ ModelColorStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
 ModelColorStage.process = function (renderResources, model, frameState) {
   var shaderBuilder = renderResources.shaderBuilder;
 
-  shaderBuilder.addDefine("HAS_MODEL_COLOR", undefined, ShaderDestination.BOTH);
+  shaderBuilder.addDefine(
+    "HAS_MODEL_COLOR",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
   shaderBuilder.addFragmentLines([ModelColorStageFS]);
 
   var stageUniforms = {};

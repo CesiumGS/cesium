@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
@@ -98,6 +99,28 @@ export default function PrimitiveRenderResources(
   this.featureTableId = nodeRenderResources.featureTableId;
 
   /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values. Inherited from the node render resources.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = clone(nodeRenderResources.uniformMap);
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the node
+   * render resources.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = clone(nodeRenderResources.alphaOptions);
+
+  /**
    * The computed model matrix for this primitive. This is cloned from the
    * node render resources as the primitive may further modify it
    *
@@ -191,16 +214,7 @@ export default function PrimitiveRenderResources(
     nodeRenderResources.instancingTranslationMax,
     nodeRenderResources.instancingTranslationMin
   );
-  /**
-   * A dictionary mapping uniform name to functions that return the uniform
-   * values.
-   *
-   * @type {Object.<String, Function>}
-   * @readonly
-   *
-   * @private
-   */
-  this.uniformMap = {};
+
   /**
    * Options for configuring the lighting stage such as selecting between
    * unlit and PBR shading.
@@ -211,15 +225,6 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
-  /**
-   * Options for configuring the alpha stage such as pass and alpha mode.
-   *
-   * @type {ModelAlphaOptions}
-   * @readonly
-   *
-   * @private
-   */
-  this.alphaOptions = new ModelAlphaOptions();
 
   /**
    * The shader variable to use for picking.
