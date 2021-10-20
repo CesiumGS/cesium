@@ -11,7 +11,7 @@ import MetadataTester from "../MetadataTester.js";
 describe(
   "Scene/parseFeatureMetadata",
   function () {
-    var featureTablesSchema = {
+    var propertyTablesSchema = {
       classes: {
         building: {
           properties: {
@@ -62,7 +62,7 @@ describe(
       expect(function () {
         return parseFeatureMetadata({
           extension: undefined,
-          schema: new MetadataSchema(featureTablesSchema),
+          schema: new MetadataSchema(propertyTablesSchema),
         });
       }).toThrowDeveloperError();
     });
@@ -79,7 +79,7 @@ describe(
     it("parses extension with default values", function () {
       var metadata = parseFeatureMetadata({
         extension: {},
-        schema: new MetadataSchema(featureTablesSchema),
+        schema: new MetadataSchema(propertyTablesSchema),
       });
 
       expect(metadata.schema).toBeDefined();
@@ -93,8 +93,8 @@ describe(
         return;
       }
 
-      var featureTableResults = MetadataTester.createPropertyTables({
-        schema: featureTablesSchema,
+      var propertyTableResults = MetadataTester.createPropertyTables({
+        schema: propertyTablesSchema,
         propertyTables: [
           {
             name: "Buildings",
@@ -115,14 +115,14 @@ describe(
       });
 
       var extension = {
-        schema: featureTablesSchema,
-        propertyTables: featureTableResults.propertyTables,
+        schema: propertyTablesSchema,
+        propertyTables: propertyTableResults.propertyTables,
       };
 
       var metadata = parseFeatureMetadata({
         extension: extension,
-        schema: new MetadataSchema(featureTablesSchema),
-        bufferViews: featureTableResults.bufferViews,
+        schema: new MetadataSchema(propertyTablesSchema),
+        bufferViews: propertyTableResults.bufferViews,
       });
 
       var buildingClass = metadata.schema.classes.building;
@@ -131,8 +131,8 @@ describe(
       expect(buildingClass.id).toBe("building");
       expect(treeClass.id).toBe("tree");
 
-      var buildingsTable = metadata.getFeatureTable(0);
-      var treesTable = metadata.getFeatureTable(1);
+      var buildingsTable = metadata.getPropertyTable(0);
+      var treesTable = metadata.getPropertyTable(1);
 
       expect(buildingsTable.count).toBe(3);
       expect(buildingsTable.id).toBe(0);

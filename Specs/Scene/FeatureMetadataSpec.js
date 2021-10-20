@@ -1,7 +1,7 @@
 import { FeatureMetadata, MetadataSchema } from "../../Source/Cesium.js";
 
 describe("Scene/FeatureMetadata", function () {
-  var featureTablesSchema = {
+  var propertyTablesSchema = {
     classes: {
       building: {
         properties: {
@@ -50,7 +50,7 @@ describe("Scene/FeatureMetadata", function () {
 
   it("creates feature metadata with default values", function () {
     var metadata = new FeatureMetadata({
-      schema: new MetadataSchema(featureTablesSchema),
+      schema: new MetadataSchema(propertyTablesSchema),
     });
 
     expect(metadata.schema).toBeDefined();
@@ -60,16 +60,16 @@ describe("Scene/FeatureMetadata", function () {
   });
 
   it("creates feature metadata", function () {
-    var mockFeatureTables = [
+    var mockPropertyTables = [
       { id: 0, name: "Buildings" },
       { id: 1, name: "Trees" },
     ];
     var metadata = new FeatureMetadata({
-      schema: new MetadataSchema(featureTablesSchema),
-      featureTables: mockFeatureTables,
+      schema: new MetadataSchema(propertyTablesSchema),
+      propertyTables: mockPropertyTables,
     });
 
-    expect(metadata.featureTableCount).toEqual(2);
+    expect(metadata.propertyTableCount).toEqual(2);
 
     var buildingClass = metadata.schema.classes.building;
     var treeClass = metadata.schema.classes.tree;
@@ -77,11 +77,11 @@ describe("Scene/FeatureMetadata", function () {
     expect(buildingClass.id).toBe("building");
     expect(treeClass.id).toBe("tree");
 
-    var buildingsTable = metadata.getFeatureTable(0);
-    var treesTable = metadata.getFeatureTable(1);
+    var buildingsTable = metadata.getPropertyTable(0);
+    var treesTable = metadata.getPropertyTable(1);
 
-    expect(buildingsTable).toBe(mockFeatureTables[0]);
-    expect(treesTable).toBe(mockFeatureTables[1]);
+    expect(buildingsTable).toBe(mockPropertyTables[0]);
+    expect(treesTable).toBe(mockPropertyTables[1]);
   });
 
   it("creates feature metadata with feature textures", function () {
@@ -128,7 +128,7 @@ describe("Scene/FeatureMetadata", function () {
 
     var metadata = new FeatureMetadata({
       extras: extras,
-      schema: new MetadataSchema(featureTablesSchema),
+      schema: new MetadataSchema(propertyTablesSchema),
     });
 
     expect(metadata.extras).toBe(extras);
@@ -141,7 +141,7 @@ describe("Scene/FeatureMetadata", function () {
 
     var metadata = new FeatureMetadata({
       extensions: extensions,
-      schema: new MetadataSchema(featureTablesSchema),
+      schema: new MetadataSchema(propertyTablesSchema),
     });
 
     expect(metadata.extensions).toBe(extensions);
@@ -164,20 +164,20 @@ describe("Scene/FeatureMetadata", function () {
 
     var metadata = new FeatureMetadata({
       statistics: statistics,
-      schema: new MetadataSchema(featureTablesSchema),
+      schema: new MetadataSchema(propertyTablesSchema),
     });
 
     expect(metadata.statistics).toBe(statistics);
   });
 
-  it("getFeatureTable throws without featureTableId", function () {
+  it("getPropertyTable throws without propertyTableId", function () {
     var metadata = new FeatureMetadata({
       extension: {},
-      schema: new MetadataSchema(featureTablesSchema),
+      schema: new MetadataSchema(propertyTablesSchema),
     });
 
     expect(function () {
-      metadata.getFeatureTable();
+      metadata.getPropertyTable();
     }).toThrowDeveloperError();
   });
 

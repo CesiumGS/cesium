@@ -75,7 +75,7 @@ describe(
 
     var results = MetadataTester.createGltf({
       schema: schemaJson,
-      featureTables: {
+      propertyTables: {
         buildings: {
           class: "building",
           properties: {
@@ -346,9 +346,9 @@ describe(
       ) {
         loaderProcess(featureMetadataLoader, scene); // Check that calling process after load doesn't break anything
         var featureMetadata = featureMetadataLoader.featureMetadata;
-        var buildingsTable = featureMetadata.getFeatureTable(0);
+        var buildingsTable = featureMetadata.getPropertyTable(0);
         expect(buildingsTable.id).toBe("buildings");
-        var treesTable = featureMetadata.getFeatureTable(1);
+        var treesTable = featureMetadata.getPropertyTable(1);
         expect(treesTable.id).toBe("trees");
         var mapTexture = featureMetadata.getFeatureTexture(0);
         expect(mapTexture.id).toBe("mapTexture");

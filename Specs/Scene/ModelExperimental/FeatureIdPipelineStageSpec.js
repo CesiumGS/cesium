@@ -81,7 +81,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       },
       runtimeNode: { node: {} },
       hasFeatureIds: false,
-      featureTableId: undefined,
+      propertyTableId: undefined,
     };
 
     return loadGltf(buildingsMetadata).then(function (gltfLoader) {
@@ -135,7 +135,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       attributes: [],
       runtimeNode: { node: {} },
       hasFeatureIds: false,
-      featureTableId: undefined,
+      propertyTableId: undefined,
       featureIdVertexAttributeSetIndex: 1,
     };
 
@@ -200,7 +200,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       },
       runtimeNode: {},
       hasFeatureIds: false,
-      featureTableId: undefined,
+      propertyTableId: undefined,
     };
 
     return loadGltf(boxInstanced).then(function (gltfLoader) {
@@ -257,7 +257,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       attributes: [],
       runtimeNode: { node: {} },
       hasFeatureIds: false,
-      featureTableId: undefined,
+      propertyTableId: undefined,
       featureIdVertexAttributeSetIndex: 1,
     };
 

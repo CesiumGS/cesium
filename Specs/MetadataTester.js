@@ -2,7 +2,7 @@ import {
   defined,
   defaultValue,
   FeatureDetection,
-  FeatureTable,
+  PropertyTable,
   MetadataClass,
   MetadataEnum,
   MetadataTable,
@@ -170,7 +170,7 @@ MetadataTester.createMetadataTable = function (options) {
   });
 };
 
-MetadataTester.createFeatureTable = function (options) {
+MetadataTester.createPropertyTable = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var disableBigIntSupport = options.disableBigIntSupport;
   var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
@@ -216,7 +216,7 @@ MetadataTester.createFeatureTable = function (options) {
     properties: properties,
   });
 
-  return new FeatureTable({
+  return new PropertyTable({
     metadataTable: metadataTable,
     count: count,
     extras: options.extras,
@@ -292,7 +292,7 @@ MetadataTester.createFeatureTables = function (options) {
 MetadataTester.createGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var featureTableResults = MetadataTester.createFeatureTables(options);
+  var featureTableResults = MetadataTester.createPropertyTables(options);
 
   var bufferByteLength = 0;
   var bufferViewsMap = featureTableResults.bufferViews;

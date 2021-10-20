@@ -105,7 +105,7 @@ export default function GltfLoader(options) {
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_mesh_features extension.
   // This requires sorting the dictionary keys for a consistent ordering.
-  this._sortedFeatureTableIds = undefined;
+  this._sortedPropertyTableIds = undefined;
   this._sortedFeatureTextureIds = undefined;
 
   this._gltfJsonLoader = undefined;
@@ -1013,7 +1013,9 @@ function loadPrimitiveMetadataLegacy(
       primitive.featureIdAttributes.push(
         loadFeatureIdAttributeLegacy(
           featureIdAttribute,
-          loader._sortedFeatureTableIds.indexOf(featureIdAttribute.featureTable)
+          loader._sortedPropertyTableIds.indexOf(
+            featureIdAttribute.featureTable
+          )
         )
       );
     }
@@ -1030,7 +1032,7 @@ function loadPrimitiveMetadataLegacy(
           loader,
           gltf,
           featureIdTexture,
-          loader._sortedFeatureTableIds.indexOf(featureIdTexture.featureTable),
+          loader._sortedPropertyTableIds.indexOf(featureIdTexture.featureTable),
           supportedImageFormats
         )
       );
@@ -1106,7 +1108,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     loadInstanceMetadataLegacy(
       instances,
       featureMetadataLegacy,
-      loader._sortedFeatureTableIds
+      loader._sortedPropertyTableIds
     );
   }
 
@@ -1135,7 +1137,7 @@ function loadInstanceMetadata(instances, metadataExtension) {
 function loadInstanceMetadataLegacy(
   instances,
   metadataExtension,
-  sortedFeatureTableIds
+  sortedPropertyTableIds
 ) {
   var featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
@@ -1145,7 +1147,7 @@ function loadInstanceMetadataLegacy(
       instances.featureIdAttributes.push(
         loadFeatureIdAttributeLegacy(
           featureIdAttribute,
-          sortedFeatureTableIds.indexOf(featureIdAttribute.featureTable)
+          sortedPropertyTableIds.indexOf(featureIdAttribute.featureTable)
         )
       );
     }
@@ -1330,9 +1332,9 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     // attributes are processed.
     var featureTables = featureMetadataExtensionLegacy.featureTables;
     var featureTextures = featureMetadataExtensionLegacy.featureTextures;
-    var allFeatureTableIds = defined(featureTables) ? featureTables : [];
+    var allPropertyTableIds = defined(featureTables) ? featureTables : [];
     var allFeatureTextureIds = defined(featureTextures) ? featureTextures : [];
-    loader._sortedFeatureTableIds = Object.keys(allFeatureTableIds).sort();
+    loader._sortedPropertyTableIds = Object.keys(allPropertyTableIds).sort();
     loader._sortedFeatureTextureIds = Object.keys(allFeatureTextureIds).sort();
   }
 

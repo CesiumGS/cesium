@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import FeatureTable from "./FeatureTable.js";
-import FeatureTexture from "./FeatureTexture.js";
+import PropertyTable from "./PropertyTable.js";
+import PropertyTexture from "./PropertyTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
@@ -53,7 +53,7 @@ export default function parseFeatureMetadataLegacy(options) {
       });
 
       featureTables.push(
-        new FeatureTable({
+        new PropertyTable({
           id: featureTableId,
           count: featureTable.count,
           metadataTable: metadataTable,
@@ -74,7 +74,7 @@ export default function parseFeatureMetadataLegacy(options) {
       var featureTextureId = sortedIds[i];
       var featureTexture = extension.featureTextures[featureTextureId];
       featureTextures.push(
-        new FeatureTexture({
+        new PropertyTexture({
           id: featureTextureId,
           featureTexture: featureTexture,
           class: schema.classes[featureTexture.class],

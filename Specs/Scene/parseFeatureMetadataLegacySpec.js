@@ -93,7 +93,7 @@ describe(
         return;
       }
 
-      var featureTableResults = MetadataTester.createFeatureTables({
+      var featureTableResults = MetadataTester.createPropertyTables({
         schema: featureTablesSchema,
         featureTables: {
           buildings: {
@@ -129,8 +129,8 @@ describe(
       expect(buildingClass.id).toBe("building");
       expect(treeClass.id).toBe("tree");
 
-      var buildingsTable = metadata.getFeatureTable(0);
-      var treesTable = metadata.getFeatureTable(1);
+      var buildingsTable = metadata.getPropertyTable(0);
+      var treesTable = metadata.getPropertyTable(1);
 
       expect(buildingsTable.id).toBe("buildings");
       expect(buildingsTable.name).not.toBeDefined();

@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import FeatureTable from "./FeatureTable.js";
-import FeatureTexture from "./FeatureTexture.js";
+import PropertyTable from "./PropertyTable.js";
+import PropertyTexture from "./PropertyTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
@@ -33,7 +33,7 @@ export default function parseFeatureMetadata(options) {
   //>>includeEnd('debug');
 
   var i;
-  var featureTables = [];
+  var propertyTables = [];
   if (defined(extension.propertyTables)) {
     for (i = 0; i < extension.propertyTables.length; i++) {
       var propertyTable = extension.propertyTables[i];
@@ -44,8 +44,8 @@ export default function parseFeatureMetadata(options) {
         class: classDefinition,
         bufferViews: options.bufferViews,
       });
-      featureTables.push(
-        new FeatureTable({
+      propertyTables.push(
+        new PropertyTable({
           id: i,
           name: propertyTable.name,
           count: propertyTable.count,
@@ -62,7 +62,7 @@ export default function parseFeatureMetadata(options) {
     for (i = 0; i < extension.propertyTextures.length; i++) {
       var propertyTexture = extension.propertyTextures[i];
       featureTextures.push(
-        new FeatureTexture({
+        new PropertyTexture({
           id: i,
           name: propertyTexture.name,
           featureTexture: propertyTexture,
@@ -75,7 +75,7 @@ export default function parseFeatureMetadata(options) {
 
   return new FeatureMetadata({
     schema: schema,
-    featureTables: featureTables,
+    propertyTables: propertyTables,
     featureTextures: featureTextures,
     statistics: extension.statistics,
     extras: extension.extras,

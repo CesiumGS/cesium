@@ -5,11 +5,11 @@ import destroyObject from "../../Core/destroyObject.js";
 
 /**
  * Manages the {@link Cesium3DTileFeature}s that belong to a {@link Cesium3DTileContent}.
- * The properties for a feature are extracted from a {@link FeatureTable}.
+ * The properties for a feature are extracted from a {@link PropertyTable}.
  *
  * @param {Object} options An object containing the following options:
  * @param {Cesium3DTileContent} options.content The tile content the features in this table belong to.
- * @param {FeatureTable} options.featureTable The feature table from the model belonging to the content.
+ * @param {PropertyTable} options.propertyTable The feature table from the model belonging to the content.
  *
  * @alias Cesium3DTileContentFeatureTable
  * @constructor
@@ -18,15 +18,15 @@ import destroyObject from "../../Core/destroyObject.js";
  */
 export default function Cesium3DTileContentFeatureTable(options) {
   var content = options.content;
-  var featureTable = options.featureTable;
+  var propertyTable = options.propertyTable;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.content", content);
-  Check.typeOf.object("options.featureTable", featureTable);
+  Check.typeOf.object("options.propertyTable", propertyTable);
   //>>includeEnd('debug');
 
   this._content = content;
-  this._featureTable = featureTable;
+  this._propertyTable = propertyTable;
 
   this._featuresLength = 0;
   this._features = undefined;
@@ -71,7 +71,7 @@ Object.defineProperties(Cesium3DTileContentFeatureTable.prototype, {
 });
 
 function initialize(contentFeatureTable) {
-  var featuresLength = contentFeatureTable._featureTable.count;
+  var featuresLength = contentFeatureTable._propertyTable.count;
   if (featuresLength === 0) {
     return;
   }
@@ -101,27 +101,27 @@ Cesium3DTileContentFeatureTable.prototype.hasProperty = function (
   featureId,
   propertyName
 ) {
-  return this._featureTable.hasProperty(featureId, propertyName);
+  return this._propertyTable.hasProperty(featureId, propertyName);
 };
 
 Cesium3DTileContentFeatureTable.prototype.getProperty = function (
   featureId,
   name
 ) {
-  return this._featureTable.getProperty(featureId, name);
+  return this._propertyTable.getProperty(featureId, name);
 };
 
 Cesium3DTileContentFeatureTable.prototype.getPropertyInherited = function (
   featureId,
   name
 ) {
-  return this._featureTable.getProperty(featureId, name);
+  return this._propertyTable.getProperty(featureId, name);
 };
 
 Cesium3DTileContentFeatureTable.prototype.getPropertyNames = function (
   results
 ) {
-  return this._featureTable.getPropertyIds(results);
+  return this._propertyTable.getPropertyIds(results);
 };
 
 Cesium3DTileContentFeatureTable.prototype.setProperty = function (
@@ -129,7 +129,7 @@ Cesium3DTileContentFeatureTable.prototype.setProperty = function (
   name,
   value
 ) {
-  return this._featureTable.setProperty(featureId, name, value);
+  return this._propertyTable.setProperty(featureId, name, value);
 };
 
 Cesium3DTileContentFeatureTable.prototype.update = function (

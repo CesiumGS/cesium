@@ -16,12 +16,12 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     }
   }
 
-  function verifyBatchTextureUniforms(featureTable, uniformMap) {
+  function verifyBatchTextureUniforms(propertyTable, uniformMap) {
     var expectedUniforms = {
-      model_featuresLength: featureTable.featuresLength,
-      model_batchTexture: featureTable.batchTexture.batchTexture,
-      model_textureDimensions: featureTable.batchTexture.textureDimensions,
-      model_textureStep: featureTable.batchTexture.textureStep,
+      model_featuresLength: propertyTable.featuresLength,
+      model_batchTexture: propertyTable.batchTexture.batchTexture,
+      model_textureDimensions: propertyTable.batchTexture.textureDimensions,
+      model_textureStep: propertyTable.batchTexture.textureStep,
     };
 
     expectUniformMap(uniformMap, expectedUniforms);
@@ -54,9 +54,9 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
   it("sets up batch textures from ModelExperimental", function () {
     var renderResources = {
       shaderBuilder: new ShaderBuilder(),
-      featureTableId: "mockFeatureTable",
+      propertyTableId: "mockFeatureTable",
       model: {
-        featureTables: {
+        propertyTables: {
           mockFeatureTable: {
             featuresLength: 10,
             batchTexture: {
@@ -74,7 +74,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     BatchTexturePipelineStage.process(renderResources, {}, {});
     verifyBatchTextureShaders(renderResources.shaderBuilder);
     verifyBatchTextureUniforms(
-      renderResources.model.featureTables.mockFeatureTable,
+      renderResources.model.propertyTables.mockFeatureTable,
       renderResources.uniformMap
     );
   });
@@ -82,10 +82,10 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
   it("sets up batch textures from Cesium3DTileContent", function () {
     var renderResources = {
       shaderBuilder: new ShaderBuilder(),
-      featureTableId: "mockFeatureTable",
+      propertyTableId: "mockFeatureTable",
       model: {
         content: {
-          featureTables: {
+          propertyTables: {
             mockFeatureTable: {
               featuresLength: 10,
               batchTexture: {
@@ -104,7 +104,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     BatchTexturePipelineStage.process(renderResources, {}, {});
     verifyBatchTextureShaders(renderResources.shaderBuilder);
     verifyBatchTextureUniforms(
-      renderResources.model.content.featureTables.mockFeatureTable,
+      renderResources.model.content.propertyTables.mockFeatureTable,
       renderResources.uniformMap
     );
   });

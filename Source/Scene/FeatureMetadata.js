@@ -10,8 +10,8 @@ import defined from "../Core/defined.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
- * @param {FeatureTable[]} [options.featureTables] An array of feature table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the featureTables dictionary
- * @param {FeatureTexture[]} [options.featureTextures] An array of feature texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the featureTextures dictionary
+ * @param {PropertyTable[]} [options.propertyTables] An array of feature table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTables dictionary
+ * @param {PropertyTexture[]} [options.propertyTextures] An array of feature texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTextures dictionary
  * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
@@ -29,10 +29,12 @@ function FeatureMetadata(options) {
   //>>includeEnd('debug');
 
   this._schema = options.schema;
-  var featureTables = options.featureTables;
-  this._featureTableCount = defined(featureTables) ? featureTables.length : 0;
-  this._featureTables = featureTables;
-  this._featureTextures = options.featureTextures;
+  var propertyTables = options.propertyTables;
+  this._propertyTableCount = defined(propertyTables)
+    ? propertyTables.length
+    : 0;
+  this._propertyTables = propertyTables;
+  this._propertyTextures = options.propertyTextures;
   this._statistics = options.statistics;
   this._extras = options.extras;
   this._extensions = options.extensions;
@@ -106,9 +108,9 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * @readonly
    * @private
    */
-  featureTableCount: {
+  propertyTableCount: {
     get: function () {
-      return this._featureTableCount;
+      return this._propertyTableCount;
     },
   },
 
@@ -116,13 +118,13 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * The feature tables in the metadata.
    *
    * @memberof FeatureMetadata.prototype
-   * @type {FeatureTable[]}
+   * @type {PropertyTable[]}
    * @readonly
    * @private
    */
-  featureTables: {
+  propertyTables: {
     get: function () {
-      return this._featureTables;
+      return this._propertyTables;
     },
   },
 });
@@ -131,38 +133,38 @@ Object.defineProperties(FeatureMetadata.prototype, {
  * Gets the feature table with the given ID.
  * <p>
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
- * by the key in the featureTables dictionary.
+ * by the key in the propertyTables dictionary.
  * </p>
  *
- * @param {Number} featureTableId The feature table ID.
- * @returns {FeatureTable} The feature table.
+ * @param {Number} propertyTableId The feature table ID.
+ * @returns {PropertyTable} The feature table.
  * @private
  */
-FeatureMetadata.prototype.getFeatureTable = function (featureTableId) {
+FeatureMetadata.prototype.getPropertyTable = function (propertyTableId) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("featureTableId", featureTableId);
+  Check.typeOf.number("propertyTableId", propertyTableId);
   //>>includeEnd('debug');
 
-  return this._featureTables[featureTableId];
+  return this._propertyTables[propertyTableId];
 };
 
 /**
  * Gets the feature texture with the given ID.
  * <p>
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
- * by the key in the featureTextures dictionary.
+ * by the key in the propertyTextures dictionary.
  * </p>
  *
- * @param {Number} featureTextureId The index into the feature textures array.
- * @returns {FeatureTexture} The feature texture.
+ * @param {Number} propertyTextureId The index into the feature textures array.
+ * @returns {PropertyTexture} The feature texture.
  * @private
  */
-FeatureMetadata.prototype.getFeatureTexture = function (featureTextureId) {
+FeatureMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("featureTextureId", featureTextureId);
+  Check.typeOf.number("propertyTextureId", propertyTextureId);
   //>>includeEnd('debug');
 
-  return this._featureTextures[featureTextureId];
+  return this._propertyTextures[propertyTextureId];
 };
 
 export default FeatureMetadata;

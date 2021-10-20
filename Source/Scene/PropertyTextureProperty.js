@@ -13,13 +13,13 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
  * @param {MetadataClassProperty} options.classProperty The class property.
  * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
- * @alias FeatureTextureProperty
+ * @alias PropertyTextureProperty
  * @constructor
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function FeatureTextureProperty(options) {
+function PropertyTextureProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var property = options.property;
   var classProperty = options.classProperty;
@@ -44,11 +44,11 @@ function FeatureTextureProperty(options) {
   this._extensions = property.extensions;
 }
 
-Object.defineProperties(FeatureTextureProperty.prototype, {
+Object.defineProperties(PropertyTextureProperty.prototype, {
   /**
    * The texture reader.
    *
-   * @memberof FeatureTextureProperty.prototype
+   * @memberof PropertyTextureProperty.prototype
    * @type {ModelComponents.TextureReader}
    * @readonly
    * @private
@@ -62,7 +62,7 @@ Object.defineProperties(FeatureTextureProperty.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof FeatureTextureProperty.prototype
+   * @memberof PropertyTextureProperty.prototype
    * @type {*}
    * @readonly
    * @private
@@ -76,7 +76,7 @@ Object.defineProperties(FeatureTextureProperty.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof FeatureTextureProperty.prototype
+   * @memberof PropertyTextureProperty.prototype
    * @type {*}
    * @readonly
    * @private
@@ -88,4 +88,4 @@ Object.defineProperties(FeatureTextureProperty.prototype, {
   },
 });
 
-export default FeatureTextureProperty;
+export default PropertyTextureProperty;

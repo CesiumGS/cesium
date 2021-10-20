@@ -4,7 +4,7 @@ import deprecationWarning from "../Core/deprecationWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import FeatureMetadata from "./FeatureMetadata.js";
-import FeatureTable from "./FeatureTable.js";
+import PropertyTable from "./PropertyTable.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
 import MetadataClass from "./MetadataClass.js";
@@ -65,7 +65,7 @@ export default function parseBatchTable(options) {
     bufferViews: binaryResults.bufferViewsU8,
   });
 
-  var featureTable = new FeatureTable({
+  var featureTable = new PropertyTable({
     id: 0,
     name: "Batch Table",
     count: featureTableJson.count,
