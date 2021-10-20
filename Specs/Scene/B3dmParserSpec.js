@@ -62,18 +62,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws on invalid type in byteOffset", function () {
-      expect(function () {
-        B3dmParser.parse(new ArrayBuffer(1), "a");
-      }).toThrowDeveloperError();
-    });
-
-    it("throws on invalid byteOffset", function () {
-      expect(function () {
-        B3dmParser.parse(new ArrayBuffer(1), -1);
-      }).toThrowRuntimeError();
-    });
-
     it("recognizes the legacy 20-byte header", function () {
       return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
         function (tileset) {

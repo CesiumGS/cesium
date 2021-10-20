@@ -28,10 +28,6 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   var byteStart = defaultValue(byteOffset, 0);
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
-  Check.typeOf.number("byteOffset", byteStart);
-  if (byteStart < 0) {
-    throw new RuntimeError("byteOffset cannot be less than 0.");
-  }
   //>>includeEnd('debug');
 
   byteOffset = byteStart;
