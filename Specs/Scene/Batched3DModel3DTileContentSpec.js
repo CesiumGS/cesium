@@ -69,19 +69,6 @@ describe(
       scene.primitives.removeAll();
     });
 
-    it("throws with invalid version", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
-        version: 2,
-      });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
-    });
-
-    it("throws with empty gltf", function () {
-      // Expect to throw DeveloperError in Model due to invalid gltf magic
-      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
-    });
-
     it("resolves readyPromise", function () {
       return Cesium3DTilesTester.resolvesReadyPromise(
         scene,
