@@ -8,7 +8,7 @@
 
 ##### Fixes :wrench:
 
-- Point cloud styles that reference a missing property now treat the missing property as `undefined` rather than throwing an error.
+- Point cloud styles that reference a missing property now treat the missing property as `undefined` rather than throwing an error. [#9882](https://github.com/CesiumGS/cesium/pull/9882)
 
 ### 1.86.1 - 2021-10-15
 
