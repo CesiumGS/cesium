@@ -4,6 +4,7 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelColorStage from "./ModelColorStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
