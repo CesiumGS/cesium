@@ -894,7 +894,7 @@ describe(
           new Cartesian3(194, 194, 194)
         );
 
-        var featureTexture = featureMetadata.getFeatureTexture(0);
+        var featureTexture = featureMetadata.getPropertyTexture(0);
         expect(featureTexture.id).toEqual(0);
         expect(featureTexture.name).toEqual("Vegetation");
         var vegetationProperty = featureTexture.getProperty(
@@ -952,7 +952,7 @@ describe(
           new Cartesian3(194, 194, 194)
         );
 
-        var featureTexture = featureMetadata.getFeatureTexture(0);
+        var featureTexture = featureMetadata.getPropertyTexture(0);
         expect(featureTexture.id).toEqual("vegetationTexture");
         var vegetationProperty = featureTexture.getProperty(
           "vegetationDensity"

@@ -1271,9 +1271,7 @@ describe("Scene/ImplicitSubtree", function () {
 
     var propertyTablesDescription = {
       schema: schema,
-      propertyTables: {
-        tiles: tileTableDescription,
-      },
+      propertyTables: [tileTableDescription],
     };
 
     var metadataSchema = new MetadataSchema(schema);
@@ -1654,9 +1652,7 @@ describe("Scene/ImplicitSubtree", function () {
 
       var propertyTablesDescription = {
         schema: schema,
-        propertyTables: {
-          tiles: tileTableDescription,
-        },
+        propertyTables: [tileTableDescription],
       };
 
       var subtreeDescription = {
@@ -1751,9 +1747,7 @@ describe("Scene/ImplicitSubtree", function () {
 
       var propertyTablesWithOffsets = {
         schema: arraySchema,
-        propertyTables: {
-          tiles: tileTableDescription,
-        },
+        propertyTables: [tileTableDescription],
       };
 
       var subtreeDescription = {
