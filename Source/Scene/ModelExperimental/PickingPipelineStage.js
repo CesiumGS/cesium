@@ -129,12 +129,11 @@ function processPickTexture(renderResources, primitive, instances) {
     featureTableId = featureIdAttribute.propertyTableId;
   }
 
-  var propertyTable;
-
+  var featureTable;
   if (defined(content)) {
-    propertyTable = content.propertyTables[featureTableId];
+    featureTable = content.featureTables[featureTableId];
   } else {
-    propertyTable = model.propertyTables[featureTableId];
+    featureTable = model.featureTables[featureTableId];
   }
 
   var shaderBuilder = renderResources.shaderBuilder;
@@ -144,7 +143,7 @@ function processPickTexture(renderResources, primitive, instances) {
     ShaderDestination.FRAGMENT
   );
 
-  var batchTexture = propertyTable.batchTexture;
+  var batchTexture = featureTable.batchTexture;
   var pickingUniforms = {
     model_pickTexture: function () {
       return defaultValue(

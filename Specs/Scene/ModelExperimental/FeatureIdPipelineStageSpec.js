@@ -81,7 +81,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       },
       runtimeNode: { node: {} },
       hasFeatureIds: false,
-      propertyTableId: undefined,
+      featureTableId: undefined,
     };
 
     return loadGltf(buildingsMetadata).then(function (gltfLoader) {

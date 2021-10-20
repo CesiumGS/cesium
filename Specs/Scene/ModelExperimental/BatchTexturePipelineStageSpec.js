@@ -16,12 +16,12 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     }
   }
 
-  function verifyBatchTextureUniforms(propertyTable, uniformMap) {
+  function verifyBatchTextureUniforms(featureTable, uniformMap) {
     var expectedUniforms = {
-      model_featuresLength: propertyTable.featuresLength,
-      model_batchTexture: propertyTable.batchTexture.batchTexture,
-      model_textureDimensions: propertyTable.batchTexture.textureDimensions,
-      model_textureStep: propertyTable.batchTexture.textureStep,
+      model_featuresLength: featureTable.featuresLength,
+      model_batchTexture: featureTable.batchTexture.batchTexture,
+      model_textureDimensions: featureTable.batchTexture.textureDimensions,
+      model_textureStep: featureTable.batchTexture.textureStep,
     };
 
     expectUniformMap(uniformMap, expectedUniforms);
@@ -56,7 +56,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       propertyTableId: "mockFeatureTable",
       model: {
-        propertyTables: {
+        featureTables: {
           mockFeatureTable: {
             featuresLength: 10,
             batchTexture: {
@@ -74,7 +74,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     BatchTexturePipelineStage.process(renderResources, {}, {});
     verifyBatchTextureShaders(renderResources.shaderBuilder);
     verifyBatchTextureUniforms(
-      renderResources.model.propertyTables.mockFeatureTable,
+      renderResources.model.featureTables.mockFeatureTable,
       renderResources.uniformMap
     );
   });
@@ -85,7 +85,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
       propertyTableId: "mockFeatureTable",
       model: {
         content: {
-          propertyTables: {
+          featureTables: {
             mockFeatureTable: {
               featuresLength: 10,
               batchTexture: {
@@ -104,7 +104,7 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     BatchTexturePipelineStage.process(renderResources, {}, {});
     verifyBatchTextureShaders(renderResources.shaderBuilder);
     verifyBatchTextureUniforms(
-      renderResources.model.content.propertyTables.mockFeatureTable,
+      renderResources.model.content.featureTables.mockFeatureTable,
       renderResources.uniformMap
     );
   });

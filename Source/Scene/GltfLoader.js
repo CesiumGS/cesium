@@ -768,9 +768,9 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
 }
 
 // for EXT_mesh_features
-function loadFeatureIdAttribute(featureIds, featureTableId) {
+function loadFeatureIdAttribute(featureIds, propertyTableId) {
   var featureIdAttribute = new FeatureIdAttribute();
-  featureIdAttribute.featureTableId = featureTableId;
+  featureIdAttribute.propertyTableId = propertyTableId;
   featureIdAttribute.setIndex = featureIds.attribute;
   featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
   featureIdAttribute.repeat = featureIds.repeat;
@@ -781,7 +781,7 @@ function loadFeatureIdAttribute(featureIds, featureTableId) {
 function loadFeatureIdAttributeLegacy(gltfFeatureIdAttribute, featureTableId) {
   var featureIdAttribute = new FeatureIdAttribute();
   var featureIds = gltfFeatureIdAttribute.featureIds;
-  featureIdAttribute.featureTableId = featureTableId;
+  featureIdAttribute.propertyTableId = featureTableId;
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
   // constant/divisor was renamed to offset/repeat
   featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
@@ -795,16 +795,16 @@ function loadFeatureIdTexture(
   loader,
   gltf,
   gltfFeatureIdTexture,
-  featureTableId,
+  propertyTableId,
   supportedImageFormats
 ) {
   var featureIdTexture = new FeatureIdTexture();
-  var textureInfo = {
-    index: gltfFeatureIdTexture.index,
-    texCoord: gltfFeatureIdTexture.texCoord,
-  };
 
-  featureIdTexture.featureTableId = featureTableId;
+  // The schema for feature ID textures is essential a subclass of glTF
+  // textureInfo
+  var textureInfo = gltfFeatureIdTexture;
+
+  featureIdTexture.propertyTableId = propertyTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
     gltf,
@@ -833,7 +833,7 @@ function loadFeatureIdTextureLegacy(
   var featureIds = gltfFeatureIdTexture.featureIds;
   var textureInfo = featureIds.texture;
 
-  featureIdTexture.featureTableId = featureTableId;
+  featureIdTexture.propertyTableId = featureTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
     gltf,

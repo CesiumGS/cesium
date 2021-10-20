@@ -97,22 +97,22 @@ describe(
         scene
       ).then(function (model) {
         expect(model.ready).toEqual(true);
-        expect(model.propertyTables).toBeDefined();
+        expect(model.featureTables).toBeDefined();
 
-        var propertyTable = model.propertyTables[0];
-        expect(propertyTable).toBeDefined();
+        var featureTable = model.featureTables[0];
+        expect(featureTable).toBeDefined();
 
-        var featuresLength = propertyTable.featuresLength;
+        var featuresLength = featureTable.featuresLength;
         expect(featuresLength).toEqual(10);
-        expect(propertyTable.batchTexture).toBeDefined();
-        expect(propertyTable.batchTexture._featuresLength).toEqual(10);
+        expect(featureTable.batchTexture).toBeDefined();
+        expect(featureTable.batchTexture._featuresLength).toEqual(10);
 
         for (var i = 0; i < featuresLength; i++) {
-          var modelFeature = propertyTable.getFeature(i);
+          var modelFeature = featureTable.getFeature(i);
           expect(modelFeature instanceof ModelFeature).toEqual(true);
           expect(modelFeature._featureId).toEqual(i);
           expect(modelFeature.primitive).toEqual(model);
-          expect(modelFeature.propertyTable).toEqual(propertyTable);
+          expect(modelFeature.featureTable).toEqual(featureTable);
         }
 
         expect(model._resourcesLoaded).toEqual(true);
@@ -283,7 +283,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.propertyTableId).toEqual(1);
+        expect(model.featureTableId).toEqual(1);
       });
     });
 
@@ -294,7 +294,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.propertyTableId).toEqual(0);
+        expect(model.featureTableId).toEqual(0);
       });
     });
 
@@ -305,7 +305,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.propertyTableId).toEqual(0);
+        expect(model.featureTableId).toEqual(0);
       });
     });
 

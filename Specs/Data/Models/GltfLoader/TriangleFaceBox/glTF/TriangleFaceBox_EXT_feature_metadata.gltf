@@ -18,9 +18,9 @@
             "name" : "Cube"
         }
     ],
-    "extensionsUsed": ["EXT_mesh_features"],
+    "extensionsUsed": ["EXT_feature_metadata"],
     "extensions": {
-        "EXT_mesh_features": {
+        "EXT_feature_metadata": {
             "schema": {
                 "classes": {
                     "perTriangle": {
@@ -39,9 +39,8 @@
                     }
                 }
             },
-            "propertyTables": [
-                {
-                    "name": "Triangles",
+            "featureTables": {
+                "triangles": {
                     "class": "perTriangle",
                     "count": 12,
                     "properties": {
@@ -50,8 +49,7 @@
                         }
                     }
                 },
-                {
-                    "name": "Faces",
+                "faces": {
                     "class": "perFace",
                     "count": 6,
                     "properties": {
@@ -60,7 +58,7 @@
                         }
                     }
                 }
-            ]
+            }
         }
     },
     "meshes" : [
@@ -70,20 +68,25 @@
                 {
                     "attributes" : {
                         "POSITION" : 0,
-                        "FEATURE_ID_0": 2
+                        "_FEATURE_ID_0": 2
                     },
                     "indices" : 1,
                     "mode": 4,
                     "extensions": {
-                        "EXT_mesh_features": {
-                            "propertyTables": [0, 1],
-                            "featureIds": [
+                        "EXT_feature_metadata": {
+                            "featureIdAttributes": [
                                 {
-                                    "offset": 0,
-                                    "repeat": 6
+                                    "featureTable": "faces",
+                                    "featureIds": {
+                                        "constant": 0,
+                                        "divisor": 6
+                                    }
                                 },
                                 {
-                                    "attribute": 0
+                                    "featureTable": "triangles",
+                                    "featureIds": {
+                                        "attribute": "_FEATURE_ID_0"
+                                    }
                                 }
                             ]
                         }

@@ -78,8 +78,8 @@ export default function ModelExperimental(options) {
     0
   );
   this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
-  this._propertyTables = undefined;
-  this._propertyTableId = undefined;
+  this._featureTables = undefined;
+  this._featureTableId = undefined;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -203,15 +203,15 @@ function initialize(model) {
         : components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        var propertyTableId = selectFeatureTableId(components, model, content);
-        var propertyTables;
+        var featureTableId = selectFeatureTableId(components, model, content);
+        var featureTables;
         if (hasContent) {
-          propertyTables = createContentFeatureTables(content, featureMetadata);
+          featureTables = createContentFeatureTables(content, featureMetadata);
         } else {
-          propertyTables = createModelFeatureTables(model, featureMetadata);
+          featureTables = createModelFeatureTables(model, featureMetadata);
         }
-        propertyTableOwner.propertyTables = propertyTables;
-        propertyTableOwner.propertyTableId = propertyTableId;
+        propertyTableOwner.featureTables = featureTables;
+        propertyTableOwner.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({

@@ -65,7 +65,7 @@ export default function parseBatchTable(options) {
     bufferViews: binaryResults.bufferViewsU8,
   });
 
-  var featureTable = new PropertyTable({
+  var propertyTable = new PropertyTable({
     id: 0,
     name: "Batch Table",
     count: featureTableJson.count,
@@ -76,7 +76,7 @@ export default function parseBatchTable(options) {
 
   return new FeatureMetadata({
     schema: binaryResults.transcodedSchema,
-    featureTables: [featureTable],
+    propertyTables: [propertyTable],
     extensions: partitionResults.extensions,
     extras: partitionResults.extras,
   });

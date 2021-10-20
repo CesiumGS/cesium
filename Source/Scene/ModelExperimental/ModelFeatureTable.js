@@ -72,7 +72,7 @@ function initialize(modelFeatureTable) {
     features[i] = new ModelFeature({
       model: modelFeatureTable._model,
       featureId: i,
-      propertyTable: modelFeatureTable,
+      featureTable: modelFeatureTable,
     });
   }
 
