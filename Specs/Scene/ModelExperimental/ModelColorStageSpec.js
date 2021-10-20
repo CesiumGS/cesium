@@ -7,7 +7,7 @@ import {
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/ModelColorStage", function () {
-  it("sets the define if model has color", function () {
+  it("sets the uniforms and shader defines if model has color", function () {
     var mockModel = {
       color: Color.RED,
       colorBlendMode: ColorBlendMode.REPLACE,
