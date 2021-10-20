@@ -43,19 +43,23 @@ describe(
       scene.primitives.removeAll();
     });
 
+    it("throws with invalid version", function () {
+      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
+        version: 2,
+      });
+      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
+    });
+
+    it("throws with empty gltf", function () {
+      // Expect to throw DeveloperError in Model due to invalid gltf magic
+      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
+      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
+    });
+
     it("throws on undefined arrayBuffer", function () {
       expect(function () {
         B3dmParser.parse(undefined);
       }).toThrowDeveloperError();
-    });
-
-    it("throws on invalid byteOffset", function () {
-      expect(function () {
-        B3dmParser.parse(new ArrayBuffer(1), "a");
-      }).toThrowDeveloperError();
-      expect(function () {
-        B3dmParser.parse(new ArrayBuffer(1), -1);
-      }).toThrowRuntimeError();
     });
 
     it("recognizes the legacy 20-byte header", function () {
