@@ -87,6 +87,52 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.extensions).toBe(extensions);
   });
 
+  it("transcodes single properties from EXT_feature_metadata", function () {
+    var max = [32767, 0, 100];
+    var min = [-32768, 0, -100];
+    var propertyDefault = 0;
+    var extras = {
+      coordinates: [0, 1, 2],
+    };
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
+    var property = new MetadataClassProperty({
+      id: "population",
+      property: {
+        name: "Population",
+        description: "Population (thousands)",
+        type: "INT32",
+        normalized: true,
+        max: max,
+        min: min,
+        default: propertyDefault,
+        optional: false,
+        semantic: "_POSITION",
+        extras: extras,
+        extensions: extensions,
+      },
+    });
+
+    expect(property.id).toBe("population");
+    expect(property.name).toBe("Population");
+    expect(property.description).toBe("Population (thousands)");
+    expect(property.type).toBe(MetadataType.SINGLE);
+    expect(property.enumType).toBeUndefined();
+    expect(property.componentType).toBe(MetadataComponentType.INT32);
+    expect(property.valueType).toBe(MetadataComponentType.INT32);
+    expect(property.componentCount).toBe(1);
+    expect(property.normalized).toBe(true);
+    expect(property.max).toBe(max);
+    expect(property.min).toBe(min);
+    expect(property.default).toBe(propertyDefault);
+    expect(property.optional).toBe(false);
+    expect(property.semantic).toBe("_POSITION");
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+  });
+
   it("creates enum property", function () {
     var colorEnum = new MetadataEnum({
       id: "color",
@@ -117,6 +163,36 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.componentType).toBe(MetadataComponentType.ENUM);
     expect(property.enumType).toBe(colorEnum);
     expect(property.valueType).toBe(MetadataComponentType.UINT16); // default enum valueType
+  });
+
+  it("creates vector and matrix types", function () {
+    var property = new MetadataClassProperty({
+      id: "speed",
+      property: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+      },
+    });
+
+    expect(property.id).toBe("speed");
+    expect(property.type).toBe(MetadataType.VEC2);
+    expect(property.componentCount).toBe(2);
+    expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
+    expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
+
+    property = new MetadataClassProperty({
+      id: "scale",
+      property: {
+        type: "MAT3",
+        componentType: "FLOAT64",
+      },
+    });
+
+    expect(property.id).toBe("scale");
+    expect(property.type).toBe(MetadataType.MAT3);
+    expect(property.componentCount).toBe(9);
+    expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
+    expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
   });
 
   it("constructor throws without id", function () {
@@ -758,8 +834,44 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(8.0)).toBe("value 8 does not match type ARRAY");
   });
 
+  it("validate returns error message if type is a vector or matrix and the component type is not vector-compatibile", function () {
+    var property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "VEC2",
+        componentType: "STRING",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe(
+      "componentType STRING is incompatible with vector type VEC2"
+    );
+
+    property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "MAT3",
+        componentType: "INT64",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe(
+      "componentType INT64 is incompatible with matrix type MAT3"
+    );
+  });
+
   it("validate returns error message if type is a vector and value is not a Cartesian", function () {
     var property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe("vector value 8 must be a Cartesian2");
+
+    property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "VEC3",
@@ -768,6 +880,48 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate(8.0)).toBe("vector value 8 must be a Cartesian3");
+
+    property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "VEC4",
+        componentType: "FLOAT32",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe("vector value 8 must be a Cartesian4");
+  });
+
+  it("validate returns error message if type is a matrix and value is not a Matrix", function () {
+    var property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "MAT2",
+        componentType: "FLOAT32",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe("matrix value 8 must be a Matrix2");
+
+    property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "MAT3",
+        componentType: "FLOAT32",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe("matrix value 8 must be a Matrix3");
+
+    property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "MAT4",
+        componentType: "FLOAT32",
+      },
+    });
+
+    expect(property.validate(8.0)).toBe("matrix value 8 must be a Matrix4");
   });
 
   it("validate returns error message if type is ARRAY and the array length does not match componentCount", function () {

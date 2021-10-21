@@ -428,12 +428,12 @@ function validateArray(classProperty, value, componentCount) {
 
 function validateVectorOrMatrix(value, type, componentType) {
   if (!MetadataComponentType.isVectorCompatible(componentType)) {
-    var message = type + " has an incompatible componentType " + componentType;
+    var message = "componentType " + componentType + " is incompatible with ";
     if (MetadataType.isVectorType(type)) {
-      return "vector value " + message;
+      return message + "vector type " + type;
     }
 
-    return "matrix value " + message;
+    return message + "matrix type " + type;
   }
 
   if (type === MetadataType.VEC2 && !(value instanceof Cartesian2)) {
