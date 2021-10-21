@@ -4,7 +4,6 @@ import {
   Cartesian3,
   GltfLoader,
   Matrix4,
-  MetadataClass,
   Resource,
   ResourceCache,
 } from "../../../Source/Cesium.js";

@@ -11,7 +11,6 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
-import MetadataClass from "../MetadataClass.js";
 import B3dmLoader from "./B3dmLoader.js";
 
 /**

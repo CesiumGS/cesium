@@ -9,7 +9,6 @@ import defined from "../../Core/defined.js";
 import FeatureMetadata from "../FeatureMetadata.js";
 import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
