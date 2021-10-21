@@ -1,162 +1,167 @@
 {
-    "asset" : {
-        "generator" : "Khronos glTF Blender I/O v1.6.16",
-        "version" : "2.0"
+    "asset": {
+      "generator": "Khronos glTF Blender I/O v1.6.16",
+      "version": "2.0"
     },
-    "scene" : 0,
-    "scenes" : [
-        {
-            "name" : "Scene",
-            "nodes" : [
-                0
-            ]
-        }
+    "scene": 0,
+    "scenes": [
+      {
+        "name": "Scene",
+        "nodes": [
+          0
+        ]
+      }
     ],
-    "nodes" : [
-        {
-            "mesh" : 0,
-            "name" : "Cube"
-        }
+    "nodes": [
+      {
+        "mesh": 0,
+        "name": "Cube"
+      }
     ],
-    "extensionsUsed": ["EXT_mesh_features"],
+    "extensionsUsed": [
+      "EXT_mesh_features"
+    ],
     "extensions": {
-        "EXT_mesh_features": {
-            "schema": {
-                "classes": {
-                    "perTriangle": {
-                        "properties": {
-                            "value": {
-                                "type": "UINT8"
-                            }
-                        }
-                    },
-                    "perFace": {
-                        "properties": {
-                            "value": {
-                                "type": "INT8"
-                            }
-                        }
-                    }
+      "EXT_mesh_features": {
+        "schema": {
+          "classes": {
+            "perTriangle": {
+              "properties": {
+                "value": {
+                  "type": "UINT8"
                 }
+              }
             },
-            "propertyTables": [
-                {
-                    "name": "Triangles",
-                    "class": "perTriangle",
-                    "count": 12,
-                    "properties": {
-                        "value": {
-                            "bufferView": 3
-                        }
-                    }
-                },
-                {
-                    "name": "Faces",
-                    "class": "perFace",
-                    "count": 6,
-                    "properties": {
-                        "value": {
-                            "bufferView": 4
-                        }
-                    }
+            "perFace": {
+              "properties": {
+                "value": {
+                  "type": "INT8"
                 }
-            ]
-        }
+              }
+            }
+          }
+        },
+        "propertyTables": [
+          {
+            "name": "Triangles",
+            "class": "perTriangle",
+            "count": 12,
+            "properties": {
+              "value": {
+                "bufferView": 3
+              }
+            }
+          },
+          {
+            "name": "Faces",
+            "class": "perFace",
+            "count": 6,
+            "properties": {
+              "value": {
+                "bufferView": 4
+              }
+            }
+          }
+        ]
+      }
     },
-    "meshes" : [
-        {
-            "name" : "Cube.001",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "POSITION" : 0,
-                        "FEATURE_ID_0": 2
-                    },
-                    "indices" : 1,
-                    "mode": 4,
-                    "extensions": {
-                        "EXT_mesh_features": {
-                            "propertyTables": [0, 1],
-                            "featureIds": [
-                                {
-                                    "offset": 0,
-                                    "repeat": 6
-                                },
-                                {
-                                    "attribute": 0
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        }
+    "meshes": [
+      {
+        "name": "Cube.001",
+        "primitives": [
+          {
+            "attributes": {
+              "POSITION": 0,
+              "FEATURE_ID_0": 2
+            },
+            "indices": 1,
+            "mode": 4,
+            "extensions": {
+              "EXT_mesh_features": {
+                "propertyTables": [
+                  0,
+                  1
+                ],
+                "featureIds": [
+                  {
+                    "offset": 0,
+                    "repeat": 6
+                  },
+                  {
+                    "attribute": 0
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
     ],
-    "accessors" : [
-        {
-            "bufferView" : 0,
-            "componentType" : 5126,
-            "count" : 8,
-            "max" : [
-                1,
-                1,
-                1
-            ],
-            "min" : [
-                -1,
-                -1,
-                -1
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 1,
-            "componentType" : 5123,
-            "count" : 36,
-            "type" : "SCALAR"
-        },
-        {
-            "bufferView": 2,
-            "componentType": 5126,
-            "count": 8,
-            "type": "SCALAR"
-        }
+    "accessors": [
+      {
+        "bufferView": 0,
+        "componentType": 5126,
+        "count": 8,
+        "max": [
+          1,
+          1,
+          1
+        ],
+        "min": [
+          -1,
+          -1,
+          -1
+        ],
+        "type": "VEC3"
+      },
+      {
+        "bufferView": 1,
+        "componentType": 5123,
+        "count": 36,
+        "type": "SCALAR"
+      },
+      {
+        "bufferView": 2,
+        "componentType": 5126,
+        "count": 8,
+        "type": "SCALAR"
+      }
     ],
-    "bufferViews" : [
-        {
-            "buffer" : 0,
-            "byteLength" : 96,
-            "byteOffset" : 0
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 72,
-            "byteOffset" : 96
-        },
-        {
-            "buffer": 1,
-            "byteLength": 32,
-            "byteOffset": 0
-        },
-        {
-            "buffer": 1,
-            "byteLength": 12,
-            "byteOffset": 32
-        },
-        {
-            "buffer": 1,
-            "byteLength": 6,
-            "byteOffset": 44
-        }
+    "bufferViews": [
+      {
+        "buffer": 0,
+        "byteLength": 96,
+        "byteOffset": 0
+      },
+      {
+        "buffer": 0,
+        "byteLength": 72,
+        "byteOffset": 96
+      },
+      {
+        "buffer": 1,
+        "byteLength": 32,
+        "byteOffset": 0
+      },
+      {
+        "buffer": 1,
+        "byteLength": 12,
+        "byteOffset": 32
+      },
+      {
+        "buffer": 1,
+        "byteLength": 6,
+        "byteOffset": 44
+      }
     ],
-    "buffers" : [
-        {
-            "byteLength" : 168,
-            "uri" : "TriangleFaceBox.bin"
-        },
-        {
-            "byteLength": 50,
-            "uri": "Metadata.bin"
-        }
+    "buffers": [
+      {
+        "byteLength": 168,
+        "uri": "TriangleFaceBox.bin"
+      },
+      {
+        "byteLength": 50,
+        "uri": "Metadata.bin"
+      }
     ]
-}
+  }

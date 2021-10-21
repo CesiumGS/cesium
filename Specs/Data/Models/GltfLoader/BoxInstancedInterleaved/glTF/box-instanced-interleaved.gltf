@@ -88,7 +88,10 @@
           },
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [0, 1],
+              "propertyTables": [
+                0,
+                1
+              ],
               "featureIds": [
                 {
                   "offset": 0,
