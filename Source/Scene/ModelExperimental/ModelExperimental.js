@@ -342,12 +342,12 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @private
    */
-  propertyTableId: {
+  featureTableId: {
     get: function () {
-      return this._propertyTableId;
+      return this._featureTableId;
     },
     set: function (value) {
-      this._propertyTableId = value;
+      this._featureTableId = value;
     },
   },
 
@@ -361,12 +361,12 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @private
    */
-  propertyTables: {
+  featureTables: {
     get: function () {
-      return this._propertyTables;
+      return this._featureTables;
     },
     set: function (value) {
-      this._propertyTables = value;
+      this._featureTables = value;
     },
   },
 
@@ -545,13 +545,10 @@ ModelExperimental.prototype.update = function (frameState) {
     });
   }
 
-  var propertyTables = this._propertyTables;
-  if (defined(propertyTables)) {
-    for (var propertyTableId in propertyTables) {
-      if (propertyTables.hasOwnProperty(propertyTableId)) {
-        var propertyTable = propertyTables[propertyTableId];
-        propertyTable.update(frameState);
-      }
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
     }
   }
 
