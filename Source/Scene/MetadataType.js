@@ -142,7 +142,7 @@ MetadataType.getComponentCount = function (type) {
     case MetadataType.VEC4:
       return 4;
     case MetadataType.MAT2:
-      return 2;
+      return 4;
     case MetadataType.MAT3:
       return 9;
     case MetadataType.MAT4:

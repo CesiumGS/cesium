@@ -508,6 +508,12 @@ describe("Scene/MetadataComponentType", function () {
       MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT32)
     ).toBe(4);
     expect(
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.INT64)
+    ).toBe(8);
+    expect(
+      MetadataComponentType.getSizeInBytes(MetadataComponentType.UINT64)
+    ).toBe(8);
+    expect(
       MetadataComponentType.getSizeInBytes(MetadataComponentType.FLOAT32)
     ).toBe(4);
     expect(

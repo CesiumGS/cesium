@@ -22,4 +22,17 @@ describe("Scene/MetadataType", function () {
     expect(MetadataType.isMatrixType(MetadataType.SINGLE)).toBe(false);
     expect(MetadataType.isMatrixType(MetadataType.ARRAY)).toBe(false);
   });
+
+  it("getComponentCount works", function () {
+    expect(MetadataType.getComponentCount(MetadataType.VEC2)).toBe(2);
+    expect(MetadataType.getComponentCount(MetadataType.VEC3)).toBe(3);
+    expect(MetadataType.getComponentCount(MetadataType.VEC4)).toBe(4);
+    expect(MetadataType.getComponentCount(MetadataType.MAT2)).toBe(4);
+    expect(MetadataType.getComponentCount(MetadataType.MAT3)).toBe(9);
+    expect(MetadataType.getComponentCount(MetadataType.MAT4)).toBe(16);
+    expect(MetadataType.getComponentCount(MetadataType.SINGLE)).toBe(1);
+    expect(
+      MetadataType.getComponentCount(MetadataType.ARRAY)
+    ).not.toBeDefined();
+  });
 });
