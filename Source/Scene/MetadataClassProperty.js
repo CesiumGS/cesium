@@ -566,15 +566,21 @@ function normalize(classProperty, value, normalizeFunction) {
   var type = classProperty._type;
   var valueType = classProperty._valueType;
 
+  var i;
+  var length;
   if (type === MetadataType.ARRAY) {
-    var length = value.length;
-    for (var i = 0; i < length; ++i) {
+    length = value.length;
+    for (i = 0; i < length; ++i) {
       value[i] = normalizeFunction(value[i], valueType);
     }
-  } else if (MetadataType.isVectorType(type)) {
-    throw "TODO: Normalize vector types";
-  } else if (MetadataType.isMatrixType(type)) {
-    throw "TODO: Normalize matrix types";
+  } else if (
+    MetadataType.isVectorType(type) ||
+    MetadataType.isMatrixType(type)
+  ) {
+    length = MetadataType.getComponentCount(type);
+    for (i = 0; i < length; ++i) {
+      value[i] = normalizeFunction(value[i], valueType);
+    }
   } else {
     value = normalizeFunction(value, valueType);
   }

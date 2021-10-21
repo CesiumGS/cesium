@@ -274,6 +274,62 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
+  it("normalize vector and matrix values", function () {
+    var properties = {
+      vec4Int8: {
+        type: "VEC4",
+        componentType: "INT8",
+        normalized: true,
+      },
+      mat2Uint8: {
+        type: "MAT2",
+        componentType: "UINT8",
+        normalized: true,
+      },
+    };
+
+    var propertyValues = {
+      vec4Int8: [
+        [-128, 0, 127, 0],
+        [-128, -128, -128, 0],
+        [127, 127, 127, 127],
+      ],
+      mat2Uint8: [
+        [0, 255, 0, 0],
+        [0, 51, 51, 0],
+        [255, 0, 0, 255],
+      ],
+    };
+
+    var normalizedValues = {
+      vec4Int8: [
+        [-1.0, 0.0, 1.0, 0],
+        [-1.0, -1.0, -1.0, 0],
+        [1.0, 1.0, 1.0, 1.0],
+      ],
+      mat2Uint8: [
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.2, 0.2, 0.0],
+        [1.0, 0.0, 0.0, 1.0],
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = normalizedValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var normalizedValue = property.normalize(value);
+          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
   it("does not normalize non integer types", function () {
     var myEnum = new MetadataEnum({
       id: "myEnum",
