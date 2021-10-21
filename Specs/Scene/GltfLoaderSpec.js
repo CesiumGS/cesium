@@ -2227,6 +2227,12 @@ describe(
       });
     });
 
+    it("sets default transform", function () {
+      return loadGltf(microcosm).then(function (gltfLoader) {
+        expect(gltfLoader.transform).toEqual(Matrix4.IDENTITY);
+      });
+    });
+
     it("destroys glTF loader", function () {
       var destroyFeatureMetadataLoader = spyOn(
         GltfFeatureMetadataLoader.prototype,

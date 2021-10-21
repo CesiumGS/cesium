@@ -40,17 +40,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
 
-  /**
-   * The ID of the feature table to use for picking and styling. Inherited from the model
-   * render resources.
-   *
-   * @type {String}
-   * @readonly
-   *
-   * @private
-   */
-  this.featureTableId = modelRenderResources.featureTableId;
-
   // other properties
   /**
    * A reference to the runtime node

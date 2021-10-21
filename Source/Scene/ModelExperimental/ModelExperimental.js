@@ -11,7 +11,7 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
-import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
+import B3dmLoader from "./B3dmLoader.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -56,7 +56,9 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
+  this._modelMatrix = Matrix4.clone(
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+  );
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -95,27 +97,6 @@ export default function ModelExperimental(options) {
   initialize(this);
 }
 
-function createContentFeatureTables(content, featureMetadata) {
-  var contentFeatureTables = [];
-
-  var propertyTables = featureMetadata.propertyTables;
-  for (var i = 0; i < propertyTables.length; i++) {
-    {
-      var propertyTable = propertyTables[i];
-      var contentFeatureTable = new Cesium3DTileContentFeatureTable({
-        content: content,
-        propertyTable: propertyTable,
-      });
-
-      if (contentFeatureTable.featuresLength > 0) {
-        contentFeatureTables.push(contentFeatureTable);
-      }
-    }
-  }
-
-  return contentFeatureTables;
-}
-
 function createModelFeatureTables(model, featureMetadata) {
   var modelFeatureTables = [];
 
@@ -136,12 +117,7 @@ function createModelFeatureTables(model, featureMetadata) {
   return modelFeatureTables;
 }
 
-function selectFeatureTableId(components, model, content) {
-  // For 3D Tiles 1.0 formats, the feature table is always the first table
-  if (defined(content) && defined(content.featureMetadata)) {
-    return 0;
-  }
-
+function selectFeatureTableId(components, model) {
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
   var featureIdTextureIndex = model._featureIdTextureIndex;
 
@@ -185,39 +161,30 @@ function selectFeatureTableId(components, model, content) {
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
-  var modelMatrix = model._modelMatrix;
 
   loader.load();
 
   loader.promise
     .then(function (loader) {
-      var components = loader.components;
-      var content = model._content;
+      Matrix4.multiply(
+        model._modelMatrix,
+        loader.transform,
+        model._modelMatrix
+      );
 
-      // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
-      // Otherwise, the metadata is owned by ModelExperimental.
-      var hasContent = defined(content);
-      var propertyTableOwner = hasContent ? content : model;
-      var featureMetadata = defined(propertyTableOwner.featureMetadata)
-        ? content.featureMetadata
-        : components.featureMetadata;
+      var components = loader.components;
+      var featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        var featureTableId = selectFeatureTableId(components, model, content);
-        var featureTables;
-        if (hasContent) {
-          featureTables = createContentFeatureTables(content, featureMetadata);
-        } else {
-          featureTables = createModelFeatureTables(model, featureMetadata);
-        }
-        propertyTableOwner.featureTables = featureTables;
-        propertyTableOwner.featureTableId = featureTableId;
+        var featureTableId = selectFeatureTableId(components, model);
+        var featureTables = createModelFeatureTables(model, featureMetadata);
+        model.featureTables = featureTables;
+        model.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
         modelComponents: components,
-        modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
     })
@@ -337,7 +304,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {String}
+   * @type {Number}
    * @readonly
    *
    * @private
@@ -356,7 +323,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Object.<String,ModelFeatureTable>}
+   * @type {Array}
    * @readonly
    *
    * @private
@@ -689,6 +656,40 @@ ModelExperimental.fromGltf = function (options) {
   };
   var model = new ModelExperimental(modelOptions);
 
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromB3dm = function (options) {
+  var loaderOptions = {
+    b3dmResource: options.resource,
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+    releaseGltfJson: options.releaseGltfJson,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+  };
+
+  var loader = new B3dmLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.b3dmResource,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+  var model = new ModelExperimental(modelOptions);
   return model;
 };
 
