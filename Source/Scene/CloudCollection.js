@@ -110,7 +110,7 @@ function CloudCollection(options) {
   this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
   this._noiseTexture = undefined;
-  this._noiseTextureLength = 128;
+  this._textureSliceWidth = 128;
 
   /**
    * <p>
@@ -173,8 +173,8 @@ function CloudCollection(options) {
     u_noiseTexture: function () {
       return that._noiseTexture;
     },
-    u_noiseTextureLength: function () {
-      return that._noiseTextureLength;
+    u_textureSliceWidth: function () {
+      return that._textureSliceWidth;
     },
     u_noiseDetail: function () {
       return that.noiseDetail;
@@ -672,14 +672,14 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     },
   });
 
-  var noiseTextureLength = that._noiseTextureLength;
+  var textureSliceWidth = that._textureSliceWidth;
   var noiseDetail = that.noiseDetail;
   var noiseOffset = that.noiseOffset;
 
   that._noiseTexture = new Texture({
     context: context,
-    width: (noiseTextureLength * noiseTextureLength) / 4,
-    height: noiseTextureLength * 4,
+    width: (textureSliceWidth * textureSliceWidth) / 4,
+    height: textureSliceWidth * 4,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     pixelFormat: PixelFormat.RGBA,
     sampler: new Sampler({
@@ -695,8 +695,8 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     shaderProgram: that._spNoise,
     outputTexture: that._noiseTexture,
     uniformMap: {
-      u_noiseTextureLength: function () {
-        return noiseTextureLength;
+      u_textureSliceWidth: function () {
+        return textureSliceWidth;
       },
       u_noiseDetail: function () {
         return noiseDetail;

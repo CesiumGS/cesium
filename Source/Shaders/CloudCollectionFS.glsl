@@ -1,5 +1,5 @@
 uniform sampler2D u_noiseTexture;
-uniform float u_noiseTextureLength;
+uniform float u_textureSliceWidth;
 uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
@@ -21,38 +21,37 @@ vec3 wrapVec(vec3 value, float rangeLength) {
                 wrap(value.z, rangeLength));
 }
 
-float noiseTextureLengthSquared = u_noiseTextureLength * u_noiseTextureLength;
-vec2 invNoiseTextureDimensions = vec2(1.0 / noiseTextureLengthSquared * 4.0, 1.0 / u_noiseTextureLength * 0.25);
-float numSlices = u_noiseTextureLength;
+float textureSliceWidthSquared = u_textureSliceWidth * u_textureSliceWidth;
+vec2 invNoiseTextureDimensions = vec2(4.0 / textureSliceWidthSquared, 0.25 / u_textureSliceWidth);
 
 vec2 voxelToUV(vec3 voxelIndex) {
-    vec3 vi = mod(voxelIndex, numSlices);
-    float column = mod(vi.z, numSlices / 4.0);
-    float row = floor(vi.z / numSlices * 4.0);
+    vec3 wrappedIndex = wrapVec(voxelIndex, u_textureSliceWidth);
+    float column = mod(wrappedIndex.z, u_textureSliceWidth * 0.25);
+    float row = floor(wrappedIndex.z / u_textureSliceWidth * 4.0);
 
-    float xPixelCoord = vi.x + column * u_noiseTextureLength;
-    float yPixelCoord = vi.y + row * u_noiseTextureLength;
+    float xPixelCoord = wrappedIndex.x + column * u_textureSliceWidth;
+    float yPixelCoord = wrappedIndex.y + row * u_textureSliceWidth;
     return vec2(xPixelCoord, yPixelCoord) * invNoiseTextureDimensions;
 }
 
+// Interpolate a voxel with its neighbor (along the positive X-axis)
+vec4 lerpSamplesX(vec3 voxelIndex, float x) {
+    vec2 uv0 = voxelToUV(voxelIndex);
+    vec2 uv1 = uv0 + vec2(invNoiseTextureDimensions.x, 0.0);
+    vec4 sample0 = texture2D(u_noiseTexture, uv0);
+    vec4 sample1 = texture2D(u_noiseTexture, uv1);
+    return mix(sample0, sample1, x);
+}
+
 vec4 sampleNoiseTexture(vec3 position) {
-    vec3 recenteredPos = position + vec3(u_noiseTextureLength / 2.0);
+    vec3 recenteredPos = position + vec3(u_textureSliceWidth / 2.0);
     vec3 lerpValue = fract(recenteredPos);
     vec3 voxelIndex = floor(recenteredPos);
 
-    vec4 sample000 = texture2D(u_noiseTexture, voxelToUV(voxelIndex));
-    vec4 sample001 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(0.0, 0.0, 1.0)));
-    vec4 sample010 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(0.0, 1.0, 0.0)));
-    vec4 sample011 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(0.0, 1.0, 1.0)));
-    vec4 sample100 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 0.0, 0.0)));
-    vec4 sample101 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 0.0, 1.0)));
-    vec4 sample110 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 1.0, 0.0)));
-    vec4 sample111 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 1.0, 1.0)));
-
-    vec4 xLerp00 = mix(sample000, sample100, lerpValue.x);
-    vec4 xLerp01 = mix(sample001, sample101, lerpValue.x);
-    vec4 xLerp10 = mix(sample010, sample110, lerpValue.x);
-    vec4 xLerp11 = mix(sample011, sample111, lerpValue.x);
+    vec4 xLerp00 = lerpSamplesX(voxelIndex, lerpValue.x);
+    vec4 xLerp01 = lerpSamplesX(voxelIndex + vec3(0.0, 0.0, 1.0), lerpValue.x);
+    vec4 xLerp10 = lerpSamplesX(voxelIndex + vec3(0.0, 1.0, 0.0), lerpValue.x);
+    vec4 xLerp11 = lerpSamplesX(voxelIndex + vec3(0.0, 1.0, 1.0), lerpValue.x);
 
     vec4 yLerp0 = mix(xLerp00, xLerp10, lerpValue.y);
     vec4 yLerp1 = mix(xLerp01, xLerp11, lerpValue.y);
