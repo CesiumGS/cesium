@@ -12,7 +12,6 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import Cesium3DTileContentFeatureTable from "./Cesium3DTileContentFeatureTable.js";
-import MetadataClass from "../MetadataClass.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -97,19 +96,19 @@ export default function ModelExperimental(options) {
 }
 
 function createContentFeatureTables(content, featureMetadata) {
-  var contentFeatureTables = {};
+  var contentFeatureTables = [];
 
-  var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
+  var propertyTables = featureMetadata.propertyTables;
+  for (var i = 0; i < propertyTables.length; i++) {
+    {
+      var propertyTable = propertyTables[i];
       var contentFeatureTable = new Cesium3DTileContentFeatureTable({
         content: content,
-        featureTable: featureTable,
+        propertyTable: propertyTable,
       });
 
       if (contentFeatureTable.featuresLength > 0) {
-        contentFeatureTables[featureTableId] = contentFeatureTable;
+        contentFeatureTables.push(contentFeatureTable);
       }
     }
   }
@@ -118,21 +117,19 @@ function createContentFeatureTables(content, featureMetadata) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  var modelFeatureTables = {};
+  var modelFeatureTables = [];
 
-  var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
-      var modelfeatureTable = new ModelFeatureTable({
-        model: model,
-        featureTable: featureTable,
-      });
+  var propertyTables = featureMetadata.propertyTables;
+  for (var i = 0; i < propertyTables.length; i++) {
+    var propertyTable = propertyTables[i];
+    var modelFeatureTable = new ModelFeatureTable({
+      model: model,
+      propertyTable: propertyTable,
+    });
 
-      if (modelfeatureTable.featuresLength > 0) {
-        modelFeatureTables[featureTableId] = modelfeatureTable;
-        model._resources.push(modelfeatureTable);
-      }
+    if (modelFeatureTable.featuresLength > 0) {
+      modelFeatureTables.push(modelFeatureTable);
+      model._resources.push(modelFeatureTable);
     }
   }
 
@@ -140,9 +137,9 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model, content) {
-  // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
+  // For 3D Tiles 1.0 formats, the feature table is always the first table
   if (defined(content) && defined(content.featureMetadata)) {
-    return MetadataClass.BATCH_TABLE_CLASS_NAME;
+    return 0;
   }
 
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
@@ -161,7 +158,7 @@ function selectFeatureTableId(components, model, content) {
       featureIdAttribute =
         node.instances.featureIdAttributes[featureIdAttributeIndex];
       if (defined(featureIdAttribute)) {
-        return featureIdAttribute.featureTableId;
+        return featureIdAttribute.propertyTableId;
       }
     }
   }
@@ -177,9 +174,9 @@ function selectFeatureTableId(components, model, content) {
         primitive.featureIdAttributes[featureIdAttributeIndex];
 
       if (defined(featureIdTexture)) {
-        return featureIdTexture.featureTableId;
+        return featureIdTexture.propertyTableId;
       } else if (defined(featureIdAttribute)) {
-        return featureIdAttribute.featureTableId;
+        return featureIdAttribute.propertyTableId;
       }
     }
   }
@@ -200,12 +197,12 @@ function initialize(model) {
       // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
       // Otherwise, the metadata is owned by ModelExperimental.
       var hasContent = defined(content);
-      var featureTableOwner = hasContent ? content : model;
-      var featureMetadata = defined(featureTableOwner.featureMetadata)
+      var propertyTableOwner = hasContent ? content : model;
+      var featureMetadata = defined(propertyTableOwner.featureMetadata)
         ? content.featureMetadata
         : components.featureMetadata;
 
-      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
+      if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
         var featureTableId = selectFeatureTableId(components, model, content);
         var featureTables;
         if (hasContent) {
@@ -213,8 +210,8 @@ function initialize(model) {
         } else {
           featureTables = createModelFeatureTables(model, featureMetadata);
         }
-        featureTableOwner.featureTables = featureTables;
-        featureTableOwner.featureTableId = featureTableId;
+        propertyTableOwner.featureTables = featureTables;
+        propertyTableOwner.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -550,11 +547,8 @@ ModelExperimental.prototype.update = function (frameState) {
 
   var featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (var featureTableId in featureTables) {
-      if (featureTables.hasOwnProperty(featureTableId)) {
-        var featureTable = featureTables[featureTableId];
-        featureTable.update(frameState);
-      }
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
     }
   }
 

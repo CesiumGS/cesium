@@ -3,14 +3,14 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features",
+    "EXT_feature_metadata",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_feature_metadata": {
       "schema": {
         "classes": {
           "box": {
@@ -35,36 +35,36 @@
           }
         }
       },
-      "propertyTables": [
-        {
+      "featureTables": {
+        "boxTable": {
           "class": "box",
           "count": 4,
-          "properties": {
-            "name": {
-              "offsetType": "UINT16",
-              "bufferView": 4,
-              "stringOffsetBufferView": 5
-            },
-            "volume": {
-              "bufferView": 6
-            }
-          }
-        },
-        {
-          "class": "section",
-          "count": 2,
           "properties": {
             "name": {
               "offsetType": "UINT16",
               "bufferView": 7,
               "stringOffsetBufferView": 8
             },
-            "id": {
+            "volume": {
               "bufferView": 9
             }
           }
+        },
+        "sectionTable": {
+          "class": "section",
+          "count": 2,
+          "properties": {
+            "name": {
+              "offsetType": "UINT16",
+              "bufferView": 10,
+              "stringOffsetBufferView": 11
+            },
+            "id": {
+              "bufferView": 12
+            }
+          }
         }
-      ]
+      }
     }
   },
   "scene": 0,
@@ -84,21 +84,23 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "FEATURE_ID_0": 6
+            "_FEATURE_ID_0": 6
           },
           "extensions": {
-            "EXT_mesh_features": {
-              "propertyTables": [
-                0,
-                1
-              ],
-              "featureIds": [
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
                 {
-                  "offset": 0,
-                  "repeat": 1
+                  "featureTable": "boxTable",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 1
+                  }
                 },
                 {
-                  "attribute": 0
+                  "featureTable": "sectionTable",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
                 }
               ]
             }
@@ -166,24 +168,24 @@
     },
     {
       "name": "Instance Rotations",
-      "bufferView": 3,
-      "byteOffset": 12,
+      "bufferView": 4,
+      "byteOffset": 0,
       "componentType": 5126,
       "count": 4,
       "type": "VEC4"
     },
     {
       "name": "Instance Scales",
-      "bufferView": 3,
-      "byteOffset": 28,
+      "bufferView": 5,
+      "byteOffset": 0,
       "componentType": 5126,
       "count": 4,
       "type": "VEC3"
     },
     {
       "name": "Instance Feature IDs",
-      "bufferView": 3,
-      "byteOffset": 40,
+      "bufferView": 6,
+      "byteOffset": 0,
       "componentType": 5126,
       "count": 4,
       "type": "SCALAR"
@@ -209,11 +211,28 @@
       "byteOffset": 576
     },
     {
-      "name": "Instance Translations, Rotations, Scales, Feature IDs",
+      "name": "Instance Translations",
       "buffer": 1,
-      "byteLength": 176,
-      "byteStride": 44,
+      "byteLength": 48,
       "byteOffset": 0
+    },
+    {
+      "name": "Instance Rotations",
+      "buffer": 1,
+      "byteLength": 64,
+      "byteOffset": 48
+    },
+    {
+      "name": "Instance Scales",
+      "buffer": 1,
+      "byteLength": 48,
+      "byteOffset": 112
+    },
+    {
+      "name": "Instance Feature IDs",
+      "buffer": 1,
+      "byteLength": 16,
+      "byteOffset": 160
     },
     {
       "name": "Box Names",

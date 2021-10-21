@@ -15,14 +15,14 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     name: ["A", "B"],
   };
 
-  var mockFeatureTable = MetadataTester.createFeatureTable({
+  var mockPropertyTable = MetadataTester.createPropertyTable({
     properties: properties,
     propertyValues: propertyValues,
   });
 
   it("hasProperty works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
@@ -34,9 +34,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getFeature works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
       var feature = table.getFeature(i);
@@ -47,9 +47,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getProperty works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
 
     for (var propertyName in properties) {
@@ -66,7 +66,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getPropertyNames works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     var modelFeatures = table._features;
     var results;
@@ -79,7 +79,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("setProperty works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     var feature = table._features[0];
     expect(feature.getProperty("height")).toEqual(1.0);
@@ -89,7 +89,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("destroy works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     var batchTexture = table._batchTexture;
     expect(batchTexture.isDestroyed()).toEqual(false);
