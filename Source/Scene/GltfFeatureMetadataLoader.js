@@ -21,7 +21,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {String} [options.extension] The EXT_mesh_features extension object. If this is undefined, then extensionLegacy must be defined.
+ * @param {String} [options.extension] The <code>EXT_mesh_features</code> extension object. If this is undefined, then extensionLegacy must be defined.
  * @param {String} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
@@ -276,6 +276,22 @@ function loadBufferViews(featureMetadataLoader) {
   });
 }
 
+function gatherUsedTextureIds(extension) {
+  // Gather the used textures
+  var textureIds = {};
+  var propertyTextures = extension.propertyTextures;
+  if (defined(propertyTextures)) {
+    for (var i = 0; i < propertyTextures.length; i++) {
+      var propertyTexture = propertyTextures[i];
+      if (defined(propertyTexture.properties)) {
+        // The property texture JSON is also a glTF textureInfo
+        textureIds[propertyTexture.index] = propertyTexture;
+      }
+    }
+  }
+  return textureIds;
+}
+
 function gatherTextureIdsFromProperties(properties, textureIds) {
   for (var propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
@@ -284,22 +300,6 @@ function gatherTextureIdsFromProperties(properties, textureIds) {
       textureIds[textureInfo.index] = textureInfo;
     }
   }
-}
-
-function gatherUsedTextureIds(extension) {
-  // Gather the used textures
-  var textureIds = {};
-  var propertyTextures = extension.propertyTextures;
-  if (defined(propertyTextures)) {
-    for (var i = 0; i < propertyTextures.length; i++) {
-      var propertyTexture = propertyTextures[i];
-      var properties = propertyTexture.properties;
-      if (defined(properties)) {
-        gatherTextureIdsFromProperties(properties, textureIds);
-      }
-    }
-  }
-  return textureIds;
 }
 
 function gatherUsedTextureIdsLegacy(extensionLegacy) {

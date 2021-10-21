@@ -56,7 +56,8 @@
               "bufferView": 7
             }
           }
-        },{
+        },
+        {
           "name": "Weather",
           "class": "weather",
           "count": 1000,
@@ -97,12 +98,15 @@
         {
           "attributes": {
             "POSITION": 0,
-            "_FEATURE_ID_0": 1
+            "FEATURE_ID_0": 1
           },
           "mode": 0,
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [1, 0],
+              "propertyTables": [
+                1,
+                0
+              ],
               "featureIds": [
                 {
                   "offset": 0,

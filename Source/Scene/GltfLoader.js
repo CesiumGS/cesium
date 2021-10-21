@@ -105,7 +105,7 @@ export default function GltfLoader(options) {
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_mesh_features extension.
   // This requires sorting the dictionary keys for a consistent ordering.
-  this._sortedFeatureTableIds = undefined;
+  this._sortedPropertyTableIds = undefined;
   this._sortedFeatureTextureIds = undefined;
 
   this._gltfJsonLoader = undefined;
@@ -768,9 +768,9 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
 }
 
 // for EXT_mesh_features
-function loadFeatureIdAttribute(featureIds, featureTableId) {
+function loadFeatureIdAttribute(featureIds, propertyTableId) {
   var featureIdAttribute = new FeatureIdAttribute();
-  featureIdAttribute.featureTableId = featureTableId;
+  featureIdAttribute.propertyTableId = propertyTableId;
   featureIdAttribute.setIndex = featureIds.attribute;
   featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
   featureIdAttribute.repeat = featureIds.repeat;
@@ -781,7 +781,7 @@ function loadFeatureIdAttribute(featureIds, featureTableId) {
 function loadFeatureIdAttributeLegacy(gltfFeatureIdAttribute, featureTableId) {
   var featureIdAttribute = new FeatureIdAttribute();
   var featureIds = gltfFeatureIdAttribute.featureIds;
-  featureIdAttribute.featureTableId = featureTableId;
+  featureIdAttribute.propertyTableId = featureTableId;
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
   // constant/divisor was renamed to offset/repeat
   featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
@@ -795,16 +795,16 @@ function loadFeatureIdTexture(
   loader,
   gltf,
   gltfFeatureIdTexture,
-  featureTableId,
+  propertyTableId,
   supportedImageFormats
 ) {
   var featureIdTexture = new FeatureIdTexture();
-  var textureInfo = {
-    index: gltfFeatureIdTexture.index,
-    texCoord: gltfFeatureIdTexture.texCoord,
-  };
 
-  featureIdTexture.featureTableId = featureTableId;
+  // The schema for feature ID textures is essential a subclass of glTF
+  // textureInfo
+  var textureInfo = gltfFeatureIdTexture;
+
+  featureIdTexture.propertyTableId = propertyTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
     gltf,
@@ -833,7 +833,7 @@ function loadFeatureIdTextureLegacy(
   var featureIds = gltfFeatureIdTexture.featureIds;
   var textureInfo = featureIds.texture;
 
-  featureIdTexture.featureTableId = featureTableId;
+  featureIdTexture.propertyTableId = featureTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
     gltf,
@@ -956,39 +956,37 @@ function loadPrimitiveMetadata(
   var featureIdsArray = metadataExtension.featureIds;
   var propertyTablesArray = metadataExtension.propertyTables;
 
-  for (i = 0; i < featureIdsArray.length; i++) {
-    var featureIds = featureIdsArray[i];
-    if (defined(featureIds.channel)) {
-      featureIdTextures.push(featureIds);
-    } else {
-      featureIdAttributes.push(featureIds);
+  if (defined(featureIdsArray)) {
+    for (i = 0; i < featureIdsArray.length; i++) {
+      var featureIds = featureIdsArray[i];
+      if (defined(featureIds.channel)) {
+        featureIdTextures.push(featureIds);
+      } else {
+        featureIdAttributes.push(featureIds);
+      }
     }
   }
 
   // Feature ID Attributes
-  if (defined(featureIdAttributes)) {
-    var featureIdAttributesLength = featureIdAttributes.length;
-    for (i = 0; i < featureIdAttributesLength; ++i) {
-      primitive.featureIdAttributes.push(
-        loadFeatureIdAttribute(featureIdAttributes[i], propertyTablesArray[i])
-      );
-    }
+  var featureIdAttributesLength = featureIdAttributes.length;
+  for (i = 0; i < featureIdAttributesLength; ++i) {
+    primitive.featureIdAttributes.push(
+      loadFeatureIdAttribute(featureIdAttributes[i], propertyTablesArray[i])
+    );
   }
 
   // Feature ID Textures
-  if (defined(featureIdTextures)) {
-    var featureIdTexturesLength = featureIdTextures.length;
-    for (i = 0; i < featureIdTexturesLength; ++i) {
-      primitive.featureIdTextures.push(
-        loadFeatureIdTexture(
-          loader,
-          gltf,
-          featureIdTextures[i],
-          propertyTablesArray[i],
-          supportedImageFormats
-        )
-      );
-    }
+  var featureIdTexturesLength = featureIdTextures.length;
+  for (i = 0; i < featureIdTexturesLength; ++i) {
+    primitive.featureIdTextures.push(
+      loadFeatureIdTexture(
+        loader,
+        gltf,
+        featureIdTextures[i],
+        propertyTablesArray[i],
+        supportedImageFormats
+      )
+    );
   }
 
   // Feature Textures
@@ -1015,7 +1013,9 @@ function loadPrimitiveMetadataLegacy(
       primitive.featureIdAttributes.push(
         loadFeatureIdAttributeLegacy(
           featureIdAttribute,
-          loader._sortedFeatureTableIds.indexOf(featureIdAttribute.featureTable)
+          loader._sortedPropertyTableIds.indexOf(
+            featureIdAttribute.featureTable
+          )
         )
       );
     }
@@ -1032,7 +1032,7 @@ function loadPrimitiveMetadataLegacy(
           loader,
           gltf,
           featureIdTexture,
-          loader._sortedFeatureTableIds.indexOf(featureIdTexture.featureTable),
+          loader._sortedPropertyTableIds.indexOf(featureIdTexture.featureTable),
           supportedImageFormats
         )
       );
@@ -1108,7 +1108,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     loadInstanceMetadataLegacy(
       instances,
       featureMetadataLegacy,
-      loader._sortedFeatureTableIds
+      loader._sortedPropertyTableIds
     );
   }
 
@@ -1137,7 +1137,7 @@ function loadInstanceMetadata(instances, metadataExtension) {
 function loadInstanceMetadataLegacy(
   instances,
   metadataExtension,
-  sortedFeatureTableIds
+  sortedPropertyTableIds
 ) {
   var featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
@@ -1147,7 +1147,7 @@ function loadInstanceMetadataLegacy(
       instances.featureIdAttributes.push(
         loadFeatureIdAttributeLegacy(
           featureIdAttribute,
-          sortedFeatureTableIds.indexOf(featureIdAttribute.featureTable)
+          sortedPropertyTableIds.indexOf(featureIdAttribute.featureTable)
         )
       );
     }
@@ -1332,9 +1332,9 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     // attributes are processed.
     var featureTables = featureMetadataExtensionLegacy.featureTables;
     var featureTextures = featureMetadataExtensionLegacy.featureTextures;
-    var allFeatureTableIds = defined(featureTables) ? featureTables : [];
+    var allPropertyTableIds = defined(featureTables) ? featureTables : [];
     var allFeatureTextureIds = defined(featureTextures) ? featureTextures : [];
-    loader._sortedFeatureTableIds = Object.keys(allFeatureTableIds).sort();
+    loader._sortedPropertyTableIds = Object.keys(allPropertyTableIds).sort();
     loader._sortedFeatureTextureIds = Object.keys(allFeatureTextureIds).sort();
   }
 

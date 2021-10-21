@@ -1,8 +1,9 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import FeatureTable from "./FeatureTable.js";
-import FeatureTexture from "./FeatureTexture.js";
+import PropertyTable from "./PropertyTable.js";
+import PropertyTexture from "./PropertyTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
@@ -33,7 +34,7 @@ export default function parseFeatureMetadata(options) {
   //>>includeEnd('debug');
 
   var i;
-  var featureTables = [];
+  var propertyTables = [];
   if (defined(extension.propertyTables)) {
     for (i = 0; i < extension.propertyTables.length; i++) {
       var propertyTable = extension.propertyTables[i];
@@ -44,8 +45,8 @@ export default function parseFeatureMetadata(options) {
         class: classDefinition,
         bufferViews: options.bufferViews,
       });
-      featureTables.push(
-        new FeatureTable({
+      propertyTables.push(
+        new PropertyTable({
           id: i,
           name: propertyTable.name,
           count: propertyTable.count,
@@ -57,15 +58,15 @@ export default function parseFeatureMetadata(options) {
     }
   }
 
-  var featureTextures = [];
+  var propertyTextures = [];
   if (defined(extension.propertyTextures)) {
     for (i = 0; i < extension.propertyTextures.length; i++) {
       var propertyTexture = extension.propertyTextures[i];
-      featureTextures.push(
-        new FeatureTexture({
+      propertyTextures.push(
+        new PropertyTexture({
           id: i,
           name: propertyTexture.name,
-          featureTexture: propertyTexture,
+          featureTexture: reformatPropertyTexture(propertyTexture),
           class: schema.classes[propertyTexture.class],
           textures: options.textures,
         })
@@ -75,10 +76,58 @@ export default function parseFeatureMetadata(options) {
 
   return new FeatureMetadata({
     schema: schema,
-    featureTables: featureTables,
-    featureTextures: featureTextures,
+    propertyTables: propertyTables,
+    propertyTextures: propertyTextures,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,
   });
+}
+
+/**
+ * The legacy EXT_feature_metadata schema was a bit broad in what it could do.
+ * The properties in a feature texture could potentially belong to different
+ * textures. For full backwards compatibility, here we transcode <i>backwards</i>
+ * from EXT_mesh_features to EXT_feature_metadata.
+ *
+ * @param {Object} propertyTexture The property texture JSON from EXT_mesh_features
+ * @return {Object} The corresponding feature texture JSON for the legacy EXT_feature_metadata
+ * @private
+ */
+function reformatPropertyTexture(propertyTexture) {
+  // in EXT_mesh_features propertyTexture is a valid glTF textureInfo
+  // since it has an index and a texCoord.
+  var textureInfo = clone(propertyTexture);
+
+  var featureTexture = clone(propertyTexture);
+  featureTexture.properties = {};
+
+  var originalProperties = propertyTexture.properties;
+  for (var propertyId in originalProperties) {
+    if (originalProperties.hasOwnProperty(propertyId)) {
+      var channels = originalProperties[propertyId];
+      featureTexture.properties[propertyId] = {
+        texture: textureInfo,
+        channels: reformatChannels(channels),
+      };
+    }
+  }
+
+  return featureTexture;
+}
+
+/**
+ * Reformat from an array of channel indices like <code>[0, 1]</code> to a
+ * string of channels as would be used in GLSL swizzling (e.g. "rg")
+ *
+ * @param {Number[]} channels the channel indices
+ * @return {String} The channels as a string of "r", "g", "b" or "a" characters.
+ * @private
+ */
+function reformatChannels(channels) {
+  return channels
+    .map(function (channelIndex) {
+      return "rgba".charAt(channelIndex);
+    })
+    .join("");
 }

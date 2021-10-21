@@ -129,8 +129,8 @@ describe(
       expect(buildingClass.id).toBe("building");
       expect(treeClass.id).toBe("tree");
 
-      var buildingsTable = metadata.getFeatureTable(0);
-      var treesTable = metadata.getFeatureTable(1);
+      var buildingsTable = metadata.getPropertyTable(0);
+      var treesTable = metadata.getPropertyTable(1);
 
       expect(buildingsTable.id).toBe("buildings");
       expect(buildingsTable.name).not.toBeDefined();
@@ -230,8 +230,8 @@ describe(
       expect(mapClass.id).toBe("map");
       expect(orthoClass.id).toBe("ortho");
 
-      var mapTexture = metadata.getFeatureTexture(0);
-      var orthoTexture = metadata.getFeatureTexture(1);
+      var mapTexture = metadata.getPropertyTexture(0);
+      var orthoTexture = metadata.getPropertyTexture(1);
 
       expect(mapTexture.class).toBe(mapClass);
       expect(mapTexture.id).toBe("mapTexture");

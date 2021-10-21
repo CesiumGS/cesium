@@ -20,7 +20,7 @@ import defined from "../Core/defined.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} [options.name] human-readable name to describe the table
+ * @param {String} [options.name] Human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
  * @param {Number} options.count The number of features in the table.
  * @param {MetadataTable} [options.metadataTable] A table of binary properties.
@@ -29,13 +29,13 @@ import defined from "../Core/defined.js";
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
  *
- * @alias FeatureTable
+ * @alias PropertyTable
  * @constructor
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function FeatureTable(options) {
+function PropertyTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
@@ -52,11 +52,11 @@ function FeatureTable(options) {
   this._batchTableHierarchy = options.batchTableHierarchy;
 }
 
-Object.defineProperties(FeatureTable.prototype, {
+Object.defineProperties(PropertyTable.prototype, {
   /**
    * A human-readable name for this table
    *
-   * @memberof FeatureTable.prototype
+   * @memberof PropertyTable.prototype
    * @type {String}
    * @readonly
    * @private
@@ -69,7 +69,7 @@ Object.defineProperties(FeatureTable.prototype, {
   /**
    * An identifier for this table. Useful for debugging.
    *
-   * @memberof FeatureTable.prototype
+   * @memberof PropertyTable.prototype
    * @type {String|Number}
    * @readonly
    * @private
@@ -82,7 +82,7 @@ Object.defineProperties(FeatureTable.prototype, {
   /**
    * The number of features in the table.
    *
-   * @memberof FeatureTable.prototype
+   * @memberof PropertyTable.prototype
    * @type {Number}
    * @readonly
    * @private
@@ -96,7 +96,7 @@ Object.defineProperties(FeatureTable.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof FeatureTable.prototype
+   * @memberof PropertyTable.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -113,7 +113,7 @@ Object.defineProperties(FeatureTable.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof FeatureTable.prototype
+   * @memberof PropertyTable.prototype
    * @type {*}
    * @readonly
    * @private
@@ -127,7 +127,7 @@ Object.defineProperties(FeatureTable.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof FeatureTable.prototype
+   * @memberof PropertyTable.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -147,7 +147,7 @@ Object.defineProperties(FeatureTable.prototype, {
  * @returns {Boolean} Whether the feature has this property.
  * @private
  */
-FeatureTable.prototype.hasProperty = function (index, propertyId) {
+PropertyTable.prototype.hasProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("index", index);
   Check.typeOf.string("propertyId", propertyId);
@@ -184,7 +184,7 @@ FeatureTable.prototype.hasProperty = function (index, propertyId) {
  * @returns {Boolean} Whether the feature has a property with the given semantic.
  * @private
  */
-FeatureTable.prototype.hasPropertyBySemantic = function (index, semantic) {
+PropertyTable.prototype.hasPropertyBySemantic = function (index, semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("index", index);
   Check.typeOf.string("semantic", semantic);
@@ -206,7 +206,7 @@ FeatureTable.prototype.hasPropertyBySemantic = function (index, semantic) {
  * @returns {Boolean} Whether any feature has this property.
  * @private
  */
-FeatureTable.prototype.propertyExists = function (propertyId) {
+PropertyTable.prototype.propertyExists = function (propertyId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
@@ -242,7 +242,7 @@ FeatureTable.prototype.propertyExists = function (propertyId) {
  * @returns {Boolean} Whether any feature has a property with the given semantic.
  * @private
  */
-FeatureTable.prototype.propertyExistsBySemantic = function (semantic) {
+PropertyTable.prototype.propertyExistsBySemantic = function (semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
@@ -264,7 +264,7 @@ var scratchResults = [];
  * @returns {String[]} The property IDs.
  * @private
  */
-FeatureTable.prototype.getPropertyIds = function (index, results) {
+PropertyTable.prototype.getPropertyIds = function (index, results) {
   results = defined(results) ? results : [];
   results.length = 0;
 
@@ -304,7 +304,7 @@ FeatureTable.prototype.getPropertyIds = function (index, results) {
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
-FeatureTable.prototype.getProperty = function (index, propertyId) {
+PropertyTable.prototype.getProperty = function (index, propertyId) {
   var result;
   if (defined(this._metadataTable)) {
     result = this._metadataTable.getProperty(index, propertyId);
@@ -342,7 +342,7 @@ FeatureTable.prototype.getProperty = function (index, propertyId) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-FeatureTable.prototype.setProperty = function (index, propertyId, value) {
+PropertyTable.prototype.setProperty = function (index, propertyId, value) {
   if (
     defined(this._metadataTable) &&
     this._metadataTable.setProperty(index, propertyId, value)
@@ -376,7 +376,7 @@ FeatureTable.prototype.setProperty = function (index, propertyId, value) {
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this semantic.
  * @private
  */
-FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
+PropertyTable.prototype.getPropertyBySemantic = function (index, semantic) {
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyBySemantic(index, semantic);
   }
@@ -398,7 +398,7 @@ FeatureTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-FeatureTable.prototype.setPropertyBySemantic = function (
+PropertyTable.prototype.setPropertyBySemantic = function (
   index,
   semantic,
   value
@@ -423,7 +423,7 @@ FeatureTable.prototype.setPropertyBySemantic = function (
  *
  * @private
  */
-FeatureTable.prototype.getPropertyTypedArray = function (propertyId) {
+PropertyTable.prototype.getPropertyTypedArray = function (propertyId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
@@ -448,7 +448,7 @@ FeatureTable.prototype.getPropertyTypedArray = function (propertyId) {
  *
  * @private
  */
-FeatureTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
+PropertyTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
@@ -460,4 +460,4 @@ FeatureTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   return undefined;
 };
 
-export default FeatureTable;
+export default PropertyTable;

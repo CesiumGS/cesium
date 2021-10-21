@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import FeatureTextureProperty from "./FeatureTextureProperty.js";
+import PropertyTextureProperty from "./PropertyTextureProperty.js";
 
 /**
  * A feature texture.
@@ -13,17 +13,17 @@ import FeatureTextureProperty from "./FeatureTextureProperty.js";
  * @param {Object} options Object with the following properties:
  * @param {String} [options.name] Optional human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
- * @param {Object} options.featureTexture The feature texture JSON.
+ * @param {Object} options.featureTexture The feature texture JSON. Note that this follows the legacy EXT_feature_metadata schema to allow full backwards compatibility.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
- * @alias FeatureTexture
+ * @alias PropertyTexture
  * @constructor
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function FeatureTexture(options) {
+function PropertyTexture(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var featureTexture = options.featureTexture;
   var classDefinition = options.class;
@@ -42,7 +42,7 @@ function FeatureTexture(options) {
   if (defined(featureTexture.properties)) {
     for (var propertyId in featureTexture.properties) {
       if (featureTexture.properties.hasOwnProperty(propertyId)) {
-        properties[propertyId] = new FeatureTextureProperty({
+        properties[propertyId] = new PropertyTextureProperty({
           property: featureTexture.properties[propertyId],
           classProperty: classDefinition.properties[propertyId],
           textures: textures,
@@ -59,11 +59,11 @@ function FeatureTexture(options) {
   this._extensions = extensions;
 }
 
-Object.defineProperties(FeatureTexture.prototype, {
+Object.defineProperties(PropertyTexture.prototype, {
   /**
    * A human-readable name for this texture
    *
-   * @memberof FeatureTexture.prototype
+   * @memberof PropertyTexture.prototype
    * @type {String}
    * @readonly
    * @private
@@ -76,7 +76,7 @@ Object.defineProperties(FeatureTexture.prototype, {
   /**
    * An identifier for this texture. Useful for debugging.
    *
-   * @memberof FeatureTexture.prototype
+   * @memberof PropertyTexture.prototype
    * @type {String|Number}
    * @readonly
    * @private
@@ -89,7 +89,7 @@ Object.defineProperties(FeatureTexture.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof FeatureTexture.prototype
+   * @memberof PropertyTexture.prototype
    * @type {MetadataClass}
    * @readonly
    * @private
@@ -103,7 +103,7 @@ Object.defineProperties(FeatureTexture.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof FeatureTexture.prototype
+   * @memberof PropertyTexture.prototype
    * @type {*}
    * @readonly
    * @private
@@ -117,7 +117,7 @@ Object.defineProperties(FeatureTexture.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof FeatureTexture.prototype
+   * @memberof PropertyTexture.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -133,10 +133,10 @@ Object.defineProperties(FeatureTexture.prototype, {
  * Gets the property with the given property ID.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {FeatureTextureProperty|undefined} The property, or <code>undefined</code> if the property does not exist.
+ * @returns {PropertyTextureProperty|undefined} The property, or <code>undefined</code> if the property does not exist.
  * @private
  */
-FeatureTexture.prototype.getProperty = function (propertyId) {
+PropertyTexture.prototype.getProperty = function (propertyId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
@@ -144,4 +144,4 @@ FeatureTexture.prototype.getProperty = function (propertyId) {
   return this._properties[propertyId];
 };
 
-export default FeatureTexture;
+export default PropertyTexture;

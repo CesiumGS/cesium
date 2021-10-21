@@ -3,70 +3,68 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features",
+    "EXT_feature_metadata",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_feature_metadata": {
       "schema": {
         "classes": {
           "box": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "volume": {
-                "componentType": "FLOAT32"
+                "type": "FLOAT32"
               }
             }
           },
           "section": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "id": {
-                "componentType": "UINT16"
+                "type": "UINT16"
               }
             }
           }
         }
       },
-      "propertyTables": [
-        {
-          "name": "Box",
+      "featureTables": {
+        "boxTable": {
           "class": "box",
           "count": 4,
+          "properties": {
+            "name": {
+              "offsetType": "UINT16",
+              "bufferView": 4,
+              "stringOffsetBufferView": 5
+            },
+            "volume": {
+              "bufferView": 6
+            }
+          }
+        },
+        "sectionTable": {
+          "class": "section",
+          "count": 2,
           "properties": {
             "name": {
               "offsetType": "UINT16",
               "bufferView": 7,
               "stringOffsetBufferView": 8
             },
-            "volume": {
+            "id": {
               "bufferView": 9
             }
           }
-        },
-        {
-          "name": "Section",
-          "class": "section",
-          "count": 2,
-          "properties": {
-            "name": {
-              "offsetType": "UINT16",
-              "bufferView": 10,
-              "stringOffsetBufferView": 11
-            },
-            "id": {
-              "bufferView": 12
-            }
-          }
         }
-      ]
+      }
     }
   },
   "scene": 0,
@@ -86,23 +84,27 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "FEATURE_ID_0": 6
-          }
-        },
-        "EXT_mesh_features": {
-          "propertyTables": [
-            0,
-            1
-          ],
-          "featureIds": [
-            {
-              "offset": 0,
-              "repeat": 1
-            },
-            {
-              "attribute": 0
+            "_FEATURE_ID_0": 6
+          },
+          "extensions": {
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
+                {
+                  "featureTable": "boxTable",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 1
+                  }
+                },
+                {
+                  "featureTable": "sectionTable",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
+                }
+              ]
             }
-          ]
+          }
         }
       }
     }
@@ -166,24 +168,24 @@
     },
     {
       "name": "Instance Rotations",
-      "bufferView": 4,
-      "byteOffset": 0,
+      "bufferView": 3,
+      "byteOffset": 12,
       "componentType": 5126,
       "count": 4,
       "type": "VEC4"
     },
     {
       "name": "Instance Scales",
-      "bufferView": 5,
-      "byteOffset": 0,
+      "bufferView": 3,
+      "byteOffset": 28,
       "componentType": 5126,
       "count": 4,
       "type": "VEC3"
     },
     {
       "name": "Instance Feature IDs",
-      "bufferView": 6,
-      "byteOffset": 0,
+      "bufferView": 3,
+      "byteOffset": 40,
       "componentType": 5126,
       "count": 4,
       "type": "SCALAR"
@@ -209,28 +211,11 @@
       "byteOffset": 576
     },
     {
-      "name": "Instance Translations",
+      "name": "Instance Translations, Rotations, Scales, Feature IDs",
       "buffer": 1,
-      "byteLength": 48,
+      "byteLength": 176,
+      "byteStride": 44,
       "byteOffset": 0
-    },
-    {
-      "name": "Instance Rotations",
-      "buffer": 1,
-      "byteLength": 64,
-      "byteOffset": 48
-    },
-    {
-      "name": "Instance Scales",
-      "buffer": 1,
-      "byteLength": 48,
-      "byteOffset": 112
-    },
-    {
-      "name": "Instance Feature IDs",
-      "buffer": 1,
-      "byteLength": 16,
-      "byteOffset": 160
     },
     {
       "name": "Box Names",

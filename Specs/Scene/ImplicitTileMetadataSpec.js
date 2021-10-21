@@ -20,6 +20,7 @@ describe("Scene/ImplicitTileMetadata", function () {
   var buildingCounts = [100, 350, 200];
 
   var tileTableDescription = {
+    name: "Tiles",
     class: "tile",
     properties: {
       highlightColor: highlightColors,
@@ -49,11 +50,9 @@ describe("Scene/ImplicitTileMetadata", function () {
     class: schema.classes.tile,
   });
 
-  var featureTablesDescription = {
+  var propertyTablesDescription = {
     schema: schema,
-    featureTables: {
-      tiles: tileTableDescription,
-    },
+    propertyTables: [tileTableDescription],
   };
 
   var subtreeDescription = {
@@ -77,7 +76,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
     metadata: {
       isInternal: true,
-      featureTables: featureTablesDescription,
+      propertyTables: propertyTablesDescription,
     },
   };
 

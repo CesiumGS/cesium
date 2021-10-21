@@ -326,7 +326,7 @@ function FeatureIdAttribute() {
    * @type {Number}
    * @private
    */
-  this.featureTableId = undefined;
+  this.propertyTableId = undefined;
 
   /**
    * The set index of feature ID attribute containing feature IDs.
@@ -369,7 +369,7 @@ function FeatureIdTexture() {
    * @type {String}
    * @private
    */
-  this.featureTableId = undefined;
+  this.propertyTableId = undefined;
 
   /**
    * The texture reader containing feature IDs.

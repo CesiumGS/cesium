@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import FeatureTable from "./FeatureTable.js";
-import FeatureTexture from "./FeatureTexture.js";
+import PropertyTable from "./PropertyTable.js";
+import PropertyTexture from "./PropertyTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
@@ -33,7 +33,7 @@ export default function parseFeatureMetadataLegacy(options) {
   //>>includeEnd('debug');
 
   var i;
-  var featureTables = [];
+  var propertyTables = [];
   var sortedIds;
   if (defined(extension.featureTables)) {
     // Store textures in an array sorted by the dictionary keys. This
@@ -52,8 +52,8 @@ export default function parseFeatureMetadataLegacy(options) {
         bufferViews: options.bufferViews,
       });
 
-      featureTables.push(
-        new FeatureTable({
+      propertyTables.push(
+        new PropertyTable({
           id: featureTableId,
           count: featureTable.count,
           metadataTable: metadataTable,
@@ -64,7 +64,7 @@ export default function parseFeatureMetadataLegacy(options) {
     }
   }
 
-  var featureTextures = [];
+  var propertyTextures = [];
   if (defined(extension.featureTextures)) {
     // Store textures in an array sorted by the dictionary keys. This
     // allows compatibility with the newer EXT_mesh_features extension
@@ -73,8 +73,8 @@ export default function parseFeatureMetadataLegacy(options) {
     for (i = 0; i < sortedIds.length; i++) {
       var featureTextureId = sortedIds[i];
       var featureTexture = extension.featureTextures[featureTextureId];
-      featureTextures.push(
-        new FeatureTexture({
+      propertyTextures.push(
+        new PropertyTexture({
           id: featureTextureId,
           featureTexture: featureTexture,
           class: schema.classes[featureTexture.class],
@@ -86,8 +86,8 @@ export default function parseFeatureMetadataLegacy(options) {
 
   return new FeatureMetadata({
     schema: schema,
-    featureTables: featureTables,
-    featureTextures: featureTextures,
+    propertyTables: propertyTables,
+    propertyTextures: propertyTextures,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,

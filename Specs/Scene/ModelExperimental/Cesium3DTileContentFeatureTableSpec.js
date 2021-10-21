@@ -23,7 +23,7 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
       statistics: {},
     },
   };
-  var mockFeatureTable = MetadataTester.createFeatureTable({
+  var mockPropertyTable = MetadataTester.createPropertyTable({
     properties: properties,
     propertyValues: propertyValues,
   });
@@ -31,7 +31,7 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("hasProperty works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
     var modelFeatures = table._features;
@@ -45,10 +45,10 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("getFeature works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
       var feature = table.getFeature(i);
@@ -60,10 +60,10 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("getProperty works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
 
     for (var propertyName in properties) {
@@ -81,10 +81,10 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("getPropertyInherited works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
 
     for (var propertyName in properties) {
@@ -102,7 +102,7 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("getPropertyNames works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
     var modelFeatures = table._features;
@@ -117,7 +117,7 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("setProperty works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
     var feature = table._features[0];
@@ -129,7 +129,7 @@ describe("Scene/ModelExperimental/Cesium3DTileContentFeatureTable", function () 
   it("destroy works", function () {
     var table = new Cesium3DTileContentFeatureTable({
       content: mockContent,
-      featureTable: mockFeatureTable,
+      propertyTable: mockPropertyTable,
     });
     mockContent.batchTable = table;
     var batchTexture = table._batchTexture;
