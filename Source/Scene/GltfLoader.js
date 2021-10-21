@@ -107,6 +107,7 @@ export default function GltfLoader(options) {
   this._textureState = GltfLoaderState.UNLOADED;
   this._promise = when.defer();
   this._texturesLoadedPromise = when.defer();
+  this._transform = Matrix4.IDENTITY;
 
   // Loaders that need to be processed before the glTF becomes ready
   this._textureLoaders = [];
@@ -181,6 +182,22 @@ Object.defineProperties(GltfLoader.prototype, {
   texturesLoadedPromise: {
     get: function () {
       return this._texturesLoadedPromise.promise;
+    },
+  },
+
+  /**
+   * A world-space transform to apply to the primitives.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {Matrix4}
+   * @default {@link Matrix4.IDENTITY}
+   * @readonly
+   * @private
+   */
+  transform: {
+    get: function () {
+      return this._transform;
     },
   },
 });

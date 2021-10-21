@@ -113,7 +113,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
       expect(featureTable).toBeDefined();
       expect(featureTable.count).toEqual(10);
 
-      expect(loader.rtcTransform).toEqual(
+      expect(loader.transform).toEqual(
         Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
       );
     });

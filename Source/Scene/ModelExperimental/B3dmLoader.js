@@ -6,7 +6,6 @@ import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import deprecationWarning from "../../Core/deprecationWarning.js";
 import FeatureTable from "../FeatureTable.js";
 import FeatureMetadata from "../FeatureMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -22,10 +21,9 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 var B3dmLoaderState = {
   UNLOADED: 0,
   LOADING: 1,
-  LOADED: 2,
-  PROCESSING: 3,
-  READY: 4,
-  FAILED: 5,
+  PROCESSING: 2,
+  READY: 3,
+  FAILED: 4,
 };
 
 var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
@@ -88,7 +86,6 @@ function B3dmLoader(options) {
   this._state = B3dmLoaderState.UNLOADED;
 
   this._promise = when.defer();
-  this._texturesLoadedPromise = when.defer();
 
   this._gltfLoader = undefined;
 
@@ -99,7 +96,7 @@ function B3dmLoader(options) {
   // The batch table object contains a json and a binary component access using keys of the same name.
   this._batchTable = undefined;
   this._components = undefined;
-  this._rtcTransform = undefined;
+  this._transform = Matrix4.IDENTITY;
 }
 
 if (defined(Object.create)) {
@@ -136,7 +133,7 @@ Object.defineProperties(B3dmLoader.prototype, {
    */
   texturesLoadedPromise: {
     get: function () {
-      return this._texturesLoadedPromise.promise;
+      return this._gltfLoader.texturesLoadedPromise;
     },
   },
   /**
@@ -160,6 +157,7 @@ Object.defineProperties(B3dmLoader.prototype, {
    * @memberof B3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
+   * @default {@link Matrix4.IDENTITY}
    * @readonly
    * @private
    */
@@ -170,7 +168,7 @@ Object.defineProperties(B3dmLoader.prototype, {
   },
 
   /**
-   * A transform from the RTC_CENTER semantic, if present in the B3DM's Feature Table.
+   * A world-space transform to apply to the primitives.
    * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel#global-semantics}
    *
    * @memberof B3dmLoader.prototype
@@ -179,9 +177,9 @@ Object.defineProperties(B3dmLoader.prototype, {
    * @readonly
    * @private
    */
-  rtcTransform: {
+  transform: {
     get: function () {
-      return this._rtcTransform;
+      return this._transform;
     },
   },
 });
@@ -213,9 +211,7 @@ B3dmLoader.prototype.load = function () {
     3
   );
   if (defined(rtcCenter)) {
-    this._rtcTransform = Matrix4.fromTranslation(
-      Cartesian3.fromArray(rtcCenter)
-    );
+    this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
   }
 
   this._batchTable = {
@@ -236,49 +232,20 @@ B3dmLoader.prototype.load = function () {
   this._gltfLoader = gltfLoader;
   this._state = B3dmLoaderState.LOADING;
 
-  gltfLoader.load();
-};
-
-function handleError(gltfLoader, error) {
-  gltfLoader.unload();
-  gltfLoader._state = B3dmLoaderState.FAILED;
-  var errorMessage = "Failed to load B3DM";
-  error = gltfLoader.getError(errorMessage, error);
-  gltfLoader._promise.reject(error);
-}
-B3dmLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  this._state = B3dmLoaderState.PROCESSING;
-  var gltfLoader = this._gltfLoader;
-
-  // Once the components are loaded, add the feature metadata created from the batch table.
   var that = this;
-  gltfLoader.process(frameState);
-  gltfLoader.promise.then(function () {
-    if (that.isDestroyed()) {
-      return;
-    }
-
-    if (that._state !== B3dmLoaderState.READY) {
-      var components = gltfLoader.components;
-      processGltfComponents(that, components);
-      that._components = components;
-      that._state = B3dmLoaderState.READY;
-    }
-
-    that._promise.resolve(that);
-  });
-
-  gltfLoader.texturesLoadedPromise
+  gltfLoader.load();
+  gltfLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
       }
 
-      that._texturesLoadedPromise.resolve(that);
+      var components = gltfLoader.components;
+      createFeatureMetadata(that, components);
+      that._components = components;
+
+      that._state = B3dmLoaderState.READY;
+      that._promise.resolve(that);
     })
     .otherwise(function (error) {
       if (that.isDestroyed()) {
@@ -288,7 +255,29 @@ B3dmLoader.prototype.process = function (frameState) {
     });
 };
 
-function processGltfComponents(loader, components) {
+function handleError(b3dmLoader, error) {
+  b3dmLoader.unload();
+  b3dmLoader._state = B3dmLoaderState.FAILED;
+  var errorMessage = "Failed to load B3DM";
+  error = b3dmLoader.getError(errorMessage, error);
+  b3dmLoader._promise.reject(error);
+}
+
+B3dmLoader.prototype.process = function (frameState) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
+
+  if (this._state === B3dmLoaderState.LOADING) {
+    this._state = B3dmLoaderState.PROCESSING;
+  }
+
+  if (this._state === B3dmLoaderState.PROCESSING) {
+    this._gltfLoader.process(frameState);
+  }
+};
+
+function createFeatureMetadata(loader, components) {
   var batchTable = loader._batchTable;
   var batchLength = loader._batchLength;
 
@@ -300,11 +289,6 @@ function processGltfComponents(loader, components) {
       batchTable: batchTable.json,
       binaryBody: batchTable.binary,
     });
-    // Add the feature ID attribute to the primitive.
-    var nodes = components.scene.nodes;
-    for (var i = 0; i < nodes.length; i++) {
-      processNode(nodes[i]);
-    }
   } else {
     // If batch table is not defined, create a feature table without any properties.
     var emptyFeatureTable = new FeatureTable({
@@ -317,9 +301,16 @@ function processGltfComponents(loader, components) {
       featureTables: featureTables,
     });
   }
+
+  // Add the feature ID attribute to the primitives.
+  var nodes = components.scene.nodes;
+  for (var i = 0; i < nodes.length; i++) {
+    processNode(nodes[i]);
+  }
   components.featureMetadata = featureMetadata;
 }
 
+// Recursive function to add the feature ID attribute to all primitives that have a feature ID vertex attribute.
 function processNode(node) {
   if (!defined(node.children) && !defined(node.primitives)) {
     return;
@@ -358,8 +349,5 @@ B3dmLoader.prototype.unload = function () {
 
   this._components = undefined;
 };
-
-// This can be overridden for testing purposes
-B3dmLoader._deprecationWarning = deprecationWarning;
 
 export default B3dmLoader;

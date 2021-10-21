@@ -57,7 +57,9 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
+  this._modelMatrix = Matrix4.clone(
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+  );
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -169,16 +171,16 @@ function selectFeatureTableId(components, model) {
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
-  var modelMatrix = model._modelMatrix;
 
   loader.load();
 
   loader.promise
     .then(function (loader) {
-      var rtcTransform = loader.rtcTransform;
-      if (defined(rtcTransform)) {
-        Matrix4.multiply(modelMatrix, rtcTransform, modelMatrix);
-      }
+      Matrix4.multiply(
+        model._modelMatrix,
+        loader.transform,
+        model._modelMatrix
+      );
 
       var components = loader.components;
       var content = model._content;
@@ -197,7 +199,6 @@ function initialize(model) {
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
         modelComponents: components,
-        modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
     })
