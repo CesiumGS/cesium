@@ -9,6 +9,7 @@ import defined from "../../Core/defined.js";
 import FeatureMetadata from "../FeatureMetadata.js";
 import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
@@ -291,6 +292,7 @@ function createFeatureMetadata(loader, components) {
   } else {
     // If batch table is not defined, create a property table without any properties.
     var emptyPropertyTable = new PropertyTable({
+      name: MetadataClass.BATCH_TABLE_CLASS_NAME,
       count: batchLength,
     });
     featureMetadata = new FeatureMetadata({
