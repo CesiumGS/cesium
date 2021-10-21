@@ -13,7 +13,7 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  * @param {Object} options Object with the following properties:
  * @param {String} [options.name] Optional human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_mesh_features</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
- * @param {Object} options.featureTexture The feature texture JSON.
+ * @param {Object} options.featureTexture The feature texture JSON. Note that this follows the legacy EXT_feature_metadata schema to allow full backwards compatibility.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *

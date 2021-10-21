@@ -276,6 +276,22 @@ function loadBufferViews(featureMetadataLoader) {
   });
 }
 
+function gatherUsedTextureIds(extension) {
+  // Gather the used textures
+  var textureIds = {};
+  var propertyTextures = extension.propertyTextures;
+  if (defined(propertyTextures)) {
+    for (var i = 0; i < propertyTextures.length; i++) {
+      var propertyTexture = propertyTextures[i];
+      if (defined(propertyTexture.properties)) {
+        // The property texture JSON is also a glTF textureInfo
+        textureIds[propertyTexture.index] = propertyTexture;
+      }
+    }
+  }
+  return textureIds;
+}
+
 function gatherTextureIdsFromProperties(properties, textureIds) {
   for (var propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
@@ -284,22 +300,6 @@ function gatherTextureIdsFromProperties(properties, textureIds) {
       textureIds[textureInfo.index] = textureInfo;
     }
   }
-}
-
-function gatherUsedTextureIds(extension) {
-  // Gather the used textures
-  var textureIds = {};
-  var propertyTextures = extension.propertyTextures;
-  if (defined(propertyTextures)) {
-    for (var i = 0; i < propertyTextures.length; i++) {
-      var propertyTexture = propertyTextures[i];
-      var properties = propertyTexture.properties;
-      if (defined(properties)) {
-        gatherTextureIdsFromProperties(properties, textureIds);
-      }
-    }
-  }
-  return textureIds;
 }
 
 function gatherUsedTextureIdsLegacy(extensionLegacy) {

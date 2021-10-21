@@ -11,7 +11,7 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
  * @param {Object} options Object with the following properties:
  * @param {Object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object.<Number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
  * @alias PropertyTextureProperty
  * @constructor

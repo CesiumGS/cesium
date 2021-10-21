@@ -51,14 +51,10 @@
         {
           "name": "Vegetation",
           "class": "vegetation",
+          "index": 1,
+          "texCoord": 0,
           "properties": {
-            "vegetationDensity": {
-              "texture": {
-                "index": 1,
-                "texCoord": 0
-              },
-              "channels": "r"
-            }
+            "vegetationDensity": [0]
           }
         }
       ]
