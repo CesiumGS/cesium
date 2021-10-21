@@ -22,45 +22,32 @@ vec3 wrapVec(vec3 value, float rangeLength) {
 }
 
 float noiseTextureLengthSquared = u_noiseTextureLength * u_noiseTextureLength;
-vec3 dimensions = vec3(noiseTextureLengthSquared * 0.25,
-                       u_noiseTextureLength * 4.0,
-                       u_noiseTextureLength * 0.25);
+vec2 invNoiseTextureDimensions = vec2(1.0 / noiseTextureLengthSquared * 4.0, 1.0 / u_noiseTextureLength * 0.25);
+float numSlices = u_noiseTextureLength;
+
+vec2 voxelToUV(vec3 voxelIndex) {
+    vec3 vi = mod(voxelIndex, numSlices);
+    float column = mod(vi.z, numSlices / 4.0);
+    float row = floor(vi.z / numSlices * 4.0);
+
+    float xPixelCoord = vi.x + column * u_noiseTextureLength;
+    float yPixelCoord = vi.y + row * u_noiseTextureLength;
+    return vec2(xPixelCoord, yPixelCoord) * invNoiseTextureDimensions;
+}
 
 vec4 sampleNoiseTexture(vec3 position) {
     vec3 recenteredPos = position + vec3(u_noiseTextureLength / 2.0);
     vec3 lerpValue = fract(recenteredPos);
+    vec3 voxelIndex = floor(recenteredPos);
 
-    vec3 slice = floor(recenteredPos);
-    vec3 slice0 = wrapVec(slice, u_noiseTextureLength);
-    vec3 slice1 = wrapVec(slice0 + vec3(1.0), u_noiseTextureLength);
-    slice0 /= dimensions;
-    slice1 /= dimensions;
-
-    float shiftSlice0 = floor(slice0.z) * 0.25;
-    float shiftSlice1 = floor(slice1.z) * 0.25;
-
-    float u00 = wrap(slice0.x + slice0.z, 1.0);
-    float u01 = wrap(slice0.x + slice1.z, 1.0);
-    float u10 = wrap(slice1.x + slice0.z, 1.0);
-    float u11 = wrap(slice1.x + slice1.z, 1.0);
-
-    vec2 uv000 = vec2(u00, slice0.y + shiftSlice0);
-    vec2 uv001 = vec2(u01, slice0.y + shiftSlice0);
-    vec2 uv010 = vec2(u00, slice1.y + shiftSlice1);
-    vec2 uv011 = vec2(u01, slice1.y + shiftSlice1);
-    vec2 uv100 = vec2(u10, slice0.y + shiftSlice0);
-    vec2 uv101 = vec2(u11, slice0.y + shiftSlice0);
-    vec2 uv110 = vec2(u10, slice1.y + shiftSlice1);
-    vec2 uv111 = vec2(u11, slice1.y + shiftSlice1);
-
-    vec4 sample000 = texture2D(u_noiseTexture, uv000);
-    vec4 sample001 = texture2D(u_noiseTexture, uv001);
-    vec4 sample010 = texture2D(u_noiseTexture, uv010);
-    vec4 sample011 = texture2D(u_noiseTexture, uv011);
-    vec4 sample100 = texture2D(u_noiseTexture, uv100);
-    vec4 sample101 = texture2D(u_noiseTexture, uv101);
-    vec4 sample110 = texture2D(u_noiseTexture, uv110);
-    vec4 sample111 = texture2D(u_noiseTexture, uv111);
+    vec4 sample000 = texture2D(u_noiseTexture, voxelToUV(voxelIndex));
+    vec4 sample001 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(0.0, 0.0, 1.0)));
+    vec4 sample010 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(0.0, 1.0, 0.0)));
+    vec4 sample011 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(0.0, 1.0, 1.0)));
+    vec4 sample100 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 0.0, 0.0)));
+    vec4 sample101 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 0.0, 1.0)));
+    vec4 sample110 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 1.0, 0.0)));
+    vec4 sample111 = texture2D(u_noiseTexture, voxelToUV(voxelIndex + vec3(1.0, 1.0, 1.0)));
 
     vec4 xLerp00 = mix(sample000, sample100, lerpValue.x);
     vec4 xLerp01 = mix(sample001, sample101, lerpValue.x);
@@ -98,7 +85,6 @@ bool intersectSphere(vec3 origin, vec3 dir, float slice,
 
     normal = normalize(point);
     point -= czm_epsilon2 * normal;
-
     return true;
 }
 
@@ -242,7 +228,6 @@ void main() {
 #ifdef DEBUG_BILLBOARDS
     gl_FragColor = vec4(0.0, 0.5, 0.5, 1.0);
 #endif
-
     // To avoid calculations with high values,
     // we raycast from an arbitrarily smaller space.
     vec2 coordinate = v_maximumSize.xy * v_offset;
@@ -254,7 +239,6 @@ void main() {
     vec3 eye = vec3(0, 0, -10.0 - zOffset);
     vec3 rayDir = normalize(vec3(coordinate, 1.0) - eye);
     vec3 rayOrigin = eye;
-
 #ifdef DEBUG_ELLIPSOIDS
     vec3 point, normal;
     if(intersectEllipsoid(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale, v_slice,
