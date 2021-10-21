@@ -1009,15 +1009,30 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
 
-        expect(primitive.featureIdAttributes.length).toBe(2);
+        expect(primitive.featureIdAttributes.length).toBe(3);
         expect(primitive.featureIdTextures.length).toBe(0);
         expect(primitive.featureTextureIds.length).toBe(0);
 
-        var featureIdAttributeMapping = primitive.featureIdAttributes[0];
-        expect(featureIdAttributeMapping.propertyTableId).toBe(0);
-        expect(featureIdAttributeMapping.setIndex).toBe(0);
-        expect(featureIdAttributeMapping.offset).toBe(0);
-        expect(featureIdAttributeMapping.repeat).not.toBeDefined();
+        // feature ID via accessor
+        var featureIdAccessor = primitive.featureIdAttributes[0];
+        expect(featureIdAccessor.propertyTableId).toBe(0);
+        expect(featureIdAccessor.setIndex).toBe(0);
+        expect(featureIdAccessor.offset).toBe(0);
+        expect(featureIdAccessor.repeat).not.toBeDefined();
+
+        // feature ID via offset + repeat
+        var featureIdImplicit = primitive.featureIdAttributes[1];
+        expect(featureIdImplicit.propertyTableId).toBe(0);
+        expect(featureIdImplicit.setIndex).not.toBeDefined();
+        expect(featureIdImplicit.offset).toBe(0);
+        expect(featureIdImplicit.repeat).toBe(2);
+
+        // Feature ID via offset only. This one has no corresponding table
+        var featureIdConstant = primitive.featureIdAttributes[2];
+        expect(featureIdConstant.propertyTableId).not.toBeDefined();
+        expect(featureIdConstant.setIndex).not.toBeDefined();
+        expect(featureIdConstant.offset).toBe(3);
+        expect(featureIdConstant.repeat).not.toBeDefined();
 
         var classDefinition = featureMetadata.schema.classes.building;
         var properties = classDefinition.properties;
