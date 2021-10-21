@@ -1,6 +1,5 @@
 import Axis from "../Axis.js";
 import defined from "../../Core/defined.js";
-import deprecationWarning from "../../Core/deprecationWarning.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelExperimental from "./ModelExperimental.js";
 import Pass from "../../Renderer/Pass.js";
