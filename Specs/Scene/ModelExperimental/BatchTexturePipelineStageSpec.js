@@ -54,8 +54,8 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
   it("sets up batch textures from ModelExperimental", function () {
     var renderResources = {
       shaderBuilder: new ShaderBuilder(),
-      featureTableId: 0,
       model: {
+        featureTableId: 0,
         featureTables: [
           {
             featuresLength: 10,

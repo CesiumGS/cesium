@@ -11,7 +11,7 @@ import ModelFeature from "./ModelFeature.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelExperimental} options.model The model that owns this feature table.
- * @param {PropertyTable} options.propertyTable The feature table from the model used to initialize the model.
+ * @param {PropertyTable} options.propertyTable The property table from the model used to initialize the model.
  *
  * @alias ModelFeatureTable
  * @constructor
@@ -20,13 +20,16 @@ import ModelFeature from "./ModelFeature.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeatureTable(options) {
-  this._propertyTable = options.propertyTable;
-  this._model = options.model;
+  var model = options.model;
+  var propertyTable = options.propertyTable;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.featureTable", options.featureTable);
-  Check.typeOf.object("options.model", options.model);
+  Check.typeOf.object("propertyTable", propertyTable);
+  Check.typeOf.object("model", model);
   //>>includeEnd('debug');
+
+  this._propertyTable = propertyTable;
+  this._model = model;
 
   this._features = undefined;
   this._featuresLength = 0;
@@ -74,7 +77,7 @@ function initialize(modelFeatureTable) {
   var content = modelFeatureTable._model.content;
   var hasContent = defined(content);
 
-  var featuresLength = modelFeatureTable._featureTable.count;
+  var featuresLength = modelFeatureTable._propertyTable.count;
   if (featuresLength === 0) {
     return;
   }

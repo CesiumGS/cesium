@@ -68,12 +68,10 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     return loadB3dm(withBatchTableUrl).then(function (loader) {
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(10);
-      expect(featureTable.class).toBeDefined();
+      var propertyTable = featureMetadata.getPropertyTable(0);
+      expect(propertyTable).toBeDefined();
+      expect(propertyTable.count).toEqual(10);
+      expect(propertyTable.class).toBeDefined();
     });
   });
 
@@ -81,12 +79,10 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     return loadB3dm(withBatchTableBinaryUrl).then(function (loader) {
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(10);
-      expect(featureTable.class).toBeDefined();
+      var propertyTable = featureMetadata.getPropertyTable(0);
+      expect(propertyTable).toBeDefined();
+      expect(propertyTable.count).toEqual(10);
+      expect(propertyTable.class).toBeDefined();
     });
   });
 
@@ -94,12 +90,10 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     return loadB3dm(withoutBatchTableUrl).then(function (loader) {
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(10);
-      expect(featureTable.class).toBeUndefined();
+      var propertyTable = featureMetadata.getPropertyTable(0);
+      expect(propertyTable).toBeDefined();
+      expect(propertyTable.count).toEqual(10);
+      expect(propertyTable.class).toBeUndefined();
     });
   });
 
@@ -107,11 +101,9 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     return loadB3dm(withRtcCenterUrl).then(function (loader) {
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(10);
+      var propertyTable = featureMetadata.getPropertyTable(0);
+      expect(propertyTable).toBeDefined();
+      expect(propertyTable.count).toEqual(10);
 
       expect(loader.transform).toEqual(
         Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
@@ -123,12 +115,10 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     return loadB3dm(withBatchTableHierarchy).then(function (loader) {
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
-      var featureTable = featureMetadata.getFeatureTable(
-        MetadataClass.BATCH_TABLE_CLASS_NAME
-      );
-      expect(featureTable).toBeDefined();
-      expect(featureTable.count).toEqual(30);
-      expect(featureTable._batchTableHierarchy).toBeDefined();
+      var propertyTable = featureMetadata.getPropertyTable(0);
+      expect(propertyTable).toBeDefined();
+      expect(propertyTable.count).toEqual(30);
+      expect(propertyTable._batchTableHierarchy).toBeDefined();
     });
   });
 

@@ -119,13 +119,6 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model) {
-  var featureTables = model._featureTables;
-
-  // For 3D Tiles 1.0 formats, the feature table will always be the first (and only) feature table.
-  if (defined(featureTables[MetadataClass.BATCH_TABLE_CLASS_NAME])) {
-    return 0;
-  }
-
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
   var featureIdTextureIndex = model._featureIdTextureIndex;
 
@@ -181,26 +174,13 @@ function initialize(model) {
       );
 
       var components = loader.components;
-      var content = model._content;
-
-      // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
-      // Otherwise, the metadata is owned by ModelExperimental.
-      var hasContent = defined(content);
-      var propertyTableOwner = hasContent ? content : model;
-      var featureMetadata = defined(propertyTableOwner.featureMetadata)
-        ? content.featureMetadata
-        : components.featureMetadata;
+      var featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        var featureTableId = selectFeatureTableId(components, model, content);
-        var featureTables;
-        if (hasContent) {
-          featureTables = createContentFeatureTables(content, featureMetadata);
-        } else {
-          featureTables = createModelFeatureTables(model, featureMetadata);
-        }
-        propertyTableOwner.featureTables = featureTables;
-        propertyTableOwner.featureTableId = featureTableId;
+        var featureTableId = selectFeatureTableId(components, model);
+        var featureTables = createModelFeatureTables(model, featureMetadata);
+        model.featureTables = featureTables;
+        model.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -325,7 +305,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {String}
+   * @type {Number}
    * @readonly
    *
    * @private
@@ -344,7 +324,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Object.<String,ModelFeatureTable>}
+   * @type {Array}
    * @readonly
    *
    * @private

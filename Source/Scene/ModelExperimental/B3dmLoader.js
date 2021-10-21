@@ -6,7 +6,6 @@ import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
-import FeatureTable from "../FeatureTable.js";
 import FeatureMetadata from "../FeatureMetadata.js";
 import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -14,6 +13,7 @@ import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
+import PropertyTable from "../PropertyTable.js";
 import ResourceLoader from "../ResourceLoader.js";
 import when from "../../ThirdParty/when.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -91,7 +91,7 @@ function B3dmLoader(options) {
 
   // Loaded results.
   this._batchLength = 0;
-  this._featureTable = undefined;
+  this._propertyTable = undefined;
 
   // The batch table object contains a json and a binary component access using keys of the same name.
   this._batchTable = undefined;
@@ -290,15 +290,13 @@ function createFeatureMetadata(loader, components) {
       binaryBody: batchTable.binary,
     });
   } else {
-    // If batch table is not defined, create a feature table without any properties.
-    var emptyFeatureTable = new FeatureTable({
+    // If batch table is not defined, create a property table without any properties.
+    var emptyPropertyTable = new PropertyTable({
       count: batchLength,
     });
-    var featureTables = {};
-    featureTables[MetadataClass.BATCH_TABLE_CLASS_NAME] = emptyFeatureTable;
     featureMetadata = new FeatureMetadata({
       schema: {},
-      featureTables: featureTables,
+      propertyTables: [emptyPropertyTable],
     });
   }
 
@@ -333,8 +331,7 @@ function processNode(node) {
       if (defined(featureIdVertexAttribute)) {
         featureIdVertexAttribute.setIndex = 0;
         var featureIdAttribute = new FeatureIdAttribute();
-        featureIdAttribute.featureTableId =
-          MetadataClass.BATCH_TABLE_CLASS_NAME;
+        featureIdAttribute.propertyTableId = 0;
         featureIdAttribute.setIndex = 0;
         primitive.featureIdAttributes.push(featureIdAttribute);
       }
