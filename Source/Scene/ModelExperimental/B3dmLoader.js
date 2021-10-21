@@ -12,9 +12,12 @@ import FeatureMetadata from "../FeatureMetadata.js";
 import GltfLoader from "../GltfLoader.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import MetadataClass from "../MetadataClass.js";
+import ModelComponents from "../ModelComponents.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
 import ResourceLoader from "../ResourceLoader.js";
 import when from "../../ThirdParty/when.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 var B3dmLoaderState = {
   UNLOADED: 0,
@@ -24,6 +27,8 @@ var B3dmLoaderState = {
   READY: 4,
   FAILED: 5,
 };
+
+var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 
 /**
  * Loads a Batched 3D Model.
@@ -92,7 +97,7 @@ function B3dmLoader(options) {
   this._featureTable = undefined;
 
   // The batch table object contains a json and a binary component access using keys of the same name.
-  this._batc = undefined;
+  this._batchTable = undefined;
   this._components = undefined;
   this._rtcTransform = undefined;
 }
@@ -123,7 +128,7 @@ Object.defineProperties(B3dmLoader.prototype, {
    * When <code>incrementallyLoadTextures</code> is true this may resolve after
    * <code>promise</code> resolves.
    *
-   * @memberof GltfLoader.prototype
+   * @memberof B3dmLoader.prototype
    *
    * @type {Promise}
    * @readonly
@@ -186,7 +191,7 @@ Object.defineProperties(B3dmLoader.prototype, {
  * @private
  */
 B3dmLoader.prototype.load = function () {
-  var b3dm = B3dmParser.parse(this._arrayBuffer, this._offset);
+  var b3dm = B3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
   var batchLength = b3dm.batchLength;
   var featureTableJson = b3dm.featureTableJson;
@@ -295,6 +300,11 @@ function processGltfComponents(loader, components) {
       batchTable: batchTable.json,
       binaryBody: batchTable.binary,
     });
+    // Add the feature ID attribute to the primitive.
+    var nodes = components.scene.nodes;
+    for (var i = 0; i < nodes.length; i++) {
+      processNode(nodes[i]);
+    }
   } else {
     // If batch table is not defined, create a feature table without any properties.
     var emptyFeatureTable = new FeatureTable({
@@ -308,6 +318,37 @@ function processGltfComponents(loader, components) {
     });
   }
   components.featureMetadata = featureMetadata;
+}
+
+function processNode(node) {
+  if (!defined(node.children) && !defined(node.primitives)) {
+    return;
+  }
+
+  var i;
+  if (defined(node.children)) {
+    for (i = 0; i < node.children.length; i++) {
+      processNode(node.children[i]);
+    }
+  }
+
+  if (defined(node.primitives)) {
+    for (i = 0; i < node.primitives.length; i++) {
+      var primitive = node.primitives[i];
+      var featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.FEATURE_ID
+      );
+      if (defined(featureIdVertexAttribute)) {
+        featureIdVertexAttribute.setIndex = 0;
+        var featureIdAttribute = new FeatureIdAttribute();
+        featureIdAttribute.featureTableId =
+          MetadataClass.BATCH_TABLE_CLASS_NAME;
+        featureIdAttribute.setIndex = 0;
+        primitive.featureIdAttributes.push(featureIdAttribute);
+      }
+    }
+  }
 }
 
 B3dmLoader.prototype.unload = function () {
