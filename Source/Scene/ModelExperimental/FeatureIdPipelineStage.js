@@ -187,7 +187,7 @@ function processFeatureIdTextures(
 }
 
 /**
- * Generates a Feature ID attribute from constant/divisor and adds it to the render resources.
+ * Generates a Feature ID attribute from offset/repeat and adds it to the render resources.
  * @private
  */
 function generateFeatureIdAttribute(
@@ -201,12 +201,12 @@ function generateFeatureIdAttribute(
   var featureIdAttribute = featureIdAttributeInfo.attribute;
   var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
 
-  // If a constant and/or divisor are used, a new vertex attribute will need to be created.
+  // If offset or repeat is used, a new vertex attribute will need to be created.
   var value;
   var vertexBuffer;
 
-  if (featureIdAttribute.divisor === 0) {
-    value = featureIdAttribute.constant;
+  if (!defined(featureIdAttribute.repeat)) {
+    value = featureIdAttribute.offset;
   } else {
     var typedArray = generateFeatureIdTypedArray(
       featureIdAttribute,
@@ -242,16 +242,17 @@ function generateFeatureIdAttribute(
 }
 
 /**
- * Generates typed array based on the constant and divisor of the feature ID attribute.
+ * Generates a typed array based on the offset and repeats of the feature ID attribute.
+ *
  * @private
  */
 function generateFeatureIdTypedArray(featureIdAttribute, count) {
-  var constant = featureIdAttribute.constant;
-  var divisor = featureIdAttribute.divisor;
+  var offset = featureIdAttribute.offset;
+  var repeat = featureIdAttribute.repeat;
 
   var typedArray = new Float32Array(count);
   for (var i = 0; i < count; i++) {
-    typedArray[i] = constant + Math.floor(i / divisor);
+    typedArray[i] = offset + Math.floor(i / repeat);
   }
 
   return typedArray;

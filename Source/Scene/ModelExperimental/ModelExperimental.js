@@ -99,21 +99,19 @@ export default function ModelExperimental(options) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  var modelFeatureTables = {};
+  var modelFeatureTables = [];
 
-  var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
-      var modelfeatureTable = new ModelFeatureTable({
-        model: model,
-        featureTable: featureTable,
-      });
+  var propertyTables = featureMetadata.propertyTables;
+  for (var i = 0; i < propertyTables.length; i++) {
+    var propertyTable = propertyTables[i];
+    var modelFeatureTable = new ModelFeatureTable({
+      model: model,
+      propertyTable: propertyTable,
+    });
 
-      if (modelfeatureTable.featuresLength > 0) {
-        modelFeatureTables[featureTableId] = modelfeatureTable;
-        model._resources.push(modelfeatureTable);
-      }
+    if (modelFeatureTable.featuresLength > 0) {
+      modelFeatureTables.push(modelFeatureTable);
+      model._resources.push(modelFeatureTable);
     }
   }
 
@@ -123,9 +121,9 @@ function createModelFeatureTables(model, featureMetadata) {
 function selectFeatureTableId(components, model) {
   var featureTables = model._featureTables;
 
-  // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
+  // For 3D Tiles 1.0 formats, the feature table will always be the first (and only) feature table.
   if (defined(featureTables[MetadataClass.BATCH_TABLE_CLASS_NAME])) {
-    return MetadataClass.BATCH_TABLE_CLASS_NAME;
+    return 0;
   }
 
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
@@ -144,7 +142,7 @@ function selectFeatureTableId(components, model) {
       featureIdAttribute =
         node.instances.featureIdAttributes[featureIdAttributeIndex];
       if (defined(featureIdAttribute)) {
-        return featureIdAttribute.featureTableId;
+        return featureIdAttribute.propertyTableId;
       }
     }
   }
@@ -160,9 +158,9 @@ function selectFeatureTableId(components, model) {
         primitive.featureIdAttributes[featureIdAttributeIndex];
 
       if (defined(featureIdTexture)) {
-        return featureIdTexture.featureTableId;
+        return featureIdTexture.propertyTableId;
       } else if (defined(featureIdAttribute)) {
-        return featureIdAttribute.featureTableId;
+        return featureIdAttribute.propertyTableId;
       }
     }
   }
@@ -184,16 +182,25 @@ function initialize(model) {
 
       var components = loader.components;
       var content = model._content;
-      var featureMetadata = components.featureMetadata;
 
-      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
-        model._featureTables = createModelFeatureTables(model, featureMetadata);
-        // Select the feature table based on the user-defined featureIdAttribute/featureIdTexture index properties.
-        model._featureTableId = selectFeatureTableId(
-          components,
-          model,
-          content
-        );
+      // For 3D Tiles 1.0 formats, the feature metadata is owned by the Cesium3DTileContent classes.
+      // Otherwise, the metadata is owned by ModelExperimental.
+      var hasContent = defined(content);
+      var propertyTableOwner = hasContent ? content : model;
+      var featureMetadata = defined(propertyTableOwner.featureMetadata)
+        ? content.featureMetadata
+        : components.featureMetadata;
+
+      if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
+        var featureTableId = selectFeatureTableId(components, model, content);
+        var featureTables;
+        if (hasContent) {
+          featureTables = createContentFeatureTables(content, featureMetadata);
+        } else {
+          featureTables = createModelFeatureTables(model, featureMetadata);
+        }
+        propertyTableOwner.featureTables = featureTables;
+        propertyTableOwner.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -528,11 +535,8 @@ ModelExperimental.prototype.update = function (frameState) {
 
   var featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (var featureTableId in featureTables) {
-      if (featureTables.hasOwnProperty(featureTableId)) {
-        var featureTable = featureTables[featureTableId];
-        featureTable.update(frameState);
-      }
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
     }
   }
 

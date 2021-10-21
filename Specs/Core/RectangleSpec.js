@@ -773,6 +773,29 @@ describe("Core/Rectangle", function () {
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
+  it("union works with rectangles that span the entire globe", function () {
+    var rectangle1 = new Rectangle(
+      -CesiumMath.PI,
+      -CesiumMath.PI_OVER_TWO,
+      +CesiumMath.PI,
+      0.0
+    );
+    var rectangle2 = new Rectangle(
+      -CesiumMath.PI,
+      0.0,
+      +CesiumMath.PI,
+      +CesiumMath.PI_OVER_TWO
+    );
+    var expected = new Rectangle(
+      -CesiumMath.PI,
+      -CesiumMath.PI_OVER_TWO,
+      +CesiumMath.PI,
+      +CesiumMath.PI_OVER_TWO
+    );
+    var returnedResult = Rectangle.union(rectangle1, rectangle2);
+    expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+  });
+
   it("expand works if rectangle needs to grow right", function () {
     var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
     var cartographic = new Cartographic(0.85, 0.5);

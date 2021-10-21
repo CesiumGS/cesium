@@ -115,7 +115,7 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
     variableName = attribute.name;
     // According to the glTF 2.0 spec, custom attributes must be prepended with
     // an underscore.
-    variableName = variableName.substring(1);
+    variableName = variableName.replace(/^_/, "");
     variableName = variableName.toLowerCase();
   }
 

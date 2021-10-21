@@ -1269,11 +1269,9 @@ describe("Scene/ImplicitSubtree", function () {
       },
     };
 
-    var featureTablesDescription = {
+    var propertyTablesDescription = {
       schema: schema,
-      featureTables: {
-        tiles: tileTableDescription,
-      },
+      propertyTables: [tileTableDescription],
     };
 
     var metadataSchema = new MetadataSchema(schema);
@@ -1306,7 +1304,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1363,7 +1361,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: false,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1420,7 +1418,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1517,7 +1515,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1565,7 +1563,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1611,7 +1609,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1652,11 +1650,9 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
-      var featureTablesDescription = {
+      var propertyTablesDescription = {
         schema: schema,
-        featureTables: {
-          tiles: tileTableDescription,
-        },
+        propertyTables: [tileTableDescription],
       };
 
       var subtreeDescription = {
@@ -1680,7 +1676,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesDescription,
+          propertyTables: propertyTablesDescription,
         },
       };
 
@@ -1749,11 +1745,9 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
-      var featureTablesWithOffsets = {
+      var propertyTablesWithOffsets = {
         schema: arraySchema,
-        featureTables: {
-          tiles: tileTableDescription,
-        },
+        propertyTables: [tileTableDescription],
       };
 
       var subtreeDescription = {
@@ -1777,7 +1771,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
         metadata: {
           isInternal: true,
-          featureTables: featureTablesWithOffsets,
+          propertyTables: propertyTablesWithOffsets,
         },
       };
 

@@ -7,11 +7,11 @@ import ModelFeature from "./ModelFeature.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
- * Extracts the properties from a {@link FeatureTable}.
+ * Extracts the properties from a {@link PropertyTable}.
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelExperimental} options.model The model that owns this feature table.
- * @param {FeatureTable} options.featureTable The feature table from the model used to initialize the model.
+ * @param {PropertyTable} options.propertyTable The feature table from the model used to initialize the model.
  *
  * @alias ModelFeatureTable
  * @constructor
@@ -20,7 +20,7 @@ import ModelFeature from "./ModelFeature.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeatureTable(options) {
-  this._featureTable = options.featureTable;
+  this._propertyTable = options.propertyTable;
   this._model = options.model;
 
   //>>includeStart('debug', pragmas.debug);
@@ -148,19 +148,19 @@ ModelFeatureTable.prototype.getFeature = function (featureId) {
 };
 
 ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
-  return this._featureTable.hasProperty(featureId, propertyName);
+  return this._propertyTable.hasProperty(featureId, propertyName);
 };
 
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
-  return this._featureTable.getProperty(featureId, name);
+  return this._propertyTable.getProperty(featureId, name);
 };
 
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
-  return this._featureTable.getPropertyIds(results);
+  return this._propertyTable.getPropertyIds(results);
 };
 
 ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
-  return this._featureTable.setProperty(featureId, name, value);
+  return this._propertyTable.setProperty(featureId, name, value);
 };
 
 /**

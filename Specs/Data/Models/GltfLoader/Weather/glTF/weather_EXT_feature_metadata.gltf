@@ -3,10 +3,10 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_feature_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_feature_metadata": {
       "schema": {
         "classes": {
           "weather": {
@@ -43,23 +43,8 @@
           }
         }
       },
-      "propertyTables": [
-        {
-          "name": "Town",
-          "class": "town",
-          "count": 3,
-          "properties": {
-            "name": {
-              "bufferView": 5,
-              "stringOffsetBufferView": 6
-            },
-            "population": {
-              "bufferView": 7
-            }
-          }
-        },
-        {
-          "name": "Weather",
+      "featureTables": {
+        "weatherTable": {
           "class": "weather",
           "count": 1000,
           "properties": {
@@ -73,8 +58,21 @@
               "bufferView": 4
             }
           }
+        },
+        "townTable": {
+          "class": "town",
+          "count": 3,
+          "properties": {
+            "name": {
+              "bufferView": 5,
+              "stringOffsetBufferView": 6
+            },
+            "population": {
+              "bufferView": 7
+            }
+          }
         }
-      ]
+      }
     }
   },
   "scene": 0,
@@ -99,22 +97,24 @@
         {
           "attributes": {
             "POSITION": 0,
-            "FEATURE_ID_0": 1
+            "_FEATURE_ID_0": 1
           },
           "mode": 0,
           "extensions": {
-            "EXT_mesh_features": {
-              "propertyTables": [
-                1,
-                0
-              ],
-              "featureIds": [
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
                 {
-                  "offset": 0,
-                  "repeat": 1
+                  "featureTable": "weatherTable",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 1
+                  }
                 },
                 {
-                  "attribute": 0
+                  "featureTable": "townTable",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
                 }
               ]
             }
