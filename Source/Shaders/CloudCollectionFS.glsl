@@ -42,7 +42,7 @@ vec2 voxelToUV(vec3 voxelIndex) {
 // Interpolate a voxel with its neighbor (along the positive X-axis)
 vec4 lerpSamplesX(vec3 voxelIndex, float x) {
     vec2 uv0 = voxelToUV(voxelIndex);
-    vec2 uv1 = uv0 + vec2(inverseNoiseTextureDimensions.x, 0.0);
+    vec2 uv1 = voxelToUV(voxelIndex + vec3(1.0, 0.0, 0.0));
     vec4 sample0 = texture2D(u_noiseTexture, uv0);
     vec4 sample1 = texture2D(u_noiseTexture, uv1);
     return mix(sample0, sample1, x);
