@@ -34,6 +34,7 @@ import VertexArrayFacade from "../Renderer/VertexArrayFacade.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 var attributeLocations;
+var scratchTextureDimensions = new Cartesian3();
 
 var attributeLocationsBatched = {
   positionHighAndScaleX: 0,
@@ -174,14 +175,7 @@ function CloudCollection(options) {
     u_noiseTexture: function () {
       return that._noiseTexture;
     },
-    // Wraps useful texture metrics into a single vec3 for less overhead.
-    u_noiseTextureDimensions: function () {
-      return new Cartesian3(
-        that._textureSliceWidth,
-        that._noiseTextureRows,
-        1.0 / that._noiseTextureRows
-      );
-    },
+    u_noiseTextureDimensions: getNoiseTextureDimensions(that),
     u_noiseDetail: function () {
       return that.noiseDetail;
     },
@@ -230,6 +224,16 @@ function CloudCollection(options) {
    */
   this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
   this._compiledDebugEllipsoids = false;
+}
+
+// Wraps useful texture metrics into a single vec3 for less overhead.
+function getNoiseTextureDimensions(collection) {
+  return function () {
+    scratchTextureDimensions.x = collection._textureSliceWidth;
+    scratchTextureDimensions.y = collection._noiseTextureRows;
+    scratchTextureDimensions.z = 1.0 / collection._noiseTextureRows;
+    return scratchTextureDimensions;
+  };
 }
 
 Object.defineProperties(CloudCollection.prototype, {
@@ -714,9 +718,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     shaderProgram: that._spNoise,
     outputTexture: that._noiseTexture,
     uniformMap: {
-      u_noiseTextureDimensions: function () {
-        return that._uniforms.u_noiseTextureDimensions();
-      },
+      u_noiseTextureDimensions: getNoiseTextureDimensions(that),
       u_noiseDetail: function () {
         return noiseDetail;
       },
