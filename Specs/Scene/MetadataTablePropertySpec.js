@@ -104,10 +104,10 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
-    expect(property._stringOffsets.componentType).toBe(
+    expect(property._stringOffsets._componentType).toBe(
       MetadataComponentType.UINT16
     );
-    expect(property._arrayOffsets.componentType).toBe(
+    expect(property._arrayOffsets._componentType).toBe(
       MetadataComponentType.UINT8
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
@@ -155,10 +155,10 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
-    expect(property._stringOffsets.componentType).toBe(
+    expect(property._stringOffsets._componentType).toBe(
       MetadataComponentType.UINT16
     );
-    expect(property._arrayOffsets.componentType).toBe(
+    expect(property._arrayOffsets._componentType).toBe(
       MetadataComponentType.UINT16
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);

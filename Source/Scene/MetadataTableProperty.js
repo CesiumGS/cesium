@@ -84,7 +84,7 @@ function MetadataTableProperty(options) {
 
   var stringOffsets;
   if (hasStrings) {
-    // EXT_mesh_features uses arrayOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    // EXT_mesh_features uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
     var stringOffsetType = defaultValue(
       property.stringOffsetType,
       property.offsetType
@@ -687,7 +687,7 @@ function BufferView(bufferView, componentType, length) {
   this.set = setFunction;
 
   // for unit testing
-  this.componentType = componentType;
+  this._componentType = componentType;
 }
 
 export default MetadataTableProperty;
