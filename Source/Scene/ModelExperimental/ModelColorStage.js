@@ -22,9 +22,9 @@ ModelColorStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
  *  <li>updates the pass type in the render resources based on translucency of the model's color</li>
  *</ul>
  *
- * @param {ModelRenderResources} renderResources
- * @param {ModelExperimental} model
- * @param {FrameState} frameState
+ * @param {ModelRenderResources} renderResources The render resources for this model.
+ * @param {ModelExperimental} model The model.
+ * @param {FrameState} frameState The frameState.
  */
 ModelColorStage.process = function (renderResources, model, frameState) {
   var shaderBuilder = renderResources.shaderBuilder;
