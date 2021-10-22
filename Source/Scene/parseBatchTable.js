@@ -222,8 +222,8 @@ function transcodeBinaryProperties(
 function transcodePropertyType(property) {
   var componentType = transcodeComponentType(property.componentType);
 
-  var propertyType = property.type;
-  if (propertyType === "SCALAR") {
+  var type = property.type;
+  if (type === "SCALAR") {
     return {
       type: "SINGLE",
       componentType: componentType,
@@ -231,9 +231,9 @@ function transcodePropertyType(property) {
   }
 
   return {
-    // propertyType is one of VEC2, VEC3 or VEC4, the same names as
+    // type is one of VEC2, VEC3 or VEC4, the same names as
     // EXT_mesh_features uses.
-    type: propertyType,
+    type: type,
     componentType: componentType,
   };
 }

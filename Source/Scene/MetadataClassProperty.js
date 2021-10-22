@@ -138,7 +138,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The enum type of the property. Only defined when type or componentType is ENUM.
+   * The enum type of the property. Only defined when componentType is ENUM.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
@@ -152,7 +152,9 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The component type of the property. These are
+   * The component type of the property. This includes integer
+   * (e.g. INT8 or UINT16), floating point (FLOAT32 and FLOAT64), STRING,
+   * BOOLEAN, and ENUM component types.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataComponentType}
@@ -336,11 +338,12 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
 
 /**
  * Unpack VECN values into {@link Cartesian2}, {@link Cartesian3}, or
- * {@link Cartesian4} depending on N. All other values (including arrays of
+ * {@link Cartesian4} and MATN values into {@link Matrix2}, {@link Matrix3}, or
+ * {@link Matrix4} depending on N. All other values (including arrays of
  * other sizes) are passed through unaltered.
  *
  * @param {*} value the original, normalized values.
- * @returns {*} The appropriate vector type if the value is a vector type. Otherwise, the value is returned unaltered.
+ * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. Otherwise, the value is returned unaltered.
  * @private
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
@@ -364,11 +367,13 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
 
 /**
  * Pack a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} into an
- * array if this property is an <code>VECN</code>
+ * array if this property is an <code>VECN</code>.
+ * Pack a {@link Matrix2}, {@link Matrix3}, or {@link Matrix4} into an
+ * array if this property is an <code>MATN</code>.
  * All other values (including arrays of other sizes) are passed through unaltered.
  *
  * @param {*} value The value of this property
- * @returns {*} An array of the appropriate length if the property is a vector type. Otherwise, the value is returned unaltered.
+ * @returns {*} An array of the appropriate length if the property is a vector or matrix type. Otherwise, the value is returned unaltered.
  * @private
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
