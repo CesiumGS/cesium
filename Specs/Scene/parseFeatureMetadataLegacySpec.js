@@ -1,6 +1,6 @@
 import {
   MetadataSchema,
-  parseFeatureMetadata,
+  parseFeatureMetadataLegacy,
   PixelDatatype,
   PixelFormat,
   Texture,
@@ -9,9 +9,9 @@ import createContext from "../createContext.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe(
-  "Scene/parseFeatureMetadata",
+  "Scene/parseFeatureMetadataLegacy",
   function () {
-    var propertyTablesSchema = {
+    var featureTablesSchema = {
       classes: {
         building: {
           properties: {
@@ -60,16 +60,16 @@ describe(
 
     it("throws without extension", function () {
       expect(function () {
-        return parseFeatureMetadata({
+        return parseFeatureMetadataLegacy({
           extension: undefined,
-          schema: new MetadataSchema(propertyTablesSchema),
+          schema: new MetadataSchema(featureTablesSchema),
         });
       }).toThrowDeveloperError();
     });
 
     it("throws without schema", function () {
       expect(function () {
-        return parseFeatureMetadata({
+        return parseFeatureMetadataLegacy({
           extension: {},
           schema: undefined,
         });
@@ -77,9 +77,9 @@ describe(
     });
 
     it("parses extension with default values", function () {
-      var metadata = parseFeatureMetadata({
+      var metadata = parseFeatureMetadataLegacy({
         extension: {},
-        schema: new MetadataSchema(propertyTablesSchema),
+        schema: new MetadataSchema(featureTablesSchema),
       });
 
       expect(metadata.schema).toBeDefined();
@@ -88,41 +88,39 @@ describe(
       expect(metadata.extensions).toBeUndefined();
     });
 
-    it("parses extension with property tables", function () {
+    it("parses extension with feature tables", function () {
       if (!MetadataTester.isSupported()) {
         return;
       }
 
-      var propertyTableResults = MetadataTester.createPropertyTables({
-        schema: propertyTablesSchema,
-        propertyTables: [
-          {
-            name: "Buildings",
+      var featureTableResults = MetadataTester.createFeatureTables({
+        schema: featureTablesSchema,
+        featureTables: {
+          buildings: {
             class: "building",
             properties: {
               name: ["Building A", "Building B", "Building C"],
               height: [10.0, 20.0, 30.0],
             },
           },
-          {
-            name: "Trees",
+          trees: {
             class: "tree",
             properties: {
               species: ["Oak", "Pine"],
             },
           },
-        ],
+        },
       });
 
       var extension = {
-        schema: propertyTablesSchema,
-        propertyTables: propertyTableResults.propertyTables,
+        schema: featureTablesSchema,
+        featureTables: featureTableResults.featureTables,
       };
 
-      var metadata = parseFeatureMetadata({
+      var metadata = parseFeatureMetadataLegacy({
         extension: extension,
-        schema: new MetadataSchema(propertyTablesSchema),
-        bufferViews: propertyTableResults.bufferViews,
+        schema: new MetadataSchema(featureTablesSchema),
+        bufferViews: featureTableResults.bufferViews,
       });
 
       var buildingClass = metadata.schema.classes.building;
@@ -134,9 +132,9 @@ describe(
       var buildingsTable = metadata.getPropertyTable(0);
       var treesTable = metadata.getPropertyTable(1);
 
+      expect(buildingsTable.id).toBe("buildings");
+      expect(buildingsTable.name).not.toBeDefined();
       expect(buildingsTable.count).toBe(3);
-      expect(buildingsTable.id).toBe(0);
-      expect(buildingsTable.name).toBe("Buildings");
       expect(buildingsTable.class).toBe(buildingClass);
       expect(buildingsTable.getPropertyIds().length).toBe(2);
       expect(buildingsTable.getProperty(0, "name")).toBe("Building A");
@@ -146,16 +144,16 @@ describe(
       expect(buildingsTable.getProperty(1, "height")).toBe(20.0);
       expect(buildingsTable.getProperty(2, "height")).toBe(30.0);
 
+      expect(treesTable.id).toBe("trees");
+      expect(treesTable.name).not.toBeDefined();
       expect(treesTable.count).toBe(2);
-      expect(treesTable.id).toBe(1);
-      expect(treesTable.name).toBe("Trees");
       expect(treesTable.class).toBe(treeClass);
       expect(treesTable.getPropertyIds().length).toBe(1);
       expect(treesTable.getProperty(0, "species")).toBe("Oak");
       expect(treesTable.getProperty(1, "species")).toBe("Pine");
     });
 
-    it("parses extension with property textures", function () {
+    it("parses extension with feature textures", function () {
       var context = createContext();
       var texture0 = new Texture({
         context: context,
@@ -185,30 +183,42 @@ describe(
 
       var extension = {
         schema: featureTexturesSchema,
-        propertyTextures: [
-          {
-            name: "Map",
+        featureTextures: {
+          mapTexture: {
             class: "map",
-            index: 0,
-            texCoord: 0,
             properties: {
-              color: [0, 1, 2],
-              intensity: [3],
+              color: {
+                channels: "rgb",
+                texture: {
+                  index: 0,
+                  texCoord: 0,
+                },
+              },
+              intensity: {
+                channels: "a",
+                texture: {
+                  index: 0,
+                  texCoord: 0,
+                },
+              },
             },
           },
-          {
-            name: "Ortho",
+          orthoTexture: {
             class: "ortho",
-            index: 1,
-            texCoord: 1,
             properties: {
-              vegetation: [0],
+              vegetation: {
+                channels: "r",
+                texture: {
+                  index: 1,
+                  texCoord: 1,
+                },
+              },
             },
           },
-        ],
+        },
       };
 
-      var metadata = parseFeatureMetadata({
+      var metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
         textures: textures,
@@ -224,11 +234,11 @@ describe(
       var orthoTexture = metadata.getPropertyTexture(1);
 
       expect(mapTexture.class).toBe(mapClass);
-      expect(mapTexture.id).toBe(0);
-      expect(mapTexture.name).toBe("Map");
+      expect(mapTexture.id).toBe("mapTexture");
+      expect(mapTexture.name).not.toBeDefined();
       expect(orthoTexture.class).toBe(orthoClass);
-      expect(orthoTexture.id).toBe(1);
-      expect(orthoTexture.name).toBe("Ortho");
+      expect(orthoTexture.id).toBe("orthoTexture");
+      expect(orthoTexture.name).not.toBeDefined();
 
       texture0.destroy();
       texture1.destroy();
@@ -252,7 +262,7 @@ describe(
       var extension = {
         statistics: statistics,
       };
-      var metadata = parseFeatureMetadata({
+      var metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -266,7 +276,7 @@ describe(
       var extension = {
         extras: extras,
       };
-      var metadata = parseFeatureMetadata({
+      var metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -280,7 +290,7 @@ describe(
       var extension = {
         extensions: extensions,
       };
-      var metadata = parseFeatureMetadata({
+      var metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });

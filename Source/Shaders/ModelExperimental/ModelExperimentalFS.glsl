@@ -47,7 +47,7 @@ void main()
     #endif
 
     #ifdef HAS_MODEL_COLOR
-    modelColorStage(material.diffuse, material.alpha);
+    modelColorStage(material);
     #endif
 
     lightingStage(material);

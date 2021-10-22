@@ -1,6 +1,5 @@
 import Axis from "../Axis.js";
 import defined from "../../Core/defined.js";
-import deprecationWarning from "../../Core/deprecationWarning.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelExperimental from "./ModelExperimental.js";
 import Pass from "../../Renderer/Pass.js";
@@ -172,7 +171,6 @@ ModelExperimental3DTileContent.prototype.update = function (
   var tile = this._tile;
 
   model.modelMatrix = tile.computedTransform;
-  model.backFaceCulling = tileset.backFaceCulling;
 
   model.update(frameState);
 };
@@ -237,6 +235,3 @@ ModelExperimental3DTileContent.fromB3dm = function (
   content._model = ModelExperimental.fromB3dm(modelOptions);
   return content;
 };
-
-// This can be overridden for testing purposes
-ModelExperimental3DTileContent._deprecationWarning = deprecationWarning;

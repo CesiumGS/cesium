@@ -100,40 +100,32 @@ function processFeatureIdAttributes(renderResources, frameState, primitive) {
   var model = renderResources.model;
   var instances = renderResources.runtimeNode.node.instances;
 
-  var featureIdAttributePrefix;
+  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+
+  var featureIdAttributeInfo = getFeatureIdAttributeInfo(
+    featureIdAttributeIndex,
+    primitive,
+    instances
+  );
+
+  var featureIdAttribute = featureIdAttributeInfo.attribute;
+  var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
   var featureIdAttributeSetIndex;
 
-  // For 3D Tiles 1.0, the FEATURE_ID vertex attribute is present but the Feature ID attribute is not.
-  if (primitive.featureIdAttributes.length === 0 && !defined(instances)) {
-    featureIdAttributePrefix = "a_featureId";
-    featureIdAttributeSetIndex = "";
+  // Check if the Feature ID attribute references an existing vertex attribute.
+  if (defined(featureIdAttribute.setIndex)) {
+    featureIdAttributeSetIndex = featureIdAttribute.setIndex;
   } else {
-    var featureIdAttributeIndex = model.featureIdAttributeIndex;
-
-    var featureIdAttributeInfo = getFeatureIdAttributeInfo(
-      featureIdAttributeIndex,
-      primitive,
-      instances
+    // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
+    // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
+    // is incremented every time a Feature ID vertex attribute is added.
+    featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
+    generateFeatureIdAttribute(
+      featureIdAttributeInfo,
+      featureIdAttributeSetIndex,
+      frameState,
+      renderResources
     );
-
-    var featureIdAttribute = featureIdAttributeInfo.attribute;
-    featureIdAttributePrefix = featureIdAttributeInfo.prefix;
-
-    // Check if the Feature ID attribute references an existing vertex attribute.
-    if (defined(featureIdAttribute.setIndex)) {
-      featureIdAttributeSetIndex = featureIdAttribute.setIndex;
-    } else {
-      // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
-      // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
-      // is incremented every time a Feature ID vertex attribute is added.
-      featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
-      generateFeatureIdAttribute(
-        featureIdAttributeInfo,
-        featureIdAttributeSetIndex,
-        frameState,
-        renderResources
-      );
-    }
   }
 
   shaderBuilder.addDefine(
@@ -195,7 +187,7 @@ function processFeatureIdTextures(
 }
 
 /**
- * Generates a Feature ID attribute from constant/divisor and adds it to the render resources.
+ * Generates a Feature ID attribute from offset/repeat and adds it to the render resources.
  * @private
  */
 function generateFeatureIdAttribute(
@@ -209,12 +201,12 @@ function generateFeatureIdAttribute(
   var featureIdAttribute = featureIdAttributeInfo.attribute;
   var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
 
-  // If a constant and/or divisor are used, a new vertex attribute will need to be created.
+  // If offset or repeat is used, a new vertex attribute will need to be created.
   var value;
   var vertexBuffer;
 
-  if (featureIdAttribute.divisor === 0) {
-    value = featureIdAttribute.constant;
+  if (!defined(featureIdAttribute.repeat)) {
+    value = featureIdAttribute.offset;
   } else {
     var typedArray = generateFeatureIdTypedArray(
       featureIdAttribute,
@@ -250,16 +242,17 @@ function generateFeatureIdAttribute(
 }
 
 /**
- * Generates typed array based on the constant and divisor of the feature ID attribute.
+ * Generates a typed array based on the offset and repeats of the feature ID attribute.
+ *
  * @private
  */
 function generateFeatureIdTypedArray(featureIdAttribute, count) {
-  var constant = featureIdAttribute.constant;
-  var divisor = featureIdAttribute.divisor;
+  var offset = featureIdAttribute.offset;
+  var repeat = featureIdAttribute.repeat;
 
   var typedArray = new Float32Array(count);
   for (var i = 0; i < count; i++) {
-    typedArray[i] = constant + Math.floor(i / divisor);
+    typedArray[i] = offset + Math.floor(i / repeat);
   }
 
   return typedArray;

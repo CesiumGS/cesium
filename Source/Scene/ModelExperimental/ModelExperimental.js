@@ -12,7 +12,6 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
-import MetadataClass from "../MetadataClass.js";
 import B3dmLoader from "./B3dmLoader.js";
 import Color from "../../Core/Color.js";
 
@@ -112,21 +111,19 @@ export default function ModelExperimental(options) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  var modelFeatureTables = {};
+  var modelFeatureTables = [];
 
-  var featureTables = featureMetadata.featureTables;
-  for (var featureTableId in featureTables) {
-    if (featureTables.hasOwnProperty(featureTableId)) {
-      var featureTable = featureTables[featureTableId];
-      var modelfeatureTable = new ModelFeatureTable({
-        model: model,
-        featureTable: featureTable,
-      });
+  var propertyTables = featureMetadata.propertyTables;
+  for (var i = 0; i < propertyTables.length; i++) {
+    var propertyTable = propertyTables[i];
+    var modelFeatureTable = new ModelFeatureTable({
+      model: model,
+      propertyTable: propertyTable,
+    });
 
-      if (modelfeatureTable.featuresLength > 0) {
-        modelFeatureTables[featureTableId] = modelfeatureTable;
-        model._resources.push(modelfeatureTable);
-      }
+    if (modelFeatureTable.featuresLength > 0) {
+      modelFeatureTables.push(modelFeatureTable);
+      model._resources.push(modelFeatureTable);
     }
   }
 
@@ -134,13 +131,6 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model) {
-  var featureTables = model._featureTables;
-
-  // For 3D Tiles 1.0 formats, the feature table always has the "_batchTable" feature table.
-  if (defined(featureTables[MetadataClass.BATCH_TABLE_CLASS_NAME])) {
-    return MetadataClass.BATCH_TABLE_CLASS_NAME;
-  }
-
   var featureIdAttributeIndex = model._featureIdAttributeIndex;
   var featureIdTextureIndex = model._featureIdTextureIndex;
 
@@ -157,7 +147,7 @@ function selectFeatureTableId(components, model) {
       featureIdAttribute =
         node.instances.featureIdAttributes[featureIdAttributeIndex];
       if (defined(featureIdAttribute)) {
-        return featureIdAttribute.featureTableId;
+        return featureIdAttribute.propertyTableId;
       }
     }
   }
@@ -173,9 +163,9 @@ function selectFeatureTableId(components, model) {
         primitive.featureIdAttributes[featureIdAttributeIndex];
 
       if (defined(featureIdTexture)) {
-        return featureIdTexture.featureTableId;
+        return featureIdTexture.propertyTableId;
       } else if (defined(featureIdAttribute)) {
-        return featureIdAttribute.featureTableId;
+        return featureIdAttribute.propertyTableId;
       }
     }
   }
@@ -184,35 +174,30 @@ function selectFeatureTableId(components, model) {
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
-  var modelMatrix = model._modelMatrix;
 
   loader.load();
 
   loader.promise
     .then(function (loader) {
-      var rtcTransform = loader.rtcTransform;
-      if (defined(rtcTransform)) {
-        Matrix4.multiply(modelMatrix, rtcTransform, modelMatrix);
-      }
+      Matrix4.multiply(
+        model._modelMatrix,
+        loader.transform,
+        model._modelMatrix
+      );
 
       var components = loader.components;
-      var content = model._content;
       var featureMetadata = components.featureMetadata;
 
-      if (defined(featureMetadata) && featureMetadata.featureTableCount > 0) {
-        model._featureTables = createModelFeatureTables(model, featureMetadata);
-        // Select the feature table based on the user-defined featureIdAttribute/featureIdTexture index properties.
-        model._featureTableId = selectFeatureTableId(
-          components,
-          model,
-          content
-        );
+      if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
+        var featureTableId = selectFeatureTableId(components, model);
+        var featureTables = createModelFeatureTables(model, featureMetadata);
+        model.featureTables = featureTables;
+        model.featureTableId = featureTableId;
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
         modelComponents: components,
-        modelMatrix: modelMatrix,
       });
       model._resourcesLoaded = true;
     })
@@ -332,7 +317,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {String}
+   * @type {Number}
    * @readonly
    *
    * @private
@@ -351,7 +336,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Object.<String,ModelFeatureTable>}
+   * @type {Array}
    * @readonly
    *
    * @private
@@ -393,6 +378,9 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._color;
     },
     set: function (value) {
+      if (!Color.equals(this._color, value)) {
+        this.resetDrawCommands();
+      }
       this._color = value;
     },
   },
@@ -608,11 +596,8 @@ ModelExperimental.prototype.update = function (frameState) {
 
   var featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (var featureTableId in featureTables) {
-      if (featureTables.hasOwnProperty(featureTableId)) {
-        var featureTable = featureTables[featureTableId];
-        featureTable.update(frameState);
-      }
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
     }
   }
 

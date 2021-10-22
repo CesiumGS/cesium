@@ -65,7 +65,7 @@ export default function PrimitiveRenderResources(
   this.attributeIndex = nodeRenderResources.attributeIndex;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the constant/divisor in the feature ID attribute.
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
    * Inherited from the node render resources.
    *
    * @type {Number}
@@ -85,17 +85,6 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.hasFeatureIds = false;
-
-  /**
-   * The ID of the feature table to use for picking and styling. Inherited from the node
-   * render resources.
-   *
-   * @type {String}
-   * @readonly
-   *
-   * @private
-   */
-  this.featureTableId = nodeRenderResources.featureTableId;
 
   /**
    * A dictionary mapping uniform name to functions that return the uniform

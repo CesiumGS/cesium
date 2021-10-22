@@ -42,17 +42,6 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
 
   /**
-   * The ID of the feature table to use for picking and styling. Inherited from the model
-   * render resources.
-   *
-   * @type {String}
-   * @readonly
-   *
-   * @private
-   */
-  this.featureTableId = modelRenderResources.featureTableId;
-
-  /**
    * A dictionary mapping uniform name to functions that return the uniform
    * values. Inherited from the model render resources.
    *
@@ -117,7 +106,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.attributeIndex = 1;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the constant/divisor in the feature ID attribute.
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
    *
    * @type {Number}
    * @readonly
