@@ -1,4 +1,5 @@
 import {
+  AlphaMode,
   Color,
   ColorBlendMode,
   ModelAlphaOptions,
@@ -74,6 +75,7 @@ describe("Scene/ModelExperimental/ModelColorStage", function () {
     ]);
 
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
+    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
 
     var uniformMap = renderResources.uniformMap;
     expect(uniformMap.model_color()).toEqual(mockModel.color);
