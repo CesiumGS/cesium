@@ -12,7 +12,9 @@ import MetadataType from "./MetadataType.js";
 /**
  * A binary property in a {@MetadataTable}
  * <p>
- * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension}
+ * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension}
+ * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -53,16 +55,20 @@ function MetadataTableProperty(options) {
   var hasStrings = valueType === MetadataComponentType.STRING;
   var hasBooleans = valueType === MetadataComponentType.BOOLEAN;
 
-  var offsetType = defaultValue(
-    MetadataComponentType[property.offsetType],
-    MetadataComponentType.UINT32
-  );
-
   var arrayOffsets;
   if (isVariableSizeArray) {
+    // EXT_mesh_features uses arrayOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    var arrayOffsetType = defaultValue(
+      property.arrayOffsetType,
+      property.offsetType
+    );
+    arrayOffsetType = defaultValue(
+      MetadataComponentType[arrayOffsetType],
+      MetadataComponentType.UINT32
+    );
     arrayOffsets = new BufferView(
       bufferViews[property.arrayOffsetBufferView],
-      offsetType,
+      arrayOffsetType,
       count + 1
     );
   }
@@ -78,9 +84,18 @@ function MetadataTableProperty(options) {
 
   var stringOffsets;
   if (hasStrings) {
+    // EXT_mesh_features uses arrayOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    var stringOffsetType = defaultValue(
+      property.stringOffsetType,
+      property.offsetType
+    );
+    stringOffsetType = defaultValue(
+      MetadataComponentType[stringOffsetType],
+      MetadataComponentType.UINT32
+    );
     stringOffsets = new BufferView(
       bufferViews[property.stringOffsetBufferView],
-      offsetType,
+      stringOffsetType,
       componentCount + 1
     );
   }
@@ -670,6 +685,9 @@ function BufferView(bufferView, componentType, length) {
   this.dataView = new DataView(typedArray.buffer, typedArray.byteOffset);
   this.get = getFunction;
   this.set = setFunction;
+
+  // for unit testing
+  this.componentType = componentType;
 }
 
 export default MetadataTableProperty;

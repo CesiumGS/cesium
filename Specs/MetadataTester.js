@@ -32,7 +32,11 @@ MetadataTester.createProperty = function (options) {
   var table = MetadataTester.createMetadataTable({
     properties: properties,
     propertyValues: propertyValues,
+    // offsetType is for legacy EXT_feature_metadata, arrayOffsetType and
+    // stringOffsetType are for EXT_mesh_features
     offsetType: options.offsetType,
+    arrayOffsetType: options.arrayOffsetType,
+    stringOffsetType: options.stringOffsetType,
     enums: options.enums,
     disableBigIntSupport: options.disableBigIntSupport,
     disableBigInt64ArraySupport: options.disableBigInt64ArraySupport,
@@ -47,6 +51,8 @@ function createProperties(options) {
   var classId = options.classId;
   var propertyValues = options.propertyValues;
   var offsetType = options.offsetType;
+  var stringOffsetType = options.stringOffsetType;
+  var arrayOffsetType = options.arrayOffsetType;
   var bufferViews = defined(options.bufferViews) ? options.bufferViews : {};
 
   var enums = defined(schema.enums) ? schema.enums : {};
@@ -86,16 +92,26 @@ function createProperties(options) {
 
       properties[propertyId] = property;
 
+      // for legacy EXT_feature_metadata
       if (defined(offsetType)) {
         property.offsetType = offsetType;
+      }
+
+      if (defined(stringOffsetType)) {
+        property.stringOffsetType = offsetType;
+      }
+
+      if (defined(arrayOffsetType)) {
+        property.arrayOffsetType = arrayOffsetType;
       }
 
       if (
         classProperty.type === MetadataType.ARRAY &&
         !defined(classProperty.componentCount)
       ) {
+        var arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
         var arrayOffsetBuffer = addPadding(
-          createArrayOffsetBuffer(values, offsetType)
+          createArrayOffsetBuffer(values, arrayOffsetBufferType)
         );
         var arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
@@ -103,8 +119,9 @@ function createProperties(options) {
       }
 
       if (classProperty.componentType === MetadataComponentType.STRING) {
+        var stringOffsetBufferType = defaultValue(stringOffsetType, offsetType);
         var stringOffsetBuffer = addPadding(
-          createStringOffsetBuffer(values, offsetType)
+          createStringOffsetBuffer(values, stringOffsetBufferType)
         );
         var stringOffsetBufferView = bufferViewIndex++;
         bufferViews[stringOffsetBufferView] = stringOffsetBuffer;

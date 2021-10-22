@@ -2,6 +2,7 @@ import {
   defaultValue,
   Cartesian3,
   MetadataClassProperty,
+  MetadataComponentType,
   MetadataTableProperty,
 } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
@@ -59,6 +60,109 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
+  });
+
+  it("constructs properties with stringOffset and arrayOffset", function () {
+    var extras = {
+      other: 0,
+    };
+
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
+    var a = 97;
+    var b = 98;
+    var c = 99;
+    var d = 100;
+    var e = 101;
+
+    var property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        bufferView: 0,
+        extras: extras,
+        extensions: extensions,
+        stringOffsetType: "UINT16",
+        stringOffsetBufferView: 1,
+        arrayOffsetType: "UINT8",
+        arrayOffsetBufferView: 2,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "ARRAY",
+          componentType: "STRING",
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([a, b, b, c, c, c, d, d, d, d, e, e, e, e, e]),
+        1: new Uint8Array([0, 0, 1, 0, 3, 0, 6, 0, 10, 0, 15, 0]),
+        2: new Uint8Array([0, 3, 5]),
+      },
+    });
+
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+    expect(property._stringOffsets.componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property._arrayOffsets.componentType).toBe(
+      MetadataComponentType.UINT8
+    );
+    expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
+    expect(property.get(1)).toEqual(["dddd", "eeeee"]);
+  });
+
+  it("constructs property with EXT_feature_metadata offsetType", function () {
+    var extras = {
+      other: 0,
+    };
+
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
+    var a = 97;
+    var b = 98;
+    var c = 99;
+    var d = 100;
+    var e = 101;
+
+    var property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        bufferView: 0,
+        extras: extras,
+        extensions: extensions,
+        offsetType: "UINT16",
+        stringOffsetBufferView: 1,
+        arrayOffsetBufferView: 2,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "ARRAY",
+          componentType: "STRING",
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([a, b, b, c, c, c, d, d, d, d, e, e, e, e, e]),
+        1: new Uint8Array([0, 0, 1, 0, 3, 0, 6, 0, 10, 0, 15, 0]),
+        2: new Uint8Array([0, 0, 3, 0, 5, 0]),
+      },
+    });
+
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+    expect(property._stringOffsets.componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property._arrayOffsets.componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
+    expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
 
   it("constructor throws without count", function () {

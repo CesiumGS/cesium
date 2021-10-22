@@ -41,7 +41,7 @@
           "count": 4,
           "properties": {
             "name": {
-              "offsetType": "UINT16",
+              "stringOffsetType": "UINT16",
               "bufferView": 4,
               "stringOffsetBufferView": 5
             },
@@ -55,7 +55,7 @@
           "count": 2,
           "properties": {
             "name": {
-              "offsetType": "UINT16",
+              "stringOffsetType": "UINT16",
               "bufferView": 7,
               "stringOffsetBufferView": 8
             },
