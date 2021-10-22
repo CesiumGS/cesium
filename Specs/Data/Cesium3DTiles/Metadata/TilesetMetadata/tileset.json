@@ -17,23 +17,22 @@
             "properties": {
               "author": {
                 "description": "The person or entity that made the tileset",
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "AUTHOR"
               },
               "date": {
                 "description": "Date of tileset creation in YYYY-MM-DD format",
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "DATE_ISO_8601"
               },
               "centerCartographic": {
-                "description": "Center of the tileset as [longitude, latitude, height] where longitude and latitude are in radians, and height is in meters].",
-                "type": "ARRAY",
-                "componentType": "FLOAT64",
-                "componentCount": 3
+                "description": "Center of the tileset as (longitude, latitude, height) where longitude and latitude are in radians, and height is in meters.",
+                "type": "VEC3",
+                "componentType": "FLOAT64"
               },
               "tileCount": {
                 "description": "Total number of tiles in the tileset",
-                "type": "UINT8"
+                "componentType": "UINT8"
               }
             }
           }

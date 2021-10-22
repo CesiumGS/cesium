@@ -1240,12 +1240,11 @@ describe("Scene/ImplicitSubtree", function () {
         tile: {
           properties: {
             highlightColor: {
-              type: "ARRAY",
+              type: "VEC3",
               componentType: "UINT8",
-              componentCount: 3,
             },
             buildingCount: {
-              type: "UINT16",
+              componentType: "UINT16",
             },
           },
         },

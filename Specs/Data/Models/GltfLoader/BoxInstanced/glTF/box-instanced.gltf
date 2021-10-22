@@ -16,20 +16,20 @@
           "box": {
             "properties": {
               "name": {
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "volume": {
-                "type": "FLOAT32"
+                "componentType": "FLOAT32"
               }
             }
           },
           "section": {
             "properties": {
               "name": {
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "id": {
-                "type": "UINT16"
+                "componentType": "UINT16"
               }
             }
           }

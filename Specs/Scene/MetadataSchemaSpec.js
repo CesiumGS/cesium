@@ -60,14 +60,14 @@ describe("Scene/MetadataSchema", function () {
         city: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
           },
         },
         neighborhood: {
           properties: {
             color: {
-              type: "ENUM",
+              componentType: "ENUM",
               enumType: "color",
             },
             coordinates: {
@@ -85,7 +85,7 @@ describe("Scene/MetadataSchema", function () {
               enumType: "species",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },

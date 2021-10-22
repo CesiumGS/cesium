@@ -4,6 +4,7 @@ import {
   FeatureDetection,
   PropertyTable,
   MetadataClass,
+  MetadataComponentType,
   MetadataEnum,
   MetadataTable,
   MetadataType,
@@ -101,10 +102,7 @@ function createProperties(options) {
         property.arrayOffsetBufferView = arrayOffsetBufferView;
       }
 
-      if (
-        classProperty.type === MetadataType.STRING ||
-        classProperty.componentType === MetadataType.STRING
-      ) {
+      if (classProperty.componentType === MetadataComponentType.STRING) {
         var stringOffsetBuffer = addPadding(
           createStringOffsetBuffer(values, offsetType)
         );
@@ -360,44 +358,44 @@ MetadataTester.createGltf = function (options) {
   };
 };
 
-function createBuffer(values, type) {
+function createBuffer(values, componentType) {
   var typedArray;
-  switch (type) {
-    case MetadataType.INT8:
+  switch (componentType) {
+    case MetadataComponentType.INT8:
       typedArray = new Int8Array(values);
       break;
-    case MetadataType.UINT8:
+    case MetadataComponentType.UINT8:
       typedArray = new Uint8Array(values);
       break;
-    case MetadataType.INT16:
+    case MetadataComponentType.INT16:
       typedArray = new Int16Array(values);
       break;
-    case MetadataType.UINT16:
+    case MetadataComponentType.UINT16:
       typedArray = new Uint16Array(values);
       break;
-    case MetadataType.INT32:
+    case MetadataComponentType.INT32:
       typedArray = new Int32Array(values);
       break;
-    case MetadataType.UINT32:
+    case MetadataComponentType.UINT32:
       typedArray = new Uint32Array(values);
       break;
-    case MetadataType.INT64:
+    case MetadataComponentType.INT64:
       typedArray = new BigInt64Array(values); // eslint-disable-line
       break;
-    case MetadataType.UINT64:
+    case MetadataComponentType.UINT64:
       typedArray = new BigUint64Array(values); // eslint-disable-line
       break;
-    case MetadataType.FLOAT32:
+    case MetadataComponentType.FLOAT32:
       typedArray = new Float32Array(values);
       break;
-    case MetadataType.FLOAT64:
+    case MetadataComponentType.FLOAT64:
       typedArray = new Float64Array(values);
       break;
-    case MetadataType.STRING:
+    case MetadataComponentType.STRING:
       var encoder = new TextEncoder();
       typedArray = encoder.encode(values.join(""));
       break;
-    case MetadataType.BOOLEAN:
+    case MetadataComponentType.BOOLEAN:
       var length = Math.ceil(values.length / 8);
       typedArray = new Uint8Array(length); // Initialized as 0's
       for (var i = 0; i < values.length; ++i) {
@@ -443,7 +441,7 @@ function createStringOffsetBuffer(values, offsetType) {
     offset += encoder.encode(strings[i]).length;
   }
   offsets[length] = offset;
-  offsetType = defaultValue(offsetType, MetadataType.UINT32);
+  offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
   return createBuffer(offsets, offsetType);
 }
 
@@ -456,7 +454,7 @@ function createArrayOffsetBuffer(values, offsetType) {
     offset += values[i].length;
   }
   offsets[length] = offset;
-  offsetType = defaultValue(offsetType, MetadataType.UINT32);
+  offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
   return createBuffer(offsets, offsetType);
 }
 
