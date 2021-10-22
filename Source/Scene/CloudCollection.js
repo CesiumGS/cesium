@@ -670,6 +670,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
 
   var textureSliceWidth = that._textureSliceWidth;
   var noiseTextureRows = that._noiseTextureRows;
+  //>>includeStart('debug', pragmas.debug);
   if (
     textureSliceWidth / noiseTextureRows < 1 ||
     textureSliceWidth % noiseTextureRows !== 0
@@ -678,6 +679,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
       "noiseTextureRows must evenly divide textureSliceWidth"
     );
   }
+  //>>includeEnd('debug');
 
   var context = frameState.context;
   that._vaNoise = createTextureVA(context);
