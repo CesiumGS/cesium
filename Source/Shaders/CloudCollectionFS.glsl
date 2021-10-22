@@ -1,5 +1,7 @@
 uniform sampler2D u_noiseTexture;
 uniform float u_textureSliceWidth;
+uniform float u_noiseTextureRows;
+uniform float u_inverseNoiseTextureRows;
 uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
@@ -22,22 +24,23 @@ vec3 wrapVec(vec3 value, float rangeLength) {
 }
 
 float textureSliceWidthSquared = u_textureSliceWidth * u_textureSliceWidth;
-vec2 invNoiseTextureDimensions = vec2(4.0 / textureSliceWidthSquared, 0.25 / u_textureSliceWidth);
+vec2 inverseNoiseTextureDimensions = vec2(u_noiseTextureRows / textureSliceWidthSquared,
+                                          u_inverseNoiseTextureRows / u_textureSliceWidth);
 
 vec2 voxelToUV(vec3 voxelIndex) {
     vec3 wrappedIndex = wrapVec(voxelIndex, u_textureSliceWidth);
-    float column = mod(wrappedIndex.z, u_textureSliceWidth * 0.25);
-    float row = floor(wrappedIndex.z / u_textureSliceWidth * 4.0);
+    float column = mod(wrappedIndex.z, u_textureSliceWidth * u_inverseNoiseTextureRows);
+    float row = floor(wrappedIndex.z / u_textureSliceWidth * u_noiseTextureRows);
 
     float xPixelCoord = wrappedIndex.x + column * u_textureSliceWidth;
     float yPixelCoord = wrappedIndex.y + row * u_textureSliceWidth;
-    return vec2(xPixelCoord, yPixelCoord) * invNoiseTextureDimensions;
+    return vec2(xPixelCoord, yPixelCoord) * inverseNoiseTextureDimensions;
 }
 
 // Interpolate a voxel with its neighbor (along the positive X-axis)
 vec4 lerpSamplesX(vec3 voxelIndex, float x) {
     vec2 uv0 = voxelToUV(voxelIndex);
-    vec2 uv1 = uv0 + vec2(invNoiseTextureDimensions.x, 0.0);
+    vec2 uv1 = uv0 + vec2(inverseNoiseTextureDimensions.x, 0.0);
     vec4 sample0 = texture2D(u_noiseTexture, uv0);
     vec4 sample1 = texture2D(u_noiseTexture, uv1);
     return mix(sample0, sample1, x);

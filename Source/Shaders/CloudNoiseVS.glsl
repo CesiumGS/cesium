@@ -1,4 +1,6 @@
 uniform float u_textureSliceWidth;
+uniform float u_noiseTextureRows;
+uniform float u_inverseNoiseTextureRows;
 attribute vec2 position;
 
 varying vec2 v_position;
@@ -9,7 +11,7 @@ void main()
 
     vec2 transformedPos = (position * 0.5) + vec2(0.5);
     transformedPos *= u_textureSliceWidth;
-    transformedPos.x *= u_textureSliceWidth * 0.25;
-    transformedPos.y *= 4.0;
+    transformedPos.x *= u_textureSliceWidth * u_inverseNoiseTextureRows;
+    transformedPos.y *= u_noiseTextureRows;
     v_position = transformedPos;
 }

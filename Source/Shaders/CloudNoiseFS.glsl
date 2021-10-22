@@ -1,4 +1,5 @@
 uniform float u_textureSliceWidth;
+uniform float u_inverseNoiseTextureRows;
 uniform float u_noiseDetail;
 uniform vec3 u_noiseOffset;
 varying vec2 v_position;
@@ -78,7 +79,7 @@ void main() {
     float x = mod(v_position.x, u_textureSliceWidth);
     float y = mod(v_position.y, u_textureSliceWidth);
     float sliceRow = floor(v_position.y / u_textureSliceWidth);
-    float z = floor(v_position.x / u_textureSliceWidth) + sliceRow * 0.25 * u_textureSliceWidth;
+    float z = floor(v_position.x / u_textureSliceWidth) + sliceRow * u_inverseNoiseTextureRows * u_textureSliceWidth;
 
     vec3 position = vec3(x, y, z);
     position /= u_noiseDetail;

@@ -606,6 +606,19 @@ describe(
         c.brightness = undefined;
       }).toThrowDeveloperError();
     });
+
+    it("throws with an invalid number of noise texture rows", function () {
+      clouds.debugBillboards = false;
+      expect(function () {
+        clouds._textureSliceWidth = 8;
+        clouds._noiseTextureRows = 16;
+        clouds.add({
+          position: Cartesian3.ZERO,
+          scale: new Cartesian3(10.0, 10.0),
+        });
+        scene.renderForSpecs();
+      }).toThrowDeveloperError();
+    });
   },
   "WebGL"
 );

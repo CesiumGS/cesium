@@ -111,6 +111,7 @@ function CloudCollection(options) {
 
   this._noiseTexture = undefined;
   this._textureSliceWidth = 128;
+  this._noiseTextureRows = 4;
 
   /**
    * <p>
@@ -175,6 +176,12 @@ function CloudCollection(options) {
     },
     u_textureSliceWidth: function () {
       return that._textureSliceWidth;
+    },
+    u_noiseTextureRows: function () {
+      return that._noiseTextureRows;
+    },
+    u_inverseNoiseTextureRows: function () {
+      return 1.0 / that._noiseTextureRows;
     },
     u_noiseDetail: function () {
       return that.noiseDetail;
@@ -661,6 +668,18 @@ function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
 
 function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
   var that = cloudCollection;
+
+  var textureSliceWidth = that._textureSliceWidth;
+  var noiseTextureRows = that._noiseTextureRows;
+  if (
+    textureSliceWidth / noiseTextureRows < 1 ||
+    textureSliceWidth % noiseTextureRows !== 0
+  ) {
+    throw new DeveloperError(
+      "noiseTextureRows must evenly divide textureSliceWidth"
+    );
+  }
+
   var context = frameState.context;
   that._vaNoise = createTextureVA(context);
   that._spNoise = ShaderProgram.fromCache({
@@ -672,14 +691,13 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     },
   });
 
-  var textureSliceWidth = that._textureSliceWidth;
   var noiseDetail = that.noiseDetail;
   var noiseOffset = that.noiseOffset;
 
   that._noiseTexture = new Texture({
     context: context,
-    width: (textureSliceWidth * textureSliceWidth) / 4,
-    height: textureSliceWidth * 4,
+    width: (textureSliceWidth * textureSliceWidth) / noiseTextureRows,
+    height: textureSliceWidth * noiseTextureRows,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     pixelFormat: PixelFormat.RGBA,
     sampler: new Sampler({
@@ -697,6 +715,12 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     uniformMap: {
       u_textureSliceWidth: function () {
         return textureSliceWidth;
+      },
+      u_noiseTextureRows: function () {
+        return noiseTextureRows;
+      },
+      u_inverseNoiseTextureRows: function () {
+        return 1.0 / noiseTextureRows;
       },
       u_noiseDetail: function () {
         return noiseDetail;
