@@ -612,10 +612,6 @@ describe(
       expect(function () {
         clouds._textureSliceWidth = 8;
         clouds._noiseTextureRows = 16;
-        clouds.add({
-          position: Cartesian3.ZERO,
-          scale: new Cartesian3(10.0, 10.0),
-        });
         scene.renderForSpecs();
       }).toThrowDeveloperError();
     });
