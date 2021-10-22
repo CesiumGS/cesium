@@ -3,10 +3,10 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_feature_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_feature_metadata": {
       "schema": {
         "classes": {
           "vegetation": {
@@ -31,9 +31,8 @@
           }
         }
       },
-      "propertyTables": [
-        {
-          "name": "Land Cover",
+      "featureTables": {
+        "landCoverTable": {
           "class": "landCover",
           "count": 256,
           "properties": {
@@ -46,20 +45,21 @@
             }
           }
         }
-      ],
-      "propertyTextures": [
-        {
-          "name": "Vegetation",
+      },
+      "featureTextures": {
+        "vegetationTexture": {
           "class": "vegetation",
-          "index": 1,
-          "texCoord": 0,
           "properties": {
-            "vegetationDensity": [
-              0
-            ]
+            "vegetationDensity": {
+              "texture": {
+                "index": 1,
+                "texCoord": 0
+              },
+              "channels": "r"
+            }
           }
         }
-      ]
+      }
     }
   },
   "scene": 0,
@@ -101,19 +101,21 @@
           "indices": 3,
           "material": 0,
           "extensions": {
-            "EXT_mesh_features": {
-              "propertyTables": [
-                0
-              ],
-              "featureIds": [
+            "EXT_feature_metadata": {
+              "featureIdTextures": [
                 {
-                  "index": 2,
-                  "texCoord": 0,
-                  "channel": 0
+                  "featureTable": "landCoverTable",
+                  "featureIds": {
+                    "texture": {
+                      "texCoord": 0,
+                      "index": 2
+                    },
+                    "channels": "r"
+                  }
                 }
               ],
-              "propertyTextures": [
-                0
+              "featureTextures": [
+                "vegetationTexture"
               ]
             }
           }

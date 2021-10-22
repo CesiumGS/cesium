@@ -2,7 +2,7 @@ import {
   defined,
   defaultValue,
   FeatureDetection,
-  FeatureTable,
+  PropertyTable,
   MetadataClass,
   MetadataEnum,
   MetadataTable,
@@ -170,7 +170,7 @@ MetadataTester.createMetadataTable = function (options) {
   });
 };
 
-MetadataTester.createFeatureTable = function (options) {
+MetadataTester.createPropertyTable = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var disableBigIntSupport = options.disableBigIntSupport;
   var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
@@ -216,7 +216,7 @@ MetadataTester.createFeatureTable = function (options) {
     properties: properties,
   });
 
-  return new FeatureTable({
+  return new PropertyTable({
     metadataTable: metadataTable,
     count: count,
     extras: options.extras,
@@ -224,6 +224,39 @@ MetadataTester.createFeatureTable = function (options) {
   });
 };
 
+// for EXT_mesh_features
+MetadataTester.createPropertyTables = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  var propertyTables = [];
+  var bufferViews = {};
+
+  for (var i = 0; i < options.propertyTables.length; i++) {
+    var propertyTable = options.propertyTables[i];
+    var tablePropertyResults = createProperties({
+      schema: options.schema,
+      classId: propertyTable.class,
+      propertyValues: propertyTable.properties,
+      bufferViews: bufferViews,
+    });
+
+    var count = tablePropertyResults.count;
+    var properties = tablePropertyResults.properties;
+    propertyTables.push({
+      name: propertyTable.name,
+      class: propertyTable.class,
+      count: count,
+      properties: properties,
+    });
+  }
+
+  return {
+    propertyTables: propertyTables,
+    bufferViews: bufferViews,
+  };
+};
+
+// For EXT_feature_metadata
 MetadataTester.createFeatureTables = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -259,10 +292,10 @@ MetadataTester.createFeatureTables = function (options) {
 MetadataTester.createGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var featureTableResults = MetadataTester.createFeatureTables(options);
+  var propertyTableResults = MetadataTester.createPropertyTables(options);
 
   var bufferByteLength = 0;
-  var bufferViewsMap = featureTableResults.bufferViews;
+  var bufferViewsMap = propertyTableResults.bufferViews;
   var bufferViewsLength = Object.keys(bufferViewsMap).length;
 
   var byteLengths = new Array(bufferViewsLength);
@@ -311,12 +344,12 @@ MetadataTester.createGltf = function (options) {
     images: options.images,
     textures: options.textures,
     bufferViews: bufferViews,
-    extensionsUsed: ["EXT_feature_metadata"],
+    extensionsUsed: ["EXT_mesh_features"],
     extensions: {
-      EXT_feature_metadata: {
+      EXT_mesh_features: {
         schema: options.schema,
-        featureTables: featureTableResults.featureTables,
-        featureTextures: options.featureTextures,
+        propertyTables: propertyTableResults.propertyTables,
+        propertyTextures: options.propertyTextures,
       },
     },
   };

@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.87 - 2021-11-1
+
+##### Additions :tada:
+
+- Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
+
 ### 1.86.1 - 2021-10-15
 
 ##### Fixes :wrench:
@@ -12,7 +18,7 @@
 
 ##### Breaking Changes :mega:
 
-- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [9847](https://github.com/CesiumGS/cesium/issues/9847)
+- Updated to Draco 1.4.1 and temporarily disabled attribute quantization. [#9847](https://github.com/CesiumGS/cesium/issues/9847)
 
 ##### Fixes :wrench:
 

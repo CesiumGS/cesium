@@ -3,14 +3,14 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features",
+    "EXT_feature_metadata",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_feature_metadata": {
       "schema": {
         "classes": {
           "box": {
@@ -35,8 +35,8 @@
           }
         }
       },
-      "propertyTables": [
-        {
+      "featureTables": {
+        "boxTable": {
           "class": "box",
           "count": 4,
           "properties": {
@@ -50,7 +50,7 @@
             }
           }
         },
-        {
+        "sectionTable": {
           "class": "section",
           "count": 2,
           "properties": {
@@ -64,7 +64,7 @@
             }
           }
         }
-      ]
+      }
     }
   },
   "scene": 0,
@@ -84,21 +84,23 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "FEATURE_ID_0": 6
+            "_FEATURE_ID_0": 6
           },
           "extensions": {
-            "EXT_mesh_features": {
-              "propertyTables": [
-                0,
-                1
-              ],
-              "featureIds": [
+            "EXT_feature_metadata": {
+              "featureIdAttributes": [
                 {
-                  "offset": 0,
-                  "repeat": 1
+                  "featureTable": "boxTable",
+                  "featureIds": {
+                    "constant": 0,
+                    "divisor": 1
+                  }
                 },
                 {
-                  "attribute": 0
+                  "featureTable": "sectionTable",
+                  "featureIds": {
+                    "attribute": "_FEATURE_ID_0"
+                  }
                 }
               ]
             }

@@ -99,8 +99,7 @@ describe(
         expect(model.ready).toEqual(true);
         expect(model.featureTables).toBeDefined();
 
-        var featureTableId = "buildings";
-        var featureTable = model.featureTables[featureTableId];
+        var featureTable = model.featureTables[0];
         expect(featureTable).toBeDefined();
 
         var featuresLength = featureTable.featuresLength;
@@ -284,7 +283,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("sectionTable");
+        expect(model.featureTableId).toEqual(1);
       });
     });
 
@@ -295,7 +294,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("landCoverTable");
+        expect(model.featureTableId).toEqual(0);
       });
     });
 
@@ -306,7 +305,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("buildings");
+        expect(model.featureTableId).toEqual(0);
       });
     });
 
