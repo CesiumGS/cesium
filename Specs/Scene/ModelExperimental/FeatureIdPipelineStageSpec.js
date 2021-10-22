@@ -192,6 +192,74 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     });
   });
 
+  it("processes primitive implicit feature ID constant only", function () {
+    var renderResources = {
+      shaderBuilder: new ShaderBuilder(),
+      model: {
+        featureIdAttributeIndex: 2,
+        _resources: [],
+      },
+      attributeIndex: 4,
+      attributes: [],
+      runtimeNode: { node: {} },
+      hasFeatureIds: false,
+      propertyTableId: undefined,
+      featureIdVertexAttributeSetIndex: 1,
+    };
+
+    return loadGltf(buildingsMetadata).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[1].primitives[0];
+
+      var frameState = scene.frameState;
+      var context = frameState.context;
+      // Reset pick objects.
+      context._pickObjects = [];
+
+      FeatureIdPipelineStage.process(renderResources, primitive, frameState);
+
+      expect(renderResources.hasFeatureIds).toBe(true);
+
+      var shaderBuilder = renderResources.shaderBuilder;
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_FEATURES",
+        "FEATURE_ID_ATTRIBUTE a_featureId_1",
+      ]);
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_FEATURES",
+      ]);
+
+      ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+        "attribute float a_featureId_1;",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "varying float v_activeFeatureId;",
+        "varying vec2 v_activeFeatureSt;",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageVS,
+      ]);
+
+      ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+        _shadersFeatureStageCommon,
+        _shadersFeatureStageFS,
+      ]);
+
+      expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
+
+      expect(renderResources.model._resources).toEqual([]);
+
+      var vertexAttribute = renderResources.attributes[0];
+      expect(vertexAttribute.instanceDivisor).toEqual(0);
+      expect(vertexAttribute.vertexBuffer).not.toBeDefined();
+      expect(vertexAttribute.value).toBe(3);
+    });
+  });
+
   it("processes instances feature IDs from vertex attribute", function () {
     var renderResources = {
       shaderBuilder: new ShaderBuilder(),

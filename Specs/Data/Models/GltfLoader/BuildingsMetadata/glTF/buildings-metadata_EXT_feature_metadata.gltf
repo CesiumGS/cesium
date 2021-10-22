@@ -157,7 +157,7 @@
                   "featureTable": "buildings",
                   "featureIds": {
                     "constant": 0,
-                    "divisor": 24
+                    "divisor": 2
                   }
                 }
               ]

@@ -98,44 +98,34 @@ function getFeatureIdAttributeInfo(
 function processFeatureIdAttributes(renderResources, frameState, primitive) {
   var shaderBuilder = renderResources.shaderBuilder;
   var model = renderResources.model;
+  var instances = renderResources.runtimeNode.node.instances;
 
-  var featureIdAttributePrefix;
+  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+
+  var featureIdAttributeInfo = getFeatureIdAttributeInfo(
+    featureIdAttributeIndex,
+    primitive,
+    instances
+  );
+
+  var featureIdAttribute = featureIdAttributeInfo.attribute;
+  var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
   var featureIdAttributeSetIndex;
 
-  // For 3D Tiles 1.0, the FEATURE_ID vertex attribute is present but the Feature ID attribute is not.
-  // The featureMetadata is owned by the Cesium3DTileContent for the legacy formats.
-  var content = model.content;
-  if (defined(content) && defined(content.featureMetadata)) {
-    featureIdAttributePrefix = "a_featureId";
-    featureIdAttributeSetIndex = "";
+  // Check if the Feature ID attribute references an existing vertex attribute.
+  if (defined(featureIdAttribute.setIndex)) {
+    featureIdAttributeSetIndex = featureIdAttribute.setIndex;
   } else {
-    var featureIdAttributeIndex = model.featureIdAttributeIndex;
-    var instances = renderResources.runtimeNode.node.instances;
-
-    var featureIdAttributeInfo = getFeatureIdAttributeInfo(
-      featureIdAttributeIndex,
-      primitive,
-      instances
+    // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
+    // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
+    // is incremented every time a Feature ID vertex attribute is added.
+    featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
+    generateFeatureIdAttribute(
+      featureIdAttributeInfo,
+      featureIdAttributeSetIndex,
+      frameState,
+      renderResources
     );
-
-    var featureIdAttribute = featureIdAttributeInfo.attribute;
-    featureIdAttributePrefix = featureIdAttributeInfo.prefix;
-
-    // Check if the Feature ID attribute references an existing vertex attribute.
-    if (defined(featureIdAttribute.setIndex)) {
-      featureIdAttributeSetIndex = featureIdAttribute.setIndex;
-    } else {
-      // Ensure that the new Feature ID vertex attribute generated does not have any conflicts with
-      // Feature ID vertex attributes already provided in the model. The featureIdVertexAttributeSetIndex
-      // is incremented every time a Feature ID vertex attribute is added.
-      featureIdAttributeSetIndex = renderResources.featureIdVertexAttributeSetIndex++;
-      generateFeatureIdAttribute(
-        featureIdAttributeInfo,
-        featureIdAttributeSetIndex,
-        frameState,
-        renderResources
-      );
-    }
   }
 
   shaderBuilder.addDefine(

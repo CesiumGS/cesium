@@ -1,17 +1,14 @@
 import {
+  B3dmParser,
   Cartesian3,
   Color,
-  ExperimentalFeatures,
   HeadingPitchRange,
   HeadingPitchRoll,
   Matrix4,
   Transforms,
-  Batched3DModel3DTileContent,
   Cesium3DTilePass,
   ClippingPlane,
   ClippingPlaneCollection,
-  Cesium3DTileFeature,
-  Cesium3DTileContentFeatureTable,
   MetadataClass,
   GroupMetadata,
   Model,
@@ -44,10 +41,6 @@ describe(
       "./Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json";
     var texturedUrl =
       "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
-    var deprecated1Url =
-      "./Data/Cesium3DTiles/Batched/BatchedDeprecated1/tileset.json";
-    var deprecated2Url =
-      "./Data/Cesium3DTiles/Batched/BatchedDeprecated2/tileset.json";
     var withRtcCenterUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json";
 
@@ -61,7 +54,7 @@ describe(
       scene = createScene();
 
       // Keep the error from logging to the console when running tests
-      spyOn(Batched3DModel3DTileContent, "_deprecationWarning");
+      spyOn(B3dmParser, "_deprecationWarning");
     });
 
     afterAll(function () {
@@ -74,56 +67,6 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
-    });
-
-    it("throws with invalid version", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
-        version: 2,
-      });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
-    });
-
-    it("recognizes the legacy 20-byte header", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
-        function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          var batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
-        }
-      );
-    });
-
-    it("recognizes the legacy 24-byte header", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated2Url).then(
-        function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          var batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
-        }
-      );
-    });
-
-    it("logs deprecation warning for use of BATCHID without prefixed underscore", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
-        function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
-      );
-    });
-
-    it("throws with empty gltf", function () {
-      // Expect to throw DeveloperError in Model due to invalid gltf magic
-      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
     });
 
     it("resolves readyPromise", function () {
@@ -459,73 +402,6 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
-    });
-
-    describe("ModelExperimental", function () {
-      beforeEach(function () {
-        ExperimentalFeatures.enableModelExperimental = true;
-      });
-
-      afterEach(function () {
-        ExperimentalFeatures.enableModelExperimental = false;
-      });
-
-      it("renders B3DM content with batch table", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            Cesium3DTilesTester.expectRender(scene, tileset);
-          }
-        );
-      });
-
-      it("renders B3DM content without batch table", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withoutBatchTableUrl
-        ).then(function (tileset) {
-          Cesium3DTilesTester.expectRender(scene, tileset);
-        });
-      });
-
-      it("assigns feature table as batch table", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            var content = tileset.root.content;
-            expect(content.batchTable).toBeDefined();
-            expect(content.batchTable).toBeInstanceOf(
-              Cesium3DTileContentFeatureTable
-            );
-          }
-        );
-      });
-
-      it("hasProperty works", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            var content = tileset.root.content;
-            var featureTable = content.batchTable;
-            expect(featureTable).toBeDefined();
-            for (var i = 0; i < featureTable.featuresLength; i++) {
-              expect(content.hasProperty(i, "Height")).toEqual(true);
-              expect(content.hasProperty(i, "Width")).toEqual(false);
-            }
-          }
-        );
-      });
-
-      it("getFeature works", function () {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-          function (tileset) {
-            var content = tileset.root.content;
-            var featureTable = content.batchTable;
-            expect(featureTable).toBeDefined();
-            for (var i = 0; i < featureTable.featuresLength; i++) {
-              var feature = content.getFeature(i);
-              expect(feature).toBeInstanceOf(Cesium3DTileFeature);
-            }
-          }
-        );
-      });
     });
 
     describe("3DTILES_metadata", function () {

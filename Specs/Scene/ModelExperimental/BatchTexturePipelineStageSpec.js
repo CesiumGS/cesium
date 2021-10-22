@@ -54,8 +54,8 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
   it("sets up batch textures from ModelExperimental", function () {
     var renderResources = {
       shaderBuilder: new ShaderBuilder(),
-      featureTableId: 0,
       model: {
+        featureTableId: 0,
         featureTables: [
           {
             featuresLength: 10,
@@ -75,36 +75,6 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     verifyBatchTextureShaders(renderResources.shaderBuilder);
     verifyBatchTextureUniforms(
       renderResources.model.featureTables[0],
-      renderResources.uniformMap
-    );
-  });
-
-  it("sets up batch textures from Cesium3DTileContent", function () {
-    var renderResources = {
-      shaderBuilder: new ShaderBuilder(),
-      featureTableId: 0,
-      model: {
-        content: {
-          featureTables: [
-            {
-              featuresLength: 10,
-              batchTexture: {
-                batchTexture: 0,
-                textureDimensions: {
-                  y: 2,
-                },
-                textureStep: 2,
-              },
-            },
-          ],
-        },
-      },
-    };
-
-    BatchTexturePipelineStage.process(renderResources, {}, {});
-    verifyBatchTextureShaders(renderResources.shaderBuilder);
-    verifyBatchTextureUniforms(
-      renderResources.model.content.featureTables[0],
       renderResources.uniformMap
     );
   });

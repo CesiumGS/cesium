@@ -156,7 +156,10 @@
                 },
                 {
                   "offset": 0,
-                  "repeat": 24
+                  "repeat": 2
+                },
+                {
+                  "offset": 3
                 }
               ]
             }
