@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -12,6 +13,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import B3dmLoader from "./B3dmLoader.js";
+import Color from "../../Core/Color.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -33,6 +35,9 @@ import B3dmLoader from "./B3dmLoader.js";
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
@@ -69,6 +74,14 @@ export default function ModelExperimental(options) {
   this._content = options.content;
 
   this._texturesLoaded = false;
+
+  var color = options.color;
+  this._color = defaultValue(color) ? Color.clone(color) : undefined;
+  this._colorBlendMode = defaultValue(
+    options.colorBlendMode,
+    ColorBlendMode.HIGHLIGHT
+  );
+  this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -352,6 +365,65 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The color to blend with the model's rendered color.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Color}
+   *
+   * @private
+   */
+  color: {
+    get: function () {
+      return this._color;
+    },
+    set: function (value) {
+      if (!Color.equals(this._color, value)) {
+        this.resetDrawCommands();
+      }
+      this._color = value;
+    },
+  },
+
+  /**
+   * Defines how the color blends with the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ColorBlendMode}
+   * @default ColorBlendMode.HIGHLIGHT
+   *
+   * @private
+   */
+  colorBlendMode: {
+    get: function () {
+      return this._colorBlendMode;
+    },
+    set: function (value) {
+      this._colorBlendMode = value;
+    },
+  },
+
+  /**
+   * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   * @default 0.5
+   *
+   * @private
+   */
+  colorBlendAmount: {
+    get: function () {
+      return this._colorBlendAmount;
+    },
+    set: function (value) {
+      this._colorBlendAmount = value;
+    },
+  },
+
+  /**
    * Gets the model's bounding sphere.
    *
    * @memberof ModelExperimental.prototype
@@ -470,6 +542,16 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
   },
 });
+
+/**
+ * Resets the draw commands for this model.
+ *
+ * @private
+ */
+ModelExperimental.prototype.resetDrawCommands = function () {
+  this._drawCommandsBuilt = false;
+  this._sceneGraph._drawCommands = [];
+};
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -601,6 +683,9 @@ ModelExperimental.prototype.destroy = function () {
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
@@ -651,6 +736,9 @@ ModelExperimental.fromGltf = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
   };

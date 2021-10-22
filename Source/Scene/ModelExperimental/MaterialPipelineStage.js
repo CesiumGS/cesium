@@ -98,11 +98,13 @@ MaterialPipelineStage.process = function (
   };
 
   var alphaOptions = renderResources.alphaOptions;
-  alphaOptions.alphaMode = material.alphaMode;
-  if (material.alphaMode === AlphaMode.BLEND) {
-    alphaOptions.pass = Pass.TRANSLUCENT;
-  } else if (material.alphaMode === AlphaMode.MASK) {
-    alphaOptions.alphaCutoff = material.alphaCutoff;
+  if (!defined(alphaOptions.alphaMode)) {
+    alphaOptions.alphaMode = material.alphaMode;
+    if (material.alphaMode === AlphaMode.BLEND) {
+      alphaOptions.pass = Pass.TRANSLUCENT;
+    } else if (material.alphaMode === AlphaMode.MASK) {
+      alphaOptions.alphaCutoff = material.alphaCutoff;
+    }
   }
 
   shaderBuilder.addFragmentLines([MaterialStageFS]);
