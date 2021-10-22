@@ -174,14 +174,13 @@ function CloudCollection(options) {
     u_noiseTexture: function () {
       return that._noiseTexture;
     },
-    u_textureSliceWidth: function () {
-      return that._textureSliceWidth;
-    },
-    u_noiseTextureRows: function () {
-      return that._noiseTextureRows;
-    },
-    u_inverseNoiseTextureRows: function () {
-      return 1.0 / that._noiseTextureRows;
+    // Wraps useful texture metrics into a single vec3 for less overhead.
+    u_noiseTextureDimensions: function () {
+      return new Cartesian3(
+        that._textureSliceWidth,
+        that._noiseTextureRows,
+        1.0 / that._noiseTextureRows
+      );
     },
     u_noiseDetail: function () {
       return that.noiseDetail;
@@ -713,14 +712,8 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     shaderProgram: that._spNoise,
     outputTexture: that._noiseTexture,
     uniformMap: {
-      u_textureSliceWidth: function () {
-        return textureSliceWidth;
-      },
-      u_noiseTextureRows: function () {
-        return noiseTextureRows;
-      },
-      u_inverseNoiseTextureRows: function () {
-        return 1.0 / noiseTextureRows;
+      u_noiseTextureDimensions: function () {
+        return that._uniforms.u_noiseTextureDimensions();
       },
       u_noiseDetail: function () {
         return noiseDetail;

@@ -1,7 +1,5 @@
 uniform sampler2D u_noiseTexture;
-uniform float u_textureSliceWidth;
-uniform float u_noiseTextureRows;
-uniform float u_inverseNoiseTextureRows;
+uniform vec3 u_noiseTextureDimensions;
 uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
@@ -23,17 +21,21 @@ vec3 wrapVec(vec3 value, float rangeLength) {
                 wrap(value.z, rangeLength));
 }
 
-float textureSliceWidthSquared = u_textureSliceWidth * u_textureSliceWidth;
-vec2 inverseNoiseTextureDimensions = vec2(u_noiseTextureRows / textureSliceWidthSquared,
-                                          u_inverseNoiseTextureRows / u_textureSliceWidth);
+float textureSliceWidth = u_noiseTextureDimensions.x;
+float noiseTextureRows = u_noiseTextureDimensions.y;
+float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
+
+float textureSliceWidthSquared = textureSliceWidth * textureSliceWidth;
+vec2 inverseNoiseTextureDimensions = vec2(noiseTextureRows / textureSliceWidthSquared,
+                                          inverseNoiseTextureRows / textureSliceWidth);
 
 vec2 voxelToUV(vec3 voxelIndex) {
-    vec3 wrappedIndex = wrapVec(voxelIndex, u_textureSliceWidth);
-    float column = mod(wrappedIndex.z, u_textureSliceWidth * u_inverseNoiseTextureRows);
-    float row = floor(wrappedIndex.z / u_textureSliceWidth * u_noiseTextureRows);
+    vec3 wrappedIndex = wrapVec(voxelIndex, textureSliceWidth);
+    float column = mod(wrappedIndex.z, textureSliceWidth * inverseNoiseTextureRows);
+    float row = floor(wrappedIndex.z / textureSliceWidth * noiseTextureRows);
 
-    float xPixelCoord = wrappedIndex.x + column * u_textureSliceWidth;
-    float yPixelCoord = wrappedIndex.y + row * u_textureSliceWidth;
+    float xPixelCoord = wrappedIndex.x + column * textureSliceWidth;
+    float yPixelCoord = wrappedIndex.y + row * textureSliceWidth;
     return vec2(xPixelCoord, yPixelCoord) * inverseNoiseTextureDimensions;
 }
 
@@ -47,7 +49,7 @@ vec4 lerpSamplesX(vec3 voxelIndex, float x) {
 }
 
 vec4 sampleNoiseTexture(vec3 position) {
-    vec3 recenteredPos = position + vec3(u_textureSliceWidth / 2.0);
+    vec3 recenteredPos = position + vec3(textureSliceWidth / 2.0);
     vec3 lerpValue = fract(recenteredPos);
     vec3 voxelIndex = floor(recenteredPos);
 
