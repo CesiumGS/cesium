@@ -46,11 +46,11 @@ void main()
     customShaderStage(material, attributes);
     #endif
 
+    lightingStage(material);
+
     #ifdef HAS_MODEL_COLOR
     modelColorStage(material);
     #endif
-
-    lightingStage(material);
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
