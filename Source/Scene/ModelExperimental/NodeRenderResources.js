@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
@@ -41,15 +42,27 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
 
   /**
-   * The ID of the feature table to use for picking and styling. Inherited from the model
-   * render resources.
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values. Inherited from the model render resources.
    *
-   * @type {String}
+   * @type {Object.<String, Function>}
+   *
    * @readonly
    *
    * @private
    */
-  this.featureTableId = modelRenderResources.featureTableId;
+  this.uniformMap = clone(modelRenderResources.uniformMap);
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the model
+   * render resources.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = clone(modelRenderResources.alphaOptions);
 
   // other properties
   /**
@@ -93,7 +106,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.attributeIndex = 1;
 
   /**
-   * The set index to assign to feature ID vertex attribute(s) created from the constant/divisor in the feature ID attribute.
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
    *
    * @type {Number}
    * @readonly

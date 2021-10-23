@@ -4,6 +4,7 @@ import {
   Cartesian4,
   parseBatchTable,
   MetadataClass,
+  MetadataComponentType,
   MetadataType,
 } from "../../Source/Cesium.js";
 
@@ -56,11 +57,13 @@ describe("Scene/parseBatchTable", function () {
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var featureTable = metadata.getFeatureTable(className);
+    var propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.id).toBe(0);
+    expect(propertyTable.name).toBe("Batch Table");
 
-    expect(featureTable.getProperty(0, "height")).toBe(10.0);
-    expect(featureTable.getProperty(1, "height")).toBe(15.0);
-    expect(featureTable.getProperty(2, "height")).toBe(25.0);
+    expect(propertyTable.getProperty(0, "height")).toBe(10.0);
+    expect(propertyTable.getProperty(1, "height")).toBe(15.0);
+    expect(propertyTable.getProperty(2, "height")).toBe(25.0);
   });
 
   it("transcodes scalars to correct types", function () {
@@ -119,24 +122,40 @@ describe("Scene/parseBatchTable", function () {
     });
     var properties = metadata.schema.classes[className].properties;
 
-    expect(properties.uint8Property.type).toBe(MetadataType.UINT8);
-    expect(properties.uint16Property.type).toBe(MetadataType.UINT16);
-    expect(properties.uint32Property.type).toBe(MetadataType.UINT32);
-    expect(properties.int8Property.type).toBe(MetadataType.INT8);
-    expect(properties.int16Property.type).toBe(MetadataType.INT16);
-    expect(properties.int32Property.type).toBe(MetadataType.INT32);
-    expect(properties.floatProperty.type).toBe(MetadataType.FLOAT32);
-    expect(properties.doubleProperty.type).toBe(MetadataType.FLOAT64);
+    expect(properties.uint8Property.componentType).toBe(
+      MetadataComponentType.UINT8
+    );
+    expect(properties.uint16Property.componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(properties.uint32Property.componentType).toBe(
+      MetadataComponentType.UINT32
+    );
+    expect(properties.int8Property.componentType).toBe(
+      MetadataComponentType.INT8
+    );
+    expect(properties.int16Property.componentType).toBe(
+      MetadataComponentType.INT16
+    );
+    expect(properties.int32Property.componentType).toBe(
+      MetadataComponentType.INT32
+    );
+    expect(properties.floatProperty.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    expect(properties.doubleProperty.componentType).toBe(
+      MetadataComponentType.FLOAT64
+    );
 
-    var featureTable = metadata.getFeatureTable(className);
-    expect(featureTable.getProperty(0, "uint8Property")).toBe(0);
-    expect(featureTable.getProperty(0, "uint16Property")).toBe(0);
-    expect(featureTable.getProperty(0, "uint32Property")).toBe(0);
-    expect(featureTable.getProperty(0, "int8Property")).toBe(0);
-    expect(featureTable.getProperty(0, "int16Property")).toBe(0);
-    expect(featureTable.getProperty(0, "int32Property")).toBe(0);
-    expect(featureTable.getProperty(0, "floatProperty")).toBe(0.0);
-    expect(featureTable.getProperty(0, "doubleProperty")).toBe(0.0);
+    var propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "uint8Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "uint16Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "uint32Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "int8Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "int16Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "int32Property")).toBe(0);
+    expect(propertyTable.getProperty(0, "floatProperty")).toBe(0.0);
+    expect(propertyTable.getProperty(0, "doubleProperty")).toBe(0.0);
   });
 
   it("transcodes binary vectors to array types", function () {
@@ -167,24 +186,30 @@ describe("Scene/parseBatchTable", function () {
     });
     var properties = metadata.schema.classes[className].properties;
 
-    expect(properties.vec2Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.uvec3Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.dvec4Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.vec2Property.componentType).toBe(MetadataType.FLOAT32);
-    expect(properties.uvec3Property.componentType).toBe(MetadataType.UINT32);
-    expect(properties.dvec4Property.componentType).toBe(MetadataType.FLOAT64);
+    expect(properties.vec2Property.type).toBe(MetadataType.VEC2);
+    expect(properties.uvec3Property.type).toBe(MetadataType.VEC3);
+    expect(properties.dvec4Property.type).toBe(MetadataType.VEC4);
+    expect(properties.vec2Property.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    expect(properties.uvec3Property.componentType).toBe(
+      MetadataComponentType.UINT32
+    );
+    expect(properties.dvec4Property.componentType).toBe(
+      MetadataComponentType.FLOAT64
+    );
     expect(properties.vec2Property.componentCount).toBe(2);
     expect(properties.uvec3Property.componentCount).toBe(3);
     expect(properties.dvec4Property.componentCount).toBe(4);
 
-    var featureTable = metadata.getFeatureTable(className);
-    expect(featureTable.getProperty(0, "vec2Property")).toEqual(
+    var propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "vec2Property")).toEqual(
       new Cartesian2(0.0, 0.0)
     );
-    expect(featureTable.getProperty(0, "uvec3Property")).toEqual(
+    expect(propertyTable.getProperty(0, "uvec3Property")).toEqual(
       new Cartesian3(0, 0, 0)
     );
-    expect(featureTable.getProperty(0, "dvec4Property")).toEqual(
+    expect(propertyTable.getProperty(0, "dvec4Property")).toEqual(
       new Cartesian4(0.0, 0.0, 0.0, 0.0)
     );
   });
@@ -217,17 +242,17 @@ describe("Scene/parseBatchTable", function () {
     var properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable(className);
-    expect(featureTable.getProperty(0, "location")).toEqual(
+    var propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "location")).toEqual(
       jsonBatchTable.location[0]
     );
-    expect(featureTable.getProperty(1, "location")).toEqual(
+    expect(propertyTable.getProperty(1, "location")).toEqual(
       jsonBatchTable.location[1]
     );
-    expect(featureTable.getProperty(0, "payload")).toEqual(
+    expect(propertyTable.getProperty(0, "payload")).toEqual(
       jsonBatchTable.payload[0]
     );
-    expect(featureTable.getProperty(1, "payload")).toEqual(
+    expect(propertyTable.getProperty(1, "payload")).toEqual(
       jsonBatchTable.payload[1]
     );
   });
@@ -282,26 +307,26 @@ describe("Scene/parseBatchTable", function () {
     var properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable(className);
-    expect(featureTable.getProperty(0, "tire_location")).toBe("front_left");
-    expect(featureTable.getProperty(0, "color")).toBe("blue");
-    expect(featureTable.getProperty(0, "type")).toBe("sedan");
-    expect(featureTable.getProperty(0, "year")).toBe("2020");
+    var propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "tire_location")).toBe("front_left");
+    expect(propertyTable.getProperty(0, "color")).toBe("blue");
+    expect(propertyTable.getProperty(0, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(0, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(4, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(4, "color")).toBe("blue");
-    expect(featureTable.getProperty(4, "type")).toBe("sedan");
-    expect(featureTable.getProperty(4, "year")).toBe("2020");
+    expect(propertyTable.getProperty(4, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(4, "color")).toBe("blue");
+    expect(propertyTable.getProperty(4, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(4, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(6, "tire_location")).toBe("front_right");
-    expect(featureTable.getProperty(6, "color")).toBe("red");
-    expect(featureTable.getProperty(6, "type")).toBe("truck");
-    expect(featureTable.getProperty(6, "year")).toBe("2018");
+    expect(propertyTable.getProperty(6, "tire_location")).toBe("front_right");
+    expect(propertyTable.getProperty(6, "color")).toBe("red");
+    expect(propertyTable.getProperty(6, "type")).toBe("truck");
+    expect(propertyTable.getProperty(6, "year")).toBe("2018");
 
-    expect(featureTable.getProperty(9, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(9, "color")).toBe("red");
-    expect(featureTable.getProperty(9, "type")).toBe("truck");
-    expect(featureTable.getProperty(9, "year")).toBe("2018");
+    expect(propertyTable.getProperty(9, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(9, "color")).toBe("red");
+    expect(propertyTable.getProperty(9, "type")).toBe("truck");
+    expect(propertyTable.getProperty(9, "year")).toBe("2018");
   });
 
   it("parses batch table with hierarchy", function () {
@@ -319,26 +344,26 @@ describe("Scene/parseBatchTable", function () {
     var properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var featureTable = metadata.getFeatureTable(className);
-    expect(featureTable.getProperty(0, "tire_location")).toBe("front_left");
-    expect(featureTable.getProperty(0, "color")).toBe("blue");
-    expect(featureTable.getProperty(0, "type")).toBe("sedan");
-    expect(featureTable.getProperty(0, "year")).toBe("2020");
+    var propertyTable = metadata.getPropertyTable(0);
+    expect(propertyTable.getProperty(0, "tire_location")).toBe("front_left");
+    expect(propertyTable.getProperty(0, "color")).toBe("blue");
+    expect(propertyTable.getProperty(0, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(0, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(4, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(4, "color")).toBe("blue");
-    expect(featureTable.getProperty(4, "type")).toBe("sedan");
-    expect(featureTable.getProperty(4, "year")).toBe("2020");
+    expect(propertyTable.getProperty(4, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(4, "color")).toBe("blue");
+    expect(propertyTable.getProperty(4, "type")).toBe("sedan");
+    expect(propertyTable.getProperty(4, "year")).toBe("2020");
 
-    expect(featureTable.getProperty(6, "tire_location")).toBe("front_right");
-    expect(featureTable.getProperty(6, "color")).toBe("red");
-    expect(featureTable.getProperty(6, "type")).toBe("truck");
-    expect(featureTable.getProperty(6, "year")).toBe("2018");
+    expect(propertyTable.getProperty(6, "tire_location")).toBe("front_right");
+    expect(propertyTable.getProperty(6, "color")).toBe("red");
+    expect(propertyTable.getProperty(6, "type")).toBe("truck");
+    expect(propertyTable.getProperty(6, "year")).toBe("2018");
 
-    expect(featureTable.getProperty(9, "tire_location")).not.toBeDefined();
-    expect(featureTable.getProperty(9, "color")).toBe("red");
-    expect(featureTable.getProperty(9, "type")).toBe("truck");
-    expect(featureTable.getProperty(9, "year")).toBe("2018");
+    expect(propertyTable.getProperty(9, "tire_location")).not.toBeDefined();
+    expect(propertyTable.getProperty(9, "color")).toBe("red");
+    expect(propertyTable.getProperty(9, "type")).toBe("truck");
+    expect(propertyTable.getProperty(9, "year")).toBe("2018");
   });
 
   it("stores extras and extensions in the transcoded FeatureMetadata", function () {

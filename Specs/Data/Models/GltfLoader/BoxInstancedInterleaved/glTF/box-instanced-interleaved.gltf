@@ -3,14 +3,14 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_feature_metadata",
+    "EXT_mesh_features",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
   "extensions": {
-    "EXT_feature_metadata": {
+    "EXT_mesh_features": {
       "schema": {
         "classes": {
           "box": {
@@ -35,13 +35,13 @@
           }
         }
       },
-      "featureTables": {
-        "boxTable": {
+      "propertyTables": [
+        {
           "class": "box",
           "count": 4,
           "properties": {
             "name": {
-              "offsetType": "UINT16",
+              "stringOffsetType": "UINT16",
               "bufferView": 4,
               "stringOffsetBufferView": 5
             },
@@ -50,12 +50,12 @@
             }
           }
         },
-        "sectionTable": {
+        {
           "class": "section",
           "count": 2,
           "properties": {
             "name": {
-              "offsetType": "UINT16",
+              "stringOffsetType": "UINT16",
               "bufferView": 7,
               "stringOffsetBufferView": 8
             },
@@ -64,7 +64,7 @@
             }
           }
         }
-      }
+      ]
     }
   },
   "scene": 0,
@@ -84,23 +84,21 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "_FEATURE_ID_0": 6
+            "FEATURE_ID_0": 6
           },
           "extensions": {
-            "EXT_feature_metadata": {
-              "featureIdAttributes": [
+            "EXT_mesh_features": {
+              "propertyTables": [
+                0,
+                1
+              ],
+              "featureIds": [
                 {
-                  "featureTable": "boxTable",
-                  "featureIds": {
-                    "constant": 0,
-                    "divisor": 1
-                  }
+                  "offset": 0,
+                  "repeat": 1
                 },
                 {
-                  "featureTable": "sectionTable",
-                  "featureIds": {
-                    "attribute": "_FEATURE_ID_0"
-                  }
+                  "attribute": 0
                 }
               ]
             }

@@ -455,10 +455,10 @@ describe(
         class: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },
