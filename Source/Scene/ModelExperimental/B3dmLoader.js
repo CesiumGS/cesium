@@ -49,6 +49,7 @@ var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
  */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -65,6 +66,7 @@ function B3dmLoader(options) {
   );
   var upAxis = defaultValue(options.upAxis, Axis.Y);
   var forwardAxis = defaultValue(options.forwardAxis, Axis.X);
+  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.b3dmResource", b3dmResource);
@@ -82,6 +84,7 @@ function B3dmLoader(options) {
   this._incrementallyLoadTextures = incrementallyLoadTextures;
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
+  this._loadAsTypedArray = loadAsTypedArray;
 
   this._state = B3dmLoaderState.UNLOADED;
 
@@ -227,6 +230,7 @@ B3dmLoader.prototype.load = function () {
     baseResource: this._baseResource,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
+    loadAsTypedArray: this._loadAsTypedArray
   });
 
   this._gltfLoader = gltfLoader;
