@@ -531,7 +531,7 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       bufferViewId: 0,
-      dequantize: true
+      dequantize: true,
     });
 
     expect(cacheKey).toBe(
@@ -545,7 +545,7 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       bufferViewId: 0,
-      loadAsTypedArray: true
+      loadAsTypedArray: true,
     });
 
     expect(cacheKey).toBe(
@@ -663,7 +663,7 @@ describe("ResourceCacheKey", function () {
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
-      loadAsTypedArray: true
+      loadAsTypedArray: true,
     });
 
     expect(cacheKey).toBe(
