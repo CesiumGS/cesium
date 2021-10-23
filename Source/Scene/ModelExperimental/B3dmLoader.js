@@ -230,7 +230,7 @@ B3dmLoader.prototype.load = function () {
     baseResource: this._baseResource,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
-    loadAsTypedArray: this._loadAsTypedArray
+    loadAsTypedArray: this._loadAsTypedArray,
   });
 
   this._gltfLoader = gltfLoader;
