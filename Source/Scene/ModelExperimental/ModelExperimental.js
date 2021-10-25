@@ -330,6 +330,12 @@ Object.defineProperties(ModelExperimental.prototype, {
     get: function () {
       return this._customShader;
     },
+    set: function (value) {
+      if (value !== this._customShader) {
+        this.resetDrawCommands();
+      }
+      this._customShader = value;
+    },
   },
 
   /**
@@ -616,6 +622,11 @@ ModelExperimental.prototype.update = function (frameState) {
   // are processed.
   if (!this._resourcesLoaded || !this._texturesLoaded) {
     this._loader.process(frameState);
+  }
+
+  if (defined(this._content)) {
+    var tileset = this._content.tileset;
+    this.customShader = tileset.customShader;
   }
 
   // A custom shader may have to load texture uniforms.
