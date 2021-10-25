@@ -34,6 +34,7 @@ import VertexArrayFacade from "../Renderer/VertexArrayFacade.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 var attributeLocations;
+var scratchTextureDimensions = new Cartesian3();
 
 var attributeLocationsBatched = {
   positionHighAndScaleX: 0,
@@ -110,7 +111,8 @@ function CloudCollection(options) {
   this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
   this._noiseTexture = undefined;
-  this._noiseTextureLength = 128;
+  this._textureSliceWidth = 128;
+  this._noiseTextureRows = 4;
 
   /**
    * <p>
@@ -173,9 +175,7 @@ function CloudCollection(options) {
     u_noiseTexture: function () {
       return that._noiseTexture;
     },
-    u_noiseTextureLength: function () {
-      return that._noiseTextureLength;
-    },
+    u_noiseTextureDimensions: getNoiseTextureDimensions(that),
     u_noiseDetail: function () {
       return that.noiseDetail;
     },
@@ -224,6 +224,16 @@ function CloudCollection(options) {
    */
   this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
   this._compiledDebugEllipsoids = false;
+}
+
+// Wraps useful texture metrics into a single vec3 for less overhead.
+function getNoiseTextureDimensions(collection) {
+  return function () {
+    scratchTextureDimensions.x = collection._textureSliceWidth;
+    scratchTextureDimensions.y = collection._noiseTextureRows;
+    scratchTextureDimensions.z = 1.0 / collection._noiseTextureRows;
+    return scratchTextureDimensions;
+  };
 }
 
 Object.defineProperties(CloudCollection.prototype, {
@@ -661,6 +671,20 @@ function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
 
 function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
   var that = cloudCollection;
+
+  var textureSliceWidth = that._textureSliceWidth;
+  var noiseTextureRows = that._noiseTextureRows;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    textureSliceWidth / noiseTextureRows < 1 ||
+    textureSliceWidth % noiseTextureRows !== 0
+  ) {
+    throw new DeveloperError(
+      "noiseTextureRows must evenly divide textureSliceWidth"
+    );
+  }
+  //>>includeEnd('debug');
+
   var context = frameState.context;
   that._vaNoise = createTextureVA(context);
   that._spNoise = ShaderProgram.fromCache({
@@ -672,14 +696,13 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     },
   });
 
-  var noiseTextureLength = that._noiseTextureLength;
   var noiseDetail = that.noiseDetail;
   var noiseOffset = that.noiseOffset;
 
   that._noiseTexture = new Texture({
     context: context,
-    width: noiseTextureLength * noiseTextureLength,
-    height: noiseTextureLength,
+    width: (textureSliceWidth * textureSliceWidth) / noiseTextureRows,
+    height: textureSliceWidth * noiseTextureRows,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     pixelFormat: PixelFormat.RGBA,
     sampler: new Sampler({
@@ -695,9 +718,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     shaderProgram: that._spNoise,
     outputTexture: that._noiseTexture,
     uniformMap: {
-      u_noiseTextureLength: function () {
-        return noiseTextureLength;
-      },
+      u_noiseTextureDimensions: getNoiseTextureDimensions(that),
       u_noiseDetail: function () {
         return noiseDetail;
       },

@@ -12,7 +12,7 @@
           "vegetation": {
             "properties": {
               "vegetationDensity": {
-                "type": "UINT8",
+                "componentType": "UINT8",
                 "normalized": true
               }
             }
@@ -20,12 +20,11 @@
           "landCover": {
             "properties": {
               "name": {
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "color": {
-                "type": "ARRAY",
-                "componentType": "UINT8",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "UINT8"
               }
             }
           }

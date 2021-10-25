@@ -2,6 +2,7 @@ import {
   defaultValue,
   Cartesian3,
   MetadataClassProperty,
+  MetadataComponentType,
   MetadataTableProperty,
 } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
@@ -49,7 +50,7 @@ describe("Scene/MetadataTableProperty", function () {
       classProperty: new MetadataClassProperty({
         id: "property",
         property: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       }),
       bufferViews: {
@@ -59,6 +60,109 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
+  });
+
+  it("constructs properties with stringOffset and arrayOffset", function () {
+    var extras = {
+      other: 0,
+    };
+
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
+    var a = 97;
+    var b = 98;
+    var c = 99;
+    var d = 100;
+    var e = 101;
+
+    var property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        bufferView: 0,
+        extras: extras,
+        extensions: extensions,
+        stringOffsetType: "UINT16",
+        stringOffsetBufferView: 1,
+        arrayOffsetType: "UINT8",
+        arrayOffsetBufferView: 2,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "ARRAY",
+          componentType: "STRING",
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([a, b, b, c, c, c, d, d, d, d, e, e, e, e, e]),
+        1: new Uint8Array([0, 0, 1, 0, 3, 0, 6, 0, 10, 0, 15, 0]),
+        2: new Uint8Array([0, 3, 5]),
+      },
+    });
+
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+    expect(property._stringOffsets._componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property._arrayOffsets._componentType).toBe(
+      MetadataComponentType.UINT8
+    );
+    expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
+    expect(property.get(1)).toEqual(["dddd", "eeeee"]);
+  });
+
+  it("constructs property with EXT_feature_metadata offsetType", function () {
+    var extras = {
+      other: 0,
+    };
+
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
+    var a = 97;
+    var b = 98;
+    var c = 99;
+    var d = 100;
+    var e = 101;
+
+    var property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        bufferView: 0,
+        extras: extras,
+        extensions: extensions,
+        offsetType: "UINT16",
+        stringOffsetBufferView: 1,
+        arrayOffsetBufferView: 2,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "ARRAY",
+          componentType: "STRING",
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([a, b, b, c, c, c, d, d, d, d, e, e, e, e, e]),
+        1: new Uint8Array([0, 0, 1, 0, 3, 0, 6, 0, 10, 0, 15, 0]),
+        2: new Uint8Array([0, 0, 3, 0, 5, 0]),
+      },
+    });
+
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+    expect(property._stringOffsets._componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property._arrayOffsets._componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
+    expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
 
   it("constructor throws without count", function () {
@@ -122,7 +226,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
 
     var classProperty = {
-      type: "UINT64",
+      componentType: "UINT64",
     };
 
     var property = MetadataTester.createProperty({
@@ -170,7 +274,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
 
     var classProperty = {
-      type: "INT64",
+      componentType: "INT64",
     };
 
     var property = MetadataTester.createProperty({
@@ -221,37 +325,37 @@ describe("Scene/MetadataTableProperty", function () {
     // INT64 and UINT64 are tested above
     var properties = {
       propertyInt8: {
-        type: "INT8",
+        componentType: "INT8",
       },
       propertyUint8: {
-        type: "UINT8",
+        componentType: "UINT8",
       },
       propertyInt16: {
-        type: "INT16",
+        componentType: "INT16",
       },
       propertyUint16: {
-        type: "UINT16",
+        componentType: "UINT16",
       },
       propertyInt32: {
-        type: "INT32",
+        componentType: "INT32",
       },
       propertyUint32: {
-        type: "UINT32",
+        componentType: "UINT32",
       },
       propertyFloat32: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       propertyFloat64: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
       },
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
       },
       propertyEnum: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
       },
     };
@@ -291,44 +395,36 @@ describe("Scene/MetadataTableProperty", function () {
   it("get returns vectors", function () {
     var properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT8",
-        componentCount: 3,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT8",
-        componentCount: 3,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT16",
-        componentCount: 3,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT16",
-        componentCount: 3,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT32",
-        componentCount: 3,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT32",
-        componentCount: 3,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT64",
-        componentCount: 3,
       },
     };
 
@@ -413,6 +509,18 @@ describe("Scene/MetadataTableProperty", function () {
         enumType: "myEnum",
         componentCount: 3,
       },
+      // Once we created EXT_mesh_features, arrays no longer automatically
+      // convert to vectors, since we now have dedicated VECN types
+      propertyUint32: {
+        type: "ARRAY",
+        componentType: "UINT32",
+        componentCount: 3,
+      },
+      propertyFloat32: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 3,
+      },
     };
 
     var propertyValues = {
@@ -435,6 +543,14 @@ describe("Scene/MetadataTableProperty", function () {
       propertyEnum: [
         ["ValueA", "ValueB", "Other"],
         ["ValueA", "ValueA", "ValueA"],
+      ],
+      propertyUint32: [
+        [0, 1, 2],
+        [3, 4, 5],
+      ],
+      propertyFloat32: [
+        [-2.0, -1.0, 0.0],
+        [1.0, 2.0, 3.0],
       ],
     };
 
@@ -566,7 +682,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("get returns normalized value", function () {
     var propertyInt8 = MetadataTester.createProperty({
       property: {
-        type: "INT8",
+        componentType: "INT8",
         normalized: true,
       },
       values: [-128],
@@ -574,7 +690,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     var propertyUint8 = MetadataTester.createProperty({
       property: {
-        type: "UINT8",
+        componentType: "UINT8",
         normalized: true,
       },
       values: [255],
@@ -587,7 +703,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("get throws without index", function () {
     var property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -600,7 +716,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("get throws if index is out of bounds", function () {
     var property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -616,43 +732,45 @@ describe("Scene/MetadataTableProperty", function () {
   it("set sets single values", function () {
     var properties = {
       propertyInt8: {
-        type: "INT8",
+        type: "SINGLE",
+        componentType: "INT8",
       },
       propertyUint8: {
-        type: "UINT8",
+        // SINGLE is the default
+        componentType: "UINT8",
       },
       propertyInt16: {
-        type: "INT16",
+        componentType: "INT16",
       },
       propertyUint16: {
-        type: "UINT16",
+        componentType: "UINT16",
       },
       propertyInt32: {
-        type: "INT32",
+        componentType: "INT32",
       },
       propertyUint32: {
-        type: "UINT32",
+        componentType: "UINT32",
       },
       propertyInt64: {
-        type: "INT64",
+        componentType: "INT64",
       },
       propertyUint64: {
-        type: "UINT64",
+        componentType: "UINT64",
       },
       propertyFloat32: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       propertyFloat64: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
       },
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
       },
       propertyEnum: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
       },
     };
@@ -694,8 +812,8 @@ describe("Scene/MetadataTableProperty", function () {
         BigInt("4611686018427387833"), // eslint-disable-line
         BigInt("18446744073709551615"), // eslint-disable-line
       ],
-      propertyFloat32: [-2.5, -1.0, 0.0, 700.0, Number.POSITIVE_INFINITY],
-      propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Number.POSITIVE_INFINITY],
+      propertyFloat32: [-2.5, -1.0, 0.0, 700.0, 38.0],
+      propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Math.PI],
       propertyBoolean: [true, true, false, false, true],
       propertyString: ["おはようございます。😃", "a", "", "def", "0001"],
       propertyEnum: ["ValueA", "ValueB", "Other", "ValueA", "ValueA"],
@@ -727,44 +845,36 @@ describe("Scene/MetadataTableProperty", function () {
   it("set sets vector values", function () {
     var properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT8",
-        componentCount: 3,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT8",
-        componentCount: 3,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT16",
-        componentCount: 3,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT16",
-        componentCount: 3,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT32",
-        componentCount: 3,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT32",
-        componentCount: 3,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT64",
-        componentCount: 3,
       },
     };
 
@@ -870,6 +980,16 @@ describe("Scene/MetadataTableProperty", function () {
         enumType: "myEnum",
         componentCount: 3,
       },
+      propertyUint32: {
+        type: "ARRAY",
+        componentType: "UINT32",
+        componentCount: 3,
+      },
+      propertyFloat32: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 2,
+      },
     };
 
     var propertyValues = {
@@ -893,6 +1013,14 @@ describe("Scene/MetadataTableProperty", function () {
         ["Other", "Other", "Other"],
         ["Other", "Other", "Other"],
       ],
+      propertyUint32: [
+        [0, 0, 0],
+        [0, 0, 0],
+      ],
+      propertyFloat32: [
+        [0.0, 0.0],
+        [0.0, 0.0],
+      ],
     };
 
     var valuesToSet = {
@@ -915,6 +1043,14 @@ describe("Scene/MetadataTableProperty", function () {
       propertyEnum: [
         ["ValueA", "ValueB", "Other"],
         ["ValueA", "ValueA", "ValueA"],
+      ],
+      propertyUint32: [
+        [1, 0, 0],
+        [0, 2, 0],
+      ],
+      propertyFloat32: [
+        [0.0, 0.5],
+        [0.25, 0.25],
       ],
     };
 
@@ -1222,58 +1358,70 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("set sets Infinity for FLOAT32 and FLOAT64", function () {
+  it("set throws if Infinity is given for FLOAT32 and FLOAT64", function () {
     var propertyFloat32 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [0.0, 0.0],
     });
 
     var propertyFloat64 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       values: [0.0, 0.0],
     });
 
-    propertyFloat32.set(0, Number.POSITIVE_INFINITY);
-    propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
-    propertyFloat64.set(0, Number.POSITIVE_INFINITY);
-    propertyFloat64.set(1, Number.NEGATIVE_INFINITY);
+    expect(function () {
+      propertyFloat32.set(0, Number.POSITIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat64.set(0, Number.POSITIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
+    }).toThrowDeveloperError();
 
-    expect(propertyFloat32.get(0)).toBe(Number.POSITIVE_INFINITY);
-    expect(propertyFloat32.get(1)).toBe(Number.NEGATIVE_INFINITY);
-    expect(propertyFloat64.get(0)).toBe(Number.POSITIVE_INFINITY);
-    expect(propertyFloat64.get(1)).toBe(Number.NEGATIVE_INFINITY);
+    expect(propertyFloat32.get(0)).toBe(0.0);
+    expect(propertyFloat32.get(1)).toBe(0.0);
+    expect(propertyFloat64.get(0)).toBe(0.0);
+    expect(propertyFloat64.get(1)).toBe(0.0);
   });
 
-  it("set sets NaN for FLOAT32 and FLOAT64", function () {
+  it("set throws if a NaN is given for FLOAT32 and FLOAT64", function () {
     var propertyFloat32 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [0.0],
     });
 
     var propertyFloat64 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       values: [0.0],
     });
 
-    propertyFloat32.set(0, NaN);
-    propertyFloat64.set(0, NaN);
+    expect(function () {
+      propertyFloat32.set(0, NaN);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat64.set(0, NaN);
+    }).toThrowDeveloperError();
 
-    expect(isNaN(propertyFloat32.get(0))).toBe(true);
-    expect(isNaN(propertyFloat64.get(0))).toBe(true);
+    expect(propertyFloat32.get(0)).toBe(0.0);
+    expect(propertyFloat64.get(0)).toBe(0.0);
   });
 
   it("set sets value for normalized property", function () {
     var propertyInt8 = MetadataTester.createProperty({
       property: {
-        type: "INT8",
+        componentType: "INT8",
         normalized: true,
       },
       values: [0],
@@ -1281,7 +1429,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     var propertyUint8 = MetadataTester.createProperty({
       property: {
-        type: "UINT8",
+        componentType: "UINT8",
         normalized: true,
       },
       values: [255],
@@ -1297,7 +1445,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws without index", function () {
     var property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -1310,7 +1458,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws if index is out of bounds", function () {
     var property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });

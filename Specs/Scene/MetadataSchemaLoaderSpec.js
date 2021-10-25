@@ -12,10 +12,10 @@ describe("Scene/MetadataSchemaLoader", function () {
       tree: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           type: {
-            type: "enum",
+            componentType: "ENUM",
             enumType: "treeType",
           },
         },

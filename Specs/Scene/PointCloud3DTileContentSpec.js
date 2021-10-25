@@ -878,20 +878,6 @@ describe(
       );
     });
 
-    it("throws when shader style reference a non-existent property", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        pointCloudWithPerPointPropertiesUrl
-      ).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: "color() * ${non_existent_property}",
-        });
-        expect(function () {
-          scene.renderForSpecs();
-        }).toThrowRuntimeError();
-      });
-    });
-
     it("does not apply shader style if the point cloud has a batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(
         function (tileset) {
@@ -1158,10 +1144,10 @@ describe(
         class: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },

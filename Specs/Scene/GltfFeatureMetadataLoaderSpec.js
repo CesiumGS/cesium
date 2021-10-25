@@ -35,10 +35,10 @@ describe(
         building: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT64",
+              componentType: "FLOAT64",
             },
           },
         },
@@ -58,7 +58,7 @@ describe(
               componentCount: 3,
             },
             intensity: {
-              type: "UINT8",
+              componentType: "UINT8",
             },
           },
         },

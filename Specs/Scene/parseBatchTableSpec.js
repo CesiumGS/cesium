@@ -4,6 +4,7 @@ import {
   Cartesian4,
   parseBatchTable,
   MetadataClass,
+  MetadataComponentType,
   MetadataType,
 } from "../../Source/Cesium.js";
 
@@ -121,14 +122,30 @@ describe("Scene/parseBatchTable", function () {
     });
     var properties = metadata.schema.classes[className].properties;
 
-    expect(properties.uint8Property.type).toBe(MetadataType.UINT8);
-    expect(properties.uint16Property.type).toBe(MetadataType.UINT16);
-    expect(properties.uint32Property.type).toBe(MetadataType.UINT32);
-    expect(properties.int8Property.type).toBe(MetadataType.INT8);
-    expect(properties.int16Property.type).toBe(MetadataType.INT16);
-    expect(properties.int32Property.type).toBe(MetadataType.INT32);
-    expect(properties.floatProperty.type).toBe(MetadataType.FLOAT32);
-    expect(properties.doubleProperty.type).toBe(MetadataType.FLOAT64);
+    expect(properties.uint8Property.componentType).toBe(
+      MetadataComponentType.UINT8
+    );
+    expect(properties.uint16Property.componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(properties.uint32Property.componentType).toBe(
+      MetadataComponentType.UINT32
+    );
+    expect(properties.int8Property.componentType).toBe(
+      MetadataComponentType.INT8
+    );
+    expect(properties.int16Property.componentType).toBe(
+      MetadataComponentType.INT16
+    );
+    expect(properties.int32Property.componentType).toBe(
+      MetadataComponentType.INT32
+    );
+    expect(properties.floatProperty.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    expect(properties.doubleProperty.componentType).toBe(
+      MetadataComponentType.FLOAT64
+    );
 
     var propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "uint8Property")).toBe(0);
@@ -169,12 +186,18 @@ describe("Scene/parseBatchTable", function () {
     });
     var properties = metadata.schema.classes[className].properties;
 
-    expect(properties.vec2Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.uvec3Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.dvec4Property.type).toBe(MetadataType.ARRAY);
-    expect(properties.vec2Property.componentType).toBe(MetadataType.FLOAT32);
-    expect(properties.uvec3Property.componentType).toBe(MetadataType.UINT32);
-    expect(properties.dvec4Property.componentType).toBe(MetadataType.FLOAT64);
+    expect(properties.vec2Property.type).toBe(MetadataType.VEC2);
+    expect(properties.uvec3Property.type).toBe(MetadataType.VEC3);
+    expect(properties.dvec4Property.type).toBe(MetadataType.VEC4);
+    expect(properties.vec2Property.componentType).toBe(
+      MetadataComponentType.FLOAT32
+    );
+    expect(properties.uvec3Property.componentType).toBe(
+      MetadataComponentType.UINT32
+    );
+    expect(properties.dvec4Property.componentType).toBe(
+      MetadataComponentType.FLOAT64
+    );
     expect(properties.vec2Property.componentCount).toBe(2);
     expect(properties.uvec3Property.componentCount).toBe(3);
     expect(properties.dvec4Property.componentCount).toBe(4);
