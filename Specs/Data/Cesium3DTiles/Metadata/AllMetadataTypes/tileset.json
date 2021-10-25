@@ -14,28 +14,26 @@
             "properties": {
               "author": {
                 "description": "The person or entity that made the tileset",
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "AUTHOR"
               },
               "date": {
                 "description": "Date of tileset creation in YYYY-MM-DD format",
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "DATE_ISO_8601"
               },
               "centerCartographic": {
                 "description": "Center of the tileset as [longitude, latitude, height] where longitude and latitude are in radians, and height is in meters].",
-                "type": "ARRAY",
-                "componentType": "FLOAT64",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "FLOAT64"
               },
               "tileCount": {
                 "description": "Total number of tiles in the tileset",
-                "type": "UINT8"
+                "componentType": "UINT8"
               },
               "color": {
-                "type": "ARRAY",
+                "type": "VEC4",
                 "componentType": "UINT8",
-                "componentCount": 4,
                 "semantic": "COLOR"
               }
             }
@@ -43,32 +41,32 @@
           "residential": {
             "properties": {
               "population": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               },
               "neighborhoods": {
                 "type": "ARRAY",
                 "componentType": "STRING"
               },
               "name": {
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "GROUP_NAME"
               },
               "tileCount": {
-                "type": "UINT8"
+                "componentType": "UINT8"
               }
             }
           },
           "commercial": {
             "properties": {
               "businessCount": {
-                "type": "UINT16"
+                "componentType": "UINT16"
               },
               "majorIndustries": {
                 "type": "ARRAY",
                 "componentType": "STRING"
               },
               "name": {
-                "type": "STRING",
+                "componentType": "STRING",
                 "semantic": "GROUP_NAME"
               }
             }
@@ -76,13 +74,12 @@
           "tile": {
             "properties": {
               "color": {
-                "type": "ARRAY",
+                "type": "VEC4",
                 "componentType": "UINT8",
-                "componentCount": 4,
                 "semantic": "COLOR"
               },
               "population": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               }
             }
           }

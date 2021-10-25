@@ -4,6 +4,7 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelColorStage from "./ModelColorStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -192,7 +193,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   var modelRenderResources = new ModelRenderResources(this._model);
 
+  this._pipelineStages = [];
+  var model = this._model;
+  if (defined(model.color)) {
+    this._pipelineStages.push(ModelColorStage);
+  }
+
   var i, j, k;
+  for (i = 0; i < this._pipelineStages.length; i++) {
+    var modelPipelineStage = this._pipelineStages[i];
+    modelPipelineStage.process(modelRenderResources, model, frameState);
+  }
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     var runtimeNode = this._runtimeNodes[i];
 

@@ -1,5 +1,5 @@
 import {
-  FeatureTextureProperty,
+  PropertyTextureProperty,
   Matrix3,
   MetadataClass,
   PixelDatatype,
@@ -8,13 +8,13 @@ import {
 } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 
-describe("Scene/FeatureTextureProperty", function () {
+describe("Scene/PropertyTextureProperty", function () {
   var classProperty;
   var context;
   var texture;
   var extras;
   var extensions;
-  var featureTextureProperty;
+  var propertyTextureProperty;
 
   beforeAll(function () {
     var classDefinition = new MetadataClass({
@@ -70,7 +70,7 @@ describe("Scene/FeatureTextureProperty", function () {
       extensions: extensions,
     };
 
-    featureTextureProperty = new FeatureTextureProperty({
+    propertyTextureProperty = new PropertyTextureProperty({
       property: property,
       classProperty: classProperty,
       textures: {
@@ -85,8 +85,8 @@ describe("Scene/FeatureTextureProperty", function () {
   });
 
   it("creates feature texture property", function () {
-    expect(featureTextureProperty.extras).toBe(extras);
-    expect(featureTextureProperty.extensions).toBe(extensions);
+    expect(propertyTextureProperty.extras).toBe(extras);
+    expect(propertyTextureProperty.extensions).toBe(extensions);
 
     // prettier-ignore
     var expectedTransform = new Matrix3(
@@ -95,7 +95,7 @@ describe("Scene/FeatureTextureProperty", function () {
       0.0, 0.0, 1.0
     );
 
-    var modelTextureReader = featureTextureProperty.textureReader;
+    var modelTextureReader = propertyTextureProperty.textureReader;
     expect(modelTextureReader.texture).toBe(texture);
     expect(modelTextureReader.texCoord).toBe(1);
     expect(modelTextureReader.transform).toEqual(expectedTransform);
@@ -104,7 +104,7 @@ describe("Scene/FeatureTextureProperty", function () {
 
   it("constructor throws without property", function () {
     expect(function () {
-      return new FeatureTextureProperty({
+      return new PropertyTextureProperty({
         classProperty: classProperty,
         textures: {},
       });
@@ -113,7 +113,7 @@ describe("Scene/FeatureTextureProperty", function () {
 
   it("constructor throws without class", function () {
     expect(function () {
-      return new FeatureTextureProperty({
+      return new PropertyTextureProperty({
         property: {},
         textures: {},
       });
@@ -122,7 +122,7 @@ describe("Scene/FeatureTextureProperty", function () {
 
   it("constructor throws without textures", function () {
     expect(function () {
-      return new FeatureTextureProperty({
+      return new PropertyTextureProperty({
         property: {},
         classProperty: classProperty,
       });

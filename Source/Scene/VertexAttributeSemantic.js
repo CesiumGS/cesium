@@ -170,7 +170,8 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.JOINTS;
     case "WEIGHTS":
       return VertexAttributeSemantic.WEIGHTS;
-    case "_FEATURE_ID":
+    case "_FEATURE_ID": // for EXT_feature_metadata
+    case "FEATURE_ID": // for EXT_mesh_features
     case "_BATCHID": // for b3dm compatibility
     case "BATCHID": // for legacy b3dm compatibility
       return VertexAttributeSemantic.FEATURE_ID;

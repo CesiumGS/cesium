@@ -3464,6 +3464,13 @@ describe("Scene/Expression", function () {
     expect(shaderExpression).toEqual(expected);
   });
 
+  it("gets shader expression for non-existent variable", function () {
+    var expression = new Expression("${nonExistentProperty}");
+    var shaderExpression = expression.getShaderExpression({}, {});
+    var expected = "czm_infinity";
+    expect(shaderExpression).toEqual(expected);
+  });
+
   it("gets shader expression for unary not", function () {
     var expression = new Expression("!true");
     var shaderExpression = expression.getShaderExpression({}, {});

@@ -153,6 +153,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Alexander Gallegos](https://github.com/argallegos)
   - [Janine Liu](https://github.com/j9liu)
   - [Sam Rothstein](https://github.com/srothst1)
+  - [Daniel Krupka](https://github.com/krupkad)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -300,3 +301,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yuki Noda](https://github.com/yukinoda)
 - [Robin Danielsson](https://github.com/robdan7)
 - [Oskar Havo](https://github.com/OskarHavo)
+- [Mark Williams](https://github.com/markw65)

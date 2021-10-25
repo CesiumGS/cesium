@@ -1,9 +1,6 @@
 import {
   Cartesian3,
-  Cesium3DTileContentFeatureTable,
-  Cesium3DTileFeature,
   Cesium3DTilePass,
-  ExperimentalFeatures,
   ClippingPlane,
   ClippingPlaneCollection,
   HeadingPitchRange,
@@ -23,8 +20,6 @@ describe(
 
     var gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     var glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
-    var buildingsMetadataUrl =
-      "./Data/Cesium3DTiles/Metadata/FeatureMetadata/tileset.json";
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
@@ -201,86 +196,16 @@ describe(
       return Cesium3DTilesTester.tileDestroys(scene, gltfContentUrl);
     });
 
-    describe("ModelExperimental", function () {
-      beforeEach(function () {
-        ExperimentalFeatures.enableModelExperimental = true;
-      });
-
-      afterEach(function () {
-        ExperimentalFeatures.enableModelExperimental = false;
-      });
-
-      it("renders glTF content with metadata", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          Cesium3DTilesTester.expectRender(scene, tileset);
-        });
-      });
-
-      it("renders glTF content without metadata", function () {
-        return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
-          function (tileset) {
-            Cesium3DTilesTester.expectRender(scene, tileset);
-          }
-        );
-      });
-
-      it("assigns feature table as batch table", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          expect(content.batchTable).toBeDefined();
-          expect(content.batchTable).toBeInstanceOf(
-            Cesium3DTileContentFeatureTable
-          );
-        });
-      });
-
-      it("hasProperty works", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          var featureTable = content.batchTable;
-          expect(featureTable).toBeDefined();
-          for (var i = 0; i < featureTable.featuresLength; i++) {
-            expect(content.hasProperty(i, "height")).toEqual(true);
-            expect(content.hasProperty(i, "width")).toEqual(false);
-          }
-        });
-      });
-
-      it("getFeature works", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          buildingsMetadataUrl
-        ).then(function (tileset) {
-          var content = tileset.root.content;
-          var featureTable = content.batchTable;
-          expect(featureTable).toBeDefined();
-          for (var i = 0; i < featureTable.featuresLength; i++) {
-            var feature = content.getFeature(i);
-            expect(feature).toBeInstanceOf(Cesium3DTileFeature);
-          }
-        });
-      });
-    });
-
     describe("3DTILES_metadata", function () {
       var metadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },

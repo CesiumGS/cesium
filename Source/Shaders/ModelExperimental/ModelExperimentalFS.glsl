@@ -48,6 +48,10 @@ void main()
 
     lightingStage(material);
 
+    #ifdef HAS_MODEL_COLOR
+    modelColorStage(material);
+    #endif
+
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
     #ifdef HAS_FEATURES
