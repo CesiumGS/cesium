@@ -86,6 +86,8 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
       // this changes, we need to derive new opaque commands here.
       commandList.push(command);
     }
+  } else {
+    commandList.push(command);
   }
 
   return commandList;

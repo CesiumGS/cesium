@@ -228,7 +228,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
       if (defined(model.style)) {
-        runtimePrimitive.pipelineStages.push(CPUStylingStage);
+        runtimePrimitive.pipelineStages.splice(
+          runtimePrimitive.pipelineStages.length - 1,
+          0,
+          CPUStylingStage
+        );
       }
 
       var primitiveRenderResources = new PrimitiveRenderResources(

@@ -102,6 +102,13 @@ ModelFeature.prototype.getProperty = function (name) {
 };
 
 /**
+ * @private
+ */
+ModelFeature.prototype.getPropertyInherited = function (name) {
+  return this._featureTable.getProperty(this._featureId, name);
+};
+
+/**
  * Returns an array of property names for the feature.
  *
  * @param {String[]} [results] An array into which to store the results.

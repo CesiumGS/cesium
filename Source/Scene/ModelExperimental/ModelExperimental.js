@@ -126,8 +126,9 @@ function createModelFeatureTables(model, featureMetadata) {
 
     if (modelFeatureTable.featuresLength > 0) {
       modelFeatureTables.push(modelFeatureTable);
-      model._resources.push(modelFeatureTable);
     }
+
+    modelFeatureTable.applyStyle(model.style);
   }
 
   return modelFeatureTables;
@@ -380,14 +381,13 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      if (
-        (!defined(value) && defined(this._style)) ||
-        (defined(this._style) && this._style.style !== value.style)
-      ) {
-        this.resetDrawCommands();
-      }
       this.resetDrawCommands();
       this._style = value;
+
+      if (!defined(this._content) && defined(this.featureTableId)) {
+        var table = this.featureTables[this.featureTableId];
+        table.applyStyle(value);
+      }
     },
   },
 
@@ -576,7 +576,10 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @private
  */
 ModelExperimental.prototype.resetDrawCommands = function () {
-  //this.destroyResources();
+  if (!this._drawCommandsBuilt) {
+    return;
+  }
+  this.destroyResources();
   this._drawCommandsBuilt = false;
   this._sceneGraph._drawCommands = [];
 };
@@ -679,12 +682,21 @@ ModelExperimental.prototype.destroy = function () {
   if (defined(loader)) {
     loader.destroy();
   }
-  this._destroyResources();
+
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].destroy();
+    }
+  }
+
+  this.destroyResources();
 
   destroyObject(this);
 };
 
 /**
+ * Destroys resources generated in the pipeline stages.
  * @private
  */
 ModelExperimental.prototype.destroyResources = function () {

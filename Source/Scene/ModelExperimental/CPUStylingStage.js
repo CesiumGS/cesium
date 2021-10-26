@@ -1,5 +1,7 @@
+import AlphaMode from "../AlphaMode.js";
 import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
+import Pass from "../../Renderer/Pass.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
@@ -27,7 +29,14 @@ CPUStylingStage.process = function (renderResources, primitive, frameState) {
   };
 
   var batchTexture = model.featureTables[model.featureTableId].batchTexture;
-  renderResources.styleCommandsNeeded = getStyleCommandsNeeded(batchTexture);
+  var styleCommandsNeeded = getStyleCommandsNeeded(batchTexture);
+
+  if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+    renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
+  }
+
+  renderResources.styleCommandsNeeded = styleCommandsNeeded;
 };
 
 /**
