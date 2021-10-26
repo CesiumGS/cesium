@@ -2,7 +2,7 @@ void filterByPassType(inout vec3 positionMC, vec4 featureColor)
 {
     bool styleTranslucent = (featureColor.a != 1.0);
     // Only render translucent features in the translucent pass (if the style or the original command has translucency).
-    if (czm_pass == czm_passTranslucent && !styleTranslucent)
+    if (czm_pass == czm_passTranslucent && !styleTranslucent && !model_commandTranslucent)
     {
         positionMC *= 0.0;
     }

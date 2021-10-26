@@ -16,10 +16,21 @@ AlphaPipelineStage.name = "AlphaPipelineStage"; // Helps with debugging
 
 AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
   var alphaOptions = renderResources.alphaOptions;
+  var shaderBuilder = renderResources.shaderBuilder;
+  var uniformMap = renderResources.uniformMap;
 
   // Ensure the pass is defined
   var model = renderResources.model;
   alphaOptions.pass = defaultValue(alphaOptions.pass, model.opaquePass);
+
+  shaderBuilder.addUniform(
+    "bool",
+    "model_commandTranslucent",
+    ShaderDestination.BOTH
+  );
+  uniformMap.model_commandTranslucent = function () {
+    return alphaOptions.pass === Pass.TRANSLUCENT;
+  };
 
   var renderStateOptions = renderResources.renderStateOptions;
   if (alphaOptions.pass === Pass.TRANSLUCENT) {
@@ -28,8 +39,6 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
     renderStateOptions.blending = BlendingState.DISABLED;
   }
 
-  var shaderBuilder = renderResources.shaderBuilder;
-  var uniformMap = renderResources.uniformMap;
   var alphaMode = alphaOptions.alphaMode;
 
   if (alphaMode === AlphaMode.MASK) {

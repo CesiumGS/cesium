@@ -249,7 +249,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
       var drawCommand = buildDrawCommand(primitiveRenderResources, frameState);
-      this._drawCommands.push(drawCommand);
+      this._drawCommands.push.apply(this._drawCommands, drawCommand);
     }
   }
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(

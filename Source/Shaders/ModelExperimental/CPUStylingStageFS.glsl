@@ -2,11 +2,11 @@ void filterByPassType(vec4 featureColor)
 {
     bool styleTranslucent = (featureColor.a != 1.0);
     // Only render translucent features in the translucent pass (if the style or the original command has translucency).
-    if (czm_pass == czm_passTranslucent && !styleTranslucent)
+    if (czm_pass == czm_passTranslucent && !styleTranslucent && !model_commandTranslucent)
     {
         discard;
     }
-    // If the current pass is not the transluceny pass and the style is not translucent, don't rendeer the feature.
+    // If the current pass is not the transluceny pass and the style is not translucent, don't render the feature.
     else if (czm_pass != czm_passTranslucent && styleTranslucent)
     {
         discard;
