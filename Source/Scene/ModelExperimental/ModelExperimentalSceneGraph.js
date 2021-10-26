@@ -11,6 +11,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import CPUStylingStage from "./CPUStylingStage.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -225,6 +226,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+
+      if (defined(model.style)) {
+        runtimePrimitive.pipelineStages.push(CPUStylingStage);
+      }
 
       var primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,

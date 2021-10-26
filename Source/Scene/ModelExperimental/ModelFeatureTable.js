@@ -1,9 +1,11 @@
 import BatchTexture from "../BatchTexture.js";
 import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
 import Check from "../../Core/Check.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
+import defaultValue from "../../Core/defaultValue.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -164,6 +166,38 @@ ModelFeatureTable.prototype.getPropertyNames = function (results) {
 
 ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
   return this._propertyTable.setProperty(featureId, name, value);
+};
+
+var scratchColor = new Color();
+ModelFeatureTable.prototype.applyStyle = function (style) {
+  var model = this._model;
+
+  if (!defined(style)) {
+    model.style = undefined;
+    this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
+    this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);
+    return;
+  }
+
+  model.style = style;
+  for (var i = 0; i < this._featuresLength; i++) {
+    var feature = this.getFeature(i);
+    var color = defined(style.color)
+      ? defaultValue(
+          style.color.evaluateColor(feature, scratchColor),
+          BatchTexture.DEFAULT_COLOR_VALUE
+        )
+      : BatchTexture.DEFAULT_COLOR_VALUE;
+    var show = defined(style.show)
+      ? defaultValue(
+          style.show.evaluate(feature),
+          BatchTexture.DEFAULT_SHOW_VALUE
+        )
+      : BatchTexture.DEFAULT_SHOW_VALUE;
+
+    this.setColor(i, color);
+    this.setShow(i, show);
+  }
 };
 
 /**

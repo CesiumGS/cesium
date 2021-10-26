@@ -154,7 +154,7 @@ function processPickTexture(renderResources, primitive, instances) {
 
   // The feature ID  is ignored if it is greater than the number of features.
   renderResources.pickId =
-    "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))";
+    "((feature.id < model_featuresLength) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))";
 }
 
 function processInstancedPickIds(renderResources, instances, context) {

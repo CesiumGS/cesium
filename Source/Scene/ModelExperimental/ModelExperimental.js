@@ -35,6 +35,7 @@ import Color from "../../Core/Color.js";
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Cesium3DTileStyle} [options.style] A style to apply to the features in the model. See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
@@ -82,6 +83,8 @@ export default function ModelExperimental(options) {
     ColorBlendMode.HIGHLIGHT
   );
   this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+
+  this._style = options.style;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -365,6 +368,30 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The style to apply the to the features in the model.
+   *
+   * @type {Cesium3DTileStyle}
+   * @readonly
+   *
+   * @private
+   */
+  style: {
+    get: function () {
+      return this._style;
+    },
+    set: function (value) {
+      if (
+        (!defined(value) && defined(this._style)) ||
+        (defined(this._style) && this._style.style !== value.style)
+      ) {
+        this.resetDrawCommands();
+      }
+      this.resetDrawCommands();
+      this._style = value;
+    },
+  },
+
+  /**
    * The color to blend with the model's rendered color.
    *
    * @memberof ModelExperimental.prototype
@@ -549,6 +576,7 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @private
  */
 ModelExperimental.prototype.resetDrawCommands = function () {
+  //this.destroyResources();
   this._drawCommandsBuilt = false;
   this._sceneGraph._drawCommands = [];
 };
@@ -651,13 +679,19 @@ ModelExperimental.prototype.destroy = function () {
   if (defined(loader)) {
     loader.destroy();
   }
+  this._destroyResources();
 
+  destroyObject(this);
+};
+
+/**
+ * @private
+ */
+ModelExperimental.prototype.destroyResources = function () {
   var resources = this._resources;
   for (var i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-
-  destroyObject(this);
 };
 
 /**

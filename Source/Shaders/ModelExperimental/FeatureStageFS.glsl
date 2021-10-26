@@ -1,13 +1,17 @@
-float featureId;
-vec2 featureSt;
+void featureStage(inout Feature feature)
+{   
 
-void featureStage()
-{
     #ifdef FEATURE_ID_TEXTURE
-    featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);
+    
+    float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);
+    vec2 featureSt;
     if (featureId < model_featuresLength)
     {
         featureSt = computeSt(featureId);
+
+        feature.id = featureId;
+        feature.st = featureSt;
+        feature.color = texture2D(model_batchTexture, featureSt);
     }
     // Floating point comparisons can be unreliable in GLSL, so we
     // increment the v_activeFeatureId to make sure it's always greater
@@ -16,10 +20,11 @@ void featureStage()
     // greater than the number of features.
     else
     {
-        featureId = model_featuresLength + 1.0;
+        feature.id = model_featuresLength + 1.0;
     }
     #else
-    featureId = v_activeFeatureId;
-    featureSt = v_activeFeatureSt;
+    // For feature ID vertex attributes, the function generated in FeatureIdPipelineStage 
+    // is used to update the Feature struct from the varyings passed in.
+    updateFeatureStruct(feature);
     #endif
 }

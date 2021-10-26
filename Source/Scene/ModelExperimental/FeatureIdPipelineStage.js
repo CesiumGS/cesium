@@ -19,6 +19,15 @@ import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
 var FeatureIdPipelineStage = {};
 FeatureIdPipelineStage.name = "FeatureIdPipelineStage"; // Helps with debugging
 
+FeatureIdPipelineStage.STRUCT_ID_FEATURE = "FeatureStruct";
+FeatureIdPipelineStage.STRUCT_NAME_FEATURE = "Feature";
+FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS =
+  "updateFeatureStructVS";
+FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS =
+  "updateFeatureStructFS";
+FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE =
+  "void updateFeatureStruct(inout Feature feature)";
+
 /**
  * Process a primitive. This modifies the following parts of the render resources:
  * <ul>
@@ -42,6 +51,7 @@ FeatureIdPipelineStage.process = function (
   renderResources.hasFeatureIds = true;
 
   shaderBuilder.addDefine("HAS_FEATURES", undefined, ShaderDestination.BOTH);
+  updateFeatureStruct(shaderBuilder);
 
   // Handle feature attribution: through feature ID texture or feature ID vertex attribute.
   var featureIdTextures = primitive.featureIdTextures;
@@ -92,6 +102,74 @@ function getFeatureIdAttributeInfo(
 }
 
 /**
+ * Populate the "Feature" struct in the shaders that holds information about the "active" (used for picking/styling) feature.
+ * The struct is always added to the shader by the GeometryPipelineStage (required for compilation).
+ *
+ * struct Feature {
+ *   float id;
+ *   vec2 st;
+ *   vec4 color;
+ * }
+ *
+ * @private
+ */
+function updateFeatureStruct(shaderBuilder) {
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    "float",
+    "id"
+  );
+
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    "vec2",
+    "st"
+  );
+
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    "vec4",
+    "color"
+  );
+}
+
+/**
+ * Generates functions in the vertex/fragment shaders to update the varyings from the Feature struct and to update the Feature struct from the varyings, respectively.
+ * @private
+ */
+function generateFeatureFunctions(shaderBuilder) {
+  // Add the function to the vertex shader.
+  shaderBuilder.addFunction(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
+    FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
+    [
+      "v_activeFeatureId = feature.id;",
+      "v_activeFeatureSt = feature.st;",
+      "v_activeFeatureColor = feature.color;",
+    ]
+  );
+
+  // Add the function to the fragment shader.
+  shaderBuilder.addFunction(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
+    FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
+    ShaderDestination.FRAGMENT
+  );
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
+    [
+      "feature.id = v_activeFeatureId;",
+      "feature.st = v_activeFeatureSt;",
+      "feature.color = v_activeFeatureColor;",
+    ]
+  );
+}
+
+/**
  * Processes feature ID vertex attributes.
  * @private
  */
@@ -135,6 +213,8 @@ function processFeatureIdAttributes(renderResources, frameState, primitive) {
   );
   shaderBuilder.addVarying("float", "v_activeFeatureId");
   shaderBuilder.addVarying("vec2", "v_activeFeatureSt");
+  shaderBuilder.addVarying("vec4", "v_activeFeatureColor");
+  generateFeatureFunctions(shaderBuilder);
   shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
 }
 

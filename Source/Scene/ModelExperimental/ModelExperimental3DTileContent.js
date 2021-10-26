@@ -183,6 +183,10 @@ ModelExperimental3DTileContent.prototype.update = function (
 
   model.modelMatrix = tile.computedTransform;
 
+  if (defined(this.batchTable)) {
+    this.batchTable.update(frameState);
+  }
+
   model.update(frameState);
 };
 
@@ -215,6 +219,8 @@ ModelExperimental3DTileContent.fromGltf = function (
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    colorBlendMode: tileset.colorBlendMode,
+    colorBlendAmount: tileset.colorBlendAmount,
   };
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;
@@ -242,6 +248,8 @@ ModelExperimental3DTileContent.fromB3dm = function (
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    colorBlendMode: tileset.colorBlendMode,
+    colorBlendAmount: tileset.colorBlendAmount,
   };
   content._model = ModelExperimental.fromB3dm(modelOptions);
   return content;
