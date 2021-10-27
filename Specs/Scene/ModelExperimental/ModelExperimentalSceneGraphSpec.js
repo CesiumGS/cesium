@@ -6,6 +6,7 @@ import {
   Matrix4,
   ModelColorStage,
   ModelExperimentalSceneGraph,
+  Pass,
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -50,6 +51,98 @@ describe(
 
         expect(runtimeNodes[0].runtimePrimitives.length).toEqual(1);
         expect(runtimeNodes[1].runtimePrimitives.length).toEqual(1);
+      });
+    });
+
+    it("builds draw commands for all opaque styled features", function () {
+      spyOn(CPUStylingStage, "process").and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+          style: new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red')"]],
+            },
+          }),
+        },
+        scene
+      ).then(function (model) {
+        var frameState = scene.frameState;
+        var sceneGraph = model._sceneGraph;
+        // Reset the draw commands so we can inspect the draw command generation.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+
+        // Re-run the update function to generate draw commands.
+        model.update(frameState);
+        // Ensure that we're check for the application of a style, not just a color.
+        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(sceneGraph._drawCommands.length).toEqual(1);
+        expect(frameState.commandList.length).toEqual(1);
+        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
+      });
+    });
+
+    it("builds draw commands for all translucent styled features", function () {
+      spyOn(CPUStylingStage, "process").and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+          style: new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red', 0.1)"]],
+            },
+          }),
+        },
+        scene
+      ).then(function (model) {
+        var frameState = scene.frameState;
+        var sceneGraph = model._sceneGraph;
+        // Reset the draw commands so we can inspect the draw command generation.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+        // Re-run the update function to generate draw commands.
+        model.update(frameState);
+        // Ensure that we're check for the application of a style, not just a color.
+        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(sceneGraph._drawCommands.length).toEqual(1);
+        expect(frameState.commandList.length).toEqual(1);
+        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
+      });
+    });
+
+    it("builds draw commands for both opaque and translucent styled features", function () {
+      spyOn(CPUStylingStage, "process").and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+          style: new Cesium3DTileStyle({
+            color: {
+              conditions: [
+                ["${height} > 80", "color('red', 0.1)"],
+                ["true", "color('blue')"],
+              ],
+            },
+          }),
+        },
+        scene
+      ).then(function (model) {
+        var frameState = scene.frameState;
+        var sceneGraph = model._sceneGraph;
+        // Reset the draw commands so we can inspect the draw command generation.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+        // Re-run the update function to generate draw commands.
+        model.update(frameState);
+        // Ensure that we're check for the application of a style, not just a color.
+        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(sceneGraph._drawCommands.length).toEqual(2);
+        expect(frameState.commandList.length).toEqual(2);
+        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
+        expect(sceneGraph._drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
       });
     });
 

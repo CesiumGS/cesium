@@ -17,13 +17,6 @@ describe("Renderer/ShaderFunction", function () {
     ]);
   });
 
-  it("addLines throws for undefined lines", function () {
-    var func = new ShaderFunction(signature);
-    expect(function () {
-      return func.addLines(undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("generateGlslLines generates a function", function () {
     var func = new ShaderFunction(signature);
     func.addLines(["v_color = a_color;", "return vec3(0.0, 0.0, 1.0);"]);

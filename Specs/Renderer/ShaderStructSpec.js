@@ -19,20 +19,6 @@ describe("Renderer/ShaderStruct", function () {
     ]);
   });
 
-  it("addField throws for undefined type", function () {
-    var struct = new ShaderStruct("TestStruct");
-    expect(function () {
-      return struct.addField(undefined, "positionMC");
-    }).toThrowDeveloperError();
-  });
-
-  it("addField throws for undefined identifier", function () {
-    var struct = new ShaderStruct("TestStruct");
-    expect(function () {
-      return struct.addField("vec3", undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("generateGlslLines generates a struct definition", function () {
     var struct = new ShaderStruct("TestStruct");
     struct.addField("vec3", "positionMC");

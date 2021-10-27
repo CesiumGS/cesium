@@ -1,4 +1,3 @@
-import AlphaMode from "../AlphaMode.js";
 import CPUStylingStageVS from "../../Shaders/ModelExperimental/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/ModelExperimental/CPUStylingStageFS.js";
 import Pass from "../../Renderer/Pass.js";
@@ -54,23 +53,22 @@ CPUStylingStage.process = function (renderResources, primitive, frameState) {
     return originalCommandTranslucency;
   };
 
-  var batchTexture = model.featureTables[model.featureTableId].batchTexture;
-  var styleCommandsNeeded = getStyleCommandsNeeded(batchTexture);
-  if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
-    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
-    renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
-  }
+  var featureTable = model.featureTables[model.featureTableId];
+  var styleCommandsNeeded = getStyleCommandsNeeded(featureTable);
   renderResources.styleCommandsNeeded = styleCommandsNeeded;
 };
 
 /**
  * @private
  */
-function getStyleCommandsNeeded(batchTexture) {
+function getStyleCommandsNeeded(featureTable) {
+  var batchTexture = featureTable.batchTexture;
+  var featuresLength = featureTable.featuresLength;
+
   var translucentFeaturesLength = batchTexture.translucentFeaturesLength;
   if (translucentFeaturesLength === 0) {
     return StyleCommandsNeeded.ALL_OPAQUE;
-  } else if (translucentFeaturesLength === batchTexture.featuresLength) {
+  } else if (translucentFeaturesLength === featuresLength) {
     return StyleCommandsNeeded.ALL_TRANSLUCENT;
   }
   return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;

@@ -1,5 +1,4 @@
 import {
-  AlphaMode,
   clone,
   ColorBlendMode,
   CPUStylingStage,
@@ -21,9 +20,9 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
       featureTableId: 0,
       featureTables: [
         {
+          featuresLength: 10,
           batchTexture: {
             translucentFeaturesLength: 0,
-            featuresLength: 10,
           },
         },
       ],
@@ -107,7 +106,6 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     var renderResources = clone(defaultRenderResources, true);
     var batchTexture = {
       translucentFeaturesLength: 10,
-      featuresLength: 10,
     };
     renderResources.model.featureTables[0].batchTexture = batchTexture;
 
@@ -116,15 +114,12 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.ALL_TRANSLUCENT
     );
-    expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
-    expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
   });
 
   it("sets the style commands needed when both opaque and translucent commands are needed", function () {
     var renderResources = clone(defaultRenderResources, true);
     var batchTexture = {
       translucentFeaturesLength: 5,
-      featuresLength: 10,
     };
     renderResources.model.featureTables[0].batchTexture = batchTexture;
 
@@ -133,7 +128,5 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
     );
-    expect(renderResources.alphaOptions.pass).toEqual(Pass.TRANSLUCENT);
-    expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
   });
 });

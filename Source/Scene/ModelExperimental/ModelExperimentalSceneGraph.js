@@ -1,4 +1,4 @@
-import buildDrawCommand from "./buildDrawCommand.js";
+import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -194,15 +194,15 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   var modelRenderResources = new ModelRenderResources(this._model);
 
-  this._pipelineStages = [];
+  var modelPipelineStages = [];
   var model = this._model;
-  if (defined(model.color)) {
-    this._pipelineStages.push(ModelColorStage);
+  if (defined(model.color) && !this._colorStageAdded) {
+    modelPipelineStages.push(ModelColorStage);
   }
 
   var i, j, k;
-  for (i = 0; i < this._pipelineStages.length; i++) {
-    var modelPipelineStage = this._pipelineStages[i];
+  for (i = 0; i < modelPipelineStages.length; i++) {
+    var modelPipelineStage = modelPipelineStages[i];
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
@@ -227,14 +227,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      // If the style is present, we add the CPU styling stage as the second last stage, so the
-      // AlphaPipelineStage can handle translucency.
+      var primitivePipelineStages = runtimePrimitive.pipelineStages;
+
       if (defined(model.style)) {
-        runtimePrimitive.pipelineStages.splice(
-          runtimePrimitive.pipelineStages.length - 1,
-          0,
-          CPUStylingStage
-        );
+        primitivePipelineStages.push(CPUStylingStage);
       }
 
       var primitiveRenderResources = new PrimitiveRenderResources(
@@ -242,8 +238,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         runtimePrimitive
       );
 
-      for (k = 0; k < runtimePrimitive.pipelineStages.length; k++) {
-        var primitivePipelineStage = runtimePrimitive.pipelineStages[k];
+      for (k = 0; k < primitivePipelineStages.length; k++) {
+        var primitivePipelineStage = primitivePipelineStages[k];
 
         primitivePipelineStage.process(
           primitiveRenderResources,
@@ -254,8 +250,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
-      var drawCommand = buildDrawCommand(primitiveRenderResources, frameState);
-      this._drawCommands.push.apply(this._drawCommands, drawCommand);
+      var drawCommands = buildDrawCommands(
+        primitiveRenderResources,
+        frameState
+      );
+      this._drawCommands.push.apply(this._drawCommands, drawCommands);
     }
   }
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(

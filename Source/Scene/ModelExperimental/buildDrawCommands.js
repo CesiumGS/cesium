@@ -15,11 +15,14 @@ import VertexArray from "../../Renderer/VertexArray.js";
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {[DrawCommand]} The generated DrawCommand.
+ * @returns {[DrawCommand]} The generated DrawCommands.
  *
  * @private
  */
-export default function buildDrawCommand(primitiveRenderResources, frameState) {
+export default function buildDrawCommands(
+  primitiveRenderResources,
+  frameState
+) {
   var shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
@@ -69,7 +72,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   if (defined(styleCommandsNeeded)) {
     var derivedCommands = createDerivedCommands(command);
 
-    if (command.pass !== Pass.TRANSLUCENT) {
+    if (!pass !== Pass.TRANSLUCENT) {
       if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
         commandList.push(command);
       }
@@ -77,6 +80,7 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
         commandList.push(derivedCommands.translucent);
       }
       if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
+        // Push both opaque and translucent commands. The rendering of features based on opacity is handled in the shaders.
         commandList.push(command, derivedCommands.translucent);
       }
     } else {
@@ -93,12 +97,18 @@ export default function buildDrawCommand(primitiveRenderResources, frameState) {
   return commandList;
 }
 
+/**
+ * @private
+ */
 function createDerivedCommands(command) {
   var derivedCommands = {};
   derivedCommands.translucent = deriveTranslucentCommand(command);
   return derivedCommands;
 }
 
+/**
+ * @private
+ */
 function deriveTranslucentCommand(command) {
   var derivedCommand = DrawCommand.shallowClone(command);
   derivedCommand.pass = Pass.TRANSLUCENT;
