@@ -43,7 +43,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
-    "@zip.js/zip.js": "^2.3.8",
+    "@zip.js/zip.js": "^2.3.12",
     "autolinker": "^3.14.3",
     "aws-sdk": "^2.932.0",
     "bitmap-sdf": "^1.0.3",
