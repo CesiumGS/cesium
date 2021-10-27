@@ -227,6 +227,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
+      // If the style is present, we add the CPU styling stage as the second last stage, so the
+      // AlphaPipelineStage can handle translucency.
       if (defined(model.style)) {
         runtimePrimitive.pipelineStages.splice(
           runtimePrimitive.pipelineStages.length - 1,

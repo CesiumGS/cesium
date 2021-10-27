@@ -1,6 +1,10 @@
 import {
   Axis,
+  Cesium3DTileStyle,
+  Color,
+  CPUStylingStage,
   Matrix4,
+  ModelColorStage,
   ModelExperimentalSceneGraph,
   ResourceCache,
 } from "../../../Source/Cesium.js";
@@ -13,6 +17,8 @@ describe(
     var parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
     var vertexColorGltfUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
+    var buildingsMetadata =
+      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
     var scene;
 
@@ -130,6 +136,39 @@ describe(
             new Matrix4()
           )
         );
+      });
+    });
+
+    it("adds ModelColorStage when color is set on the model", function () {
+      spyOn(ModelColorStage, "process");
+      return loadAndZoomToModelExperimental(
+        {
+          color: Color.RED,
+          gltf: parentGltfUrl,
+        },
+        scene
+      ).then(function () {
+        expect(ModelColorStage.process).toHaveBeenCalled();
+      });
+    });
+
+    it("adds CPUStylingStage when style is set on the model", function () {
+      spyOn(CPUStylingStage, "process");
+      return loadAndZoomToModelExperimental(
+        {
+          style: new Cesium3DTileStyle({
+            color: {
+              conditions: [
+                ["${height} > 80", "color('#436d9d', 0.5)"],
+                ["true", "color('red')"],
+              ],
+            },
+          }),
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function () {
+        expect(CPUStylingStage.process).toHaveBeenCalled();
       });
     });
 
