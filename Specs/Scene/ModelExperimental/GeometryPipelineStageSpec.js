@@ -2,6 +2,7 @@ import {
   AttributeType,
   combine,
   ComponentDatatype,
+  FeatureIdPipelineStage,
   GltfLoader,
   GeometryPipelineStage,
   Resource,
@@ -83,6 +84,21 @@ describe(
       gltfLoaders.length = 0;
       ResourceCache.clearForSpecs();
     });
+
+    function verifyFeatureStruct(shaderBuilder) {
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+        FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+        []
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+        FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+        []
+      );
+    }
 
     function getOptions(gltfPath, options) {
       var resource = new Resource({
@@ -168,6 +184,7 @@ describe(
         "attribute vec3 a_positionMC;",
         []
       );
+      verifyFeatureStruct(shaderBuilder);
     });
 
     it("processes POSITION, NORMAL and TEXCOORD attributes from primitive", function () {
@@ -278,6 +295,7 @@ describe(
           "attribute vec3 a_positionMC;",
           ["attribute vec3 a_normalMC;", "attribute vec2 a_texCoord_0;"]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -419,6 +437,7 @@ describe(
             "attribute vec2 a_texCoord_0;",
           ]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -538,6 +557,7 @@ describe(
           "attribute vec3 a_positionMC;",
           ["attribute vec2 a_texCoord_0;", "attribute vec2 a_texCoord_1;"]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -679,6 +699,7 @@ describe(
             "attribute vec2 a_texCoord_0;",
           ]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -765,6 +786,7 @@ describe(
         "attribute vec3 a_positionMC;",
         ["attribute vec2 a_temperature;"]
       );
+      verifyFeatureStruct(shaderBuilder);
     });
 
     it("processes POSITION, NORMAL and FEATURE_ID attributes from primitive", function () {
@@ -860,6 +882,7 @@ describe(
           "HAS_FEATURE_ID_0",
           "HAS_NORMALS",
         ]);
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -940,6 +963,7 @@ describe(
           "HAS_FEATURE_ID_0",
           "PRIMITIVE_TYPE_POINTS",
         ]);
+        verifyFeatureStruct(shaderBuilder);
       });
     });
   },

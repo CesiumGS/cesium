@@ -43,6 +43,17 @@ CPUStylingStage.process = function (renderResources, primitive, frameState) {
     );
   };
 
+  var originalCommandTranslucency =
+    renderResources.alphaOptions.pass === Pass.TRANSLUCENT;
+  shaderBuilder.addUniform(
+    "bool",
+    "model_commandTranslucent",
+    ShaderDestination.BOTH
+  );
+  renderResources.uniformMap.model_commandTranslucent = function () {
+    return originalCommandTranslucency;
+  };
+
   var batchTexture = model.featureTables[model.featureTableId].batchTexture;
   var styleCommandsNeeded = getStyleCommandsNeeded(batchTexture);
   if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {

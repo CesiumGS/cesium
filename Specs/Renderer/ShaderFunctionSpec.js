@@ -8,12 +8,6 @@ describe("Renderer/ShaderFunction", function () {
     expect(func.body).toEqual([]);
   });
 
-  it("constructor throws for undefined name", function () {
-    expect(function () {
-      return new ShaderFunction(undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("addLines adds lines to the function body", function () {
     var func = new ShaderFunction("TestStruct");
     func.addLines(["v_color = a_color;", "return vec3(0.0, 0.0, 1.0);"]);

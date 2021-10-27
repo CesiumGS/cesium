@@ -64,10 +64,28 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     var uniformMap = renderResources.uniformMap;
 
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+      "uniform bool model_commandTranslucent;",
       "uniform float model_colorBlend;",
     ]);
 
     expect(uniformMap.model_colorBlend()).toEqual(colorBlend);
+  });
+
+  it("adds command translucent uniform", function () {
+    var renderResources = clone(defaultRenderResources, true);
+    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+
+    CPUStylingStage.process(renderResources);
+
+    var shaderBuilder = renderResources.shaderBuilder;
+    var uniformMap = renderResources.uniformMap;
+
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+      "uniform bool model_commandTranslucent;",
+      "uniform float model_colorBlend;",
+    ]);
+
+    expect(uniformMap.model_commandTranslucent()).toEqual(true);
   });
 
   it("sets the style commands needed when only opaque commands are needed", function () {

@@ -103,7 +103,8 @@ function getFeatureIdAttributeInfo(
 
 /**
  * Populate the "Feature" struct in the shaders that holds information about the "active" (used for picking/styling) feature.
- * The struct is always added to the shader by the GeometryPipelineStage (required for compilation).
+ * The struct is always added to the shader by the GeometryPipelineStage (required for compilation). The Feature struct looks
+ * as follows:
  *
  * struct Feature {
  *   float id;
@@ -134,7 +135,7 @@ function updateFeatureStruct(shaderBuilder) {
 }
 
 /**
- * Generates functions in the vertex/fragment shaders to update the varyings from the Feature struct and to update the Feature struct from the varyings, respectively.
+ * Generates functions in the vertex and fragment shaders to update the varyings from the Feature struct and to update the Feature struct from the varyings, respectively.
  * @private
  */
 function generateFeatureFunctions(shaderBuilder) {

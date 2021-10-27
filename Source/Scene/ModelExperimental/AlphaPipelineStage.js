@@ -23,15 +23,6 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
   var model = renderResources.model;
   alphaOptions.pass = defaultValue(alphaOptions.pass, model.opaquePass);
 
-  shaderBuilder.addUniform(
-    "bool",
-    "model_commandTranslucent",
-    ShaderDestination.BOTH
-  );
-  uniformMap.model_commandTranslucent = function () {
-    return alphaOptions.pass === Pass.TRANSLUCENT;
-  };
-
   var renderStateOptions = renderResources.renderStateOptions;
   if (alphaOptions.pass === Pass.TRANSLUCENT) {
     renderStateOptions.blending = BlendingState.ALPHA_BLEND;

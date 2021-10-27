@@ -7,12 +7,6 @@ describe("Renderer/ShaderStruct", function () {
     expect(struct.fields).toEqual([]);
   });
 
-  it("constructor throws for undefined name", function () {
-    expect(function () {
-      return new ShaderStruct(undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("addField adds fields", function () {
     var struct = new ShaderStruct("TestStruct");
     struct.addField("vec3", "positionMC");
