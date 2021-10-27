@@ -15,7 +15,7 @@ import VertexArray from "../../Renderer/VertexArray.js";
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {[DrawCommand]} The generated DrawCommands.
+ * @returns {Array.<DrawCommand>} The generated DrawCommands.
  *
  * @private
  */
