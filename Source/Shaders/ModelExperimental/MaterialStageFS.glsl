@@ -101,6 +101,8 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
 
     #ifdef USE_CPU_STYLING
     material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
+    #elif defined(HAS_MODEL_COLOR)
+    material.diffuse = mix(material.diffuse, model_color.rgb, model_colorBlend);
     #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
