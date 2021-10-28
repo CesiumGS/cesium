@@ -8,6 +8,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * The CPU styling stage is responsible for ensuring that the feature's color is applied at runtime.
  */
 var CPUStylingStage = {};
+CPUStylingStage.name = "CPUStylingStage"; // Helps with debugging
 
 /**
  * Processes a primitive. This modifies the following parts of the render resources:

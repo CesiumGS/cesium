@@ -227,9 +227,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      var primitivePipelineStages = runtimePrimitive.pipelineStages;
+      // The pipeline stage array is copied because we don't want dynamic stages to be added to the primitive's default stages.
+      var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
 
-      if (defined(model.style)) {
+      if (defined(model.style) && !defined(model.customShader)) {
         primitivePipelineStages.push(CPUStylingStage);
       }
 

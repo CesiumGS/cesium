@@ -1272,7 +1272,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * The style, defined using the
    * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language},
-   * applied to each feature in the tileset.
+   * applied to each feature in the tileset. Cannot be applied if a {@link CustomShader} is also applied.
    * <p>
    * Assign <code>undefined</code> to remove the style, which will restore the visual
    * appearance of the tileset to its default when no style was applied.
@@ -1319,6 +1319,14 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._styleEngine.style;
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(this.customShader) && defined(value)) {
+        throw new DeveloperError(
+          "Custom shaders and style cannot be applied at the same time."
+        );
+      }
+      //>>includeEnd('debug');
+
       this._styleEngine.style = value;
     },
   },

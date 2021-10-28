@@ -1,4 +1,6 @@
 import {
+  Cesium3DTileStyle,
+  CustomShader,
   FeatureDetection,
   JulianDate,
   defaultValue,
@@ -214,6 +216,69 @@ describe(
             CesiumMath.EPSILON8
           );
         });
+      });
+    });
+
+    it("renders model with style", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata },
+        scene
+      ).then(function (model) {
+        // Renders without style.
+        verifyRender(model, true);
+
+        // Renders with opaque style.
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red')"]],
+          },
+        });
+        verifyRender(model, true);
+
+        // Renders with translucent style.
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.5)"]],
+          },
+        });
+        verifyRender(model, true);
+
+        // Does not render when style disables show.
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.0)"]],
+          },
+        });
+        verifyRender(model, false);
+
+        // Render when style is removed.
+        model.style = undefined;
+        verifyRender(model, true);
+      });
+    });
+
+    it("throws when both custom shader and style are set", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+          customShader: new CustomShader({
+            vertexShaderText: [
+              "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+              "{",
+              "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
+              "}",
+            ].join("\n"),
+          }),
+        },
+        scene
+      ).then(function (model) {
+        expect(function () {
+          model.style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red')"]],
+            },
+          });
+        }).toThrowDeveloperError();
       });
     });
 

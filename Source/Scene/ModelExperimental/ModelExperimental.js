@@ -35,7 +35,6 @@ import Color from "../../Core/Color.js";
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
- * @param {Cesium3DTileStyle} [options.style] A style to apply to the features in the model. See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
@@ -83,8 +82,6 @@ export default function ModelExperimental(options) {
     ColorBlendMode.HIGHLIGHT
   );
   this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
-
-  this._style = options.style;
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
@@ -369,7 +366,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The style to apply the to the features in the model.
+   * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
    *
    * @type {Cesium3DTileStyle}
    * @readonly
@@ -386,11 +383,19 @@ Object.defineProperties(ModelExperimental.prototype, {
         return;
       }
 
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(this._customShader) && defined(value)) {
+        throw new DeveloperError(
+          "Custom shaders and style cannot be applied at the same time."
+        );
+      }
+      //>>includeEnd('debug');
+
       // The style is only set by the ModelFeatureTable. If there are no features,
       // the color and show from the style are directly applied.
       if (
         defined(this.featureTableId) &&
-        this.featureTables[this.featureTableId].length > 0
+        this.featureTables[this.featureTableId].featuresLength > 0
       ) {
         var featureTable = this.featureTables[this.featureTableId];
         featureTable.applyStyle(value);
@@ -716,6 +721,7 @@ ModelExperimental.prototype.destroyResources = function () {
   for (var i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
+  this._resources = [];
 };
 
 /**
@@ -741,7 +747,6 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
- * @param {Cesium3DTileStyle} [options.style] A style to apply to the features in the model. See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
@@ -795,7 +800,6 @@ ModelExperimental.fromGltf = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
-    style: options.style,
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,

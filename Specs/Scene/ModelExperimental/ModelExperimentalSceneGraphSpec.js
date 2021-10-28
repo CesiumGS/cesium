@@ -59,14 +59,14 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
-          style: new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red')"]],
-            },
-          }),
         },
         scene
       ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red')"]],
+          },
+        });
         var frameState = scene.frameState;
         var sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
@@ -89,14 +89,14 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
-          style: new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.1)"]],
-            },
-          }),
         },
         scene
       ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.1)"]],
+          },
+        });
         var frameState = scene.frameState;
         var sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
@@ -118,17 +118,17 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
-          style: new Cesium3DTileStyle({
-            color: {
-              conditions: [
-                ["${height} > 80", "color('red', 0.1)"],
-                ["true", "color('blue')"],
-              ],
-            },
-          }),
         },
         scene
       ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${height} > 80", "color('red', 0.1)"],
+              ["true", "color('blue')"],
+            ],
+          },
+        });
         var frameState = scene.frameState;
         var sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
@@ -249,18 +249,19 @@ describe(
       spyOn(CPUStylingStage, "process");
       return loadAndZoomToModelExperimental(
         {
-          style: new Cesium3DTileStyle({
-            color: {
-              conditions: [
-                ["${height} > 80", "color('#436d9d', 0.5)"],
-                ["true", "color('red')"],
-              ],
-            },
-          }),
           gltf: buildingsMetadata,
         },
         scene
-      ).then(function () {
+      ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${height} > 80", "color('#436d9d', 0.5)"],
+              ["true", "color('red')"],
+            ],
+          },
+        });
+        model.update(scene.frameState);
         expect(CPUStylingStage.process).toHaveBeenCalled();
       });
     });
