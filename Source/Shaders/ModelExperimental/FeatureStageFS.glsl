@@ -1,6 +1,5 @@
 void featureStage(inout Feature feature)
 {   
-
     #ifdef FEATURE_ID_TEXTURE
     
     float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);
@@ -14,13 +13,15 @@ void featureStage(inout Feature feature)
         feature.color = texture2D(model_batchTexture, featureSt);
     }
     // Floating point comparisons can be unreliable in GLSL, so we
-    // increment the v_activeFeatureId to make sure it's always greater
+    // increment the feature ID to make sure it's always greater
     // then the model_featuresLength - a condition we check for in the
     // pick ID, to avoid sampling the pick texture if the feature ID is
     // greater than the number of features.
     else
     {
         feature.id = model_featuresLength + 1.0;
+        feature.st = vec2(0.0);
+        feature.color = vec4(1.0);
     }
     #else
     // For feature ID vertex attributes, the function generated in FeatureIdPipelineStage 

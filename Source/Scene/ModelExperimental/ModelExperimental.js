@@ -381,13 +381,25 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      this.resetDrawCommands();
-      this._style = value;
-
-      if (!defined(this._content) && defined(this.featureTableId)) {
-        var table = this.featureTables[this.featureTableId];
-        table.applyStyle(value);
+      // In case of 3D Tiles, the content will call applyStyle on the feature table.
+      if (defined(this._content)) {
+        return;
       }
+
+      // The style is only set by the ModelFeatureTable. If there are no features,
+      // the color and show from the style are directly applied.
+      if (
+        defined(this.featureTableId) &&
+        this.featureTables[this.featureTableId].length > 0
+      ) {
+        var featureTable = this.featureTables[this.featureTableId];
+        featureTable.applyStyle(value);
+      } else {
+        this._style = undefined;
+        applyColorAndShow(this, value);
+      }
+
+      this.resetDrawCommands();
     },
   },
 
@@ -834,4 +846,17 @@ function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
   for (var i = 0; i < drawCommands.length; i++) {
     drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
   }
+}
+
+/**
+ * @private
+ */
+function applyColorAndShow(model, style) {
+  var hasColorStyle = defined(style) && defined(style.color);
+  var hasShowStyle = defined(style) && defined(style.show);
+
+  model._color = hasColorStyle
+    ? style.color.evaluateColor(undefined, model._color)
+    : Color.clone(Color.WHITE, model._color);
+  model._show = hasShowStyle ? style.show.evaluate(undefined) : true;
 }

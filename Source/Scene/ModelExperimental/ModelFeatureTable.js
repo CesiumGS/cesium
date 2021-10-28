@@ -172,14 +172,15 @@ var scratchColor = new Color();
 ModelFeatureTable.prototype.applyStyle = function (style) {
   var model = this._model;
 
+  model._style = style;
+  model.resetDrawCommands();
+
   if (!defined(style)) {
-    model.style = undefined;
     this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
     this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);
     return;
   }
 
-  model.style = style;
   for (var i = 0; i < this._featuresLength; i++) {
     var feature = this.getFeature(i);
     var color = defined(style.color)

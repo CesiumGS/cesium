@@ -6,6 +6,7 @@ import ModelExperimentalFS from "../../Shaders/ModelExperimental/ModelExperiment
 import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperimentalVS.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
@@ -72,16 +73,22 @@ export default function buildDrawCommands(
   if (defined(styleCommandsNeeded)) {
     var derivedCommands = createDerivedCommands(command);
 
-    if (!pass !== Pass.TRANSLUCENT) {
-      if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
-        commandList.push(command);
-      }
-      if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
-        commandList.push(derivedCommands.translucent);
-      }
-      if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
-        // Push both opaque and translucent commands. The rendering of features based on opacity is handled in the shaders.
-        commandList.push(command, derivedCommands.translucent);
+    if (pass !== Pass.TRANSLUCENT) {
+      switch (styleCommandsNeeded) {
+        case StyleCommandsNeeded.ALL_OPAQUE:
+          commandList.push(command);
+          break;
+        case StyleCommandsNeeded.ALL_TRANSLUCENT:
+          commandList.push(derivedCommands.translucent);
+          break;
+        case StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT:
+          // Push both opaque and translucent commands. The rendering of features based on opacity is handled in the shaders.
+          commandList.push(command, derivedCommands.translucent);
+          break;
+        //>>includeStart('debug', pragmas.debug);
+        default:
+          throw new RuntimeError("styleCommandsNeeded is not a valid value.");
+        //>>includeEnd('debug');
       }
     } else {
       // Command was originally translucent so no need to derive new commands;

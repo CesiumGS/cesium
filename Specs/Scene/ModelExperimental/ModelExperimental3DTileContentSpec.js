@@ -9,7 +9,7 @@ import {
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 
-describe("Scene/ModelExperimental/ModelExperimental3DTileContentSpec", function () {
+describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   var gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
   var glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
   var buildingsMetadataUrl =

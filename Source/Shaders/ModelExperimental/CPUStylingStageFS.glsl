@@ -6,7 +6,7 @@ void filterByPassType(vec4 featureColor)
     {
         discard;
     }
-    // If the current pass is not the transluceny pass and the style is not translucent, don't render the feature.
+    // If the current pass is not the translucent pass and the style is not translucent, don't render the feature.
     else if (czm_pass != czm_passTranslucent && styleTranslucent)
     {
         discard;

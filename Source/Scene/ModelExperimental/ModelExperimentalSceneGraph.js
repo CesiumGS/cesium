@@ -196,7 +196,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
   var modelPipelineStages = [];
   var model = this._model;
-  if (defined(model.color) && !this._colorStageAdded) {
+  if (defined(model.color)) {
     modelPipelineStages.push(ModelColorStage);
   }
 

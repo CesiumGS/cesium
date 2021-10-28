@@ -238,6 +238,9 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageFS,
       ]);
 
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
+
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       var vertexBuffer = renderResources.model._resources[0];
@@ -307,6 +310,9 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageFS,
       ]);
 
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
+
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
       expect(renderResources.model._resources).toEqual([]);
@@ -360,6 +366,9 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "varying vec2 v_activeFeatureSt;",
         "varying vec4 v_activeFeatureColor;",
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersFeatureStageCommon,
@@ -422,6 +431,9 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         "varying vec2 v_activeFeatureSt;",
         "varying vec4 v_activeFeatureColor;",
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersFeatureStageCommon,
