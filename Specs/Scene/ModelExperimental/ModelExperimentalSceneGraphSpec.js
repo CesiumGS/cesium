@@ -3,6 +3,8 @@ import {
   Cesium3DTileStyle,
   Color,
   CPUStylingPipelineStage,
+  CustomShader,
+  CustomShaderPipelineStage,
   Matrix4,
   ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
@@ -263,6 +265,20 @@ describe(
         });
         model.update(scene.frameState);
         expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
+      });
+    });
+
+    it("adds CustomShaderPipelineStage when customShader is set on the model", function () {
+      spyOn(CustomShaderPipelineStage, "process");
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.customShader = new CustomShader();
+        model.update(scene.frameState);
+        expect(CustomShaderPipelineStage.process).toHaveBeenCalled();
       });
     });
 
