@@ -160,6 +160,13 @@ ModelFeatureTable.prototype.getProperty = function (featureId, name) {
   return this._propertyTable.getProperty(featureId, name);
 };
 
+ModelFeatureTable.prototype.getPropertyBySemantic = function (
+  featureId,
+  semantic
+) {
+  return this._propertyTable.getPropertyBySemantic(featureId, semantic);
+};
+
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
   return this._propertyTable.getPropertyIds(results);
 };

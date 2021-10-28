@@ -8,6 +8,7 @@ import MetadataTester from "../../MetadataTester.js";
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   var properties = {
     height: {
+      semantic: "_HEIGHT",
       componentType: "FLOAT32",
     },
     name: {
@@ -98,6 +99,35 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
           );
         }
       }
+    }
+  });
+
+  it("getPropertyBySemantic works", function () {
+    var table = new ModelFeatureTable({
+      model: {},
+      propertyTable: mockPropertyTable,
+    });
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
+    var modelFeatures = table._features;
+
+    var i;
+    var feature;
+    // getProperty check
+    for (i = 0; i < modelFeatures.length; i++) {
+      feature = modelFeatures[i];
+      expect(feature.getPropertyInherited("height")).toEqual(
+        propertyValues["height"][i]
+      );
+      expect(feature.getPropertyInherited("_height")).toBeUndefined();
+    }
+
+    // getPropertyBySemantic check
+    for (i = 0; i < modelFeatures.length; i++) {
+      feature = modelFeatures[i];
+      expect(feature.getPropertyInherited("_HEIGHT")).toEqual(
+        propertyValues["height"][i]
+      );
+      expect(feature.getPropertyInherited("_HEIGHT_")).toBeUndefined();
     }
   });
 
