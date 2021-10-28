@@ -5,6 +5,7 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
+import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
@@ -145,6 +146,9 @@ function initialize(runtimePrimitive) {
   if (hasInstancedFeatureIdAttribute || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
+    if (!hasCustomShader) {
+      pipelineStages.push(CPUStylingPipelineStage);
+    }
   }
 
   if (model.allowPicking) {

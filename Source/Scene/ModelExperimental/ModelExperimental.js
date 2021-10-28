@@ -438,9 +438,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   colorBlendMode: {
     get: function () {
-      if (defined(this._content)) {
-        return this._content.tileset.colorBlendMode;
-      }
       return this._colorBlendMode;
     },
     set: function (value) {
@@ -460,9 +457,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   colorBlendAmount: {
     get: function () {
-      if (defined(this._content)) {
-        return this._content.tileset.colorBlendAmount;
-      }
       return this._colorBlendAmount;
     },
     set: function (value) {
