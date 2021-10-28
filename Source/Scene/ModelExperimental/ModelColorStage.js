@@ -7,6 +7,10 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The model color pipeline stage is responsible for handling the application of a static color to the model.
+ *
+ * @namespace ModelColorStage
+ *
+ * @private
  */
 var ModelColorStage = {};
 
@@ -26,6 +30,8 @@ ModelColorStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {ModelExperimental} model The model.
  * @param {FrameState} frameState The frameState.
+ *
+ * @private
  */
 ModelColorStage.process = function (renderResources, model, frameState) {
   var shaderBuilder = renderResources.shaderBuilder;
