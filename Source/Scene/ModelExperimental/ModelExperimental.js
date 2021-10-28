@@ -431,13 +431,16 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ColorBlendMode}
+   * @type {Cesium3DTileColorBlend|ColorBlendMode}
    * @default ColorBlendMode.HIGHLIGHT
    *
    * @private
    */
   colorBlendMode: {
     get: function () {
+      if (defined(this._content)) {
+        return this._content.tileset.colorBlendMode;
+      }
       return this._colorBlendMode;
     },
     set: function (value) {
@@ -457,6 +460,9 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   colorBlendAmount: {
     get: function () {
+      if (defined(this._content)) {
+        return this._content.tileset.colorBlendAmount;
+      }
       return this._colorBlendAmount;
     },
     set: function (value) {

@@ -15,6 +15,7 @@ import {
   when,
   ShaderProgram,
   ModelFeature,
+  Cesium3DTileColorBlendMode,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -254,6 +255,33 @@ describe(
         // Render when style is removed.
         model.style = undefined;
         verifyRender(model, true);
+      });
+    });
+
+    it("gets colorBlendMode and colorBlendAmount from tileset when content is present", function () {
+      var tileset = {
+        colorBlendMode: Cesium3DTileColorBlendMode.HIGHLIGHT,
+        colorBlendAmount: 0.5,
+      };
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+          content: {
+            tileset: tileset,
+          },
+        },
+        scene
+      ).then(function (model) {
+        expect(model.colorBlendMode).toEqual(
+          Cesium3DTileColorBlendMode.HIGHLIGHT
+        );
+        expect(model.colorBlendAmount).toEqual(0.5);
+        tileset.colorBlendMode = Cesium3DTileColorBlendMode.REPLACE;
+        tileset.colorBlendAmount = 0.25;
+        expect(model.colorBlendMode).toEqual(
+          Cesium3DTileColorBlendMode.REPLACE
+        );
+        expect(model.colorBlendAmount).toEqual(0.25);
       });
     });
 
