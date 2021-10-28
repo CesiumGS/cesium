@@ -171,6 +171,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   var tile = this._tile;
 
   model.modelMatrix = tile.computedTransform;
+  model.customShader = tileset.customShader;
 
   if (defined(this.batchTable)) {
     this.batchTable.update(frameState);

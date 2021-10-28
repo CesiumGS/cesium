@@ -636,13 +636,6 @@ ModelExperimental.prototype.update = function (frameState) {
     this._loader.process(frameState);
   }
 
-  // Update the custom shader. if the value changed, this will recreate
-  // the primitive pipeline.
-  if (defined(this._content)) {
-    var tileset = this._content.tileset;
-    this.customShader = tileset.customShader;
-  }
-
   // A custom shader may have to load texture uniforms.
   if (defined(this._customShader)) {
     this._customShader.update(frameState);
