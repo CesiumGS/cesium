@@ -5,6 +5,8 @@ import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
+import LightingPipelineStage from "./LightingPipelineStage.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
@@ -236,6 +238,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
           runtimePrimitive.pipelineStages.length - 1,
           0,
           CPUStylingPipelineStage
+        );
+      }
+
+      if (defined(model.customShader) && !defined(model.style)) {
+        // The custom shader stage needs to go before the lighting stage.
+        var lightingStageIndex = primitivePipelineStages.indexOf(
+          LightingPipelineStage
+        );
+        primitivePipelineStages.splice(
+          lightingStageIndex,
+          0,
+          CustomShaderPipelineStage
         );
       }
 

@@ -295,6 +295,20 @@ Object.defineProperties(ModelExperimental.prototype, {
     get: function () {
       return this._customShader;
     },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(this._style) && defined(value)) {
+        throw new DeveloperError(
+          "Custom shaders and style cannot be applied at the same time."
+        );
+      }
+      //>>includeEnd('debug');
+
+      if (value !== this._customShader) {
+        this.resetDrawCommands();
+      }
+      this._customShader = value;
+    },
   },
 
   /**
@@ -620,6 +634,13 @@ ModelExperimental.prototype.update = function (frameState) {
   // are processed.
   if (!this._resourcesLoaded || !this._texturesLoaded) {
     this._loader.process(frameState);
+  }
+
+  // Update the custom shader. if the value changed, this will recreate
+  // the primitive pipeline.
+  if (defined(this._content)) {
+    var tileset = this._content.tileset;
+    this.customShader = tileset.customShader;
   }
 
   // A custom shader may have to load texture uniforms.

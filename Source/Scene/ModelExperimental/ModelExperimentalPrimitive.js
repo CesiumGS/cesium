@@ -5,7 +5,6 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
-import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
@@ -103,10 +102,6 @@ function initialize(runtimePrimitive) {
 
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);
-  }
-
-  if (hasCustomShader) {
-    pipelineStages.push(CustomShaderPipelineStage);
   }
 
   pipelineStages.push(LightingPipelineStage);
