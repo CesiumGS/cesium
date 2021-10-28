@@ -62,13 +62,13 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       shaderBuilder,
       FeatureIdPipelineStage.STRUCT_ID_FEATURE,
       FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
-      ["    float id;", "    vec2 st;", "    vec4 color;"]
+      ["    int id;", "    vec2 st;", "    vec4 color;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       FeatureIdPipelineStage.STRUCT_ID_FEATURE,
       FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
-      ["    float id;", "    vec2 st;", "    vec4 color;"]
+      ["    int id;", "    vec2 st;", "    vec4 color;"]
     );
   }
 
@@ -78,7 +78,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
       FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
       [
-        "    v_activeFeatureId = feature.id;",
+        "    v_activeFeatureId = float(feature.id);",
         "    v_activeFeatureSt = feature.st;",
         "    v_activeFeatureColor = feature.color;",
       ]
@@ -88,7 +88,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
       FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
       [
-        "    feature.id = v_activeFeatureId;",
+        "    feature.id = int(v_activeFeatureId);",
         "    feature.st = v_activeFeatureSt;",
         "    feature.color = v_activeFeatureColor;",
       ]

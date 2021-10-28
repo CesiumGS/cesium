@@ -176,12 +176,10 @@ ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
 };
 
 var scratchColor = new Color();
+/**
+ * @private
+ */
 ModelFeatureTable.prototype.applyStyle = function (style) {
-  var model = this._model;
-
-  model._style = style;
-  model.resetDrawCommands();
-
   if (!defined(style)) {
     this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
     this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);

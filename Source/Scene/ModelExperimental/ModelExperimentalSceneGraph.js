@@ -1,17 +1,17 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
+import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelColorStage from "./ModelColorStage.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
-import CPUStylingStage from "./CPUStylingStage.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -197,7 +197,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   var modelPipelineStages = [];
   var model = this._model;
   if (defined(model.color)) {
-    modelPipelineStages.push(ModelColorStage);
+    modelPipelineStages.push(ModelColorPipelineStage);
   }
 
   var i, j, k;
@@ -231,7 +231,12 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
 
       if (defined(model.style) && !defined(model.customShader)) {
-        primitivePipelineStages.push(CPUStylingStage);
+        // Ensure that the CPU styling stage is always added before the AlphaPipelineStage, which is the last stage.
+        primitivePipelineStages.splice(
+          runtimePrimitive.pipelineStages.length - 1,
+          0,
+          CPUStylingPipelineStage
+        );
       }
 
       var primitiveRenderResources = new PrimitiveRenderResources(

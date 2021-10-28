@@ -4,15 +4,17 @@ import Pass from "../../Renderer/Pass.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
+import AlphaMode from "../AlphaMode.js";
 /**
  * The CPU styling stage is responsible for ensuring that the feature's color is applied at runtime.
  *
- * @namespace CPUStylingStage
+ * @namespace CPUStylingPipelineStage
  *
  * @private
  */
-var CPUStylingStage = {};
-CPUStylingStage.name = "CPUStylingStage"; // Helps with debugging
+var CPUStylingPipelineStage = {};
+CPUStylingPipelineStage.name = "CPUStylingPipelineStage"; // Helps with debugging
 
 /**
  * Processes a primitive. This modifies the following parts of the render resources:
@@ -29,7 +31,11 @@ CPUStylingStage.name = "CPUStylingStage"; // Helps with debugging
  *
  * @private
  */
-CPUStylingStage.process = function (renderResources, primitive, frameState) {
+CPUStylingPipelineStage.process = function (
+  renderResources,
+  primitive,
+  frameState
+) {
   var model = renderResources.model;
   var shaderBuilder = renderResources.shaderBuilder;
 
@@ -39,10 +45,12 @@ CPUStylingStage.process = function (renderResources, primitive, frameState) {
 
   shaderBuilder.addUniform(
     "float",
-    "model_colorBlend",
+    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
     ShaderDestination.FRAGMENT
   );
-  renderResources.uniformMap.model_colorBlend = function () {
+  renderResources.uniformMap[
+    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME
+  ] = function () {
     return ColorBlendMode.getColorBlend(
       model.colorBlendMode,
       model.colorBlendAmount
@@ -62,6 +70,11 @@ CPUStylingStage.process = function (renderResources, primitive, frameState) {
 
   var featureTable = model.featureTables[model.featureTableId];
   var styleCommandsNeeded = getStyleCommandsNeeded(featureTable);
+
+  if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+    renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
+  }
+
   renderResources.styleCommandsNeeded = styleCommandsNeeded;
 };
 
@@ -81,4 +94,4 @@ function getStyleCommandsNeeded(featureTable) {
   return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
 }
 
-export default CPUStylingStage;
+export default CPUStylingPipelineStage;

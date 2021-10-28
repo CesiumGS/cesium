@@ -1,7 +1,8 @@
 import {
+  AlphaMode,
   clone,
   ColorBlendMode,
-  CPUStylingStage,
+  CPUStylingPipelineStage,
   ModelAlphaOptions,
   Pass,
   ShaderBuilder,
@@ -11,7 +12,7 @@ import {
 } from "../../../Source/Cesium.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe("Scene/ModelExperimental/CPUStylingStage", function () {
+describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
   var defaultRenderResources = {
     alphaOptions: new ModelAlphaOptions(),
     model: {
@@ -35,7 +36,7 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     var renderResources = clone(defaultRenderResources, true);
     var shaderBuilder = renderResources.shaderBuilder;
 
-    CPUStylingStage.process(renderResources);
+    CPUStylingPipelineStage.process(renderResources);
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "USE_CPU_STYLING",
@@ -57,7 +58,7 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
       renderResources.model.colorBlendAmount
     );
 
-    CPUStylingStage.process(renderResources);
+    CPUStylingPipelineStage.process(renderResources);
 
     var shaderBuilder = renderResources.shaderBuilder;
     var uniformMap = renderResources.uniformMap;
@@ -74,7 +75,7 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     var renderResources = clone(defaultRenderResources, true);
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
 
-    CPUStylingStage.process(renderResources);
+    CPUStylingPipelineStage.process(renderResources);
 
     var shaderBuilder = renderResources.shaderBuilder;
     var uniformMap = renderResources.uniformMap;
@@ -95,7 +96,7 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     };
     renderResources.model.featureTables[0].batchTexture = batchTexture;
 
-    CPUStylingStage.process(renderResources);
+    CPUStylingPipelineStage.process(renderResources);
 
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.ALL_OPAQUE
@@ -109,11 +110,12 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     };
     renderResources.model.featureTables[0].batchTexture = batchTexture;
 
-    CPUStylingStage.process(renderResources);
+    CPUStylingPipelineStage.process(renderResources);
 
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.ALL_TRANSLUCENT
     );
+    expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
   });
 
   it("sets the style commands needed when both opaque and translucent commands are needed", function () {
@@ -123,10 +125,11 @@ describe("Scene/ModelExperimental/CPUStylingStage", function () {
     };
     renderResources.model.featureTables[0].batchTexture = batchTexture;
 
-    CPUStylingStage.process(renderResources);
+    CPUStylingPipelineStage.process(renderResources);
 
     expect(renderResources.styleCommandsNeeded).toEqual(
       StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
     );
+    expect(renderResources.alphaOptions.alphaMode).toEqual(AlphaMode.BLEND);
   });
 });

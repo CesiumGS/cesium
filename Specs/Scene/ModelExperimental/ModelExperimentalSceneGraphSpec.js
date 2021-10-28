@@ -2,9 +2,9 @@ import {
   Axis,
   Cesium3DTileStyle,
   Color,
-  CPUStylingStage,
+  CPUStylingPipelineStage,
   Matrix4,
-  ModelColorStage,
+  ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
   Pass,
   ResourceCache,
@@ -55,7 +55,7 @@ describe(
     });
 
     it("builds draw commands for all opaque styled features", function () {
-      spyOn(CPUStylingStage, "process").and.callThrough();
+      spyOn(CPUStylingPipelineStage, "process").and.callThrough();
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -77,7 +77,7 @@ describe(
         // Re-run the update function to generate draw commands.
         model.update(frameState);
         // Ensure that we're check for the application of a style, not just a color.
-        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
         expect(sceneGraph._drawCommands.length).toEqual(1);
         expect(frameState.commandList.length).toEqual(1);
         expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -85,7 +85,7 @@ describe(
     });
 
     it("builds draw commands for all translucent styled features", function () {
-      spyOn(CPUStylingStage, "process").and.callThrough();
+      spyOn(CPUStylingPipelineStage, "process").and.callThrough();
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -106,7 +106,7 @@ describe(
         // Re-run the update function to generate draw commands.
         model.update(frameState);
         // Ensure that we're check for the application of a style, not just a color.
-        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
         expect(sceneGraph._drawCommands.length).toEqual(1);
         expect(frameState.commandList.length).toEqual(1);
         expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
@@ -114,7 +114,7 @@ describe(
     });
 
     it("builds draw commands for both opaque and translucent styled features", function () {
-      spyOn(CPUStylingStage, "process").and.callThrough();
+      spyOn(CPUStylingPipelineStage, "process").and.callThrough();
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -138,7 +138,7 @@ describe(
         // Re-run the update function to generate draw commands.
         model.update(frameState);
         // Ensure that we're check for the application of a style, not just a color.
-        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
         expect(sceneGraph._drawCommands.length).toEqual(2);
         expect(frameState.commandList.length).toEqual(2);
         expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -232,8 +232,8 @@ describe(
       });
     });
 
-    it("adds ModelColorStage when color is set on the model", function () {
-      spyOn(ModelColorStage, "process");
+    it("adds ModelColorPipelineStage when color is set on the model", function () {
+      spyOn(ModelColorPipelineStage, "process");
       return loadAndZoomToModelExperimental(
         {
           color: Color.RED,
@@ -241,12 +241,12 @@ describe(
         },
         scene
       ).then(function () {
-        expect(ModelColorStage.process).toHaveBeenCalled();
+        expect(ModelColorPipelineStage.process).toHaveBeenCalled();
       });
     });
 
-    it("adds CPUStylingStage when style is set on the model", function () {
-      spyOn(CPUStylingStage, "process");
+    it("adds CPUStylingPipelineStage when style is set on the model", function () {
+      spyOn(CPUStylingPipelineStage, "process");
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -262,7 +262,7 @@ describe(
           },
         });
         model.update(scene.frameState);
-        expect(CPUStylingStage.process).toHaveBeenCalled();
+        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
       });
     });
 

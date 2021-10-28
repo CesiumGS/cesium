@@ -11,12 +11,12 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
 /**
- * Builds a DrawCommand for a {@link ModelExperimentalPrimitive} using its render resources.
+ * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
  *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
- * @returns {Array.<DrawCommand>} The generated DrawCommands.
+ * @returns {DrawCommand[]} The generated DrawCommands.
  *
  * @private
  */

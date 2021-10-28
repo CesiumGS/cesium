@@ -107,7 +107,7 @@ function getFeatureIdAttributeInfo(
  * as follows:
  *
  * struct Feature {
- *   float id;
+ *   int id;
  *   vec2 st;
  *   vec4 color;
  * }
@@ -117,7 +117,7 @@ function getFeatureIdAttributeInfo(
 function updateFeatureStruct(shaderBuilder) {
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE,
-    "float",
+    "int",
     "id"
   );
 
@@ -148,7 +148,7 @@ function generateFeatureFunctions(shaderBuilder) {
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
     [
-      "v_activeFeatureId = feature.id;",
+      "v_activeFeatureId = float(feature.id);",
       "v_activeFeatureSt = feature.st;",
       "v_activeFeatureColor = feature.color;",
     ]
@@ -163,7 +163,7 @@ function generateFeatureFunctions(shaderBuilder) {
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
     [
-      "feature.id = v_activeFeatureId;",
+      "feature.id = int(v_activeFeatureId);",
       "feature.st = v_activeFeatureSt;",
       "feature.color = v_activeFeatureColor;",
     ]

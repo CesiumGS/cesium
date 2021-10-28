@@ -1,5 +1,4 @@
 import Axis from "../Axis.js";
-import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelExperimental from "./ModelExperimental.js";
@@ -161,17 +160,7 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
-  if (this.featuresLength === 0) {
-    var hasColorStyle = defined(style) && defined(style.color);
-    var hasShowStyle = defined(style) && defined(style.show);
-
-    this._model.color = hasColorStyle
-      ? style.color.evaluateColor(undefined, this._model.color)
-      : Color.clone(Color.WHITE, this._model.color);
-    this._model.show = hasShowStyle ? style.show.evaluate(undefined) : true;
-  } else {
-    this.batchTable.applyStyle(style);
-  }
+  this._model.style = style;
 };
 
 ModelExperimental3DTileContent.prototype.update = function (

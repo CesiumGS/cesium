@@ -307,7 +307,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       ]);
 
       expect(renderResources.pickId).toEqual(
-        "((feature.id < model_featuresLength) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))"
+        "((feature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))"
       );
     });
   });

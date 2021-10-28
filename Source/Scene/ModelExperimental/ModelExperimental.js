@@ -378,11 +378,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      // In case of 3D Tiles, the content will call applyStyle on the feature table.
-      if (defined(this._content)) {
-        return;
-      }
-
       //>>includeStart('debug', pragmas.debug);
       if (defined(this._customShader) && defined(value)) {
         throw new DeveloperError(
@@ -399,9 +394,11 @@ Object.defineProperties(ModelExperimental.prototype, {
       ) {
         var featureTable = this.featureTables[this.featureTableId];
         featureTable.applyStyle(value);
+        this._style = value;
+        this._color = undefined;
       } else {
+        this.applyColorAndShow(value);
         this._style = undefined;
-        applyColorAndShow(this, value);
       }
 
       this.resetDrawCommands();
@@ -855,12 +852,12 @@ function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
 /**
  * @private
  */
-function applyColorAndShow(model, style) {
+ModelExperimental.prototype.applyColorAndShow = function (style) {
   var hasColorStyle = defined(style) && defined(style.color);
   var hasShowStyle = defined(style) && defined(style.show);
 
-  model._color = hasColorStyle
-    ? style.color.evaluateColor(undefined, model._color)
-    : Color.clone(Color.WHITE, model._color);
-  model._show = hasShowStyle ? style.show.evaluate(undefined) : true;
-}
+  this._color = hasColorStyle
+    ? style.color.evaluateColor(undefined, this._color)
+    : Color.clone(Color.WHITE, this._color);
+  this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+};
