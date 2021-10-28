@@ -6,6 +6,8 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 /**
  * The CPU styling stage is responsible for ensuring that the feature's color is applied at runtime.
+ *
+ * @private
  */
 var CPUStylingStage = {};
 CPUStylingStage.name = "CPUStylingStage"; // Helps with debugging
