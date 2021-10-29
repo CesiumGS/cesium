@@ -216,6 +216,80 @@ Object.defineProperties(EntityCollection.prototype, {
   },
 });
 
+EntityCollection.prototype.manageVisualizers = function (entity) {
+
+  if (this.owner) {
+    if (!this.owner._visualizerCache) {
+      this.owner._visualizerCache = {};
+      if (this.owner._visualizers) {
+        for (let v = 0; v < this.owner._visualizers.length; v++) {
+          let vname = this.owner._visualizers[v].constructor.name;
+          this.owner._visualizerCache[vname] = this.owner._visualizers[v];
+          this.syncVisualizerCache(vname);
+        }
+      }
+      this.owner._visualizers = [];
+    }
+    for (let viz in EntityCollection.prototype._visualizerMap) {
+      let _c = this.owner._visualizerCache[
+        EntityCollection.prototype._visualizerMap[viz]
+      ];
+      if (entity[viz]) {
+        if (_c && this.owner._visualizers.indexOf(_c) === -1)
+          this.owner._visualizers.push(_c);
+      }
+      this.syncVisualizerCache(viz);
+    }
+  }
+};
+
+/**
+ * Enum for visualization throttle types
+ * @enum {number}
+ */
+const ThrottleType = {
+  MAX: 0,
+  DYNAMIC: 1,
+};
+
+EntityCollection.ThrottleType = ThrottleType;
+EntityCollection.prototype.ThrottleType = ThrottleType;
+
+EntityCollection.prototype.syncVisualizerCache = function (vname) {
+  if (
+    this.owner._visualizerCache &&
+    this.owner._throttleCache &&
+    this.owner._visualizerCache[vname] &&
+    this.owner._throttleCache[vname]
+  ) {
+    this.owner._visualizerCache[vname]._fps = this.owner._throttleCache[
+      vname
+    ]._fps;
+  }
+};
+/**
+ * An method to throttle visualizer execution
+ * @param {string} visualizerName The name of the visualizer in the _visualizerCache to throttle
+ * @param {ThrottleType} type
+ * @param {number} fps Frames Per Second to limit rendering of the visualizer
+ *
+ * EntityCollection.throttleVisualizer("point", EntityCollection.ThrottleType.MAX, 30);
+ */
+// Throttle updates per second for entire visualizer, if supported
+EntityCollection.prototype.throttleVisualizer = function (
+  visualizerName,
+  type,
+  fps
+) {
+  let vname = EntityCollection.prototype._visualizerMap[visualizerName];
+  this.owner._throttleCache = this.owner._throttleCache || {};
+  this.owner._throttleCache[vname] = this.owner._throttleCache[vname] || {
+    _fps: [],
+  };
+  this.owner._throttleCache[vname]._fps[type] = fps;
+  this.syncVisualizerCache(vname);
+};
+
 /**
  * Computes the maximum availability of the entities in the collection.
  * If the collection contains a mix of infinitely available data and non-infinite data,
@@ -262,6 +336,35 @@ EntityCollection.prototype.computeAvailability = function () {
 };
 
 /**
+ * Map of entity properties and the default visualizers
+ * displayed.  When true, each entity is only displayed if
+ * its own show property is also true.
+ * @memberof EntityCollection.prototype
+ * @type {Object}
+ */
+EntityCollection.prototype._visualizerMap = {
+  billboard: "BillboardVisualizer",
+  box: "GeometryVisualizer",
+  cylinder: "GeometryVisualizer",
+  corridor: "GeometryVisualizer",
+  ellipse: "GeometryVisualizer",
+  ellipsoid: "GeometryVisualizer",
+  plane: "GeometryVisualizer",
+  polygon: "GeometryVisualizer",
+  polylineVolume: "GeometryVisualizer",
+  rectangle: "GeometryVisualizer",
+  wall: "GeometryVisualizer",
+  label: "LabelVisualizer",
+  model: "ModelVisualizer",
+  point: "PointVisualizer",
+  path: "PathVisualizer",
+  polyline: "PolylineVisualizer",
+  customPatternSensor: "CustomPatternSensorVisualizer",
+  conicSensor: "ConicSensorVisualizer",
+  rectangularSensor: "RectangularSensorVisualizer"
+};
+
+/**
  * Add an entity to the collection.
  *
  * @param {Entity | Entity.ConstructorOptions} entity The entity to be added.
@@ -278,7 +381,7 @@ EntityCollection.prototype.add = function (entity) {
   if (!(entity instanceof Entity)) {
     entity = new Entity(entity);
   }
-
+  this.manageVisualizers(entity);
   var id = entity.id;
   var entities = this._entities;
   if (entities.contains(id)) {
@@ -436,6 +539,9 @@ EntityCollection.prototype._onEntityDefinitionChanged = function (entity) {
   if (!this._addedEntities.contains(id)) {
     this._changedEntities.set(id, entity);
   }
+  this.manageVisualizers(entity);
   fireChangedEvent(this);
 };
+
 export default EntityCollection;
+
