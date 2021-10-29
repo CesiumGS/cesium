@@ -9,4 +9,19 @@ var StyleCommandsNeeded = {
   OPAQUE_AND_TRANSLUCENT: 2,
 };
 
+/**
+ * @private
+ */
+StyleCommandsNeeded.getStyleCommandsNeeded = function (
+  featuresLength,
+  translucentFeaturesLength
+) {
+  if (translucentFeaturesLength === 0) {
+    return StyleCommandsNeeded.ALL_OPAQUE;
+  } else if (translucentFeaturesLength === featuresLength) {
+    return StyleCommandsNeeded.ALL_TRANSLUCENT;
+  }
+  return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
+};
+
 export default Object.freeze(StyleCommandsNeeded);

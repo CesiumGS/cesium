@@ -170,12 +170,10 @@ ModelExperimental3DTileContent.prototype.update = function (
   var model = this._model;
   var tile = this._tile;
 
+  model.colorBlendAmount = tileset.colorBlendAmount;
+  model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
-
-  if (defined(this.batchTable)) {
-    this.batchTable.update(frameState);
-  }
 
   model.update(frameState);
 };

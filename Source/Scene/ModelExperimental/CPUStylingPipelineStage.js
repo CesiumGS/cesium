@@ -6,6 +6,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import AlphaMode from "../AlphaMode.js";
+import defined from "../../Core/defined.js";
 /**
  * The CPU styling stage is responsible for ensuring that the feature's color is applied at runtime.
  *
@@ -43,19 +44,23 @@ CPUStylingPipelineStage.process = function (
   shaderBuilder.addFragmentLines([CPUStylingStageFS]);
   shaderBuilder.addDefine("USE_CPU_STYLING", undefined, ShaderDestination.BOTH);
 
-  shaderBuilder.addUniform(
-    "float",
-    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
-    ShaderDestination.FRAGMENT
-  );
-  renderResources.uniformMap[
-    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME
-  ] = function () {
-    return ColorBlendMode.getColorBlend(
-      model.colorBlendMode,
-      model.colorBlendAmount
+  // These uniforms may have already been added by the ModelColorStage if a static
+  // color is applied.
+  if (!defined(model.color)) {
+    shaderBuilder.addUniform(
+      "float",
+      ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
+      ShaderDestination.FRAGMENT
     );
-  };
+    renderResources.uniformMap[
+      ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME
+    ] = function () {
+      return ColorBlendMode.getColorBlend(
+        model.colorBlendMode,
+        model.colorBlendAmount
+      );
+    };
+  }
 
   var originalCommandTranslucency =
     renderResources.alphaOptions.pass === Pass.TRANSLUCENT;
@@ -69,7 +74,10 @@ CPUStylingPipelineStage.process = function (
   };
 
   var featureTable = model.featureTables[model.featureTableId];
-  var styleCommandsNeeded = getStyleCommandsNeeded(featureTable);
+  var styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    featureTable.featuresLength,
+    featureTable.batchTexture.translucentFeaturesLength
+  );
 
   if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
     renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
@@ -77,21 +85,5 @@ CPUStylingPipelineStage.process = function (
 
   renderResources.styleCommandsNeeded = styleCommandsNeeded;
 };
-
-/**
- * @private
- */
-function getStyleCommandsNeeded(featureTable) {
-  var batchTexture = featureTable.batchTexture;
-  var featuresLength = featureTable.featuresLength;
-
-  var translucentFeaturesLength = batchTexture.translucentFeaturesLength;
-  if (translucentFeaturesLength === 0) {
-    return StyleCommandsNeeded.ALL_OPAQUE;
-  } else if (translucentFeaturesLength === featuresLength) {
-    return StyleCommandsNeeded.ALL_TRANSLUCENT;
-  }
-  return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
-}
 
 export default CPUStylingPipelineStage;

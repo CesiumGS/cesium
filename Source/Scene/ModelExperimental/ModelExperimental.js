@@ -452,9 +452,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   colorBlendMode: {
     get: function () {
-      if (defined(this._content)) {
-        return this._content.tileset.colorBlendMode;
-      }
       return this._colorBlendMode;
     },
     set: function (value) {
@@ -474,9 +471,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   colorBlendAmount: {
     get: function () {
-      if (defined(this._content)) {
-        return this._content.tileset.colorBlendAmount;
-      }
       return this._colorBlendAmount;
     },
     set: function (value) {
@@ -661,8 +655,17 @@ ModelExperimental.prototype.update = function (frameState) {
 
   var featureTables = this._featureTables;
   if (defined(featureTables)) {
+    var that = this;
     for (var i = 0; i < featureTables.length; i++) {
       featureTables[i].update(frameState);
+      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+      // to ensure that translucent and opaque features are handled in the correct passes.
+      if (featureTables[i].styleCommandsNeededDirty) {
+        // Reset the draw commands after the current render to avoid flickering.
+        frameState.afterRender.push(function () {
+          that.resetDrawCommands();
+        });
+      }
     }
   }
 

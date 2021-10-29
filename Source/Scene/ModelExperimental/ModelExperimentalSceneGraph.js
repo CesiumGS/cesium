@@ -1,7 +1,6 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
-import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -231,15 +230,6 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
       // The pipeline stage array is copied because we don't want dynamic stages to be added to the primitive's default stages.
       var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
-
-      if (defined(model.style) && !defined(model.customShader)) {
-        // Ensure that the CPU styling stage is always added before the AlphaPipelineStage, which is the last stage.
-        primitivePipelineStages.splice(
-          runtimePrimitive.pipelineStages.length - 1,
-          0,
-          CPUStylingPipelineStage
-        );
-      }
 
       if (defined(model.customShader) && !defined(model.style)) {
         // The custom shader stage needs to go before the lighting stage.
