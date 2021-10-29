@@ -141,9 +141,7 @@ function initialize(runtimePrimitive) {
   if (hasInstancedFeatureIdAttribute || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
-    if (!hasCustomShader) {
-      pipelineStages.push(CPUStylingPipelineStage);
-    }
+    pipelineStages.push(CPUStylingPipelineStage);
   }
 
   if (model.allowPicking) {
