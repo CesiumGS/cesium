@@ -3,6 +3,7 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
+import { CustomShader } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { getJsonFromTypedArray } from "../../Source/Cesium.js";
@@ -665,6 +666,27 @@ describe(
             expect(statistics.numberOfTilesProcessing).toBe(0);
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
           });
+      });
+    });
+
+    it("throws when both custom shader and style are set", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        customShader: new CustomShader({
+          vertexShaderText: [
+            "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+            "{",
+            "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
+            "}",
+          ].join("\n"),
+        }),
+      }).then(function (tileset) {
+        expect(function () {
+          tileset.style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red')"]],
+            },
+          });
+        }).toThrowDeveloperError();
       });
     });
 

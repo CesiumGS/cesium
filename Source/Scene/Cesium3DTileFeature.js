@@ -218,6 +218,11 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
   var value;
   var batchTable = content.batchTable;
   if (defined(batchTable)) {
+    value = batchTable.getPropertyBySemantic(batchId, name);
+    if (defined(value)) {
+      return value;
+    }
+
     value = batchTable.getProperty(batchId, name);
     if (defined(value)) {
       return value;

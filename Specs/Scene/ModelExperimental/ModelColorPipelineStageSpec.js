@@ -3,13 +3,13 @@ import {
   Color,
   ColorBlendMode,
   ModelAlphaOptions,
-  ModelColorStage,
+  ModelColorPipelineStage,
   Pass,
   ShaderBuilder,
 } from "../../../Source/Cesium.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe("Scene/ModelExperimental/ModelColorStage", function () {
+describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
   it("configures the render resources for opaque color", function () {
     var mockModel = {
       color: Color.RED,
@@ -26,7 +26,7 @@ describe("Scene/ModelExperimental/ModelColorStage", function () {
     };
     var shaderBuilder = renderResources.shaderBuilder;
 
-    ModelColorStage.process(renderResources, mockModel);
+    ModelColorPipelineStage.process(renderResources, mockModel);
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "HAS_MODEL_COLOR",
@@ -64,7 +64,7 @@ describe("Scene/ModelExperimental/ModelColorStage", function () {
     };
     var shaderBuilder = renderResources.shaderBuilder;
 
-    ModelColorStage.process(renderResources, mockModel);
+    ModelColorPipelineStage.process(renderResources, mockModel);
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "HAS_MODEL_COLOR",

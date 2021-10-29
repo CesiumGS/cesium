@@ -1,10 +1,10 @@
-import buildDrawCommand from "./buildDrawCommand.js";
+import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import ModelColorStage from "./ModelColorStage.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -193,15 +193,15 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   var modelRenderResources = new ModelRenderResources(this._model);
 
-  this._pipelineStages = [];
+  var modelPipelineStages = [];
   var model = this._model;
   if (defined(model.color)) {
-    this._pipelineStages.push(ModelColorStage);
+    modelPipelineStages.push(ModelColorPipelineStage);
   }
 
   var i, j, k;
-  for (i = 0; i < this._pipelineStages.length; i++) {
-    var modelPipelineStage = this._pipelineStages[i];
+  for (i = 0; i < modelPipelineStages.length; i++) {
+    var modelPipelineStage = modelPipelineStages[i];
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
@@ -225,7 +225,6 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
-
       var primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
         runtimePrimitive
@@ -243,8 +242,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
-      var drawCommand = buildDrawCommand(primitiveRenderResources, frameState);
-      this._drawCommands.push(drawCommand);
+      var drawCommands = buildDrawCommands(
+        primitiveRenderResources,
+        frameState
+      );
+      this._drawCommands.push.apply(this._drawCommands, drawCommands);
     }
   }
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(

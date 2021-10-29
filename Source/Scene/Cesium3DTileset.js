@@ -1319,6 +1319,14 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._styleEngine.style;
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(this.customShader) && defined(value)) {
+        throw new DeveloperError(
+          "Custom shaders and style cannot be applied at the same time."
+        );
+      }
+      //>>includeEnd('debug');
+
       this._styleEngine.style = value;
     },
   },

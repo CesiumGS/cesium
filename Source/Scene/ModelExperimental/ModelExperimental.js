@@ -123,8 +123,9 @@ function createModelFeatureTables(model, featureMetadata) {
 
     if (modelFeatureTable.featuresLength > 0) {
       modelFeatureTables.push(modelFeatureTable);
-      model._resources.push(modelFeatureTable);
     }
+
+    modelFeatureTable.applyStyle(model.style);
   }
 
   return modelFeatureTables;
@@ -365,6 +366,46 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   *
+   * @type {Cesium3DTileStyle}
+   * @readonly
+   *
+   * @private
+   */
+  style: {
+    get: function () {
+      return this._style;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(this._customShader) && defined(value)) {
+        throw new DeveloperError(
+          "Custom shaders and style cannot be applied at the same time."
+        );
+      }
+      //>>includeEnd('debug');
+
+      // The style is only set by the ModelFeatureTable. If there are no features,
+      // the color and show from the style are directly applied.
+      if (
+        defined(this.featureTableId) &&
+        this.featureTables[this.featureTableId].featuresLength > 0
+      ) {
+        var featureTable = this.featureTables[this.featureTableId];
+        featureTable.applyStyle(value);
+        this._style = value;
+        this._color = undefined;
+      } else {
+        this.applyColorAndShow(value);
+        this._style = undefined;
+      }
+
+      this.resetDrawCommands();
+    },
+  },
+
+  /**
    * The color to blend with the model's rendered color.
    *
    * @memberof ModelExperimental.prototype
@@ -390,7 +431,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {ColorBlendMode}
+   * @type {Cesium3DTileColorBlend|ColorBlendMode}
    * @default ColorBlendMode.HIGHLIGHT
    *
    * @private
@@ -549,6 +590,10 @@ Object.defineProperties(ModelExperimental.prototype, {
  * @private
  */
 ModelExperimental.prototype.resetDrawCommands = function () {
+  if (!this._drawCommandsBuilt) {
+    return;
+  }
+  this.destroyResources();
   this._drawCommandsBuilt = false;
   this._sceneGraph._drawCommands = [];
 };
@@ -581,6 +626,18 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
+      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+      // to ensure that translucent and opaque features are handled in the correct passes.
+      if (featureTables[i].styleCommandsNeededDirty) {
+        this.resetDrawCommands();
+      }
+    }
+  }
+
   if (!this._drawCommandsBuilt) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
@@ -592,13 +649,6 @@ ModelExperimental.prototype.update = function (frameState) {
       model._ready = true;
       model._readyPromise.resolve(model);
     });
-  }
-
-  var featureTables = this._featureTables;
-  if (defined(featureTables)) {
-    for (var i = 0; i < featureTables.length; i++) {
-      featureTables[i].update(frameState);
-    }
   }
 
   if (this._debugShowBoundingVolumeDirty) {
@@ -652,12 +702,28 @@ ModelExperimental.prototype.destroy = function () {
     loader.destroy();
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].destroy();
+    }
+  }
+
+  this.destroyResources();
+
+  destroyObject(this);
+};
+
+/**
+ * Destroys resources generated in the pipeline stages.
+ * @private
+ */
+ModelExperimental.prototype.destroyResources = function () {
   var resources = this._resources;
   for (var i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-
-  destroyObject(this);
+  this._resources = [];
 };
 
 /**
@@ -787,3 +853,16 @@ function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
     drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
   }
 }
+
+/**
+ * @private
+ */
+ModelExperimental.prototype.applyColorAndShow = function (style) {
+  var hasColorStyle = defined(style) && defined(style.color);
+  var hasShowStyle = defined(style) && defined(style.show);
+
+  this._color = hasColorStyle
+    ? style.color.evaluateColor(undefined, this._color)
+    : Color.clone(Color.WHITE, this._color);
+  this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+};

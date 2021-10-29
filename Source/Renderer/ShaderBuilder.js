@@ -193,7 +193,7 @@ ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("structId", structId);
   Check.typeOf.string("type", type);
-  Check.typeOf.string("identifier", "identifier");
+  Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
   this._structs[structId].addField(type, identifier);
 };
