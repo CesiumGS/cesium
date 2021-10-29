@@ -644,7 +644,7 @@ ModelExperimental.prototype.update = function (frameState) {
     var that = this;
     for (var i = 0; i < featureTables.length; i++) {
       featureTables[i].update(frameState);
-      // Check if the number of translucent features has changed and trigger a reset of the draw commands,
+      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
       // to ensure that translucent and opaque features are handled in the correct passes.
       if (featureTables[i].styleCommandsNeededDirty) {
         // Reset the draw commands after the current render to avoid flickering.

@@ -79,7 +79,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   },
 
   /**
-   * A flag to indicate whether or not the number of translucent features in this table have changed.
+   * A flag to indicate whether or not the types of style commands needed by this feature table have changed.
    *
    * @memberof ModelFeatureTable.prototype
    *
