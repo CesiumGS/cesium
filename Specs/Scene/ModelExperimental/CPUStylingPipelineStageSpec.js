@@ -1,6 +1,7 @@
 import {
   AlphaMode,
   clone,
+  Color,
   ColorBlendMode,
   CPUStylingPipelineStage,
   ModelAlphaOptions,
@@ -49,7 +50,7 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     ]);
   });
 
-  it("adds color blend uniform", function () {
+  it("adds color blend uniforms", function () {
     var renderResources = clone(defaultRenderResources, true);
     renderResources.model.colorBlendAmount = 0.75;
     renderResources.model.colorBlendMode = ColorBlendMode.MIX;
@@ -69,6 +70,24 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     ]);
 
     expect(uniformMap.model_colorBlend()).toEqual(colorBlend);
+  });
+
+  it("doesn't add color blend uniforms if model color is present", function () {
+    var renderResources = clone(defaultRenderResources, true);
+    renderResources.model.color = Color.RED;
+    renderResources.model.colorBlendAmount = 0.75;
+    renderResources.model.colorBlendMode = ColorBlendMode.MIX;
+
+    CPUStylingPipelineStage.process(renderResources);
+
+    var shaderBuilder = renderResources.shaderBuilder;
+    var uniformMap = renderResources.uniformMap;
+
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+      "uniform bool model_commandTranslucent;",
+    ]);
+
+    expect(uniformMap.model_colorBlend).toBeUndefined();
   });
 
   it("adds command translucent uniform", function () {
