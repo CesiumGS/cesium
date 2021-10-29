@@ -150,12 +150,12 @@ ModelFeature.prototype.getProperty = function (name) {
  * @private
  */
 ModelFeature.prototype.getPropertyInherited = function (name) {
-  var value = this._featureTable.getProperty(this._featureId, name);
+  var value = this._featureTable.getPropertyBySemantic(this._featureId, name);
   if (defined(value)) {
     return value;
   }
 
-  return this._featureTable.getPropertyBySemantic(this._featureId, name);
+  return this._featureTable.getProperty(this._featureId, name);
 };
 
 /**
