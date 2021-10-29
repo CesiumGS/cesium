@@ -6,6 +6,7 @@
 
 - Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
 - Fixed crashes caused by the cloud noise texture exceeding WebGL's maximum supported texture size. [#9885](https://github.com/CesiumGS/cesium/pull/9885)
+- Added back some support for Draco attribute quantization as a workaround until a full fix in the next Draco version. [#9904](https://github.com/CesiumGS/cesium/pull/9904)
 - Updated third-party zip.js library to 2.3.12, fixing compatibility with Webpack 4. [#9897][https://github.com/cesiumgs/cesium/pull/9897]
 
 ##### Fixes :wrench:
