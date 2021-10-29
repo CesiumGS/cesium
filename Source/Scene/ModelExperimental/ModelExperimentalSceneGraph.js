@@ -231,7 +231,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       // The pipeline stage array is copied because we don't want dynamic stages to be added to the primitive's default stages.
       var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
 
-      if (defined(model.customShader) && !defined(model.style)) {
+      if (defined(model.customShader)) {
         // The custom shader stage needs to go before the lighting stage.
         var lightingStageIndex = primitivePipelineStages.indexOf(
           LightingPipelineStage

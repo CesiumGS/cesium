@@ -669,49 +669,6 @@ describe(
       });
     });
 
-    it("throws when customShader then style are set", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
-        customShader: new CustomShader({
-          vertexShaderText: [
-            "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
-            "{",
-            "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
-            "}",
-          ].join("\n"),
-        }),
-      }).then(function (tileset) {
-        expect(function () {
-          tileset.style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red')"]],
-            },
-          });
-        }).toThrowDeveloperError();
-      });
-    });
-
-    it("throws when style then customShader are set", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        tileset.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red')"]],
-          },
-        });
-        expect(function () {
-          tileset.customShader = new CustomShader({
-            vertexShaderText: [
-              "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
-              "{",
-              "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
-              "}",
-            ].join("\n"),
-          });
-        }).toThrowDeveloperError();
-      });
-    });
-
     it("renders tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset

@@ -259,31 +259,6 @@ describe(
       });
     });
 
-    it("throws when both custom shader and style are set", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
-          customShader: new CustomShader({
-            vertexShaderText: [
-              "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
-              "{",
-              "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
-              "}",
-            ].join("\n"),
-          }),
-        },
-        scene
-      ).then(function (model) {
-        expect(function () {
-          model.style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red')"]],
-            },
-          });
-        }).toThrowDeveloperError();
-      });
-    });
-
     it("fromGltf throws with undefined options", function () {
       expect(function () {
         ModelExperimental.fromGltf();
