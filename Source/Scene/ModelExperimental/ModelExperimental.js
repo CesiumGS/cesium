@@ -864,7 +864,6 @@ ModelExperimental.prototype.applyStyle = function (style) {
   ) {
     var featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
-    this._color = undefined;
   } else {
     this.applyColorAndShow(style);
   }

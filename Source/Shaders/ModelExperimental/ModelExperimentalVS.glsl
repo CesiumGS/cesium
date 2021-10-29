@@ -24,13 +24,8 @@ void main()
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
     Feature feature;
     featureStage(feature);
-
-        #ifdef USE_CPU_STYLING
-        cpuStylingStage(attributes.positionMC, feature);
-        #endif
-
+    cpuStylingStage(attributes.positionMC, feature);
     updateFeatureStruct(feature);
-
     #endif
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER

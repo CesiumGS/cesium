@@ -33,15 +33,12 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     uniformMap: {},
   };
 
-  it("adds shader functions and defines", function () {
+  it("adds shader functions", function () {
     var renderResources = clone(defaultRenderResources, true);
     var shaderBuilder = renderResources.shaderBuilder;
 
     CPUStylingPipelineStage.process(renderResources);
 
-    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "USE_CPU_STYLING",
-    ]);
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
       _shadersCPUStylingStageFS,
     ]);

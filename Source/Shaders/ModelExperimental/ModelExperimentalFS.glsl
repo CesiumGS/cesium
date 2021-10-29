@@ -55,11 +55,13 @@ void main()
 
     lightingStage(material);
 
-    #ifdef USE_CPU_STYLING
+    #ifdef HAS_FEATURES
     cpuStylingStage(material, feature);
-    #elif defined(HAS_MODEL_COLOR)
-    modelColorStage(material);
     #endif
+    
+    #ifdef HAS_MODEL_COLOR
+    modelColorStage(material);
+    #endif 
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
