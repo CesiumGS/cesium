@@ -388,7 +388,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       if (value !== this._style) {
         this.applyStyle(value);
       }
-      this._style = style;
+      this._style = value;
     },
   },
 
