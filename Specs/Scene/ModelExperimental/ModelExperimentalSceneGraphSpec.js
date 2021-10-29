@@ -73,9 +73,6 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-
-        // Run this twice to let the post-render reset call run.
-        scene.renderForSpecs();
         scene.renderForSpecs();
         expect(sceneGraph._drawCommands.length).toEqual(1);
         expect(frameState.commandList.length).toEqual(1);
@@ -101,8 +98,6 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-        // Run this twice to let the post-render reset call run.
-        scene.renderForSpecs();
         scene.renderForSpecs();
         expect(sceneGraph._drawCommands.length).toEqual(1);
         expect(frameState.commandList.length).toEqual(1);
@@ -131,8 +126,6 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-        // Run this twice to let the post-render reset call run.
-        scene.renderForSpecs();
         scene.renderForSpecs();
         expect(sceneGraph._drawCommands.length).toEqual(2);
         expect(frameState.commandList.length).toEqual(2);
@@ -160,7 +153,6 @@ describe(
 
         var frameState = scene.frameState;
         frameState.commandList = [];
-
         scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
@@ -174,7 +166,6 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-
         scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
