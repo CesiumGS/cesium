@@ -160,7 +160,7 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
-  this._model.style = style;
+  this._model.applySyle(style);
 };
 
 ModelExperimental3DTileContent.prototype.update = function (
