@@ -4,6 +4,7 @@ import {
   CustomShaderMode,
   FeatureIdPipelineStage,
   CustomShaderPipelineStage,
+  CPUStylingPipelineStage,
   DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
@@ -133,6 +134,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       FeatureIdPipelineStage,
       BatchTexturePipelineStage,
+      CPUStylingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -165,6 +167,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       FeatureIdPipelineStage,
       BatchTexturePipelineStage,
+      CPUStylingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];

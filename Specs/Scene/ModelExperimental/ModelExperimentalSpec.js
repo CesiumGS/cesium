@@ -15,7 +15,8 @@ import {
   when,
   ShaderProgram,
   ModelFeature,
-  Cesium3DTileColorBlendMode,
+  Color,
+  StyleCommandsNeeded,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -335,6 +336,69 @@ describe(
         expect(scene).toPickAndCall(function (result) {
           expect(result).toBeUndefined();
         });
+      });
+    });
+
+    function setFeaturesWithOpacity(
+      featureTable,
+      opaqueFeaturesLength,
+      translucentFeaturesLength
+    ) {
+      var i, feature;
+      for (i = 0; i < opaqueFeaturesLength; i++) {
+        feature = featureTable.getFeature(i);
+        feature.color = Color.RED;
+      }
+      for (
+        i = opaqueFeaturesLength;
+        i < opaqueFeaturesLength + translucentFeaturesLength;
+        i++
+      ) {
+        feature = featureTable.getFeature(i);
+        feature.color = Color.RED.withAlpha(0.5);
+      }
+    }
+
+    it("resets draw commands when the style commands needed are changed", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        var featureTable = model.featureTables[model.featureTableId];
+
+        // Set all features to opaque.
+        setFeaturesWithOpacity(featureTable, 10, 0);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(false);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.ALL_OPAQUE
+        );
+
+        // Set some features to translucent.
+        setFeaturesWithOpacity(featureTable, 8, 2);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(true);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
+        );
+
+        // Set some more features to translucent.
+        setFeaturesWithOpacity(featureTable, 2, 8);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(false);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
+        );
+
+        // Set all features to translucent.
+        setFeaturesWithOpacity(featureTable, 0, 10);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(true);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.ALL_TRANSLUCENT
+        );
       });
     });
 

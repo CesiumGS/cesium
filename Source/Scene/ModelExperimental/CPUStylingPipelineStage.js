@@ -69,7 +69,10 @@ CPUStylingPipelineStage.process = function (
   };
 
   var featureTable = model.featureTables[model.featureTableId];
-  var styleCommandsNeeded = getStyleCommandsNeeded(featureTable);
+  var styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    featureTable.featuresLength,
+    featureTable.batchTexture.translucentFeaturesLength
+  );
 
   if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
     renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
@@ -77,21 +80,5 @@ CPUStylingPipelineStage.process = function (
 
   renderResources.styleCommandsNeeded = styleCommandsNeeded;
 };
-
-/**
- * @private
- */
-function getStyleCommandsNeeded(featureTable) {
-  var batchTexture = featureTable.batchTexture;
-  var featuresLength = featureTable.featuresLength;
-
-  var translucentFeaturesLength = batchTexture.translucentFeaturesLength;
-  if (translucentFeaturesLength === 0) {
-    return StyleCommandsNeeded.ALL_OPAQUE;
-  } else if (translucentFeaturesLength === featuresLength) {
-    return StyleCommandsNeeded.ALL_TRANSLUCENT;
-  }
-  return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
-}
 
 export default CPUStylingPipelineStage;

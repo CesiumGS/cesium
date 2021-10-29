@@ -2,7 +2,6 @@ import {
   Axis,
   Cesium3DTileStyle,
   Color,
-  CPUStylingPipelineStage,
   Matrix4,
   ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
@@ -55,7 +54,6 @@ describe(
     });
 
     it("builds draw commands for all opaque styled features", function () {
-      spyOn(CPUStylingPipelineStage, "process").and.callThrough();
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -74,10 +72,9 @@ describe(
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
 
-        // Re-run the update function to generate draw commands.
-        model.update(frameState);
-        // Ensure that we're check for the application of a style, not just a color.
-        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
+        // Run this twice to let the post-render reset call run.
+        scene.renderForSpecs();
+        scene.renderForSpecs();
         expect(sceneGraph._drawCommands.length).toEqual(1);
         expect(frameState.commandList.length).toEqual(1);
         expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -85,7 +82,6 @@ describe(
     });
 
     it("builds draw commands for all translucent styled features", function () {
-      spyOn(CPUStylingPipelineStage, "process").and.callThrough();
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -103,10 +99,9 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-        // Re-run the update function to generate draw commands.
-        model.update(frameState);
-        // Ensure that we're check for the application of a style, not just a color.
-        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
+        // Run this twice to let the post-render reset call run.
+        scene.renderForSpecs();
+        scene.renderForSpecs();
         expect(sceneGraph._drawCommands.length).toEqual(1);
         expect(frameState.commandList.length).toEqual(1);
         expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
@@ -114,7 +109,6 @@ describe(
     });
 
     it("builds draw commands for both opaque and translucent styled features", function () {
-      spyOn(CPUStylingPipelineStage, "process").and.callThrough();
       return loadAndZoomToModelExperimental(
         {
           gltf: buildingsMetadata,
@@ -135,10 +129,9 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-        // Re-run the update function to generate draw commands.
-        model.update(frameState);
-        // Ensure that we're check for the application of a style, not just a color.
-        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
+        // Run this twice to let the post-render reset call run.
+        scene.renderForSpecs();
+        scene.renderForSpecs();
         expect(sceneGraph._drawCommands.length).toEqual(2);
         expect(frameState.commandList.length).toEqual(2);
         expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -166,7 +159,7 @@ describe(
         var frameState = scene.frameState;
         frameState.commandList = [];
 
-        model.update(frameState);
+        scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
         ).toHaveBeenCalled();
@@ -180,7 +173,7 @@ describe(
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
 
-        model.update(frameState);
+        scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
         ).toHaveBeenCalled();
@@ -242,27 +235,6 @@ describe(
         scene
       ).then(function () {
         expect(ModelColorPipelineStage.process).toHaveBeenCalled();
-      });
-    });
-
-    it("adds CPUStylingPipelineStage when style is set on the model", function () {
-      spyOn(CPUStylingPipelineStage, "process");
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
-        },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${height} > 80", "color('#436d9d', 0.5)"],
-              ["true", "color('red')"],
-            ],
-          },
-        });
-        model.update(scene.frameState);
-        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
       });
     });
 

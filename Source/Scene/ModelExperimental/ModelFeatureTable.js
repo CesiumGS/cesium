@@ -6,6 +6,7 @@ import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
 import defaultValue from "../../Core/defaultValue.js";
+import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -37,6 +38,9 @@ export default function ModelFeatureTable(options) {
   this._featuresLength = 0;
 
   this._batchTexture = undefined;
+
+  this._styleCommandsNeededDirty = false;
+  this._styleCommandsNeeded = StyleCommandsNeeded.ALL_OPAQUE;
 
   initialize(this);
 }
@@ -71,6 +75,22 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   featuresLength: {
     get: function () {
       return this._featuresLength;
+    },
+  },
+
+  /**
+   * A flag to indicate whether or not the number of translucent features in this table have changed.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  styleCommandsNeededDirty: {
+    get: function () {
+      return this._styleCommandsNeededDirty;
     },
   },
 });
@@ -117,7 +137,19 @@ function initialize(modelFeatureTable) {
  * @private
  */
 ModelFeatureTable.prototype.update = function (frameState) {
+  // Assume the number of translucent features has not changed.
+  this._styleCommandsNeededDirty = false;
   this._batchTexture.update(undefined, frameState);
+
+  var currentStyleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    this._featuresLength,
+    this._batchTexture.translucentFeaturesLength
+  );
+
+  if (this._styleCommandsNeeded !== currentStyleCommandsNeeded) {
+    this._styleCommandsNeededDirty = true;
+    this._styleCommandsNeeded = currentStyleCommandsNeeded;
+  }
 };
 
 ModelFeatureTable.prototype.setShow = function (featureId, show) {
