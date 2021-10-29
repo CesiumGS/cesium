@@ -626,6 +626,18 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
+      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+      // to ensure that translucent and opaque features are handled in the correct passes.
+      if (featureTables[i].styleCommandsNeededDirty) {
+        this.resetDrawCommands();
+      }
+    }
+  }
+
   if (!this._drawCommandsBuilt) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
@@ -637,22 +649,6 @@ ModelExperimental.prototype.update = function (frameState) {
       model._ready = true;
       model._readyPromise.resolve(model);
     });
-  }
-
-  var featureTables = this._featureTables;
-  if (defined(featureTables)) {
-    var that = this;
-    for (var i = 0; i < featureTables.length; i++) {
-      featureTables[i].update(frameState);
-      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-      // to ensure that translucent and opaque features are handled in the correct passes.
-      if (featureTables[i].styleCommandsNeededDirty) {
-        // Reset the draw commands after the current render to avoid flickering.
-        frameState.afterRender.push(function () {
-          that.resetDrawCommands();
-        });
-      }
-    }
   }
 
   if (this._debugShowBoundingVolumeDirty) {
