@@ -399,23 +399,8 @@ Object.defineProperties(ModelExperimental.prototype, {
         );
       }
       //>>includeEnd('debug');
-
-      // The style is only set by the ModelFeatureTable. If there are no features,
-      // the color and show from the style are directly applied.
-      if (
-        defined(this.featureTableId) &&
-        this.featureTables[this.featureTableId].featuresLength > 0
-      ) {
-        var featureTable = this.featureTables[this.featureTableId];
-        featureTable.applyStyle(value);
-        this._style = value;
-        this._color = undefined;
-      } else {
-        this.applyColorAndShow(value);
-        this._style = undefined;
-      }
-
-      this.resetDrawCommands();
+      this._style = value;
+      this.applyStyle(value);
     },
   },
 
@@ -879,4 +864,21 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
     ? style.color.evaluateColor(undefined, this._color)
     : Color.clone(Color.WHITE, this._color);
   this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+};
+
+ModelExperimental.prototype.applyStyle = function (style) {
+  // The style is only set by the ModelFeatureTable. If there are no features,
+  // the color and show from the style are directly applied.
+  if (
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0
+  ) {
+    var featureTable = this.featureTables[this.featureTableId];
+    featureTable.applyStyle(style);
+    this._color = undefined;
+  } else {
+    this.applyColorAndShow(style);
+  }
+
+  this.resetDrawCommands();
 };
