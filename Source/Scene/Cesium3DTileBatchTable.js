@@ -352,7 +352,7 @@ Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (
   batchId,
   name
 ) {
-  this.getProperty(batchId, name);
+  return undefined;
 };
 
 Cesium3DTileBatchTable.prototype.getProperty = function (batchId, name) {

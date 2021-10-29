@@ -8,20 +8,20 @@ import MetadataTester from "../../MetadataTester.js";
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   var properties = {
     height: {
-      semantic: "HEIGHT_SEM",
+      semantic: "HEIGHT_SEMANTIC",
       componentType: "FLOAT32",
     },
     name: {
       componentType: "STRING",
     },
-    HEIGHT_SEM: {
+    HEIGHT_SEMANTIC: {
       componentType: "FLOAT32",
     },
   };
   var propertyValues = {
     height: [1.0, 2.0],
     name: ["A", "B"],
-    HEIGHT_SEM: [3.0, 4.0],
+    HEIGHT_SEMANTIC: [3.0, 4.0],
   };
 
   var mockPropertyTable = MetadataTester.createPropertyTable({
@@ -128,7 +128,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     // Check if the semantic is prioritized over the property name.
     for (i = 0; i < modelFeatures.length; i++) {
       feature = modelFeatures[i];
-      expect(feature.getPropertyInherited("HEIGHT_SEM")).toEqual(
+      expect(feature.getPropertyInherited("HEIGHT_SEMANTIC")).toEqual(
         propertyValues["height"][i]
       );
       expect(feature.getPropertyInherited("_HEIGHT_")).toBeUndefined();
@@ -148,7 +148,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
       expect(feature.getPropertyNames(results)).toEqual([
         "height",
         "name",
-        "HEIGHT_SEM",
+        "HEIGHT_SEMANTIC",
       ]);
     }
   });
