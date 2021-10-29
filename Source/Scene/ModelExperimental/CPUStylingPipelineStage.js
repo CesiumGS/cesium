@@ -45,8 +45,8 @@ CPUStylingPipelineStage.process = function (
   shaderBuilder.addDefine("USE_CPU_STYLING", undefined, ShaderDestination.BOTH);
 
   // These uniforms may have already been added by the ModelColorStage if a static
-  // color is applied, which is not run if there is a style.
-  if (defined(model.style)) {
+  // color is applied.
+  if (!defined(model.color)) {
     shaderBuilder.addUniform(
       "float",
       ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
