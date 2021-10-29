@@ -2,7 +2,6 @@ import {
   Axis,
   Cesium3DTileStyle,
   Color,
-  CPUStylingPipelineStage,
   CustomShader,
   CustomShaderPipelineStage,
   Matrix4,
@@ -238,27 +237,6 @@ describe(
         scene
       ).then(function () {
         expect(ModelColorPipelineStage.process).toHaveBeenCalled();
-      });
-    });
-
-    it("adds CPUStylingPipelineStage when style is set on the model", function () {
-      spyOn(CPUStylingPipelineStage, "process");
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
-        },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${height} > 80", "color('#436d9d', 0.5)"],
-              ["true", "color('red')"],
-            ],
-          },
-        });
-        model.update(scene.frameState);
-        expect(CPUStylingPipelineStage.process).toHaveBeenCalled();
       });
     });
 
