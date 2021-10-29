@@ -1,6 +1,5 @@
 import {
   Cesium3DTileStyle,
-  CustomShader,
   FeatureDetection,
   JulianDate,
   defaultValue,
