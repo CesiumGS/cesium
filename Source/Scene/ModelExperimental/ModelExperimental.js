@@ -32,7 +32,7 @@ import Color from "../../Core/Color.js";
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
@@ -282,7 +282,8 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The model's custom shader, if it exists.
+   * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
+   * may lead to undefined behavior.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -294,6 +295,12 @@ Object.defineProperties(ModelExperimental.prototype, {
   customShader: {
     get: function () {
       return this._customShader;
+    },
+    set: function (value) {
+      if (value !== this._customShader) {
+        this.resetDrawCommands();
+      }
+      this._customShader = value;
     },
   },
 
@@ -378,30 +385,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._style;
     },
     set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (defined(this._customShader) && defined(value)) {
-        throw new DeveloperError(
-          "Custom shaders and style cannot be applied at the same time."
-        );
+      if (value !== this._style) {
+        this.applyStyle(value);
       }
-      //>>includeEnd('debug');
-
-      // The style is only set by the ModelFeatureTable. If there are no features,
-      // the color and show from the style are directly applied.
-      if (
-        defined(this.featureTableId) &&
-        this.featureTables[this.featureTableId].featuresLength > 0
-      ) {
-        var featureTable = this.featureTables[this.featureTableId];
-        featureTable.applyStyle(value);
-        this._style = value;
-        this._color = undefined;
-      } else {
-        this.applyColorAndShow(value);
-        this._style = undefined;
-      }
-
-      this.resetDrawCommands();
+      this._style = value;
     },
   },
 
@@ -746,7 +733,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
  * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
@@ -865,4 +852,23 @@ ModelExperimental.prototype.applyColorAndShow = function (style) {
     ? style.color.evaluateColor(undefined, this._color)
     : Color.clone(Color.WHITE, this._color);
   this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+};
+
+/**
+ * @private
+ */
+ModelExperimental.prototype.applyStyle = function (style) {
+  // The style is only set by the ModelFeatureTable. If there are no features,
+  // the color and show from the style are directly applied.
+  if (
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0
+  ) {
+    var featureTable = this.featureTables[this.featureTableId];
+    featureTable.applyStyle(style);
+  } else {
+    this.applyColorAndShow(style);
+  }
+
+  this.resetDrawCommands();
 };

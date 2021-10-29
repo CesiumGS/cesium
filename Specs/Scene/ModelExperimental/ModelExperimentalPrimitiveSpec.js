@@ -3,7 +3,6 @@ import {
   CustomShader,
   CustomShaderMode,
   FeatureIdPipelineStage,
-  CustomShaderPipelineStage,
   CPUStylingPipelineStage,
   DequantizationPipelineStage,
   GeometryPipelineStage,
@@ -237,7 +236,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -262,7 +260,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     var expectedStages = [
       GeometryPipelineStage,
-      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -287,7 +284,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];

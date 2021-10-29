@@ -6,7 +6,6 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
-import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
@@ -106,10 +105,6 @@ function initialize(runtimePrimitive) {
     pipelineStages.push(MaterialPipelineStage);
   }
 
-  if (hasCustomShader) {
-    pipelineStages.push(CustomShaderPipelineStage);
-  }
-
   pipelineStages.push(LightingPipelineStage);
 
   // Add the FeatureIdPipelineStage and BatchTexturePipelineStage when the primitive has features, i.e. when at least one of the following conditions exists:
@@ -146,9 +141,7 @@ function initialize(runtimePrimitive) {
   if (hasInstancedFeatureIdAttribute || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
-    if (!hasCustomShader) {
-      pipelineStages.push(CPUStylingPipelineStage);
-    }
+    pipelineStages.push(CPUStylingPipelineStage);
   }
 
   if (model.allowPicking) {

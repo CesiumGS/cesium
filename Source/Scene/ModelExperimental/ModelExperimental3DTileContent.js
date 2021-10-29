@@ -160,7 +160,7 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
-  this._model.style = style;
+  this._model.applyStyle(style);
 };
 
 ModelExperimental3DTileContent.prototype.update = function (
@@ -173,6 +173,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.colorBlendAmount = tileset.colorBlendAmount;
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
+  model.customShader = tileset.customShader;
 
   model.update(frameState);
 };
