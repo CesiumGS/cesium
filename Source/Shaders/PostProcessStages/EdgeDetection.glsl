@@ -16,8 +16,8 @@ void main(void)
     scalars[1] = 10.0;
     scalars[2] = 3.0;
 
-    float padx = 1.0 / czm_viewport.z;
-    float pady = 1.0 / czm_viewport.w;
+    float padx = czm_pixelRatio / czm_viewport.z;
+    float pady = czm_pixelRatio / czm_viewport.w;
 
 #ifdef CZM_SELECTED_FEATURE
     bool selected = false;

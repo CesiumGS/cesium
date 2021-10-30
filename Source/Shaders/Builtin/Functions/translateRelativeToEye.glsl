@@ -6,7 +6,7 @@
  * respectively.
  * <p>
  * This technique, called GPU RTE, eliminates jittering artifacts when using large coordinates as
- * described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+ * described in {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
  * </p>
  *
  * @name czm_translateRelativeToEye
@@ -19,8 +19,8 @@
  * @example
  * attribute vec3 positionHigh;
  * attribute vec3 positionLow;
- * 
- * void main() 
+ *
+ * void main()
  * {
  *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
  *   gl_Position = czm_modelViewProjectionRelativeToEye * p;

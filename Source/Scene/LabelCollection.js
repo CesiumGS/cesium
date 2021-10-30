@@ -1,954 +1,1005 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/writeTextToCanvas',
-        '../Core/Matrix4',
-        './BillboardCollection',
-        './BlendOption',
-        './HeightReference',
-        './HorizontalOrigin',
-        './Label',
-        './LabelStyle',
-        './SDFSettings',
-        './TextureAtlas',
-        './VerticalOrigin',
-        '../ThirdParty/bitmap-sdf'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        writeTextToCanvas,
-        Matrix4,
-        BillboardCollection,
-        BlendOption,
-        HeightReference,
-        HorizontalOrigin,
-        Label,
-        LabelStyle,
-        SDFSettings,
-        TextureAtlas,
-        VerticalOrigin,
-        bitmapSDF) {
-    'use strict';
+import BoundingRectangle from "../Core/BoundingRectangle.js";
+import Cartesian2 from "../Core/Cartesian2.js";
+import Color from "../Core/Color.js";
+import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import Matrix4 from "../Core/Matrix4.js";
+import writeTextToCanvas from "../Core/writeTextToCanvas.js";
+import bitmapSDF from "../ThirdParty/bitmap-sdf.js";
+import BillboardCollection from "./BillboardCollection.js";
+import BlendOption from "./BlendOption.js";
+import HeightReference from "./HeightReference.js";
+import HorizontalOrigin from "./HorizontalOrigin.js";
+import Label from "./Label.js";
+import LabelStyle from "./LabelStyle.js";
+import SDFSettings from "./SDFSettings.js";
+import TextureAtlas from "./TextureAtlas.js";
+import VerticalOrigin from "./VerticalOrigin.js";
+import GraphemeSplitter from "../ThirdParty/grapheme-splitter.js";
 
-    // A glyph represents a single character in a particular label.  It may or may
-    // not have a billboard, depending on whether the texture info has an index into
-    // the the label collection's texture atlas.  Invisible characters have no texture, and
-    // no billboard.  However, it always has a valid dimensions object.
-    function Glyph() {
-        this.textureInfo = undefined;
-        this.dimensions = undefined;
-        this.billboard = undefined;
+// A glyph represents a single character in a particular label.  It may or may
+// not have a billboard, depending on whether the texture info has an index into
+// the the label collection's texture atlas.  Invisible characters have no texture, and
+// no billboard.  However, it always has a valid dimensions object.
+function Glyph() {
+  this.textureInfo = undefined;
+  this.dimensions = undefined;
+  this.billboard = undefined;
+}
+
+// GlyphTextureInfo represents a single character, drawn in a particular style,
+// shared and reference counted across all labels.  It may or may not have an
+// index into the label collection's texture atlas, depending on whether the character
+// has both width and height, but it always has a valid dimensions object.
+function GlyphTextureInfo(labelCollection, index, dimensions) {
+  this.labelCollection = labelCollection;
+  this.index = index;
+  this.dimensions = dimensions;
+}
+
+// Traditionally, leading is %20 of the font size.
+var defaultLineSpacingPercent = 1.2;
+
+var whitePixelCanvasId = "ID_WHITE_PIXEL";
+var whitePixelSize = new Cartesian2(4, 4);
+var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
+
+function addWhitePixelCanvas(textureAtlas, labelCollection) {
+  var canvas = document.createElement("canvas");
+  canvas.width = whitePixelSize.x;
+  canvas.height = whitePixelSize.y;
+
+  var context2D = canvas.getContext("2d");
+  context2D.fillStyle = "#fff";
+  context2D.fillRect(0, 0, canvas.width, canvas.height);
+
+  textureAtlas.addImage(whitePixelCanvasId, canvas).then(function (index) {
+    labelCollection._whitePixelIndex = index;
+  });
+}
+
+// reusable object for calling writeTextToCanvas
+var writeTextToCanvasParameters = {};
+function createGlyphCanvas(
+  character,
+  font,
+  fillColor,
+  outlineColor,
+  outlineWidth,
+  style,
+  verticalOrigin
+) {
+  writeTextToCanvasParameters.font = font;
+  writeTextToCanvasParameters.fillColor = fillColor;
+  writeTextToCanvasParameters.strokeColor = outlineColor;
+  writeTextToCanvasParameters.strokeWidth = outlineWidth;
+  // Setting the padding to something bigger is necessary to get enough space for the outlining.
+  writeTextToCanvasParameters.padding = SDFSettings.PADDING;
+
+  if (verticalOrigin === VerticalOrigin.CENTER) {
+    writeTextToCanvasParameters.textBaseline = "middle";
+  } else if (verticalOrigin === VerticalOrigin.TOP) {
+    writeTextToCanvasParameters.textBaseline = "top";
+  } else {
+    // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
+    writeTextToCanvasParameters.textBaseline = "bottom";
+  }
+
+  writeTextToCanvasParameters.fill =
+    style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
+  writeTextToCanvasParameters.stroke =
+    style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE;
+  writeTextToCanvasParameters.backgroundColor = Color.BLACK;
+
+  return writeTextToCanvas(character, writeTextToCanvasParameters);
+}
+
+function unbindGlyph(labelCollection, glyph) {
+  glyph.textureInfo = undefined;
+  glyph.dimensions = undefined;
+
+  var billboard = glyph.billboard;
+  if (defined(billboard)) {
+    billboard.show = false;
+    billboard.image = undefined;
+    if (defined(billboard._removeCallbackFunc)) {
+      billboard._removeCallbackFunc();
+      billboard._removeCallbackFunc = undefined;
+    }
+    labelCollection._spareBillboards.push(billboard);
+    glyph.billboard = undefined;
+  }
+}
+
+function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
+  textureAtlas.addImage(id, canvas).then(function (index) {
+    glyphTextureInfo.index = index;
+  });
+}
+
+var splitter = new GraphemeSplitter();
+
+function rebindAllGlyphs(labelCollection, label) {
+  var text = label._renderedText;
+  var graphemes = splitter.splitGraphemes(text);
+  var textLength = graphemes.length;
+  var glyphs = label._glyphs;
+  var glyphsLength = glyphs.length;
+
+  var glyph;
+  var glyphIndex;
+  var textIndex;
+
+  // Compute a font size scale relative to the sdf font generated size.
+  label._relativeSize = label._fontSize / SDFSettings.FONT_SIZE;
+
+  // if we have more glyphs than needed, unbind the extras.
+  if (textLength < glyphsLength) {
+    for (glyphIndex = textLength; glyphIndex < glyphsLength; ++glyphIndex) {
+      unbindGlyph(labelCollection, glyphs[glyphIndex]);
+    }
+  }
+
+  // presize glyphs to match the new text length
+  glyphs.length = textLength;
+
+  var showBackground =
+    label._showBackground && text.split("\n").join("").length > 0;
+  var backgroundBillboard = label._backgroundBillboard;
+  var backgroundBillboardCollection =
+    labelCollection._backgroundBillboardCollection;
+  if (!showBackground) {
+    if (defined(backgroundBillboard)) {
+      backgroundBillboardCollection.remove(backgroundBillboard);
+      label._backgroundBillboard = backgroundBillboard = undefined;
+    }
+  } else {
+    if (!defined(backgroundBillboard)) {
+      backgroundBillboard = backgroundBillboardCollection.add({
+        collection: labelCollection,
+        image: whitePixelCanvasId,
+        imageSubRegion: whitePixelBoundingRegion,
+      });
+      label._backgroundBillboard = backgroundBillboard;
     }
 
-    // GlyphTextureInfo represents a single character, drawn in a particular style,
-    // shared and reference counted across all labels.  It may or may not have an
-    // index into the label collection's texture atlas, depending on whether the character
-    // has both width and height, but it always has a valid dimensions object.
-    function GlyphTextureInfo(labelCollection, index, dimensions) {
-        this.labelCollection = labelCollection;
-        this.index = index;
-        this.dimensions = dimensions;
-    }
+    backgroundBillboard.color = label._backgroundColor;
+    backgroundBillboard.show = label._show;
+    backgroundBillboard.position = label._position;
+    backgroundBillboard.eyeOffset = label._eyeOffset;
+    backgroundBillboard.pixelOffset = label._pixelOffset;
+    backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
+    backgroundBillboard.verticalOrigin = label._verticalOrigin;
+    backgroundBillboard.heightReference = label._heightReference;
+    backgroundBillboard.scale = label.totalScale;
+    backgroundBillboard.pickPrimitive = label;
+    backgroundBillboard.id = label._id;
+    backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
+    backgroundBillboard.pixelOffsetScaleByDistance =
+      label._pixelOffsetScaleByDistance;
+    backgroundBillboard.scaleByDistance = label._scaleByDistance;
+    backgroundBillboard.distanceDisplayCondition =
+      label._distanceDisplayCondition;
+    backgroundBillboard.disableDepthTestDistance =
+      label._disableDepthTestDistance;
+  }
 
-    // Traditionally, leading is %20 of the font size.
-    var defaultLineSpacingPercent = 1.2;
+  var glyphTextureCache = labelCollection._glyphTextureCache;
 
-    var whitePixelCanvasId = 'ID_WHITE_PIXEL';
-    var whitePixelSize = new Cartesian2(4, 4);
-    var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
+  // walk the text looking for new characters (creating new glyphs for each)
+  // or changed characters (rebinding existing glyphs)
+  for (textIndex = 0; textIndex < textLength; ++textIndex) {
+    var character = graphemes[textIndex];
+    var verticalOrigin = label._verticalOrigin;
 
-    function addWhitePixelCanvas(textureAtlas, labelCollection) {
-        var canvas = document.createElement('canvas');
-        canvas.width = whitePixelSize.x;
-        canvas.height = whitePixelSize.y;
+    var id = JSON.stringify([
+      character,
+      label._fontFamily,
+      label._fontStyle,
+      label._fontWeight,
+      +verticalOrigin,
+    ]);
 
-        var context2D = canvas.getContext('2d');
-        context2D.fillStyle = '#fff';
-        context2D.fillRect(0, 0, canvas.width, canvas.height);
+    var glyphTextureInfo = glyphTextureCache[id];
+    if (!defined(glyphTextureInfo)) {
+      var glyphFont =
+        label._fontStyle +
+        " " +
+        label._fontWeight +
+        " " +
+        SDFSettings.FONT_SIZE +
+        "px " +
+        label._fontFamily;
 
-        textureAtlas.addImage(whitePixelCanvasId, canvas).then(function(index) {
-            labelCollection._whitePixelIndex = index;
+      var canvas = createGlyphCanvas(
+        character,
+        glyphFont,
+        Color.WHITE,
+        Color.WHITE,
+        0.0,
+        LabelStyle.FILL,
+        verticalOrigin
+      );
+
+      glyphTextureInfo = new GlyphTextureInfo(
+        labelCollection,
+        -1,
+        canvas.dimensions
+      );
+      glyphTextureCache[id] = glyphTextureInfo;
+
+      if (canvas.width > 0 && canvas.height > 0) {
+        var sdfValues = bitmapSDF(canvas, {
+          cutoff: SDFSettings.CUTOFF,
+          radius: SDFSettings.RADIUS,
         });
-    }
 
-    // reusable object for calling writeTextToCanvas
-    var writeTextToCanvasParameters = {};
-    function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
-        writeTextToCanvasParameters.font = font;
-        writeTextToCanvasParameters.fillColor = fillColor;
-        writeTextToCanvasParameters.strokeColor = outlineColor;
-        writeTextToCanvasParameters.strokeWidth = outlineWidth;
-        // Setting the padding to something bigger is necessary to get enough space for the outlining.
-        writeTextToCanvasParameters.padding = SDFSettings.PADDING;
-
-        if (verticalOrigin === VerticalOrigin.CENTER) {
-            writeTextToCanvasParameters.textBaseline = 'middle';
-        } else if (verticalOrigin === VerticalOrigin.TOP) {
-            writeTextToCanvasParameters.textBaseline = 'top';
-        } else {
-            // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
-            writeTextToCanvasParameters.textBaseline = 'bottom';
+        var ctx = canvas.getContext("2d");
+        var canvasWidth = canvas.width;
+        var canvasHeight = canvas.height;
+        var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+        for (var i = 0; i < canvasWidth; i++) {
+          for (var j = 0; j < canvasHeight; j++) {
+            var baseIndex = j * canvasWidth + i;
+            var alpha = sdfValues[baseIndex] * 255;
+            var imageIndex = baseIndex * 4;
+            imgData.data[imageIndex + 0] = alpha;
+            imgData.data[imageIndex + 1] = alpha;
+            imgData.data[imageIndex + 2] = alpha;
+            imgData.data[imageIndex + 3] = alpha;
+          }
         }
-
-        writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
-        writeTextToCanvasParameters.stroke = style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE;
-        writeTextToCanvasParameters.backgroundColor = Color.BLACK;
-
-        return writeTextToCanvas(character, writeTextToCanvasParameters);
+        ctx.putImageData(imgData, 0, 0);
+        if (character !== " ") {
+          addGlyphToTextureAtlas(
+            labelCollection._textureAtlas,
+            id,
+            canvas,
+            glyphTextureInfo
+          );
+        }
+      }
     }
 
-    function unbindGlyph(labelCollection, glyph) {
+    glyph = glyphs[textIndex];
+
+    if (defined(glyph)) {
+      // clean up leftover information from the previous glyph
+      if (glyphTextureInfo.index === -1) {
+        // no texture, and therefore no billboard, for this glyph.
+        // so, completely unbind glyph.
+        unbindGlyph(labelCollection, glyph);
+      } else if (defined(glyph.textureInfo)) {
+        // we have a texture and billboard.  If we had one before, release
+        // our reference to that texture info, but reuse the billboard.
         glyph.textureInfo = undefined;
-        glyph.dimensions = undefined;
-
-        var billboard = glyph.billboard;
-        if (defined(billboard)) {
-            billboard.show = false;
-            billboard.image = undefined;
-            if (defined(billboard._removeCallbackFunc)) {
-                billboard._removeCallbackFunc();
-                billboard._removeCallbackFunc = undefined;
-            }
-            labelCollection._spareBillboards.push(billboard);
-            glyph.billboard = undefined;
-        }
+      }
+    } else {
+      // create a glyph object
+      glyph = new Glyph();
+      glyphs[textIndex] = glyph;
     }
 
-    function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-        textureAtlas.addImage(id, canvas).then(function(index) {
-            glyphTextureInfo.index = index;
-        });
-    }
+    glyph.textureInfo = glyphTextureInfo;
+    glyph.dimensions = glyphTextureInfo.dimensions;
 
-    function rebindAllGlyphs(labelCollection, label) {
-        var text = label._renderedText;
-        var textLength = text.length;
-        var glyphs = label._glyphs;
-        var glyphsLength = glyphs.length;
-
-        var glyph;
-        var glyphIndex;
-        var textIndex;
-
-        // Compute a font size scale relative to the sdf font generated size.
-        label._relativeSize = label._fontSize / SDFSettings.FONT_SIZE;
-
-        // if we have more glyphs than needed, unbind the extras.
-        if (textLength < glyphsLength) {
-            for (glyphIndex = textLength; glyphIndex < glyphsLength; ++glyphIndex) {
-                unbindGlyph(labelCollection, glyphs[glyphIndex]);
-            }
-        }
-
-        // presize glyphs to match the new text length
-        glyphs.length = textLength;
-
-        var showBackground = label._showBackground && (text.split('\n').join('').length > 0);
-        var backgroundBillboard = label._backgroundBillboard;
-        var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
-        if (!showBackground) {
-            if (defined(backgroundBillboard)) {
-                backgroundBillboardCollection.remove(backgroundBillboard);
-                label._backgroundBillboard = backgroundBillboard = undefined;
-            }
+    // if we have a texture, configure the existing billboard, or obtain one
+    if (glyphTextureInfo.index !== -1) {
+      var billboard = glyph.billboard;
+      var spareBillboards = labelCollection._spareBillboards;
+      if (!defined(billboard)) {
+        if (spareBillboards.length > 0) {
+          billboard = spareBillboards.pop();
         } else {
-            if (!defined(backgroundBillboard)) {
-                backgroundBillboard = backgroundBillboardCollection.add({
-                    collection : labelCollection,
-                    image : whitePixelCanvasId,
-                    imageSubRegion : whitePixelBoundingRegion
-                });
-                label._backgroundBillboard = backgroundBillboard;
-            }
-
-            backgroundBillboard.color = label._backgroundColor;
-            backgroundBillboard.show = label._show;
-            backgroundBillboard.position = label._position;
-            backgroundBillboard.eyeOffset = label._eyeOffset;
-            backgroundBillboard.pixelOffset = label._pixelOffset;
-            backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
-            backgroundBillboard.verticalOrigin = label._verticalOrigin;
-            backgroundBillboard.heightReference = label._heightReference;
-            backgroundBillboard.scale = label.totalScale;
-            backgroundBillboard.pickPrimitive = label;
-            backgroundBillboard.id = label._id;
-            backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
-            backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
-            backgroundBillboard.scaleByDistance = label._scaleByDistance;
-            backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
-            backgroundBillboard.disableDepthTestDistance = label._disableDepthTestDistance;
+          billboard = labelCollection._billboardCollection.add({
+            collection: labelCollection,
+          });
+          billboard._labelDimensions = new Cartesian2();
+          billboard._labelTranslate = new Cartesian2();
         }
+        glyph.billboard = billboard;
+      }
 
-        var glyphTextureCache = labelCollection._glyphTextureCache;
-
-        // walk the text looking for new characters (creating new glyphs for each)
-        // or changed characters (rebinding existing glyphs)
-        for (textIndex = 0; textIndex < textLength; ++textIndex) {
-            var character = text.charAt(textIndex);
-            var verticalOrigin = label._verticalOrigin;
-
-            var id = JSON.stringify([
-                                     character,
-                                     label._fontFamily,
-                                     label._fontStyle,
-                                     label._fontWeight,
-                                     +verticalOrigin
-                                    ]);
-
-            var glyphTextureInfo = glyphTextureCache[id];
-            if (!defined(glyphTextureInfo)) {
-
-                var glyphFont = label._fontStyle + ' ' + label._fontWeight + ' ' + SDFSettings.FONT_SIZE + 'px ' + label._fontFamily;
-
-                var canvas = createGlyphCanvas(character, glyphFont, Color.WHITE, Color.WHITE, 0.0, LabelStyle.FILL, verticalOrigin);
-
-                glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, canvas.dimensions);
-                glyphTextureCache[id] = glyphTextureInfo;
-
-                if (canvas.width > 0 && canvas.height > 0) {
-                    var sdfValues = bitmapSDF(canvas, {
-                        cutoff: SDFSettings.CUTOFF,
-                        radius: SDFSettings.RADIUS
-                    });
-
-                    var ctx = canvas.getContext('2d');
-                    var canvasWidth = canvas.width;
-                    var canvasHeight = canvas.height;
-                    var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-                    for (var i = 0; i < canvasWidth; i++) {
-                        for (var j = 0; j < canvasHeight; j++) {
-                            var baseIndex = (j * canvasWidth + i);
-                            var alpha = sdfValues[baseIndex] * 255;
-                            var imageIndex = baseIndex * 4;
-                            imgData.data[imageIndex + 0] = alpha;
-                            imgData.data[imageIndex + 1] = alpha;
-                            imgData.data[imageIndex + 2] = alpha;
-                            imgData.data[imageIndex + 3] = alpha;
-                        }
-                    }
-                    ctx.putImageData(imgData, 0, 0);
-                    if (character !== ' ') {
-                        addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
-                    }
-                }
-            }
-
-            glyph = glyphs[textIndex];
-
-            if (defined(glyph)) {
-                // clean up leftover information from the previous glyph
-                if (glyphTextureInfo.index === -1) {
-                    // no texture, and therefore no billboard, for this glyph.
-                    // so, completely unbind glyph.
-                    unbindGlyph(labelCollection, glyph);
-                } else if (defined(glyph.textureInfo)) {
-                    // we have a texture and billboard.  If we had one before, release
-                    // our reference to that texture info, but reuse the billboard.
-                    glyph.textureInfo = undefined;
-                }
-            } else {
-                // create a glyph object
-                glyph = new Glyph();
-                glyphs[textIndex] = glyph;
-            }
-
-            glyph.textureInfo = glyphTextureInfo;
-            glyph.dimensions = glyphTextureInfo.dimensions;
-
-            // if we have a texture, configure the existing billboard, or obtain one
-            if (glyphTextureInfo.index !== -1) {
-                var billboard = glyph.billboard;
-                var spareBillboards = labelCollection._spareBillboards;
-                if (!defined(billboard)) {
-                    if (spareBillboards.length > 0) {
-                        billboard = spareBillboards.pop();
-                    } else {
-                        billboard = labelCollection._billboardCollection.add({
-                            collection : labelCollection
-                        });
-                        billboard._labelDimensions = new Cartesian2();
-                        billboard._labelTranslate = new Cartesian2();
-                    }
-                    glyph.billboard = billboard;
-                }
-
-                billboard.show = label._show;
-                billboard.position = label._position;
-                billboard.eyeOffset = label._eyeOffset;
-                billboard.pixelOffset = label._pixelOffset;
-                billboard.horizontalOrigin = HorizontalOrigin.LEFT;
-                billboard.verticalOrigin = label._verticalOrigin;
-                billboard.heightReference = label._heightReference;
-                billboard.scale = label.totalScale;
-                billboard.pickPrimitive = label;
-                billboard.id = label._id;
-                billboard.image = id;
-                billboard.translucencyByDistance = label._translucencyByDistance;
-                billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
-                billboard.scaleByDistance = label._scaleByDistance;
-                billboard.distanceDisplayCondition = label._distanceDisplayCondition;
-                billboard.disableDepthTestDistance = label._disableDepthTestDistance;
-                billboard._batchIndex = label._batchIndex;
-                billboard.outlineColor = label.outlineColor;
-                if (label.style === LabelStyle.FILL_AND_OUTLINE) {
-                    billboard.color = label._fillColor;
-                    billboard.outlineWidth = label.outlineWidth;
-                }
-                else if (label.style === LabelStyle.FILL) {
-                    billboard.color = label._fillColor;
-                    billboard.outlineWidth = 0.0;
-                }
-                else if (label.style === LabelStyle.OUTLINE) {
-                    billboard.color = Color.TRANSPARENT;
-                    billboard.outlineWidth = label.outlineWidth;
-                }
-            }
-        }
-
-        // changing glyphs will cause the position of the
-        // glyphs to change, since different characters have different widths
-        label._repositionAllGlyphs = true;
+      billboard.show = label._show;
+      billboard.position = label._position;
+      billboard.eyeOffset = label._eyeOffset;
+      billboard.pixelOffset = label._pixelOffset;
+      billboard.horizontalOrigin = HorizontalOrigin.LEFT;
+      billboard.verticalOrigin = label._verticalOrigin;
+      billboard.heightReference = label._heightReference;
+      billboard.scale = label.totalScale;
+      billboard.pickPrimitive = label;
+      billboard.id = label._id;
+      billboard.image = id;
+      billboard.translucencyByDistance = label._translucencyByDistance;
+      billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+      billboard.scaleByDistance = label._scaleByDistance;
+      billboard.distanceDisplayCondition = label._distanceDisplayCondition;
+      billboard.disableDepthTestDistance = label._disableDepthTestDistance;
+      billboard._batchIndex = label._batchIndex;
+      billboard.outlineColor = label.outlineColor;
+      if (label.style === LabelStyle.FILL_AND_OUTLINE) {
+        billboard.color = label._fillColor;
+        billboard.outlineWidth = label.outlineWidth;
+      } else if (label.style === LabelStyle.FILL) {
+        billboard.color = label._fillColor;
+        billboard.outlineWidth = 0.0;
+      } else if (label.style === LabelStyle.OUTLINE) {
+        billboard.color = Color.TRANSPARENT;
+        billboard.outlineWidth = label.outlineWidth;
+      }
     }
+  }
 
-    function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
-        if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            return -lineWidth / 2;
-        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            return -(lineWidth + backgroundPadding.x);
-        }
-        return backgroundPadding.x;
+  // changing glyphs will cause the position of the
+  // glyphs to change, since different characters have different widths
+  label._repositionAllGlyphs = true;
+}
+
+function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
+  if (horizontalOrigin === HorizontalOrigin.CENTER) {
+    return -lineWidth / 2;
+  } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+    return -(lineWidth + backgroundPadding.x);
+  }
+  return backgroundPadding.x;
+}
+
+// reusable Cartesian2 instances
+var glyphPixelOffset = new Cartesian2();
+var scratchBackgroundPadding = new Cartesian2();
+
+function repositionAllGlyphs(label) {
+  var glyphs = label._glyphs;
+  var text = label._renderedText;
+  var glyph;
+  var dimensions;
+  var lastLineWidth = 0;
+  var maxLineWidth = 0;
+  var lineWidths = [];
+  var maxGlyphDescent = Number.NEGATIVE_INFINITY;
+  var maxGlyphY = 0;
+  var numberOfLines = 1;
+  var glyphIndex;
+  var glyphLength = glyphs.length;
+
+  var backgroundBillboard = label._backgroundBillboard;
+  var backgroundPadding = Cartesian2.clone(
+    defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO,
+    scratchBackgroundPadding
+  );
+
+  // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
+  backgroundPadding.x /= label._relativeSize;
+  backgroundPadding.y /= label._relativeSize;
+
+  for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+    if (text.charAt(glyphIndex) === "\n") {
+      lineWidths.push(lastLineWidth);
+      ++numberOfLines;
+      lastLineWidth = 0;
+    } else {
+      glyph = glyphs[glyphIndex];
+      dimensions = glyph.dimensions;
+      maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
+      maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
+
+      //Computing the line width must also account for the kerning that occurs between letters.
+      lastLineWidth += dimensions.width - dimensions.minx;
+      if (glyphIndex < glyphLength - 1) {
+        lastLineWidth += glyphs[glyphIndex + 1].dimensions.minx;
+      }
+      maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
     }
+  }
+  lineWidths.push(lastLineWidth);
+  var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
-    // reusable Cartesian2 instances
-    var glyphPixelOffset = new Cartesian2();
-    var scratchBackgroundPadding = new Cartesian2();
+  var scale = label.totalScale;
+  var horizontalOrigin = label._horizontalOrigin;
+  var verticalOrigin = label._verticalOrigin;
+  var lineIndex = 0;
+  var lineWidth = lineWidths[lineIndex];
+  var widthOffset = calculateWidthOffset(
+    lineWidth,
+    horizontalOrigin,
+    backgroundPadding
+  );
+  var lineSpacing =
+    (defined(label._lineHeight)
+      ? label._lineHeight
+      : defaultLineSpacingPercent * label._fontSize) / label._relativeSize;
+  var otherLinesHeight = lineSpacing * (numberOfLines - 1);
+  var totalLineWidth = maxLineWidth;
+  var totalLineHeight = maxLineHeight + otherLinesHeight;
 
-    function repositionAllGlyphs(label, resolutionScale) {
-        var glyphs = label._glyphs;
-        var text = label._renderedText;
-        var glyph;
-        var dimensions;
-        var lastLineWidth = 0;
-        var maxLineWidth = 0;
-        var lineWidths = [];
-        var maxGlyphDescent = Number.NEGATIVE_INFINITY;
-        var maxGlyphY = 0;
-        var numberOfLines = 1;
-        var glyphIndex;
-        var glyphLength = glyphs.length;
+  if (defined(backgroundBillboard)) {
+    totalLineWidth += backgroundPadding.x * 2;
+    totalLineHeight += backgroundPadding.y * 2;
+    backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
+  }
 
-        var backgroundBillboard = label._backgroundBillboard;
-        var backgroundPadding = Cartesian2.clone(
-            (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
-            scratchBackgroundPadding);
+  glyphPixelOffset.x = widthOffset * scale;
+  glyphPixelOffset.y = 0;
 
-        // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
-        backgroundPadding.x /= label._relativeSize;
-        backgroundPadding.y /= label._relativeSize;
+  var firstCharOfLine = true;
 
-        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            if (text.charAt(glyphIndex) === '\n') {
-                lineWidths.push(lastLineWidth);
-                ++numberOfLines;
-                lastLineWidth = 0;
-            } else {
-                glyph = glyphs[glyphIndex];
-                dimensions = glyph.dimensions;
-                maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
-                maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
+  var lineOffsetY = 0;
+  for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+    if (text.charAt(glyphIndex) === "\n") {
+      ++lineIndex;
+      lineOffsetY += lineSpacing;
+      lineWidth = lineWidths[lineIndex];
+      widthOffset = calculateWidthOffset(
+        lineWidth,
+        horizontalOrigin,
+        backgroundPadding
+      );
+      glyphPixelOffset.x = widthOffset * scale;
+      firstCharOfLine = true;
+    } else {
+      glyph = glyphs[glyphIndex];
+      dimensions = glyph.dimensions;
 
-                //Computing the line width must also account for the kerning that occurs between letters.
-                lastLineWidth += dimensions.width - dimensions.bounds.minx;
-                if (glyphIndex < glyphLength - 1) {
-                    lastLineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
-                }
-                maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
-            }
-        }
-        lineWidths.push(lastLineWidth);
-        var maxLineHeight = maxGlyphY + maxGlyphDescent;
+      if (verticalOrigin === VerticalOrigin.TOP) {
+        glyphPixelOffset.y =
+          dimensions.height - maxGlyphY - backgroundPadding.y;
+        glyphPixelOffset.y += SDFSettings.PADDING;
+      } else if (verticalOrigin === VerticalOrigin.CENTER) {
+        glyphPixelOffset.y =
+          (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
+      } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+        glyphPixelOffset.y = otherLinesHeight;
+        glyphPixelOffset.y -= SDFSettings.PADDING;
+      } else {
+        // VerticalOrigin.BOTTOM
+        glyphPixelOffset.y =
+          otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
+        glyphPixelOffset.y -= SDFSettings.PADDING;
+      }
+      glyphPixelOffset.y =
+        (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale;
 
-        var scale = label.totalScale;
-        var horizontalOrigin = label._horizontalOrigin;
-        var verticalOrigin = label._verticalOrigin;
-        var lineIndex = 0;
-        var lineWidth = lineWidths[lineIndex];
-        var widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
-        var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
-        var otherLinesHeight = lineSpacing * (numberOfLines - 1);
-        var totalLineWidth = maxLineWidth;
-        var totalLineHeight = maxLineHeight + otherLinesHeight;
+      // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
+      if (firstCharOfLine) {
+        glyphPixelOffset.x -= SDFSettings.PADDING * scale;
+        firstCharOfLine = false;
+      }
 
-        if (defined(backgroundBillboard)) {
-            totalLineWidth += (backgroundPadding.x * 2);
-            totalLineHeight += (backgroundPadding.y * 2);
-            backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
-        }
+      if (defined(glyph.billboard)) {
+        glyph.billboard._setTranslate(glyphPixelOffset);
+        glyph.billboard._labelDimensions.x = totalLineWidth;
+        glyph.billboard._labelDimensions.y = totalLineHeight;
+        glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
+      }
 
-        glyphPixelOffset.x = widthOffset * scale * resolutionScale;
-        glyphPixelOffset.y = 0;
-
-        var firstCharOfLine = true;
-
-        var lineOffsetY = 0;
-        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            if (text.charAt(glyphIndex) === '\n') {
-                ++lineIndex;
-                lineOffsetY += lineSpacing;
-                lineWidth = lineWidths[lineIndex];
-                widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
-                glyphPixelOffset.x = widthOffset * scale * resolutionScale;
-                firstCharOfLine = true;
-            } else {
-                glyph = glyphs[glyphIndex];
-                dimensions = glyph.dimensions;
-
-                if (verticalOrigin === VerticalOrigin.TOP) {
-                    glyphPixelOffset.y = dimensions.height - maxGlyphY - backgroundPadding.y;
-                    glyphPixelOffset.y += SDFSettings.PADDING;
-                } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                    glyphPixelOffset.y = (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
-                } else if (verticalOrigin === VerticalOrigin.BASELINE) {
-                    glyphPixelOffset.y = otherLinesHeight;
-                    glyphPixelOffset.y -= SDFSettings.PADDING;
-                } else {
-                    // VerticalOrigin.BOTTOM
-                    glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
-                    glyphPixelOffset.y -= SDFSettings.PADDING;
-                }
-                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale * resolutionScale;
-
-                // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
-                if (firstCharOfLine)
-                {
-                    glyphPixelOffset.x -= SDFSettings.PADDING * scale * resolutionScale;
-                    firstCharOfLine = false;
-                }
-
-                if (defined(glyph.billboard)) {
-                    glyph.billboard._setTranslate(glyphPixelOffset);
-                    glyph.billboard._labelDimensions.x = totalLineWidth;
-                    glyph.billboard._labelDimensions.y = totalLineHeight;
-                    glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
-                }
-
-                //Compute the next x offset taking into account the kerning performed
-                //on both the current letter as well as the next letter to be drawn
-                //as well as any applied scale.
-                if (glyphIndex < glyphLength - 1) {
-                    var nextGlyph = glyphs[glyphIndex + 1];
-                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
-                }
-            }
-        }
-
-        if (defined(backgroundBillboard) && (text.split('\n').join('').length > 0)) {
-            if (horizontalOrigin === HorizontalOrigin.CENTER) {
-                widthOffset = -maxLineWidth / 2 - backgroundPadding.x;
-            } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-                widthOffset = -(maxLineWidth + backgroundPadding.x * 2);
-            } else {
-                widthOffset = 0;
-            }
-            glyphPixelOffset.x = widthOffset * scale * resolutionScale;
-
-            if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
-            } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
-            } else if (verticalOrigin === VerticalOrigin.BASELINE) {
-                glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
-            } else {
-                // VerticalOrigin.BOTTOM
-                glyphPixelOffset.y = 0;
-            }
-            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
-
-            backgroundBillboard.width = totalLineWidth;
-            backgroundBillboard.height = totalLineHeight;
-            backgroundBillboard._setTranslate(glyphPixelOffset);
-            backgroundBillboard._labelTranslate = Cartesian2.clone(glyphPixelOffset, backgroundBillboard._labelTranslate);
-        }
-
-        if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
-            for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-                glyph = glyphs[glyphIndex];
-                var billboard = glyph.billboard;
-                if (defined(billboard)) {
-                    billboard._labelTranslate = Cartesian2.clone(glyphPixelOffset, billboard._labelTranslate);
-                }
-            }
-        }
+      //Compute the next x offset taking into account the kerning performed
+      //on both the current letter as well as the next letter to be drawn
+      //as well as any applied scale.
+      if (glyphIndex < glyphLength - 1) {
+        var nextGlyph = glyphs[glyphIndex + 1];
+        glyphPixelOffset.x +=
+          (dimensions.width - dimensions.minx + nextGlyph.dimensions.minx) *
+          scale;
+      }
     }
+  }
 
-    function destroyLabel(labelCollection, label) {
-        var glyphs = label._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; ++i) {
-            unbindGlyph(labelCollection, glyphs[i]);
-        }
-        if (defined(label._backgroundBillboard)) {
-            labelCollection._backgroundBillboardCollection.remove(label._backgroundBillboard);
-            label._backgroundBillboard = undefined;
-        }
-        label._labelCollection = undefined;
-
-        if (defined(label._removeCallbackFunc)) {
-            label._removeCallbackFunc();
-        }
-
-        destroyObject(label);
+  if (defined(backgroundBillboard) && text.split("\n").join("").length > 0) {
+    if (horizontalOrigin === HorizontalOrigin.CENTER) {
+      widthOffset = -maxLineWidth / 2 - backgroundPadding.x;
+    } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+      widthOffset = -(maxLineWidth + backgroundPadding.x * 2);
+    } else {
+      widthOffset = 0;
     }
+    glyphPixelOffset.x = widthOffset * scale;
 
-    /**
-     * A renderable collection of labels.  Labels are viewport-aligned text positioned in the 3D scene.
-     * Each label can have a different font, color, scale, etc.
-     * <br /><br />
-     * <div align='center'>
-     * <img src='Images/Label.png' width='400' height='300' /><br />
-     * Example labels
-     * </div>
-     * <br /><br />
-     * Labels are added and removed from the collection using {@link LabelCollection#add}
-     * and {@link LabelCollection#remove}.
-     *
-     * @alias LabelCollection
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
-     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
-     * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
-     * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
-     *
-     * @performance For best performance, prefer a few collections, each with many labels, to
-     * many collections with only a few labels each.  Avoid having collections where some
-     * labels change every frame and others do not; instead, create one or more collections
-     * for static labels, and one or more collections for dynamic labels.
-     *
-     * @see LabelCollection#add
-     * @see LabelCollection#remove
-     * @see Label
-     * @see BillboardCollection
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
-     *
-     * @example
-     * // Create a label collection with two labels
-     * var labels = scene.primitives.add(new Cesium.LabelCollection());
-     * labels.add({
-     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
-     *   text : 'A label'
-     * });
-     * labels.add({
-     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
-     *   text : 'Another label'
-     * });
-     */
-    function LabelCollection(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._scene = options.scene;
-        this._batchTable = options.batchTable;
-
-        this._textureAtlas = undefined;
-        this._backgroundTextureAtlas = undefined;
-        this._whitePixelIndex = undefined;
-
-        this._backgroundBillboardCollection = new BillboardCollection({
-            scene : this._scene
-        });
-        this._backgroundBillboardCollection.destroyTextureAtlas = false;
-
-        this._billboardCollection = new BillboardCollection({
-            scene : this._scene,
-            batchTable : this._batchTable
-        });
-        this._billboardCollection.destroyTextureAtlas = false;
-        this._billboardCollection._sdf = true;
-
-        this._spareBillboards = [];
-        this._glyphTextureCache = {};
-        this._labels = [];
-        this._labelsToUpdate = [];
-        this._totalGlyphCount = 0;
-        this._resolutionScale = undefined;
-
-        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-
-        /**
-         * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
-         * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         * @default {@link Matrix4.IDENTITY}
-         *
-         * @example
-         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-         * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-         * labels.add({
-         *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
-         *   text     : 'Center'
-         * });
-         * labels.add({
-         *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
-         *   text     : 'East'
-         * });
-         * labels.add({
-         *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
-         *   text     : 'North'
-         * });
-         * labels.add({
-         *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
-         *   text     : 'Up'
-         * });
-         */
-        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each draw command in the primitive.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
-        /**
-         * The label blending option. The default is used for rendering both opaque and translucent labels.
-         * However, if either all of the labels are completely opaque or all are completely translucent,
-         * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
-         * performance by up to 2x.
-         * @type {BlendOption}
-         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
-         */
-        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
+    if (verticalOrigin === VerticalOrigin.TOP) {
+      glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
+    } else if (verticalOrigin === VerticalOrigin.CENTER) {
+      glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
+    } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+      glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
+    } else {
+      // VerticalOrigin.BOTTOM
+      glyphPixelOffset.y = 0;
     }
+    glyphPixelOffset.y = glyphPixelOffset.y * scale;
 
-    defineProperties(LabelCollection.prototype, {
-        /**
-         * Returns the number of labels in this collection.  This is commonly used with
-         * {@link LabelCollection#get} to iterate over all the labels
-         * in the collection.
-         * @memberof LabelCollection.prototype
-         * @type {Number}
-         */
-        length : {
-            get : function() {
-                return this._labels.length;
-            }
-        }
-    });
+    backgroundBillboard.width = totalLineWidth;
+    backgroundBillboard.height = totalLineHeight;
+    backgroundBillboard._setTranslate(glyphPixelOffset);
+    backgroundBillboard._labelTranslate = Cartesian2.clone(
+      glyphPixelOffset,
+      backgroundBillboard._labelTranslate
+    );
+  }
 
-    /**
-     * Creates and adds a label with the specified initial properties to the collection.
-     * The added label is returned so it can be modified or removed from the collection later.
-     *
-     * @param {Object} [options] A template describing the label's properties as shown in Example 1.
-     * @returns {Label} The label that was added to the collection.
-     *
-     * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
-     * is rewritten; this operations is <code>O(n)</code> and also incurs
-     * CPU to GPU overhead.  For best performance, add as many billboards as possible before
-     * calling <code>update</code>.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * // Example 1:  Add a label, specifying all the default values.
-     * var l = labels.add({
-     *   show : true,
-     *   position : Cesium.Cartesian3.ZERO,
-     *   text : '',
-     *   font : '30px sans-serif',
-     *   fillColor : Cesium.Color.WHITE,
-     *   outlineColor : Cesium.Color.BLACK,
-     *   outlineWidth : 1.0,
-     *   showBackground : false,
-     *   backgroundColor : new Cesium.Color(0.165, 0.165, 0.165, 0.8),
-     *   backgroundPadding : new Cesium.Cartesian2(7, 5),
-     *   style : Cesium.LabelStyle.FILL,
-     *   pixelOffset : Cesium.Cartesian2.ZERO,
-     *   eyeOffset : Cesium.Cartesian3.ZERO,
-     *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-     *   verticalOrigin : Cesium.VerticalOrigin.BASELINE,
-     *   scale : 1.0,
-     *   translucencyByDistance : undefined,
-     *   pixelOffsetScaleByDistance : undefined,
-     *   heightReference : HeightReference.NONE,
-     *   distanceDisplayCondition : undefined
-     * });
-     *
-     * @example
-     * // Example 2:  Specify only the label's cartographic position,
-     * // text, and font.
-     * var l = labels.add({
-     *   position : Cesium.Cartesian3.fromRadians(longitude, latitude, height),
-     *   text : 'Hello World',
-     *   font : '24px Helvetica',
-     * });
-     *
-     * @see LabelCollection#remove
-     * @see LabelCollection#removeAll
-     */
-    LabelCollection.prototype.add = function(options) {
-        var label = new Label(options, this);
+  if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
+    for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+      glyph = glyphs[glyphIndex];
+      var billboard = glyph.billboard;
+      if (defined(billboard)) {
+        billboard._labelTranslate = Cartesian2.clone(
+          glyphPixelOffset,
+          billboard._labelTranslate
+        );
+      }
+    }
+  }
+}
 
-        this._labels.push(label);
-        this._labelsToUpdate.push(label);
+function destroyLabel(labelCollection, label) {
+  var glyphs = label._glyphs;
+  for (var i = 0, len = glyphs.length; i < len; ++i) {
+    unbindGlyph(labelCollection, glyphs[i]);
+  }
+  if (defined(label._backgroundBillboard)) {
+    labelCollection._backgroundBillboardCollection.remove(
+      label._backgroundBillboard
+    );
+    label._backgroundBillboard = undefined;
+  }
+  label._labelCollection = undefined;
 
-        return label;
-    };
+  if (defined(label._removeCallbackFunc)) {
+    label._removeCallbackFunc();
+  }
 
-    /**
-     * Removes a label from the collection.  Once removed, a label is no longer usable.
-     *
-     * @param {Label} label The label to remove.
-     * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
-     *
-     * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
-     * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
-     * best performance, remove as many labels as possible before calling <code>update</code>.
-     * If you intend to temporarily hide a label, it is usually more efficient to call
-     * {@link Label#show} instead of removing and re-adding the label.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * var l = labels.add(...);
-     * labels.remove(l);  // Returns true
-     *
-     * @see LabelCollection#add
-     * @see LabelCollection#removeAll
-     * @see Label#show
-     */
-    LabelCollection.prototype.remove = function(label) {
-        if (defined(label) && label._labelCollection === this) {
-            var index = this._labels.indexOf(label);
-            if (index !== -1) {
-                this._labels.splice(index, 1);
-                destroyLabel(this, label);
-                return true;
-            }
-        }
-        return false;
-    };
+  destroyObject(label);
+}
 
-    /**
-     * Removes all labels from the collection.
-     *
-     * @performance <code>O(n)</code>.  It is more efficient to remove all the labels
-     * from a collection and then add new ones than to create a new collection entirely.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * labels.add(...);
-     * labels.add(...);
-     * labels.removeAll();
-     *
-     * @see LabelCollection#add
-     * @see LabelCollection#remove
-     */
-    LabelCollection.prototype.removeAll = function() {
-        var labels = this._labels;
+/**
+ * A renderable collection of labels.  Labels are viewport-aligned text positioned in the 3D scene.
+ * Each label can have a different font, color, scale, etc.
+ * <br /><br />
+ * <div align='center'>
+ * <img src='Images/Label.png' width='400' height='300' /><br />
+ * Example labels
+ * </div>
+ * <br /><br />
+ * Labels are added and removed from the collection using {@link LabelCollection#add}
+ * and {@link LabelCollection#remove}.
+ *
+ * @alias LabelCollection
+ * @constructor
+ *
+ * @param {Object} [options] Object with the following properties:
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
+ * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
+ * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
+ * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
+ * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the labels in the collection will be shown.
+ *
+ * @performance For best performance, prefer a few collections, each with many labels, to
+ * many collections with only a few labels each.  Avoid having collections where some
+ * labels change every frame and others do not; instead, create one or more collections
+ * for static labels, and one or more collections for dynamic labels.
+ *
+ * @see LabelCollection#add
+ * @see LabelCollection#remove
+ * @see Label
+ * @see BillboardCollection
+ *
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ *
+ * @example
+ * // Create a label collection with two labels
+ * var labels = scene.primitives.add(new Cesium.LabelCollection());
+ * labels.add({
+ *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
+ *   text : 'A label'
+ * });
+ * labels.add({
+ *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
+ *   text : 'Another label'
+ * });
+ */
+function LabelCollection(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        for (var i = 0, len = labels.length; i < len; ++i) {
-            destroyLabel(this, labels[i]);
-        }
+  this._scene = options.scene;
+  this._batchTable = options.batchTable;
 
-        labels.length = 0;
-    };
+  this._textureAtlas = undefined;
+  this._backgroundTextureAtlas = undefined;
+  this._whitePixelIndex = undefined;
 
-    /**
-     * Check whether this collection contains a given label.
-     *
-     * @param {Label} label The label to check for.
-     * @returns {Boolean} true if this collection contains the label, false otherwise.
-     *
-     * @see LabelCollection#get
-     *
-     */
-    LabelCollection.prototype.contains = function(label) {
-        return defined(label) && label._labelCollection === this;
-    };
+  this._backgroundBillboardCollection = new BillboardCollection({
+    scene: this._scene,
+  });
+  this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
-    /**
-     * Returns the label in the collection at the specified index.  Indices are zero-based
-     * and increase as labels are added.  Removing a label shifts all labels after
-     * it to the left, changing their indices.  This function is commonly used with
-     * {@link LabelCollection#length} to iterate over all the labels
-     * in the collection.
-     *
-     * @param {Number} index The zero-based index of the billboard.
-     *
-     * @returns {Label} The label at the specified index.
-     *
-     * @performance Expected constant time.  If labels were removed from the collection and
-     * {@link Scene#render} was not called, an implicit <code>O(n)</code>
-     * operation is performed.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * // Toggle the show property of every label in the collection
-     * var len = labels.length;
-     * for (var i = 0; i < len; ++i) {
-     *   var l = billboards.get(i);
-     *   l.show = !l.show;
-     * }
-     *
-     * @see LabelCollection#length
-     */
-    LabelCollection.prototype.get = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(index)) {
-            throw new DeveloperError('index is required.');
-        }
-        //>>includeEnd('debug');
+  this._billboardCollection = new BillboardCollection({
+    scene: this._scene,
+    batchTable: this._batchTable,
+  });
+  this._billboardCollection.destroyTextureAtlas = false;
+  this._billboardCollection._sdf = true;
 
-        return this._labels[index];
-    };
+  this._spareBillboards = [];
+  this._glyphTextureCache = {};
+  this._labels = [];
+  this._labelsToUpdate = [];
+  this._totalGlyphCount = 0;
 
-    /**
-     * @private
-     *
-     */
-    LabelCollection.prototype.update = function(frameState) {
-        var billboardCollection = this._billboardCollection;
-        var backgroundBillboardCollection = this._backgroundBillboardCollection;
+  this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
-        billboardCollection.modelMatrix = this.modelMatrix;
-        billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        backgroundBillboardCollection.modelMatrix = this.modelMatrix;
-        backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+  /**
+   * Determines if labels in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
-        var context = frameState.context;
+  /**
+   * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
+   * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+   * Local reference frames can be used by providing a different transformation matrix, like that returned
+   * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
+   * @type Matrix4
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+   * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+   * labels.add({
+   *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
+   *   text     : 'Center'
+   * });
+   * labels.add({
+   *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+   *   text     : 'East'
+   * });
+   * labels.add({
+   *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+   *   text     : 'North'
+   * });
+   * labels.add({
+   *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+   *   text     : 'Up'
+   * });
+   */
+  this.modelMatrix = Matrix4.clone(
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+  );
 
-        if (!defined(this._textureAtlas)) {
-            this._textureAtlas = new TextureAtlas({
-                context : context
-            });
-            billboardCollection.textureAtlas = this._textureAtlas;
-        }
+  /**
+   * This property is for debugging only; it is not for production use nor is it optimized.
+   * <p>
+   * Draws the bounding sphere for each draw command in the primitive.
+   * </p>
+   *
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  this.debugShowBoundingVolume = defaultValue(
+    options.debugShowBoundingVolume,
+    false
+  );
 
-        if (!defined(this._backgroundTextureAtlas)) {
-            this._backgroundTextureAtlas = new TextureAtlas({
-                context : context,
-                initialSize : whitePixelSize
-            });
-            backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
-            addWhitePixelCanvas(this._backgroundTextureAtlas, this);
-        }
+  /**
+   * The label blending option. The default is used for rendering both opaque and translucent labels.
+   * However, if either all of the labels are completely opaque or all are completely translucent,
+   * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
+   * performance by up to 2x.
+   * @type {BlendOption}
+   * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+   */
+  this.blendOption = defaultValue(
+    options.blendOption,
+    BlendOption.OPAQUE_AND_TRANSLUCENT
+  );
+}
 
-        var uniformState = context.uniformState;
-        var resolutionScale = uniformState.resolutionScale;
-        var resolutionChanged = this._resolutionScale !== resolutionScale;
-        this._resolutionScale = resolutionScale;
-
-        var labelsToUpdate;
-        if (resolutionChanged) {
-            labelsToUpdate = this._labels;
-        } else {
-            labelsToUpdate = this._labelsToUpdate;
-        }
-
-        var len = labelsToUpdate.length;
-        for (var i = 0; i < len; ++i) {
-            var label = labelsToUpdate[i];
-            if (label.isDestroyed()) {
-                continue;
-            }
-
-            var preUpdateGlyphCount = label._glyphs.length;
-
-            if (label._rebindAllGlyphs) {
-                rebindAllGlyphs(this, label);
-                label._rebindAllGlyphs = false;
-            }
-
-            if (resolutionChanged || label._repositionAllGlyphs) {
-                repositionAllGlyphs(label, resolutionScale);
-                label._repositionAllGlyphs = false;
-            }
-
-            var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
-            this._totalGlyphCount += glyphCountDifference;
-        }
-
-        var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
-        billboardCollection.blendOption = blendOption;
-        backgroundBillboardCollection.blendOption = blendOption;
-
-        billboardCollection._highlightColor = this._highlightColor;
-        backgroundBillboardCollection._highlightColor = this._highlightColor;
-
-        this._labelsToUpdate.length = 0;
-        backgroundBillboardCollection.update(frameState);
-        billboardCollection.update(frameState);
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see LabelCollection#destroy
-     */
-    LabelCollection.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * labels = labels && labels.destroy();
-     *
-     * @see LabelCollection#isDestroyed
-     */
-    LabelCollection.prototype.destroy = function() {
-        this.removeAll();
-        this._billboardCollection = this._billboardCollection.destroy();
-        this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
-        this._backgroundBillboardCollection = this._backgroundBillboardCollection.destroy();
-        this._backgroundTextureAtlas = this._backgroundTextureAtlas && this._backgroundTextureAtlas.destroy();
-
-        return destroyObject(this);
-    };
-
-    return LabelCollection;
+Object.defineProperties(LabelCollection.prototype, {
+  /**
+   * Returns the number of labels in this collection.  This is commonly used with
+   * {@link LabelCollection#get} to iterate over all the labels
+   * in the collection.
+   * @memberof LabelCollection.prototype
+   * @type {Number}
+   */
+  length: {
+    get: function () {
+      return this._labels.length;
+    },
+  },
 });
+
+/**
+ * Creates and adds a label with the specified initial properties to the collection.
+ * The added label is returned so it can be modified or removed from the collection later.
+ *
+ * @param {Object} [options] A template describing the label's properties as shown in Example 1.
+ * @returns {Label} The label that was added to the collection.
+ *
+ * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
+ * is rewritten; this operations is <code>O(n)</code> and also incurs
+ * CPU to GPU overhead.  For best performance, add as many billboards as possible before
+ * calling <code>update</code>.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * // Example 1:  Add a label, specifying all the default values.
+ * var l = labels.add({
+ *   show : true,
+ *   position : Cesium.Cartesian3.ZERO,
+ *   text : '',
+ *   font : '30px sans-serif',
+ *   fillColor : Cesium.Color.WHITE,
+ *   outlineColor : Cesium.Color.BLACK,
+ *   outlineWidth : 1.0,
+ *   showBackground : false,
+ *   backgroundColor : new Cesium.Color(0.165, 0.165, 0.165, 0.8),
+ *   backgroundPadding : new Cesium.Cartesian2(7, 5),
+ *   style : Cesium.LabelStyle.FILL,
+ *   pixelOffset : Cesium.Cartesian2.ZERO,
+ *   eyeOffset : Cesium.Cartesian3.ZERO,
+ *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+ *   verticalOrigin : Cesium.VerticalOrigin.BASELINE,
+ *   scale : 1.0,
+ *   translucencyByDistance : undefined,
+ *   pixelOffsetScaleByDistance : undefined,
+ *   heightReference : HeightReference.NONE,
+ *   distanceDisplayCondition : undefined
+ * });
+ *
+ * @example
+ * // Example 2:  Specify only the label's cartographic position,
+ * // text, and font.
+ * var l = labels.add({
+ *   position : Cesium.Cartesian3.fromRadians(longitude, latitude, height),
+ *   text : 'Hello World',
+ *   font : '24px Helvetica',
+ * });
+ *
+ * @see LabelCollection#remove
+ * @see LabelCollection#removeAll
+ */
+LabelCollection.prototype.add = function (options) {
+  var label = new Label(options, this);
+
+  this._labels.push(label);
+  this._labelsToUpdate.push(label);
+
+  return label;
+};
+
+/**
+ * Removes a label from the collection.  Once removed, a label is no longer usable.
+ *
+ * @param {Label} label The label to remove.
+ * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
+ *
+ * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
+ * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
+ * best performance, remove as many labels as possible before calling <code>update</code>.
+ * If you intend to temporarily hide a label, it is usually more efficient to call
+ * {@link Label#show} instead of removing and re-adding the label.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * var l = labels.add(...);
+ * labels.remove(l);  // Returns true
+ *
+ * @see LabelCollection#add
+ * @see LabelCollection#removeAll
+ * @see Label#show
+ */
+LabelCollection.prototype.remove = function (label) {
+  if (defined(label) && label._labelCollection === this) {
+    var index = this._labels.indexOf(label);
+    if (index !== -1) {
+      this._labels.splice(index, 1);
+      destroyLabel(this, label);
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * Removes all labels from the collection.
+ *
+ * @performance <code>O(n)</code>.  It is more efficient to remove all the labels
+ * from a collection and then add new ones than to create a new collection entirely.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * labels.add(...);
+ * labels.add(...);
+ * labels.removeAll();
+ *
+ * @see LabelCollection#add
+ * @see LabelCollection#remove
+ */
+LabelCollection.prototype.removeAll = function () {
+  var labels = this._labels;
+
+  for (var i = 0, len = labels.length; i < len; ++i) {
+    destroyLabel(this, labels[i]);
+  }
+
+  labels.length = 0;
+};
+
+/**
+ * Check whether this collection contains a given label.
+ *
+ * @param {Label} label The label to check for.
+ * @returns {Boolean} true if this collection contains the label, false otherwise.
+ *
+ * @see LabelCollection#get
+ *
+ */
+LabelCollection.prototype.contains = function (label) {
+  return defined(label) && label._labelCollection === this;
+};
+
+/**
+ * Returns the label in the collection at the specified index.  Indices are zero-based
+ * and increase as labels are added.  Removing a label shifts all labels after
+ * it to the left, changing their indices.  This function is commonly used with
+ * {@link LabelCollection#length} to iterate over all the labels
+ * in the collection.
+ *
+ * @param {Number} index The zero-based index of the billboard.
+ *
+ * @returns {Label} The label at the specified index.
+ *
+ * @performance Expected constant time.  If labels were removed from the collection and
+ * {@link Scene#render} was not called, an implicit <code>O(n)</code>
+ * operation is performed.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * // Toggle the show property of every label in the collection
+ * var len = labels.length;
+ * for (var i = 0; i < len; ++i) {
+ *   var l = billboards.get(i);
+ *   l.show = !l.show;
+ * }
+ *
+ * @see LabelCollection#length
+ */
+LabelCollection.prototype.get = function (index) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
+
+  return this._labels[index];
+};
+
+/**
+ * @private
+ *
+ */
+LabelCollection.prototype.update = function (frameState) {
+  if (!this.show) {
+    return;
+  }
+
+  var billboardCollection = this._billboardCollection;
+  var backgroundBillboardCollection = this._backgroundBillboardCollection;
+
+  billboardCollection.modelMatrix = this.modelMatrix;
+  billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+  backgroundBillboardCollection.modelMatrix = this.modelMatrix;
+  backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+  var context = frameState.context;
+
+  if (!defined(this._textureAtlas)) {
+    this._textureAtlas = new TextureAtlas({
+      context: context,
+    });
+    billboardCollection.textureAtlas = this._textureAtlas;
+  }
+
+  if (!defined(this._backgroundTextureAtlas)) {
+    this._backgroundTextureAtlas = new TextureAtlas({
+      context: context,
+      initialSize: whitePixelSize,
+    });
+    backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
+    addWhitePixelCanvas(this._backgroundTextureAtlas, this);
+  }
+
+  var len = this._labelsToUpdate.length;
+  for (var i = 0; i < len; ++i) {
+    var label = this._labelsToUpdate[i];
+    if (label.isDestroyed()) {
+      continue;
+    }
+
+    var preUpdateGlyphCount = label._glyphs.length;
+
+    if (label._rebindAllGlyphs) {
+      rebindAllGlyphs(this, label);
+      label._rebindAllGlyphs = false;
+    }
+
+    if (label._repositionAllGlyphs) {
+      repositionAllGlyphs(label);
+      label._repositionAllGlyphs = false;
+    }
+
+    var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
+    this._totalGlyphCount += glyphCountDifference;
+  }
+
+  var blendOption =
+    backgroundBillboardCollection.length > 0
+      ? BlendOption.TRANSLUCENT
+      : this.blendOption;
+  billboardCollection.blendOption = blendOption;
+  backgroundBillboardCollection.blendOption = blendOption;
+
+  billboardCollection._highlightColor = this._highlightColor;
+  backgroundBillboardCollection._highlightColor = this._highlightColor;
+
+  this._labelsToUpdate.length = 0;
+  backgroundBillboardCollection.update(frameState);
+  billboardCollection.update(frameState);
+};
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ *
+ * @see LabelCollection#destroy
+ */
+LabelCollection.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * labels = labels && labels.destroy();
+ *
+ * @see LabelCollection#isDestroyed
+ */
+LabelCollection.prototype.destroy = function () {
+  this.removeAll();
+  this._billboardCollection = this._billboardCollection.destroy();
+  this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+  this._backgroundBillboardCollection = this._backgroundBillboardCollection.destroy();
+  this._backgroundTextureAtlas =
+    this._backgroundTextureAtlas && this._backgroundTextureAtlas.destroy();
+
+  return destroyObject(this);
+};
+export default LabelCollection;

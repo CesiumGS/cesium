@@ -1,192 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Create and style textual labels.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Create and style textual labels." />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Beginner" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var labelListenerCallback;
 
-function addLabel() {
-    Sandcastle.declare(addLabel);
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-        label : {
-            text : 'Philadelphia'
-        }
-    });
-}
-
-function setFont() {
-    Sandcastle.declare(setFont);
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-        label : {
-            text : 'Philadelphia',
-            font : '24px Helvetica',
-            fillColor : Cesium.Color.SKYBLUE,
-            outlineColor : Cesium.Color.BLACK,
-            outlineWidth : 2,
-            style : Cesium.LabelStyle.FILL_AND_OUTLINE
-        }
-    });
-}
-
-function setProperties() {
-    Sandcastle.declare(setProperties);
-    var entity = viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0),
-        label : {
-            text : 'Philadelphia'
-        }
-    });
-
-    entity.label.scale = 2.0;
-    entity.label.showBackground = true;
-}
-
-function offsetByDistance() {
-    Sandcastle.declare(offsetByDistance);
-    var image = new Image();
-    image.onload = function() {
-        viewer.entities.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-            billboard : {
-                position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-                scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
-                image : image
+        function addLabel() {
+          Sandcastle.declare(addLabel);
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            label: {
+              text: "Philadelphia",
             },
-            label : {
-                text : 'Label on top of scaling billboard',
-                font : '20px sans-serif',
-                showBackground : true,
-                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
-                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
+          });
+        }
+
+        function setFont() {
+          Sandcastle.declare(setFont);
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            label: {
+              text: "Philadelphia",
+              font: "24px Helvetica",
+              fillColor: Cesium.Color.SKYBLUE,
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 2,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            },
+          });
+        }
+
+        function setProperties() {
+          Sandcastle.declare(setProperties);
+          var entity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(
+              -75.1641667,
+              39.9522222,
+              300000.0
+            ),
+            label: {
+              text: "Philadelphia",
+            },
+          });
+
+          entity.label.scale = 2.0;
+          entity.label.showBackground = true;
+        }
+
+        function offsetByDistance() {
+          Sandcastle.declare(offsetByDistance);
+          var image = new Image();
+          image.onload = function () {
+            viewer.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+              billboard: {
+                position: Cesium.Cartesian3.fromDegrees(
+                  -75.1641667,
+                  39.9522222
+                ),
+                scaleByDistance: new Cesium.NearFarScalar(
+                  1.5e2,
+                  5.0,
+                  1.5e7,
+                  0.5
+                ),
+                image: image,
+              },
+              label: {
+                text: "Label on top of scaling billboard",
+                font: "20px sans-serif",
+                showBackground: true,
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                pixelOffset: new Cesium.Cartesian2(0.0, -image.height),
+                pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
+                  1.5e2,
+                  3.0,
+                  1.5e7,
+                  0.5
+                ),
+              },
+            });
+          };
+          image.src = "../images/facility.gif";
+        }
+
+        function fadeByDistance() {
+          Sandcastle.declare(fadeByDistance);
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
+            label: {
+              text: "New York",
+              translucencyByDistance: new Cesium.NearFarScalar(
+                1.5e2,
+                1.0,
+                1.5e8,
+                0.0
+              ),
+            },
+          });
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
+            label: {
+              text: "Atlanta",
+              translucencyByDistance: new Cesium.NearFarScalar(
+                1.5e5,
+                1.0,
+                1.5e7,
+                0.0
+              ),
+            },
+          });
+        }
+
+        function scaleByDistance() {
+          Sandcastle.declare(scaleByDistance);
+
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            label: {
+              text: "Philadelphia",
+              scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
+            },
+          });
+        }
+
+        function setRightToLeft() {
+          Sandcastle.declare(setRightToLeft);
+          Cesium.Label.enableRightToLeftDetection = true; //Only needs to be set once at the beginning of the application.
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            label: {
+              text: "Master (אדון): Hello\nתלמיד (student): שלום",
+            },
+          });
+        }
+
+        function animateLabel() {
+          Sandcastle.declare(animateLabel);
+          var entity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            label: {
+              text: "Philadelphia",
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 0,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            },
+          });
+
+          var outlineDelta = 0.1;
+          var fontDelta = -1.0;
+          var fontSize = 20.0;
+          var minFontSize = 1.0;
+          var maxFontSize = 48.0;
+
+          labelListenerCallback = viewer.scene.preUpdate.addEventListener(
+            function (scene, time) {
+              entity.label.outlineWidth += outlineDelta;
+              if (
+                entity.label.outlineWidth >= 4.0 ||
+                entity.label.outlineWidth <= 0.0
+              ) {
+                outlineDelta *= -1.0;
+              }
+
+              fontSize += fontDelta;
+              if (fontSize >= maxFontSize || fontSize <= minFontSize) {
+                fontDelta *= -1.0;
+              }
+              entity.label.font = fontSize + "px Calibri";
             }
-        });
-    };
-    image.src = '../images/facility.gif';
-}
-
-function fadeByDistance() {
-    Sandcastle.declare(fadeByDistance);
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
-        label : {
-            text : 'New York',
-            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
+          );
         }
-    });
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
-        label : {
-            text : 'Atlanta',
-            translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
-        }
-    });
-}
 
-function scaleByDistance() {
-    Sandcastle.declare(scaleByDistance);
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Add label",
+            onselect: function () {
+              addLabel();
+              Sandcastle.highlight(addLabel);
+            },
+          },
+          {
+            text: "Set font",
+            onselect: function () {
+              setFont();
+              Sandcastle.highlight(setFont);
+            },
+          },
+          {
+            text: "Set properties",
+            onselect: function () {
+              setProperties();
+              Sandcastle.highlight(setProperties);
+            },
+          },
+          {
+            text: "Offset label by distance",
+            onselect: function () {
+              offsetByDistance();
+              Sandcastle.highlight(offsetByDistance);
+            },
+          },
+          {
+            text: "Fade label by distance",
+            onselect: function () {
+              fadeByDistance();
+              Sandcastle.highlight(fadeByDistance);
+            },
+          },
+          {
+            text: "Scale label by distance",
+            onselect: function () {
+              scaleByDistance();
+              Sandcastle.highlight(scaleByDistance);
+            },
+          },
+          {
+            text: "Set label with right-to-left language",
+            onselect: function () {
+              setRightToLeft();
+              Sandcastle.highlight(setRightToLeft);
+            },
+          },
+          {
+            text: "Animate Label",
+            onselect: function () {
+              animateLabel();
+              Sandcastle.highlight(animateLabel);
+            },
+          },
+        ]);
 
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-        label : {
-            text : 'Philadelphia',
-            scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
-        }
-    });
-}
-
-function setRightToLeft() {
-    Sandcastle.declare(setRightToLeft);
-    Cesium.Label.enableRightToLeftDetection = true; //Only needs to be set once at the beginning of the application.
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-        label : {
-            text : 'Master (אדון): Hello\nתלמיד (student): שלום'
-        }
-    });
-}
-
-Sandcastle.addToolbarMenu([{
-    text : 'Add label',
-    onselect : function() {
-        addLabel();
-        Sandcastle.highlight(addLabel);
-    }
-}, {
-    text : 'Set font',
-    onselect : function() {
-        setFont();
-        Sandcastle.highlight(setFont);
-    }
-}, {
-    text : 'Set properties',
-    onselect : function() {
-        setProperties();
-        Sandcastle.highlight(setProperties);
-    }
-}, {
-    text : 'Offset label by distance',
-    onselect : function() {
-        offsetByDistance();
-        Sandcastle.highlight(offsetByDistance);
-    }
-}, {
-    text : 'Fade label by distance',
-    onselect : function() {
-        fadeByDistance();
-        Sandcastle.highlight(fadeByDistance);
-    }
-}, {
-    text : 'Scale label by distance',
-    onselect : function() {
-        scaleByDistance();
-        Sandcastle.highlight(scaleByDistance);
-    }
-}, {
-    text : 'Set label with right-to-left language',
-    onselect : function() {
-        setRightToLeft();
-        Sandcastle.highlight(setRightToLeft);
-    }
-}]);
-
-Sandcastle.reset = function() {
-    viewer.entities.removeAll();
-};
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        Sandcastle.reset = function () {
+          viewer.entities.removeAll();
+          if (Cesium.defined(labelListenerCallback)) {
+            labelListenerCallback();
+          }
+        };
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

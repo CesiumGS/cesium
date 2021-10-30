@@ -1,136 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Control fog parameters.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Control fog parameters." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>enabled</td>
+            <td><input type="checkbox" data-bind="checked: enabled" /></td>
+          </tr>
+          <tr>
+            <td>density</td>
+            <td><input type="text" size="5" data-bind="value: density" /></td>
+          </tr>
+          <tr>
+            <td>sse increase factor</td>
+            <td><input type="text" size="5" data-bind="value: sse" /></td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="zoomButtons"></div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+
+        viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+        //The viewModel tracks the state of our mini application.
+        var viewModel = {
+          enabled: true,
+          density: 0,
+          sse: 0,
+        };
+        // Convert the viewModel members into knockout observables.
+        Cesium.knockout.track(viewModel);
+
+        // Bind the viewModel to the DOM elements of the UI that call for it.
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "enabled")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.enabled = newValue;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "density")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.density = newValue;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "sse")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.screenSpaceErrorFactor = newValue;
+          });
+
+        viewModel.enabled = viewer.scene.fog.enabled;
+        viewModel.density = viewer.scene.fog.density;
+        viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
+
+        Sandcastle.addToolbarButton("Horizon high altitude", function () {
+          viewer.camera.setView({
+            destination: new Cesium.Cartesian3(
+              -2467730.5740817646,
+              -4390507.315824514,
+              3906155.113316938
+            ),
+            orientation: {
+              heading: 4.492211521856625,
+              pitch: -0.2687139437696304,
+            },
+          });
+        });
+
+        Sandcastle.addToolbarButton("Horizon low altitude", function () {
+          viewer.camera.setView({
+            destination: new Cesium.Cartesian3(
+              -734001.9511656855,
+              -4214090.596769834,
+              4715898.125886317
+            ),
+            orientation: {
+              heading: 5.634257362559497,
+              pitch: -0.019548505785381032,
+            },
+          });
+        });
+
+        viewer.scene.globe._surface._debug.enableDebugOutput = true;
+
+        Sandcastle.addToolbarButton("Snap", function () {
+          var container = document.getElementById("cesiumContainer");
+          var tmpH = container.style.height;
+          var tmpW = container.style.width;
+
+          container.style.height = "600px";
+          container.style.width = "800px";
+
+          viewer.resize();
+          viewer.render();
+          window.open(viewer.canvas.toDataURL("image/png"));
+          container.style.height = tmpH;
+          container.style.width = tmpW;
+          viewer.resize();
+          viewer.render();
+        });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-<table><tbody>
-    <tr>
-        <td>enabled</td>
-        <td><input type="checkbox" data-bind="checked: enabled"/></td>
-    </tr>
-    <tr>
-        <td>density</td>
-        <td><input type="text" size="5" data-bind="value: density"></td>
-    </tr>
-    <tr>
-        <td>sse increase factor</td>
-        <td><input type="text" size="5" data-bind="value: sse"></td>
-    </tr>
-</tbody></table>
-<div id="zoomButtons"></div>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
-});
-
-viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
-//The viewModel tracks the state of our mini application.
-var viewModel = {
-    enabled : true,
-    density : 0,
-    sse : 0
-};
-// Convert the viewModel members into knockout observables.
-Cesium.knockout.track(viewModel);
-
-// Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
-    function(newValue) {
-        viewer.scene.fog.enabled = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'density').subscribe(
-    function(newValue) {
-        viewer.scene.fog.density = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'sse').subscribe(
-    function(newValue) {
-        viewer.scene.fog.screenSpaceErrorFactor = newValue;
-    }
-);
-
-viewModel.enabled = viewer.scene.fog.enabled;
-viewModel.density = viewer.scene.fog.density;
-viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
-
-Sandcastle.addToolbarButton('Horizon high altitude', function() {
-    viewer.camera.setView({
-        destination: new Cesium.Cartesian3(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
-        orientation: {
-            heading: 4.492211521856625,
-            pitch: -0.2687139437696304
-        }
-    });
-});
-
-Sandcastle.addToolbarButton('Horizon low altitude', function() {
-    viewer.camera.setView({
-        destination : new Cesium.Cartesian3(-734001.9511656855, -4214090.596769834, 4715898.125886317),
-        orientation : {
-            heading : 5.634257362559497,
-            pitch : -0.019548505785381032
-        }
-    });
-});
-
-viewer.scene.globe._surface._debug.enableDebugOutput = true;
-
-Sandcastle.addToolbarButton('Snap', function() {
-    var container = document.getElementById('cesiumContainer');
-    var tmpH = container.style.height;
-    var tmpW = container.style.width;
-
-    container.style.height = '600px';
-    container.style.width = '800px';
-
-    viewer.resize();
-    viewer.render();
-    window.open(viewer.canvas.toDataURL('image/png'));
-    container.style.height = tmpH;
-    container.style.width = tmpW;
-    viewer.resize();
-    viewer.render();
-});
-
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

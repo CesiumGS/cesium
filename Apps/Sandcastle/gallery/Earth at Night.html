@@ -1,44 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="NASA-generated imagery of the earth at night hosted on Cesium ion. Also known as Black Marble and Night Lights.">
-    <meta name="cesium-sandcastle-labels" content="ion Assets">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="NASA-generated imagery of the earth at night hosted on Cesium ion. Also known as Black Marble and Night Lights."
+    />
+    <meta name="cesium-sandcastle-labels" content="ion Assets" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // The Earth at Night, also known as Black Marble 2017 and Night Lights
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 }),
+        });
+
+        // The rest of the code is for dynamic lighting
+        var dynamicLighting = false;
+
+        viewer.clock.multiplier = 4000;
+
+        var imageryLayers = viewer.imageryLayers;
+        var nightLayer = imageryLayers.get(0);
+        var dayLayer = imageryLayers.addImageryProvider(
+          new Cesium.IonImageryProvider({
+            assetId: 3845,
+          })
+        );
+        imageryLayers.lowerToBottom(dayLayer);
+
+        function updateLighting(dynamicLighting) {
+          dayLayer.show = dynamicLighting;
+          viewer.scene.globe.enableLighting = dynamicLighting;
+          viewer.clock.shouldAnimate = dynamicLighting;
+
+          // If dynamic lighting is enabled, make the night imagery invisible
+          // on the lit side of the globe.
+          nightLayer.dayAlpha = dynamicLighting ? 0.0 : 1.0;
+        }
+
+        updateLighting(dynamicLighting);
+
+        Sandcastle.addToggleButton(
+          "Dynamic lighting",
+          dynamicLighting,
+          function (checked) {
+            updateLighting(checked);
+          }
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// The Earth at Night, also known as Black Marble 2017 and Night Lights
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 })
-});
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

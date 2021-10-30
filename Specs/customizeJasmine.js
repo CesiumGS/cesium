@@ -1,152 +1,139 @@
-define([
-        'Source/ThirdParty/when',
-        'Specs/addDefaultMatchers',
-        'Specs/equalsMethodEqualityTester'
-    ], function(
-        when,
-        addDefaultMatchers,
-        equalsMethodEqualityTester) {
-    'use strict';
+import { when } from "../Source/Cesium.js";
+import addDefaultMatchers from "./addDefaultMatchers.js";
+import equalsMethodEqualityTester from "./equalsMethodEqualityTester.js";
 
-    return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
-        function defineSuite(deps, name, suite, categories, focus) {
-            /*global define,describe,fdescribe*/
-            if (typeof suite === 'object' || typeof suite === 'string') {
-                categories = suite;
-            }
+function customizeJasmine(
+  env,
+  includedCategory,
+  excludedCategory,
+  webglValidation,
+  webglStub,
+  release
+) {
+  // set this for uniform test resolution across devices
+  window.devicePixelRatio = 1;
 
-            if (typeof name === 'function') {
-                suite = name;
-                name = deps[0];
-            }
+  window.specsUsingRelease = release;
 
-            // exclude this spec if we're filtering by category and it's not the selected category
-            // otherwise if we have an excluded category, exclude this test if the category of this spec matches
-            if (includedCategory && categories !== includedCategory) {
-                return;
-            } else if (excludedCategory && categories === excludedCategory) {
-                return;
-            }
+  var originalDescribe = window.describe;
 
-            define(deps, function() {
-                var args = arguments;
-                if (focus) {
-                    fdescribe(name, function() { //eslint-disable-line
-                        suite.apply(null, args);
-                    }, categories);
-                } else {
-                    describe(name, function() {
-                        suite.apply(null, args);
-                    }, categories);
-                }
-            });
+  window.describe = function (name, suite, categories) {
+    // exclude this spec if we're filtering by category and it's not the selected category
+    // otherwise if we have an excluded category, exclude this test if the category of this spec matches
+    if (includedCategory && categories !== includedCategory) {
+      return;
+    } else if (excludedCategory && categories === excludedCategory) {
+      return;
+    }
+
+    originalDescribe(name, suite, categories);
+  };
+
+  // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
+  // call done() when a returned promise resolves.
+  var originalIt = window.it;
+
+  window.it = function (description, f, timeout, categories) {
+    originalIt(
+      description,
+      function (done) {
+        var result = f();
+        when(
+          result,
+          function () {
+            done();
+          },
+          function (e) {
+            done.fail("promise rejected: " + e.toString());
+          }
+        );
+      },
+      timeout,
+      categories
+    );
+  };
+
+  var originalBeforeEach = window.beforeEach;
+
+  window.beforeEach = function (f) {
+    originalBeforeEach(function (done) {
+      var result = f();
+      when(
+        result,
+        function () {
+          done();
+        },
+        function (e) {
+          done.fail("promise rejected: " + e.toString());
         }
+      );
+    });
+  };
 
-        window.specsUsingRelease = release;
+  var originalAfterEach = window.afterEach;
 
-        window.fdefineSuite = function(deps, name, suite, categories) {
-            defineSuite(deps, name, suite, categories, true);
-        };
-
-        window.defineSuite = function(deps, name, suite, categories) {
-            defineSuite(deps, name, suite, categories, false);
-
-        };
-
-        var originalDescribe = window.describe;
-
-        window.describe = function (name, suite, categories) {
-            // exclude this spec if we're filtering by category and it's not the selected category
-            // otherwise if we have an excluded category, exclude this test if the category of this spec matches
-            if (includedCategory && categories !== includedCategory) {
-                return;
-            } else if (excludedCategory && categories === excludedCategory) {
-                return;
-            }
-
-            originalDescribe(name, suite, categories);
-        };
-
-        // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
-        // call done() when a returned promise resolves.
-        var originalIt = window.it;
-
-        window.it = function(description, f, timeout, categories) {
-            originalIt(description, function(done) {
-                var result = f();
-                when(result, function() {
-                    done();
-                }, function(e) {
-                    done.fail('promise rejected: ' + e.toString());
-                });
-            }, timeout, categories);
-        };
-
-        var originalBeforeEach = window.beforeEach;
-
-        window.beforeEach = function(f) {
-            originalBeforeEach(function(done) {
-                var result = f();
-                when(result, function() {
-                    done();
-                }, function(e) {
-                    done.fail('promise rejected: ' + e.toString());
-                });
-            });
-        };
-
-        var originalAfterEach = window.afterEach;
-
-        window.afterEach = function(f) {
-            originalAfterEach(function(done) {
-                var result = f();
-                when(result, function() {
-                    done();
-                }, function(e) {
-                    done.fail('promise rejected: ' + e.toString());
-                });
-            });
-        };
-
-        var originalBeforeAll = window.beforeAll;
-
-        window.beforeAll = function(f) {
-            originalBeforeAll(function(done) {
-                var result = f();
-                when(result, function() {
-                    done();
-                }, function(e) {
-                    done.fail('promise rejected: ' + e.toString());
-                });
-            });
-        };
-
-        var originalAfterAll = window.afterAll;
-
-        window.afterAll = function(f) {
-            originalAfterAll(function(done) {
-                var result = f();
-                when(result, function() {
-                    done();
-                }, function(e) {
-                    done.fail('promise rejected: ' + e.toString());
-                });
-            });
-        };
-
-        if (webglValidation) {
-            window.webglValidation = true;
+  window.afterEach = function (f) {
+    originalAfterEach(function (done) {
+      var result = f();
+      when(
+        result,
+        function () {
+          done();
+        },
+        function (e) {
+          done.fail("promise rejected: " + e.toString());
         }
+      );
+    });
+  };
 
-        if (webglStub) {
-            window.webglStub = true;
+  var originalBeforeAll = window.beforeAll;
+
+  window.beforeAll = function (f) {
+    originalBeforeAll(function (done) {
+      var result = f();
+      when(
+        result,
+        function () {
+          done();
+        },
+        function (e) {
+          done.fail("promise rejected: " + e.toString());
         }
+      );
+    });
+  };
 
-        //env.catchExceptions(true);
+  var originalAfterAll = window.afterAll;
 
-        env.beforeEach(function () {
-            addDefaultMatchers(!release).call(env);
-            env.addCustomEqualityTester(equalsMethodEqualityTester);
-        });
-    };
-});
+  window.afterAll = function (f) {
+    originalAfterAll(function (done) {
+      var result = f();
+      when(
+        result,
+        function () {
+          done();
+        },
+        function (e) {
+          done.fail("promise rejected: " + e.toString());
+        }
+      );
+    });
+  };
+
+  if (webglValidation) {
+    window.webglValidation = true;
+  }
+
+  if (webglStub) {
+    window.webglStub = true;
+  }
+
+  //env.catchExceptions(true);
+
+  env.beforeEach(function () {
+    addDefaultMatchers(!release).call(env);
+    env.addCustomEqualityTester(equalsMethodEqualityTester);
+  });
+}
+export default customizeJasmine;

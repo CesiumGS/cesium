@@ -20,6 +20,6 @@ void main()
 #ifdef FLAT
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #else
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
 #endif
 }

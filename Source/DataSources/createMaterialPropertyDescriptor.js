@@ -1,41 +1,35 @@
-define([
-        '../Core/Color',
-        '../Core/DeveloperError',
-        '../Core/Resource',
-        './ColorMaterialProperty',
-        './createPropertyDescriptor',
-        './ImageMaterialProperty'
-    ], function(
-        Color,
-        DeveloperError,
-        Resource,
-        ColorMaterialProperty,
-        createPropertyDescriptor,
-        ImageMaterialProperty) {
-    'use strict';
+import Color from "../Core/Color.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import Resource from "../Core/Resource.js";
+import ColorMaterialProperty from "./ColorMaterialProperty.js";
+import createPropertyDescriptor from "./createPropertyDescriptor.js";
+import ImageMaterialProperty from "./ImageMaterialProperty.js";
 
-    function createMaterialProperty(value) {
-        if (value instanceof Color) {
-            return new ColorMaterialProperty(value);
-        }
+function createMaterialProperty(value) {
+  if (value instanceof Color) {
+    return new ColorMaterialProperty(value);
+  }
 
-        if (typeof value === 'string' || value instanceof Resource || value instanceof HTMLCanvasElement || value instanceof HTMLVideoElement) {
-            var result = new ImageMaterialProperty();
-            result.image = value;
-            return result;
-        }
+  if (
+    typeof value === "string" ||
+    value instanceof Resource ||
+    value instanceof HTMLCanvasElement ||
+    value instanceof HTMLVideoElement
+  ) {
+    var result = new ImageMaterialProperty();
+    result.image = value;
+    return result;
+  }
 
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Unable to infer material type: ' + value);
-        //>>includeEnd('debug');
-    }
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError("Unable to infer material type: " + value);
+  //>>includeEnd('debug');
+}
 
-    /**
-     * @private
-     */
-    function createMaterialPropertyDescriptor(name, configurable) {
-        return createPropertyDescriptor(name, configurable, createMaterialProperty);
-    }
-
-    return createMaterialPropertyDescriptor;
-});
+/**
+ * @private
+ */
+function createMaterialPropertyDescriptor(name, configurable) {
+  return createPropertyDescriptor(name, configurable, createMaterialProperty);
+}
+export default createMaterialPropertyDescriptor;

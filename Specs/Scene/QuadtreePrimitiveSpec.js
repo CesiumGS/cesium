@@ -1,1030 +1,1194 @@
-defineSuite([
-        'Scene/QuadtreePrimitive',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/defined',
-        'Core/defineProperties',
-        'Core/Ellipsoid',
-        'Core/EventHelper',
-        'Core/GeographicProjection',
-        'Core/GeographicTilingScheme',
-        'Core/Intersect',
-        'Core/Rectangle',
-        'Core/Visibility',
-        'Scene/Camera',
-        'Scene/GlobeSurfaceTileProvider',
-        'Scene/ImageryLayerCollection',
-        'Scene/QuadtreeTileLoadState',
-        'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor'
-    ], function(
-        QuadtreePrimitive,
-        Cartesian3,
-        Cartographic,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        EventHelper,
-        GeographicProjection,
-        GeographicTilingScheme,
-        Intersect,
-        Rectangle,
-        Visibility,
-        Camera,
-        GlobeSurfaceTileProvider,
-        ImageryLayerCollection,
-        QuadtreeTileLoadState,
-        SceneMode,
-        createScene,
-        pollToPromise,
-        when,
-        MockTerrainProvider,
-        TerrainTileProcessor) {
-    'use strict';
+import MockTerrainProvider from "../MockTerrainProvider.js";
+import TerrainTileProcessor from "../TerrainTileProcessor.js";
+import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartographic } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
+import { Ellipsoid } from "../../Source/Cesium.js";
+import { EventHelper } from "../../Source/Cesium.js";
+import { GeographicProjection } from "../../Source/Cesium.js";
+import { GeographicTilingScheme } from "../../Source/Cesium.js";
+import { Intersect } from "../../Source/Cesium.js";
+import { Rectangle } from "../../Source/Cesium.js";
+import { Visibility } from "../../Source/Cesium.js";
+import { Camera } from "../../Source/Cesium.js";
+import { GlobeSurfaceTileProvider } from "../../Source/Cesium.js";
+import { GlobeTranslucencyState } from "../../Source/Cesium.js";
+import { ImageryLayerCollection } from "../../Source/Cesium.js";
+import { QuadtreePrimitive } from "../../Source/Cesium.js";
+import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
+import { SceneMode } from "../../Source/Cesium.js";
+import createScene from "../createScene.js";
+import pollToPromise from "../pollToPromise.js";
+import { when } from "../../Source/Cesium.js";
 
-    describe('selectTilesForRendering', function() {
-        var scene;
-        var camera;
-        var frameState;
-        var quadtree;
-        var mockTerrain;
-        var tileProvider;
-        var imageryLayerCollection;
-        var surfaceShaderSet;
-        var processor;
-        var rootTiles;
+describe("Scene/QuadtreePrimitive", function () {
+  describe("selectTilesForRendering", function () {
+    var scene;
+    var camera;
+    var frameState;
+    var quadtree;
+    var mockTerrain;
+    var tileProvider;
+    var imageryLayerCollection;
+    var surfaceShaderSet;
+    var processor;
+    var rootTiles;
 
-        beforeEach(function() {
-            scene = {
-                mapProjection: new GeographicProjection(),
-                drawingBufferWidth: 1000,
-                drawingBufferHeight: 1000
-            };
+    beforeEach(function () {
+      scene = {
+        mapProjection: new GeographicProjection(),
+        drawingBufferWidth: 1000,
+        drawingBufferHeight: 1000,
+      };
 
-            camera = new Camera(scene);
+      camera = new Camera(scene);
 
-            frameState = {
-                frameNumber: 0,
-                passes: {
-                    render: true
-                },
-                camera: camera,
-                fog: {
-                    enabled: false
-                },
-                context: {
-                    drawingBufferWidth: scene.drawingBufferWidth,
-                    drawingBufferHeight: scene.drawingBufferHeight
-                },
-                mode: SceneMode.SCENE3D,
-                commandList: [],
-                cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
-                afterRender: []
-            };
+      frameState = {
+        frameNumber: 0,
+        passes: {
+          render: true,
+        },
+        camera: camera,
+        fog: {
+          enabled: false,
+        },
+        context: {
+          drawingBufferWidth: scene.drawingBufferWidth,
+          drawingBufferHeight: scene.drawingBufferHeight,
+        },
+        mode: SceneMode.SCENE3D,
+        commandList: [],
+        cullingVolume: jasmine.createSpyObj("CullingVolume", [
+          "computeVisibility",
+        ]),
+        afterRender: [],
+        pixelRatio: 1.0,
 
-            frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
+        terrainExaggeration: 1.0,
+        terrainExaggerationRelativeHeight: 0.0,
 
-            imageryLayerCollection = new ImageryLayerCollection();
-            surfaceShaderSet = jasmine.createSpyObj('SurfaceShaderSet', ['getShaderProgram']);
-            mockTerrain = new MockTerrainProvider();
-            tileProvider = new GlobeSurfaceTileProvider({
-                terrainProvider: mockTerrain,
-                imageryLayers: imageryLayerCollection,
-                surfaceShaderSet: surfaceShaderSet
-            });
-            quadtree = new QuadtreePrimitive({
-                tileProvider: tileProvider
-            });
+        globeTranslucencyState: new GlobeTranslucencyState(),
+      };
 
-            processor = new TerrainTileProcessor(frameState, mockTerrain, imageryLayerCollection);
+      frameState.cullingVolume.computeVisibility.and.returnValue(
+        Intersect.INTERSECTING
+      );
 
-            quadtree.render(frameState);
-            rootTiles = quadtree._levelZeroTiles;
+      imageryLayerCollection = new ImageryLayerCollection();
+      surfaceShaderSet = jasmine.createSpyObj("SurfaceShaderSet", [
+        "getShaderProgram",
+      ]);
+      mockTerrain = new MockTerrainProvider();
+      tileProvider = new GlobeSurfaceTileProvider({
+        terrainProvider: mockTerrain,
+        imageryLayers: imageryLayerCollection,
+        surfaceShaderSet: surfaceShaderSet,
+      });
+      quadtree = new QuadtreePrimitive({
+        tileProvider: tileProvider,
+      });
 
-            processor.mockWebGL();
-        });
+      processor = new TerrainTileProcessor(
+        frameState,
+        mockTerrain,
+        imageryLayerCollection
+      );
 
-        function process(quadtreePrimitive, callback) {
-            var deferred = when.defer();
+      quadtree.render(frameState);
+      rootTiles = quadtree._levelZeroTiles;
 
-            function next() {
-                ++frameState.frameNumber;
-                quadtree.beginFrame(frameState);
-                quadtree.render(frameState);
-                quadtree.endFrame(frameState);
+      processor.mockWebGL();
+    });
 
-                if (callback()) {
-                    setTimeout(next, 0);
-                } else {
-                    deferred.resolve();
-                }
-            }
+    function process(quadtreePrimitive, callback) {
+      var deferred = when.defer();
 
-            next();
+      function next() {
+        ++frameState.frameNumber;
+        quadtree.beginFrame(frameState);
+        quadtree.render(frameState);
+        quadtree.endFrame(frameState);
 
-            return deferred.promise;
+        if (callback()) {
+          setTimeout(next, 0);
+        } else {
+          deferred.resolve();
         }
+      }
 
-        it('must be constructed with a tileProvider', function() {
-            expect(function() {
-                return new QuadtreePrimitive();
-            }).toThrowDeveloperError();
+      next();
 
-            expect(function() {
-                return new QuadtreePrimitive({});
-            }).toThrowDeveloperError();
-        });
+      return deferred.promise;
+    }
 
-        it('selects nothing when the root tiles are not yet ready', function() {
-            quadtree.render(frameState);
-            expect(quadtree._tilesToRender.length).toBe(0);
-        });
+    it("must be constructed with a tileProvider", function () {
+      expect(function () {
+        return new QuadtreePrimitive();
+      }).toThrowDeveloperError();
 
-        it('selects root tiles once they are ready', function() {
-            mockTerrain
-                .requestTileGeometryWillSucceed(rootTiles[0])
-                .requestTileGeometryWillSucceed(rootTiles[1])
-                .createMeshWillSucceed(rootTiles[0])
-                .createMeshWillSucceed(rootTiles[1]);
+      expect(function () {
+        return new QuadtreePrimitive({});
+      }).toThrowDeveloperError();
+    });
 
-            return processor.process(rootTiles).then(function() {
-                quadtree.render(frameState);
+    it("selects nothing when the root tiles are not yet ready", function () {
+      quadtree.render(frameState);
+      expect(quadtree._tilesToRender.length).toBe(0);
+    });
 
-                // There should be at least one selected tile.
-                expect(quadtree._tilesToRender.length).toBeGreaterThan(0);
+    it("selects root tiles once they are ready", function () {
+      mockTerrain
+        .requestTileGeometryWillSucceed(rootTiles[0])
+        .requestTileGeometryWillSucceed(rootTiles[1])
+        .createMeshWillSucceed(rootTiles[0])
+        .createMeshWillSucceed(rootTiles[1]);
 
-                // All selected tiles should be root tiles.
-                expect(quadtree._tilesToRender.filter(function(tile) { return tile.level === 0; }).length).toBe(quadtree._tilesToRender.length);
-            });
-        });
+      return processor.process(rootTiles).then(function () {
+        quadtree.render(frameState);
 
-        it('selects deeper tiles once they are renderable', function() {
-            mockTerrain
-                .requestTileGeometryWillSucceed(rootTiles[0])
-                .requestTileGeometryWillSucceed(rootTiles[1])
-                .createMeshWillSucceed(rootTiles[0])
-                .createMeshWillSucceed(rootTiles[1]);
+        // There should be at least one selected tile.
+        expect(quadtree._tilesToRender.length).toBeGreaterThan(0);
 
-            rootTiles[0].children.forEach(function(tile) {
-                mockTerrain
-                    .requestTileGeometryWillSucceed(tile)
-                    .createMeshWillSucceed(tile);
-                expect(tile.renderable).toBe(false);
-            });
+        // All selected tiles should be root tiles.
+        expect(
+          quadtree._tilesToRender.filter(function (tile) {
+            return tile.level === 0;
+          }).length
+        ).toBe(quadtree._tilesToRender.length);
+      });
+    });
 
-            return processor.process(rootTiles).then(function() {
-                quadtree.render(frameState);
+    it("selects deeper tiles once they are renderable", function () {
+      mockTerrain
+        .requestTileGeometryWillSucceed(rootTiles[0])
+        .requestTileGeometryWillSucceed(rootTiles[1])
+        .createMeshWillSucceed(rootTiles[0])
+        .createMeshWillSucceed(rootTiles[1]);
 
-                // All selected tiles should be root tiles.
-                expect(quadtree._tilesToRender.length).toBeGreaterThan(0);
-                expect(quadtree._tilesToRender.filter(function(tile) { return tile.level === 0; }).length).toBe(quadtree._tilesToRender.length);
+      rootTiles[0].children.forEach(function (tile) {
+        mockTerrain
+          .requestTileGeometryWillSucceed(tile)
+          .createMeshWillSucceed(tile);
+        expect(tile.renderable).toBe(false);
+      });
 
-                // Allow the child tiles to load.
-                return processor.process(rootTiles[0].children);
-            }).then(function() {
-                quadtree.render(frameState);
+      return processor
+        .process(rootTiles)
+        .then(function () {
+          quadtree.render(frameState);
 
-                // Now child tiles should be rendered too.
-                expect(quadtree._tilesToRender).toContain(rootTiles[0].southwestChild);
-                expect(quadtree._tilesToRender).toContain(rootTiles[0].southeastChild);
-                expect(quadtree._tilesToRender).toContain(rootTiles[0].northwestChild);
-                expect(quadtree._tilesToRender).toContain(rootTiles[0].northeastChild);
-            });
-        });
+          // All selected tiles should be root tiles.
+          expect(quadtree._tilesToRender.length).toBeGreaterThan(0);
+          expect(
+            quadtree._tilesToRender.filter(function (tile) {
+              return tile.level === 0;
+            }).length
+          ).toBe(quadtree._tilesToRender.length);
 
-        it('skips loading levels when tiles are known to be available', function() {
-            // Mark all tiles through level 2 as available.
-            rootTiles.forEach(function(tile) {
-                // level 0 tile
-                mockTerrain
-                    .willBeAvailable(tile)
-                    .requestTileGeometryWillSucceed(tile)
-                    .createMeshWillSucceed(tile);
+          // Allow the child tiles to load.
+          return processor.process(rootTiles[0].children);
+        })
+        .then(function () {
+          quadtree.render(frameState);
 
-                tile.children.forEach(function(tile) {
-                    // level 1 tile
-                    mockTerrain
-                        .willBeAvailable(tile)
-                        .requestTileGeometryWillSucceed(tile)
-                        .createMeshWillSucceed(tile);
-
-                    tile.children.forEach(function(tile) {
-                        // level 2 tile
-                        mockTerrain
-                            .willBeAvailable(tile)
-                            .requestTileGeometryWillSucceed(tile)
-                            .createMeshWillSucceed(tile);
-                    });
-                });
-            });
-
-            quadtree.preloadAncestors = false;
-
-            // Look down at the center of a level 2 tile from a distance that will refine to it.
-            var lookAtTile = rootTiles[0].southwestChild.northeastChild;
-            setCameraPosition(quadtree, frameState, Rectangle.center(lookAtTile.rectangle), lookAtTile.level);
-
-            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
-
-            return process(quadtree, function() {
-                // Process until the lookAtTile is rendered. That tile's parent (level 1)
-                // should not be rendered along the way.
-                expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-                var lookAtTileRendered = quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-                var continueProcessing = !lookAtTileRendered;
-                return continueProcessing;
-            }).then(function() {
-                // The lookAtTile should be a real tile, not a fill.
-                expect(quadtree._tilesToRender).toContain(lookAtTile);
-                expect(lookAtTile.data.fill).toBeUndefined();
-                expect(lookAtTile.data.vertexArray).toBeDefined();
-
-                // The parent of the lookAtTile should not have been requested.
-                var parent = lookAtTile.parent;
-                mockTerrain.requestTileGeometry.calls.allArgs().forEach(function(call) {
-                    expect(call.slice(0, 3)).not.toEqual([parent.x, parent.y, parent.level]);
-                });
-            });
-        });
-
-        it('does not skip loading levels if availability is unknown', function() {
-            // Mark all tiles through level 2 as available.
-            rootTiles.forEach(function(tile) {
-                // level 0 tile
-                mockTerrain
-                    .requestTileGeometryWillSucceed(tile)
-                    .createMeshWillSucceed(tile);
-
-                tile.children.forEach(function(tile) {
-                    // level 1 tile
-                    mockTerrain
-                        .willBeAvailable(tile)
-                        .requestTileGeometryWillSucceed(tile)
-                        .createMeshWillSucceed(tile);
-
-                    tile.children.forEach(function(tile) {
-                        // level 2 tile
-                        mockTerrain
-                            .willBeUnknownAvailability(tile)
-                            .requestTileGeometryWillSucceed(tile)
-                            .createMeshWillSucceed(tile);
-                    });
-                });
-            });
-
-            quadtree.preloadAncestors = false;
-
-            // Look down at the center of a level 2 tile from a distance that will refine to it.
-            var lookAtTile = rootTiles[0].southwestChild.northeastChild;
-            setCameraPosition(quadtree, frameState, Rectangle.center(lookAtTile.rectangle), lookAtTile.level);
-
-            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
-
-            return process(quadtree, function() {
-                // Process until the lookAtTile is rendered. That tile's parent (level 1)
-                // should not be rendered along the way, but it will be loaded.
-                expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-                var lookAtTileRendered = quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-                var continueProcessing = !lookAtTileRendered;
-                return continueProcessing;
-            }).then(function() {
-                // The lookAtTile should be a real tile, not a fill.
-                expect(quadtree._tilesToRender).toContain(lookAtTile);
-                expect(lookAtTile.data.fill).toBeUndefined();
-                expect(lookAtTile.data.vertexArray).toBeDefined();
-
-                // The parent of the lookAtTile should have been requested before the lookAtTile itself.
-                var parent = lookAtTile.parent;
-                var allArgs = mockTerrain.requestTileGeometry.calls.allArgs();
-                var parentArgsIndex = allArgs.indexOf(allArgs.filter(function(call) {
-                    return call[0] === parent.x && call[1] === parent.y && call[2] === parent.level;
-                })[0]);
-                var lookAtArgsIndex = allArgs.indexOf(allArgs.filter(function(call) {
-                    return call[0] === lookAtTile.x && call[1] === lookAtTile.y && call[2] === lookAtTile.level;
-                })[0]);
-                expect(parentArgsIndex).toBeLessThan(lookAtArgsIndex);
-            });
-        });
-
-        it('loads and renders intermediate tiles according to loadingDescendantLimit', function() {
-            // Mark all tiles through level 2 as available.
-            rootTiles.forEach(function(tile) {
-                // level 0 tile
-                mockTerrain
-                    .willBeAvailable(tile)
-                    .requestTileGeometryWillSucceed(tile)
-                    .createMeshWillSucceed(tile);
-
-                tile.children.forEach(function(tile) {
-                    // level 1 tile
-                    mockTerrain
-                        .willBeAvailable(tile)
-                        .requestTileGeometryWillSucceed(tile)
-                        .createMeshWillSucceed(tile);
-
-                    tile.children.forEach(function(tile) {
-                        // level 2 tile
-                        mockTerrain
-                            .willBeAvailable(tile)
-                            .requestTileGeometryWillSucceed(tile)
-                            .createMeshWillSucceed(tile);
-                    });
-                });
-            });
-
-            quadtree.preloadAncestors = false;
-            quadtree.loadingDescendantLimit = 1;
-
-            // Look down at the center of a level 2 tile from a distance that will refine to it.
-            var lookAtTile = rootTiles[0].southwestChild.northeastChild;
-            setCameraPosition(quadtree, frameState, Rectangle.center(lookAtTile.rectangle), lookAtTile.level);
-
-            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
-
-            return process(quadtree, function() {
-                // First the lookAtTile's parent should be rendered.
-                var lookAtTileParentRendered = quadtree._tilesToRender.indexOf(lookAtTile.parent) >= 0;
-                var continueProcessing = !lookAtTileParentRendered;
-                return continueProcessing;
-            }).then(function() {
-                // The lookAtTile's parent should be a real tile, not a fill.
-                expect(quadtree._tilesToRender).toContain(lookAtTile.parent);
-                expect(lookAtTile.parent.data.fill).toBeUndefined();
-                expect(lookAtTile.parent.data.vertexArray).toBeDefined();
-
-                return process(quadtree, function() {
-                    // Then the lookAtTile should be rendered.
-                    var lookAtTileRendered = quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-                    var continueProcessing = !lookAtTileRendered;
-                    return continueProcessing;
-                });
-            }).then(function() {
-                // The lookAtTile should be a real tile, not a fill.
-                expect(quadtree._tilesToRender).toContain(lookAtTile);
-                expect(lookAtTile.data.fill).toBeUndefined();
-                expect(lookAtTile.data.vertexArray).toBeDefined();
-            });
-        });
-
-        it('continues rendering more detailed tiles when camera zooms out and an appropriate ancestor is not yet renderable', function() {
-            // Mark all tiles through level 2 as available.
-            rootTiles.forEach(function(tile) {
-                // level 0 tile
-                mockTerrain
-                    .willBeAvailable(tile)
-                    .requestTileGeometryWillSucceed(tile)
-                    .createMeshWillSucceed(tile);
-
-                tile.children.forEach(function(tile) {
-                    // level 1 tile
-                    mockTerrain
-                        .willBeAvailable(tile)
-                        .requestTileGeometryWillSucceed(tile)
-                        .createMeshWillSucceed(tile);
-
-                    tile.children.forEach(function(tile) {
-                        // level 2 tile
-                        mockTerrain
-                            .willBeAvailable(tile)
-                            .requestTileGeometryWillSucceed(tile)
-                            .createMeshWillSucceed(tile);
-                    });
-                });
-            });
-
-            quadtree.preloadAncestors = false;
-
-            // Look down at the center of a level 2 tile from a distance that will refine to it.
-            var lookAtTile = rootTiles[0].southwestChild.northeastChild;
-            setCameraPosition(quadtree, frameState, Rectangle.center(lookAtTile.rectangle), lookAtTile.level);
-
-            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
-
-            return process(quadtree, function() {
-                // Process until the lookAtTile is rendered. That tile's parent (level 1)
-                // should not be rendered along the way.
-                expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-                var lookAtTileRendered = quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
-                var continueProcessing = !lookAtTileRendered;
-                return continueProcessing;
-            }).then(function() {
-                // Zoom out so the parent tile no longer needs to refine to meet SSE.
-                setCameraPosition(quadtree, frameState, Rectangle.center(lookAtTile.rectangle), lookAtTile.parent.level);
-
-                // Select new tiles
-                quadtree.beginFrame(frameState);
-                quadtree.render(frameState);
-                quadtree.endFrame(frameState);
-
-                // The lookAtTile should still be rendered, not it's parent.
-                expect(quadtree._tilesToRender).toContain(lookAtTile);
-                expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-
-                return process(quadtree, function() {
-                    // Eventually the parent should be rendered instead.
-                    var parentRendered = quadtree._tilesToRender.indexOf(lookAtTile.parent) >= 0;
-                    var continueProcessing = !parentRendered;
-                    return continueProcessing;
-                });
-            }).then(function() {
-                expect(quadtree._tilesToRender).not.toContain(lookAtTile);
-                expect(quadtree._tilesToRender).toContain(lookAtTile.parent);
-            });
-        });
-
-        it('renders a fill for a newly-visible tile', function() {
-            // Mark all tiles through level 2 as available.
-            rootTiles.forEach(function(tile) {
-                // level 0 tile
-                mockTerrain
-                    .willBeAvailable(tile)
-                    .requestTileGeometryWillSucceed(tile)
-                    .createMeshWillSucceed(tile);
-
-                tile.children.forEach(function(tile) {
-                    // level 1 tile
-                    mockTerrain
-                        .willBeAvailable(tile)
-                        .requestTileGeometryWillSucceed(tile)
-                        .createMeshWillSucceed(tile);
-
-                    tile.children.forEach(function(tile) {
-                        // level 2 tile
-                        mockTerrain
-                            .willBeAvailable(tile)
-                            .requestTileGeometryWillSucceed(tile)
-                            .createMeshWillSucceed(tile);
-                    });
-                });
-            });
-
-            quadtree.preloadAncestors = false;
-
-            var visibleTile = rootTiles[0].southwestChild.northeastChild;
-            var notVisibleTile = rootTiles[0].southwestChild.northwestChild;
-
-            frameState.cullingVolume.computeVisibility.and.callFake(function(boundingVolume) {
-                if (!defined(visibleTile.data)) {
-                    return Intersect.INTERSECTING;
-                }
-
-                if (boundingVolume === visibleTile.data.orientedBoundingBox) {
-                    return Intersect.INTERSECTING;
-                } else if (boundingVolume === notVisibleTile.data.orientedBoundingBox) {
-                    return Intersect.OUTSIDE;
-                }
-                return Intersect.INTERSECTING;
-            });
-
-            // Look down at the center of the visible tile.
-            setCameraPosition(quadtree, frameState, Rectangle.center(visibleTile.rectangle), visibleTile.level);
-
-            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
-
-            return process(quadtree, function() {
-                // Process until the visibleTile is rendered.
-                var visibleTileRendered = quadtree._tilesToRender.indexOf(visibleTile) >= 0;
-                var continueProcessing = !visibleTileRendered;
-                return continueProcessing;
-            }).then(function() {
-                expect(quadtree._tilesToRender).not.toContain(notVisibleTile);
-
-                // Now treat the not-visible-tile as visible.
-                frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
-
-                // Select new tiles
-                quadtree.beginFrame(frameState);
-                quadtree.render(frameState);
-                quadtree.endFrame(frameState);
-
-                // The notVisibleTile should be rendered as a fill.
-                expect(quadtree._tilesToRender).toContain(visibleTile);
-                expect(quadtree._tilesToRender).toContain(notVisibleTile);
-                expect(notVisibleTile.data.fill).toBeDefined();
-                expect(notVisibleTile.data.vertexArray).toBeUndefined();
-            });
+          // Now child tiles should be rendered too.
+          expect(quadtree._tilesToRender).toContain(
+            rootTiles[0].southwestChild
+          );
+          expect(quadtree._tilesToRender).toContain(
+            rootTiles[0].southeastChild
+          );
+          expect(quadtree._tilesToRender).toContain(
+            rootTiles[0].northwestChild
+          );
+          expect(quadtree._tilesToRender).toContain(
+            rootTiles[0].northeastChild
+          );
         });
     });
 
-    describe('with mock tile provider', function() {
-        var scene;
+    it("skips loading levels when tiles are known to be available", function () {
+      // Mark all tiles through level 2 as available.
+      rootTiles.forEach(function (tile) {
+        // level 0 tile
+        mockTerrain
+          .willBeAvailable(tile)
+          .requestTileGeometryWillSucceed(tile)
+          .createMeshWillSucceed(tile);
 
-        beforeAll(function() {
-            scene = createScene();
-            scene.render();
+        tile.children.forEach(function (tile) {
+          // level 1 tile
+          mockTerrain
+            .willBeAvailable(tile)
+            .requestTileGeometryWillSucceed(tile)
+            .createMeshWillSucceed(tile);
+
+          tile.children.forEach(function (tile) {
+            // level 2 tile
+            mockTerrain
+              .willBeAvailable(tile)
+              .requestTileGeometryWillSucceed(tile)
+              .createMeshWillSucceed(tile);
+          });
         });
+      });
 
-        afterAll(function() {
-            scene.destroyForSpecs();
+      quadtree.preloadAncestors = false;
+
+      // Look down at the center of a level 2 tile from a distance that will refine to it.
+      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      setCameraPosition(
+        quadtree,
+        frameState,
+        Rectangle.center(lookAtTile.rectangle),
+        lookAtTile.level
+      );
+
+      spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
+
+      return process(quadtree, function () {
+        // Process until the lookAtTile is rendered. That tile's parent (level 1)
+        // should not be rendered along the way.
+        expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
+        var lookAtTileRendered =
+          quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
+        var continueProcessing = !lookAtTileRendered;
+        return continueProcessing;
+      }).then(function () {
+        // The lookAtTile should be a real tile, not a fill.
+        expect(quadtree._tilesToRender).toContain(lookAtTile);
+        expect(lookAtTile.data.fill).toBeUndefined();
+        expect(lookAtTile.data.vertexArray).toBeDefined();
+
+        // The parent of the lookAtTile should not have been requested.
+        var parent = lookAtTile.parent;
+        mockTerrain.requestTileGeometry.calls
+          .allArgs()
+          .forEach(function (call) {
+            expect(call.slice(0, 3)).not.toEqual([
+              parent.x,
+              parent.y,
+              parent.level,
+            ]);
+          });
+      });
+    });
+
+    it("does not skip loading levels if availability is unknown", function () {
+      // Mark all tiles through level 2 as available.
+      rootTiles.forEach(function (tile) {
+        // level 0 tile
+        mockTerrain
+          .requestTileGeometryWillSucceed(tile)
+          .createMeshWillSucceed(tile);
+
+        tile.children.forEach(function (tile) {
+          // level 1 tile
+          mockTerrain
+            .willBeAvailable(tile)
+            .requestTileGeometryWillSucceed(tile)
+            .createMeshWillSucceed(tile);
+
+          tile.children.forEach(function (tile) {
+            // level 2 tile
+            mockTerrain
+              .willBeUnknownAvailability(tile)
+              .requestTileGeometryWillSucceed(tile)
+              .createMeshWillSucceed(tile);
+          });
         });
+      });
 
-        function createSpyTileProvider() {
-            var result = jasmine.createSpyObj('tileProvider', [
-                'getQuadtree', 'setQuadtree', 'getReady', 'getTilingScheme', 'getErrorEvent',
-                'initialize', 'updateImagery', 'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
-                'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'canRefine', 'isDestroyed', 'destroy']);
+      quadtree.preloadAncestors = false;
 
-            defineProperties(result, {
-                quadtree : {
-                    get : result.getQuadtree,
-                    set : result.setQuadtree
-                },
-                ready : {
-                    get : result.getReady
-                },
-                tilingScheme : {
-                    get : result.getTilingScheme
-                },
-                errorEvent : {
-                    get : result.getErrorEvent
-                }
-            });
+      // Look down at the center of a level 2 tile from a distance that will refine to it.
+      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      setCameraPosition(
+        quadtree,
+        frameState,
+        Rectangle.center(lookAtTile.rectangle),
+        lookAtTile.level
+      );
 
-            var tilingScheme = new GeographicTilingScheme();
-            result.getTilingScheme.and.returnValue(tilingScheme);
+      spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
 
-            result.canRefine.and.callFake(function(tile) {
-                return tile.renderable;
-            });
+      return process(quadtree, function () {
+        // Process until the lookAtTile is rendered. That tile's parent (level 1)
+        // should not be rendered along the way, but it will be loaded.
+        expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
+        var lookAtTileRendered =
+          quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
+        var continueProcessing = !lookAtTileRendered;
+        return continueProcessing;
+      }).then(function () {
+        // The lookAtTile should be a real tile, not a fill.
+        expect(quadtree._tilesToRender).toContain(lookAtTile);
+        expect(lookAtTile.data.fill).toBeUndefined();
+        expect(lookAtTile.data.vertexArray).toBeDefined();
 
-            return result;
+        // The parent of the lookAtTile should have been requested before the lookAtTile itself.
+        var parent = lookAtTile.parent;
+        var allArgs = mockTerrain.requestTileGeometry.calls.allArgs();
+        var parentArgsIndex = allArgs.indexOf(
+          allArgs.filter(function (call) {
+            return (
+              call[0] === parent.x &&
+              call[1] === parent.y &&
+              call[2] === parent.level
+            );
+          })[0]
+        );
+        var lookAtArgsIndex = allArgs.indexOf(
+          allArgs.filter(function (call) {
+            return (
+              call[0] === lookAtTile.x &&
+              call[1] === lookAtTile.y &&
+              call[2] === lookAtTile.level
+            );
+          })[0]
+        );
+        expect(parentArgsIndex).toBeLessThan(lookAtArgsIndex);
+      });
+    });
+
+    it("loads and renders intermediate tiles according to loadingDescendantLimit", function () {
+      // Mark all tiles through level 2 as available.
+      rootTiles.forEach(function (tile) {
+        // level 0 tile
+        mockTerrain
+          .willBeAvailable(tile)
+          .requestTileGeometryWillSucceed(tile)
+          .createMeshWillSucceed(tile);
+
+        tile.children.forEach(function (tile) {
+          // level 1 tile
+          mockTerrain
+            .willBeAvailable(tile)
+            .requestTileGeometryWillSucceed(tile)
+            .createMeshWillSucceed(tile);
+
+          tile.children.forEach(function (tile) {
+            // level 2 tile
+            mockTerrain
+              .willBeAvailable(tile)
+              .requestTileGeometryWillSucceed(tile)
+              .createMeshWillSucceed(tile);
+          });
+        });
+      });
+
+      quadtree.preloadAncestors = false;
+      quadtree.loadingDescendantLimit = 1;
+
+      // Look down at the center of a level 2 tile from a distance that will refine to it.
+      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      setCameraPosition(
+        quadtree,
+        frameState,
+        Rectangle.center(lookAtTile.rectangle),
+        lookAtTile.level
+      );
+
+      spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
+
+      return process(quadtree, function () {
+        // First the lookAtTile's parent should be rendered.
+        var lookAtTileParentRendered =
+          quadtree._tilesToRender.indexOf(lookAtTile.parent) >= 0;
+        var continueProcessing = !lookAtTileParentRendered;
+        return continueProcessing;
+      })
+        .then(function () {
+          // The lookAtTile's parent should be a real tile, not a fill.
+          expect(quadtree._tilesToRender).toContain(lookAtTile.parent);
+          expect(lookAtTile.parent.data.fill).toBeUndefined();
+          expect(lookAtTile.parent.data.vertexArray).toBeDefined();
+
+          return process(quadtree, function () {
+            // Then the lookAtTile should be rendered.
+            var lookAtTileRendered =
+              quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
+            var continueProcessing = !lookAtTileRendered;
+            return continueProcessing;
+          });
+        })
+        .then(function () {
+          // The lookAtTile should be a real tile, not a fill.
+          expect(quadtree._tilesToRender).toContain(lookAtTile);
+          expect(lookAtTile.data.fill).toBeUndefined();
+          expect(lookAtTile.data.vertexArray).toBeDefined();
+        });
+    });
+
+    it("continues rendering more detailed tiles when camera zooms out and an appropriate ancestor is not yet renderable", function () {
+      // Mark all tiles through level 2 as available.
+      rootTiles.forEach(function (tile) {
+        // level 0 tile
+        mockTerrain
+          .willBeAvailable(tile)
+          .requestTileGeometryWillSucceed(tile)
+          .createMeshWillSucceed(tile);
+
+        tile.children.forEach(function (tile) {
+          // level 1 tile
+          mockTerrain
+            .willBeAvailable(tile)
+            .requestTileGeometryWillSucceed(tile)
+            .createMeshWillSucceed(tile);
+
+          tile.children.forEach(function (tile) {
+            // level 2 tile
+            mockTerrain
+              .willBeAvailable(tile)
+              .requestTileGeometryWillSucceed(tile)
+              .createMeshWillSucceed(tile);
+          });
+        });
+      });
+
+      quadtree.preloadAncestors = false;
+
+      // Look down at the center of a level 2 tile from a distance that will refine to it.
+      var lookAtTile = rootTiles[0].southwestChild.northeastChild;
+      setCameraPosition(
+        quadtree,
+        frameState,
+        Rectangle.center(lookAtTile.rectangle),
+        lookAtTile.level
+      );
+
+      spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
+
+      return process(quadtree, function () {
+        // Process until the lookAtTile is rendered. That tile's parent (level 1)
+        // should not be rendered along the way.
+        expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
+        var lookAtTileRendered =
+          quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
+        var continueProcessing = !lookAtTileRendered;
+        return continueProcessing;
+      })
+        .then(function () {
+          // Zoom out so the parent tile no longer needs to refine to meet SSE.
+          setCameraPosition(
+            quadtree,
+            frameState,
+            Rectangle.center(lookAtTile.rectangle),
+            lookAtTile.parent.level
+          );
+
+          // Select new tiles
+          quadtree.beginFrame(frameState);
+          quadtree.render(frameState);
+          quadtree.endFrame(frameState);
+
+          // The lookAtTile should still be rendered, not it's parent.
+          expect(quadtree._tilesToRender).toContain(lookAtTile);
+          expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
+
+          return process(quadtree, function () {
+            // Eventually the parent should be rendered instead.
+            var parentRendered =
+              quadtree._tilesToRender.indexOf(lookAtTile.parent) >= 0;
+            var continueProcessing = !parentRendered;
+            return continueProcessing;
+          });
+        })
+        .then(function () {
+          expect(quadtree._tilesToRender).not.toContain(lookAtTile);
+          expect(quadtree._tilesToRender).toContain(lookAtTile.parent);
+        });
+    });
+
+    it("renders a fill for a newly-visible tile", function () {
+      // Mark all tiles through level 2 as available.
+      rootTiles.forEach(function (tile) {
+        // level 0 tile
+        mockTerrain
+          .willBeAvailable(tile)
+          .requestTileGeometryWillSucceed(tile)
+          .createMeshWillSucceed(tile);
+
+        tile.children.forEach(function (tile) {
+          // level 1 tile
+          mockTerrain
+            .willBeAvailable(tile)
+            .requestTileGeometryWillSucceed(tile)
+            .createMeshWillSucceed(tile);
+
+          tile.children.forEach(function (tile) {
+            // level 2 tile
+            mockTerrain
+              .willBeAvailable(tile)
+              .requestTileGeometryWillSucceed(tile)
+              .createMeshWillSucceed(tile);
+          });
+        });
+      });
+
+      quadtree.preloadAncestors = false;
+
+      var visibleTile = rootTiles[0].southwestChild.northeastChild;
+      var notVisibleTile = rootTiles[0].southwestChild.northwestChild;
+
+      frameState.cullingVolume.computeVisibility.and.callFake(function (
+        boundingVolume
+      ) {
+        if (!defined(visibleTile.data)) {
+          return Intersect.INTERSECTING;
         }
 
-        it('calls initialize, beginUpdate, loadTile, and endUpdate', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
+        if (
+          boundingVolume === visibleTile.data.tileBoundingRegion.boundingVolume
+        ) {
+          return Intersect.INTERSECTING;
+        } else if (
+          boundingVolume ===
+          notVisibleTile.data.tileBoundingRegion.boundingVolume
+        ) {
+          return Intersect.OUTSIDE;
+        }
+        return Intersect.INTERSECTING;
+      });
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
+      // Look down at the center of the visible tile.
+      setCameraPosition(
+        quadtree,
+        frameState,
+        Rectangle.center(visibleTile.rectangle),
+        visibleTile.level
+      );
 
-            // determine what tiles to load
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
+      spyOn(mockTerrain, "requestTileGeometry").and.callThrough();
 
-            // load tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
+      return process(quadtree, function () {
+        // Process until the visibleTile is rendered.
+        var visibleTileRendered =
+          quadtree._tilesToRender.indexOf(visibleTile) >= 0;
+        var continueProcessing = !visibleTileRendered;
+        return continueProcessing;
+      }).then(function () {
+        expect(quadtree._tilesToRender).not.toContain(notVisibleTile);
 
-            expect(tileProvider.initialize).toHaveBeenCalled();
-            expect(tileProvider.beginUpdate).toHaveBeenCalled();
-            expect(tileProvider.loadTile).toHaveBeenCalled();
-            expect(tileProvider.endUpdate).toHaveBeenCalled();
+        // Now treat the not-visible-tile as visible.
+        frameState.cullingVolume.computeVisibility.and.returnValue(
+          Intersect.INTERSECTING
+        );
+
+        // Select new tiles
+        quadtree.beginFrame(frameState);
+        quadtree.render(frameState);
+        quadtree.endFrame(frameState);
+
+        // The notVisibleTile should be rendered as a fill.
+        expect(quadtree._tilesToRender).toContain(visibleTile);
+        expect(quadtree._tilesToRender).toContain(notVisibleTile);
+        expect(notVisibleTile.data.fill).toBeDefined();
+        expect(notVisibleTile.data.vertexArray).toBeUndefined();
+      });
+    });
+  });
+
+  describe(
+    "with mock tile provider",
+    function () {
+      var scene;
+
+      beforeAll(function () {
+        scene = createScene();
+        scene.render();
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      function createSpyTileProvider() {
+        var result = jasmine.createSpyObj("tileProvider", [
+          "getQuadtree",
+          "setQuadtree",
+          "getReady",
+          "getTilingScheme",
+          "getErrorEvent",
+          "initialize",
+          "updateImagery",
+          "beginUpdate",
+          "endUpdate",
+          "getLevelMaximumGeometricError",
+          "loadTile",
+          "computeTileVisibility",
+          "showTileThisFrame",
+          "computeDistanceToTile",
+          "canRefine",
+          "isDestroyed",
+          "destroy",
+        ]);
+
+        Object.defineProperties(result, {
+          quadtree: {
+            get: result.getQuadtree,
+            set: result.setQuadtree,
+          },
+          ready: {
+            get: result.getReady,
+          },
+          tilingScheme: {
+            get: result.getTilingScheme,
+          },
+          errorEvent: {
+            get: result.getErrorEvent,
+          },
         });
 
-        it('shows the root tiles when they are ready and visible', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                tile.renderable = true;
-            });
+        var tilingScheme = new GeographicTilingScheme();
+        result.getTilingScheme.and.returnValue(tilingScheme);
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
-
-            // determine what tiles to load
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // load tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            expect(tileProvider.showTileThisFrame).toHaveBeenCalled();
+        result.canRefine.and.callFake(function (tile) {
+          return tile.renderable;
         });
 
-        it('stops loading a tile that moves to the DONE state', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        return result;
+      }
 
-            var calls = 0;
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                ++calls;
-                tile.state = QuadtreeTileLoadState.DONE;
-            });
+      it("calls initialize, beginUpdate, loadTile, and endUpdate", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
-
-            // determine what tiles to load
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // load tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            expect(calls).toBe(2);
-
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            expect(calls).toBe(2);
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
         });
 
-        it('tileLoadProgressEvent is raised when tile loaded and when new children discovered', function() {
-            var eventHelper = new EventHelper();
+        // determine what tiles to load
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        // load tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
+        expect(tileProvider.initialize).toHaveBeenCalled();
+        expect(tileProvider.beginUpdate).toHaveBeenCalled();
+        expect(tileProvider.loadTile).toHaveBeenCalled();
+        expect(tileProvider.endUpdate).toHaveBeenCalled();
+      });
 
-            var progressEventSpy = jasmine.createSpy('progressEventSpy');
-            eventHelper.add(quadtree.tileLoadProgressEvent, progressEventSpy);
-
-            // Initial update to get the zero-level tiles set up.
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // load zero-level tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            quadtree.update(scene.frameState);
-
-            scene.renderForSpecs();
-
-            // There will now be two zero-level tiles in the load queue.
-            expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
-
-            // Change one to loaded and update again
-            quadtree._levelZeroTiles[0].state = QuadtreeTileLoadState.DONE;
-            quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.LOADING;
-
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            quadtree.update(scene.frameState);
-
-            scene.renderForSpecs();
-
-            // Now there should only be one left in the update queue
-            expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(1);
-
-            // Simulate the second zero-level child having loaded with two children.
-            quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.DONE;
-            quadtree._levelZeroTiles[1].renderable = true;
-
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            quadtree.update(scene.frameState);
-
-            scene.renderForSpecs();
-
-            // Now that tile's four children should be in the load queue.
-            expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(4);
+      it("shows the root tiles when they are ready and visible", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.renderable = true;
         });
 
-        it('forEachLoadedTile does not enumerate tiles in the START state', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
-            tileProvider.computeDistanceToTile.and.returnValue(1e-15);
-
-            // Load the root tiles.
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                tile.state = QuadtreeTileLoadState.DONE;
-                tile.renderable = true;
-            });
-
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
-
-            // determine what tiles to load
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // load tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // Don't load further tiles.
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                tile.state = QuadtreeTileLoadState.START;
-            });
-
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            quadtree.forEachLoadedTile(function(tile) {
-                expect(tile.state).not.toBe(QuadtreeTileLoadState.START);
-            });
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
         });
 
-        it('add and remove callbacks to tiles', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
-            tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+        // determine what tiles to load
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            // Load the root tiles.
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                tile.state = QuadtreeTileLoadState.DONE;
-                tile.renderable = true;
-                tile.data = {
-                    pick : function() {
-                        return undefined;
-                    }
-                };
-            });
+        // load tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
+        expect(tileProvider.showTileThisFrame).toHaveBeenCalled();
+      });
 
-            var removeFunc = quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function(position) {
-            });
+      it("stops loading a tile that moves to the DONE state", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
-            // determine what tiles to load
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            ++scene.frameState.frameNumber;
-
-            // load tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            var addedCallback = false;
-            quadtree.forEachLoadedTile(function(tile) {
-                addedCallback = addedCallback || tile.customData.length > 0;
-            });
-
-            expect(addedCallback).toEqual(true);
-
-            removeFunc();
-
-            ++scene.frameState.frameNumber;
-
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            var removedCallback = true;
-            quadtree.forEachLoadedTile(function(tile) {
-                removedCallback = removedCallback && tile.customData.length === 0;
-            });
-
-            expect(removedCallback).toEqual(true);
+        var calls = 0;
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          ++calls;
+          tile.state = QuadtreeTileLoadState.DONE;
         });
 
-        it('updates heights', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
-            tileProvider.computeDistanceToTile.and.returnValue(1e-15);
-
-            tileProvider.terrainProvider = {
-                getTileDataAvailable : function() {
-                    return true;
-                }
-            };
-
-            var position = Cartesian3.clone(Cartesian3.ZERO);
-            var updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
-            var currentPosition = position;
-
-            // Load the root tiles.
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                tile.state = QuadtreeTileLoadState.DONE;
-                tile.renderable = true;
-                tile.data = {
-                    pick : function() {
-                        return currentPosition;
-                    },
-                    mesh: {}
-                };
-            });
-
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
-
-            quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function(p) {
-                Cartesian3.clone(p, position);
-            });
-
-            // determine what tiles to load
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // load tiles
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            expect(position).toEqual(Cartesian3.ZERO);
-
-            currentPosition = updatedPosition;
-
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            expect(position).toEqual(updatedPosition);
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
         });
 
-        it('gives correct priority to tile loads', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        // determine what tiles to load
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
+        // load tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
+        expect(calls).toBe(2);
 
-            // The root tiles should be in the high priority load queue
-            expect(quadtree._tileLoadQueueHigh.length).toBe(2);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[1]);
-            expect(quadtree._tileLoadQueueMedium.length).toBe(0);
-            expect(quadtree._tileLoadQueueLow.length).toBe(0);
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            // Mark the first root tile renderable (but not done loading)
-            quadtree._levelZeroTiles[0].renderable = true;
+        expect(calls).toBe(2);
+      });
 
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
+      it("tileLoadProgressEvent is raised when tile loaded and when new children discovered", function () {
+        var eventHelper = new EventHelper();
 
-            // That root tile should now load with low priority while its children should load with high.
-            expect(quadtree._tileLoadQueueHigh.length).toBe(5);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[1]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[0]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[1]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[2]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[3]);
-            expect(quadtree._tileLoadQueueMedium.length).toBe(0);
-            expect(quadtree._tileLoadQueueLow.length).toBe(1);
-            expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0]);
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
-            // Mark the children of that root tile renderable too, so we can refine it
-            quadtree._levelZeroTiles[0].children[0].renderable = true;
-            quadtree._levelZeroTiles[0].children[1].renderable = true;
-            quadtree._levelZeroTiles[0].children[2].renderable = true;
-            quadtree._levelZeroTiles[0].children[3].renderable = true;
-
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            expect(quadtree._tileLoadQueueHigh.length).toBe(17); // levelZeroTiles[1] plus levelZeroTiles[0]'s 16 grandchildren
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[1]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[0].children[0]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[0].children[1]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[0].children[2]);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[0].children[0].children[3]);
-            expect(quadtree._tileLoadQueueMedium.length).toBe(0);
-            expect(quadtree._tileLoadQueueLow.length).toBe(5);
-            expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0]);
-            expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[0]);
-            expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[1]);
-            expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[2]);
-            expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[3]);
-
-            // Mark the children of levelZeroTiles[0] upsampled
-            quadtree._levelZeroTiles[0].children[0].upsampledFromParent = true;
-            quadtree._levelZeroTiles[0].children[1].upsampledFromParent = true;
-            quadtree._levelZeroTiles[0].children[2].upsampledFromParent = true;
-            quadtree._levelZeroTiles[0].children[3].upsampledFromParent = true;
-
-            quadtree.update(scene.frameState);
-            quadtree.beginFrame(scene.frameState);
-            quadtree.render(scene.frameState);
-            quadtree.endFrame(scene.frameState);
-
-            // levelZeroTiles[0] should move to medium priority.
-            expect(quadtree._tileLoadQueueHigh.length).toBe(1);
-            expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[1]);
-            expect(quadtree._tileLoadQueueMedium.length).toBe(1);
-            expect(quadtree._tileLoadQueueMedium).toContain(quadtree._levelZeroTiles[0]);
-            expect(quadtree._tileLoadQueueLow.length).toBe(0);
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
         });
 
-        it('renders tiles in approximate near-to-far order', function() {
-            var tileProvider = createSpyTileProvider();
-            tileProvider.getReady.and.returnValue(true);
-            tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        var progressEventSpy = jasmine.createSpy("progressEventSpy");
+        eventHelper.add(quadtree.tileLoadProgressEvent, progressEventSpy);
 
-            var quadtree = new QuadtreePrimitive({
-                tileProvider : tileProvider
-            });
+        // Initial update to get the zero-level tiles set up.
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            tileProvider.loadTile.and.callFake(function(frameState, tile) {
-                if (tile.level <= 1) {
-                    tile.state = QuadtreeTileLoadState.DONE;
-                    tile.renderable = true;
-                }
-            });
+        // load zero-level tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
 
-            scene.camera.setView({
-                destination : Cartesian3.fromDegrees(1.0, 1.0, 15000.0)
-            });
-            scene.camera.update(scene.mode);
+        quadtree.update(scene.frameState);
 
-            return pollToPromise(function() {
-                quadtree.update(scene.frameState);
-                quadtree.beginFrame(scene.frameState);
-                quadtree.render(scene.frameState);
-                quadtree.endFrame(scene.frameState);
+        scene.renderForSpecs();
 
-                return quadtree._tilesToRender.filter(function(tile) { return tile.level === 1; }).length === 8;
-            }).then(function() {
-                quadtree.update(scene.frameState);
-                quadtree.beginFrame(scene.frameState);
-                quadtree.render(scene.frameState);
-                quadtree.endFrame(scene.frameState);
+        // There will now be two zero-level tiles in the load queue.
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
 
-                // Rendered tiles:
-                // +----+----+----+----+
-                // |w.nw|w.ne|e.nw|e.ne|
-                // +----+----+----+----+
-                // |w.sw|w.se|e.sw|e.se|
-                // +----+----+----+----+
-                // camera is located in e.nw (east.northwestChild)
+        // Change one to loaded and update again
+        quadtree._levelZeroTiles[0].state = QuadtreeTileLoadState.DONE;
+        quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.LOADING;
 
-                var west = quadtree._levelZeroTiles.filter(function(tile) { return tile.x === 0; })[0];
-                var east = quadtree._levelZeroTiles.filter(function(tile) { return tile.x === 1; })[0];
-                expect(quadtree._tilesToRender[0]).toBe(east.northwestChild);
-                expect(quadtree._tilesToRender[1] === east.southwestChild || quadtree._tilesToRender[1] === east.northeastChild).toBe(true);
-                expect(quadtree._tilesToRender[2] === east.southwestChild || quadtree._tilesToRender[2] === east.northeastChild).toBe(true);
-                expect(quadtree._tilesToRender[3]).toBe(east.southeastChild);
-                expect(quadtree._tilesToRender[4]).toBe(west.northeastChild);
-                expect(quadtree._tilesToRender[5] === west.northwestChild || quadtree._tilesToRender[5] === west.southeastChild).toBe(true);
-                expect(quadtree._tilesToRender[6] === west.northwestChild || quadtree._tilesToRender[6] === west.southeastChild).toBe(true);
-                expect(quadtree._tilesToRender[7]).toBe(west.southwestChild);
-            });
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
+
+        scene.renderForSpecs();
+
+        // Now there should only be one left in the update queue
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(1);
+
+        // Simulate the second zero-level child having loaded with two children.
+        quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.DONE;
+        quadtree._levelZeroTiles[1].renderable = true;
+
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
+
+        scene.renderForSpecs();
+
+        // Now that tile's four children should be in the load queue.
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(4);
+      });
+
+      it("forEachLoadedTile does not enumerate tiles in the START state", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
         });
-    }, 'WebGL');
 
-    // Sets the camera to look at a given cartographic position from a distance
-    // that will produce a screen-space error at that position that will refine to
-    // a given tile level and no further.
-    function setCameraPosition(quadtree, frameState, position, level) {
-        var camera = frameState.camera;
-        var geometricError = quadtree.tileProvider.getLevelMaximumGeometricError(level);
-        var sse = quadtree.maximumScreenSpaceError * 0.8;
-        var sseDenominator = camera.frustum.sseDenominator;
-        var height = frameState.context.drawingBufferHeight;
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
 
-        var distance = (geometricError * height) / (sse * sseDenominator);
-        var cartesian = Ellipsoid.WGS84.cartographicToCartesian(position);
-        camera.lookAt(cartesian, new Cartesian3(0.0, 0.0, distance));
-    }
+        // determine what tiles to load
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // load tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // Don't load further tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.START;
+        });
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        quadtree.forEachLoadedTile(function (tile) {
+          expect(tile.state).not.toBe(QuadtreeTileLoadState.START);
+        });
+      });
+
+      it("add and remove callbacks to tiles", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            pick: function () {
+              return undefined;
+            },
+          };
+        });
+
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        var removeFunc = quadtree.updateHeight(
+          Cartographic.fromDegrees(-72.0, 40.0),
+          function (position) {}
+        );
+
+        // determine what tiles to load
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        ++scene.frameState.frameNumber;
+
+        // load tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        var addedCallback = false;
+        quadtree.forEachLoadedTile(function (tile) {
+          addedCallback = addedCallback || tile.customData.length > 0;
+        });
+
+        expect(addedCallback).toEqual(true);
+
+        removeFunc();
+
+        ++scene.frameState.frameNumber;
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        var removedCallback = true;
+        quadtree.forEachLoadedTile(function (tile) {
+          removedCallback = removedCallback && tile.customData.length === 0;
+        });
+
+        expect(removedCallback).toEqual(true);
+      });
+
+      it("updates heights", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        tileProvider.terrainProvider = {
+          getTileDataAvailable: function () {
+            return true;
+          },
+        };
+
+        var position = Cartesian3.clone(Cartesian3.ZERO);
+        var updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
+        var currentPosition = position;
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            pick: function () {
+              return currentPosition;
+            },
+            mesh: {},
+          };
+        });
+
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function (
+          p
+        ) {
+          Cartesian3.clone(p, position);
+        });
+
+        // determine what tiles to load
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // load tiles
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        expect(position).toEqual(Cartesian3.ZERO);
+
+        currentPosition = updatedPosition;
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        expect(position).toEqual(updatedPosition);
+      });
+
+      it("gives correct priority to tile loads", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // The root tiles should be in the high priority load queue
+        expect(quadtree._tileLoadQueueHigh.length).toBe(2);
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[1]
+        );
+        expect(quadtree._tileLoadQueueMedium.length).toBe(0);
+        expect(quadtree._tileLoadQueueLow.length).toBe(0);
+
+        // Mark the first root tile renderable (but not done loading)
+        quadtree._levelZeroTiles[0].renderable = true;
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // That root tile should now load with low priority while its children should load with high.
+        expect(quadtree._tileLoadQueueHigh.length).toBe(5);
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[1]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[0]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[1]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[2]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[3]
+        );
+        expect(quadtree._tileLoadQueueMedium.length).toBe(0);
+        expect(quadtree._tileLoadQueueLow.length).toBe(1);
+        expect(quadtree._tileLoadQueueLow).toContain(
+          quadtree._levelZeroTiles[0]
+        );
+
+        // Mark the children of that root tile renderable too, so we can refine it
+        quadtree._levelZeroTiles[0].children[0].renderable = true;
+        quadtree._levelZeroTiles[0].children[1].renderable = true;
+        quadtree._levelZeroTiles[0].children[2].renderable = true;
+        quadtree._levelZeroTiles[0].children[3].renderable = true;
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        expect(quadtree._tileLoadQueueHigh.length).toBe(17); // levelZeroTiles[1] plus levelZeroTiles[0]'s 16 grandchildren
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[1]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[0].children[0]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[0].children[1]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[0].children[2]
+        );
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[0].children[0].children[3]
+        );
+        expect(quadtree._tileLoadQueueMedium.length).toBe(0);
+        expect(quadtree._tileLoadQueueLow.length).toBe(5);
+        expect(quadtree._tileLoadQueueLow).toContain(
+          quadtree._levelZeroTiles[0]
+        );
+        expect(quadtree._tileLoadQueueLow).toContain(
+          quadtree._levelZeroTiles[0].children[0]
+        );
+        expect(quadtree._tileLoadQueueLow).toContain(
+          quadtree._levelZeroTiles[0].children[1]
+        );
+        expect(quadtree._tileLoadQueueLow).toContain(
+          quadtree._levelZeroTiles[0].children[2]
+        );
+        expect(quadtree._tileLoadQueueLow).toContain(
+          quadtree._levelZeroTiles[0].children[3]
+        );
+
+        // Mark the children of levelZeroTiles[0] upsampled
+        quadtree._levelZeroTiles[0].children[0].upsampledFromParent = true;
+        quadtree._levelZeroTiles[0].children[1].upsampledFromParent = true;
+        quadtree._levelZeroTiles[0].children[2].upsampledFromParent = true;
+        quadtree._levelZeroTiles[0].children[3].upsampledFromParent = true;
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // levelZeroTiles[0] should move to medium priority.
+        expect(quadtree._tileLoadQueueHigh.length).toBe(1);
+        expect(quadtree._tileLoadQueueHigh).toContain(
+          quadtree._levelZeroTiles[1]
+        );
+        expect(quadtree._tileLoadQueueMedium.length).toBe(1);
+        expect(quadtree._tileLoadQueueMedium).toContain(
+          quadtree._levelZeroTiles[0]
+        );
+        expect(quadtree._tileLoadQueueLow.length).toBe(0);
+      });
+
+      it("renders tiles in approximate near-to-far order", function () {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+
+        var quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          if (tile.level <= 1) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+          }
+        });
+
+        scene.camera.setView({
+          destination: Cartesian3.fromDegrees(1.0, 1.0, 15000.0),
+        });
+        scene.camera.update(scene.mode);
+
+        return pollToPromise(function () {
+          quadtree.update(scene.frameState);
+          quadtree.beginFrame(scene.frameState);
+          quadtree.render(scene.frameState);
+          quadtree.endFrame(scene.frameState);
+
+          return (
+            quadtree._tilesToRender.filter(function (tile) {
+              return tile.level === 1;
+            }).length === 8
+          );
+        }).then(function () {
+          quadtree.update(scene.frameState);
+          quadtree.beginFrame(scene.frameState);
+          quadtree.render(scene.frameState);
+          quadtree.endFrame(scene.frameState);
+
+          // Rendered tiles:
+          // +----+----+----+----+
+          // |w.nw|w.ne|e.nw|e.ne|
+          // +----+----+----+----+
+          // |w.sw|w.se|e.sw|e.se|
+          // +----+----+----+----+
+          // camera is located in e.nw (east.northwestChild)
+
+          var west = quadtree._levelZeroTiles.filter(function (tile) {
+            return tile.x === 0;
+          })[0];
+          var east = quadtree._levelZeroTiles.filter(function (tile) {
+            return tile.x === 1;
+          })[0];
+          expect(quadtree._tilesToRender[0]).toBe(east.northwestChild);
+          expect(
+            quadtree._tilesToRender[1] === east.southwestChild ||
+              quadtree._tilesToRender[1] === east.northeastChild
+          ).toBe(true);
+          expect(
+            quadtree._tilesToRender[2] === east.southwestChild ||
+              quadtree._tilesToRender[2] === east.northeastChild
+          ).toBe(true);
+          expect(quadtree._tilesToRender[3]).toBe(east.southeastChild);
+          expect(quadtree._tilesToRender[4]).toBe(west.northeastChild);
+          expect(
+            quadtree._tilesToRender[5] === west.northwestChild ||
+              quadtree._tilesToRender[5] === west.southeastChild
+          ).toBe(true);
+          expect(
+            quadtree._tilesToRender[6] === west.northwestChild ||
+              quadtree._tilesToRender[6] === west.southeastChild
+          ).toBe(true);
+          expect(quadtree._tilesToRender[7]).toBe(west.southwestChild);
+        });
+      });
+    },
+    "WebGL"
+  );
+
+  // Sets the camera to look at a given cartographic position from a distance
+  // that will produce a screen-space error at that position that will refine to
+  // a given tile level and no further.
+  function setCameraPosition(quadtree, frameState, position, level) {
+    var camera = frameState.camera;
+    var geometricError = quadtree.tileProvider.getLevelMaximumGeometricError(
+      level
+    );
+    var sse = quadtree.maximumScreenSpaceError * 0.8;
+    var sseDenominator = camera.frustum.sseDenominator;
+    var height = frameState.context.drawingBufferHeight;
+
+    var distance = (geometricError * height) / (sse * sseDenominator);
+    var cartesian = Ellipsoid.WGS84.cartographicToCartesian(position);
+    camera.lookAt(cartesian, new Cartesian3(0.0, 0.0, distance));
+  }
 });

@@ -1,131 +1,120 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Quaternion'
-    ], function(
-        defined,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
-    'use strict';
+import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
+import Quaternion from "../Core/Quaternion.js";
 
-    /**
-     * @private
-     */
-    function DeviceOrientationCameraController(scene) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        //>>includeEnd('debug');
+/**
+ * @private
+ */
+function DeviceOrientationCameraController(scene) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
-        this._scene = scene;
+  this._scene = scene;
 
-        this._lastAlpha = undefined;
-        this._lastBeta = undefined;
-        this._lastGamma = undefined;
+  this._lastAlpha = undefined;
+  this._lastBeta = undefined;
+  this._lastGamma = undefined;
 
-        this._alpha = undefined;
-        this._beta = undefined;
-        this._gamma = undefined;
+  this._alpha = undefined;
+  this._beta = undefined;
+  this._gamma = undefined;
 
-        var that = this;
+  var that = this;
 
-        function callback(e) {
-            var alpha = e.alpha;
-            if (!defined(alpha)) {
-                that._alpha = undefined;
-                that._beta = undefined;
-                that._gamma = undefined;
-                return;
-            }
-
-            that._alpha = CesiumMath.toRadians(alpha);
-            that._beta = CesiumMath.toRadians(e.beta);
-            that._gamma = CesiumMath.toRadians(e.gamma);
-        }
-
-        window.addEventListener('deviceorientation', callback, false);
-
-        this._removeListener = function() {
-            window.removeEventListener('deviceorientation', callback, false);
-        };
+  function callback(e) {
+    var alpha = e.alpha;
+    if (!defined(alpha)) {
+      that._alpha = undefined;
+      that._beta = undefined;
+      that._gamma = undefined;
+      return;
     }
 
-    var scratchQuaternion1 = new Quaternion();
-    var scratchQuaternion2 = new Quaternion();
-    var scratchMatrix3 = new Matrix3();
+    that._alpha = CesiumMath.toRadians(alpha);
+    that._beta = CesiumMath.toRadians(e.beta);
+    that._gamma = CesiumMath.toRadians(e.gamma);
+  }
 
-    function rotate(camera, alpha, beta, gamma) {
-        var direction = camera.direction;
-        var right = camera.right;
-        var up = camera.up;
+  window.addEventListener("deviceorientation", callback, false);
 
-        var bQuat = Quaternion.fromAxisAngle(direction, beta, scratchQuaternion2);
-        var gQuat = Quaternion.fromAxisAngle(right, gamma, scratchQuaternion1);
+  this._removeListener = function () {
+    window.removeEventListener("deviceorientation", callback, false);
+  };
+}
 
-        var rotQuat = Quaternion.multiply(gQuat, bQuat, gQuat);
+var scratchQuaternion1 = new Quaternion();
+var scratchQuaternion2 = new Quaternion();
+var scratchMatrix3 = new Matrix3();
 
-        var aQuat = Quaternion.fromAxisAngle(up, alpha, scratchQuaternion2);
-        Quaternion.multiply(aQuat, rotQuat, rotQuat);
+function rotate(camera, alpha, beta, gamma) {
+  var direction = camera.direction;
+  var right = camera.right;
+  var up = camera.up;
 
-        var matrix = Matrix3.fromQuaternion(rotQuat, scratchMatrix3);
-        Matrix3.multiplyByVector(matrix, right, right);
-        Matrix3.multiplyByVector(matrix, up, up);
-        Matrix3.multiplyByVector(matrix, direction, direction);
-    }
+  var bQuat = Quaternion.fromAxisAngle(direction, beta, scratchQuaternion2);
+  var gQuat = Quaternion.fromAxisAngle(right, gamma, scratchQuaternion1);
 
-    DeviceOrientationCameraController.prototype.update = function() {
-        if (!defined(this._alpha)) {
-            return;
-        }
+  var rotQuat = Quaternion.multiply(gQuat, bQuat, gQuat);
 
-        if (!defined(this._lastAlpha)) {
-            this._lastAlpha = this._alpha;
-            this._lastBeta = this._beta;
-            this._lastGamma = this._gamma;
-        }
+  var aQuat = Quaternion.fromAxisAngle(up, alpha, scratchQuaternion2);
+  Quaternion.multiply(aQuat, rotQuat, rotQuat);
 
-        var a = this._lastAlpha - this._alpha;
-        var b = this._lastBeta - this._beta;
-        var g = this._lastGamma - this._gamma;
+  var matrix = Matrix3.fromQuaternion(rotQuat, scratchMatrix3);
+  Matrix3.multiplyByVector(matrix, right, right);
+  Matrix3.multiplyByVector(matrix, up, up);
+  Matrix3.multiplyByVector(matrix, direction, direction);
+}
 
-        rotate(this._scene.camera, -a, b, g);
+DeviceOrientationCameraController.prototype.update = function () {
+  if (!defined(this._alpha)) {
+    return;
+  }
 
-        this._lastAlpha = this._alpha;
-        this._lastBeta = this._beta;
-        this._lastGamma = this._gamma;
-    };
+  if (!defined(this._lastAlpha)) {
+    this._lastAlpha = this._alpha;
+    this._lastBeta = this._beta;
+    this._lastGamma = this._gamma;
+  }
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     */
-    DeviceOrientationCameraController.prototype.isDestroyed = function() {
-        return false;
-    };
+  var a = this._lastAlpha - this._alpha;
+  var b = this._lastBeta - this._beta;
+  var g = this._lastGamma - this._gamma;
 
-    /**
-     * Destroys the resources held by this object.  Destroying an object allows for deterministic
-     * release of resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DeviceOrientationCameraController.prototype.destroy = function() {
-        this._removeListener();
-        return destroyObject(this);
-    };
+  rotate(this._scene.camera, -a, b, g);
 
-    return DeviceOrientationCameraController;
-});
+  this._lastAlpha = this._alpha;
+  this._lastBeta = this._beta;
+  this._lastGamma = this._gamma;
+};
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ */
+DeviceOrientationCameraController.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the resources held by this object.  Destroying an object allows for deterministic
+ * release of resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ */
+DeviceOrientationCameraController.prototype.destroy = function () {
+  this._removeListener();
+  return destroyObject(this);
+};
+export default DeviceOrientationCameraController;

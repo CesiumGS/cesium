@@ -3,8 +3,9 @@ float czm_reverseLogDepth(float logZ)
 #ifdef LOG_DEPTH
     float near = czm_currentFrustum.x;
     float far = czm_currentFrustum.y;
-    logZ = pow(2.0, logZ * czm_log2FarPlusOne) - 1.0;
-    logZ = far * (1.0 - near / logZ) / (far - near);
+    float log2Depth = logZ * czm_log2FarDepthFromNearPlusOne;
+    float depthFromNear = pow(2.0, log2Depth) - 1.0;
+    return far * (1.0 - near / (depthFromNear + near)) / (far - near);
 #endif
     return logZ;
 }

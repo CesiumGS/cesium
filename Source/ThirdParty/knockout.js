@@ -1,18 +1,11 @@
-define([
-        './knockout-3.5.0',
-        './knockout-es5',
-        '../Widgets/SvgPathBindingHandler'
-    ], function(
-        knockout,
-        knockout_es5,
-        SvgPathBindingHandler) {
-    "use strict";
+import knockout from './knockout-3.5.1.js';
+import knockout_es5 from './knockout-es5.js';
+import SvgPathBindingHandler from '../Widgets/SvgPathBindingHandler.js';
 
-    // install the Knockout-ES5 plugin
-    knockout_es5.attachToKo(knockout);
+// install the Knockout-ES5 plugin
+knockout_es5.attachToKo(knockout);
 
-    // Register all Cesium binding handlers
-    SvgPathBindingHandler.register(knockout);
+// Register all Cesium binding handlers
+SvgPathBindingHandler.register(knockout);
 
-    return knockout;
-});
+export default knockout;

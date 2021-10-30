@@ -1,218 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Example styles for a point cloud tileset.">
-    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <!-- Use Chrome Frame in IE -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Example styles for a point cloud tileset."
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar button {
+        display: block;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
+
+        var tileset = new Cesium.Cesium3DTileset({
+          url:
+            "../../SampleData/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json",
+        });
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
+
+        var styles = [];
+        function addStyle(name, style) {
+          style.pointSize = Cesium.defaultValue(style.pointSize, 5.0);
+          styles.push({
+            name: name,
+            style: style,
+          });
+        }
+
+        addStyle("No Style", {});
+
+        addStyle("Red", {
+          color: "color('#ff0000')",
+        });
+
+        addStyle("Color Gradient", {
+          color: "color() * ${temperature}",
+        });
+
+        addStyle("Step Red/Blue", {
+          color: "${temperature} > 0.5 ? color('red') : color('blue')",
+        });
+
+        addStyle("Interpolate Red/Blue", {
+          color:
+            "color('red') * ${temperature} + color('blue') * (1.0 - ${temperature})",
+        });
+
+        addStyle("Color Ramp", {
+          color: {
+            conditions: [
+              ["${temperature} < 0.1", "color('#000099')"],
+              ["${temperature} < 0.2", "color('#00cc99', 1.0)"],
+              ["${temperature} < 0.3", "color('#66ff33', 0.5)"],
+              ["${temperature} < 0.4", "rgba(255, 255, 0, 0.1)"],
+              ["${temperature} < 0.5", "rgb(255, 128, 0)"],
+              ["${temperature} < 0.6", "color('red')"],
+              ["${temperature} < 0.7", "color('rgb(255, 102, 102)')"],
+              ["${temperature} < 0.8", "hsl(0.875, 1.0, 0.6)"],
+              ["${temperature} < 0.9", "hsla(0.83, 1.0, 0.5, 0.1)"],
+              ["true", "color('#FFFFFF', 1.0)"],
+            ],
+          },
+        });
+
+        addStyle("Transparency", {
+          color: "rgba(0, 255, 0, ${temperature})",
+        });
+
+        addStyle("Hide Low Temperature", {
+          color: "rgb(${temperature}*255, 0, 0)",
+          show: "${temperature} > 0.3",
+        });
+
+        addStyle("Show Subsections", {
+          show: "${id} === 1 || ${id} > 250 && ${id} < 300",
+        });
+
+        addStyle("Mod", {
+          show: "${id} % 2 === 0",
+        });
+
+        addStyle("Abs", {
+          color: "color() * abs(${temperature} - 0.5)",
+        });
+
+        addStyle("Trigonometric Functions", {
+          color:
+            "color() * radians(cos(${temperature})) + color() * sin(${temperature}) + color() * tan(${temperature})",
+        });
+
+        addStyle("Arc Trigonometric Functions", {
+          color:
+            "color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) + color() * atan2(${POSITION}[0],${temperature})",
+        });
+
+        addStyle("Sqrt", {
+          color: "color() * sqrt(${temperature})",
+        });
+
+        addStyle("Sign", {
+          color:
+            "rgb(sign(${POSITION}[0]) * 255, sign(${POSITION}[1]) * 255, sign(${POSITION}[2]) * 255)",
+        });
+
+        addStyle("Rounding Functions", {
+          color:
+            "rgb(floor(${POSITION}[0]) * 255, ceil(${POSITION}[1]) * 255, round(${POSITION}[2]) * 255)",
+        });
+
+        addStyle("Exp and Log Functions", {
+          color:
+            "rgb(log(${POSITION}[0]) * 255, log2(${POSITION}[1]) * 255 + exp2(${POSITION}[1]) * 255, exp(${POSITION}[2]) * 255)",
+        });
+
+        addStyle("Fractional Part", {
+          color:
+            "rgb(fract(${POSITION}[0]) * 255, fract(${POSITION}[1]) * 255, fract(${POSITION}[2]) * 255)",
+        });
+
+        addStyle("Pow", {
+          color: "color() * pow(${temperature}, 3)",
+        });
+
+        addStyle("Min and Max", {
+          color:
+            "rgb(min(${POSITION}.x, 0.75) * 255, max(${POSITION}.z, 0.25) * 255, 255)",
+        });
+
+        addStyle("Clamp and Mix", {
+          color: "color() * clamp(${temperature}, 0.1, 0.2)",
+        });
+
+        addStyle("Secondary Color", {
+          color: {
+            conditions: [
+              ["${id} < 250", "vec4(${secondaryColor}, 1.0)"],
+              [
+                "${id} < 500",
+                "vec4(${secondaryColor} * ${secondaryColor}, 1.0)",
+              ],
+              ["${id} < 750", "vec4(${secondaryColor} / 5.0, 1.0)"],
+              [
+                "${id} < 1000",
+                "rgb(0, 0, Number(${secondaryColor}.x < 0.5) * 255)",
+              ],
+            ],
+          },
+        });
+
+        addStyle("Use point colors", {
+          color: "${COLOR} * ${temperature} + rgb(128,128,128)",
+        });
+
+        addStyle("Use point positions", {
+          show:
+            "${POSITION}[0] > 0.5 || ${POSITION}[1] > 0.5 || ${POSITION}[2] > 0.5",
+        });
+
+        // POSITION contains 0 as its last component, so add 1.0 to make the point cloud opaque
+        addStyle("Color based on position", {
+          color: "vec4(${POSITION}, 1.0)",
+        });
+
+        addStyle("Style point size", {
+          color: "color('red')",
+          pointSize: "${temperature} * 10",
+        });
+
+        addStyle("Multiple defines", {
+          defines: {
+            length: "length(${POSITION})",
+            time: "${tiles3d_tileset_time} * 3.0",
+          },
+          color: {
+            conditions: [
+              ["${length} < 0.5", "${length} * color('red')"],
+              [
+                "${length} < 1.0",
+                "vec4(vec3(${temperature} * fract(${time})), 1.0)",
+              ],
+              ["true", "${COLOR}"],
+            ],
+          },
+          pointSize: "5.0 - ${length} * 2.0",
+          show: "${length} < 2.0",
+        });
+
+        function setStyle(style) {
+          return function () {
+            tileset.style = new Cesium.Cesium3DTileStyle(style);
+          };
+        }
+
+        var styleOptions = [];
+        for (var i = 0; i < styles.length; ++i) {
+          var style = styles[i];
+          styleOptions.push({
+            text: style.name,
+            onselect: setStyle(style.style),
+          });
+        }
+
+        Sandcastle.addToolbarMenu(styleOptions);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-    #toolbar button { display: block; }
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-
-var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
-
-var tileset = new Cesium.Cesium3DTileset({
-    url: '../../SampleData/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json'
-});
-viewer.scene.primitives.add(tileset);
-viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
-
-var styles = [];
-function addStyle(name, style) {
-    style.pointSize = Cesium.defaultValue(style.pointSize, 5.0);
-    styles.push({
-        name : name,
-        style : style
-    });
-}
-
-addStyle('No Style', {});
-
-addStyle('Red', {
-    color : "color('#ff0000')"
-});
-
-addStyle('Color Gradient', {
-    color : 'color() * ${temperature}'
-});
-
-addStyle('Step Red/Blue', {
-    color : "${temperature} > 0.5 ? color('red') : color('blue')"
-});
-
-addStyle('Interpolate Red/Blue', {
-    color : "color('red') * ${temperature} + color('blue') * (1.0 - ${temperature})"
-});
-
-addStyle('Color Ramp', {
-    color : {
-        conditions : [
-            ['${temperature} < 0.1', "color('#000099')"],
-            ['${temperature} < 0.2', "color('#00cc99', 1.0)"],
-            ['${temperature} < 0.3', "color('#66ff33', 0.5)"],
-            ['${temperature} < 0.4', 'rgba(255, 255, 0, 0.1)'],
-            ['${temperature} < 0.5', 'rgb(255, 128, 0)'],
-            ['${temperature} < 0.6', "color('red')"],
-            ['${temperature} < 0.7', "color('rgb(255, 102, 102)')"],
-            ['${temperature} < 0.8', 'hsl(0.875, 1.0, 0.6)'],
-            ['${temperature} < 0.9', 'hsla(0.83, 1.0, 0.5, 0.1)'],
-            ['true', "color('#FFFFFF', 1.0)"]
-        ]
-    }
-});
-
-addStyle('Transparency', {
-    color : 'rgba(0, 255, 0, ${temperature})'
-});
-
-addStyle('Hide Low Temperature', {
-    color : 'rgb(${temperature}*255, 0, 0)',
-    show : '${temperature} > 0.3'
-});
-
-addStyle('Show Subsections', {
-    show : '${id} === 1 || ${id} > 250 && ${id} < 300'
-});
-
-addStyle('Mod', {
-    show : '${id} % 2 === 0'
-});
-
-addStyle('Abs', {
-    color : 'color() * abs(${temperature} - 0.5)'
-});
-
-addStyle('Trigonometric Functions', {
-    color : 'color() * radians(cos(${temperature})) + color() * sin(${temperature}) + color() * tan(${temperature})'
-
-});
-
-addStyle('Arc Trigonometric Functions', {
-    color : 'color() * acos(degrees(${temperature})) + color() * asin(${temperature}) + color() * atan(${temperature}) + color() * atan2(${POSITION}[0],${temperature})'
-});
-
-addStyle('Sqrt', {
-    color : 'color() * sqrt(${temperature})'
-});
-
-addStyle('Sign', {
-    color : 'rgb(sign(${POSITION}[0]) * 255, sign(${POSITION}[1]) * 255, sign(${POSITION}[2]) * 255)'
-});
-
-addStyle('Rounding Functions', {
-    color : 'rgb(floor(${POSITION}[0]) * 255, ceil(${POSITION}[1]) * 255, round(${POSITION}[2]) * 255)'
-});
-
-addStyle('Exp and Log Functions', {
-    color : 'rgb(log(${POSITION}[0]) * 255, log2(${POSITION}[1]) * 255 + exp2(${POSITION}[1]) * 255, exp(${POSITION}[2]) * 255)'
-});
-
-addStyle('Fractional Part', {
-    color : 'rgb(fract(${POSITION}[0]) * 255, fract(${POSITION}[1]) * 255, fract(${POSITION}[2]) * 255)'
-});
-
-addStyle('Pow', {
-    color : 'color() * pow(${temperature}, 3)'
-});
-
-addStyle('Min and Max', {
-    color : 'rgb(min(${POSITION}.x, 0.75) * 255, max(${POSITION}.z, 0.25) * 255, 255)'
-});
-
-addStyle('Clamp and Mix', {
-    color : 'color() * clamp(${temperature}, 0.1, 0.2)'
-});
-
-addStyle('Secondary Color', {
-    color : {
-        conditions : [
-            ['${id} < 250', 'vec4(${secondaryColor}, 1.0)'],
-            ['${id} < 500', 'vec4(${secondaryColor} * ${secondaryColor}, 1.0)'],
-            ['${id} < 750', 'vec4(${secondaryColor} / 5.0, 1.0)'],
-            ['${id} < 1000', 'rgb(0, 0, Number(${secondaryColor}.x < 0.5) * 255)']
-        ]
-    }
-});
-
-addStyle('Use point colors', {
-    color : '${COLOR} * ${temperature} + rgb(128,128,128)'
-});
-
-addStyle('Use point positions', {
-    show : '${POSITION}[0] > 0.5 || ${POSITION}[1] > 0.5 || ${POSITION}[2] > 0.5'
-});
-
-// POSITION contains 0 as its last component, so add 1.0 to make the point cloud opaque
-addStyle('Color based on position', {
-    color : 'vec4(${POSITION}, 1.0)'
-});
-
-addStyle('Style point size', {
-    color : "color('red')",
-    pointSize : '${temperature} * 10'
-});
-
-addStyle('Multiple defines', {
-    defines : {
-        length : 'length(${POSITION})',
-        time : '${tiles3d_tileset_time} * 3.0'
-    },
-    color : {
-        conditions : [
-            ['${length} < 0.5', "${length} * color('red')"],
-            ['${length} < 1.0', 'vec4(vec3(${temperature} * fract(${time})), 1.0)'],
-            ['true', '${COLOR}']
-        ]
-    },
-    pointSize : '5.0 - ${length} * 2.0',
-    show : '${length} < 2.0'
-});
-
-function setStyle(style) {
-    return function() {
-        tileset.style = new Cesium.Cesium3DTileStyle(style);
-    };
-}
-
-var styleOptions = [];
-for (var i = 0; i < styles.length; ++i) {
-    var style = styles[i];
-    styleOptions.push({
-        text : style.name,
-        onselect : setStyle(style.style)
-    });
-}
-
-Sandcastle.addToolbarMenu(styleOptions);
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

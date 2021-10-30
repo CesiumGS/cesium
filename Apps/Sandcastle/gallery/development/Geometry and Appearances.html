@@ -1,996 +1,1289 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Demonstates the wide variety of available Geometry and Appearances.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Demonstates the wide variety of available Geometry and Appearances."
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-Cesium.Math.setRandomNumberSeed(1234);
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var primitives = scene.primitives;
-var solidWhite = Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE);
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        Cesium.Math.setRandomNumberSeed(1234);
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+        var primitives = scene.primitives;
+        var solidWhite = Cesium.ColorGeometryInstanceAttribute.fromColor(
+          Cesium.Color.WHITE
+        );
 
-// Combine instances for a rectangle, polygon, ellipse, and circle into a single primitive.
+        // Combine instances for a rectangle, polygon, ellipse, and circle into a single primitive.
 
-var rectangle = Cesium.Rectangle.fromDegrees(-92.0, 20.0, -86.0, 27.0);
-var rectangleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : rectangle,
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-        stRotation : Cesium.Math.toRadians(45)
-    })
-});
-var rectangleOutlineInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleOutlineGeometry({
-        rectangle : rectangle
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        var rectangle = Cesium.Rectangle.fromDegrees(-92.0, 20.0, -86.0, 27.0);
+        var rectangleInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleGeometry({
+            rectangle: rectangle,
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+            stRotation: Cesium.Math.toRadians(45),
+          }),
+        });
+        var rectangleOutlineInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleOutlineGeometry({
+            rectangle: rectangle,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
 
-var positions = Cesium.Cartesian3.fromDegreesArray([
-    -107.0, 27.0,
-    -107.0, 22.0,
-    -102.0, 23.0,
-    -97.0, 21.0,
-    -97.0, 25.0
-]);
+        var positions = Cesium.Cartesian3.fromDegreesArray([
+          -107.0,
+          27.0,
+          -107.0,
+          22.0,
+          -102.0,
+          23.0,
+          -97.0,
+          21.0,
+          -97.0,
+          25.0,
+        ]);
 
-var polygonInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonGeometry.fromPositions({
-        positions : positions,
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
-var polygonOutlineInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonOutlineGeometry.fromPositions({
-        positions : positions
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        var polygonInstance = new Cesium.GeometryInstance({
+          geometry: Cesium.PolygonGeometry.fromPositions({
+            positions: positions,
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+        var polygonOutlineInstance = new Cesium.GeometryInstance({
+          geometry: Cesium.PolygonOutlineGeometry.fromPositions({
+            positions: positions,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
 
-var center = Cesium.Cartesian3.fromDegrees(-80.0, 25.0);
-var semiMinorAxis = 300000.0;
-var semiMajorAxis = 500000.0;
-var rotation = Cesium.Math.toRadians(-40.0);
-var ellipseInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.EllipseGeometry({
-        center : center,
-        semiMinorAxis : semiMinorAxis,
-        semiMajorAxis : semiMajorAxis,
-        rotation : rotation,
-        stRotation : Cesium.Math.toRadians(22),
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
-var ellipseOutlineInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.EllipseOutlineGeometry({
-        center : center,
-        semiMinorAxis : semiMinorAxis,
-        semiMajorAxis : semiMajorAxis,
-        rotation : rotation
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        var center = Cesium.Cartesian3.fromDegrees(-80.0, 25.0);
+        var semiMinorAxis = 300000.0;
+        var semiMajorAxis = 500000.0;
+        var rotation = Cesium.Math.toRadians(-40.0);
+        var ellipseInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.EllipseGeometry({
+            center: center,
+            semiMinorAxis: semiMinorAxis,
+            semiMajorAxis: semiMajorAxis,
+            rotation: rotation,
+            stRotation: Cesium.Math.toRadians(22),
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+        var ellipseOutlineInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.EllipseOutlineGeometry({
+            center: center,
+            semiMinorAxis: semiMinorAxis,
+            semiMajorAxis: semiMajorAxis,
+            rotation: rotation,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
 
-center = Cesium.Cartesian3.fromDegrees(-72.0, 25.0);
-var radius = 250000.0;
-var circleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.CircleGeometry({
-        center : center,
-        radius : radius,
-        stRotation : Cesium.Math.toRadians(90),
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
-var circleOutlineInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.CircleOutlineGeometry({
-        center : center,
-        radius : radius
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        center = Cesium.Cartesian3.fromDegrees(-72.0, 25.0);
+        var radius = 250000.0;
+        var circleInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.CircleGeometry({
+            center: center,
+            radius: radius,
+            stRotation: Cesium.Math.toRadians(90),
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+        var circleOutlineInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.CircleOutlineGeometry({
+            center: center,
+            radius: radius,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
 
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [rectangleInstance, polygonInstance, ellipseInstance, circleInstance],
-    appearance : new Cesium.EllipsoidSurfaceAppearance({
-        material : Cesium.Material.fromType('Stripe')
-    })
-}));
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [rectangleOutlineInstance, polygonOutlineInstance, ellipseOutlineInstance, circleOutlineInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              rectangleInstance,
+              polygonInstance,
+              ellipseInstance,
+              circleInstance,
+            ],
+            appearance: new Cesium.EllipsoidSurfaceAppearance({
+              material: Cesium.Material.fromType("Stripe"),
+            }),
+          })
+        );
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              rectangleOutlineInstance,
+              polygonOutlineInstance,
+              ellipseOutlineInstance,
+              circleOutlineInstance,
+            ],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: false,
+              renderState: {
+                lineWidth: Math.min(4.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
+
+        // Create extruded rectangle
+        rectangle = Cesium.Rectangle.fromDegrees(-118.0, 38.0, -116.0, 40.0);
+        var extrudedHeight = 500000.0;
+        var extrudedRectangle = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleGeometry({
+            rectangle: rectangle,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+
+        var extrudedOutlineRectangle = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleOutlineGeometry({
+            rectangle: rectangle,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
+
+        // Create extruded ellipse
+        center = Cesium.Cartesian3.fromDegrees(-117.0, 35.0);
+        semiMinorAxis = 100000.0;
+        semiMajorAxis = 200000.0;
+        rotation = Cesium.Math.toRadians(90);
+        var height = 100000.0;
+        extrudedHeight = 200000.0;
+        var extrudedEllipse = new Cesium.GeometryInstance({
+          geometry: new Cesium.EllipseGeometry({
+            center: center,
+            semiMinorAxis: semiMinorAxis,
+            semiMajorAxis: semiMajorAxis,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: height,
+            rotation: rotation,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+        var extrudedOutlineEllipse = new Cesium.GeometryInstance({
+          geometry: new Cesium.EllipseOutlineGeometry({
+            center: center,
+            semiMinorAxis: semiMinorAxis,
+            semiMajorAxis: semiMajorAxis,
+            height: height,
+            rotation: rotation,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
+
+        // Create extruded polygon
+        var polygonHierarchy = {
+          positions: Cesium.Cartesian3.fromDegreesArray([
+            -118.0,
+            30.0,
+            -115.0,
+            30.0,
+            -117.1,
+            31.1,
+            -118.0,
+            33.0,
+          ]),
+        };
+        height = 300000.0;
+        extrudedHeight = 700000.0;
+        var extrudedPolygon = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: polygonHierarchy,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            extrudedHeight: extrudedHeight,
+            height: height,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+        var extrudedOutlinePolygon = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonOutlineGeometry({
+            polygonHierarchy: polygonHierarchy,
+            extrudedHeight: extrudedHeight,
+            height: height,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
+
+        // cylinder
+        var length = 200000.0;
+        var topRadius = 150000.0;
+        var bottomRadius = 150000.0;
+        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+          Cesium.Transforms.eastNorthUpToFixedFrame(
+            Cesium.Cartesian3.fromDegrees(-70.0, 45.0)
+          ),
+          new Cesium.Cartesian3(0.0, 0.0, 100000.0),
+          new Cesium.Matrix4()
+        );
+        var cylinderInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.CylinderGeometry({
+            length: length,
+            topRadius: topRadius,
+            bottomRadius: bottomRadius,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          modelMatrix: modelMatrix,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+        var cylinderOutlineInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.CylinderOutlineGeometry({
+            length: length,
+            topRadius: topRadius,
+            bottomRadius: bottomRadius,
+          }),
+          modelMatrix: modelMatrix,
+          attributes: {
+            color: solidWhite,
+          },
+        });
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              extrudedPolygon,
+              extrudedRectangle,
+              extrudedEllipse,
+              cylinderInstance,
+            ],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+          })
+        );
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              extrudedOutlineRectangle,
+              extrudedOutlineEllipse,
+              extrudedOutlinePolygon,
+              cylinderOutlineInstance,
+            ],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: false,
+              renderState: {
+                lineWidth: Math.min(4.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
+
+        // Create box and ellipsoid boxes, and use the instance's
+        // modelMatrix to scale and position them.
+        var dimensions = new Cesium.Cartesian3(1.0, 1.0, 1.0);
+        var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          dimensions: dimensions,
+        });
+        var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
+          dimensions: dimensions,
+        });
+
+        var radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
+        var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          radii: radii,
+        });
+
+        var ellipsoidOutlineGeometry = new Cesium.EllipsoidOutlineGeometry({
+          radii: radii,
+          stackPartitions: 6,
+          slicePartitions: 5,
+        });
+
+        radius = 0.75;
+        var sphereGeometry = new Cesium.SphereGeometry({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          radius: radius,
+        });
+
+        var sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
+          radius: radius,
+          stackPartitions: 6,
+          slicePartitions: 5,
+        });
+
+        var instances = [];
+        var outlineInstances = [];
+        var i;
+        var boxModelMatrix, ellipsoidModelMatrix, sphereModelMatrix;
+        for (i = 0; i < 5; ++i) {
+          height = 100000.0 + 200000.0 * i;
+          boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-106.0, 45.0)
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, height),
+              new Cesium.Matrix4()
+            ),
+            90000.0,
+            new Cesium.Matrix4()
+          );
+          ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-102.0, 45.0)
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, height),
+              new Cesium.Matrix4()
+            ),
+            90000.0,
+            new Cesium.Matrix4()
+          );
+          sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-98.0, 45.0)
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, height),
+              new Cesium.Matrix4()
+            ),
+            90000.0,
+            new Cesium.Matrix4()
+          );
+
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: boxGeometry,
+              modelMatrix: boxModelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 1.0 })
+                ),
+              },
+            })
+          );
+          outlineInstances.push(
+            new Cesium.GeometryInstance({
+              geometry: boxOutlineGeometry,
+              modelMatrix: boxModelMatrix,
+              attributes: {
+                color: solidWhite,
+              },
+            })
+          );
+
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: ellipsoidGeometry,
+              modelMatrix: ellipsoidModelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 1.0 })
+                ),
+              },
+            })
+          );
+          outlineInstances.push(
+            new Cesium.GeometryInstance({
+              geometry: ellipsoidOutlineGeometry,
+              modelMatrix: ellipsoidModelMatrix,
+              attributes: {
+                color: solidWhite,
+              },
+            })
+          );
+
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: sphereGeometry,
+              modelMatrix: sphereModelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 1.0 })
+                ),
+              },
+            })
+          );
+          outlineInstances.push(
+            new Cesium.GeometryInstance({
+              geometry: sphereOutlineGeometry,
+              modelMatrix: sphereModelMatrix,
+              attributes: {
+                color: solidWhite,
+              },
+            })
+          );
         }
-    })
-}));
 
-// Create extruded rectangle
-rectangle = Cesium.Rectangle.fromDegrees(-118.0, 38.0, -116.0, 40.0);
-var extrudedHeight = 500000.0;
-var extrudedRectangle = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : rectangle,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: instances,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+          })
+        );
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: outlineInstances,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: false,
+              renderState: {
+                lineWidth: Math.min(4.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
 
-var extrudedOutlineRectangle = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleOutlineGeometry({
-        rectangle : rectangle,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        // Create a single wall
+        positions = Cesium.Cartesian3.fromDegreesArray([
+          -95.0,
+          50.0,
+          -85.0,
+          50.0,
+          -75.0,
+          50.0,
+        ]);
+        var maximumHeights = [500000, 1000000, 500000];
+        var minimumHeights = [0, 500000, 0];
 
-// Create extruded ellipse
-center = Cesium.Cartesian3.fromDegrees(-117.0, 35.0);
-semiMinorAxis = 100000.0;
-semiMajorAxis = 200000.0;
-rotation = Cesium.Math.toRadians(90);
-var height = 100000.0;
-extrudedHeight = 200000.0;
-var extrudedEllipse = new Cesium.GeometryInstance({
-    geometry : new Cesium.EllipseGeometry({
-        center : center,
-        semiMinorAxis : semiMinorAxis,
-        semiMajorAxis : semiMajorAxis,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        height : height,
-        rotation : rotation,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-var extrudedOutlineEllipse = new Cesium.GeometryInstance({
-    geometry : new Cesium.EllipseOutlineGeometry({
-        center : center,
-        semiMinorAxis : semiMinorAxis,
-        semiMajorAxis : semiMajorAxis,
-        height : height,
-        rotation : rotation,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        var wallInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.WallGeometry({
+            positions: positions,
+            maximumHeights: maximumHeights,
+            minimumHeights: minimumHeights,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 0.7 })
+            ),
+          },
+        });
 
-// Create extruded polygon
-var polygonHierarchy = {
-    positions : Cesium.Cartesian3.fromDegreesArray([
-        -118.0, 30.0,
-        -115.0, 30.0,
-        -117.1, 31.1,
-        -118.0, 33.0
-    ])
-};
-height = 300000.0;
-extrudedHeight = 700000.0;
-var extrudedPolygon = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonGeometry({
-        polygonHierarchy : polygonHierarchy,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        extrudedHeight : extrudedHeight,
-        height : height
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-var extrudedOutlinePolygon = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonOutlineGeometry({
-        polygonHierarchy : polygonHierarchy,
-        extrudedHeight : extrudedHeight,
-        height : height
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
+        var wallOutlineInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.WallOutlineGeometry({
+            positions: positions,
+            maximumHeights: maximumHeights,
+            minimumHeights: minimumHeights,
+          }),
+          attributes: {
+            color: new Cesium.ColorGeometryInstanceAttribute(
+              0.7,
+              0.7,
+              0.7,
+              1.0
+            ),
+          },
+        });
 
-// cylinder
-var length = 200000.0;
-var topRadius = 150000.0;
-var bottomRadius = 150000.0;
-var modelMatrix = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-    Cesium.Cartesian3.fromDegrees(-70.0, 45.0)),
-    new Cesium.Cartesian3(0.0, 0.0, 100000.0), new Cesium.Matrix4());
-var cylinderInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.CylinderGeometry({
-        length : length,
-        topRadius : topRadius,
-        bottomRadius : bottomRadius,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    modelMatrix : modelMatrix,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-var cylinderOutlineInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.CylinderOutlineGeometry({
-        length : length,
-        topRadius : topRadius,
-        bottomRadius : bottomRadius
-    }),
-    modelMatrix : modelMatrix,
-    attributes : {
-        color : solidWhite
-    }
-});
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: wallInstance,
+            appearance: new Cesium.PerInstanceColorAppearance(),
+          })
+        );
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: wallOutlineInstance,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: false,
+              renderState: {
+                lineWidth: Math.min(4.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
 
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [extrudedPolygon, extrudedRectangle, extrudedEllipse, cylinderInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : true
-    })
-}));
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [extrudedOutlineRectangle, extrudedOutlineEllipse, extrudedOutlinePolygon, cylinderOutlineInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
+        rectangle = Cesium.Rectangle.fromDegrees(-92.0, 30.0, -85.0, 40.0);
+        rectangleInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleGeometry({
+            rectangle: rectangle,
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+
+        polygonHierarchy = {
+          positions: Cesium.Cartesian3.fromDegreesArray([
+            -109.0,
+            30.0,
+            -95.0,
+            30.0,
+            -95.0,
+            40.0,
+            -109.0,
+            40.0,
+          ]),
+          holes: [
+            {
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -107.0,
+                31.0,
+                -107.0,
+                39.0,
+                -97.0,
+                39.0,
+                -97.0,
+                31.0,
+              ]),
+              holes: [
+                {
+                  positions: Cesium.Cartesian3.fromDegreesArray([
+                    -105.0,
+                    33.0,
+                    -99.0,
+                    33.0,
+                    -99.0,
+                    37.0,
+                    -105.0,
+                    37.0,
+                  ]),
+                  holes: [
+                    {
+                      positions: Cesium.Cartesian3.fromDegreesArray([
+                        -103.0,
+                        34.0,
+                        -101.0,
+                        34.0,
+                        -101.0,
+                        36.0,
+                        -103.0,
+                        36.0,
+                      ]),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+        polygonInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: polygonHierarchy,
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+
+        center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
+        semiMinorAxis = 200000.0;
+        semiMajorAxis = 500000.0;
+        rotation = Cesium.Math.toRadians(30.0);
+        ellipseInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.EllipseGeometry({
+            center: center,
+            semiMinorAxis: semiMinorAxis,
+            semiMajorAxis: semiMajorAxis,
+            rotation: rotation,
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+
+        center = Cesium.Cartesian3.fromDegrees(-72.0, 35.0);
+        radius = 200000.0;
+        circleInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.CircleGeometry({
+            center: center,
+            radius: radius,
+            vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+          }),
+        });
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              rectangleInstance,
+              polygonInstance,
+              ellipseInstance,
+              circleInstance,
+            ],
+            appearance: new Cesium.EllipsoidSurfaceAppearance({
+              material: Cesium.Material.fromType("Stripe"),
+            }),
+          })
+        );
+
+        // Create extruded rectangle
+        rectangle = Cesium.Rectangle.fromDegrees(-110.0, 38.0, -107.0, 40.0);
+        height = 700000.0;
+        extrudedHeight = 1000000.0;
+        rotation = Cesium.Math.toRadians(45.0);
+        extrudedRectangle = new Cesium.GeometryInstance({
+          geometry: new Cesium.RectangleGeometry({
+            rectangle: rectangle,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: height,
+            rotation: rotation,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+
+        // Create extruded ellipse
+        center = Cesium.Cartesian3.fromDegrees(-110.0, 35.0);
+        semiMinorAxis = 100000.0;
+        semiMajorAxis = 200000.0;
+        rotation = Cesium.Math.toRadians(-40.0);
+        height = 300000.0;
+        extrudedHeight = 700000.0;
+        extrudedEllipse = new Cesium.GeometryInstance({
+          geometry: new Cesium.EllipseGeometry({
+            center: center,
+            semiMinorAxis: semiMinorAxis,
+            semiMajorAxis: semiMajorAxis,
+            rotation: rotation,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: height,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+
+        // Create extruded polygon
+        polygonHierarchy = {
+          positions: Cesium.Cartesian3.fromDegreesArray([
+            -113.0,
+            30.0,
+            -110.0,
+            30.0,
+            -110.0,
+            33.0,
+            -111.5,
+            31.0,
+            -113.0,
+            33.0,
+          ]),
+        };
+        extrudedHeight = 300000.0;
+        extrudedPolygon = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: polygonHierarchy,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            extrudedHeight: extrudedHeight,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+
+        // cylinder
+        length = 400000.0;
+        topRadius = 0.0;
+        bottomRadius = 200000.0;
+        modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+          Cesium.Transforms.eastNorthUpToFixedFrame(
+            Cesium.Cartesian3.fromDegrees(-70.0, 40.0)
+          ),
+          new Cesium.Cartesian3(0.0, 0.0, 200000.0),
+          new Cesium.Matrix4()
+        );
+        cylinderInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.CylinderGeometry({
+            length: length,
+            topRadius: topRadius,
+            bottomRadius: bottomRadius,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          modelMatrix: modelMatrix,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              extrudedPolygon,
+              extrudedRectangle,
+              extrudedEllipse,
+              cylinderInstance,
+            ],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+          })
+        );
+
+        // Combine instances each with a unique color.
+        // We can combine heterogeneous geometries as we
+        // do here as long as vertex formats match.
+        instances = [];
+
+        center = Cesium.Cartesian3.fromDegrees(-65.0, 35.0);
+        radius = 200000.0;
+        rectangle = Cesium.Rectangle.fromDegrees(-67.0, 27.0, -63.0, 32.0);
+        for (i = 0; i < 5; ++i) {
+          height = 200000.0 * i;
+
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: new Cesium.CircleGeometry({
+                center: center,
+                radius: radius,
+                height: height,
+                vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+              }),
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 0.5 })
+                ),
+              },
+            })
+          );
+
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: new Cesium.RectangleGeometry({
+                rectangle: rectangle,
+                height: height,
+                vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+              }),
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 0.5 })
+                ),
+              },
+            })
+          );
         }
-    })
-}));
 
-// Create box and ellipsoid boxes, and use the instance's
-// modelMatrix to scale and position them.
-var dimensions = new Cesium.Cartesian3(1.0, 1.0, 1.0);
-var boxGeometry = Cesium.BoxGeometry.fromDimensions({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    dimensions : dimensions
-});
-var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
-    dimensions : dimensions
-});
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: instances,
+            appearance: new Cesium.PerInstanceColorAppearance(),
+          })
+        );
 
-var radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
-var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    radii : radii
-});
+        // Create box and ellipsoid boxes, and use the instance's
+        // modelMatrix to scale and position them.
+        dimensions = new Cesium.Cartesian3(1.0, 1.0, 1.0);
+        boxGeometry = Cesium.BoxGeometry.fromDimensions({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          dimensions: dimensions,
+        });
 
-var ellipsoidOutlineGeometry = new Cesium.EllipsoidOutlineGeometry({
-    radii : radii,
-    stackPartitions : 6,
-    slicePartitions : 5
-});
+        radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
+        ellipsoidGeometry = new Cesium.EllipsoidGeometry({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          radii: radii,
+        });
 
-radius = 0.75;
-var sphereGeometry = new Cesium.SphereGeometry({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    radius : radius
-});
+        radius = 0.75;
+        sphereGeometry = new Cesium.SphereGeometry({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          radius: radius,
+        });
 
-var sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
-    radius : radius,
-    stackPartitions : 6,
-    slicePartitions : 5
-});
+        instances = [];
+        outlineInstances = [];
+        for (i = 0; i < 5; ++i) {
+          height = 100000.0 + 200000.0 * i;
+          boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-108.0, 45.0)
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, height),
+              new Cesium.Matrix4()
+            ),
+            90000.0,
+            new Cesium.Matrix4()
+          );
+          ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-104.0, 45.0)
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, height),
+              new Cesium.Matrix4()
+            ),
+            90000.0,
+            new Cesium.Matrix4()
+          );
+          sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByTranslation(
+              Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(-100.0, 45.0)
+              ),
+              new Cesium.Cartesian3(0.0, 0.0, height),
+              new Cesium.Matrix4()
+            ),
+            90000.0,
+            new Cesium.Matrix4()
+          );
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: boxGeometry,
+              modelMatrix: boxModelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 0.5 })
+                ),
+              },
+            })
+          );
 
-var instances = [];
-var outlineInstances = [];
-var i;
-var boxModelMatrix, ellipsoidModelMatrix, sphereModelMatrix;
-for (i = 0; i < 5; ++i) {
-    height = 100000.0 + (200000.0 * i);
-    boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-106.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
-    ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-102.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
-    sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-98.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: ellipsoidGeometry,
+              modelMatrix: ellipsoidModelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 0.5 })
+                ),
+              },
+            })
+          );
 
-    instances.push(new Cesium.GeometryInstance({
-        geometry : boxGeometry,
-        modelMatrix : boxModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+          instances.push(
+            new Cesium.GeometryInstance({
+              geometry: sphereGeometry,
+              modelMatrix: sphereModelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.fromRandom({ alpha: 0.5 })
+                ),
+              },
+            })
+          );
         }
-    }));
-    outlineInstances.push(new Cesium.GeometryInstance({
-        geometry : boxOutlineGeometry,
-        modelMatrix : boxModelMatrix,
-        attributes : {
-            color : solidWhite
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: instances,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: true,
+              closed: true,
+            }),
+          })
+        );
+
+        positions = [];
+        var colors = [];
+        for (i = 0; i < 40; ++i) {
+          positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 48.0));
+          colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
         }
-    }));
 
-    instances.push(new Cesium.GeometryInstance({
-        geometry : ellipsoidGeometry,
-        modelMatrix : ellipsoidModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.SimplePolylineGeometry({
+                positions: positions,
+                colors: colors,
+              }),
+            }),
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              renderState: {
+                // Override the appearance render state to change the
+                // line width on system's that support it (Linx/Mac).
+                lineWidth: Math.min(4.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
+
+        // create a polyline with a material
+        positions = [];
+        for (i = 0; i < 40; ++i) {
+          positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 15.0));
         }
-    }));
-    outlineInstances.push(new Cesium.GeometryInstance({
-        geometry : ellipsoidOutlineGeometry,
-        modelMatrix : ellipsoidModelMatrix,
-        attributes : {
-            color : solidWhite
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.PolylineGeometry({
+                positions: positions,
+                width: 10.0,
+                vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+              }),
+            }),
+            appearance: new Cesium.PolylineMaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.PolylineGlowType
+              ),
+            }),
+          })
+        );
+
+        // create a polyline with per segment colors
+        positions = [];
+        colors = [];
+        for (i = 0; i < 40; ++i) {
+          positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 12.0));
+          colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
         }
-    }));
 
-    instances.push(new Cesium.GeometryInstance({
-        geometry : sphereGeometry,
-        modelMatrix : sphereModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.PolylineGeometry({
+                positions: positions,
+                width: 10.0,
+                vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+                colors: colors,
+              }),
+            }),
+            appearance: new Cesium.PolylineColorAppearance(),
+          })
+        );
+
+        // create a polyline with per vertex colors
+        positions = [];
+        colors = [];
+        for (i = 0; i < 40; ++i) {
+          positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 9.0));
+          colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
         }
-    }));
-    outlineInstances.push(new Cesium.GeometryInstance({
-        geometry : sphereOutlineGeometry,
-        modelMatrix : sphereModelMatrix,
-        attributes : {
-            color : solidWhite
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.PolylineGeometry({
+                positions: positions,
+                width: 10.0,
+                vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+                colors: colors,
+                colorsPerVertex: true,
+              }),
+            }),
+            appearance: new Cesium.PolylineColorAppearance(),
+          })
+        );
+
+        // Create a single wall
+        positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+          -90.0,
+          43.0,
+          100000.0,
+          -87.5,
+          45.0,
+          100000.0,
+          -85.0,
+          43.0,
+          100000.0,
+          -87.5,
+          41.0,
+          100000.0,
+          -90.0,
+          43.0,
+          100000.0,
+        ]);
+
+        wallInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.WallGeometry({
+            positions: positions,
+          }),
+        });
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: wallInstance,
+            appearance: new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType("Checkerboard", {
+                repeat: new Cesium.Cartesian2(20.0, 6.0),
+              }),
+            }),
+          })
+        );
+
+        positions = Cesium.Cartesian3.fromDegreesArray([
+          -120.0,
+          45.0,
+          -125.0,
+          50.0,
+          -125.0,
+          55.0,
+        ]);
+        var width = 100000;
+
+        var corridor = new Cesium.GeometryInstance({
+          geometry: new Cesium.CorridorGeometry({
+            positions: positions,
+            width: width,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
+
+        var extrudedCorridor = new Cesium.GeometryInstance({
+          geometry: new Cesium.CorridorGeometry({
+            positions: positions,
+            width: width,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 300000,
+            extrudedHeight: 400000,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 0.7 })
+            ),
+          },
+        });
+
+        var corridorOutline = new Cesium.GeometryInstance({
+          geometry: new Cesium.CorridorOutlineGeometry({
+            positions: positions,
+            width: width,
+            height: 700000,
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
+
+        var corridorFill = new Cesium.GeometryInstance({
+          geometry: new Cesium.CorridorGeometry({
+            positions: positions,
+            width: width,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 700000,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 0.7 })
+            ),
+          },
+        });
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [corridor, extrudedCorridor, corridorFill],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: true,
+              closed: true,
+            }),
+          })
+        );
+
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: corridorOutline,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: false,
+              renderState: {
+                lineWidth: Math.min(4.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
+
+        function starPositions(arms, rOuter, rInner) {
+          var angle = Math.PI / arms;
+          var pos = [];
+          for (var i = 0; i < 2 * arms; i++) {
+            var r = i % 2 === 0 ? rOuter : rInner;
+            var p = new Cesium.Cartesian2(
+              Math.cos(i * angle) * r,
+              Math.sin(i * angle) * r
+            );
+            pos.push(p);
+          }
+          return pos;
         }
-    }));
-}
 
-primitives.add(new Cesium.Primitive({
-    geometryInstances : instances,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : true
-    })
-}));
-primitives.add(new Cesium.Primitive({
-    geometryInstances : outlineInstances,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-        }
-    })
-}));
+        positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+          -102.0,
+          15.0,
+          100000.0,
+          -105.0,
+          20.0,
+          200000.0,
+          -110.0,
+          20.0,
+          100000.0,
+        ]);
+        var polylineVolumeFill = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineVolumeGeometry({
+            polylinePositions: positions,
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            shapePositions: starPositions(7, 30000.0, 20000.0),
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
 
-// Create a single wall
-positions = Cesium.Cartesian3.fromDegreesArray([
-    -95.0, 50.0,
-    -85.0, 50.0,
-    -75.0, 50.0
-]);
-var maximumHeights = [500000, 1000000, 500000];
-var minimumHeights = [0, 500000, 0];
+        var polylineVolumeOutline = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineVolumeOutlineGeometry({
+            polylinePositions: positions,
+            shapePositions: starPositions(7, 30000.0, 20000.0),
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
 
-var wallInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.WallGeometry({
-        positions : positions,
-        maximumHeights : maximumHeights,
-        minimumHeights : minimumHeights,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
-    }
-});
-
-var wallOutlineInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.WallOutlineGeometry({
-        positions : positions,
-        maximumHeights : maximumHeights,
-        minimumHeights : minimumHeights
-    }),
-    attributes : {
-        color : new Cesium.ColorGeometryInstanceAttribute(0.7, 0.7, 0.7, 1.0)
-    }
-});
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : wallInstance,
-    appearance : new Cesium.PerInstanceColorAppearance()
-}));
-primitives.add(new Cesium.Primitive({
-    geometryInstances : wallOutlineInstance,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-        }
-    })
-}));
-
-rectangle = Cesium.Rectangle.fromDegrees(-92.0, 30.0, -85.0, 40.0);
-rectangleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : rectangle,
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
-
-polygonHierarchy = {
-    positions : Cesium.Cartesian3.fromDegreesArray([
-        -109.0, 30.0,
-        -95.0, 30.0,
-        -95.0, 40.0,
-        -109.0, 40.0
-    ]),
-    holes : [{
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            -107.0, 31.0,
-            -107.0, 39.0,
-            -97.0, 39.0,
-            -97.0, 31.0
-        ]),
-        holes : [{
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                -105.0, 33.0,
-                -99.0, 33.0,
-                -99.0, 37.0,
-                -105.0, 37.0
+        var polylineVolume = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineVolumeGeometry({
+            polylinePositions: Cesium.Cartesian3.fromDegreesArray([
+              -102.0,
+              15.0,
+              -105.0,
+              20.0,
+              -110.0,
+              20.0,
             ]),
-            holes : [{
-                positions : Cesium.Cartesian3.fromDegreesArray([
-                    -103.0, 34.0,
-                    -101.0, 34.0,
-                    -101.0, 36.0,
-                    -103.0, 36.0
-                ])
-            }]
-        }]
-    }]
-};
-polygonInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonGeometry({
-        polygonHierarchy : polygonHierarchy,
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            shapePositions: starPositions(7, 30000, 20000),
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.fromRandom({ alpha: 1.0 })
+            ),
+          },
+        });
 
-center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
-semiMinorAxis = 200000.0;
-semiMajorAxis = 500000.0;
-rotation = Cesium.Math.toRadians(30.0);
-ellipseInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.EllipseGeometry({
-        center : center,
-        semiMinorAxis : semiMinorAxis,
-        semiMajorAxis : semiMajorAxis,
-        rotation : rotation,
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
-
-center = Cesium.Cartesian3.fromDegrees(-72.0, 35.0);
-radius = 200000.0;
-circleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.CircleGeometry({
-        center : center,
-        radius : radius,
-        vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-    })
-});
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [rectangleInstance, polygonInstance, ellipseInstance, circleInstance],
-    appearance : new Cesium.EllipsoidSurfaceAppearance({
-        material : Cesium.Material.fromType('Stripe')
-    })
-}));
-
-// Create extruded rectangle
-rectangle = Cesium.Rectangle.fromDegrees(-110.0, 38.0, -107.0, 40.0);
-height = 700000.0;
-extrudedHeight = 1000000.0;
-rotation = Cesium.Math.toRadians(45.0);
-extrudedRectangle = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : rectangle,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        height : height,
-        rotation : rotation,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-// Create extruded ellipse
-center = Cesium.Cartesian3.fromDegrees(-110.0, 35.0);
-semiMinorAxis = 100000.0;
-semiMajorAxis = 200000.0;
-rotation = Cesium.Math.toRadians(-40.0);
-height = 300000.0;
-extrudedHeight = 700000.0;
-extrudedEllipse = new Cesium.GeometryInstance({
-    geometry : new Cesium.EllipseGeometry({
-        center : center,
-        semiMinorAxis : semiMinorAxis,
-        semiMajorAxis : semiMajorAxis,
-        rotation : rotation,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        height : height,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-// Create extruded polygon
-polygonHierarchy = {
-    positions : Cesium.Cartesian3.fromDegreesArray([
-        -113.0, 30.0,
-        -110.0, 30.0,
-        -110.0, 33.0,
-        -111.5, 31.0,
-        -113.0, 33.0
-    ])
-};
-extrudedHeight = 300000.0;
-extrudedPolygon = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonGeometry({
-        polygonHierarchy : polygonHierarchy,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-// cylinder
-length = 400000.0;
-topRadius = 0.0;
-bottomRadius = 200000.0;
-modelMatrix = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-    Cesium.Cartesian3.fromDegrees(-70.0, 40.0)), new Cesium.Cartesian3(0.0, 0.0, 200000.0), new Cesium.Matrix4());
-cylinderInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.CylinderGeometry({
-        length : length,
-        topRadius : topRadius,
-        bottomRadius : bottomRadius,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    modelMatrix : modelMatrix,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [extrudedPolygon, extrudedRectangle, extrudedEllipse, cylinderInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : true
-    })
-}));
-
-// Combine instances each with a unique color.
-// We can combine heterogeneous geometries as we
-// do here as long as vertex formats match.
-instances = [];
-
-center = Cesium.Cartesian3.fromDegrees(-65.0, 35.0);
-radius = 200000.0;
-rectangle = Cesium.Rectangle.fromDegrees(-67.0, 27.0, -63.0, 32.0);
-for (i = 0; i < 5; ++i) {
-    height = 200000.0 * i;
-
-    instances.push(new Cesium.GeometryInstance({
-        geometry : new Cesium.CircleGeometry({
-            center : center,
-            radius : radius,
-            height : height,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
+        function computeCircle(radius) {
+          var positions = [];
+          for (var i = 0; i < 360; i++) {
+            var radians = Cesium.Math.toRadians(i);
+            positions.push(
+              new Cesium.Cartesian2(
+                radius * Math.cos(radians),
+                radius * Math.sin(radians)
+              )
+            );
+          }
+          return positions;
         }
-    }));
 
-    instances.push(new Cesium.GeometryInstance({
-        geometry : new Cesium.RectangleGeometry({
-            rectangle : rectangle,
-            height : height,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
-        }
-    }));
-}
+        var tubeGeometry = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineVolumeGeometry({
+            polylinePositions: Cesium.Cartesian3.fromDegreesArray([
+              -104.0,
+              13.0,
+              -107.0,
+              18.0,
+              -112.0,
+              18.0,
+            ]),
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            shapePositions: computeCircle(40000.0),
+          }),
+          attributes: {
+            color: solidWhite,
+          },
+        });
 
-primitives.add(new Cesium.Primitive({
-    geometryInstances : instances,
-    appearance : new Cesium.PerInstanceColorAppearance()
-}));
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              tubeGeometry,
+              polylineVolume,
+              polylineVolumeFill,
+            ],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+          })
+        );
 
-// Create box and ellipsoid boxes, and use the instance's
-// modelMatrix to scale and position them.
-dimensions = new Cesium.Cartesian3(1.0, 1.0, 1.0);
-boxGeometry = Cesium.BoxGeometry.fromDimensions({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    dimensions : dimensions
-});
-
-radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
-ellipsoidGeometry = new Cesium.EllipsoidGeometry({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    radii : radii
-});
-
-radius = 0.75;
-sphereGeometry = new Cesium.SphereGeometry({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    radius : radius
-});
-
-instances = [];
-outlineInstances = [];
-for (i = 0; i < 5; ++i) {
-    height = 100000.0 + (200000.0 * i);
-    boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-108.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
-    ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-104.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
-    sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-100.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
-    instances.push(new Cesium.GeometryInstance({
-        geometry : boxGeometry,
-        modelMatrix : boxModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
-        }
-    }));
-
-    instances.push(new Cesium.GeometryInstance({
-        geometry : ellipsoidGeometry,
-        modelMatrix : ellipsoidModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
-        }
-    }));
-
-    instances.push(new Cesium.GeometryInstance({
-        geometry : sphereGeometry,
-        modelMatrix : sphereModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
-        }
-    }));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : instances,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : true,
-        closed : true
-    })
-}));
-
-positions = [];
-var colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 48.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.SimplePolylineGeometry({
-            positions : positions,
-            colors : colors
-        })
-    }),
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            // Override the appearance render state to change the
-            // line width on system's that support it (Linx/Mac).
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-        }
-    })
-}));
-
-// create a polyline with a material
-positions = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 15.0));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
-        })
-    }),
-    appearance : new Cesium.PolylineMaterialAppearance({
-        material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType)
-    })
-}));
-
-// create a polyline with per segment colors
-positions = [];
-colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 12.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-            colors : colors
-        })
-    }),
-    appearance : new Cesium.PolylineColorAppearance()
-}));
-
-// create a polyline with per vertex colors
-positions = [];
-colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 9.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-            colors : colors,
-            colorsPerVertex : true
-        })
-    }),
-    appearance : new Cesium.PolylineColorAppearance()
-}));
-
-// Create a single wall
-positions = Cesium.Cartesian3.fromDegreesArrayHeights([
-    -90.0, 43.0, 100000.0,
-    -87.5, 45.0, 100000.0,
-    -85.0, 43.0, 100000.0,
-    -87.5, 41.0, 100000.0,
-    -90.0, 43.0, 100000.0
-]);
-
-wallInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.WallGeometry({
-        positions : positions
-    })
-});
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : wallInstance,
-    appearance : new Cesium.MaterialAppearance({
-        material : Cesium.Material.fromType('Checkerboard', {
-            repeat : new Cesium.Cartesian2(20.0, 6.0)
-        })
-    })
-}));
-
-positions = Cesium.Cartesian3.fromDegreesArray([
-    -120.0, 45.0,
-    -125.0, 50.0,
-    -125.0, 55.0
-]);
-var width = 100000;
-
-var corridor = new Cesium.GeometryInstance({
-    geometry : new Cesium.CorridorGeometry({
-        positions : positions,
-        width : width,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-var extrudedCorridor = new Cesium.GeometryInstance({
-    geometry : new Cesium.CorridorGeometry({
-        positions : positions,
-        width : width,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        height : 300000,
-        extrudedHeight : 400000
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
-    }
-});
-
-var corridorOutline = new Cesium.GeometryInstance({
-    geometry : new Cesium.CorridorOutlineGeometry({
-        positions : positions,
-        width : width,
-        height : 700000
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
-
-var corridorFill = new Cesium.GeometryInstance({
-    geometry : new Cesium.CorridorGeometry({
-        positions : positions,
-        width : width,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        height : 700000
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
-    }
-});
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [corridor, extrudedCorridor, corridorFill],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : true,
-        closed : true
-    })
-}));
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : corridorOutline,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-        }
-    })
-}));
-
-function starPositions(arms, rOuter, rInner) {
-    var angle = Math.PI / arms;
-    var pos = [];
-    for ( var i = 0; i < 2 * arms; i++) {
-        var r = (i % 2) === 0 ? rOuter : rInner;
-        var p = new Cesium.Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
-        pos.push(p);
-    }
-    return pos;
-}
-
-positions = Cesium.Cartesian3.fromDegreesArrayHeights([
-    -102.0, 15.0, 100000.0,
-    -105.0, 20.0, 200000.0,
-    -110.0, 20.0, 100000.0
-]);
-var polylineVolumeFill = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeGeometry({
-        polylinePositions : positions,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        shapePositions : starPositions(7, 30000.0, 20000.0)
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-var polylineVolumeOutline = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeOutlineGeometry({
-        polylinePositions : positions,
-        shapePositions : starPositions(7, 30000.0, 20000.0)
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
-
-var polylineVolume = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeGeometry({
-        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-            -102.0, 15.0,
-            -105.0, 20.0,
-            -110.0, 20.0
-        ]),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        shapePositions : starPositions(7, 30000, 20000)
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-    }
-});
-
-function computeCircle(radius) {
-    var positions = [];
-    for (var i = 0; i < 360; i++) {
-        var radians = Cesium.Math.toRadians(i);
-        positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
-    }
-    return positions;
-}
-
-var tubeGeometry = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeGeometry({
-        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-            -104.0, 13.0,
-            -107.0, 18.0,
-            -112.0, 18.0
-        ]),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        shapePositions : computeCircle(40000.0)
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [tubeGeometry, polylineVolume, polylineVolumeFill],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : true
-    })
-}));
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : polylineVolumeOutline,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : 1.0
-        }
-    })
-}));
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: polylineVolumeOutline,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: false,
+              renderState: {
+                lineWidth: 1.0,
+              },
+            }),
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

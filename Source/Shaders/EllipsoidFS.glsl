@@ -31,9 +31,9 @@ vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
     czm_material material = czm_getMaterial(materialInput);
 
 #ifdef ONLY_SUN_LIGHTING
-    return czm_private_phong(normalize(positionToEyeEC), material);
+    return czm_private_phong(normalize(positionToEyeEC), material, czm_sunDirectionEC);
 #else
-    return czm_phong(normalize(positionToEyeEC), material);
+    return czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
 #endif
 }
 

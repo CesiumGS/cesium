@@ -38,7 +38,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
 
     // fade out water effect as specular map value decreases
-    material.alpha = specularMapValue;
+    material.alpha = mix(blendColor.a, baseWaterColor.a, specularMapValue) * specularMapValue;
 
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this

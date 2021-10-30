@@ -1,160 +1,355 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
     <title>Cesium Sandcastle</title>
-    <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/lib/codemirror.css">
-    <link rel="stylesheet" href="CesiumSandcastle.css">
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="https://cesium.com/cesium-logomark.svg"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="https://cesium.com/cesium-logomark-192.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://cesium.com/cesium-logomark-192.png"
+    />
+    <link
+      rel="mask-icon"
+      href="https://cesium.com/cesium-logomark-mask.svg"
+      color="rgb(15,98,105)"
+    />
+    <link
+      rel="stylesheet"
+      href="../../ThirdParty/codemirror-5.52.0/lib/codemirror.css"
+    />
+    <link rel="stylesheet" href="CesiumSandcastle.css" />
     <script>
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+      if (window.location.protocol === "file:") {
+        if (
+          confirm(
+            "You must host this app on a web server.\nSee contributor's guide for more info?"
+          )
+        ) {
+          window.location =
+            "https://github.com/CesiumGS/cesium/wiki/Contributor%27s-Guide";
         }
-    }
+      }
     </script>
-    <script src="../../ThirdParty/jshint-2.1.10/jshint.js"></script>
+    <script src="../../ThirdParty/jshint-2.11.0/jshint.js"></script>
 
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.10.4/dojo/dojo.js"></script>
+    <script
+      data-dojo-config="async: 1, tlmSiblingOfDojo: 0"
+      src="../../ThirdParty/dojo-release-1.10.4/dojo/dojo.js"
+    ></script>
 
     <script src="jsHintOptions.js"></script>
     <script src="gallery/gallery-index.js"></script>
     <script type="text/javascript" src="Sandcastle-helpers.js"></script>
     <script src="CesiumSandcastle.js"></script>
     <!-- Needed for autocomplete -->
-    <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/addon/hint/show-hint.css">
+    <link
+      rel="stylesheet"
+      href="../../ThirdParty/codemirror-5.52.0/addon/hint/show-hint.css"
+    />
     <!-- End of autocomplete -->
     <meta property="og:title" content="Cesium Sandcastle" />
-    <meta property="og:description" content="The Cesium Sandcastle provides an interactive environment for testing Cesium code." />
+    <meta
+      property="og:description"
+      content="The Cesium Sandcastle provides an interactive environment for testing Cesium code."
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/index.html" />
-    <meta property="og:image" content="https://cesiumjs.org/images/Sandcastle.png" />
+    <meta
+      property="og:url"
+      content="https://sandcastle.cesium.com/index.html"
+    />
+    <meta property="og:image" content="https://cesium.com/social-card.jpg" />
     <meta property="og:site_name" content="Cesium" />
     <meta property="fb:admins" content="1222088662,1322006496" />
-</head>
-<body class="claro">
+  </head>
+  <body class="claro">
     <div id="loading"><span>Loading...</span></div>
-    <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
-        <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
-            <div class="cesiumTitle"><a href="http://cesiumjs.org/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
-            <div id="buttonNew" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFile', showLabel: true">
-                New
+    <div
+      id="appLayout"
+      data-dojo-type="dijit.layout.BorderContainer"
+      data-dojo-props="design: 'headline', gutters: true, liveSplitters: true"
+    >
+      <div
+        id="toolbar"
+        data-dojo-type="dijit.Toolbar"
+        data-dojo-props="region: 'top'"
+      >
+        <div class="cesiumTitle">
+          <a href="http://cesium.com/" target="_blank"
+            ><img
+              src="./images/Cesium_Logo_Color_Overlay.png"
+              style="width: 118px"
+          /></a>
+        </div>
+        <div
+          id="buttonNew"
+          data-dojo-type="dijit.form.Button"
+          data-dojo-props="iconClass: 'dijitIconFile', showLabel: true"
+        >
+          New
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonRun"
+          data-dojo-type="dijit.form.Button"
+          data-dojo-props="iconClass: 'dijitIconFunction', showLabel: true"
+        >
+          Run (F8)
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonSuggest"
+          data-dojo-type="dijit.form.Button"
+          data-dojo-props="iconClass: 'dijitIconEdit', showLabel: true"
+        >
+          Suggest (Ctrl-Space)
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonInfo"
+          data-dojo-type="dijit.form.DropDownButton"
+          data-dojo-props="iconClass: 'dijitIconTask', showLabel: true"
+        >
+          <span>Info</span>
+          <div
+            id="dropDownInfo"
+            data-dojo-type="dijit.TooltipDialog"
+            data-dojo-props="class: 'popDownDialog'"
+          >
+            <div>
+              Description:<br />
+              <textarea
+                data-dojo-type="dijit.form.Textarea"
+                id="description"
+                data-dojo-props="trim:true"
+                style="width: 335px"
+              ></textarea>
             </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonRun" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFunction', showLabel: true">
-                Run (F8)
+            <br />
+            <div>
+              Labels:<br />
+              <textarea
+                data-dojo-type="dijit.form.Textarea"
+                id="label"
+                data-dojo-props="trim:true"
+                style="width: 335px"
+              ></textarea>
             </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonSuggest" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconEdit', showLabel: true">
-                Suggest (Ctrl-Space)
+          </div>
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonSaveAs"
+          data-dojo-type="dijit.form.DropDownButton"
+          data-dojo-props="iconClass: 'dijitIconSave', showLabel: true"
+        >
+          <span>Save As</span>
+          <div
+            id="dropDownSaveAs"
+            data-dojo-type="dijit.TooltipDialog"
+            data-dojo-props="class: 'popDownDialog'"
+          >
+            <p>
+              You must save the file to this folder:
+              <code>Apps/Sandcastle/gallery/*.html</code>
+            </p>
+            <p>
+              Some browsers require you to manually rename the saved file to a
+              <code>*.html</code> file.
+            </p>
+            <a
+              id="saveAsFile"
+              class="linkButton"
+              href="#"
+              download="cesiumDemo.html"
+            >
+              <span data-dojo-type="Sandcastle.LinkButton">
+                Save *.html file
+              </span>
+            </a>
+          </div>
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonShareDrop"
+          data-dojo-type="dijit.form.DropDownButton"
+          data-dojo-props="iconClass: 'shareIcon', showLabel: true"
+        >
+          <span>Share</span>
+          <div
+            id="dropDownShare"
+            data-dojo-type="dijit.TooltipDialog"
+            data-dojo-props="class: 'popDownDialog'"
+          >
+            Be sure to re-share if you make any changes.
+            <br />
+            <input id="shareUrl" type="text" size="35" value="" />
+            <button class="copyButton" data-clipboard-target="#shareUrl">
+              Copy
+            </button>
+          </div>
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonImportDrop"
+          data-dojo-type="dijit.form.DropDownButton"
+          data-dojo-props="iconClass: 'gitHubIcon', showLabel: true"
+        >
+          <span>Import Gist</span>
+          <div
+            id="dropDownImport"
+            data-dojo-type="dijit.TooltipDialog"
+            data-dojo-props="class: 'popDownDialog'"
+          >
+            <div>
+              Gist Id or Url:<br />
+              <textarea
+                data-dojo-type="dijit.form.Textarea"
+                id="gistId"
+                data-dojo-props="trim:true"
+                style="width: 335px"
+              ></textarea>
             </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonInfo" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitIconTask', showLabel: true">
-                <span>Info</span>
-                <div id="dropDownInfo" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
-                    <div>Description:<br/>
-                        <textarea data-dojo-type="dijit.form.Textarea" id="description"
-                            data-dojo-props="trim:true" style="width: 335px;"></textarea>
-                    </div>
-                    <br/>
-                    <div>Labels:<br/>
-                        <textarea data-dojo-type="dijit.form.Textarea" id="label"
-                            data-dojo-props="trim:true" style="width: 335px;"></textarea>
-                    </div>
-                </div>
+            <div id="buttonImport" data-dojo-type="dijit.form.Button">
+              Import
             </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonSaveAs" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitIconSave', showLabel: true">
-                <span>Save As</span>
-                <div id="dropDownSaveAs" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
-                    <p>You must save the file to this folder:
-                        <code>Apps/Sandcastle/gallery/*.html</code></p>
-                    <p>Some browsers require you to manually rename
-                        the saved file to a <code>*.html</code> file.</p>
-                    <a id="saveAsFile" class="linkButton" href="#" download="cesiumDemo.html">
-                        <span data-dojo-type="Sandcastle.LinkButton">
-                            Save *.html file
-                        </span>
-                    </a>
-                </div>
-            </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonShareDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'shareIcon', showLabel: true">
-                <span>Share</span>
-                <div id="dropDownShare" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
-                    Be sure to re-share if you make any changes.
-                    <br />
-                    <input id="shareUrl" type="text" size="35" value="">
-                    <button class="copyButton" data-clipboard-target="#shareUrl">Copy</button>
-                </div>
-            </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonImportDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'gitHubIcon', showLabel: true">
-                <span>Import Gist</span>
-                <div id="dropDownImport" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
-                    <div>Gist Id or Url:<br/>
-                        <textarea data-dojo-type="dijit.form.Textarea" id="gistId"
-                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
-                    </div>
-                    <div id="buttonImport" data-dojo-type="dijit.form.Button">Import</div>
-                </div>
-            </div>
-            <!--
+          </div>
+        </div>
+        <!--
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div id="buttonUpload" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconDocuments', showLabel: true">
                 Upload to Gallery...
             </div>
              -->
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonNewWindow" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconApplication', showLabel: true">
-                Open in New Window
-            </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonThumbnail" data-dojo-type="dijit.form.ToggleButton" data-dojo-props="iconClass: 'dijitEditorIcon dijitEditorIconInsertImage', showLabel: true">
-                View as Thumbnail
-            </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true"/>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonNewWindow"
+          data-dojo-type="dijit.form.Button"
+          data-dojo-props="iconClass: 'dijitIconApplication', showLabel: true"
+        >
+          Open in New Window
         </div>
-        <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true">
-            <script type='dojo/method' event='_onKeyDown'></script>
-            <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
-                <textarea id="code" name="code">// Select a demo from the gallery to load.
-                </textarea>
-            </div>
-            <div id="htmlContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'HTML body &amp; CSS'">
-                <textarea id="htmlBody" name="htmlBody">
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <div
+          id="buttonThumbnail"
+          data-dojo-type="dijit.form.ToggleButton"
+          data-dojo-props="iconClass: 'dijitEditorIcon dijitEditorIconInsertImage', showLabel: true"
+        >
+          View as Thumbnail
+        </div>
+        <span data-dojo-type="dijit.ToolbarSeparator"></span>
+        <input
+          data-dojo-type="dijit.form.TextBox"
+          type="text"
+          id="search"
+          name="search"
+          data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true"
+        />
+      </div>
+      <div
+        id="codeContainer"
+        data-dojo-type="dijit.layout.TabContainer"
+        data-dojo-props="region: 'leading', splitter: true"
+      >
+        <script type="dojo/method" event="_onKeyDown"></script>
+        <div
+          id="jsContainer"
+          data-dojo-type="dijit.layout.ContentPane"
+          data-dojo-props="title: 'JavaScript code'"
+        >
+          <textarea id="code" name="code">
+// Select a demo from the gallery to load.
+                </textarea
+          >
+        </div>
+        <div
+          id="htmlContainer"
+          data-dojo-type="dijit.layout.ContentPane"
+          data-dojo-props="title: 'HTML body &amp; CSS'"
+        >
+          <textarea id="htmlBody" name="htmlBody">
                     &lt;!--
                     Select a demo from the gallery to load.
                     --&gt;
-                </textarea>
-            </div>
+                </textarea
+          >
         </div>
-        <div id="cesiumContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center'">
-            <div id="bucketPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium ' + Cesium.VERSION">
-                <iframe id="bucketFrame" src="templates/bucket.html" class="fullFrame" allowfullscreen mozallowfullscreen webkitallowfullscreen></iframe>
-            </div>
+      </div>
+      <div
+        id="cesiumContainer"
+        data-dojo-type="dijit.layout.TabContainer"
+        data-dojo-props="region: 'center'"
+      >
+        <div
+          id="bucketPane"
+          data-dojo-type="dijit.layout.ContentPane"
+          data-dojo-props="title: 'Cesium ' + VERSION"
+        >
+          <iframe
+            id="bucketFrame"
+            src="templates/bucket.html"
+            class="fullFrame"
+            allowfullscreen
+            mozallowfullscreen
+            webkitallowfullscreen
+          ></iframe>
         </div>
-        <div id="bottomPanel" class="bottomPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'bottom', splitter: true">
-            <div id="innerPanel" class="bottomPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="title: 'Gallery', nested: true">
-                <div id="searchContainer" class="galleryContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Search Results'">
-                    <div id="searchResults" class="demosContainer">
-                        <div id="searchDemos" class="demos"></div>
-                    </div>
-                </div>
+      </div>
+      <div
+        id="bottomPanel"
+        class="bottomPanel"
+        data-dojo-type="dijit.layout.TabContainer"
+        data-dojo-props="region: 'bottom', splitter: true"
+      >
+        <div
+          id="innerPanel"
+          class="bottomPanel"
+          data-dojo-type="dijit.layout.TabContainer"
+          data-dojo-props="title: 'Gallery', nested: true"
+        >
+          <div
+            id="searchContainer"
+            class="galleryContainer"
+            data-dojo-type="dijit.layout.ContentPane"
+            data-dojo-props="title: 'Search Results'"
+          >
+            <div id="searchResults" class="demosContainer">
+              <div id="searchDemos" class="demos"></div>
             </div>
-            <div id="logContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Console'">
-                <div class="logContainer">
-                    <div id="logOutput"></div>
-                </div>
-            </div>
+          </div>
         </div>
+        <div
+          id="logContainer"
+          data-dojo-type="dijit.layout.ContentPane"
+          data-dojo-props="title: 'Console'"
+        >
+          <div class="logContainer">
+            <div id="logOutput"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="dijitTooltip dijitTooltipBelow" id="docPopup">
-        <div class="dijitTooltipContainer dijitTooltipContents" id="docPopupMessage"></div>
-        <div class="dijitTooltipConnector"></div>
+      <div
+        class="dijitTooltipContainer dijitTooltipContents"
+        id="docPopupMessage"
+      ></div>
+      <div class="dijitTooltipConnector"></div>
     </div>
-</body>
+  </body>
 </html>

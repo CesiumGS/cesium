@@ -1,89 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Custom per-feature post processing effect.">
-    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Custom per-feature post processing effect."
+    />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Post Processing"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
         });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate : true
-});
-var scene = viewer.scene;
+        var scene = viewer.scene;
 
-var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
-var url = '../../SampleData/models/CesiumMan/Cesium_Man.glb';
-var entity = viewer.trackedEntity = viewer.entities.add({
-    name : url,
-    position : position,
-    model : {
-        uri : url
-    }
-});
+        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
+        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        var entity = (viewer.trackedEntity = viewer.entities.add({
+          name: url,
+          position: position,
+          model: {
+            uri: url,
+          },
+        }));
 
-// Shade selected model with highlight.
-var fragmentShaderSource =
-    'uniform sampler2D colorTexture;\n' +
-    'varying vec2 v_textureCoordinates;\n' +
-    'uniform vec4 highlight;\n' +
-    'void main() {\n' +
-    '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
-    '    if (czm_selected()) {\n' +
-    '        vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;\n' +
-    '        gl_FragColor = vec4(highlighted, 1.0);\n' +
-    '    } else { \n' +
-    '        gl_FragColor = color;\n' +
-    '    }\n' +
- '}\n';
-var stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
-    fragmentShader : fragmentShaderSource,
-    uniforms : {
-        highlight : function() {
-            return new Cesium.Color(1.0, 0.0, 0.0, 0.5);
-        }
-    }
-}));
-stage.selected = [];
-
-var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-handler.setInputAction(function(movement) {
-    var pickedObject = viewer.scene.pick(movement.endPosition);
-    if (Cesium.defined(pickedObject)) {
-        stage.selected = [pickedObject.primitive];
-    } else {
+        // Shade selected model with highlight.
+        var fragmentShaderSource =
+          "uniform sampler2D colorTexture;\n" +
+          "varying vec2 v_textureCoordinates;\n" +
+          "uniform vec4 highlight;\n" +
+          "void main() {\n" +
+          "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
+          "    if (czm_selected()) {\n" +
+          "        vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;\n" +
+          "        gl_FragColor = vec4(highlighted, 1.0);\n" +
+          "    } else { \n" +
+          "        gl_FragColor = color;\n" +
+          "    }\n" +
+          "}\n";
+        var stage = scene.postProcessStages.add(
+          new Cesium.PostProcessStage({
+            fragmentShader: fragmentShaderSource,
+            uniforms: {
+              highlight: function () {
+                return new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+              },
+            },
+          })
+        );
         stage.selected = [];
-    }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (movement) {
+          var pickedObject = viewer.scene.pick(movement.endPosition);
+          if (Cesium.defined(pickedObject)) {
+            stage.selected = [pickedObject.primitive];
+          } else {
+            stage.selected = [];
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

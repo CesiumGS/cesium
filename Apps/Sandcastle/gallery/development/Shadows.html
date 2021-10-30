@@ -1,752 +1,1091 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Shadow maps.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Shadow maps." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-    #toolbar input[type=range] {
-        width : 70px;
-    }
-    #toolbar input {
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar input[type="range"] {
+        width: 70px;
+      }
+      #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
-    }
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <table><tbody>
-        <tr>
-            <td data-bind="style: { color: lightHorizonEnabled ? '' : 'gray'}">Light Horizon</td>
-            <td>
-                <input type="range" min="0" max="90" step="1.0" data-bind="value: lightHorizon, valueUpdate: 'input', enable: lightHorizonEnabled">
-                <input type="text" size="2" data-bind="value: lightHorizon, enable: lightHorizonEnabled">
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td data-bind="style: { color: lightHorizonEnabled ? '' : 'gray'}">
+              Light Horizon
             </td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: lightAngleEnabled ? '' : 'gray'}">Light Angle</td>
             <td>
-                <input type="range" min="0" max="360" step="1.0" data-bind="value: lightAngle, valueUpdate: 'input', enable: lightAngleEnabled">
-                <input type="text" size="2" data-bind="value: lightAngle, enable: lightAngleEnabled">
+              <input
+                type="range"
+                min="0"
+                max="90"
+                step="1.0"
+                data-bind="value: lightHorizon, valueUpdate: 'input', enable: lightHorizonEnabled"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: lightHorizon, enable: lightHorizonEnabled"
+              />
             </td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: distanceEnabled ? '' : 'gray'}">Distance Limit</td>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: lightAngleEnabled ? '' : 'gray'}">
+              Light Angle
+            </td>
             <td>
-                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input', enable: distanceEnabled">
-                <input type="text" size="2" data-bind="value: distance, enable: distanceEnabled">
+              <input
+                type="range"
+                min="0"
+                max="360"
+                step="1.0"
+                data-bind="value: lightAngle, valueUpdate: 'input', enable: lightAngleEnabled"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: lightAngle, enable: lightAngleEnabled"
+              />
             </td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: radiusEnabled ? '' : 'gray'}">Radius</td>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: distanceEnabled ? '' : 'gray'}">
+              Distance Limit
+            </td>
             <td>
-                <input type="range" min="10.0" max="1000.0" step="1.0" data-bind="value: radius, valueUpdate: 'input', enable: radiusEnabled">
-                <input type="text" size="2" data-bind="value: radius, enable: radiusEnabled">
+              <input
+                type="range"
+                min="100.0"
+                max="10000.0"
+                step="1.0"
+                data-bind="value: distance, valueUpdate: 'input', enable: distanceEnabled"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: distance, enable: distanceEnabled"
+              />
             </td>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: radiusEnabled ? '' : 'gray'}">
+              Radius
+            </td>
+            <td>
+              <input
+                type="range"
+                min="10.0"
+                max="1000.0"
+                step="1.0"
+                data-bind="value: radius, valueUpdate: 'input', enable: radiusEnabled"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: radius, enable: radiusEnabled"
+              />
+            </td>
+          </tr>
+          <tr>
             <td>Darkness</td>
             <td>
-                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: darkness, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: darkness">
+              <input
+                type="range"
+                min="0.0"
+                max="1.0"
+                step="0.01"
+                data-bind="value: darkness, valueUpdate: 'input'"
+              />
+              <input type="text" size="2" data-bind="value: darkness" />
             </td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">Cascades</td>
-            <td><select data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"/></td>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">
+              Cascades
+            </td>
+            <td>
+              <select
+                data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"
+              />
+            </td>
+          </tr>
+          <tr>
             <td>Light Source</td>
-            <td><select data-bind="options: lightSourceOptions, value: lightSource"/></td>
-        </tr>
-        <tr>
+            <td>
+              <select
+                data-bind="options: lightSourceOptions, value: lightSource"
+              />
+            </td>
+          </tr>
+          <tr>
             <td>Texture Size</td>
-            <td><select data-bind="options: sizeOptions, value: size"/></td>
-        </tr>
-        <tr>
+            <td><select data-bind="options: sizeOptions, value: size" /></td>
+          </tr>
+          <tr>
             <td>Shadows Enabled</td>
-            <td><input type="checkbox" data-bind="checked: shadows"/></td>
-        </tr>
-        <tr>
+            <td><input type="checkbox" data-bind="checked: shadows" /></td>
+          </tr>
+          <tr>
             <td>Terrain Enabled</td>
-            <td><input type="checkbox" data-bind="checked: terrain"/></td>
-        </tr>
-        <tr>
+            <td><input type="checkbox" data-bind="checked: terrain" /></td>
+          </tr>
+          <tr>
             <td>Show Globe</td>
-            <td><input type="checkbox" data-bind="checked: globe"/></td>
-        </tr>
-        <tr>
+            <td><input type="checkbox" data-bind="checked: globe" /></td>
+          </tr>
+          <tr>
             <td>Terrain Cast</td>
-            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
-        </tr>
-        <tr>
+            <td><input type="checkbox" data-bind="checked: terrainCast" /></td>
+          </tr>
+          <tr>
             <td>Terrain Receive</td>
-            <td><input type="checkbox" data-bind="checked: terrainReceive"/></td>
-        </tr>
-        <tr>
+            <td>
+              <input type="checkbox" data-bind="checked: terrainReceive" />
+            </td>
+          </tr>
+          <tr>
             <td>Show debug</td>
-            <td><input type="checkbox" data-bind="checked: debug"/></td>
-        </tr>
-        <tr>
+            <td><input type="checkbox" data-bind="checked: debug" /></td>
+          </tr>
+          <tr>
             <td>Freeze frame</td>
-            <td><input type="checkbox" data-bind="checked: freeze"/></td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: cascadeColorsEnabled ? '' : 'gray'}">Cascade colors</td>
-            <td><input type="checkbox" data-bind="checked: cascadeColors, enable: cascadeColorsEnabled"/></td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: fitNearFarEnabled ? '' : 'gray'}">Fit near/far</td>
-            <td><input type="checkbox" data-bind="checked: fitNearFar, enable: fitNearFarEnabled"/></td>
-        </tr>
-        <tr>
-            <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">Soft shadows</td>
-            <td><input type="checkbox" data-bind="checked: softShadows, enable: softShadowsEnabled"/></td>
-        </tr>
-        <tr>
+            <td><input type="checkbox" data-bind="checked: freeze" /></td>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: cascadeColorsEnabled ? '' : 'gray'}">
+              Cascade colors
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: cascadeColors, enable: cascadeColorsEnabled"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: fitNearFarEnabled ? '' : 'gray'}">
+              Fit near/far
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: fitNearFar, enable: fitNearFarEnabled"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">
+              Soft shadows
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: softShadows, enable: softShadowsEnabled"
+              />
+            </td>
+          </tr>
+          <tr>
             <td>Location</td>
-            <td><select data-bind="options: locationOptions, value: location"/></td>
-        </tr>
-        <tr>
+            <td>
+              <select data-bind="options: locationOptions, value: location" />
+            </td>
+          </tr>
+          <tr>
             <td>Model</td>
-            <td><select data-bind="options: modelOptions, value: model"/></td>
-        </tr>
-        <tr>
+            <td><select data-bind="options: modelOptions, value: model" /></td>
+          </tr>
+          <tr>
             <td>Model Position</td>
             <td>
-                <select data-bind="options: modelPositionOptions, value: modelPosition"/>
-                <input type="checkbox" data-bind="checked: grid"/>
-                <span>Grid</span>
+              <select
+                data-bind="options: modelPositionOptions, value: modelPosition"
+              />
+              <input type="checkbox" data-bind="checked: grid" />
+              <span>Grid</span>
             </td>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
             <td>Bias Mode</td>
-            <td><select data-bind="options: biasModes, optionsText : 'type', value: biasMode"/></td>
-        </tr>
-        <tr>
+            <td>
+              <select
+                data-bind="options: biasModes, optionsText : 'type', value: biasMode"
+              />
+            </td>
+          </tr>
+          <tr>
             <td>Polygon Offset</td>
             <td>
-                <input type="checkbox" data-bind="checked: biasMode.polygonOffset">
-                <input type="text" size="2" data-bind="value: biasMode.polygonOffsetFactor">
-                <input type="text" size="2" data-bind="value: biasMode.polygonOffsetUnits">
+              <input
+                type="checkbox"
+                data-bind="checked: biasMode.polygonOffset"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: biasMode.polygonOffsetFactor"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: biasMode.polygonOffsetUnits"
+              />
             </td>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
             <td>Normal Offset</td>
             <td>
-                <input type="checkbox" data-bind="checked: biasMode.normalOffset">
-                <input type="text" size="2" data-bind="value: biasMode.normalOffsetScale">
+              <input
+                type="checkbox"
+                data-bind="checked: biasMode.normalOffset"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: biasMode.normalOffsetScale"
+              />
             </td>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
             <td>Normal Shading</td>
             <td>
-                <input type="checkbox" data-bind="checked: biasMode.normalShading">
-                <input type="text" size="2" data-bind="value: biasMode.normalShadingSmooth">
+              <input
+                type="checkbox"
+                data-bind="checked: biasMode.normalShading"
+              />
+              <input
+                type="text"
+                size="2"
+                data-bind="value: biasMode.normalShadingSmooth"
+              />
             </td>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
             <td>Depth Bias</td>
             <td>
-                <input type="text" size="2" data-bind="value: biasMode.depthBias">
+              <input
+                type="text"
+                size="2"
+                data-bind="value: biasMode.depthBias"
+              />
             </td>
-        </tr>
-    </tbody></table>
-</div>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
 
-function BiasOptions(options) {
-    this.type = options.type;
-    this.polygonOffset = Cesium.knockout.observable(options.polygonOffset);
-    this.polygonOffsetFactor = Cesium.knockout.observable(options.polygonOffsetFactor);
-    this.polygonOffsetUnits = Cesium.knockout.observable(options.polygonOffsetUnits);
-    this.normalOffset = Cesium.knockout.observable(options.normalOffset);
-    this.normalOffsetScale = Cesium.knockout.observable(options.normalOffsetScale);
-    this.normalShading = Cesium.knockout.observable(options.normalShading);
-    this.normalShadingSmooth = Cesium.knockout.observable(options.normalShadingSmooth);
-    this.depthBias = Cesium.knockout.observable(options.depthBias);
-}
-
-var viewModel = {
-    lightAngle : 40.0,
-    lightAngleEnabled : true,
-    lightHorizon : 70.0,
-    lightHorizonEnabled : true,
-    distance : 10000.0,
-    distanceEnabled : true,
-    radius : 200.0,
-    radiusEnabled : true,
-    darkness : 0.3,
-    shadows : true,
-    terrain : true,
-    globe : true,
-    terrainCast : true,
-    terrainReceive : true,
-    debug : true,
-    freeze : false,
-    cascadeColors : false,
-    cascadeColorsEnabled : true,
-    fitNearFar : true,
-    fitNearFarEnabled : true,
-    softShadows : false,
-    softShadowsEnabled : true,
-    cascadeOptions : [1, 4],
-    cascades : 4,
-    cascadesEnabled : true,
-    lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point', 'Spot'],
-    lightSource : 'Freeform',
-    sizeOptions : [256, 512, 1024, 2048],
-    size : 1024,
-    modelOptions : ['Wood Tower', 'Cesium Air', 'Cesium Man', 'Transparent Box', 'Shadow Tester', 'Shadow Tester 2', 'Shadow Tester 3', 'Shadow Tester 4', 'Shadow Tester Point'],
-    model : 'Shadow Tester',
-    locationOptions : ['Exton', 'Everest', 'Pinnacle PA', 'Seneca Rocks', 'Half Dome', '3D Tiles'],
-    location : 'Pinnacle PA',
-    modelPositionOptions : ['Center', 'Ground', 'High', 'Higher', 'Space'],
-    modelPosition : 'Center',
-    grid : false,
-    biasModes : [
-        new BiasOptions({
-            type : 'terrain',
-            polygonOffset : true,
-            polygonOffsetFactor : 1.1,
-            polygonOffsetUnits : 4.0,
-            normalOffset : true,
-            normalOffsetScale : 0.5,
-            normalShading : true,
-            normalShadingSmooth : 0.3,
-            depthBias : 0.0001
-        }),
-        new BiasOptions({
-            type : 'primitive',
-            polygonOffset : true,
-            polygonOffsetFactor : 1.1,
-            polygonOffsetUnits : 4.0,
-            normalOffset : true,
-            normalOffsetScale : 0.1,
-            normalShading : true,
-            normalShadingSmooth : 0.05,
-            depthBias : 0.00001
-        }),
-        new BiasOptions({
-            type : 'point',
-            polygonOffset : false,
-            polygonOffsetFactor : 1.1,
-            polygonOffsetUnits : 4.0,
-            normalOffset : false,
-            normalOffsetScale : 0.0,
-            normalShading : true,
-            normalShadingSmooth : 0.1,
-            depthBias : 0.0005
-        })
-    ],
-    biasMode : Cesium.knockout.observable()
-};
-
-var uiOptions = {
-    all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
-    disable : {
-        'Freeform' : ['radius'],
-        'Sun' : ['lightHorizon', 'lightAngle', 'radius'],
-        'Fixed' : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'cascades', 'cascadeColors', 'fitNearFar'],
-        'Point' : ['lightHorizon', 'lightAngle', 'distance', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
-        'Spot' : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'cascades', 'cascadeColors', 'fitNearFar']
-    },
-    modelUrls : {
-        'Wood Tower' : '../../SampleData/models/WoodTower/Wood_Tower.gltf',
-        'Cesium Air' : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-        'Cesium Man' : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
-        'Transparent Box' : '../../SampleData/models/ShadowTester/Shadow_Transparent.gltf',
-        'Shadow Tester' : '../../SampleData/models/ShadowTester/Shadow_Tester.gltf',
-        'Shadow Tester 2' : '../../SampleData/models/ShadowTester/Shadow_Tester_2.gltf',
-        'Shadow Tester 3' : '../../SampleData/models/ShadowTester/Shadow_Tester_3.gltf',
-        'Shadow Tester 4' : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf',
-        'Shadow Tester Point' : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf'
-    },
-    locations : {
-        'Exton' : {
-            'centerLongitude' : -1.31968,
-            'centerLatitude' : 0.698874
-        },
-        'Everest' : {
-            'centerLongitude' : 1.517132688,
-            'centerLatitude' : 0.4884844964
-        },
-        'Pinnacle PA' : {
-            'centerLongitude' : -1.3324415110874286,
-            'centerLatitude' : 0.6954224325279967
-        },
-        'Seneca Rocks' : {
-            'centerLongitude' : -1.38519677,
-            'centerLatitude' : 0.67781497
-        },
-        'Half Dome' : {
-            'centerLongitude' : -2.0862479628,
-            'centerLatitude' : 0.6587902522
-        },
-        '3D Tiles' : {
-            'centerLongitude' : -1.31968,
-            'centerLatitude' : 0.698874,
-            'tileset' : '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+        function BiasOptions(options) {
+          this.type = options.type;
+          this.polygonOffset = Cesium.knockout.observable(
+            options.polygonOffset
+          );
+          this.polygonOffsetFactor = Cesium.knockout.observable(
+            options.polygonOffsetFactor
+          );
+          this.polygonOffsetUnits = Cesium.knockout.observable(
+            options.polygonOffsetUnits
+          );
+          this.normalOffset = Cesium.knockout.observable(options.normalOffset);
+          this.normalOffsetScale = Cesium.knockout.observable(
+            options.normalOffsetScale
+          );
+          this.normalShading = Cesium.knockout.observable(
+            options.normalShading
+          );
+          this.normalShadingSmooth = Cesium.knockout.observable(
+            options.normalShadingSmooth
+          );
+          this.depthBias = Cesium.knockout.observable(options.depthBias);
         }
-    }
-};
 
-Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'darkness').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateLocation);
-Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'terrainReceive').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateModels);
-Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateLocation);
-Cesium.knockout.getObservable(viewModel, 'grid').subscribe(updateModels);
-Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
-
-for (var i = 0; i < viewModel.biasModes.length; ++i) {
-    var biasMode = viewModel.biasModes[i];
-    biasMode.polygonOffset.subscribe(updateSettings);
-    biasMode.polygonOffsetFactor.subscribe(updateSettings);
-    biasMode.polygonOffsetUnits.subscribe(updateSettings);
-    biasMode.normalOffset.subscribe(updateSettings);
-    biasMode.normalOffsetScale.subscribe(updateSettings);
-    biasMode.normalShading.subscribe(updateSettings);
-    biasMode.normalShadingSmooth.subscribe(updateSettings);
-    biasMode.depthBias.subscribe(updateSettings);
-}
-
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    scene3DOnly : true,
-    infoBox : false,
-    selectionIndicator : false,
-    timeline : false
-});
-
-var offset = new Cesium.Cartesian3();
-var scene = viewer.scene;
-var freeformLightCamera = new Cesium.Camera(scene);
-
-function updateLightDirection() {
-    var location = uiOptions.locations[viewModel.location];
-    var center = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
-    var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
-    var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
-    offset.z = Math.cos(lightHorizon);
-    offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
-    offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
-
-    freeformLightCamera.lookAt(center, offset);
-}
-
-var context = scene.context;
-var camera = scene.camera;
-var globe = scene.globe;
-var shadowMap;
-
-function updateSettings() {
-    shadowMap.maximumDistance = Number(viewModel.distance);
-    shadowMap._pointLightRadius = Number(viewModel.radius);
-    shadowMap._fitNearFar = viewModel.fitNearFar;
-    shadowMap.darkness = viewModel.darkness;
-    shadowMap.debugShow = viewModel.debug;
-    shadowMap.debugFreezeFrame = viewModel.freeze;
-    shadowMap.enabled = viewModel.shadows;
-    shadowMap.size = viewModel.size;
-    shadowMap.debugCascadeColors = viewModel.cascadeColors;
-    shadowMap.softShadows = viewModel.softShadows;
-
-    // Update biases
-    for (var i = 0; i < viewModel.biasModes.length; ++i) {
-        var biasMode = viewModel.biasModes[i];
-        var bias = shadowMap['_' + biasMode.type + 'Bias'];
-        bias.polygonOffset = !shadowMap._isPointLight && shadowMap._polygonOffsetSupported && biasMode.polygonOffset();
-        bias.polygonOffsetFactor = biasMode.polygonOffsetFactor();
-        bias.polygonOffsetUnits = biasMode.polygonOffsetUnits();
-        bias.normalOffset = biasMode.normalOffset();
-        bias.normalOffsetScale = biasMode.normalOffsetScale();
-        bias.normalShading = biasMode.normalShading();
-        bias.normalShadingSmooth = biasMode.normalShadingSmooth();
-        bias.depthBias = biasMode.depthBias();
-    }
-
-    // Update render states for when polygon offset values change
-    shadowMap.debugCreateRenderStates();
-
-    // Force all derived commands to update
-    shadowMap.dirty = true;
-
-    globe.shadows = Cesium.ShadowMode.fromCastReceive(viewModel.terrainCast, viewModel.terrainReceive);
-    globe.show = viewModel.globe;
-    scene.skyAtmosphere.show = viewModel.globe;
-}
-
-var sunCamera = scene._sunCamera;
-var fixedLightCamera = new Cesium.Camera(scene);
-var pointLightCamera = new Cesium.Camera(scene);
-var spotLightCamera = new Cesium.Camera(scene);
-
-function updateShadows() {
-    var cascades = viewModel.cascades;
-    var lightSource = viewModel.lightSource;
-
-    var lightCamera;
-    if (lightSource === 'Freeform') {
-        lightCamera = freeformLightCamera;
-    } else if (lightSource === 'Sun') {
-        lightCamera = sunCamera;
-    }
-
-    var shadowOptions;
-
-    if (lightSource === 'Fixed') {
-        shadowOptions = {
-            context : context,
-            lightCamera : fixedLightCamera,
-            cascadesEnabled : false
+        var viewModel = {
+          lightAngle: 40.0,
+          lightAngleEnabled: true,
+          lightHorizon: 70.0,
+          lightHorizonEnabled: true,
+          distance: 10000.0,
+          distanceEnabled: true,
+          radius: 200.0,
+          radiusEnabled: true,
+          darkness: 0.3,
+          shadows: true,
+          terrain: true,
+          globe: true,
+          terrainCast: true,
+          terrainReceive: true,
+          debug: true,
+          freeze: false,
+          cascadeColors: false,
+          cascadeColorsEnabled: true,
+          fitNearFar: true,
+          fitNearFarEnabled: true,
+          softShadows: false,
+          softShadowsEnabled: true,
+          cascadeOptions: [1, 4],
+          cascades: 4,
+          cascadesEnabled: true,
+          lightSourceOptions: ["Freeform", "Sun", "Fixed", "Point", "Spot"],
+          lightSource: "Freeform",
+          sizeOptions: [256, 512, 1024, 2048],
+          size: 1024,
+          modelOptions: [
+            "Wood Tower",
+            "Cesium Air",
+            "Cesium Man",
+            "Transparent Box",
+            "Shadow Tester",
+            "Shadow Tester 2",
+            "Shadow Tester 3",
+            "Shadow Tester 4",
+            "Shadow Tester Point",
+          ],
+          model: "Shadow Tester",
+          locationOptions: [
+            "Exton",
+            "Everest",
+            "Pinnacle PA",
+            "Seneca Rocks",
+            "Half Dome",
+            "3D Tiles",
+          ],
+          location: "Pinnacle PA",
+          modelPositionOptions: ["Center", "Ground", "High", "Higher", "Space"],
+          modelPosition: "Center",
+          grid: false,
+          biasModes: [
+            new BiasOptions({
+              type: "terrain",
+              polygonOffset: true,
+              polygonOffsetFactor: 1.1,
+              polygonOffsetUnits: 4.0,
+              normalOffset: true,
+              normalOffsetScale: 0.5,
+              normalShading: true,
+              normalShadingSmooth: 0.3,
+              depthBias: 0.0001,
+            }),
+            new BiasOptions({
+              type: "primitive",
+              polygonOffset: true,
+              polygonOffsetFactor: 1.1,
+              polygonOffsetUnits: 4.0,
+              normalOffset: true,
+              normalOffsetScale: 0.1,
+              normalShading: true,
+              normalShadingSmooth: 0.05,
+              depthBias: 0.00001,
+            }),
+            new BiasOptions({
+              type: "point",
+              polygonOffset: false,
+              polygonOffsetFactor: 1.1,
+              polygonOffsetUnits: 4.0,
+              normalOffset: false,
+              normalOffsetScale: 0.0,
+              normalShading: true,
+              normalShadingSmooth: 0.1,
+              depthBias: 0.0005,
+            }),
+          ],
+          biasMode: Cesium.knockout.observable(),
         };
-    } else if (lightSource === 'Point') {
-        shadowOptions = {
-            context : context,
-            lightCamera : pointLightCamera,
-            isPointLight : true
-        };
-    } else if (lightSource === 'Spot') {
-        shadowOptions = {
-            context : context,
-            lightCamera : spotLightCamera,
-            cascadesEnabled : false
-        };
-    } else if (cascades === 4) {
-        shadowOptions = {
-            context : context,
-            lightCamera : lightCamera
-        };
-    } else if (cascades === 1) {
-        shadowOptions = {
-            context : context,
-            lightCamera : lightCamera,
-            numberOfCascades : 1
-        };
-    }
 
-    scene.shadowMap.destroy();
-    scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
+        var uiOptions = {
+          all: [
+            "lightHorizon",
+            "lightAngle",
+            "distance",
+            "radius",
+            "terrainCast",
+            "cascades",
+            "cascadeColors",
+            "fitNearFar",
+            "softShadows",
+          ],
+          disable: {
+            Freeform: ["radius"],
+            Sun: ["lightHorizon", "lightAngle", "radius"],
+            Fixed: [
+              "lightHorizon",
+              "lightAngle",
+              "distance",
+              "radius",
+              "cascades",
+              "cascadeColors",
+              "fitNearFar",
+            ],
+            Point: [
+              "lightHorizon",
+              "lightAngle",
+              "distance",
+              "cascades",
+              "cascadeColors",
+              "fitNearFar",
+              "softShadows",
+            ],
+            Spot: [
+              "lightHorizon",
+              "lightAngle",
+              "distance",
+              "radius",
+              "cascades",
+              "cascadeColors",
+              "fitNearFar",
+            ],
+          },
+          modelUrls: {
+            "Wood Tower": "../../SampleData/models/WoodTower/Wood_Tower.glb",
+            "Cesium Air": "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            "Cesium Man": "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+            "Transparent Box":
+              "../../SampleData/models/ShadowTester/Shadow_Transparent.glb",
+            "Shadow Tester":
+              "../../SampleData/models/ShadowTester/Shadow_Tester.glb",
+            "Shadow Tester 2":
+              "../../SampleData/models/ShadowTester/Shadow_Tester_2.glb",
+            "Shadow Tester 3":
+              "../../SampleData/models/ShadowTester/Shadow_Tester_3.glb",
+            "Shadow Tester 4":
+              "../../SampleData/models/ShadowTester/Shadow_Tester_4.glb",
+            "Shadow Tester Point":
+              "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
+          },
+          locations: {
+            Exton: {
+              centerLongitude: -1.31968,
+              centerLatitude: 0.698874,
+            },
+            Everest: {
+              centerLongitude: 1.517132688,
+              centerLatitude: 0.4884844964,
+            },
+            "Pinnacle PA": {
+              centerLongitude: -1.3324415110874286,
+              centerLatitude: 0.6954224325279967,
+            },
+            "Seneca Rocks": {
+              centerLongitude: -1.38519677,
+              centerLatitude: 0.67781497,
+            },
+            "Half Dome": {
+              centerLongitude: -2.0862479628,
+              centerLatitude: 0.6587902522,
+            },
+            "3D Tiles": {
+              centerLongitude: -1.31968,
+              centerLatitude: 0.698874,
+              tileset:
+                "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
+            },
+          },
+        };
 
-    shadowMap = scene.shadowMap;
-    shadowMap.enabled = true;
-    shadowMap.debugShow = true;
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        Cesium.knockout
+          .getObservable(viewModel, "lightAngle")
+          .subscribe(updateLightDirection);
+        Cesium.knockout
+          .getObservable(viewModel, "lightHorizon")
+          .subscribe(updateLightDirection);
+        Cesium.knockout
+          .getObservable(viewModel, "distance")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "radius")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "darkness")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "debug")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "freeze")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "shadows")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "terrain")
+          .subscribe(updateLocation);
+        Cesium.knockout
+          .getObservable(viewModel, "globe")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "terrainCast")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "terrainReceive")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "fitNearFar")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "cascadeColors")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "softShadows")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "cascades")
+          .subscribe(updateShadows);
+        Cesium.knockout
+          .getObservable(viewModel, "lightSource")
+          .subscribe(updateShadows);
+        Cesium.knockout
+          .getObservable(viewModel, "size")
+          .subscribe(updateSettings);
+        Cesium.knockout
+          .getObservable(viewModel, "model")
+          .subscribe(updateModels);
+        Cesium.knockout
+          .getObservable(viewModel, "modelPosition")
+          .subscribe(updateLocation);
+        Cesium.knockout
+          .getObservable(viewModel, "grid")
+          .subscribe(updateModels);
+        Cesium.knockout
+          .getObservable(viewModel, "location")
+          .subscribe(updateLocation);
 
-    updateSettings();
-    updateUI();
-}
-
-function updateUI() {
-    uiOptions.all.forEach(function(setting) {
-        if (uiOptions.disable[viewModel.lightSource].indexOf(setting) > -1) {
-            viewModel[setting + 'Enabled'] = false;
-        } else {
-            viewModel[setting + 'Enabled'] = true;
+        for (var i = 0; i < viewModel.biasModes.length; ++i) {
+          var biasMode = viewModel.biasModes[i];
+          biasMode.polygonOffset.subscribe(updateSettings);
+          biasMode.polygonOffsetFactor.subscribe(updateSettings);
+          biasMode.polygonOffsetUnits.subscribe(updateSettings);
+          biasMode.normalOffset.subscribe(updateSettings);
+          biasMode.normalOffsetScale.subscribe(updateSettings);
+          biasMode.normalShading.subscribe(updateSettings);
+          biasMode.normalShadingSmooth.subscribe(updateSettings);
+          biasMode.depthBias.subscribe(updateSettings);
         }
-    });
-}
 
-scene.debugShowFramesPerSecond = true;
-
-var cesiumTerrainProvider = Cesium.createWorldTerrain();
-
-var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
-
-updateLocation();
-
-function getModelPosition() {
-    if (viewModel.modelPosition === 'Ground') {
-        return 0.0;
-    } else if (viewModel.modelPosition === 'Center') {
-        return 50.0;
-    } else if (viewModel.modelPosition === 'High') {
-        return 5000.0;
-    } else if (viewModel.modelPosition === 'Higher') {
-        return 20000.0;
-    } else if (viewModel.modelPosition === 'Space') {
-        return 10000000.0;
-    }
-}
-
-function updateLocation() {
-    // Get the height of the terrain at the given longitude/latitude, then create the scene.
-    var location = uiOptions.locations[viewModel.location];
-    var positions = [new Cesium.Cartographic(location.centerLongitude, location.centerLatitude)];
-    var terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
-    globe.terrainProvider = terrainProvider;
-    var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
-    Cesium.when(promise, function(updatedPositions) {
-        location.height = updatedPositions[0].height + getModelPosition();
-        createScene();
-    });
-}
-
-function createScene() {
-    var location = uiOptions.locations[viewModel.location];
-    var center = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
-
-    var frustumSize = 55.0;
-    var frustumNear = 1.0;
-    var frustumFar = 400.0;
-    var frustum = new Cesium.OrthographicOffCenterFrustum();
-    frustum.left = -frustumSize;
-    frustum.right = frustumSize;
-    frustum.bottom = -frustumSize;
-    frustum.top = frustumSize;
-    frustum.near = frustumNear;
-    frustum.far = frustumFar;
-
-    fixedLightCamera.frustum = frustum;
-    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(30.0, 30.0, 50.0));
-
-    spotLightCamera.frustum.fov = Cesium.Math.PI_OVER_TWO;
-    spotLightCamera.frustum.aspectRatio = 1.0;
-    spotLightCamera.frustum.near = 1.0;
-    spotLightCamera.frustum.far = 500.0;
-    spotLightCamera.lookAt(center, new Cesium.Cartesian3(30.0, 30.0, 50.0));
-
-    pointLightCamera.position = center;
-
-    camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
-
-    updateLightDirection();
-    updateModels();
-    updateShadows();
-}
-
-function updateModels() {
-    scene.primitives.removeAll();
-
-    var location = uiOptions.locations[viewModel.location];
-    var centerLongitude = location.centerLongitude;
-    var centerLatitude = location.centerLatitude;
-    var height = location.height;
-
-    var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
-    var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
-    var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
-    var modelPosition = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
-
-    createModel(uiOptions.modelUrls[viewModel.model], modelPosition);
-    createBox(position3);
-    createBoxRTC(position2);
-    createSphere(position1);
-
-    if (Cesium.defined(location.tileset)) {
-        createTileset(location.tileset);
-    }
-
-    // Add a grid of models
-    if (viewModel.grid) {
-        var spacing = 0.00002;
-        var gridSize = 10;
-        for (var i = 0; i < gridSize * gridSize; ++i) {
-            var x = i % gridSize;
-            var y = Math.floor(i / gridSize);
-            var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
-            var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
-            var position = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
-            createModel(uiOptions.modelUrls[viewModel.model], position);
-        }
-    }
-}
-
-function createTileset(resource) {
-    resource.then(function(url) {
-        viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : url
-        }));
-    })
-    .otherwise(function(error) {
-        console.log(error);
-    });
-}
-
-function createModel(url, origin) {
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
-
-    var model = scene.primitives.add(Cesium.Model.fromGltf({
-        url : url,
-        modelMatrix : modelMatrix
-    }));
-
-    model.readyPromise.then(function(model) {
-        // Play and loop all animations at half-speed
-        model.activeAnimations.addAll({
-            multiplier : 0.5,
-            loop : Cesium.ModelAnimationLoop.REPEAT
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          scene3DOnly: true,
+          infoBox: false,
+          selectionIndicator: false,
+          timeline: false,
         });
-    }).otherwise(function(error){
-        window.alert(error);
-    });
 
-    return model;
-}
+        var offset = new Cesium.Cartesian3();
+        var scene = viewer.scene;
+        var freeformLightCamera = new Cesium.Camera(scene);
 
-function createBoxRTC(origin) {
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
+        function updateLightDirection() {
+          var location = uiOptions.locations[viewModel.location];
+          var center = Cesium.Cartesian3.fromRadians(
+            location.centerLongitude,
+            location.centerLatitude,
+            location.height
+          );
+          var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
+          var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
+          offset.z = Math.cos(lightHorizon);
+          offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
+          offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
 
-    var boxGeometry = Cesium.BoxGeometry.createGeometry(Cesium.BoxGeometry.fromDimensions({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
-    }));
-
-    var positions = boxGeometry.attributes.position.values;
-    var newPositions = new Float32Array(positions.length);
-    for (var i = 0; i < positions.length; ++i) {
-        newPositions[i] = positions[i];
-    }
-    boxGeometry.attributes.position.values = newPositions;
-    boxGeometry.attributes.position.componentDatatype = Cesium.ComponentDatatype.FLOAT;
-
-    Cesium.BoundingSphere.transform(boxGeometry.boundingSphere, modelMatrix, boxGeometry.boundingSphere);
-
-    var boxGeometryInstance = new Cesium.GeometryInstance({
-        geometry : boxGeometry,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+          freeformLightCamera.lookAt(center, offset);
         }
-    });
 
-    var box = new Cesium.Primitive({
-        geometryInstances : boxGeometryInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
-            closed : true
-        }),
-        asynchronous : false,
-        rtcCenter : boxGeometry.boundingSphere.center,
-        shadows : Cesium.ShadowMode.ENABLED
-    });
+        var context = scene.context;
+        var camera = scene.camera;
+        var globe = scene.globe;
+        var shadowMap;
 
-    scene.primitives.add(box);
-}
+        function updateSettings() {
+          shadowMap.maximumDistance = Number(viewModel.distance);
+          shadowMap._pointLightRadius = Number(viewModel.radius);
+          shadowMap._fitNearFar = viewModel.fitNearFar;
+          shadowMap.darkness = viewModel.darkness;
+          shadowMap.debugShow = viewModel.debug;
+          shadowMap.debugFreezeFrame = viewModel.freeze;
+          shadowMap.enabled = viewModel.shadows;
+          shadowMap.size = viewModel.size;
+          shadowMap.debugCascadeColors = viewModel.cascadeColors;
+          shadowMap.softShadows = viewModel.softShadows;
 
-function createBox(origin) {
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
+          // Update biases
+          for (var i = 0; i < viewModel.biasModes.length; ++i) {
+            var biasMode = viewModel.biasModes[i];
+            var bias = shadowMap["_" + biasMode.type + "Bias"];
+            bias.polygonOffset =
+              !shadowMap._isPointLight &&
+              shadowMap._polygonOffsetSupported &&
+              biasMode.polygonOffset();
+            bias.polygonOffsetFactor = biasMode.polygonOffsetFactor();
+            bias.polygonOffsetUnits = biasMode.polygonOffsetUnits();
+            bias.normalOffset = biasMode.normalOffset();
+            bias.normalOffsetScale = biasMode.normalOffsetScale();
+            bias.normalShading = biasMode.normalShading();
+            bias.normalShadingSmooth = biasMode.normalShadingSmooth();
+            bias.depthBias = biasMode.depthBias();
+          }
 
-    var box = new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : Cesium.BoxGeometry.fromDimensions({
-                dimensions : new Cesium.Cartesian3(0.5, 0.5, 0.5),
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-            }),
-            modelMatrix : modelMatrix,
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+          // Update render states for when polygon offset values change
+          shadowMap.debugCreateRenderStates();
+
+          // Force all derived commands to update
+          shadowMap.dirty = true;
+
+          globe.shadows = Cesium.ShadowMode.fromCastReceive(
+            viewModel.terrainCast,
+            viewModel.terrainReceive
+          );
+          globe.show = viewModel.globe;
+          scene.skyAtmosphere.show = viewModel.globe;
+        }
+
+        var sunCamera = scene._sunCamera;
+        var fixedLightCamera = new Cesium.Camera(scene);
+        var pointLightCamera = new Cesium.Camera(scene);
+        var spotLightCamera = new Cesium.Camera(scene);
+
+        function updateShadows() {
+          var cascades = viewModel.cascades;
+          var lightSource = viewModel.lightSource;
+
+          var lightCamera;
+          if (lightSource === "Freeform") {
+            lightCamera = freeformLightCamera;
+          } else if (lightSource === "Sun") {
+            lightCamera = sunCamera;
+          }
+
+          var shadowOptions;
+
+          if (lightSource === "Fixed") {
+            shadowOptions = {
+              context: context,
+              lightCamera: fixedLightCamera,
+              cascadesEnabled: false,
+            };
+          } else if (lightSource === "Point") {
+            shadowOptions = {
+              context: context,
+              lightCamera: pointLightCamera,
+              isPointLight: true,
+            };
+          } else if (lightSource === "Spot") {
+            shadowOptions = {
+              context: context,
+              lightCamera: spotLightCamera,
+              cascadesEnabled: false,
+            };
+          } else if (cascades === 4) {
+            shadowOptions = {
+              context: context,
+              lightCamera: lightCamera,
+            };
+          } else if (cascades === 1) {
+            shadowOptions = {
+              context: context,
+              lightCamera: lightCamera,
+              numberOfCascades: 1,
+            };
+          }
+
+          scene.shadowMap.destroy();
+          scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
+
+          shadowMap = scene.shadowMap;
+          shadowMap.enabled = true;
+          shadowMap.debugShow = true;
+
+          updateSettings();
+          updateUI();
+        }
+
+        function updateUI() {
+          uiOptions.all.forEach(function (setting) {
+            if (
+              uiOptions.disable[viewModel.lightSource].indexOf(setting) > -1
+            ) {
+              viewModel[setting + "Enabled"] = false;
+            } else {
+              viewModel[setting + "Enabled"] = true;
             }
-        }),
-        appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
-            closed : true
-        }),
-        asynchronous : false,
-        shadows : Cesium.ShadowMode.ENABLED
-    });
+          });
+        }
 
-    scene.primitives.add(box);
-}
+        scene.debugShowFramesPerSecond = true;
 
-function createSphere(origin) {
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
+        var cesiumTerrainProvider = Cesium.createWorldTerrain();
 
-    var sphere = new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.SphereGeometry({
-                radius : 2.0,
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-            }),
-            modelMatrix : modelMatrix,
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+
+        updateLocation();
+
+        function getModelPosition() {
+          if (viewModel.modelPosition === "Ground") {
+            return 0.0;
+          } else if (viewModel.modelPosition === "Center") {
+            return 50.0;
+          } else if (viewModel.modelPosition === "High") {
+            return 5000.0;
+          } else if (viewModel.modelPosition === "Higher") {
+            return 20000.0;
+          } else if (viewModel.modelPosition === "Space") {
+            return 10000000.0;
+          }
+        }
+
+        function updateLocation() {
+          // Get the height of the terrain at the given longitude/latitude, then create the scene.
+          var location = uiOptions.locations[viewModel.location];
+          var positions = [
+            new Cesium.Cartographic(
+              location.centerLongitude,
+              location.centerLatitude
+            ),
+          ];
+          var terrainProvider = viewModel.terrain
+            ? cesiumTerrainProvider
+            : ellipsoidTerrainProvider;
+          globe.terrainProvider = terrainProvider;
+          var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+          Cesium.when(promise, function (updatedPositions) {
+            location.height = updatedPositions[0].height + getModelPosition();
+            createScene();
+          });
+        }
+
+        function createScene() {
+          var location = uiOptions.locations[viewModel.location];
+          var center = Cesium.Cartesian3.fromRadians(
+            location.centerLongitude,
+            location.centerLatitude,
+            location.height
+          );
+
+          var frustumSize = 55.0;
+          var frustumNear = 1.0;
+          var frustumFar = 400.0;
+          var frustum = new Cesium.OrthographicOffCenterFrustum();
+          frustum.left = -frustumSize;
+          frustum.right = frustumSize;
+          frustum.bottom = -frustumSize;
+          frustum.top = frustumSize;
+          frustum.near = frustumNear;
+          frustum.far = frustumFar;
+
+          fixedLightCamera.frustum = frustum;
+          fixedLightCamera.lookAt(
+            center,
+            new Cesium.Cartesian3(30.0, 30.0, 50.0)
+          );
+
+          spotLightCamera.frustum.fov = Cesium.Math.PI_OVER_TWO;
+          spotLightCamera.frustum.aspectRatio = 1.0;
+          spotLightCamera.frustum.near = 1.0;
+          spotLightCamera.frustum.far = 500.0;
+          spotLightCamera.lookAt(
+            center,
+            new Cesium.Cartesian3(30.0, 30.0, 50.0)
+          );
+
+          pointLightCamera.position = center;
+
+          camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
+
+          updateLightDirection();
+          updateModels();
+          updateShadows();
+        }
+
+        function updateModels() {
+          scene.primitives.removeAll();
+
+          var location = uiOptions.locations[viewModel.location];
+          var centerLongitude = location.centerLongitude;
+          var centerLatitude = location.centerLatitude;
+          var height = location.height;
+
+          var position1 = Cesium.Cartesian3.fromRadians(
+            centerLongitude,
+            centerLatitude,
+            height + 5.0
+          );
+          var position2 = Cesium.Cartesian3.fromRadians(
+            centerLongitude,
+            centerLatitude,
+            height + 10.0
+          );
+          var position3 = Cesium.Cartesian3.fromRadians(
+            centerLongitude,
+            centerLatitude,
+            height + 15.0
+          );
+          var modelPosition = Cesium.Cartesian3.fromRadians(
+            centerLongitude,
+            centerLatitude,
+            height
+          );
+
+          createModel(uiOptions.modelUrls[viewModel.model], modelPosition);
+          createBox(position3);
+          createBoxRTC(position2);
+          createSphere(position1);
+
+          if (Cesium.defined(location.tileset)) {
+            createTileset(location.tileset);
+          }
+
+          // Add a grid of models
+          if (viewModel.grid) {
+            var spacing = 0.00002;
+            var gridSize = 10;
+            for (var i = 0; i < gridSize * gridSize; ++i) {
+              var x = i % gridSize;
+              var y = Math.floor(i / gridSize);
+              var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
+              var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
+              var position = Cesium.Cartesian3.fromRadians(
+                longitude,
+                latitude,
+                height
+              );
+              createModel(uiOptions.modelUrls[viewModel.model], position);
             }
-        }),
-        appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : true,
-            closed : true
-        }),
-        asynchronous : false,
-        shadows : Cesium.ShadowMode.ENABLED
-    });
+          }
+        }
 
-    scene.primitives.add(sphere);
-}
+        function createTileset(resource) {
+          resource
+            .then(function (url) {
+              viewer.scene.primitives.add(
+                new Cesium.Cesium3DTileset({
+                  url: url,
+                })
+              );
+            })
+            .otherwise(function (error) {
+              console.log(error);
+            });
+        }
 
-var canvas = viewer.canvas;
-canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
-canvas.onclick = function() {
-    // To get key events
-    canvas.focus();
-};
+        function createModel(url, origin) {
+          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+            origin,
+            new Cesium.HeadingPitchRoll()
+          );
 
-var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+          var model = scene.primitives.add(
+            Cesium.Model.fromGltf({
+              url: url,
+              modelMatrix: modelMatrix,
+            })
+          );
 
-// Click object to turn castShadows on/off
-handler.setInputAction(function(movement) {
-    var picked = scene.pick(movement.position);
-    if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
-        var castShadows = Cesium.ShadowMode.castShadows(picked.primitive.shadows);
-        var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
-        picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(!castShadows, receiveShadows);
-    }
-}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+          model.readyPromise
+            .then(function (model) {
+              // Play and loop all animations at half-speed
+              model.activeAnimations.addAll({
+                multiplier: 0.5,
+                loop: Cesium.ModelAnimationLoop.REPEAT,
+              });
+            })
+            .otherwise(function (error) {
+              window.alert(error);
+            });
 
-// Middle click object to turn receiveShadows on/off
-handler.setInputAction(function(movement) {
-    var picked = scene.pick(movement.position);
-    if (Cesium.defined(picked)) {
-        var castShadows = Cesium.ShadowMode.castShadows(picked.primitive.shadows);
-        var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
-        picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(castShadows, !receiveShadows);
-    }
-}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
+          return model;
+        }
 
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        function createBoxRTC(origin) {
+          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+            origin,
+            new Cesium.HeadingPitchRoll()
+          );
+
+          var boxGeometry = Cesium.BoxGeometry.createGeometry(
+            Cesium.BoxGeometry.fromDimensions({
+              vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+              dimensions: new Cesium.Cartesian3(1.0, 1.0, 1.0),
+            })
+          );
+
+          var positions = boxGeometry.attributes.position.values;
+          var newPositions = new Float32Array(positions.length);
+          for (var i = 0; i < positions.length; ++i) {
+            newPositions[i] = positions[i];
+          }
+          boxGeometry.attributes.position.values = newPositions;
+          boxGeometry.attributes.position.componentDatatype =
+            Cesium.ComponentDatatype.FLOAT;
+
+          Cesium.BoundingSphere.transform(
+            boxGeometry.boundingSphere,
+            modelMatrix,
+            boxGeometry.boundingSphere
+          );
+
+          var boxGeometryInstance = new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+            attributes: {
+              color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                Cesium.Color.BLUE
+              ),
+            },
+          });
+
+          var box = new Cesium.Primitive({
+            geometryInstances: boxGeometryInstance,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+            asynchronous: false,
+            rtcCenter: boxGeometry.boundingSphere.center,
+            shadows: Cesium.ShadowMode.ENABLED,
+          });
+
+          scene.primitives.add(box);
+        }
+
+        function createBox(origin) {
+          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+            origin,
+            new Cesium.HeadingPitchRoll()
+          );
+
+          var box = new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: Cesium.BoxGeometry.fromDimensions({
+                dimensions: new Cesium.Cartesian3(0.5, 0.5, 0.5),
+                vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+              }),
+              modelMatrix: modelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  Cesium.Color.BLUE
+                ),
+              },
+            }),
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+            asynchronous: false,
+            shadows: Cesium.ShadowMode.ENABLED,
+          });
+
+          scene.primitives.add(box);
+        }
+
+        function createSphere(origin) {
+          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+            origin,
+            new Cesium.HeadingPitchRoll()
+          );
+
+          var sphere = new Cesium.Primitive({
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.SphereGeometry({
+                radius: 2.0,
+                vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+              }),
+              modelMatrix: modelMatrix,
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+                ),
+              },
+            }),
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: true,
+              closed: true,
+            }),
+            asynchronous: false,
+            shadows: Cesium.ShadowMode.ENABLED,
+          });
+
+          scene.primitives.add(sphere);
+        }
+
+        var canvas = viewer.canvas;
+        canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
+        canvas.onclick = function () {
+          // To get key events
+          canvas.focus();
+        };
+
+        var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+        // Click object to turn castShadows on/off
+        handler.setInputAction(function (movement) {
+          var picked = scene.pick(movement.position);
+          if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
+            var castShadows = Cesium.ShadowMode.castShadows(
+              picked.primitive.shadows
+            );
+            var receiveShadows = Cesium.ShadowMode.receiveShadows(
+              picked.primitive.shadows
+            );
+            picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(
+              !castShadows,
+              receiveShadows
+            );
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // Middle click object to turn receiveShadows on/off
+        handler.setInputAction(function (movement) {
+          var picked = scene.pick(movement.position);
+          if (Cesium.defined(picked)) {
+            var castShadows = Cesium.ShadowMode.castShadows(
+              picked.primitive.shadows
+            );
+            var receiveShadows = Cesium.ShadowMode.receiveShadows(
+              picked.primitive.shadows
+            );
+            picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(
+              castShadows,
+              !receiveShadows
+            );
+          }
+        }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

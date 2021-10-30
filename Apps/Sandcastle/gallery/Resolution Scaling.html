@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Set a custom resolution scale and/or toggle the browser's recommended resolution."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>Use Browser Recommended Resolution</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: useBrowserRecommendedResolution"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Resolution Scale</td>
+            <td>
+              <input
+                type="range"
+                min="0.1"
+                max="2.0"
+                step="0.1"
+                data-bind="value: resolutionScale, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: resolutionScale" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // When browser recommended resolution is enabled, the viewer renders at
+        // CSS pixel resolution (96 dpi). Otherwise, the viewer renders at the
+        // screen's native resolution.
+        //
+        // Resolution scale applies an additional scaling factor to the
+        // WebGL canvas.
+        //
+        // For example, if the cesium container div is 500x500 pixels,
+        // window.devicePixelRatio is 2.0, and useBrowserRecommendedResolution
+        // is false, the WebGL canvas will be 1000x1000 pixels. Then if
+        // the resolutionScale is 0.25, the canvas will be scaled
+        // down to 250x250 pixels.
+
+        var viewer = new Cesium.Viewer("cesiumContainer");
+
+        var viewModel = {
+          useBrowserRecommendedResolution: false,
+          resolutionScale: 0.25,
+        };
+
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (var name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout.getObservable(viewModel, name).subscribe(update);
+          }
+        }
+
+        function update() {
+          viewer.useBrowserRecommendedResolution =
+            viewModel.useBrowserRecommendedResolution;
+
+          var resolutionScale = Number(viewModel.resolutionScale);
+          resolutionScale = !isNaN(resolutionScale) ? resolutionScale : 1.0;
+          resolutionScale = Cesium.Math.clamp(resolutionScale, 0.1, 2.0);
+          viewer.resolutionScale = resolutionScale;
+        }
+        update();
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

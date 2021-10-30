@@ -1,25 +1,53 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>Jasmine Spec Runner v2.2.0</title>
 
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <link rel="stylesheet" type="text/css" href="Data/Fonts/OpenSans-Main.css">
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="Data/Fonts/OpenSans-Main.css"
+    />
 
-    <link rel="shortcut icon" type="image/png" href="../ThirdParty/jasmine-2.2.0/jasmine_favicon.png">
-    <link rel="stylesheet" href="../ThirdParty/jasmine-2.2.0/jasmine.css">
-    <link rel="stylesheet" href="CesiumJasmineHtml.css">
+    <link
+      rel="shortcut icon"
+      type="image/png"
+      href="../ThirdParty/jasmine-2.2.0/jasmine_favicon.png"
+    />
+    <link rel="stylesheet" href="../ThirdParty/jasmine-2.2.0/jasmine.css" />
+    <link rel="stylesheet" href="CesiumJasmineHtml.css" />
 
     <script src="../ThirdParty/jasmine-2.2.0/jasmine.js"></script>
     <script src="../ThirdParty/jasmine-2.2.0/jasmine-html.js"></script>
-
-    <script type="text/javascript" src="SpecList.js"></script>
-    <script type="text/javascript" data-main="spec-main" src="../ThirdParty/requirejs-2.1.20/require.js"></script>
-</head>
-
-<body>
-    <span style="font-family: 'Open Sans'; position: absolute; visibility: hidden;">&nbsp;</span>
-</body>
+  </head>
+  <body>
+    <span
+      style="font-family: 'Open Sans'; position: absolute; visibility: hidden"
+      >&nbsp;</span
+    >
+    <script>
+      if (window.location.search.indexOf("built") !== -1) {
+        if (window.location.search.indexOf("release") !== -1) {
+          document.write('<script src="../Build/Cesium/Cesium.js"><\/script>');
+        } else {
+          document.write(
+            '<script src="../Build/CesiumUnminified/Cesium.js"><\/script>'
+          );
+        }
+        document.write('<script src="../Build/Specs/spec-main.js"><\/script>');
+        document.write('<script src="../Build/Specs/Specs.js"><\/script>');
+      } else {
+        window.CESIUM_BASE_URL = "../Source/";
+        document.write('<script type="module" src="spec-main.js"><\/script>');
+      }
+    </script>
+    <script>
+      if (window.location.search.indexOf("built") !== -1) {
+        jasmine.getEnv().execute();
+      }
+    </script>
+  </body>
 </html>

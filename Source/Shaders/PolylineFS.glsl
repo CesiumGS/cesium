@@ -8,9 +8,12 @@ void main()
 {
     czm_materialInput materialInput;
 
-    materialInput.s = v_st.s;
-    materialInput.st = v_st;
-    materialInput.str = vec3(v_st, 0.0);
+    vec2 st = v_st;
+    st.t = czm_readNonPerspective(st.t, gl_FragCoord.w);
+
+    materialInput.s = st.s;
+    materialInput.st = st;
+    materialInput.str = vec3(st, 0.0);
 
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);

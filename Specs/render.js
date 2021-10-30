@@ -1,66 +1,59 @@
-define([
-        'Core/defined',
-        'Core/Intersect',
-        'Renderer/Pass',
-        'Scene/SceneMode'
-    ], function(
-        defined,
-        Intersect,
-        Pass,
-        SceneMode) {
-    'use strict';
+import { defined } from "../Source/Cesium.js";
+import { Intersect } from "../Source/Cesium.js";
+import { Pass } from "../Source/Cesium.js";
+import { SceneMode } from "../Source/Cesium.js";
 
-    function executeCommands(frameState, commands) {
-        var commandsExecuted = 0;
-        var cullingVolume = frameState.cullingVolume;
-        var occluder;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            occluder = frameState.occluder;
-        }
+function executeCommands(frameState, commands) {
+  var commandsExecuted = 0;
+  var cullingVolume = frameState.cullingVolume;
+  var occluder;
+  if (frameState.mode === SceneMode.SCENE3D) {
+    occluder = frameState.occluder;
+  }
 
-        var length = commands.length;
-        for (var i = 0; i < length; ++i) {
-            var command = commands[i];
-            var boundingVolume = command.boundingVolume;
-            if (defined(boundingVolume)) {
-                if (cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE ||
-                        (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))) {
-                    continue;
-                }
-            }
-
-            command.execute(frameState.context);
-            commandsExecuted++;
-        }
-
-        return commandsExecuted;
+  var length = commands.length;
+  for (var i = 0; i < length; ++i) {
+    var command = commands[i];
+    var boundingVolume = command.boundingVolume;
+    if (defined(boundingVolume)) {
+      if (
+        cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE ||
+        (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))
+      ) {
+        continue;
+      }
     }
 
-    function render(frameState, primitive) {
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
+    command.execute(frameState.context);
+    commandsExecuted++;
+  }
 
-        var i;
-        var renderCommands = new Array(Pass.NUMBER_OF_PASSES);
-        for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
-            renderCommands[i] = [];
-        }
+  return commandsExecuted;
+}
 
-        var commands = frameState.commandList;
-        var length = commands.length;
-        for (i = 0; i < length; i++) {
-            var command = commands[i];
-            var pass = defined(command.pass) ? command.pass : Pass.OPAQUE;
-            renderCommands[pass].push(command);
-        }
+function render(frameState, primitive) {
+  frameState.commandList.length = 0;
+  primitive.update(frameState);
 
-        var commandsExecuted = 0;
-        for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
-            commandsExecuted += executeCommands(frameState, renderCommands[i]);
-        }
+  var i;
+  var renderCommands = new Array(Pass.NUMBER_OF_PASSES);
+  for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
+    renderCommands[i] = [];
+  }
 
-        return commandsExecuted;
-    }
+  var commands = frameState.commandList;
+  var length = commands.length;
+  for (i = 0; i < length; i++) {
+    var command = commands[i];
+    var pass = defined(command.pass) ? command.pass : Pass.OPAQUE;
+    renderCommands[pass].push(command);
+  }
 
-    return render;
-});
+  var commandsExecuted = 0;
+  for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
+    commandsExecuted += executeCommands(frameState, renderCommands[i]);
+  }
+
+  return commandsExecuted;
+}
+export default render;

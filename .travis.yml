@@ -1,24 +1,20 @@
 language: node_js
 node_js:
-  - "8"
-sudo: false
+  - "16"
 addons:
   chrome: stable
   firefox: latest
-services:
-  - xvfb
-before_script:
-  - export DISPLAY=:99.0
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
+  - npm --silent run prettier-check
 
   - npm --silent run build
-  - npm --silent run test -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+  - npm --silent run build-ts
+  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - npm --silent run clean
   - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1
   - npm pack &> /dev/null
 
@@ -27,11 +23,12 @@ script:
   - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm --silent run deploy-status -- --status success --message Deployed
 
-  - npm --silent run test -- --browsers FirefoxHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+  - npm --silent run build-specs
+  - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
-# Various Node.js smoke-screen tests
+  # Various Node.js smoke-screen tests
   - node -e "const Cesium = require('./');"
-  - NODE_ENV=development node index.js
-  - NODE_ENV=production node index.js
+  - NODE_ENV=development node index.cjs
+  - NODE_ENV=production node index.cjs
 
   - npm --silent run cloc

@@ -4,8 +4,6 @@
 
 uniform vec4 color;
 
-varying float v_width;
-
 float getPointOnLine(vec2 p0, vec2 p1, float x)
 {
     float slope = (p0.y - p1.y) / (p0.x - p1.x);
@@ -19,9 +17,9 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     vec2 st = materialInput.st;
 
 #ifdef GL_OES_standard_derivatives
-    float base = 1.0 - abs(fwidth(st.s)) * 10.0;
+    float base = 1.0 - abs(fwidth(st.s)) * 10.0 * czm_pixelRatio;
 #else
-    float base = 0.99; // 1% of the line will be the arrow head
+    float base = 0.975; // 2.5% of the line will be the arrow head
 #endif
 
     vec2 center = vec2(1.0, 0.5);

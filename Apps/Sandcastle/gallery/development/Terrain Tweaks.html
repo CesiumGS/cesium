@@ -1,122 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Tweak various terrain tweakables.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Tweak various terrain tweakables." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-    #toolbar {
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
         background: rgba(42, 42, 42, 0.8);
         padding: 4px;
         border-radius: 4px;
-    }
-    #toolbar input {
+      }
+      #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
-    }
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <table>
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
         <tbody>
-            <tr>
-                <td>Loading Descendant Limit</td>
-                <td>
-                    <input type="text" size="5" data-bind="value: loadingDescendantLimit" title="The number of loading descendant tiles that is considered 'too many'. If a tile has too many loading descendants, that tile will be loaded and rendered before any of its descendants are loaded and rendered. This means more feedback for the user that something is happening at the cost of a longer overall load time. Setting this to 0 will cause each tile level to be loaded successively, significantly increasing load time. Setting it to a large number (e.g. 100000) will minimize the number of tiles that are loaded but tend to make detail appear all at once after a long wait." />
-                </td>
-            </tr>
-            <tr>
-                <td>Preload Ancestors</td>
-                <td>
-                    <input type="checkbox" data-bind="checked: preloadAncestors" title="Indicating whether the ancestors of rendered tiles should be preloaded. Setting this to true optimizes the zoom-out experience and provides more detail in newly-exposed areas when panning. The down side is that it requires loading more tiles." />
-                </td>
-            </tr>
-            <tr>
-                <td>Preload Siblings</td>
-                <td>
-                    <input type="checkbox" data-bind="checked: preloadSiblings" title="Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded. Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even if they are culled. Setting this to true may provide a better panning experience at the cost of loading more tiles." />
-                </td>
-            </tr>
-            <tr>
-                <td>Fill Tile Highlight</td>
-                <td>
-                    <input type="checkbox" data-bind="checked: fillHighlightEnabled" title="Highlights generated fill tiles." />
-                    <input type="text" size="25" data-bind="value: fillHighlightColor" title="The color to use to highlight fill tiles. If undefined, fill tiles are not highlighted at all. The alpha value is used to alpha blend with the tile's actual color." />
-                </td>
-            </tr>
+          <tr>
+            <td>Loading Descendant Limit</td>
+            <td>
+              <input
+                type="text"
+                size="5"
+                data-bind="value: loadingDescendantLimit"
+                title="The number of loading descendant tiles that is considered 'too many'. If a tile has too many loading descendants, that tile will be loaded and rendered before any of its descendants are loaded and rendered. This means more feedback for the user that something is happening at the cost of a longer overall load time. Setting this to 0 will cause each tile level to be loaded successively, significantly increasing load time. Setting it to a large number (e.g. 100000) will minimize the number of tiles that are loaded but tend to make detail appear all at once after a long wait."
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Preload Ancestors</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: preloadAncestors"
+                title="Indicating whether the ancestors of rendered tiles should be preloaded. Setting this to true optimizes the zoom-out experience and provides more detail in newly-exposed areas when panning. The down side is that it requires loading more tiles."
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Preload Siblings</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: preloadSiblings"
+                title="Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded. Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even if they are culled. Setting this to true may provide a better panning experience at the cost of loading more tiles."
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Fill Tile Highlight</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: fillHighlightEnabled"
+                title="Highlights generated fill tiles."
+              />
+              <input
+                type="text"
+                size="25"
+                data-bind="value: fillHighlightColor"
+                title="The color to use to highlight fill tiles. If undefined, fill tiles are not highlighted at all. The alpha value is used to alpha blend with the tile's actual color."
+              />
+            </td>
+          </tr>
         </tbody>
-    </table>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
 
-var viewModel = {
-    loadingDescendantLimit: viewer.scene.globe.loadingDescendantLimit,
-    preloadAncestors: viewer.scene.globe.preloadAncestors,
-    preloadSiblings: viewer.scene.globe.preloadSiblings,
-    fillHighlightColor: Cesium.defined(viewer.scene.globe.fillHighlightColor) ? viewer.scene.globe.fillHighlightColor.toCssColorString() : 'rgba(255, 255, 0, 0.5)',
-    fillHighlightEnabled: Cesium.defined(viewer.scene.globe.fillHighlightColor)
-};
+        var viewModel = {
+          loadingDescendantLimit: viewer.scene.globe.loadingDescendantLimit,
+          preloadAncestors: viewer.scene.globe.preloadAncestors,
+          preloadSiblings: viewer.scene.globe.preloadSiblings,
+          fillHighlightColor: Cesium.defined(
+            viewer.scene.globe.fillHighlightColor
+          )
+            ? viewer.scene.globe.fillHighlightColor.toCssColorString()
+            : "rgba(255, 255, 0, 0.5)",
+          fillHighlightEnabled: Cesium.defined(
+            viewer.scene.globe.fillHighlightColor
+          ),
+        };
 
-Cesium.knockout.track(viewModel);
+        Cesium.knockout.track(viewModel);
 
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
 
-Cesium.knockout.getObservable(viewModel, 'loadingDescendantLimit').subscribe(function(newValue) {
-    viewer.scene.globe.loadingDescendantLimit = parseInt(newValue, 10);
-});
-Cesium.knockout.getObservable(viewModel, 'preloadAncestors').subscribe(function(newValue) {
-    viewer.scene.globe.preloadAncestors = newValue;
-});
-Cesium.knockout.getObservable(viewModel, 'preloadSiblings').subscribe(function(newValue) {
-    viewer.scene.globe.preloadSiblings = newValue;
-});
+        Cesium.knockout
+          .getObservable(viewModel, "loadingDescendantLimit")
+          .subscribe(function (newValue) {
+            viewer.scene.globe.loadingDescendantLimit = parseInt(newValue, 10);
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "preloadAncestors")
+          .subscribe(function (newValue) {
+            viewer.scene.globe.preloadAncestors = newValue;
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "preloadSiblings")
+          .subscribe(function (newValue) {
+            viewer.scene.globe.preloadSiblings = newValue;
+          });
 
-function updateFillHighlight() {
-    if (viewModel.fillHighlightEnabled) {
-        viewer.scene.globe.fillHighlightColor = Cesium.Color.fromCssColorString(viewModel.fillHighlightColor);
-    } else {
-        viewer.scene.globe.fillHighlightColor = undefined;
-    }
-}
+        function updateFillHighlight() {
+          if (viewModel.fillHighlightEnabled) {
+            viewer.scene.globe.fillHighlightColor = Cesium.Color.fromCssColorString(
+              viewModel.fillHighlightColor
+            );
+          } else {
+            viewer.scene.globe.fillHighlightColor = undefined;
+          }
+        }
 
-Cesium.knockout.getObservable(viewModel, 'fillHighlightEnabled').subscribe(function(newValue) {
-    updateFillHighlight();
-});
-Cesium.knockout.getObservable(viewModel, 'fillHighlightColor').subscribe(function(newValue) {
-    updateFillHighlight();
-});
+        Cesium.knockout
+          .getObservable(viewModel, "fillHighlightEnabled")
+          .subscribe(function (newValue) {
+            updateFillHighlight();
+          });
+        Cesium.knockout
+          .getObservable(viewModel, "fillHighlightColor")
+          .subscribe(function (newValue) {
+            updateFillHighlight();
+          });
 
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

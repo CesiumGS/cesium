@@ -1,110 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw the outline of a polyline volume.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Draw the outline of a polyline volume." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// Create the viewer.
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create the viewer.
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
 
-// Example 1: Draw the outline of an extruded square.
+        // Example 1: Draw the outline of an extruded square.
 
-// Create a 2D square
-function boxPositions() {
-    return [new Cesium.Cartesian2(-50000, -50000),
+        // Create a 2D square
+        function boxPositions() {
+          return [
+            new Cesium.Cartesian2(-50000, -50000),
             new Cesium.Cartesian2(50000, -50000),
             new Cesium.Cartesian2(50000, 50000),
-            new Cesium.Cartesian2(-50000, 50000)
-    ];
-}
-// Create the polyline volume geometry instance.  The shape defined by the
-// shapePositions option will be extruded along the polylinePosition
-// The corderType option can be set to draw rounded, beveled or mitered corners.
-var boxOutline = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeOutlineGeometry({
-        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-            -89.0, 32.0,
-            -89.0, 36.0,
-            -93.0, 36.0
-        ]),
-        shapePositions : boxPositions(),
-        cornerType : Cesium.CornerType.MITERED
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-    }
-});
-
-// Example 2: Draw the outline of an extruded star.
-
-// Create a 2D star shape
-function starPositions(arms, rOuter, rInner) {
-    var angle = Math.PI / arms;
-    var pos = [];
-    for ( var i = 0; i < 2 * arms; i++) {
-        var r = (i % 2) === 0 ? rOuter : rInner;
-        var p = new Cesium.Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
-        pos.push(p);
-    }
-    return pos;
-}
-// Create the polyline volume geometry instance.
-var starOutline = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeOutlineGeometry({
-        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-            -95.0, 32.0,
-            -95.0, 36.0
-        ]),
-        shapePositions : starPositions(5, 70000, 40000),
-        cornerType : Cesium.CornerType.ROUNDED
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-    }
-});
-
-// Add all instances to primitives.
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [boxOutline, starOutline],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
+            new Cesium.Cartesian2(-50000, 50000),
+          ];
         }
-    })
-}));
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        // Create the polyline volume geometry instance.  The shape defined by the
+        // shapePositions option will be extruded along the polylinePosition
+        // The corderType option can be set to draw rounded, beveled or mitered corners.
+        var boxOutline = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineVolumeOutlineGeometry({
+            polylinePositions: Cesium.Cartesian3.fromDegreesArray([
+              -89.0,
+              32.0,
+              -89.0,
+              36.0,
+              -93.0,
+              36.0,
+            ]),
+            shapePositions: boxPositions(),
+            cornerType: Cesium.CornerType.MITERED,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.WHITE
+            ),
+          },
+        });
+
+        // Example 2: Draw the outline of an extruded star.
+
+        // Create a 2D star shape
+        function starPositions(arms, rOuter, rInner) {
+          var angle = Math.PI / arms;
+          var pos = [];
+          for (var i = 0; i < 2 * arms; i++) {
+            var r = i % 2 === 0 ? rOuter : rInner;
+            var p = new Cesium.Cartesian2(
+              Math.cos(i * angle) * r,
+              Math.sin(i * angle) * r
+            );
+            pos.push(p);
+          }
+          return pos;
+        }
+        // Create the polyline volume geometry instance.
+        var starOutline = new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineVolumeOutlineGeometry({
+            polylinePositions: Cesium.Cartesian3.fromDegreesArray([
+              -95.0,
+              32.0,
+              -95.0,
+              36.0,
+            ]),
+            shapePositions: starPositions(5, 70000, 40000),
+            cornerType: Cesium.CornerType.ROUNDED,
+          }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.WHITE
+            ),
+          },
+        });
+
+        // Add all instances to primitives.
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [boxOutline, starOutline],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              renderState: {
+                lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

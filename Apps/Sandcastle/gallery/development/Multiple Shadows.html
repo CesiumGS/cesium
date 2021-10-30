@@ -1,48 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Shadow maps.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Shadow maps." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-    #toolbar input[type=range] {
-        width : 70px;
-    }
-    #toolbar input {
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar input[type="range"] {
+        width: 70px;
+      }
+      #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
-    }
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
 
-<script id="cesium_sandcastle_script">
-    function startup(Cesium) {
-        'use strict';
-//Sandcastle_Begin
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
 
-        var viewer = new Cesium.Viewer('cesiumContainer', {
-            scene3DOnly : true,
-            infoBox : false,
-            selectionIndicator : false,
-            timeline : false,
-            terrainProvider: Cesium.createWorldTerrain()
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          scene3DOnly: true,
+          infoBox: false,
+          selectionIndicator: false,
+          timeline: false,
+          terrainProvider: Cesium.createWorldTerrain(),
         });
 
         var scene = viewer.scene;
@@ -51,77 +56,94 @@
         scene.debugShowFramesPerSecond = true;
 
         function addPrimitive(lon, lat, height, heading) {
-            var center = Cesium.Cartesian3.fromRadians(lon, lat, height);
+          var center = Cesium.Cartesian3.fromRadians(lon, lat, height);
 
-            var pointLightCamera = new Cesium.Camera(scene);
-            pointLightCamera.position = center;
+          var pointLightCamera = new Cesium.Camera(scene);
+          pointLightCamera.position = center;
 
-            camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
-            camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+          camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
+          camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-            var shadowMap = new Cesium.ShadowMap({
-                context : scene.context,
-                lightCamera : pointLightCamera,
-                isPointLight : true,
-                softShadows : false
+          var shadowMap = new Cesium.ShadowMap({
+            context: scene.context,
+            lightCamera: pointLightCamera,
+            isPointLight: true,
+            softShadows: false,
+          });
+
+          shadowMap.enabled = true;
+
+          var model = scene.primitives.add(
+            Cesium.Model.fromGltf({
+              url:
+                "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
+              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                center,
+                new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
+              ),
+            })
+          );
+
+          model.readyPromise
+            .then(function (model) {
+              // Play and loop all animations at half-speed
+              model.activeAnimations.addAll({
+                multiplier: 0.5,
+                loop: Cesium.ModelAnimationLoop.REPEAT,
+              });
+            })
+            .otherwise(function (error) {
+              window.alert(error);
             });
 
-            shadowMap.enabled = true;
-
-            var model = scene.primitives.add(Cesium.Model.fromGltf({
-                url : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf',
-                modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(center, new Cesium.HeadingPitchRoll(heading, 0.0, 0.0))
-            }));
-
-            model.readyPromise.then(function(model) {
-                // Play and loop all animations at half-speed
-                model.activeAnimations.addAll({
-                    multiplier : 0.5,
-                    loop : Cesium.ModelAnimationLoop.REPEAT
-                });
-            }).otherwise(function(error) {
-                window.alert(error);
-            });
-
-            return shadowMap;
+          return shadowMap;
         }
 
         var longitude = -1.3324415110874286;
         var latitude = 0.6954224325279967;
         var height = 200.0;
 
-        var shadowMap1 = addPrimitive(longitude + 0.00005, latitude, height, 0.0);
-        var shadowMap2 = addPrimitive(longitude - 0.00005, latitude, height, Math.PI);
+        var shadowMap1 = addPrimitive(
+          longitude + 0.00005,
+          latitude,
+          height,
+          0.0
+        );
+        var shadowMap2 = addPrimitive(
+          longitude - 0.00005,
+          latitude,
+          height,
+          Math.PI
+        );
 
         shadowMap1.debugShow = true;
         shadowMap2.debugShow = false;
 
-        Sandcastle.addToolbarButton('Debug Toggle', function() {
-            shadowMap1.debugShow = !shadowMap1.debugShow;
-            shadowMap2.debugShow = !shadowMap2.debugShow;
+        Sandcastle.addToolbarButton("Debug Toggle", function () {
+          shadowMap1.debugShow = !shadowMap1.debugShow;
+          shadowMap2.debugShow = !shadowMap2.debugShow;
         });
 
         scene.shadowMap = shadowMap1;
 
         // TODO : workaround until Cesium supports multiple light sources
-        var CustomPrimitive = function(shadowMap) {
-            this.shadowMap = shadowMap;
+        var CustomPrimitive = function (shadowMap) {
+          this.shadowMap = shadowMap;
         };
 
-        CustomPrimitive.prototype.update = function(frameState) {
-            frameState.shadowMaps.push(this.shadowMap);
+        CustomPrimitive.prototype.update = function (frameState) {
+          frameState.shadowMaps.push(this.shadowMap);
         };
 
         scene.primitives.add(new CustomPrimitive(shadowMap2));
 
-//Sandcastle_End
+        //Sandcastle_End
         Sandcastle.finishedLoading();
-    }
-    if (typeof Cesium !== 'undefined') {
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
         startup(Cesium);
-    } else if (typeof require === 'function') {
-        require(['Cesium'], startup);
-    }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>

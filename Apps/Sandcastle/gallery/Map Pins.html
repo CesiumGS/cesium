@@ -1,91 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Create and display map pins.">
-    <meta name="cesium-sandcastle-labels" content="Beginner">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Create and display map pins." />
+    <meta name="cesium-sandcastle-labels" content="Beginner" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+        });
+
+        var pinBuilder = new Cesium.PinBuilder();
+
+        var bluePin = viewer.entities.add({
+          name: "Blank blue pin",
+          position: Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667),
+          billboard: {
+            image: pinBuilder.fromColor(Cesium.Color.ROYALBLUE, 48).toDataURL(),
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          },
+        });
+
+        var questionPin = viewer.entities.add({
+          name: "Question mark",
+          position: Cesium.Cartesian3.fromDegrees(-75.1698529, 39.9220071),
+          billboard: {
+            image: pinBuilder.fromText("?", Cesium.Color.BLACK, 48).toDataURL(),
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          },
+        });
+
+        var url = Cesium.buildModuleUrl("Assets/Textures/maki/grocery.png");
+        var groceryPin = Cesium.when(
+          pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48),
+          function (canvas) {
+            return viewer.entities.add({
+              name: "Grocery store",
+              position: Cesium.Cartesian3.fromDegrees(-75.1705217, 39.921786),
+              billboard: {
+                image: canvas.toDataURL(),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              },
+            });
+          }
+        );
+
+        //Create a red pin representing a hospital from the maki icon set.
+        var hospitalPin = Cesium.when(
+          pinBuilder.fromMakiIconId("hospital", Cesium.Color.RED, 48),
+          function (canvas) {
+            return viewer.entities.add({
+              name: "Hospital",
+              position: Cesium.Cartesian3.fromDegrees(-75.1698606, 39.9211275),
+              billboard: {
+                image: canvas.toDataURL(),
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              },
+            });
+          }
+        );
+
+        //Since some of the pins are created asynchronously, wait for them all to load before zooming/
+        Cesium.when.all(
+          [bluePin, questionPin, groceryPin, hospitalPin],
+          function (pins) {
+            viewer.zoomTo(pins);
+          }
+        );
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {timeline : false, animation : false});
-
-var pinBuilder = new Cesium.PinBuilder();
-
-var bluePin = viewer.entities.add({
-    name : 'Blank blue pin',
-    position : Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667),
-    billboard : {
-        image : pinBuilder.fromColor(Cesium.Color.ROYALBLUE, 48).toDataURL(),
-        verticalOrigin : Cesium.VerticalOrigin.BOTTOM
-    }
-});
-
-var questionPin = viewer.entities.add({
-    name : 'Question mark',
-    position : Cesium.Cartesian3.fromDegrees(-75.1698529, 39.9220071),
-    billboard : {
-        image : pinBuilder.fromText('?', Cesium.Color.BLACK, 48).toDataURL(),
-        verticalOrigin : Cesium.VerticalOrigin.BOTTOM
-    }
-});
-
-var url = Cesium.buildModuleUrl('Assets/Textures/maki/grocery.png');
-var groceryPin = Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), function(canvas) {
-    return viewer.entities.add({
-        name : 'Grocery store',
-        position : Cesium.Cartesian3.fromDegrees(-75.1705217, 39.921786),
-        billboard : {
-            image : canvas.toDataURL(),
-            verticalOrigin : Cesium.VerticalOrigin.BOTTOM
-        }
-    });
-});
-
-//Create a red pin representing a hospital from the maki icon set.
-var hospitalPin = Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48), function(canvas) {
-    return viewer.entities.add({
-        name : 'Hospital',
-        position : Cesium.Cartesian3.fromDegrees(-75.1698606, 39.9211275),
-        billboard : {
-            image : canvas.toDataURL(),
-            verticalOrigin : Cesium.VerticalOrigin.BOTTOM
-        }
-    });
-});
-
-//Since some of the pins are created asynchronously, wait for them all to load before zooming/
-Cesium.when.all([bluePin, questionPin, groceryPin, hospitalPin], function(pins){
-    viewer.zoomTo(pins);
-});
-
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

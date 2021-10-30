@@ -56,7 +56,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
 {
     // Note the halfSize cannot be computed in JavaScript because it is sent via
     // compressed vertex attributes that coerce it to an integer.
-    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
+    vec2 halfSize = imageSize * scale * 0.5;
     halfSize *= ((direction * 2.0) - 1.0);
 
     vec2 originTranslate = origin * abs(halfSize);
@@ -83,26 +83,10 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
     }
 #endif
 
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
-    }
-
     mpp = czm_metersPerPixel(positionEC);
+    positionEC.xy += (originTranslate + halfSize) * czm_branchFreeTernary(sizeInMeters, 1.0, mpp);
+    positionEC.xy += (translate + pixelOffset) * mpp;
 
-    if (!sizeInMeters)
-    {
-        originTranslate *= mpp;
-    }
-
-    positionEC.xy += originTranslate;
-    if (!sizeInMeters)
-    {
-        positionEC.xy += halfSize * mpp;
-    }
-
-    positionEC.xy += translate * mpp;
-    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
     return positionEC;
 }
 
@@ -377,7 +361,7 @@ if (lengthSq < disableDepthTestDistance) {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
 #ifdef LOG_DEPTH
-            czm_vertexLogDepth(vec4(czm_currentFrustum.x));
+            v_depthFromNearPlusOne = 1.0;
 #endif
         }
     }
@@ -439,6 +423,7 @@ if (lengthSq < disableDepthTestDistance) {
 
     v_outlineWidth = outlineWidth / 255.0;
     v_outlineColor = outlineColor;
+    v_outlineColor.a *= translucency;
 #endif
 
     v_pickColor = pickColor;

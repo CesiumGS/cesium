@@ -1,161 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Interactive 3D Tiles styling.">
-    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use 3D Tiles Styling to assign colors based on material or find all office buildings."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, 3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar">
+      <select class="cesium-button" id="dropdown">
+        <option value="0">Color By Building Material</option>
+        <option value="1">Color By Distance To Selected Location</option>
+        <option value="2">Highlight Residential Buildings</option>
+        <option value="3">Show Office Buildings Only</option>
+        <option value="4">Show Apartment Buildings Only</option>
+      </select>
+      <table class="infoPanel">
+        <tbody>
+          <tr>
+            <td>Click on a building to select as the central location</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // How to use the 3D Tiles Styling language to style individual features, like buildings.
+        // Styling language specification: https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+        // Add Cesium OSM buildings to the scene as our example 3D Tileset.
+        var osmBuildingsTileset = Cesium.createOsmBuildings();
+        viewer.scene.primitives.add(osmBuildingsTileset);
+
+        // Set the initial camera to look at Seattle
+        viewer.scene.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(-122.3472, 47.598, 370),
+          orientation: {
+            heading: Cesium.Math.toRadians(10),
+            pitch: Cesium.Math.toRadians(-10),
+          },
+        });
+
+        // Styling functions
+
+        // Color by material checks for null values since not all
+        // buildings have the material property.
+        function colorByMaterial() {
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
+            defines: {
+              material: "${feature['building:material']}",
+            },
+            color: {
+              conditions: [
+                ["${material} === null", "color('white')"],
+                ["${material} === 'glass'", "color('skyblue', 0.5)"],
+                ["${material} === 'concrete'", "color('grey')"],
+                ["${material} === 'brick'", "color('indianred')"],
+                ["${material} === 'stone'", "color('lightslategrey')"],
+                ["${material} === 'metal'", "color('lightgrey')"],
+                ["${material} === 'steel'", "color('lightsteelblue')"],
+                ["true", "color('white')"], // This is the else case
+              ],
+            },
+          });
+        }
+
+        function highlightAllResidentialBuildings() {
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [
+                  "${feature['building']} === 'apartments' || ${feature['building']} === 'residential'",
+                  "color('cyan', 0.9)",
+                ],
+                [true, "color('white')"],
+              ],
+            },
+          });
+        }
+
+        function showByBuildingType(buildingType) {
+          switch (buildingType) {
+            case "office":
+              osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
+                show: "${feature['building']} === 'office'",
+              });
+              break;
+            case "apartments":
+              osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
+                show: "${feature['building']} === 'apartments'",
+              });
+              break;
+            default:
+              break;
+          }
+        }
+
+        // Color the buildings based on their distance from a selected central location
+        function colorByDistanceToCoordinate(pickedLatitude, pickedLongitude) {
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
+            defines: {
+              distance:
+                "distance(vec2(${feature['cesium#longitude']}, ${feature['cesium#latitude']}), vec2(" +
+                pickedLongitude +
+                "," +
+                pickedLatitude +
+                "))",
+            },
+            color: {
+              conditions: [
+                ["${distance} > 0.014", "color('blue')"],
+                ["${distance} > 0.010", "color('green')"],
+                ["${distance} > 0.006", "color('yellow')"],
+                ["${distance} > 0.0001", "color('red')"],
+                ["true", "color('white')"],
+              ],
+            },
+          });
+        }
+
+        // When dropdown option is not "Color By Distance To Selected Location",
+        // remove the left click input event for selecting a central location
+        function removeCoordinatePickingOnLeftClick() {
+          document.querySelector(".infoPanel").style.visibility = "hidden";
+          handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        }
+
+        // Add event listeners to dropdown menu options
+        document.querySelector(".infoPanel").style.visibility = "hidden";
+        var menu = document.getElementById("dropdown");
+
+        menu.options[0].onselect = function () {
+          removeCoordinatePickingOnLeftClick();
+          colorByMaterial();
+        };
+
+        menu.options[1].onselect = function () {
+          // Default to Space Needle as the central location
+          colorByDistanceToCoordinate(47.62051, -122.34931);
+          document.querySelector(".infoPanel").style.visibility = "visible";
+          // Add left click input to select a building to and extract its coordinates
+          handler.setInputAction(function (movement) {
+            viewer.selectedEntity = undefined;
+            var pickedBuilding = viewer.scene.pick(movement.position);
+            if (pickedBuilding) {
+              var pickedLatitude = pickedBuilding.getProperty(
+                "cesium#latitude"
+              );
+              var pickedLongitude = pickedBuilding.getProperty(
+                "cesium#longitude"
+              );
+              colorByDistanceToCoordinate(pickedLatitude, pickedLongitude);
+            }
+          }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        };
+
+        menu.options[2].onselect = function () {
+          removeCoordinatePickingOnLeftClick();
+          highlightAllResidentialBuildings();
+        };
+
+        menu.options[3].onselect = function () {
+          removeCoordinatePickingOnLeftClick();
+          showByBuildingType("office");
+        };
+
+        menu.options[4].onselect = function () {
+          removeCoordinatePickingOnLeftClick();
+          showByBuildingType("apartments");
+        };
+
+        menu.onchange = function () {
+          Sandcastle.reset();
+          var item = menu.options[menu.selectedIndex];
+          if (item && typeof item.onselect === "function") {
+            item.onselect();
+          }
+        };
+
+        colorByMaterial();
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// A demo of interactive 3D Tiles styling
-// Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling
-// Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
-});
-
-viewer.scene.globe.depthTestAgainstTerrain = true;
-
-// Set the initial camera view to look at Manhattan
-var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
-var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
-viewer.scene.camera.setView({
-    destination: initialPosition,
-    orientation: initialOrientation,
-    endTransform: Cesium.Matrix4.IDENTITY
-});
-
-// Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
-viewer.scene.primitives.add(tileset);
-
-// Color buildings based on their height.
-function colorByHeight() {
-    tileset.style = new Cesium.Cesium3DTileStyle({
-        color: {
-            conditions: [
-                ['${height} >= 300', 'rgba(45, 0, 75, 0.5)'],
-                ['${height} >= 200', 'rgb(102, 71, 151)'],
-                ['${height} >= 100', 'rgb(170, 162, 204)'],
-                ['${height} >= 50', 'rgb(224, 226, 238)'],
-                ['${height} >= 25', 'rgb(252, 230, 200)'],
-                ['${height} >= 10', 'rgb(248, 176, 87)'],
-                ['${height} >= 5', 'rgb(198, 106, 11)'],
-                ['true', 'rgb(127, 59, 8)']
-            ]
-        }
-    });
-}
-
-// Color buildings by their latitude coordinate.
-function colorByLatitude() {
-    tileset.style = new Cesium.Cesium3DTileStyle({
-        defines: {
-            latitudeRadians: 'radians(${latitude})'
-        },
-        color: {
-            conditions: [
-                ['${latitudeRadians} >= 0.7125', "color('purple')"],
-                ['${latitudeRadians} >= 0.712', "color('red')"],
-                ['${latitudeRadians} >= 0.7115', "color('orange')"],
-                ['${latitudeRadians} >= 0.711', "color('yellow')"],
-                ['${latitudeRadians} >= 0.7105', "color('lime')"],
-                ['${latitudeRadians} >= 0.710', "color('cyan')"],
-                ['true', "color('blue')"]
-            ]
-        }
-    });
-}
-
-// Color buildings by distance from a landmark.
-function colorByDistance() {
-    tileset.style = new Cesium.Cesium3DTileStyle({
-        defines : {
-            distance : 'distance(vec2(radians(${longitude}), radians(${latitude})), vec2(-1.291777521, 0.7105706624))'
-        },
-        color : {
-            conditions : [
-                ['${distance} > 0.0012',"color('gray')"],
-                ['${distance} > 0.0008', "mix(color('yellow'), color('red'), (${distance} - 0.008) / 0.0004)"],
-                ['${distance} > 0.0004', "mix(color('green'), color('yellow'), (${distance} - 0.0004) / 0.0004)"],
-                ['${distance} < 0.00001', "color('white')"],
-                ['true', "mix(color('blue'), color('green'), ${distance} / 0.0004)"]
-            ]
-        }
-    });
-}
-
-// Color buildings with a '3' in their name.
-function colorByNameRegex() {
-    tileset.style = new Cesium.Cesium3DTileStyle({
-        color : "(regExp('3').test(String(${name}))) ? color('cyan', 0.9) : color('purple', 0.1)"
-    });
-}
-
-// Show only buildings greater than 200 meters in height.
-function hideByHeight() {
-    tileset.style = new Cesium.Cesium3DTileStyle({
-        show : '${height} > 200'
-    });
-}
-
-Sandcastle.addToolbarMenu([{
-    text : 'Color By Height',
-    onselect : function() {
-        colorByHeight();
-    }
-}, {
-    text : 'Color By Latitude',
-    onselect : function() {
-        colorByLatitude();
-    }
-}, {
-    text : 'Color By Distance',
-    onselect : function() {
-        colorByDistance();
-    }
-}, {
-    text : 'Color By Name Regex',
-    onselect : function() {
-        colorByNameRegex();
-    }
-}, {
-    text : 'Hide By Height',
-    onselect : function() {
-        hideByHeight();
-    }
-}]);
-
-colorByHeight();
-
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

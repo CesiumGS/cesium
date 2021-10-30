@@ -1,158 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Construct and style polylines.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Construct and style polylines." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-function createPrimitives(scene) {
-    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        function createPrimitives(scene) {
+          var polylines = scene.primitives.add(new Cesium.PolylineCollection());
 
-    // A simple polyline with two points.
-    var polyline = polylines.add({
-        positions : Cesium.PolylinePipeline.generateCartesianArc({
-            positions : Cesium.Cartesian3.fromDegreesArray([-120.0, 40.0,
-                                                            -110.0, 30.0])
-        }),
-        material : Cesium.Material.fromType('Color', {
-            color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)
-        })
-    });
-    Sandcastle.declare(polyline); // For highlighting on mouseover in Sandcastle.
+          // A simple polyline with two points.
+          var polyline = polylines.add({
+            positions: Cesium.PolylinePipeline.generateCartesianArc({
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -120.0,
+                40.0,
+                -110.0,
+                30.0,
+              ]),
+            }),
+            material: Cesium.Material.fromType("Color", {
+              color: new Cesium.Color(1.0, 1.0, 1.0, 1.0),
+            }),
+          });
+          Sandcastle.declare(polyline); // For highlighting on mouseover in Sandcastle.
 
-    // Apply a polyline outline material
-    var widePolyline = polylines.add({
-        positions : Cesium.PolylinePipeline.generateCartesianArc({
-            positions : Cesium.Cartesian3.fromDegreesArray([-105.0, 40.0,
-                                                            -100.0, 38.0,
-                                                            -105.0, 35.0,
-                                                            -100.0, 32.0])
-        }),
-        material : Cesium.Material.fromType(Cesium.Material.PolylineOutlineType, {
-            outlineWidth : 5.0
-        }),
-        width : 10.0
-    });
-    Sandcastle.declare(widePolyline); // For highlighting on mouseover in Sandcastle.
+          // Apply a polyline outline material
+          var widePolyline = polylines.add({
+            positions: Cesium.PolylinePipeline.generateCartesianArc({
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -105.0,
+                40.0,
+                -100.0,
+                38.0,
+                -105.0,
+                35.0,
+                -100.0,
+                32.0,
+              ]),
+            }),
+            material: Cesium.Material.fromType(
+              Cesium.Material.PolylineOutlineType,
+              {
+                outlineWidth: 5.0,
+              }
+            ),
+            width: 10.0,
+          });
+          Sandcastle.declare(widePolyline); // For highlighting on mouseover in Sandcastle.
 
-    // Apply a polyline glow material
-    var coloredPolyline = polylines.add({
-        positions : Cesium.PolylinePipeline.generateCartesianArc({
-            positions : Cesium.Cartesian3.fromDegreesArray([-95.0, 30.0,
-                                                            -85.0, 40.0])
-        }),
-        material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType, {
-            glowPower : 0.2,
-            taperPower : 0.2,
-            color : new Cesium.Color(1.0, 0.5, 0.0, 1.0)
-        }),
-        width : 10.0
-    });
-    Sandcastle.declare(coloredPolyline); // For highlighting on mouseover in Sandcastle.
+          // Apply a polyline glow material
+          var coloredPolyline = polylines.add({
+            positions: Cesium.PolylinePipeline.generateCartesianArc({
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -95.0,
+                30.0,
+                -85.0,
+                40.0,
+              ]),
+            }),
+            material: Cesium.Material.fromType(
+              Cesium.Material.PolylineGlowType,
+              {
+                glowPower: 0.2,
+                taperPower: 0.2,
+                color: new Cesium.Color(1.0, 0.5, 0.0, 1.0),
+              }
+            ),
+            width: 10.0,
+          });
+          Sandcastle.declare(coloredPolyline); // For highlighting on mouseover in Sandcastle.
 
-    // A polyline loop
-    var loopPolyline = polylines.add({
-        positions : Cesium.PolylinePipeline.generateCartesianArc({
-            positions : Cesium.Cartesian3.fromDegreesArray([-105.0, 30.0,
-                                                            -105.0, 25.0,
-                                                            -100.0, 22.0,
-                                                            -100.0, 28.0])
-        }),
-        width : 3.0,
-        loop : true
-    });
-    Sandcastle.declare(loopPolyline); // For highlighting on mouseover in Sandcastle.
+          // A polyline loop
+          var loopPolyline = polylines.add({
+            positions: Cesium.PolylinePipeline.generateCartesianArc({
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -105.0,
+                30.0,
+                -105.0,
+                25.0,
+                -100.0,
+                22.0,
+                -100.0,
+                28.0,
+              ]),
+            }),
+            width: 3.0,
+            loop: true,
+          });
+          Sandcastle.declare(loopPolyline); // For highlighting on mouseover in Sandcastle.
 
-    // Draw a line in a local reference frame
-    // The arrow points to the east, i.e. along the local x-axis.
-    var localPolylines = scene.primitives.add(new Cesium.PolylineCollection());
-    var center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
-    localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+          // Draw a line in a local reference frame
+          // The arrow points to the east, i.e. along the local x-axis.
+          var localPolylines = scene.primitives.add(
+            new Cesium.PolylineCollection()
+          );
+          var center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
+          localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+            center
+          );
 
-    var localPolyline = localPolylines.add({
-        positions : [
-            new Cesium.Cartesian3(0.0, 0.0, 0.0),
-            new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
-        ],
-        width : 10.0,
-        material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
-    });
-    Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
+          var localPolyline = localPolylines.add({
+            positions: [
+              new Cesium.Cartesian3(0.0, 0.0, 0.0),
+              new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+            ],
+            width: 10.0,
+            material: Cesium.Material.fromType(
+              Cesium.Material.PolylineArrowType
+            ),
+          });
+          Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
 
-    //Polyline using the fade material
-    var fadingPolyline = polylines.add({
-        positions : Cesium.PolylinePipeline.generateCartesianArc({
-            positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
-                                                                   -125, 43, 500000])
-        }),
-        width : 5,
-        material : Cesium.Material.fromType(Cesium.Material.FadeType, {
-            repeat: false,
-            fadeInColor: Cesium.Color.CYAN,
-            fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
-            time: new Cesium.Cartesian2(0.0, 0.0),
-            fadeDirection: {
+          //Polyline using the fade material
+          var fadingPolyline = polylines.add({
+            positions: Cesium.PolylinePipeline.generateCartesianArc({
+              positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                -75,
+                43,
+                500000,
+                -125,
+                43,
+                500000,
+              ]),
+            }),
+            width: 5,
+            material: Cesium.Material.fromType(Cesium.Material.FadeType, {
+              repeat: false,
+              fadeInColor: Cesium.Color.CYAN,
+              fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
+              time: new Cesium.Cartesian2(0.0, 0.0),
+              fadeDirection: {
                 x: true,
-                y: false
-            }
-        })
-    });
-    Sandcastle.declare(fadingPolyline); // For highlighting on mouseover in Sandcastle.
+                y: false,
+              },
+            }),
+          });
+          Sandcastle.declare(fadingPolyline); // For highlighting on mouseover in Sandcastle.
 
-    // A rhumb line with two points.
-    var rhumbLine = polylines.add({
-        positions : Cesium.PolylinePipeline.generateCartesianRhumbArc({
-            positions : Cesium.Cartesian3.fromDegreesArray([-130.0, 30.0,
-                                                            -75.0, 30.0])
-        }),
-        width: 5,
-        material : Cesium.Material.fromType('Color', {
-            color : new Cesium.Color(0.0, 1.0, 0.0, 1.0)
-        })
-    });
-    Sandcastle.declare(rhumbLine); // For highlighting on mouseover in Sandcastle.
+          // A rhumb line with two points.
+          var rhumbLine = polylines.add({
+            positions: Cesium.PolylinePipeline.generateCartesianRhumbArc({
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -130.0,
+                30.0,
+                -75.0,
+                30.0,
+              ]),
+            }),
+            width: 5,
+            material: Cesium.Material.fromType("Color", {
+              color: new Cesium.Color(0.0, 1.0, 0.0, 1.0),
+            }),
+          });
+          Sandcastle.declare(rhumbLine); // For highlighting on mouseover in Sandcastle.
+        }
 
-}
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        viewer.screenSpaceEventHandler.setInputAction(function (movement) {
+          var pickedPrimitive = viewer.scene.pick(movement.endPosition);
+          Sandcastle.highlight(pickedPrimitive);
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.screenSpaceEventHandler.setInputAction(function(movement) {
-    var pickedPrimitive = viewer.scene.pick(movement.endPosition);
-    Sandcastle.highlight(pickedPrimitive);
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-createPrimitives(viewer.scene);
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        createPrimitives(viewer.scene);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

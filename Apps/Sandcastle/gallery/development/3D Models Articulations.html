@@ -1,152 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Explore node transformations of 3D models.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Explore node transformations of 3D models."
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-    #toolbar {
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
         background: rgba(42, 42, 42, 0.8);
         padding: 4px;
         border-radius: 4px;
-    }
-    #toolbar input {
+      }
+      #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
-    }
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <div>Articulation:
-        <select class="cesium-button" data-bind="options: articulations,
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div>
+        Articulation:
+        <select
+          class="cesium-button"
+          data-bind="options: articulations,
                                                  optionsText: 'name',
-                                                 value: selectedArticulation"></select>
-    </div>
-    <table>
+                                                 value: selectedArticulation"
+        ></select>
+      </div>
+      <table>
         <tbody data-bind="foreach: stages">
-            <tr>
-                <td data-bind="text: name"></td>
-                <td>
-                    <input type="range" min="-3" max="3" step="0.01" data-bind="value: current,
+          <tr>
+            <td data-bind="text: name"></td>
+            <td>
+              <input
+                type="range"
+                min="-3"
+                max="3"
+                step="0.01"
+                data-bind="value: current,
                                       valueUpdate: 'input',
                                       attr: {
                                           min: minimum,
                                           max: maximum
-                                      }">
-                    <input type="text" size="2" data-bind="value: currentText">
-                </td>
-            </tr>
+                                      }"
+              />
+              <input type="text" size="2" data-bind="value: currentText" />
+            </td>
+          </tr>
         </tbody>
-    </table>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// this can be changed to any glTF model
-var modelUrl = 'https://assets.agi.com/models/launchvehicle.glb';
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // this can be changed to any glTF model
+        var modelUrl = "https://assets.agi.com/models/launchvehicle.glb";
 
-var viewModel = {
-    articulations: [],
-    stages: [],
-    selectedArticulation: undefined
-};
+        var viewModel = {
+          articulations: [],
+          stages: [],
+          selectedArticulation: undefined,
+        };
 
-Cesium.knockout.track(viewModel);
+        Cesium.knockout.track(viewModel);
 
-Cesium.knockout.getObservable(viewModel, 'selectedArticulation').subscribe(function(newArticulation) {
-    viewModel.stages = newArticulation.stages;
-});
+        Cesium.knockout
+          .getObservable(viewModel, "selectedArticulation")
+          .subscribe(function (newArticulation) {
+            viewModel.stages = newArticulation.stages;
+          });
 
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
 
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
 
-var height = 220000.0;
-var origin = Cesium.Cartesian3.fromDegrees(-74.693, 28.243, height);
-var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
+        var height = 220000.0;
+        var origin = Cesium.Cartesian3.fromDegrees(-74.693, 28.243, height);
+        var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          origin,
+          new Cesium.HeadingPitchRoll()
+        );
 
-var model = scene.primitives.add(Cesium.Model.fromGltf({
-    url : modelUrl,
-    modelMatrix : modelMatrix,
-    minimumPixelSize : 128
-}));
+        var model = scene.primitives.add(
+          Cesium.Model.fromGltf({
+            url: modelUrl,
+            modelMatrix: modelMatrix,
+            minimumPixelSize: 128,
+          })
+        );
 
-model.readyPromise.then(function(model) {
-    var camera = viewer.camera;
+        model.readyPromise
+          .then(function (model) {
+            var camera = viewer.camera;
 
-    // Zoom to model
-    var controller = scene.screenSpaceCameraController;
-    var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-    controller.minimumZoomDistance = r * 0.2;
+            // Zoom to model
+            var controller = scene.screenSpaceCameraController;
+            var r =
+              2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            controller.minimumZoomDistance = r * 0.2;
 
-    var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, Cesium.Cartesian3.ZERO, new Cesium.Cartesian3());
-    var heading = Cesium.Math.toRadians(0.0);
-    var pitch = Cesium.Math.toRadians(-10.0);
-    camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 0.8));
+            var center = Cesium.Matrix4.multiplyByPoint(
+              model.modelMatrix,
+              Cesium.Cartesian3.ZERO,
+              new Cesium.Cartesian3()
+            );
+            var heading = Cesium.Math.toRadians(0.0);
+            var pitch = Cesium.Math.toRadians(-10.0);
+            camera.lookAt(
+              center,
+              new Cesium.HeadingPitchRange(heading, pitch, r * 0.8)
+            );
 
-    viewModel.articulations = Object.keys(model._runtime.articulationsByName).map(function(articulationName) {
-        return {
-            name: articulationName,
-            stages: model._runtime.articulationsByName[articulationName].stages.map(function(stage) {
-                var stageModel = {
+            viewModel.articulations = Object.keys(
+              model._runtime.articulationsByName
+            ).map(function (articulationName) {
+              return {
+                name: articulationName,
+                stages: model._runtime.articulationsByName[
+                  articulationName
+                ].stages.map(function (stage) {
+                  var stageModel = {
                     name: stage.name,
                     minimum: stage.minimumValue,
                     maximum: stage.maximumValue,
-                    current: stage.currentValue
-                };
-                Cesium.knockout.track(stageModel);
-                Cesium.knockout.defineProperty(stageModel, 'currentText', {
-                    get: function() {
-                        return stageModel.current.toString();
+                    current: stage.currentValue,
+                  };
+                  Cesium.knockout.track(stageModel);
+                  Cesium.knockout.defineProperty(stageModel, "currentText", {
+                    get: function () {
+                      return stageModel.current.toString();
                     },
-                    set: function(value) {
-                        // coerce values to number
-                        stageModel.current = +value;
-                    }
-                });
-                Cesium.knockout.getObservable(stageModel, 'current').subscribe(function(newValue) {
-                    model.setArticulationStage(articulationName + ' ' + stage.name, +stageModel.current);
-                    model.applyArticulations();
-                });
-                return stageModel;
-            })
-        };
-    });
-    viewModel.selectedArticulation = viewModel.articulations[0];
+                    set: function (value) {
+                      // coerce values to number
+                      stageModel.current = +value;
+                    },
+                  });
+                  Cesium.knockout
+                    .getObservable(stageModel, "current")
+                    .subscribe(function (newValue) {
+                      model.setArticulationStage(
+                        articulationName + " " + stage.name,
+                        +stageModel.current
+                      );
+                      model.applyArticulations();
+                    });
+                  return stageModel;
+                }),
+              };
+            });
+            viewModel.selectedArticulation = viewModel.articulations[0];
+          })
+          .otherwise(function (error) {
+            console.error(error);
+          });
 
-}).otherwise(function(error){
-    console.error(error);
-});
-
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

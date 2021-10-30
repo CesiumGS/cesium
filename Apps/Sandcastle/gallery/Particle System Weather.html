@@ -1,170 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Particle systems for rain and snow.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, Tutorials">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Particle systems for rain and snow." />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Beginner, Showcases, Tutorials"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+          terrainProvider: Cesium.createWorldTerrain(),
         });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-</div>
-<script id="cesium_sandcastle_script">
-    function startup(Cesium) {
-        'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate : true,
-    terrainProvider: Cesium.createWorldTerrain()
-});
-var scene = viewer.scene;
-scene.globe.depthTestAgainstTerrain = true;
-var resetCameraFunction = function() {
-    scene.camera.setView({
-        destination : new Cesium.Cartesian3(277096.634865404, 5647834.481964232, 2985563.7039122293),
-        orientation : {
-            heading : 4.731089976107251,
-            pitch : -0.32003481981370063
-        }
-    });
-};
-resetCameraFunction();
+        var scene = viewer.scene;
+        scene.globe.depthTestAgainstTerrain = true;
+        var resetCameraFunction = function () {
+          scene.camera.setView({
+            destination: new Cesium.Cartesian3(
+              277096.634865404,
+              5647834.481964232,
+              2985563.7039122293
+            ),
+            orientation: {
+              heading: 4.731089976107251,
+              pitch: -0.32003481981370063,
+            },
+          });
+        };
+        resetCameraFunction();
 
-// snow
-var snowParticleSize = scene.drawingBufferWidth / 100.0;
-var snowRadius = 100000.0;
-var minimumSnowImageSize = new Cesium.Cartesian2(snowParticleSize, snowParticleSize);
-var maximumSnowImageSize = new Cesium.Cartesian2(snowParticleSize * 2.0, snowParticleSize * 2.0);
-var snowSystem;
+        // snow
+        var snowParticleSize = 12.0;
+        var snowRadius = 100000.0;
+        var minimumSnowImageSize = new Cesium.Cartesian2(
+          snowParticleSize,
+          snowParticleSize
+        );
+        var maximumSnowImageSize = new Cesium.Cartesian2(
+          snowParticleSize * 2.0,
+          snowParticleSize * 2.0
+        );
+        var snowSystem;
 
-var snowGravityScratch = new Cesium.Cartesian3();
-var snowUpdate = function(particle, dt) {
-    snowGravityScratch = Cesium.Cartesian3.normalize(particle.position, snowGravityScratch);
-    Cesium.Cartesian3.multiplyByScalar(snowGravityScratch, Cesium.Math.randomBetween(-30.0, -300.0), snowGravityScratch);
-    particle.velocity = Cesium.Cartesian3.add(particle.velocity, snowGravityScratch, particle.velocity);
+        var snowGravityScratch = new Cesium.Cartesian3();
+        var snowUpdate = function (particle, dt) {
+          snowGravityScratch = Cesium.Cartesian3.normalize(
+            particle.position,
+            snowGravityScratch
+          );
+          Cesium.Cartesian3.multiplyByScalar(
+            snowGravityScratch,
+            Cesium.Math.randomBetween(-30.0, -300.0),
+            snowGravityScratch
+          );
+          particle.velocity = Cesium.Cartesian3.add(
+            particle.velocity,
+            snowGravityScratch,
+            particle.velocity
+          );
 
-    var distance = Cesium.Cartesian3.distance(scene.camera.position, particle.position);
-    if (distance > snowRadius) {
-        particle.endColor.alpha = 0.0;
-    } else {
-        particle.endColor.alpha = snowSystem.endColor.alpha / (distance / snowRadius + 0.1);
-    }
-};
+          var distance = Cesium.Cartesian3.distance(
+            scene.camera.position,
+            particle.position
+          );
+          if (distance > snowRadius) {
+            particle.endColor.alpha = 0.0;
+          } else {
+            particle.endColor.alpha =
+              snowSystem.endColor.alpha / (distance / snowRadius + 0.1);
+          }
+        };
 
-snowSystem = new Cesium.ParticleSystem({
-    modelMatrix : new Cesium.Matrix4.fromTranslation(scene.camera.position),
-    minimumSpeed : -1.0,
-    maximumSpeed : 0.0,
-    lifetime : 15.0,
-    emitter : new Cesium.SphereEmitter(snowRadius),
-    startScale : 0.5,
-    endScale : 1.0,
-    image : '../../SampleData/snowflake_particle.png',
-    emissionRate : 7000.0,
-    startColor : Cesium.Color.WHITE.withAlpha(0.0),
-    endColor : Cesium.Color.WHITE.withAlpha(1.0),
-    minimumImageSize : minimumSnowImageSize,
-    maximumImageSize : maximumSnowImageSize,
-    updateCallback : snowUpdate
-});
-scene.primitives.add(snowSystem);
+        snowSystem = new Cesium.ParticleSystem({
+          modelMatrix: new Cesium.Matrix4.fromTranslation(
+            scene.camera.position
+          ),
+          minimumSpeed: -1.0,
+          maximumSpeed: 0.0,
+          lifetime: 15.0,
+          emitter: new Cesium.SphereEmitter(snowRadius),
+          startScale: 0.5,
+          endScale: 1.0,
+          image: "../../SampleData/snowflake_particle.png",
+          emissionRate: 7000.0,
+          startColor: Cesium.Color.WHITE.withAlpha(0.0),
+          endColor: Cesium.Color.WHITE.withAlpha(1.0),
+          minimumImageSize: minimumSnowImageSize,
+          maximumImageSize: maximumSnowImageSize,
+          updateCallback: snowUpdate,
+        });
+        scene.primitives.add(snowSystem);
 
-// rain
-var rainParticleSize = scene.drawingBufferWidth / 80.0;
-var rainRadius = 100000.0;
-var rainImageSize = new Cesium.Cartesian2(rainParticleSize, rainParticleSize * 2.0);
+        // rain
+        var rainParticleSize = 15.0;
+        var rainRadius = 100000.0;
+        var rainImageSize = new Cesium.Cartesian2(
+          rainParticleSize,
+          rainParticleSize * 2.0
+        );
 
-var rainSystem;
+        var rainSystem;
 
-var rainGravityScratch = new Cesium.Cartesian3();
-var rainUpdate = function(particle, dt) {
-    rainGravityScratch = Cesium.Cartesian3.normalize(particle.position, rainGravityScratch);
-    rainGravityScratch = Cesium.Cartesian3.multiplyByScalar(rainGravityScratch, -1050.0, rainGravityScratch);
+        var rainGravityScratch = new Cesium.Cartesian3();
+        var rainUpdate = function (particle, dt) {
+          rainGravityScratch = Cesium.Cartesian3.normalize(
+            particle.position,
+            rainGravityScratch
+          );
+          rainGravityScratch = Cesium.Cartesian3.multiplyByScalar(
+            rainGravityScratch,
+            -1050.0,
+            rainGravityScratch
+          );
 
-    particle.position = Cesium.Cartesian3.add(particle.position, rainGravityScratch, particle.position);
+          particle.position = Cesium.Cartesian3.add(
+            particle.position,
+            rainGravityScratch,
+            particle.position
+          );
 
-    var distance = Cesium.Cartesian3.distance(scene.camera.position, particle.position);
-    if (distance > rainRadius) {
-        particle.endColor.alpha = 0.0;
-    } else {
-        particle.endColor.alpha = rainSystem.endColor.alpha / (distance / rainRadius + 0.1);
-    }
-};
+          var distance = Cesium.Cartesian3.distance(
+            scene.camera.position,
+            particle.position
+          );
+          if (distance > rainRadius) {
+            particle.endColor.alpha = 0.0;
+          } else {
+            particle.endColor.alpha =
+              rainSystem.endColor.alpha / (distance / rainRadius + 0.1);
+          }
+        };
 
-rainSystem = new Cesium.ParticleSystem({
-    modelMatrix : new Cesium.Matrix4.fromTranslation(scene.camera.position),
-    speed : -1.0,
-    lifetime : 15.0,
-    emitter : new Cesium.SphereEmitter(rainRadius),
-    startScale : 1.0,
-    endScale : 0.0,
-    image : '../../SampleData/circular_particle.png',
-    emissionRate : 9000.0,
-    startColor :new Cesium.Color(0.27, 0.5, 0.70, 0.0),
-    endColor : new Cesium.Color(0.27, 0.5, 0.70, 0.98),
-    imageSize : rainImageSize,
-    updateCallback : rainUpdate
-});
-scene.primitives.add(rainSystem);
+        rainSystem = new Cesium.ParticleSystem({
+          modelMatrix: new Cesium.Matrix4.fromTranslation(
+            scene.camera.position
+          ),
+          speed: -1.0,
+          lifetime: 15.0,
+          emitter: new Cesium.SphereEmitter(rainRadius),
+          startScale: 1.0,
+          endScale: 0.0,
+          image: "../../SampleData/circular_particle.png",
+          emissionRate: 9000.0,
+          startColor: new Cesium.Color(0.27, 0.5, 0.7, 0.0),
+          endColor: new Cesium.Color(0.27, 0.5, 0.7, 0.98),
+          imageSize: rainImageSize,
+          updateCallback: rainUpdate,
+        });
+        scene.primitives.add(rainSystem);
 
-// button
-Sandcastle.addToolbarButton('Reset Camera', resetCameraFunction);
+        // button
+        Sandcastle.addToolbarButton("Reset Camera", resetCameraFunction);
 
-// drop down
-var options = [{
-    text : 'Snow',
-    onselect : function() {
-        rainSystem.show = false;
-        snowSystem.show = true;
+        // drop down
+        var options = [
+          {
+            text: "Snow",
+            onselect: function () {
+              rainSystem.show = false;
+              snowSystem.show = true;
 
-        scene.skyAtmosphere.hueShift = -0.8;
-        scene.skyAtmosphere.saturationShift = -0.7;
-        scene.skyAtmosphere.brightnessShift = -0.33;
+              scene.skyAtmosphere.hueShift = -0.8;
+              scene.skyAtmosphere.saturationShift = -0.7;
+              scene.skyAtmosphere.brightnessShift = -0.33;
 
-        scene.fog.density = 0.001;
-        scene.fog.minimumBrightness = 0.8;
-    }
-}, {
-    text : 'Rain',
-    onselect : function() {
-        rainSystem.show = true;
-        snowSystem.show = false;
+              scene.fog.density = 0.001;
+              scene.fog.minimumBrightness = 0.8;
+            },
+          },
+          {
+            text: "Rain",
+            onselect: function () {
+              rainSystem.show = true;
+              snowSystem.show = false;
 
-        scene.skyAtmosphere.hueShift = -0.97;
-        scene.skyAtmosphere.saturationShift = 0.25;
-        scene.skyAtmosphere.brightnessShift = -0.4;
+              scene.skyAtmosphere.hueShift = -0.97;
+              scene.skyAtmosphere.saturationShift = 0.25;
+              scene.skyAtmosphere.brightnessShift = -0.4;
 
-        scene.fog.density = 0.00025;
-        scene.fog.minimumBrightness = 0.01;
-    }
-}];
-Sandcastle.addToolbarMenu(options);
+              scene.fog.density = 0.00025;
+              scene.fog.minimumBrightness = 0.01;
+            },
+          },
+        ];
+        Sandcastle.addToolbarMenu(options);
         //Sandcastle_End
-    Sandcastle.finishedLoading();
-    }
+        Sandcastle.finishedLoading();
+      }
 
-    if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-    } else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-    }
-</script>
-
-</body>
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

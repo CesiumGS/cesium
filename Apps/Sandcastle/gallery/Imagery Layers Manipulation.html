@@ -1,269 +1,336 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Layer imagery from multiple sources, including WMS servers, Bing Maps, ArcGIS Online, OpenStreetMaps, and more, and adjust the alpha of each independently.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Layer imagery from multiple sources, including WMS servers, Bing Maps, ArcGIS Online, OpenStreetMaps, and more, and adjust the alpha of each independently."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-    #toolbar {
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar {
         background: rgba(42, 42, 42, 0.8);
         padding: 4px;
         border-radius: 4px;
-    }
-    #toolbar input {
+      }
+
+      #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
-    }
-    #toolbar table tr {
+      }
+
+      #toolbar table tr {
         transform: translateY(0);
         transition: transform 0.4s ease-out;
-    }
-    #toolbar table tr.up {
+      }
+
+      #toolbar table tr.up {
         transform: translateY(33px);
         transition: none;
-    }
-    #toolbar table tr.down {
+      }
+
+      #toolbar table tr.down {
         transform: translateY(-33px);
         transition: none;
-    }
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-<table><tbody data-bind="foreach: layers">
-    <tr data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }">
-        <td><input type="checkbox" data-bind="checked: show"></td>
-        <td>
-            <span data-bind="text: name, visible: !$parent.isSelectableLayer($data)"></span>
-            <select data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"></select>
-        </td>
-        <td>
-            <input type="range" min="0" max="1" step="0.01" data-bind="value: alpha, valueUpdate: 'input'">
-        </td>
-        <td><button type="button" class="cesium-button" data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())">&#9650;</button></td>
-        <td><button type="button" class="cesium-button" data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())">&#9660;</button></td>
-    </tr>
-</tbody></table>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    baseLayerPicker : false
-});
-var imageryLayers = viewer.imageryLayers;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody data-bind="foreach: layers">
+          <tr
+            data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }"
+          >
+            <td><input type="checkbox" data-bind="checked: show" /></td>
+            <td>
+              <span
+                data-bind="text: name, visible: !$parent.isSelectableLayer($data)"
+              ></span>
+              <select
+                data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"
+              ></select>
+            </td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                data-bind="value: alpha, valueUpdate: 'input'"
+              />
+            </td>
+            <td>
+              <button
+                type="button"
+                class="cesium-button"
+                data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())"
+              >
+                ▲
+              </button>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="cesium-button"
+                data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())"
+              >
+                ▼
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          baseLayerPicker: false,
+        });
+        var imageryLayers = viewer.imageryLayers;
 
-var viewModel = {
-    layers : [],
-    baseLayers : [],
-    upLayer : null,
-    downLayer : null,
-    selectedLayer : null,
-    isSelectableLayer : function(layer) {
-        return this.baseLayers.indexOf(layer) >= 0;
-    },
-    raise : function(layer, index) {
-        imageryLayers.raise(layer);
-        viewModel.upLayer = layer;
-        viewModel.downLayer = viewModel.layers[Math.max(0, index - 1)];
-        updateLayerList();
-        window.setTimeout(function() { viewModel.upLayer = viewModel.downLayer = null; }, 10);
-    },
-    lower : function(layer, index) {
-        imageryLayers.lower(layer);
-        viewModel.upLayer = viewModel.layers[Math.min(viewModel.layers.length - 1, index + 1)];
-        viewModel.downLayer = layer;
-        updateLayerList();
-        window.setTimeout(function() { viewModel.upLayer = viewModel.downLayer = null; }, 10);
-    },
-    canRaise : function(layerIndex) {
-        return layerIndex > 0;
-    },
-    canLower : function(layerIndex) {
-        return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
-    }
-};
-var baseLayers = viewModel.baseLayers;
+        var viewModel = {
+          layers: [],
+          baseLayers: [],
+          upLayer: null,
+          downLayer: null,
+          selectedLayer: null,
+          isSelectableLayer: function (layer) {
+            return this.baseLayers.indexOf(layer) >= 0;
+          },
+          raise: function (layer, index) {
+            imageryLayers.raise(layer);
+            viewModel.upLayer = layer;
+            viewModel.downLayer = viewModel.layers[Math.max(0, index - 1)];
+            updateLayerList();
+            window.setTimeout(function () {
+              viewModel.upLayer = viewModel.downLayer = null;
+            }, 10);
+          },
+          lower: function (layer, index) {
+            imageryLayers.lower(layer);
+            viewModel.upLayer =
+              viewModel.layers[
+                Math.min(viewModel.layers.length - 1, index + 1)
+              ];
+            viewModel.downLayer = layer;
+            updateLayerList();
+            window.setTimeout(function () {
+              viewModel.upLayer = viewModel.downLayer = null;
+            }, 10);
+          },
+          canRaise: function (layerIndex) {
+            return layerIndex > 0;
+          },
+          canLower: function (layerIndex) {
+            return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
+          },
+        };
+        var baseLayers = viewModel.baseLayers;
 
-Cesium.knockout.track(viewModel);
+        Cesium.knockout.track(viewModel);
 
-function setupLayers() {
-    // Create all the base layers that this example will support.
-    // These base layers aren't really special.  It's possible to have multiple of them
-    // enabled at once, just like the other layers, but it doesn't make much sense because
-    // all of these layers cover the entire globe and are opaque.
-    addBaseLayerOption(
-            'Bing Maps Aerial',
-            undefined); // the current base layer
-    addBaseLayerOption(
-            'Bing Maps Road',
-            new Cesium.BingMapsImageryProvider({
-                url : 'https://dev.virtualearth.net',
-                mapStyle: Cesium.BingMapsStyle.ROAD
-            }));
-    addBaseLayerOption(
-            'ArcGIS World Street Maps',
+        function setupLayers() {
+          // Create all the base layers that this example will support.
+          // These base layers aren't really special.  It's possible to have multiple of them
+          // enabled at once, just like the other layers, but it doesn't make much sense because
+          // all of these layers cover the entire globe and are opaque.
+          addBaseLayerOption("Bing Maps Aerial", undefined); // the current base layer
+          addBaseLayerOption(
+            "Bing Maps Road",
+            Cesium.createWorldImagery({
+              style: Cesium.IonWorldImageryStyle.ROAD,
+            })
+          );
+          addBaseLayerOption(
+            "ArcGIS World Street Maps",
             new Cesium.ArcGisMapServerImageryProvider({
-                url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-            }));
-    addBaseLayerOption(
-            'OpenStreetMaps',
-            Cesium.createOpenStreetMapImageryProvider());
-    addBaseLayerOption(
-            'MapQuest OpenStreetMaps',
-            Cesium.createOpenStreetMapImageryProvider({
-                url : 'https://otile1-s.mqcdn.com/tiles/1.0.0/osm/'
-            }));
-    addBaseLayerOption(
-            'Stamen Maps',
-            Cesium.createOpenStreetMapImageryProvider({
-                url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
-                fileExtension: 'jpg',
-                credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
-            }));
-    addBaseLayerOption(
-            'Natural Earth II (local)',
-            Cesium.createTileMapServiceImageryProvider({
-                url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-            }));
-    addBaseLayerOption(
-            'USGS Shaded Relief (via WMTS)',
+              url:
+                "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
+            })
+          );
+          addBaseLayerOption(
+            "OpenStreetMaps",
+            new Cesium.OpenStreetMapImageryProvider()
+          );
+          addBaseLayerOption(
+            "Stamen Maps",
+            new Cesium.OpenStreetMapImageryProvider({
+              url: "https://stamen-tiles.a.ssl.fastly.net/watercolor/",
+              fileExtension: "jpg",
+              credit:
+                "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.",
+            })
+          );
+          addBaseLayerOption(
+            "Natural Earth II (local)",
+            new Cesium.TileMapServiceImageryProvider({
+              url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            })
+          );
+          addBaseLayerOption(
+            "USGS Shaded Relief (via WMTS)",
             new Cesium.WebMapTileServiceImageryProvider({
-                url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
-                layer : 'USGSShadedReliefOnly',
-                style : 'default',
-                format : 'image/jpeg',
-                tileMatrixSetID : 'default028mm',
-                maximumLevel: 19,
-                credit : 'U. S. Geological Survey'
-            }));
+              url:
+                "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS",
+              layer: "USGSShadedReliefOnly",
+              style: "default",
+              format: "image/jpeg",
+              tileMatrixSetID: "default028mm",
+              maximumLevel: 19,
+              credit: "U. S. Geological Survey",
+            })
+          );
 
-    // Create the additional layers
-    addAdditionalLayerOption(
-            'United States GOES Infrared',
+          // Create the additional layers
+          addAdditionalLayerOption(
+            "United States GOES Infrared",
             new Cesium.WebMapServiceImageryProvider({
-                url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
-                layers : 'goes_conus_ir',
-                credit : 'Infrared data courtesy Iowa Environmental Mesonet',
-                parameters : {
-                    transparent : 'true',
-                    format : 'image/png'
-                }
-            }));
-    addAdditionalLayerOption(
-            'United States Weather Radar',
+              url:
+                "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?",
+              layers: "goes_conus_ir",
+              credit: "Infrared data courtesy Iowa Environmental Mesonet",
+              parameters: {
+                transparent: "true",
+                format: "image/png",
+              },
+            })
+          );
+          addAdditionalLayerOption(
+            "United States Weather Radar",
             new Cesium.WebMapServiceImageryProvider({
-                url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
-                layers : 'nexrad-n0r',
-                credit : 'Radar data courtesy Iowa Environmental Mesonet',
-                parameters : {
-                    transparent : 'true',
-                    format : 'image/png'
-                }
-            }));
-    addAdditionalLayerOption(
-            'TileMapService Image',
-            Cesium.createTileMapServiceImageryProvider({
-                url : '../images/cesium_maptiler/Cesium_Logo_Color'
+              url:
+                "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?",
+              layers: "nexrad-n0r",
+              credit: "Radar data courtesy Iowa Environmental Mesonet",
+              parameters: {
+                transparent: "true",
+                format: "image/png",
+              },
+            })
+          );
+          addAdditionalLayerOption(
+            "TileMapService Image",
+            new Cesium.TileMapServiceImageryProvider({
+              url: "../images/cesium_maptiler/Cesium_Logo_Color",
             }),
-            0.2);
-    addAdditionalLayerOption(
-            'Single Image',
+            0.2
+          );
+          addAdditionalLayerOption(
+            "Single Image",
             new Cesium.SingleTileImageryProvider({
-                url : '../images/Cesium_Logo_overlay.png',
-                rectangle : Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75)
+              url: "../images/Cesium_Logo_overlay.png",
+              rectangle: Cesium.Rectangle.fromDegrees(
+                -115.0,
+                38.0,
+                -107,
+                39.75
+              ),
             }),
-            1.0);
-    addAdditionalLayerOption(
-            'Grid',
-            new Cesium.GridImageryProvider(), 1.0, false);
-    addAdditionalLayerOption(
-            'Tile Coordinates',
-            new Cesium.TileCoordinatesImageryProvider(), 1.0, false);
-}
-
-function addBaseLayerOption(name, imageryProvider) {
-    var layer;
-    if (typeof imageryProvider === 'undefined') {
-        layer = imageryLayers.get(0);
-        viewModel.selectedLayer = layer;
-    } else {
-        layer = new Cesium.ImageryLayer(imageryProvider);
-    }
-
-    layer.name = name;
-    baseLayers.push(layer);
-}
-
-function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
-    var layer = imageryLayers.addImageryProvider(imageryProvider);
-    layer.alpha = Cesium.defaultValue(alpha, 0.5);
-    layer.show = Cesium.defaultValue(show, true);
-    layer.name = name;
-    Cesium.knockout.track(layer, ['alpha', 'show', 'name']);
-}
-
-function updateLayerList() {
-    var numLayers = imageryLayers.length;
-    viewModel.layers.splice(0, viewModel.layers.length);
-    for (var i = numLayers - 1; i >= 0; --i) {
-        viewModel.layers.push(imageryLayers.get(i));
-    }
-}
-
-setupLayers();
-updateLayerList();
-
-//Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'selectedLayer').subscribe(function(baseLayer) {
-    // Handle changes to the drop-down base layer selector.
-    var activeLayerIndex = 0;
-    var numLayers = viewModel.layers.length;
-    for (var i = 0; i < numLayers; ++i) {
-        if (viewModel.isSelectableLayer(viewModel.layers[i])) {
-            activeLayerIndex = i;
-            break;
+            1.0
+          );
+          addAdditionalLayerOption(
+            "Grid",
+            new Cesium.GridImageryProvider(),
+            1.0,
+            false
+          );
+          addAdditionalLayerOption(
+            "Tile Coordinates",
+            new Cesium.TileCoordinatesImageryProvider(),
+            1.0,
+            false
+          );
         }
-    }
-    var activeLayer = viewModel.layers[activeLayerIndex];
-    var show = activeLayer.show;
-    var alpha = activeLayer.alpha;
-    imageryLayers.remove(activeLayer, false);
-    imageryLayers.add(baseLayer, numLayers - activeLayerIndex - 1);
-    baseLayer.show = show;
-    baseLayer.alpha = alpha;
-    updateLayerList();
-});
 
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        function addBaseLayerOption(name, imageryProvider) {
+          var layer;
+          if (typeof imageryProvider === "undefined") {
+            layer = imageryLayers.get(0);
+            viewModel.selectedLayer = layer;
+          } else {
+            layer = new Cesium.ImageryLayer(imageryProvider);
+          }
+
+          layer.name = name;
+          baseLayers.push(layer);
+        }
+
+        function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
+          var layer = imageryLayers.addImageryProvider(imageryProvider);
+          layer.alpha = Cesium.defaultValue(alpha, 0.5);
+          layer.show = Cesium.defaultValue(show, true);
+          layer.name = name;
+          Cesium.knockout.track(layer, ["alpha", "show", "name"]);
+        }
+
+        function updateLayerList() {
+          var numLayers = imageryLayers.length;
+          viewModel.layers.splice(0, viewModel.layers.length);
+          for (var i = numLayers - 1; i >= 0; --i) {
+            viewModel.layers.push(imageryLayers.get(i));
+          }
+        }
+
+        setupLayers();
+        updateLayerList();
+
+        //Bind the viewModel to the DOM elements of the UI that call for it.
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "selectedLayer")
+          .subscribe(function (baseLayer) {
+            // Handle changes to the drop-down base layer selector.
+            var activeLayerIndex = 0;
+            var numLayers = viewModel.layers.length;
+            for (var i = 0; i < numLayers; ++i) {
+              if (viewModel.isSelectableLayer(viewModel.layers[i])) {
+                activeLayerIndex = i;
+                break;
+              }
+            }
+            var activeLayer = viewModel.layers[activeLayerIndex];
+            var show = activeLayer.show;
+            var alpha = activeLayer.alpha;
+            imageryLayers.remove(activeLayer, false);
+            imageryLayers.add(baseLayer, numLayers - activeLayerIndex - 1);
+            baseLayer.show = show;
+            baseLayer.alpha = alpha;
+            updateLayerList();
+          });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

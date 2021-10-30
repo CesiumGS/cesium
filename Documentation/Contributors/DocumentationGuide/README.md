@@ -1,40 +1,46 @@
 # Documentation Guide
 
-CesiumJS's reference documentation is one of the most popular sections of the CesiumJS website, and a critical resource for developers.  
+CesiumJS's reference documentation is one of the most popular sections of the CesiumJS website, and a critical resource for developers.
 
 This guide describes best practices for writing reference doc.
 
 Always include doc for new identifiers (classes, functions, properties, constants) in the public CesiumJS API.
 
-Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js).
+Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/CesiumGS/cesium/blob/main/Source/Scene/Model.js).
 
-* [Building the Doc](#building-the-doc)
-* [Basics](#basics)
-* [Parameters](#parameters)
-* [`options` Parameters](#options-parameters)
-* [Exceptions](#exceptions)
-* [Examples](#examples)
-* [References](#references)
-* [Classes](#classes)
-* [Properties and Constants](#properties-and-constants)
-* [Functions and Callbacks](#functions-and-callbacks)
-* [Private](#private)
-* [Layout Reference](#layout-reference)
-   * [Constructor Function](#constructor-function)
-   * [Member Function](#member-function)
-   * [Property](#property)
-   * [Property Getter/Setter](#property-gettersetter)
-   * [Standalone Function](#standalone-function)
+- [Building the Doc](#building-the-doc)
+- [Basics](#basics)
+- [Parameters](#parameters)
+- [`options` Parameters](#options-parameters)
+- [Exceptions](#exceptions)
+- [Examples](#examples)
+- [References](#references)
+- [Classes](#classes)
+- [Properties and Constants](#properties-and-constants)
+- [Functions and Callbacks](#functions-and-callbacks)
+- [Private](#private)
+- [Layout Reference](#layout-reference)
+  - [Constructor Function](#constructor-function)
+  - [Member Function](#member-function)
+  - [Property](#property)
+  - [Property Getter/Setter](#property-gettersetter)
+  - [Standalone Function](#standalone-function)
+- [TypeScript type definitions](#typescript)
 
 ## Building the Doc
 
-The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags.  At the command line, build the doc from the root CesiumJS directory by running the following:
+The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags. At the command line, build the doc from the root CesiumJS directory by running the following:
+
 ```
 npm run generateDocumentation
 ```
+
 This creates a `Build/Documentation` directory with the built HTML files.
 
+> Alternatively, you can build documentation in watch mode `npm run generateDocumentation-watch` and have it generated automatically when source files change.
+
 There is a link to the doc from CesiumJS's main `index.html` when running
+
 ```
 npm start
 ```
@@ -44,9 +50,10 @@ npm start
 ## Basics
 
 Consider one of the simplest functions in CesiumJS, `defined`:
+
 ```javascript
 /**
- * @exports defined
+ * @function
  *
  * @param {*} value The object.
  * @returns {Boolean} Returns true if the object is defined, returns false otherwise.
@@ -59,39 +66,45 @@ Consider one of the simplest functions in CesiumJS, `defined`:
  * }
  */
 function defined(value) {
-    return value !== undefined;
-};
+  return value !== undefined;
+}
 ```
 
-* The doc for `defined` is in the comment starting with `/**`.  JSDoc tags begin with `@`.
-* `@exports` describes the name of the function that is exported from the module.
-* `@param` describes the function's parameters, and `@returns` describes the function's return value.
-* `@example` describes a code sample.
+- The doc for `defined` is in the comment starting with `/**`. JSDoc tags begin with `@`.
+- `@function` tells JSDoc that this is a function.
+- `@param` describes the function's parameters, and `@returns` describes the function's return value.
+- `@example` describes a code sample.
 
 The above reference doc is built into the following:
 
 ![](defined.jpg)
 
-This guide describes best practices for writing doc.  For complete details on JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
+This guide describes best practices for writing doc. For complete details on JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
 
 ## Parameters
 
-* Document all function parameters.
-* Use `[]` for optional parameters and include the default value, e.g.,
+- Document all function parameters.
+- Use `[]` for optional parameters and include the default value, e.g.,
+
 ```
 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
 
 ```
-* Omit the default value if it is `undefined`, e.g.,
+
+- Omit the default value if it is `undefined`, e.g.,
+
 ```
 * @param {Cartesian3} [result] The object on which to store the result.
 ```
-* If a parameter can be more than one type, use `|` to separate the types, e.g.,
+
+- If a parameter can be more than one type, use `|` to separate the types, e.g.,
+
 ```
 * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
 ```
 
 As a complete example,
+
 ```javascript
 /**
  * Computes a Matrix4 instance from a Matrix3 representing the rotation
@@ -105,6 +118,7 @@ As a complete example,
 Matrix4.fromRotationTranslation = function(rotation, translation, result) {
     // ..
 ```
+
 generates
 
 ![](fromRotationTranslation.jpg)
@@ -112,7 +126,8 @@ The CesiumJS classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
 
-Each property of an `options` parameter (see the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/true/master/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
+Each property of an `options` parameter (see the [Coding Guide](https://github.com/CesiumGS/cesium/true/main/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
+
 ```
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.length=10000000.0] The length of the axes in meters.
@@ -121,6 +136,7 @@ Each property of an `options` parameter (see the [Coding Guide](https://github.c
  * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
 ```
+
 generates
 
 ![](DebugModelMatrixPrimitive.jpg)
@@ -129,7 +145,8 @@ If all `options` properties are optional, also mark the `options` object optiona
 
 ## Exceptions
 
-* Document exceptions after the `@param`/`@returns` section using `@exception`, e.g.,
+- Document exceptions after the `@param`/`@returns` section using `@exception`, e.g.,
+
 ```javascript
 /**
  * ...
@@ -143,7 +160,9 @@ Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, r
     }
     // ...
 ```
-* Do not document exceptions for missing parameters; it is implicit in the `@param` tag because the parameter is not optional, e.g.,
+
+- Do not document exceptions for missing parameters; it is implicit in the `@param` tag because the parameter is not optional, e.g.,
+
 ```javascript
 /**
  * Computes a Matrix4 instance from a column-major order array.
@@ -152,22 +171,23 @@ Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, r
  * @param {Matrix4} [result] The object in which the result will be stored. If undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  */
-Matrix4.fromColumnMajorArray = function(values, result) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(values)) {
-        throw new DeveloperError('values is required.');
-    }
-    //>>includeEnd('debug');
+Matrix4.fromColumnMajorArray = function (values, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(values)) {
+    throw new DeveloperError("values is required.");
+  }
+  //>>includeEnd('debug');
 
-    return Matrix4.clone(values, result);
+  return Matrix4.clone(values, result);
 };
 ```
 
 ## Examples
 
-Developers almost always jump to an example before reading the doc.  Provide concise but instructive code examples with enough context whenever possible.
+Developers almost always jump to an example before reading the doc. Provide concise but instructive code examples with enough context whenever possible.
 
 Useful examples:
+
 ```javascript
 /**
  * ...
@@ -193,6 +213,7 @@ Model.prototype.getNode = function(name) {
 ```
 
 Unnecessary example:
+
 ```javascript
 /**
  * ..
@@ -203,12 +224,13 @@ Unnecessary example:
 CesiumMath.EPSILON1 = 0.1;
 ```
 
-* Use the Cesium namespace (`Cesium.`) in examples.
-* Limit code in `@example` tags to 80 lines so it does not overflow.
+- Use the Cesium namespace (`Cesium.`) in examples.
+- Limit code in `@example` tags to 80 lines so it does not overflow.
 
 ## References
 
-* Use `@see` sparingly to link to related classes, functions, and online resources., e.g.,
+- Use `@see` sparingly to link to related classes, functions, and online resources., e.g.,
+
 ```javascript
 /**
  * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is
@@ -221,18 +243,22 @@ CesiumMath.EPSILON1 = 0.1;
  * @see EllipsoidTerrainProvider
  * @see CesiumTerrainProvider
  */
-function TerrainProvider() { /* ... */ }
+function TerrainProvider() {
+  /* ... */
+}
 ```
 
-* Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
+- Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
+
 ```
 @see Class
 @see Class#instanceMember
 @see Class.staticMember
 ```
-* Use `{@link className}` to link to another documented type.  This is not required for `@param` tags when the type is provided.
-* Use `<code> </code>` tags when referring to parameters or other variable names and values within a description.
-* Use `{@link URL|title}` to link to external sites.
+
+- Use `{@link className}` to link to another documented type. This is not required for `@param` tags when the type is provided.
+- Use `<code> </code>` tags when referring to parameters or other variable names and values within a description.
+- Use `{@link URL|title}` to link to external sites.
 
 ## Classes
 
@@ -253,7 +279,8 @@ function Cartesian3(x, y, z) {
 
 ## Properties and Constants
 
-* Use `@type` and `@default` (whenever possible, except when the default is `undefined`) to document properties, e.g.,
+- Use `@type` and `@default` (whenever possible, except when the default is `undefined`) to document properties, e.g.,
+
 ```javascript
 function Cartesian3(x, y) {
     /**
@@ -266,9 +293,11 @@ function Cartesian3(x, y) {
 
     // ...
 ```
-* Use `@memberOf` when documenting property getter/setters, e.g.,
+
+- Use `@memberOf` when documenting property getter/setters, e.g.,
+
 ```javascript
-defineProperties(Entity.prototype, {
+Object.defineProperties(Entity.prototype, {
     /**
      * Gets or sets whether this entity should be displayed. When set to true,
      * the entity is only displayed if the parent entity's show property is also true.
@@ -286,9 +315,11 @@ defineProperties(Entity.prototype, {
     },
     // ...
 ```
-* Use `@readonly` to indicate read-only properties, e.g.,
+
+- Use `@readonly` to indicate read-only properties, e.g.,
+
 ```javascript
-defineProperties(Entity.prototype, {
+Object.defineProperties(Entity.prototype, {
     /**
      * Gets the unique ID associated with this object.
      *
@@ -303,8 +334,9 @@ defineProperties(Entity.prototype, {
     },
     // ...
 ```
-* The description for readonly properties should start with "Gets", and the description for read/write properties should start with "Gets or sets."
-* Document constants with `@constant`, e.g.,
+
+- The description for readonly properties should start with "Gets", and the description for read/write properties should start with "Gets or sets."
+- Document constants with `@constant`, e.g.,
 
 ```javascript
 /**
@@ -313,12 +345,13 @@ defineProperties(Entity.prototype, {
  * @type {Cartesian3}
  * @constant
  */
-Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
 ## Functions and Callbacks
 
-* Use `@function` when JSDoc can't infer that an identifier is a function because the JavaScript `function` keyword isn't used, e.g.,
+- Use `@function` when JSDoc can't infer that an identifier is a function because the JavaScript `function` keyword isn't used, e.g.,
+
 ```javascript
 /**
  * Creates a Cartesian4 from four consecutive elements in an array.
@@ -340,26 +373,28 @@ Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
  */
 Cartesian4.fromArray = Cartesian4.unpack;
 ```
-* Use `@callback` to document a function signature, e.g.,
+
+- Use `@callback` to document a function signature, e.g.,
+
 ```javascript
 /**
  * Sort the items in the queue in-place.
  *
- * @param {Queue~Comparator} compareFunction A function that defines the sort order.
+ * @param {Queue.Comparator} compareFunction A function that defines the sort order.
  */
-Queue.prototype.sort = function(compareFunction) {
-    if (this._offset > 0) {
-        //compact array
-        this._array = this._array.slice(this._offset);
-        this._offset = 0;
-    }
+Queue.prototype.sort = function (compareFunction) {
+  if (this._offset > 0) {
+    //compact array
+    this._array = this._array.slice(this._offset);
+    this._offset = 0;
+  }
 
-    this._array.sort(compareFunction);
+  this._array.sort(compareFunction);
 };
 
 /**
  * A function used to compare two items while sorting a queue.
- * @callback Queue~Comparator
+ * @callback Queue.Comparator
  *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
@@ -376,9 +411,10 @@ Queue.prototype.sort = function(compareFunction) {
 
 ## Private
 
-Documentation is not generated for private members that start with `_`.  It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/CodingGuide/README.md#design)).
+Documentation is not generated for private members that start with `_`. It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide/README.md#design)).
 
 If a member or function doesn't start with `_`, but is intended to be private, use the `@private` tag at the bottom of the documentation, e.g.,
+
 ```javascript
 /**
  * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create
@@ -389,14 +425,20 @@ If a member or function doesn't start with `_`, but is intended to be private, u
  *
  * @private
  */
-function Tween(/* ... */) { /* ... */ }
+function Tween(/* ... */) {
+  /* ... */
+}
 ```
-If no documentation comments are provided, the identifier will not be documented.  In this case, `@private` is not strictly needed, but we use it anyway so it is clear that documentation was not forgotten, e.g.,
+
+If no documentation comments are provided, the identifier will not be documented. In this case, `@private` is not strictly needed, but we use it anyway so it is clear that documentation was not forgotten, e.g.,
+
 ```javascript
 /**
  * @private
  */
-function appendForwardSlash(url) { /* ... */ }
+function appendForwardSlash(url) {
+  /* ... */
+}
 ```
 
 ## Layout Reference
@@ -442,7 +484,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
@@ -463,7 +505,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
@@ -484,7 +526,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
@@ -494,7 +536,7 @@ DESCRIPTION.
 ```
 DESCRIPTION.
 
-@exports NAME
+@function
 
 @param {TYPE} NAME DESCRIPTION.
 @param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG
@@ -507,7 +549,17 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
+
+# TypeScript
+
+We also use JSDoc to build official TypeScript type definitions. Normally this behavior is transparent to the developer and happens as part of CI, however incorrect or non-standard JSDoc can lead to failures. If CI is failing because of the `build-ts` step, you can debug it locally by running:
+
+```
+npm run build-ts
+```
+
+In most cases, the TypeScript compiler will provide a very obvious error and line number which will help you track down the offending, most likely incorrect, JSDoc.

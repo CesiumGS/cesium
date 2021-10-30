@@ -1,124 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw an arbitrary coplanar polygon.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Draw an arbitrary coplanar polygon." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
 
-var polygonGeometry1 = Cesium.CoplanarPolygonGeometry.fromPositions({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-       -91.0, 40.0, 0.0,
-       -90.0, 40.0, 200000.0,
-       -89.0, 40.0, 200000.0,
-       -88.0, 40.0, 0.0
-    ])
-});
+        var polygonGeometry1 = Cesium.CoplanarPolygonGeometry.fromPositions({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+            -91.0,
+            40.0,
+            0.0,
+            -90.0,
+            40.0,
+            200000.0,
+            -89.0,
+            40.0,
+            200000.0,
+            -88.0,
+            40.0,
+            0.0,
+          ]),
+        });
 
-var polygonGeometry2 = new Cesium.CoplanarPolygonGeometry({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    polygonHierarchy : {
-        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-99.0, 38.0, 100000,
-                                                        -97.0, 38.0, 100000,
-                                                        -97.0, 40.0, 100000,
-                                                        -99.0, 40.0, 100000]),
-        holes : [{
-            positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                -98.5, 38.5, 100000,
-                -98.5, 39.5, 100000,
-                -97.5, 39.5, 100000,
-                -97.5, 38.5, 100000
+        var polygonGeometry2 = new Cesium.CoplanarPolygonGeometry({
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          polygonHierarchy: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+              -99.0,
+              38.0,
+              100000,
+              -97.0,
+              38.0,
+              100000,
+              -97.0,
+              40.0,
+              100000,
+              -99.0,
+              40.0,
+              100000,
             ]),
-            holes : [{
-                positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                    -98.25, 38.75, 100000,
-                    -97.75, 38.75, 100000,
-                    -97.75, 39.25, 100000,
-                    -98.25, 39.25, 100000
-                ])
-            }]
-        }]
-    }
-});
+            holes: [
+              {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                  -98.5,
+                  38.5,
+                  100000,
+                  -98.5,
+                  39.5,
+                  100000,
+                  -97.5,
+                  39.5,
+                  100000,
+                  -97.5,
+                  38.5,
+                  100000,
+                ]),
+                holes: [
+                  {
+                    positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                      -98.25,
+                      38.75,
+                      100000,
+                      -97.75,
+                      38.75,
+                      100000,
+                      -97.75,
+                      39.25,
+                      100000,
+                      -98.25,
+                      39.25,
+                      100000,
+                    ]),
+                  },
+                ],
+              },
+            ],
+          },
+        });
 
-var polygonInstance1 = new Cesium.GeometryInstance({
-    geometry : polygonGeometry1,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-    }
-});
+        var polygonInstance1 = new Cesium.GeometryInstance({
+          geometry: polygonGeometry1,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.BLUE
+            ),
+          },
+        });
 
-var polygonInstance2 = new Cesium.GeometryInstance({
-    geometry : polygonGeometry2,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-    }
-});
+        var polygonInstance2 = new Cesium.GeometryInstance({
+          geometry: polygonGeometry2,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.RED
+            ),
+          },
+        });
 
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [polygonInstance1, polygonInstance2],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : false
-    })
-}));
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [polygonInstance1, polygonInstance2],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: false,
+            }),
+          })
+        );
 
-var polygonGeometry = Cesium.CoplanarPolygonGeometry.fromPositions({
-    vertexFormat : Cesium.VertexFormat.ALL,
-    positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-       -95.0, 40.0, 100000.0,
-       -94.0, 42.0, 200000.0,
-       -93.0, 42.0, 200000.0,
-       -92.0, 40.0, 100000.0
-    ]),
-    stRotation: Cesium.Math.toRadians(-20)
-});
+        var polygonGeometry = Cesium.CoplanarPolygonGeometry.fromPositions({
+          vertexFormat: Cesium.VertexFormat.ALL,
+          positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+            -95.0,
+            40.0,
+            100000.0,
+            -94.0,
+            42.0,
+            200000.0,
+            -93.0,
+            42.0,
+            200000.0,
+            -92.0,
+            40.0,
+            100000.0,
+          ]),
+          stRotation: Cesium.Math.toRadians(-20),
+        });
 
-var polygonInstance = new Cesium.GeometryInstance({
-    geometry : polygonGeometry
-});
+        var polygonInstance = new Cesium.GeometryInstance({
+          geometry: polygonGeometry,
+        });
 
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : polygonInstance,
-    appearance : new Cesium.MaterialAppearance({
-        material : Cesium.Material.fromType('Checkerboard'),
-        materialSupport : Cesium.MaterialAppearance.MaterialSupport.TEXTURED
-    })
-}));//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: polygonInstance,
+            appearance: new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType("Checkerboard"),
+              materialSupport:
+                Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+            }),
+          })
+        ); //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

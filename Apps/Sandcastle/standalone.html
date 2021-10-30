@@ -1,80 +1,85 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="Sandcastle-header.js"></script>
     <script type="text/javascript" src="Sandcastle-client.js"></script>
     <script type="text/javascript" src="ThirdParty/pako.min.js"></script>
-    <script type="text/javascript" src="../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script
+      type="text/javascript"
+      src="../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="load-cesium-es6.js"></script>
     <script type="text/javascript" src="Sandcastle-helpers.js"></script>
     <style>
-        .fullSize {
-            display: none;
-        }
-        .sandcastle-loading::after {
-            font: 24px sans-serif;
-            content: 'Loading...';
-        }
+      .fullSize {
+        display: none;
+      }
+      .sandcastle-loading::after {
+        font: 24px sans-serif;
+        content: "Loading...";
+      }
     </style>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<script type="text/javascript">
-/*global pako */
-if (window.location.hash.indexOf('#c=') === 0) {
-    var base64String = window.location.hash.substr(3);
-    var data = window.decodeBase64Data(base64String, pako);
-    //Handle case where demo is in a sub-directory by modifying
-    //the HTML to add a base href.
-    document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
-    window.sandcastleData = data;
-}
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <script type="text/javascript">
+      /*global pako */
+      var base64String;
+      var data;
 
-require({
-    baseUrl : '../../../',
-    waitSeconds : 120,
-    packages: [{
-        name: 'CesiumUnminified',
-        location: '../Build/CesiumUnminified',
-        main: 'Cesium'
-    }]
-},[
-    'Source/Cesium'
-], function(
-    Cesium) {
-     'use strict';
-     if (window.Cesium === undefined) {
-        window.Cesium = Cesium;
-     }
+      // Since we are setting the HTML base href below, we need to get the getCesiumBaseUrl
+      // upfront so that the value is correct. It gets cached for future calls.
+      // This is only a problem when using combined Cesium, which is the only time Cesium
+      // will be defined below.
+      if (typeof Cesium !== "undefined") {
+        Cesium.buildModuleUrl.getCesiumBaseUrl();
+      }
 
-    var defined = window.Cesium.defined;
-    var code;
+      if (window.location.hash.indexOf("#c=") === 0) {
+        base64String = window.location.hash.substr(3);
+        data = window.decodeBase64Data(base64String, pako);
+        //Handle case where demo is in a sub-directory by modifying
+        //the HTML to add a base href.
+        document.head.innerHTML =
+          document.head.innerHTML + '<base href="' + data.baseHref + '" />';
+        window.sandcastleData = data;
+      }
 
-    if (defined(window.sandcastleData)) {
-        var base64String = window.location.hash.substr(3);
-        var data = window.sandcastleData;
+      var code;
+      if (window.sandcastleData) {
+        base64String = window.location.hash.substr(3);
+        data = window.sandcastleData;
         var html = data.html;
         code = data.code;
         var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
         if (isIE11) {
-            html = html.replace('../templates', 'templates');
+          html = html.replace("../templates", "templates");
         }
 
         // Add the HTML content
-        var htmlElement = document.createElement('div');
+        var htmlElement = document.createElement("div");
         htmlElement.innerHTML = html;
         document.body.appendChild(htmlElement);
 
         // Add the JavaScript
-        var scriptElement = document.createElement('script');
-        var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+        var scriptElement = document.createElement("script");
+        var isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
         document.head.appendChild(scriptElement);
-        scriptElement.innerHTML = window.embedInSandcastleTemplate(code, isFirefox);
-    }
-});
-
-</script>
-</body>
+        scriptElement.innerHTML = window.embedInSandcastleTemplate(
+          code,
+          isFirefox
+        );
+      }
+    </script>
+  </body>
 </html>

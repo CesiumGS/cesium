@@ -1,109 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Set the texture minification and magnification filters of an imagery layer.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Set the texture minification and magnification filters of an imagery layer."
+    />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Beginner, Tutorials, Showcases"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
 
-<style>
-    @import url(../templates/bucket.css);
-
-    #slider {
+      #slider {
         position: absolute;
         left: 50%;
         top: 0px;
-        background-color: #D3D3D3;
+        background-color: #d3d3d3;
         width: 2px;
         height: 100%;
         z-index: 9999;
-    }
+      }
 
-    #slider:hover {
+      #slider:hover {
         cursor: ew-resize;
-    }
+      }
+    </style>
 
-</style>
+    <div id="cesiumContainer" class="fullSize">
+      <div id="slider"></div>
+    </div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
 
-<div id="cesiumContainer" class="fullSize">
-    <div id="slider"></div>
-</div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        viewer.camera.flyTo({
+          destination: new Cesium.Rectangle.fromDegrees(-84, 43, -80, 47),
+        });
 
-<script id="cesium_sandcastle_script">
+        var layers = viewer.imageryLayers;
+        layers.removeAll();
 
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.camera.flyTo({destination : new Cesium.Rectangle.fromDegrees(-84, 43, -80, 47)});
+        var layerLinear = layers.addImageryProvider(
+          new Cesium.TileMapServiceImageryProvider({
+            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+          })
+        );
 
-var layers = viewer.imageryLayers;
-layers.removeAll();
+        var layerNearest = layers.addImageryProvider(
+          new Cesium.TileMapServiceImageryProvider({
+            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+          })
+        );
 
-var layerLinear = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-}));
+        // Set the texture minification and magnification filters of layerNearest. Default is LINEAR.
+        layerNearest.minificationFilter =
+          Cesium.TextureMinificationFilter.NEAREST;
+        layerNearest.magnificationFilter =
+          Cesium.TextureMagnificationFilter.NEAREST;
 
-var layerNearest = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-}));
+        // The remaining code installs a split layer so the effect of the texture filters becomes apparent.
 
-// Set the texture minification and magnification filters of layerNearest. Default is LINEAR.
-layerNearest.minificationFilter = Cesium.TextureMinificationFilter.NEAREST;
-layerNearest.magnificationFilter = Cesium.TextureMagnificationFilter.NEAREST;
+        layerNearest.splitDirection = Cesium.ImagerySplitDirection.RIGHT;
 
-// The remaining code installs a split layer so the effect of the texture filters becomes apparent.
+        var slider = document.getElementById("slider");
+        viewer.scene.imagerySplitPosition =
+          slider.offsetLeft / slider.parentElement.offsetWidth;
 
-layerNearest.splitDirection = Cesium.ImagerySplitDirection.RIGHT;
+        var dragStartX = 0;
 
-var slider = document.getElementById('slider');
-viewer.scene.imagerySplitPosition = (slider.offsetLeft) / slider.parentElement.offsetWidth;
+        document
+          .getElementById("slider")
+          .addEventListener("mousedown", mouseDown, false);
+        window.addEventListener("mouseup", mouseUp, false);
 
-var dragStartX = 0;
+        function mouseUp() {
+          window.removeEventListener("mousemove", sliderMove, true);
+        }
 
-document.getElementById('slider').addEventListener('mousedown', mouseDown, false);
-window.addEventListener('mouseup', mouseUp, false);
+        function mouseDown(e) {
+          var slider = document.getElementById("slider");
+          dragStartX = e.clientX - slider.offsetLeft;
+          window.addEventListener("mousemove", sliderMove, true);
+        }
 
-function mouseUp() {
-    window.removeEventListener('mousemove', sliderMove, true);
-}
+        function sliderMove(e) {
+          var slider = document.getElementById("slider");
+          var splitPosition =
+            (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
+          slider.style.left = 100.0 * splitPosition + "%";
+          viewer.scene.imagerySplitPosition = splitPosition;
+        }
+        //Sandcastle_End
 
-function mouseDown(e) {
-    var slider = document.getElementById('slider');
-    dragStartX = e.clientX - slider.offsetLeft;
-    window.addEventListener('mousemove', sliderMove, true);
-}
-
-function sliderMove(e) {
-    var slider = document.getElementById('slider');
-    var splitPosition = (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
-    slider.style.left = 100.0 * splitPosition + '%';
-    viewer.scene.imagerySplitPosition = splitPosition;
-}
-//Sandcastle_End
-
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-
-</body>
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

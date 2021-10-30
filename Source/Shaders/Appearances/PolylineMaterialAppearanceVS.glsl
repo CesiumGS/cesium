@@ -22,13 +22,12 @@ void main()
     vec4 prev = czm_computePrevPosition();
     vec4 next = czm_computeNextPosition();
 
-    v_width = width;
-    v_st = st;
-
-    vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, v_polylineAngle);
+    float angle;
+    vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
 
-#ifdef LOG_DEPTH
-    czm_vertexLogDepth(czm_modelViewProjectionRelativeToEye * p);
-#endif
+    v_width = width;
+    v_st.s = st.s;
+    v_st.t = czm_writeNonPerspective(st.t, gl_Position.w);
+    v_polylineAngle = angle;
 }

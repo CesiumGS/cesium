@@ -27,7 +27,7 @@ void main()
     float totalSize = positionHighAndSize.w + outlineWidthBothSides;
     float outlinePercent = outlineWidthBothSides / totalSize;
     // Scale in response to browser-zoom.
-    totalSize *= czm_resolutionScale;
+    totalSize *= czm_pixelRatio;
     // Add padding for anti-aliasing on both sides.
     totalSize += 3.0;
 
@@ -91,7 +91,6 @@ void main()
 
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    positionEC.xyz *= show;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -136,7 +135,8 @@ void main()
     float nearSq = distanceDisplayConditionAndDisableDepth.x;
     float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
-        positionEC.xyz = vec3(0.0);
+        // push vertex behind camera to force it to be clipped
+        positionEC.xyz = vec3(0.0, 0.0, 1.0);
     }
 #endif
 
@@ -167,13 +167,14 @@ void main()
 #endif
 
     v_color = color;
-    v_color.a *= translucency;
+    v_color.a *= translucency * show;
     v_outlineColor = outlineColor;
-    v_outlineColor.a *= translucency;
+    v_outlineColor.a *= translucency * show;
 
     v_innerPercent = 1.0 - outlinePercent;
     v_pixelDistance = 2.0 / totalSize;
-    gl_PointSize = totalSize;
+    gl_PointSize = totalSize * show;
+    gl_Position *= show;
 
     v_pickColor = pickColor;
 }

@@ -1,122 +1,210 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Ambient Occlusion.">
-    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Ambient Occlusion." />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Post Processing"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>Ambient Occlusion</td>
+            <td><input type="checkbox" data-bind="checked: show" /></td>
+          </tr>
+          <tr>
+            <td>Ambient Occlusion Only</td>
+            <td>
+              <input
+                type="checkbox"
+                data-bind="checked: ambientOcclusionOnly"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Intensity</td>
+            <td>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                data-bind="value: intensity, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Length Cap</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                data-bind="value: lengthCap, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Step Size</td>
+            <td>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="0.01"
+                data-bind="value: stepSize, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Bias</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                data-bind="value: bias, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Blur Step Size</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="4"
+                step="0.01"
+                data-bind="value: blurStepSize, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+
+        if (
+          !Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(
+            viewer.scene
+          )
+        ) {
+          window.alert(
+            "This browser does not support the ambient occlusion post process."
+          );
+        }
+
+        // Power Plant design model provided by Bentley Systems
+        var tileset = new Cesium.Cesium3DTileset({
+          url: Cesium.IonResource.fromAssetId(8564),
+        });
+        tileset.readyPromise
+          .then(function (tileset) {
+            viewer.scene.primitives.add(tileset);
+          })
+          .otherwise(function (error) {
+            console.log(error);
+          });
+
+        var viewModel = {
+          show: true,
+          ambientOcclusionOnly: false,
+          intensity: 3.0,
+          bias: 0.1,
+          lengthCap: 0.03,
+          stepSize: 1.0,
+          blurStepSize: 0.86,
+        };
+
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (var name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout
+              .getObservable(viewModel, name)
+              .subscribe(updatePostProcess);
+          }
+        }
+
+        function updatePostProcess() {
+          var ambientOcclusion =
+            viewer.scene.postProcessStages.ambientOcclusion;
+          ambientOcclusion.enabled =
+            Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
+          ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(
+            viewModel.ambientOcclusionOnly
+          );
+          ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
+          ambientOcclusion.uniforms.bias = Number(viewModel.bias);
+          ambientOcclusion.uniforms.lengthCap = Number(viewModel.lengthCap);
+          ambientOcclusion.uniforms.stepSize = Number(viewModel.stepSize);
+          ambientOcclusion.uniforms.blurStepSize = Number(
+            viewModel.blurStepSize
+          );
+        }
+        updatePostProcess();
+
+        var camera = viewer.scene.camera;
+        camera.position = new Cesium.Cartesian3(
+          1234127.2294710164,
+          -5086011.666443127,
+          3633337.0413351045
+        );
+        camera.direction = new Cesium.Cartesian3(
+          -0.5310064396211631,
+          -0.30299013818088416,
+          -0.7913464078682514
+        );
+        camera.right = new Cesium.Cartesian3(
+          -0.8468592075426076,
+          0.1574051185945647,
+          0.507989282604011
+        );
+        camera.up = Cesium.Cartesian3.cross(
+          camera.right,
+          camera.direction,
+          new Cesium.Cartesian3()
+        );
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-<table><tbody>
-    <tr>
-        <td>Ambient Occlusion</td>
-        <td><input type="checkbox" data-bind="checked: show"></td>
-    </tr>
-    <tr>
-        <td>Ambient Occlusion Only</td>
-        <td><input type="checkbox" data-bind="checked: ambientOcclusionOnly"></td>
-    </tr>
-    <tr>
-        <td>Intensity</td>
-        <td><input type="range" min="1" max="10" step="1" data-bind="value: intensity, valueUpdate: 'input'"></td>
-    </tr>
-    <tr>
-        <td>Length Cap</td>
-        <td><input type="range" min="0" max="1" step="0.01" data-bind="value: lengthCap, valueUpdate: 'input'"></td>
-    </tr>
-    <tr>
-        <td>Step Size</td>
-        <td><input type="range" min="1" max="10" step="0.01" data-bind="value: stepSize, valueUpdate: 'input'"></td>
-    </tr>
-    <tr>
-        <td>Bias</td>
-        <td><input type="range" min="0" max="1" step="0.01" data-bind="value: bias, valueUpdate: 'input'"></td>
-    </tr>
-    <tr>
-        <td>Blur Step Size</td>
-        <td><input type="range" min="0" max="4" step="0.01" data-bind="value: blurStepSize, valueUpdate: 'input'"></td>
-    </tr>
-</tbody></table>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-
-if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
-    console.log('This browser does not support the ambient occlusion post process.');
-}
-
-// Power Plant design model provided by Bentley Systems
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(8564) });
-tileset.readyPromise.then(function(tileset) {
-    viewer.scene.primitives.add(tileset);
-}).otherwise(function(error) {
-    console.log(error);
-});
-
-var viewModel = {
-    show : true,
-    ambientOcclusionOnly : false,
-    intensity : 3.0,
-    bias : 0.1,
-    lengthCap : 0.03,
-    stepSize : 1.0,
-    blurStepSize : 0.86
-};
-
-Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name)) {
-        Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
-    }
-}
-
-function updatePostProcess() {
-    var ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
-    ambientOcclusion.enabled = Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
-    ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
-    ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
-    ambientOcclusion.uniforms.bias = Number(viewModel.bias);
-    ambientOcclusion.uniforms.lengthCap = Number(viewModel.lengthCap);
-    ambientOcclusion.uniforms.stepSize = Number(viewModel.stepSize);
-    ambientOcclusion.uniforms.blurStepSize = Number(viewModel.blurStepSize);
-}
-updatePostProcess();
-
-var camera = viewer.scene.camera;
-camera.position = new Cesium.Cartesian3(1234127.2294710164, -5086011.666443127, 3633337.0413351045);
-camera.direction = new Cesium.Cartesian3(-0.5310064396211631, -0.30299013818088416, -0.7913464078682514);
-camera.right = new Cesium.Cartesian3(-0.8468592075426076, 0.1574051185945647, 0.507989282604011);
-camera.up = Cesium.Cartesian3.cross(camera.right, camera.direction, new Cesium.Cartesian3());
-
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

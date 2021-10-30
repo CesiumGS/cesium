@@ -1,115 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw an ellipse on the globe surface.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Draw an ellipse on the globe surface." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create the viewer.
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+
+        // Example 1: Draw a red ellipse on the globe surface.
+
+        // Create the ellipse geometry.
+        var ellipseGeometry = new Cesium.EllipseGeometry({
+          center: Cesium.Cartesian3.fromDegrees(-100.0, 40.0),
+          semiMinorAxis: 300000.0,
+          semiMajorAxis: 400000.0,
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        });
+        // Create a geometry instance using the ellipse geometry
+        // created above. We can also specify a color attribute,
+        // in this case, we're creating a solid red color.
+        var redEllipseInstance = new Cesium.GeometryInstance({
+          geometry: ellipseGeometry,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.RED
+            ),
+          },
+        });
+
+        // Example 2: Draw a green ellipse at a height.
+
+        // Create the ellipse geometry.  Use the height option
+        // to set the distance from the ground.  In this case,
+        // the rotation option is used to draw the ellipse at
+        // a 45 degree angle.
+        ellipseGeometry = new Cesium.EllipseGeometry({
+          center: Cesium.Cartesian3.fromDegrees(-95.0, 35.0),
+          semiMinorAxis: 200000.0,
+          semiMajorAxis: 400000.0,
+          rotation: Cesium.Math.toRadians(45),
+          height: 200000.0,
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        });
+        // Create a geometry instance using the ellipse geometry
+        // created above.
+        var greenEllipseInstance = new Cesium.GeometryInstance({
+          geometry: ellipseGeometry,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.GREEN
+            ),
+          },
+        });
+
+        // Example 3: Draw a blue extruded ellipse.
+
+        // Create the ellipse geometry.  To extrude, specify the
+        // height of the geometry with the extrudedHeight option.
+        ellipseGeometry = new Cesium.EllipseGeometry({
+          center: Cesium.Cartesian3.fromDegrees(-90.0, 40.0),
+          semiMinorAxis: 200000.0,
+          semiMajorAxis: 300000.0,
+          extrudedHeight: 200000.0,
+          rotation: Cesium.Math.toRadians(90),
+          vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        });
+        // Create a geometry instance using the ellipse geometry
+        // created above.
+        var blueEllipseInstance = new Cesium.GeometryInstance({
+          geometry: ellipseGeometry,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.BLUE
+            ),
+          },
+        });
+
+        // Add all ellipse instances to primitives.
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: [
+              redEllipseInstance,
+              greenEllipseInstance,
+              blueEllipseInstance,
+            ],
+            appearance: new Cesium.PerInstanceColorAppearance({
+              translucent: false,
+              closed: true,
+            }),
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// Create the viewer.
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-
-// Example 1: Draw a red ellipse on the globe surface.
-
-// Create the ellipse geometry.
-var ellipseGeometry = new Cesium.EllipseGeometry({
-    center : Cesium.Cartesian3.fromDegrees(-100.0, 40.0),
-    semiMinorAxis : 300000.0,
-    semiMajorAxis : 400000.0,
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-});
-// Create a geometry instance using the ellipse geometry
-// created above. We can also specify a color attribute,
-// in this case, we're creating a solid red color.
-var redEllipseInstance = new Cesium.GeometryInstance({
-    geometry : ellipseGeometry,
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-    }
-});
-
-// Example 2: Draw a green ellipse at a height.
-
-// Create the ellipse geometry.  Use the height option
-// to set the distance from the ground.  In this case,
-// the rotation option is used to draw the ellipse at
-// a 45 degree angle.
-ellipseGeometry = new Cesium.EllipseGeometry({
-    center : Cesium.Cartesian3.fromDegrees(-95.0, 35.0),
-    semiMinorAxis : 200000.0,
-    semiMajorAxis : 400000.0,
-    rotation : Cesium.Math.toRadians(45),
-    height: 200000.0,
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-});
-// Create a geometry instance using the ellipse geometry
-// created above.
-var greenEllipseInstance = new Cesium.GeometryInstance({
-    geometry : ellipseGeometry,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
-    }
-});
-
-// Example 3: Draw a blue extruded ellipse.
-
-// Create the ellipse geometry.  To extrude, specify the
-// height of the geometry with the extrudedHeight option.
-ellipseGeometry = new Cesium.EllipseGeometry({
-    center : Cesium.Cartesian3.fromDegrees(-90.0, 40.0),
-    semiMinorAxis : 200000.0,
-    semiMajorAxis : 300000.0,
-    extrudedHeight : 200000.0,
-    rotation : Cesium.Math.toRadians(90),
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-});
-// Create a geometry instance using the ellipse geometry
-// created above.
-var blueEllipseInstance = new Cesium.GeometryInstance({
-    geometry : ellipseGeometry,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-    }
-});
-
-// Add all ellipse instances to primitives.
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [redEllipseInstance, greenEllipseInstance, blueEllipseInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : true
-    })
-}));
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

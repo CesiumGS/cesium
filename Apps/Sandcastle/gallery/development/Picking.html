@@ -1,497 +1,705 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Picking.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Picking." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          selectionIndicator: false,
+          infoBox: false,
         });
+
+        var scene = viewer.scene;
+        var camera = scene.camera;
+
+        var handler;
+        var primitive;
+        var polylines;
+        var tileset;
+
+        var highlighted = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Billboard",
+            onselect: function () {
+              var entity = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                billboard: {
+                  image: "../images/Cesium_Logo_overlay.png",
+                },
+              });
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (
+                  Cesium.defined(pickedObject) &&
+                  pickedObject.id === entity
+                ) {
+                  entity.billboard.color = Cesium.Color.YELLOW;
+                } else {
+                  entity.billboard.color = Cesium.Color.WHITE;
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Label",
+            onselect: function () {
+              var entity = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                label: {
+                  text: "Label",
+                },
+              });
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (
+                  Cesium.defined(pickedObject) &&
+                  pickedObject.id === entity
+                ) {
+                  entity.label.fillColor = Cesium.Color.YELLOW;
+                } else {
+                  entity.label.fillColor = Cesium.Color.WHITE;
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Point",
+            onselect: function () {
+              var entity = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                point: {
+                  color: Cesium.Color.WHITE,
+                  pixelSize: 15.0,
+                },
+              });
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (
+                  Cesium.defined(pickedObject) &&
+                  pickedObject.id === entity
+                ) {
+                  entity.point.color = Cesium.Color.YELLOW;
+                } else {
+                  entity.point.color = Cesium.Color.WHITE;
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Polyline collection",
+            onselect: function () {
+              polylines = scene.primitives.add(new Cesium.PolylineCollection());
+              var id = "line";
+              var line = polylines.add({
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                  -84.0,
+                  50.0,
+                  0.0,
+                  -100.0,
+                  30.0,
+                  0.0,
+                ]),
+                width: 5.0,
+                id: id,
+              });
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (Cesium.defined(pickedObject) && pickedObject.id === id) {
+                  line.material.uniforms.color = Cesium.Color.YELLOW;
+                } else {
+                  line.material.uniforms.color = Cesium.Color.WHITE;
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Polyline geometry",
+            onselect: function () {
+              var id = "line";
+              primitive = scene.primitives.add(
+                new Cesium.Primitive({
+                  geometryInstances: new Cesium.GeometryInstance({
+                    geometry: new Cesium.PolylineGeometry({
+                      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                        -84.0,
+                        50.0,
+                        0.0,
+                        -100.0,
+                        30.0,
+                        0.0,
+                      ]),
+                      width: 5.0,
+                      vertexFormat:
+                        Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+                    }),
+                    attributes: {
+                      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        Cesium.Color.WHITE
+                      ),
+                    },
+                    id: id,
+                  }),
+                  appearance: new Cesium.PolylineColorAppearance(),
+                  asynchronous: false,
+                })
+              );
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (Cesium.defined(pickedObject) && pickedObject.id === id) {
+                  primitive.getGeometryInstanceAttributes(
+                    id
+                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
+                    Cesium.Color.YELLOW
+                  );
+                } else {
+                  primitive.getGeometryInstanceAttributes(
+                    id
+                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
+                    Cesium.Color.WHITE
+                  );
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Geometry",
+            onselect: function () {
+              var color = Cesium.Color.WHITE;
+              var entity = viewer.entities.add({
+                name: "box",
+                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                box: {
+                  dimensions: new Cesium.Cartesian3(
+                    400000.0,
+                    300000.0,
+                    500000.0
+                  ),
+                  material: Cesium.Color.WHITE,
+                },
+              });
+              entity.box.material.color = new Cesium.CallbackProperty(
+                function () {
+                  return color;
+                },
+                false
+              );
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (
+                  Cesium.defined(pickedObject) &&
+                  pickedObject.id === entity
+                ) {
+                  color = Cesium.Color.YELLOW;
+                } else {
+                  color = Cesium.Color.WHITE;
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Ground primitive",
+            onselect: function () {
+              var id = "rect";
+              primitive = scene.primitives.add(
+                new Cesium.GroundPrimitive({
+                  geometryInstances: new Cesium.GeometryInstance({
+                    geometry: new Cesium.RectangleGeometry({
+                      rectangle: Cesium.Rectangle.fromDegrees(
+                        -100.0,
+                        30.0,
+                        -90.0,
+                        40.0
+                      ),
+                      rotation: Cesium.Math.toRadians(45),
+                    }),
+                    attributes: {
+                      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                        Cesium.Color.WHITE
+                      ),
+                    },
+                    id: id,
+                  }),
+                  asynchronous: false,
+                  classificationType: Cesium.ClassificationType.TERRAIN,
+                })
+              );
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (Cesium.defined(pickedObject) && pickedObject.id === id) {
+                  primitive.getGeometryInstanceAttributes(
+                    id
+                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
+                    Cesium.Color.YELLOW
+                  );
+                } else {
+                  primitive.getGeometryInstanceAttributes(
+                    id
+                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
+                    Cesium.Color.WHITE
+                  );
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Model",
+            onselect: function () {
+              var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+              var hpr = new Cesium.HeadingPitchRoll(
+                Cesium.Math.toRadians(135),
+                0,
+                0
+              );
+              var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+                position,
+                hpr
+              );
+
+              var entity = viewer.entities.add({
+                position: position,
+                orientation: orientation,
+                model: {
+                  uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+                  minimumPixelSize: 256,
+                },
+              });
+
+              handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+              handler.setInputAction(function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (
+                  Cesium.defined(pickedObject) &&
+                  pickedObject.id === entity
+                ) {
+                  entity.model.color = Cesium.Color.YELLOW;
+                } else {
+                  entity.model.color = Cesium.Color.WHITE;
+                }
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Model instancing collection",
+            onselect: function () {
+              var instances = [];
+              var gridSize = 2;
+              var spacing = 0.0002;
+              var centerLongitude = -75.61209431;
+              var centerLatitude = 40.042530612;
+              var height = 50.0;
+
+              for (var y = 0; y < gridSize; ++y) {
+                for (var x = 0; x < gridSize; ++x) {
+                  var longitude =
+                    centerLongitude + spacing * (x - gridSize / 2);
+                  var latitude = centerLatitude + spacing * (y - gridSize / 2);
+                  var position = Cesium.Cartesian3.fromDegrees(
+                    longitude,
+                    latitude,
+                    height
+                  );
+
+                  var heading = Math.random();
+                  var pitch = Math.random();
+                  var roll = Math.random();
+                  var scale = (Math.random() + 1.0) / 2.0;
+
+                  var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+                    position,
+                    new Cesium.HeadingPitchRoll(heading, pitch, roll)
+                  );
+                  Cesium.Matrix4.multiplyByUniformScale(
+                    modelMatrix,
+                    scale,
+                    modelMatrix
+                  );
+
+                  instances.push({
+                    modelMatrix: modelMatrix,
+                  });
+                }
+              }
+
+              primitive = scene.primitives.add(
+                new Cesium.ModelInstanceCollection({
+                  url: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+                  instances: instances,
+                })
+              );
+
+              primitive.readyPromise
+                .then(function (collection) {
+                  var range =
+                    Math.max(
+                      collection._boundingSphere.radius,
+                      camera.frustum.near
+                    ) * 2.0;
+                  var heading = Cesium.Math.toRadians(230.0);
+                  var pitch = Cesium.Math.toRadians(-20.0);
+                  camera.lookAt(
+                    collection._boundingSphere.center,
+                    new Cesium.HeadingPitchRange(heading, pitch, range)
+                  );
+                  camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+                })
+                .otherwise(function (error) {
+                  window.alert(error);
+                });
+
+              handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+              handler.setInputAction(function (movement) {
+                if (Cesium.defined(highlighted.feature)) {
+                  highlighted.feature.model.color = highlighted.originalColor;
+                  highlighted.feature = undefined;
+                }
+                var pickedFeature = viewer.scene.pick(movement.endPosition);
+                if (!Cesium.defined(pickedFeature)) {
+                  return;
+                }
+                highlighted.feature = pickedFeature;
+                Cesium.Color.clone(
+                  pickedFeature.model.color,
+                  highlighted.originalColor
+                );
+                pickedFeature.model.color = Cesium.Color.YELLOW;
+              }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            },
+          },
+          {
+            text: "Batched 3D Model",
+            onselect: function () {
+              tileset = viewer.scene.primitives.add(
+                new Cesium.Cesium3DTileset({
+                  url:
+                    "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
+                })
+              );
+
+              tileset.readyPromise
+                .then(function () {
+                  viewer.zoomTo(
+                    tileset,
+                    new Cesium.HeadingPitchRange(
+                      0,
+                      -2.0,
+                      Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
+                    )
+                  );
+
+                  handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+                  handler.setInputAction(function (movement) {
+                    if (Cesium.defined(highlighted.feature)) {
+                      highlighted.feature.color = highlighted.originalColor;
+                      highlighted.feature = undefined;
+                    }
+                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    if (!Cesium.defined(pickedFeature)) {
+                      return;
+                    }
+                    highlighted.feature = pickedFeature;
+                    Cesium.Color.clone(
+                      pickedFeature.color,
+                      highlighted.originalColor
+                    );
+                    pickedFeature.color = Cesium.Color.YELLOW;
+                  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                })
+                .otherwise(function (error) {
+                  throw error;
+                });
+            },
+          },
+          {
+            text: "Instanced 3D Model",
+            onselect: function () {
+              tileset = viewer.scene.primitives.add(
+                new Cesium.Cesium3DTileset({
+                  url:
+                    "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json",
+                })
+              );
+
+              tileset.readyPromise
+                .then(function () {
+                  viewer.zoomTo(
+                    tileset,
+                    new Cesium.HeadingPitchRange(
+                      0,
+                      -2.0,
+                      Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
+                    )
+                  );
+
+                  handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+                  handler.setInputAction(function (movement) {
+                    if (Cesium.defined(highlighted.feature)) {
+                      highlighted.feature.color = highlighted.originalColor;
+                      highlighted.feature = undefined;
+                    }
+                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    if (!Cesium.defined(pickedFeature)) {
+                      return;
+                    }
+                    highlighted.feature = pickedFeature;
+                    Cesium.Color.clone(
+                      pickedFeature.color,
+                      highlighted.originalColor
+                    );
+                    pickedFeature.color = Cesium.Color.YELLOW;
+                  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                })
+                .otherwise(function (error) {
+                  throw error;
+                });
+            },
+          },
+          {
+            text: "Point cloud",
+            onselect: function () {
+              tileset = viewer.scene.primitives.add(
+                new Cesium.Cesium3DTileset({
+                  url:
+                    "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
+                })
+              );
+
+              tileset.readyPromise
+                .then(function () {
+                  viewer.zoomTo(
+                    tileset,
+                    new Cesium.HeadingPitchRange(
+                      0,
+                      -2.0,
+                      Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
+                    )
+                  );
+
+                  tileset.style = new Cesium.Cesium3DTileStyle({
+                    pointSize: 8.0,
+                  });
+
+                  handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+                  handler.setInputAction(function (movement) {
+                    if (Cesium.defined(highlighted.feature)) {
+                      highlighted.feature.primitive.style = new Cesium.Cesium3DTileStyle(
+                        {
+                          pointSize: 10.0,
+                        }
+                      );
+                      highlighted.feature = undefined;
+                    }
+                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    if (!Cesium.defined(pickedFeature)) {
+                      return;
+                    }
+                    highlighted.feature = pickedFeature;
+                    pickedFeature.primitive.style = new Cesium.Cesium3DTileStyle(
+                      {
+                        pointSize: 10.0,
+                        color: 'color("yellow")',
+                      }
+                    );
+                  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                })
+                .otherwise(function (error) {
+                  throw error;
+                });
+            },
+          },
+          {
+            text: "Vector tile polygons",
+            onselect: function () {
+              viewer.terrainProvider = Cesium.createWorldTerrain();
+
+              tileset = viewer.scene.primitives.add(
+                new Cesium.Cesium3DTileset({
+                  url:
+                    "../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json",
+                })
+              );
+
+              tileset.readyPromise
+                .then(function () {
+                  camera.position = new Cesium.Cartesian3(
+                    6382696.762766026,
+                    20.61495686957654,
+                    -83.83598213685399
+                  );
+                  camera.direction = new Cesium.Cartesian3(
+                    -0.9999999739409788,
+                    0.00022792812935066512,
+                    0.000012915478344419502
+                  );
+                  camera.up = new Cesium.Cartesian3(
+                    0.00001291547800893194,
+                    -2.9438010410026854e-9,
+                    0.9999999999165953
+                  );
+                  camera.right = new Cesium.Cartesian3.cross(
+                    camera.direction,
+                    camera.up,
+                    camera.right
+                  );
+
+                  handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+                  handler.setInputAction(function (movement) {
+                    if (Cesium.defined(highlighted.feature)) {
+                      highlighted.feature.color = highlighted.originalColor;
+                      highlighted.feature = undefined;
+                    }
+                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    if (!Cesium.defined(pickedFeature)) {
+                      return;
+                    }
+                    highlighted.feature = pickedFeature;
+                    Cesium.Color.clone(
+                      pickedFeature.color,
+                      highlighted.originalColor
+                    );
+                    pickedFeature.color = Cesium.Color.YELLOW;
+                  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                })
+                .otherwise(function (error) {
+                  throw error;
+                });
+            },
+          },
+          {
+            text: "Vector tile polylines",
+            onselect: function () {
+              viewer.terrainProvider = Cesium.createWorldTerrain();
+
+              tileset = viewer.scene.primitives.add(
+                new Cesium.Cesium3DTileset({
+                  url:
+                    "../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json",
+                })
+              );
+
+              tileset.readyPromise
+                .then(function () {
+                  camera.position = new Cesium.Cartesian3(
+                    6382696.762766026,
+                    20.61495686957654,
+                    -83.83598213685399
+                  );
+                  camera.direction = new Cesium.Cartesian3(
+                    -0.9999999739409788,
+                    0.00022792812935066512,
+                    0.000012915478344419502
+                  );
+                  camera.up = new Cesium.Cartesian3(
+                    0.00001291547800893194,
+                    -2.9438010410026854e-9,
+                    0.9999999999165953
+                  );
+                  camera.right = new Cesium.Cartesian3.cross(
+                    camera.direction,
+                    camera.up,
+                    camera.right
+                  );
+
+                  handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+                  handler.setInputAction(function (movement) {
+                    if (Cesium.defined(highlighted.feature)) {
+                      highlighted.feature.color = highlighted.originalColor;
+                      highlighted.feature = undefined;
+                    }
+                    var pickedFeature = viewer.scene.pick(movement.endPosition);
+                    if (!Cesium.defined(pickedFeature)) {
+                      return;
+                    }
+                    highlighted.feature = pickedFeature;
+                    Cesium.Color.clone(
+                      pickedFeature.color,
+                      highlighted.originalColor
+                    );
+                    pickedFeature.color = Cesium.Color.YELLOW;
+                  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                })
+                .otherwise(function (error) {
+                  throw error;
+                });
+            },
+          },
+        ]);
+
+        Sandcastle.reset = function () {
+          viewer.entities.removeAll();
+          if (Cesium.defined(polylines)) {
+            scene.primitives.remove(polylines);
+            polylines = undefined;
+          }
+          if (Cesium.defined(primitive)) {
+            scene.primitives.remove(primitive);
+            primitive = undefined;
+          }
+          if (Cesium.defined(tileset)) {
+            scene.primitives.remove(tileset);
+            tileset = undefined;
+          }
+          handler = handler && handler.destroy();
+          viewer.scene.camera.flyHome(0.0);
+          if (
+            !(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)
+          ) {
+            viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+          }
+        };
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    selectionIndicator : false,
-    infoBox : false
-});
-
-var scene = viewer.scene;
-var camera = scene.camera;
-
-var handler;
-var primitive;
-var polylines;
-var tileset;
-
-var highlighted = {
-    feature: undefined,
-    originalColor: new Cesium.Color()
-};
-
-Sandcastle.addToolbarMenu([{
-    text : 'Billboard',
-    onselect: function() {
-        var entity = viewer.entities.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-            billboard : {
-                image : '../images/Cesium_Logo_overlay.png'
-            }
-        });
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
-                entity.billboard.color = Cesium.Color.YELLOW;
-            } else {
-                entity.billboard.color = Cesium.Color.WHITE;
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Label',
-    onselect : function() {
-        var entity = viewer.entities.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-            label : {
-                text : 'Label'
-            }
-        });
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
-                entity.label.fillColor = Cesium.Color.YELLOW;
-            } else {
-                entity.label.fillColor = Cesium.Color.WHITE;
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Point',
-    onselect : function() {
-        var entity = viewer.entities.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-            point : {
-                color : Cesium.Color.WHITE,
-                pixelSize : 15.0
-            }
-        });
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
-                entity.point.color = Cesium.Color.YELLOW;
-            } else {
-                entity.point.color = Cesium.Color.WHITE;
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Polyline collection',
-    onselect : function() {
-        polylines = scene.primitives.add(new Cesium.PolylineCollection());
-        var id = 'line';
-        var line = polylines.add({
-            positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                -84.0, 50.0, 0.0,
-                -100.0, 30.0, 0.0
-            ]),
-            width : 5.0,
-            id : id
-        });
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === id)) {
-                line.material.uniforms.color = Cesium.Color.YELLOW;
-            } else {
-                line.material.uniforms.color = Cesium.Color.WHITE;
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Polyline geometry',
-    onselect : function() {
-        var id = 'line';
-        primitive = scene.primitives.add(new Cesium.Primitive({
-            geometryInstances : new Cesium.GeometryInstance({
-                geometry : new Cesium.PolylineGeometry({
-                    positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                        -84.0, 50.0, 0.0,
-                        -100.0, 30.0, 0.0
-                    ]),
-                    width : 5.0,
-                    vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
-                }),
-                attributes : {
-                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-                },
-                id : id
-            }),
-            appearance : new Cesium.PolylineColorAppearance(),
-            asynchronous : false
-        }));
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === id)) {
-                primitive.getGeometryInstanceAttributes(id).color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.YELLOW);
-            } else {
-                primitive.getGeometryInstanceAttributes(id).color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.WHITE);
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Geometry',
-    onselect : function() {
-        var color = Cesium.Color.WHITE;
-        var entity = viewer.entities.add({
-            name : 'box',
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-            box : {
-                dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
-                material : Cesium.Color.WHITE
-            }
-        });
-        entity.box.material.color = new Cesium.CallbackProperty(function() {
-            return color;
-        }, false);
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
-                color = Cesium.Color.YELLOW;
-            } else {
-                color = Cesium.Color.WHITE;
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Ground primitive',
-    onselect : function() {
-        var id = 'rect';
-        primitive = scene.primitives.add(new Cesium.GroundPrimitive({
-            geometryInstances : new Cesium.GeometryInstance({
-                geometry : new Cesium.RectangleGeometry({
-                    rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
-                    rotation : Cesium.Math.toRadians(45)
-                }),
-                attributes : {
-                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-                },
-                id : id
-            }),
-            asynchronous : false,
-            classificationType : Cesium.ClassificationType.TERRAIN
-        }));
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === id)) {
-                primitive.getGeometryInstanceAttributes(id).color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.YELLOW);
-            } else {
-                primitive.getGeometryInstanceAttributes(id).color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.WHITE);
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Model',
-    onselect : function() {
-        var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-        var hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0, 0);
-        var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
-
-        var entity = viewer.entities.add({
-            position : position,
-            orientation : orientation,
-            model : {
-                uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-                minimumPixelSize : 256
-            }
-        });
-
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var pickedObject = scene.pick(movement.endPosition);
-            if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
-                entity.model.color = Cesium.Color.YELLOW;
-            } else {
-                entity.model.color = Cesium.Color.WHITE;
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Model instancing collection',
-    onselect : function() {
-        var instances = [];
-        var gridSize = 2;
-        var spacing = 0.0002;
-        var centerLongitude = -75.61209431;
-        var centerLatitude = 40.042530612;
-        var height = 50.0;
-
-        for (var y = 0; y < gridSize; ++y) {
-            for (var x = 0; x < gridSize; ++x) {
-                var longitude = centerLongitude + spacing * (x - gridSize / 2);
-                var latitude = centerLatitude + spacing * (y - gridSize / 2);
-                var position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
-
-                var heading = Math.random();
-                var pitch = Math.random();
-                var roll = Math.random();
-                var scale = (Math.random() + 1.0) / 2.0;
-
-                var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, new Cesium.HeadingPitchRoll(heading, pitch, roll));
-                Cesium.Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
-
-                instances.push({
-                    modelMatrix : modelMatrix
-                });
-            }
-        }
-
-        primitive = scene.primitives.add(new Cesium.ModelInstanceCollection({
-            url : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
-            instances : instances
-        }));
-
-        primitive.readyPromise.then(function(collection) {
-            var range = Math.max(collection._boundingSphere.radius, camera.frustum.near) * 2.0;
-            var heading = Cesium.Math.toRadians(230.0);
-            var pitch = Cesium.Math.toRadians(-20.0);
-            camera.lookAt(collection._boundingSphere.center, new Cesium.HeadingPitchRange(heading, pitch, range));
-            camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        }).otherwise(function(error){
-            window.alert(error);
-        });
-
-        handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-        handler.setInputAction(function(movement) {
-            if (Cesium.defined(highlighted.feature)) {
-                highlighted.feature.model.color = highlighted.originalColor;
-                highlighted.feature = undefined;
-            }
-            var pickedFeature = viewer.scene.pick(movement.endPosition);
-            if (!Cesium.defined(pickedFeature)) {
-                return;
-            }
-            highlighted.feature = pickedFeature;
-            Cesium.Color.clone(pickedFeature.model.color, highlighted.originalColor);
-            pickedFeature.model.color = Cesium.Color.YELLOW;
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-}, {
-    text : 'Batched 3D Model',
-    onselect : function() {
-        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
-        }));
-
-        tileset.readyPromise.then(function() {
-            viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
-
-            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                if (Cesium.defined(highlighted.feature)) {
-                    highlighted.feature.color = highlighted.originalColor;
-                    highlighted.feature = undefined;
-                }
-                var pickedFeature = viewer.scene.pick(movement.endPosition);
-                if (!Cesium.defined(pickedFeature)) {
-                    return;
-                }
-                highlighted.feature = pickedFeature;
-                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-                pickedFeature.color = Cesium.Color.YELLOW;
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        }).otherwise(function(error) {
-            throw(error);
-        });
-    }
-}, {
-    text : 'Instanced 3D Model',
-    onselect : function() {
-        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : '../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json'
-        }));
-
-        tileset.readyPromise.then(function() {
-            viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
-
-            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                if (Cesium.defined(highlighted.feature)) {
-                    highlighted.feature.color = highlighted.originalColor;
-                    highlighted.feature = undefined;
-                }
-                var pickedFeature = viewer.scene.pick(movement.endPosition);
-                if (!Cesium.defined(pickedFeature)) {
-                    return;
-                }
-                highlighted.feature = pickedFeature;
-                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-                pickedFeature.color = Cesium.Color.YELLOW;
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        }).otherwise(function(error) {
-            throw(error);
-        });
-    }
-}, {
-    text : 'Point cloud',
-    onselect : function() {
-        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json'
-        }));
-
-        tileset.readyPromise.then(function() {
-            viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
-
-            tileset.style = new Cesium.Cesium3DTileStyle({
-                pointSize : 8.0
-            });
-
-            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                if (Cesium.defined(highlighted.feature)) {
-                    highlighted.feature.primitive.style = new Cesium.Cesium3DTileStyle({
-                        pointSize : 10.0
-                    });
-                    highlighted.feature = undefined;
-                }
-                var pickedFeature = viewer.scene.pick(movement.endPosition);
-                if (!Cesium.defined(pickedFeature)) {
-                    return;
-                }
-                highlighted.feature = pickedFeature;
-                pickedFeature.primitive.style = new Cesium.Cesium3DTileStyle({
-                    pointSize : 10.0,
-                    color : 'color("yellow")'
-                });
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        }).otherwise(function(error) {
-            throw(error);
-        });
-    }
-}, {
-    text : 'Vector tile polygons',
-    onselect : function() {
-        viewer.terrainProvider = Cesium.createWorldTerrain();
-
-        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json'
-        }));
-
-        tileset.readyPromise.then(function() {
-            camera.position = new Cesium.Cartesian3(6382696.762766026, 20.61495686957654, -83.83598213685399);
-            camera.direction = new Cesium.Cartesian3(-0.9999999739409788, 0.00022792812935066512, 0.000012915478344419502);
-            camera.up = new Cesium.Cartesian3(0.00001291547800893194, -2.9438010410026854e-9, 0.9999999999165953);
-            camera.right = new Cesium.Cartesian3.cross(camera.direction, camera.up, camera.right);
-
-            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                if (Cesium.defined(highlighted.feature)) {
-                    highlighted.feature.color = highlighted.originalColor;
-                    highlighted.feature = undefined;
-                }
-                var pickedFeature = viewer.scene.pick(movement.endPosition);
-                if (!Cesium.defined(pickedFeature)) {
-                    return;
-                }
-                highlighted.feature = pickedFeature;
-                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-                pickedFeature.color = Cesium.Color.YELLOW;
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        }).otherwise(function(error) {
-            throw(error);
-        });
-    }
-}, {
-    text : 'Vector tile polylines',
-    onselect : function() {
-        viewer.terrainProvider = Cesium.createWorldTerrain();
-
-        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json'
-        }));
-
-        tileset.readyPromise.then(function() {
-            camera.position = new Cesium.Cartesian3(6382696.762766026, 20.61495686957654, -83.83598213685399);
-            camera.direction = new Cesium.Cartesian3(-0.9999999739409788, 0.00022792812935066512, 0.000012915478344419502);
-            camera.up = new Cesium.Cartesian3(0.00001291547800893194, -2.9438010410026854e-9, 0.9999999999165953);
-            camera.right = new Cesium.Cartesian3.cross(camera.direction, camera.up, camera.right);
-
-            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                if (Cesium.defined(highlighted.feature)) {
-                    highlighted.feature.color = highlighted.originalColor;
-                    highlighted.feature = undefined;
-                }
-                var pickedFeature = viewer.scene.pick(movement.endPosition);
-                if (!Cesium.defined(pickedFeature)) {
-                    return;
-                }
-                highlighted.feature = pickedFeature;
-                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-                pickedFeature.color = Cesium.Color.YELLOW;
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        }).otherwise(function(error) {
-            throw(error);
-        });
-    }
-}]);
-
-Sandcastle.reset = function() {
-    viewer.entities.removeAll();
-    if (Cesium.defined(polylines)) {
-        scene.primitives.remove(polylines);
-        polylines = undefined;
-    }
-    if (Cesium.defined(primitive)) {
-        scene.primitives.remove(primitive);
-        primitive = undefined;
-    }
-    if (Cesium.defined(tileset)) {
-        scene.primitives.remove(tileset);
-        tileset = undefined;
-    }
-    handler = handler && handler.destroy();
-    viewer.scene.camera.flyHome(0.0);
-    if (!(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)) {
-        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-    }
-};
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

@@ -83,5 +83,8 @@ void main(void)
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
 
-    czm_writeDepthClampedToFarPlane();
+    // Premultiply alpha. Required for classification primitives on translucent globe.
+    gl_FragColor.rgb *= gl_FragColor.a;
+
+    czm_writeDepthClamp();
 }

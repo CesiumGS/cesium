@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use polylines to draw parallels and meridians on the globe."
+    />
+    <meta name="cesium-sandcastle-labels" content="Geometries" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var toDegrees = Cesium.Math.toDegrees;
+
+        function parallel(latitude, color, granularity) {
+          var name = "Parallel " + latitude;
+          return viewer.entities.add({
+            name: name,
+            polyline: {
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -180,
+                latitude,
+                -90,
+                latitude,
+                0,
+                latitude,
+                90,
+                latitude,
+                180,
+                latitude,
+              ]),
+              width: 2,
+              arcType: Cesium.ArcType.RHUMB,
+              material: color,
+              granularity: granularity,
+            },
+          });
+        }
+
+        function meridian(longitude, color, granularity) {
+          var name = "Meridian " + longitude;
+          return viewer.entities.add({
+            name: name,
+            polyline: {
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                longitude,
+                90,
+                longitude,
+                0,
+                longitude,
+                -90,
+              ]),
+              width: 2,
+              arcType: Cesium.ArcType.RHUMB,
+              material: color,
+              granularity: granularity,
+            },
+          });
+        }
+
+        function labelCoordinates(cartographic) {
+          var position = Cesium.Cartographic.toCartesian(cartographic);
+          var latitude = toDegrees(cartographic.latitude).toFixed(4);
+          var longitude = toDegrees(cartographic.longitude).toFixed(4);
+          var label = "lat: " + latitude + "°\nlon: " + longitude + "°";
+
+          return viewer.entities.add({
+            position: position,
+            label: {
+              text: label,
+              showBackground: true,
+              font: "14px monospace",
+            },
+          });
+        }
+
+        function makeGrid(numberOfDivisions, color, show) {
+          var parallels = makeParallelsRecursive(
+            -90,
+            90,
+            numberOfDivisions,
+            color
+          );
+          var meridians = makeMeridiansRecursive(
+            -180,
+            180,
+            numberOfDivisions,
+            color
+          );
+          meridians.push(meridian(180, color));
+
+          var allLines = parallels.concat(meridians);
+          allLines.forEach(function (line) {
+            line.show = show;
+          });
+
+          return allLines;
+        }
+
+        function makeParallelsRecursive(
+          minLatitude,
+          maxLatitude,
+          depth,
+          color
+        ) {
+          var result = [];
+          var midpoint = (minLatitude + maxLatitude) / 2;
+          result.push(parallel(midpoint, color));
+
+          if (depth > 0) {
+            var southernLines = makeParallelsRecursive(
+              minLatitude,
+              midpoint,
+              depth - 1,
+              color
+            );
+            var northernLines = makeParallelsRecursive(
+              midpoint,
+              maxLatitude,
+              depth - 1,
+              color
+            );
+            result = southernLines.concat(result, northernLines);
+          }
+
+          return result;
+        }
+
+        function makeMeridiansRecursive(
+          minLongitude,
+          maxLongitude,
+          depth,
+          color
+        ) {
+          var result = [];
+          var midpoint = (minLongitude + maxLongitude) / 2;
+          result.push(meridian(midpoint, color));
+
+          if (depth > 0) {
+            var westernLines = makeMeridiansRecursive(
+              minLongitude,
+              midpoint,
+              depth - 1,
+              color
+            );
+            var easternLines = makeMeridiansRecursive(
+              midpoint,
+              maxLongitude,
+              depth - 1,
+              color
+            );
+            result = westernLines.concat(result, easternLines);
+          }
+
+          return result;
+        }
+
+        var showAntipodalPoint = false;
+        var primitives = {
+          equator: parallel(0, Cesium.Color.BLUE),
+          primeMeridian: meridian(0, Cesium.Color.BLUE),
+          selectedPoint: {
+            meridian: undefined,
+            parallel: undefined,
+            label: undefined,
+          },
+          antipodalPoint: {
+            meridian: undefined,
+            parallel: undefined,
+            label: undefined,
+          },
+          lowResolutionGrid: makeGrid(2, Cesium.Color.PALEGREEN, false),
+          higherResolutionGrid: makeGrid(5, Cesium.Color.DARKORANGE, false),
+        };
+
+        function updateCrosshairs(cartographic) {
+          var selectedPoint = primitives.selectedPoint;
+          var antipodalPoint = primitives.antipodalPoint;
+          if (Cesium.defined(selectedPoint.parallel)) {
+            viewer.entities.remove(selectedPoint.parallel);
+            viewer.entities.remove(selectedPoint.meridian);
+            viewer.entities.remove(selectedPoint.label);
+            viewer.entities.remove(antipodalPoint.parallel);
+            viewer.entities.remove(antipodalPoint.meridian);
+            viewer.entities.remove(antipodalPoint.label);
+          }
+
+          var pointLatitude = toDegrees(cartographic.latitude);
+          var antipodeLatitude = -pointLatitude;
+
+          var pointLongitude = toDegrees(cartographic.longitude);
+          var antipodeLongitude = (pointLongitude + 180) % 360;
+
+          // Increase the granularity to improve accuracy when zoomed in
+          var finerGranularity = 0.001;
+          var red = Cesium.Color.RED;
+          selectedPoint.parallel = parallel(
+            toDegrees(cartographic.latitude),
+            red,
+            finerGranularity
+          );
+          selectedPoint.meridian = meridian(
+            toDegrees(cartographic.longitude),
+            red,
+            finerGranularity
+          );
+          selectedPoint.label = labelCoordinates(cartographic);
+
+          var cyan = Cesium.Color.CYAN;
+          var antipode = new Cesium.Cartographic.fromDegrees(
+            antipodeLongitude,
+            antipodeLatitude,
+            0
+          );
+          antipodalPoint.parallel = parallel(
+            antipodeLatitude,
+            cyan,
+            finerGranularity
+          );
+          antipodalPoint.meridian = meridian(
+            antipodeLongitude,
+            cyan,
+            finerGranularity
+          );
+          antipodalPoint.label = labelCoordinates(antipode);
+
+          antipodalPoint.parallel.show = showAntipodalPoint;
+          antipodalPoint.meridian.show = showAntipodalPoint;
+          antipodalPoint.label.show = showAntipodalPoint;
+        }
+
+        // Click to shift the cross-hairs
+        viewer.screenSpaceEventHandler.setInputAction(function (mouse) {
+          viewer.scene.pick(mouse.position);
+          var ray = viewer.camera.getPickRay(mouse.position);
+          var globe = viewer.scene.globe;
+          var cartesian = globe.pick(ray, viewer.scene);
+
+          if (!Cesium.defined(cartesian)) {
+            return;
+          }
+
+          var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+          updateCrosshairs(cartographic);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        Sandcastle.addToggleButton("Show equator", true, function (checked) {
+          primitives.equator.show = checked;
+        });
+
+        Sandcastle.addToggleButton("Show prime meridian", true, function (
+          checked
+        ) {
+          primitives.primeMeridian.show = checked;
+        });
+
+        Sandcastle.addToggleButton("Show low-resolution grid", false, function (
+          checked
+        ) {
+          primitives.lowResolutionGrid.forEach(function (line) {
+            line.show = checked;
+          });
+        });
+
+        Sandcastle.addToggleButton(
+          "Show higher-resolution grid",
+          false,
+          function (checked) {
+            primitives.higherResolutionGrid.forEach(function (line) {
+              line.show = checked;
+            });
+          }
+        );
+
+        Sandcastle.addToggleButton("Show antipodal point", false, function (
+          checked
+        ) {
+          showAntipodalPoint = checked;
+          var antipodalPoint = primitives.antipodalPoint;
+
+          if (Cesium.defined(antipodalPoint.parallel)) {
+            antipodalPoint.parallel.show = showAntipodalPoint;
+            antipodalPoint.meridian.show = showAntipodalPoint;
+            antipodalPoint.label.show = showAntipodalPoint;
+          }
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

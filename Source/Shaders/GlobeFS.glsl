@@ -9,6 +9,11 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_DAY_NIGHT_ALPHA
+uniform float u_dayTextureNightAlpha[TEXTURE_UNITS];
+uniform float u_dayTextureDayAlpha[TEXTURE_UNITS];
+#endif
+
 #ifdef APPLY_SPLIT
 uniform float u_dayTextureSplit[TEXTURE_UNITS];
 #endif
@@ -67,12 +72,12 @@ uniform vec2 u_nightFadeDistance;
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES
-uniform sampler2D u_clippingPlanes;
+uniform highp sampler2D u_clippingPlanes;
 uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
 
@@ -82,6 +87,17 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 
 #ifdef HIGHLIGHT_FILL_TILE
 uniform vec4 u_fillHighlightColor;
+#endif
+
+#ifdef TRANSLUCENT
+uniform vec4 u_frontFaceAlphaByDistance;
+uniform vec4 u_backFaceAlphaByDistance;
+uniform vec4 u_translucencyRectangle;
+#endif
+
+#ifdef UNDERGROUND_COLOR
+uniform vec4 u_undergroundColor;
+uniform vec4 u_undergroundColorAlphaByDistance;
 #endif
 
 varying vec3 v_positionMC;
@@ -96,8 +112,11 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
 varying float v_distance;
+#endif
+
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogRayleighColor;
 varying vec3 v_fogMieColor;
 #endif
@@ -107,6 +126,36 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
 
+#if defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
+float interpolateByDistance(vec4 nearFarScalar, float distance)
+{
+    float startDistance = nearFarScalar.x;
+    float startValue = nearFarScalar.y;
+    float endDistance = nearFarScalar.z;
+    float endValue = nearFarScalar.w;
+    float t = clamp((distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    return mix(startValue, endValue, t);
+}
+#endif
+
+#if defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT) || defined(APPLY_MATERIAL)
+vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
+{
+    return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a);
+}
+#endif
+
+#ifdef TRANSLUCENT
+bool inTranslucencyRectangle()
+{
+    return
+        v_textureCoordinates.x > u_translucencyRectangle.x &&
+        v_textureCoordinates.x < u_translucencyRectangle.z &&
+        v_textureCoordinates.y > u_translucencyRectangle.y &&
+        v_textureCoordinates.y < u_translucencyRectangle.w;
+}
+#endif
+
 vec4 sampleAndBlend(
     vec4 previousColor,
     sampler2D textureToSample,
@@ -114,13 +163,16 @@ vec4 sampleAndBlend(
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
     float textureAlpha,
+    float textureNightAlpha,
+    float textureDayAlpha,
     float textureBrightness,
     float textureContrast,
     float textureHue,
     float textureSaturation,
     float textureOneOverGamma,
     float split,
-    vec4 colorToAlpha)
+    vec4 colorToAlpha,
+    float nightBlend)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -134,6 +186,10 @@ vec4 sampleAndBlend(
 
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
+    textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightBlend);
+#endif
 
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
@@ -225,8 +281,14 @@ vec3 colorCorrect(vec3 rgb) {
     return rgb;
 }
 
-vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
+vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
+
+#ifdef GROUND_ATMOSPHERE
+vec3 computeGroundAtmosphereColor(vec3 fogColor, vec4 finalColor, vec3 atmosphereLightDirection, float cameraDist);
+#endif
+
+const float fExposure = 2.0;
 
 void main()
 {
@@ -242,11 +304,22 @@ void main()
     float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
 #endif
 
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(HDR)
+    vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
+    vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
+#endif
+
+#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
+    float nightBlend = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
+#else
+    float nightBlend = 0.0;
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
-    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0), nightBlend);
 
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
@@ -254,11 +327,6 @@ void main()
     {
         color = vec4(1.0, 0.0, 0.0, 1.0);
     }
-#endif
-
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(HDR)
-    vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
-    vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
 #endif
 
 #if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
@@ -313,20 +381,23 @@ void main()
     czm_materialInput materialInput;
     materialInput.st = v_textureCoordinates.st;
     materialInput.normalEC = normalize(v_normalEC);
+    materialInput.positionToEyeEC = -v_positionEC;
+    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalize(v_normalEC));     
     materialInput.slope = v_slope;
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
-    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+    vec4 materialColor = vec4(material.diffuse, material.alpha);
+    color = alphaBlend(materialColor, color);
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+    vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #else
     vec4 finalColor = color;
 #endif
@@ -349,14 +420,19 @@ void main()
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
     vec3 fogColor = colorCorrect(v_fogMieColor) + finalColor.rgb * colorCorrect(v_fogRayleighColor);
 #ifndef HDR
-    const float fExposure = 2.0;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 #endif
 #endif
 
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
+    vec3 atmosphereLightDirection = czm_sunDirectionWC;
+#else
+    vec3 atmosphereLightDirection = czm_lightDirectionWC;
+#endif
+
 #ifdef FOG
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
-    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
 
@@ -369,14 +445,40 @@ void main()
 #endif
 
 #ifdef GROUND_ATMOSPHERE
-    if (czm_sceneMode != czm_sceneMode3D)
+    if (!czm_backFacing())
     {
-        gl_FragColor = finalColor;
-        return;
+        vec3 groundAtmosphereColor = computeGroundAtmosphereColor(fogColor, finalColor, atmosphereLightDirection, cameraDist);
+        finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
     }
+#endif
 
-#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-    float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0));
+#ifdef UNDERGROUND_COLOR
+    if (czm_backFacing())
+    {
+        float distanceFromEllipsoid = max(czm_eyeHeight, 0.0);
+        float distance = max(v_distance - distanceFromEllipsoid, 0.0);
+        float blendAmount = interpolateByDistance(u_undergroundColorAlphaByDistance, distance);
+        vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
+        finalColor = alphaBlend(undergroundColor, finalColor);
+    }
+#endif
+
+#ifdef TRANSLUCENT
+    if (inTranslucencyRectangle())
+    {
+      vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
+      finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
+    }
+#endif
+
+    gl_FragColor = finalColor;
+}
+
+#ifdef GROUND_ATMOSPHERE
+vec3 computeGroundAtmosphereColor(vec3 fogColor, vec4 finalColor, vec3 atmosphereLightDirection, float cameraDist)
+{
+#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+    float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
 
@@ -389,15 +491,15 @@ void main()
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
-    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true, atmosphereLightDirection);
 
     vec3 groundAtmosphereColor = colorCorrect(atmosColor.mie) + finalColor.rgb * colorCorrect(atmosColor.rayleigh);
 #ifndef HDR
     groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 #endif
 
-    fadeInDist = u_nightFadeDistance.x;
-    fadeOutDist = u_nightFadeDistance.y;
+    float fadeInDist = u_nightFadeDistance.x;
+    float fadeOutDist = u_nightFadeDistance.y;
 
     float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
 
@@ -416,11 +518,9 @@ void main()
     groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
 #endif
 
-    finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
-#endif
-
-    gl_FragColor = finalColor;
+    return groundAtmosphereColor;
 }
+#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
 
@@ -455,7 +555,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float positionToEyeECLength = length(positionToEyeEC);
 
     // The double normalize below works around a bug in Firefox on Android devices.
-    vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
+    vec3 normalizedPositionToEyeEC = normalize(normalize(positionToEyeEC));
 
     // Fade out the waves as the camera moves far from the surface.
     float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);
@@ -491,7 +591,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
 
     // Use diffuse light to highlight the waves
-    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * maskValue;
+    float diffuseIntensity = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * maskValue;
     vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity * (1.0 - fade);
 
 #ifdef SHOW_OCEAN_WAVES
@@ -504,7 +604,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
-    float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float specularIntensity = czm_getSpecular(czm_lightDirectionEC, normalizedPositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
 
