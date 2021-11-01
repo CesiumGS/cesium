@@ -253,11 +253,23 @@ function decodePointCloud(parameters) {
   var properties = parameters.properties;
   for (var propertyName in properties) {
     if (properties.hasOwnProperty(propertyName)) {
-      var attributeId = properties[propertyName];
-      var dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
-        dracoPointCloud,
-        attributeId
-      );
+      var dracoAttribute;
+      if (propertyName === "POSITION" || propertyName === "NORMAL") {
+        var dracoAttributeId = dracoDecoder.GetAttributeId(
+          dracoPointCloud,
+          draco[propertyName]
+        );
+        dracoAttribute = dracoDecoder.GetAttribute(
+          dracoPointCloud,
+          dracoAttributeId
+        );
+      } else {
+        var attributeId = properties[propertyName];
+        dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
+          dracoPointCloud,
+          attributeId
+        );
+      }
       result[propertyName] = decodeAttribute(
         dracoPointCloud,
         dracoDecoder,
