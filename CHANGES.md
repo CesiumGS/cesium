@@ -5,13 +5,14 @@
 ##### Additions :tada:
 
 - Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
-- Fixed crashes caused by the cloud noise texture exceeding WebGL's maximum supported texture size. [#9885](https://github.com/CesiumGS/cesium/pull/9885)
 - Added back some support for Draco attribute quantization as a workaround until a full fix in the next Draco version. [#9904](https://github.com/CesiumGS/cesium/pull/9904)
 - Updated third-party zip.js library to 2.3.12, fixing compatibility with Webpack 4. [#9897](https://github.com/cesiumgs/cesium/pull/9897)
 
 ##### Fixes :wrench:
 
 - Point cloud styles that reference a missing property now treat the missing property as `undefined` rather than throwing an error. [#9882](https://github.com/CesiumGS/cesium/pull/9882)
+- Fixed Draco attribute quantization in point clouds. [#9908](https://github.com/CesiumGS/cesium/pull/9908)
+- Fixed crashes caused by the cloud noise texture exceeding WebGL's maximum supported texture size. [#9885](https://github.com/CesiumGS/cesium/pull/9885)
 
 ### 1.86.1 - 2021-10-15
 
