@@ -35,10 +35,10 @@ describe(
         building: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT64",
+              componentType: "FLOAT64",
             },
           },
         },
@@ -58,7 +58,7 @@ describe(
               componentCount: 3,
             },
             intensity: {
-              type: "UINT8",
+              componentType: "UINT8",
             },
           },
         },
@@ -75,21 +75,23 @@ describe(
 
     var results = MetadataTester.createGltf({
       schema: schemaJson,
-      featureTables: {
-        buildings: {
+      propertyTables: [
+        {
+          name: "Buildings",
           class: "building",
           properties: {
             name: ["House", "Hospital"],
             height: [10.0, 20.0],
           },
         },
-        trees: {
+        {
+          name: "Trees",
           class: "tree",
           properties: {
             species: [["Sparrow", "Squirrel"], ["Crow"]],
           },
         },
-      },
+      ],
       images: [
         {
           uri: "map.png",
@@ -106,47 +108,35 @@ describe(
           source: 1,
         },
       ],
-      featureTextures: {
-        mapTexture: {
+      propertyTextures: [
+        {
+          name: "Map",
           class: "map",
+          index: 0,
+          texCoord: 0,
           properties: {
-            color: {
-              channels: "rgb",
-              texture: {
-                index: 0,
-                texCoord: 0,
-              },
-            },
-            intensity: {
-              channels: "a",
-              texture: {
-                index: 0,
-                texCoord: 0,
-              },
-            },
+            color: [0, 1, 2],
+            intensity: [3],
           },
         },
-        orthoTexture: {
+        {
+          name: "Ortho",
           class: "ortho",
+          index: 1,
+          texCoord: 1,
           properties: {
-            vegetation: {
-              channels: "r",
-              texture: {
-                index: 1,
-                texCoord: 1,
-              },
-            },
+            vegetation: [0],
           },
         },
-      },
+      ],
     });
 
     var gltf = results.gltf;
-    var extension = gltf.extensions.EXT_feature_metadata;
+    var extension = gltf.extensions.EXT_mesh_features;
     var buffer = results.buffer.buffer;
 
     var gltfSchemaUri = clone(gltf, true);
-    var extensionSchemaUri = gltfSchemaUri.extensions.EXT_feature_metadata;
+    var extensionSchemaUri = gltfSchemaUri.extensions.EXT_mesh_features;
     extensionSchemaUri.schemaUri = "schema.json";
     delete extensionSchemaUri.schema;
 
@@ -176,11 +166,12 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if extension is undefined", function () {
+    it("throws if neither extension nor extension is defined", function () {
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,
           extension: undefined,
+          extensionLegacy: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
@@ -345,10 +336,14 @@ describe(
       ) {
         loaderProcess(featureMetadataLoader, scene); // Check that calling process after load doesn't break anything
         var featureMetadata = featureMetadataLoader.featureMetadata;
-        var buildingsTable = featureMetadata.getFeatureTable("buildings");
-        var treesTable = featureMetadata.getFeatureTable("trees");
-        var mapTexture = featureMetadata.getFeatureTexture("mapTexture");
-        var orthoTexture = featureMetadata.getFeatureTexture("orthoTexture");
+        var buildingsTable = featureMetadata.getPropertyTable(0);
+        expect(buildingsTable.id).toBe(0);
+        var treesTable = featureMetadata.getPropertyTable(1);
+        expect(treesTable.id).toBe(1);
+        var mapTexture = featureMetadata.getPropertyTexture(0);
+        expect(mapTexture.id).toBe(0);
+        var orthoTexture = featureMetadata.getPropertyTexture(1);
+        expect(orthoTexture.id).toBe(1);
 
         expect(buildingsTable.getProperty(0, "name")).toBe("House");
         expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");

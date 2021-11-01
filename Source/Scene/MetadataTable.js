@@ -316,7 +316,7 @@ function getDefault(classDefinition, propertyId) {
         value = value.slice(); // clone
       }
       value = classProperty.normalize(value);
-      return classProperty.unpackVectorTypes(value);
+      return classProperty.unpackVectorAndMatrixTypes(value);
     }
   }
 }

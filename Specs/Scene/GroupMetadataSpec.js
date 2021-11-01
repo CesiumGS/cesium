@@ -25,9 +25,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -98,7 +97,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -122,7 +121,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -146,7 +145,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             optional: true,
             default: 10.0,
           },
@@ -187,7 +186,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -211,7 +210,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "HEIGHT",
           },
         },
@@ -236,7 +235,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "HEIGHT",
             optional: true,
             default: 10.0,
@@ -279,10 +278,10 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -308,12 +307,12 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             optional: true,
             default: 10.0,
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -337,10 +336,10 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -378,7 +377,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -402,9 +401,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -433,9 +431,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
             optional: true,
             default: position,
           },
@@ -480,9 +477,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -540,7 +536,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -565,7 +561,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
@@ -602,7 +598,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
@@ -629,7 +625,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -665,7 +661,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },

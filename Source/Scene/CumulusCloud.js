@@ -277,7 +277,6 @@ Object.defineProperties(CumulusCloud.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug)
-      console.log(value);
       Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 

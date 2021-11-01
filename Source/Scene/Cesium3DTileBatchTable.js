@@ -345,6 +345,16 @@ Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   return results;
 };
 
+/**
+ * @private
+ */
+Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (
+  batchId,
+  name
+) {
+  return undefined;
+};
+
 Cesium3DTileBatchTable.prototype.getProperty = function (batchId, name) {
   //>>includeStart('debug', pragmas.debug);
   checkBatchId(batchId, this.featuresLength);

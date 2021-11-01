@@ -5,13 +5,14 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
-import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
+import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -82,7 +83,6 @@ function initialize(runtimePrimitive) {
   var primitive = runtimePrimitive.primitive;
   var node = runtimePrimitive.node;
   var model = runtimePrimitive.model;
-  var content = model.content;
   var customShader = model.customShader;
 
   var hasCustomShader = defined(customShader);
@@ -105,34 +105,43 @@ function initialize(runtimePrimitive) {
     pipelineStages.push(MaterialPipelineStage);
   }
 
-  if (hasCustomShader) {
-    pipelineStages.push(CustomShaderPipelineStage);
-  }
-
   pipelineStages.push(LightingPipelineStage);
 
+  // Add the FeatureIdPipelineStage and BatchTexturePipelineStage when the primitive has features, i.e. when at least one of the following conditions exists:
+  // - the node is instanced and has feature ID attributes
+  // - the primitive has a feature ID vertex attributes
+  // - the primitive has a feature ID texture
+  // It must be noted that we check for the presence of feature ID vertex attributes, and not feature ID attributes, because it is possible to have features in a model
+  // without a feature table (for example, in 3D Tiles 1.0, where batch length > 0 but a batch table is not defined.)
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
   var featureIdTextureIndex = model.featureIdTextureIndex;
-
-  var hasInstancedFeatureIds;
+  var hasInstancedFeatureIdAttribute;
   if (
     defined(node.instances) &&
     node.instances.featureIdAttributes.length > 0
   ) {
     var featureIdAttributes = node.instances.featureIdAttributes;
     if (defined(featureIdAttributes[featureIdAttributeIndex])) {
-      hasInstancedFeatureIds = true;
+      hasInstancedFeatureIdAttribute = true;
     }
   }
-
-  var hasContentMetadata = defined(content) && defined(content.featureMetadata);
+  var hasFeatureIdVertexAttribute = defined(
+    ModelExperimentalUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.FEATURE_ID
+    )
+  );
+  var hasFeatureIdTexture = defined(
+    primitive.featureIdTextures[featureIdTextureIndex]
+  );
   var hasFeatureIds =
-    defined(primitive.featureIdAttributes[featureIdAttributeIndex]) ||
-    defined(primitive.featureIdTextures[featureIdTextureIndex]) ||
-    hasContentMetadata;
-  if (hasInstancedFeatureIds || hasFeatureIds) {
+    hasInstancedFeatureIdAttribute ||
+    hasFeatureIdVertexAttribute ||
+    hasFeatureIdTexture;
+  if (hasInstancedFeatureIdAttribute || hasFeatureIds) {
     pipelineStages.push(FeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
+    pipelineStages.push(CPUStylingPipelineStage);
   }
 
   if (model.allowPicking) {

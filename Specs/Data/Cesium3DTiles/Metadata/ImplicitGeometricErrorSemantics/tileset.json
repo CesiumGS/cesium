@@ -16,7 +16,7 @@
           "tile": {
             "properties": {
               "geometricError": {
-                "type": "FLOAT64",
+                "componentType": "FLOAT64",
                 "semantic": "TILE_GEOMETRIC_ERROR"
               }
             }

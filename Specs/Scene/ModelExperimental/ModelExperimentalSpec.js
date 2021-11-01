@@ -1,4 +1,5 @@
 import {
+  Cesium3DTileStyle,
   FeatureDetection,
   JulianDate,
   defaultValue,
@@ -13,6 +14,8 @@ import {
   when,
   ShaderProgram,
   ModelFeature,
+  Color,
+  StyleCommandsNeeded,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -99,8 +102,7 @@ describe(
         expect(model.ready).toEqual(true);
         expect(model.featureTables).toBeDefined();
 
-        var featureTableId = "buildings";
-        var featureTable = model.featureTables[featureTableId];
+        var featureTable = model.featureTables[0];
         expect(featureTable).toBeDefined();
 
         var featuresLength = featureTable.featuresLength;
@@ -218,6 +220,44 @@ describe(
       });
     });
 
+    it("renders model with style", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: buildingsMetadata },
+        scene
+      ).then(function (model) {
+        // Renders without style.
+        verifyRender(model, true);
+
+        // Renders with opaque style.
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red')"]],
+          },
+        });
+        verifyRender(model, true);
+
+        // Renders with translucent style.
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.5)"]],
+          },
+        });
+        verifyRender(model, true);
+
+        // Does not render when style disables show.
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.0)"]],
+          },
+        });
+        verifyRender(model, false);
+
+        // Render when style is removed.
+        model.style = undefined;
+        verifyRender(model, true);
+      });
+    });
+
     it("fromGltf throws with undefined options", function () {
       expect(function () {
         ModelExperimental.fromGltf();
@@ -273,6 +313,69 @@ describe(
       });
     });
 
+    function setFeaturesWithOpacity(
+      featureTable,
+      opaqueFeaturesLength,
+      translucentFeaturesLength
+    ) {
+      var i, feature;
+      for (i = 0; i < opaqueFeaturesLength; i++) {
+        feature = featureTable.getFeature(i);
+        feature.color = Color.RED;
+      }
+      for (
+        i = opaqueFeaturesLength;
+        i < opaqueFeaturesLength + translucentFeaturesLength;
+        i++
+      ) {
+        feature = featureTable.getFeature(i);
+        feature.color = Color.RED.withAlpha(0.5);
+      }
+    }
+
+    it("resets draw commands when the style commands needed are changed", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        var featureTable = model.featureTables[model.featureTableId];
+
+        // Set all features to opaque.
+        setFeaturesWithOpacity(featureTable, 10, 0);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(false);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.ALL_OPAQUE
+        );
+
+        // Set some features to translucent.
+        setFeaturesWithOpacity(featureTable, 8, 2);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(true);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
+        );
+
+        // Set some more features to translucent.
+        setFeaturesWithOpacity(featureTable, 2, 8);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(false);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT
+        );
+
+        // Set all features to translucent.
+        setFeaturesWithOpacity(featureTable, 0, 10);
+        scene.renderForSpecs();
+        expect(featureTable.styleCommandsNeededDirty).toEqual(true);
+        expect(featureTable._styleCommandsNeeded).toEqual(
+          StyleCommandsNeeded.ALL_TRANSLUCENT
+        );
+      });
+    });
+
     it("selects feature table for instanced feature ID attributes", function () {
       if (webglStub) {
         return;
@@ -284,7 +387,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("sectionTable");
+        expect(model.featureTableId).toEqual(1);
       });
     });
 
@@ -295,7 +398,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("landCoverTable");
+        expect(model.featureTableId).toEqual(0);
       });
     });
 
@@ -306,7 +409,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        expect(model.featureTableId).toEqual("buildings");
+        expect(model.featureTableId).toEqual(0);
       });
     });
 
