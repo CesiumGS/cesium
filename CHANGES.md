@@ -11,7 +11,7 @@
 ##### Fixes :wrench:
 
 - Point cloud styles that reference a missing property now treat the missing property as `undefined` rather than throwing an error. [#9882](https://github.com/CesiumGS/cesium/pull/9882)
-- Fixed Draco attribute quantization in point clouds [#9908](https://github.com/CesiumGS/cesium/pull/9908)
+- Fixed Draco attribute quantization in point clouds. [#9908](https://github.com/CesiumGS/cesium/pull/9908)
 - Fixed crashes caused by the cloud noise texture exceeding WebGL's maximum supported texture size. [#9885](https://github.com/CesiumGS/cesium/pull/9885)
 
 ### 1.86.1 - 2021-10-15
