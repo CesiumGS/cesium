@@ -250,7 +250,7 @@ EntityCollection.prototype.manageVisualizers = function (entity) {
  * Enum for visualization throttle types
  * @enum {number}
  */
-const ThrottleType = {
+var ThrottleType = {
   MAX: 0,
   DYNAMIC: 1,
 };
