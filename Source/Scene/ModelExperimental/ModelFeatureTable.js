@@ -1,9 +1,12 @@
 import BatchTexture from "../BatchTexture.js";
 import Cesium3DTileFeature from "../Cesium3DTileFeature.js";
 import Check from "../../Core/Check.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import ModelFeature from "./ModelFeature.js";
+import defaultValue from "../../Core/defaultValue.js";
+import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
 /**
  * Manages the {@link ModelFeature}s in a {@link ModelExperimental}.
@@ -35,6 +38,9 @@ export default function ModelFeatureTable(options) {
   this._featuresLength = 0;
 
   this._batchTexture = undefined;
+
+  this._styleCommandsNeededDirty = false;
+  this._styleCommandsNeeded = StyleCommandsNeeded.ALL_OPAQUE;
 
   initialize(this);
 }
@@ -69,6 +75,22 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   featuresLength: {
     get: function () {
       return this._featuresLength;
+    },
+  },
+
+  /**
+   * A flag to indicate whether or not the types of style commands needed by this feature table have changed.
+   *
+   * @memberof ModelFeatureTable.prototype
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  styleCommandsNeededDirty: {
+    get: function () {
+      return this._styleCommandsNeededDirty;
     },
   },
 });
@@ -115,7 +137,19 @@ function initialize(modelFeatureTable) {
  * @private
  */
 ModelFeatureTable.prototype.update = function (frameState) {
+  // Assume the number of translucent features has not changed.
+  this._styleCommandsNeededDirty = false;
   this._batchTexture.update(undefined, frameState);
+
+  var currentStyleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+    this._featuresLength,
+    this._batchTexture.translucentFeaturesLength
+  );
+
+  if (this._styleCommandsNeeded !== currentStyleCommandsNeeded) {
+    this._styleCommandsNeededDirty = true;
+    this._styleCommandsNeeded = currentStyleCommandsNeeded;
+  }
 };
 
 ModelFeatureTable.prototype.setShow = function (featureId, show) {
@@ -158,12 +192,50 @@ ModelFeatureTable.prototype.getProperty = function (featureId, name) {
   return this._propertyTable.getProperty(featureId, name);
 };
 
+ModelFeatureTable.prototype.getPropertyBySemantic = function (
+  featureId,
+  semantic
+) {
+  return this._propertyTable.getPropertyBySemantic(featureId, semantic);
+};
+
 ModelFeatureTable.prototype.getPropertyNames = function (results) {
   return this._propertyTable.getPropertyIds(results);
 };
 
 ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
   return this._propertyTable.setProperty(featureId, name, value);
+};
+
+var scratchColor = new Color();
+/**
+ * @private
+ */
+ModelFeatureTable.prototype.applyStyle = function (style) {
+  if (!defined(style)) {
+    this.setAllColor(BatchTexture.DEFAULT_COLOR_VALUE);
+    this.setAllShow(BatchTexture.DEFAULT_SHOW_VALUE);
+    return;
+  }
+
+  for (var i = 0; i < this._featuresLength; i++) {
+    var feature = this.getFeature(i);
+    var color = defined(style.color)
+      ? defaultValue(
+          style.color.evaluateColor(feature, scratchColor),
+          BatchTexture.DEFAULT_COLOR_VALUE
+        )
+      : BatchTexture.DEFAULT_COLOR_VALUE;
+    var show = defined(style.show)
+      ? defaultValue(
+          style.show.evaluate(feature),
+          BatchTexture.DEFAULT_SHOW_VALUE
+        )
+      : BatchTexture.DEFAULT_SHOW_VALUE;
+
+    this.setColor(i, color);
+    this.setShow(i, show);
+  }
 };
 
 /**

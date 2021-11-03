@@ -81,12 +81,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
   if (defined(boundingSphere)) {
     // ARRAY with 4 elements is automatically converted to a Cartesian4
     return {
-      sphere: [
-        boundingSphere.x,
-        boundingSphere.y,
-        boundingSphere.z,
-        boundingSphere.w,
-      ],
+      sphere: boundingSphere,
     };
   }
 

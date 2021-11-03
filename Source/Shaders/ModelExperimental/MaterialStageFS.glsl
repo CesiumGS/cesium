@@ -1,3 +1,16 @@
+// If the style color is white, it implies the feature has not been styled.
+bool isDefaultStyleColor(vec3 color)
+{
+    return all(greaterThan(color, vec3(1.0 - czm_epsilon3)));
+}
+
+vec3 blend(vec3 sourceColor, vec3 styleColor, float styleColorBlend)
+{
+    vec3 blendColor = mix(sourceColor, styleColor, styleColorBlend);
+    vec3 color = isDefaultStyleColor(styleColor.rgb) ? sourceColor : blendColor;
+    return color;
+}
+
 vec3 SRGBtoLINEAR3(vec3 srgbIn) 
 {
     return pow(srgbIn, vec3(2.2));
@@ -54,7 +67,7 @@ vec3 computeNormal(ProcessedAttributes attributes)
 }
 #endif
 
-void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes)
+void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes, Feature feature)
 {
 
     #ifdef HAS_NORMALS
@@ -85,6 +98,10 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
 
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
+
+    #ifdef USE_CPU_STYLING
+    material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
+    #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
     vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;

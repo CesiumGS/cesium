@@ -16,20 +16,20 @@
           "box": {
             "properties": {
               "name": {
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "volume": {
-                "type": "FLOAT32"
+                "componentType": "FLOAT32"
               }
             }
           },
           "section": {
             "properties": {
               "name": {
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "id": {
-                "type": "UINT16"
+                "componentType": "UINT16"
               }
             }
           }
@@ -42,7 +42,7 @@
           "count": 4,
           "properties": {
             "name": {
-              "offsetType": "UINT16",
+              "stringOffsetType": "UINT16",
               "bufferView": 7,
               "stringOffsetBufferView": 8
             },
@@ -57,7 +57,7 @@
           "count": 2,
           "properties": {
             "name": {
-              "offsetType": "UINT16",
+              "stringOffsetType": "UINT16",
               "bufferView": 10,
               "stringOffsetBufferView": 11
             },

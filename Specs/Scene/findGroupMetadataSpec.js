@@ -10,10 +10,10 @@ describe("Scene/findGroupMetadata", function () {
     class: {
       properties: {
         name: {
-          type: "STRING",
+          componentType: "STRING",
         },
         elevation: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       },
     },

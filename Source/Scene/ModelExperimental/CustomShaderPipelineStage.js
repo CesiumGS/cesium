@@ -87,7 +87,7 @@ CustomShaderPipelineStage.process = function (
     shaderBuilder.addDefine(
       "COMPUTE_POSITION_WC",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.BOTH
     );
   }
 

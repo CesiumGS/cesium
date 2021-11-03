@@ -253,11 +253,23 @@ function decodePointCloud(parameters) {
   var properties = parameters.properties;
   for (var propertyName in properties) {
     if (properties.hasOwnProperty(propertyName)) {
-      var attributeId = properties[propertyName];
-      var dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
-        dracoPointCloud,
-        attributeId
-      );
+      var dracoAttribute;
+      if (propertyName === "POSITION" || propertyName === "NORMAL") {
+        var dracoAttributeId = dracoDecoder.GetAttributeId(
+          dracoPointCloud,
+          draco[propertyName]
+        );
+        dracoAttribute = dracoDecoder.GetAttribute(
+          dracoPointCloud,
+          dracoAttributeId
+        );
+      } else {
+        var attributeId = properties[propertyName];
+        dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
+          dracoPointCloud,
+          attributeId
+        );
+      }
       result[propertyName] = decodeAttribute(
         dracoPointCloud,
         dracoDecoder,
@@ -274,6 +286,24 @@ function decodePointCloud(parameters) {
 
 function decodePrimitive(parameters) {
   var dracoDecoder = new draco.Decoder();
+
+  // Skip all parameter types except generic
+  // Note: As a temporary work-around until GetAttributeByUniqueId() works after
+  // calling SkipAttributeTransform(), we will not skip attributes with multiple
+  // sets of data in the glTF.
+  var attributesToSkip = ["POSITION", "NORMAL"];
+  var compressedAttributes = parameters.compressedAttributes;
+  if (!defined(compressedAttributes["COLOR_1"])) {
+    attributesToSkip.push("COLOR");
+  }
+  if (!defined(compressedAttributes["TEXCOORD_1"])) {
+    attributesToSkip.push("TEX_COORD");
+  }
+  if (parameters.dequantizeInShader) {
+    for (var i = 0; i < attributesToSkip.length; ++i) {
+      dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
+    }
+  }
 
   var bufferView = parameters.bufferView;
   var buffer = new draco.DecoderBuffer();
@@ -295,15 +325,37 @@ function decodePrimitive(parameters) {
   draco.destroy(buffer);
 
   var attributeData = {};
-
-  var compressedAttributes = parameters.compressedAttributes;
   for (var attributeName in compressedAttributes) {
     if (compressedAttributes.hasOwnProperty(attributeName)) {
-      var compressedAttribute = compressedAttributes[attributeName];
-      var dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
-        dracoGeometry,
-        compressedAttribute
-      );
+      // Since GetAttributeByUniqueId() only works on attributes that we have not called
+      // SkipAttributeTransform() on, we must first store a `dracoAttributeName` in case
+      // we call GetAttributeId() instead.
+      var dracoAttributeName = attributeName;
+      if (attributeName === "TEXCOORD_0") {
+        dracoAttributeName = "TEX_COORD";
+      }
+      if (attributeName === "COLOR_0") {
+        dracoAttributeName = "COLOR";
+      }
+
+      var dracoAttribute;
+      if (attributesToSkip.includes(dracoAttributeName)) {
+        var dracoAttributeId = dracoDecoder.GetAttributeId(
+          dracoGeometry,
+          draco[dracoAttributeName]
+        );
+        dracoAttribute = dracoDecoder.GetAttribute(
+          dracoGeometry,
+          dracoAttributeId
+        );
+      } else {
+        var compressedAttribute = compressedAttributes[attributeName];
+        dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
+          dracoGeometry,
+          compressedAttribute
+        );
+      }
+
       attributeData[attributeName] = decodeAttribute(
         dracoGeometry,
         dracoDecoder,

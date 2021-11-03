@@ -3,6 +3,7 @@ import {
   GltfLoader,
   FeatureIdPipelineStage,
   ShaderBuilder,
+  ShaderDestination,
   Resource,
   ResourceCache,
   _shadersFeatureStageCommon,
@@ -23,8 +24,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
   var scene;
   var gltfLoaders = [];
 
+  var defaultShaderBuilder;
+
   beforeAll(function () {
     scene = createScene();
+    defaultShaderBuilder = createDefaultShaderBuilder();
   });
 
   afterAll(function () {
@@ -42,6 +46,54 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     gltfLoaders.length = 0;
     ResourceCache.clearForSpecs();
   });
+
+  function createDefaultShaderBuilder() {
+    var shaderBuilder = new ShaderBuilder();
+    shaderBuilder.addStruct(
+      FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+      FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+      ShaderDestination.BOTH
+    );
+    return shaderBuilder;
+  }
+
+  function verifyFeatureStruct(shaderBuilder) {
+    ShaderBuilderTester.expectHasVertexStruct(
+      shaderBuilder,
+      FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+      FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+      ["    int id;", "    vec2 st;", "    vec4 color;"]
+    );
+    ShaderBuilderTester.expectHasFragmentStruct(
+      shaderBuilder,
+      FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+      FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+      ["    int id;", "    vec2 st;", "    vec4 color;"]
+    );
+  }
+
+  function verifyFeatureStructFunctions(shaderBuilder) {
+    ShaderBuilderTester.expectHasVertexFunction(
+      shaderBuilder,
+      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
+      FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
+      [
+        "    v_activeFeatureId = float(feature.id);",
+        "    v_activeFeatureSt = feature.st;",
+        "    v_activeFeatureColor = feature.color;",
+      ]
+    );
+    ShaderBuilderTester.expectHasFragmentFunction(
+      shaderBuilder,
+      FeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
+      FeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
+      [
+        "    feature.id = int(v_activeFeatureId);",
+        "    feature.st = v_activeFeatureSt;",
+        "    feature.color = v_activeFeatureColor;",
+      ]
+    );
+  }
 
   function getOptions(gltfPath, options) {
     var resource = new Resource({
@@ -75,7 +127,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
   it("processes primitive feature IDs from vertex attribute", function () {
     var renderResources = {
-      shaderBuilder: new ShaderBuilder(),
+      shaderBuilder: defaultShaderBuilder.clone(),
       model: {
         featureIdAttributeIndex: 0,
       },
@@ -110,7 +162,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
         "varying float v_activeFeatureId;",
         "varying vec2 v_activeFeatureSt;",
+        "varying vec4 v_activeFeatureColor;",
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersFeatureStageCommon,
@@ -126,7 +182,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
   it("processes primitive implicit feature IDs", function () {
     var renderResources = {
-      shaderBuilder: new ShaderBuilder(),
+      shaderBuilder: defaultShaderBuilder.clone(),
       model: {
         featureIdAttributeIndex: 1,
         _resources: [],
@@ -169,6 +225,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
         "varying float v_activeFeatureId;",
         "varying vec2 v_activeFeatureSt;",
+        "varying vec4 v_activeFeatureColor;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -180,6 +237,9 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageCommon,
         _shadersFeatureStageFS,
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
@@ -194,7 +254,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
   it("processes primitive implicit feature ID constant only", function () {
     var renderResources = {
-      shaderBuilder: new ShaderBuilder(),
+      shaderBuilder: defaultShaderBuilder.clone(),
       model: {
         featureIdAttributeIndex: 2,
         _resources: [],
@@ -237,6 +297,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
         "varying float v_activeFeatureId;",
         "varying vec2 v_activeFeatureSt;",
+        "varying vec4 v_activeFeatureColor;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -248,6 +309,9 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
         _shadersFeatureStageCommon,
         _shadersFeatureStageFS,
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
 
@@ -262,7 +326,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
   it("processes instances feature IDs from vertex attribute", function () {
     var renderResources = {
-      shaderBuilder: new ShaderBuilder(),
+      shaderBuilder: defaultShaderBuilder.clone(),
       model: {
         featureIdAttributeIndex: 1,
       },
@@ -300,7 +364,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
         "varying float v_activeFeatureId;",
         "varying vec2 v_activeFeatureSt;",
+        "varying vec4 v_activeFeatureColor;",
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersFeatureStageCommon,
@@ -316,7 +384,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
   it("processes instance implicit feature IDs", function () {
     var renderResources = {
-      shaderBuilder: new ShaderBuilder(),
+      shaderBuilder: defaultShaderBuilder.clone(),
       model: {
         featureIdAttributeIndex: 0,
         _resources: [],
@@ -361,7 +429,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
         "varying float v_activeFeatureId;",
         "varying vec2 v_activeFeatureSt;",
+        "varying vec4 v_activeFeatureColor;",
       ]);
+
+      verifyFeatureStruct(shaderBuilder);
+      verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersFeatureStageCommon,
@@ -388,7 +460,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     var renderResources = {
       attributeIndex: 1,
       hasFeatureIds: false,
-      shaderBuilder: new ShaderBuilder(),
+      shaderBuilder: defaultShaderBuilder.clone(),
       model: {
         featureIdTextureIndex: 0,
       },

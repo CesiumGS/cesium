@@ -2013,11 +2013,7 @@ function getExpressionArray(
 
 function getVariableName(variableName, variableSubstitutionMap) {
   if (!defined(variableSubstitutionMap[variableName])) {
-    throw new RuntimeError(
-      'Style references a property "' +
-        variableName +
-        '" that does not exist or is not styleable.'
-    );
+    return Expression.NULL_SENTINEL;
   }
 
   return variableSubstitutionMap[variableName];

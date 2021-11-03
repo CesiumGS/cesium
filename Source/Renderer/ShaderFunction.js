@@ -1,5 +1,3 @@
-import Check from "../Core/Check.js";
-
 /**
  * A utility for dynamically-generating a GLSL function
  *
@@ -25,9 +23,6 @@ import Check from "../Core/Check.js";
  * @private
  */
 export default function ShaderFunction(signature) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("signature", signature);
-  //>>includeEnd('debug');
   this.signature = signature;
   this.body = [];
 }
@@ -37,9 +32,6 @@ export default function ShaderFunction(signature) {
  * @param {String} lines Line of GLSL code to add to the function body. Do not include any preceding whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("line", lines);
-  //>>includeEnd('debug');
   var paddedLines = lines.map(function (line) {
     return "    " + line;
   });
