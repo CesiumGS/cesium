@@ -231,16 +231,17 @@ EntityCollection.prototype.manageVisualizers = function (entity) {
       this.owner._visualizers = [];
     }
     for (var viz in EntityCollection.prototype._visualizerMap) {
-      if(EntityCollection.prototype._visualizerMap.hasOwnProperty(viz)){
+      if (EntityCollection.prototype._visualizerMap.hasOwnProperty(viz)) {
         var _c = this.owner._visualizerCache[
           EntityCollection.prototype._visualizerMap[viz]
         ];
+
+        if (entity[viz]) {
+          if (_c && this.owner._visualizers.indexOf(_c) === -1)
+            this.owner._visualizers.push(_c);
+        }
+        this.syncVisualizerCache(viz);
       }
-      if (entity[viz]) {
-        if (_c && this.owner._visualizers.indexOf(_c) === -1)
-          this.owner._visualizers.push(_c);
-      }
-      this.syncVisualizerCache(viz);
     }
   }
 };
