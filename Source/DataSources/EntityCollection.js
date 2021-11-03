@@ -222,18 +222,20 @@ EntityCollection.prototype.manageVisualizers = function (entity) {
     if (!this.owner._visualizerCache) {
       this.owner._visualizerCache = {};
       if (this.owner._visualizers) {
-        for (let v = 0; v < this.owner._visualizers.length; v++) {
-          let vname = this.owner._visualizers[v].constructor.name;
+        for (var v = 0; v < this.owner._visualizers.length; v++) {
+          var vname = this.owner._visualizers[v].constructor.name;
           this.owner._visualizerCache[vname] = this.owner._visualizers[v];
           this.syncVisualizerCache(vname);
         }
       }
       this.owner._visualizers = [];
     }
-    for (let viz in EntityCollection.prototype._visualizerMap) {
-      let _c = this.owner._visualizerCache[
-        EntityCollection.prototype._visualizerMap[viz]
-      ];
+    for (var viz in EntityCollection.prototype._visualizerMap) {
+      if(EntityCollection.prototype._visualizerMap.hasOwnProperty(viz)){
+        var _c = this.owner._visualizerCache[
+          EntityCollection.prototype._visualizerMap[viz]
+        ];
+      }
       if (entity[viz]) {
         if (_c && this.owner._visualizers.indexOf(_c) === -1)
           this.owner._visualizers.push(_c);
@@ -281,7 +283,7 @@ EntityCollection.prototype.throttleVisualizer = function (
   type,
   fps
 ) {
-  let vname = EntityCollection.prototype._visualizerMap[visualizerName];
+  var vname = EntityCollection.prototype._visualizerMap[visualizerName];
   this.owner._throttleCache = this.owner._throttleCache || {};
   this.owner._throttleCache[vname] = this.owner._throttleCache[vname] || {
     _fps: [],
