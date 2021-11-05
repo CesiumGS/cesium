@@ -146,8 +146,9 @@ function getDependencies(collection, context) {
     var ao = collection.ambientOcclusion;
     var bloom = collection.bloom;
     var tonemapping = collection._tonemapping;
+    var fxaa = collection.fxaa;
     var smaa = collection.smaa;
-    // var fxaa = collection.fxaa;
+
     var previousName = getCompositeDependencies(
       collection,
       context,
@@ -176,14 +177,14 @@ function getDependencies(collection, context) {
       collection,
       previousName
     );
-    getCompositeDependencies(
+    previousName = getCompositeDependencies(
       collection,
       context,
       dependencies,
       smaa,
       previousName
     );
-    // getStageDependencies(collection, context, dependencies, smaa, previousName);
+    getStageDependencies(collection, context, dependencies, fxaa, previousName);
   } else {
     getCompositeDependencies(
       collection,
@@ -347,6 +348,10 @@ PostProcessStageTextureCache.prototype.update = function (context) {
     defined(collection._tonemapping) &&
     collection._tonemapping.enabled &&
     collection._tonemapping._isSupported(context);
+  var fxaaEnabled =
+    defined(collection.fxaa) &&
+    collection.fxaa.enabled &&
+    collection.fxaa._isSupported(context);
   var smaaEnabled =
     defined(collection.smaa) &&
     collection.smaa.enabled &&
@@ -357,6 +362,7 @@ PostProcessStageTextureCache.prototype.update = function (context) {
     aoEnabled ||
     bloomEnabled ||
     tonemappingEnabled ||
+    fxaaEnabled ||
     smaaEnabled;
   if (
     updateDependencies ||
