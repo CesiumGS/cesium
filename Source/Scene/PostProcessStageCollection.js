@@ -1,3 +1,4 @@
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import arraySlice from "../Core/arraySlice.js";
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
@@ -34,9 +35,10 @@ var stackScratch = [];
  * @constructor
  */
 function PostProcessStageCollection() {
-  var fxaa = PostProcessStageLibrary.createFXAAStage();
+  // var fxaa = PostProcessStageLibrary.createFXAAStage();
   var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
   var bloom = PostProcessStageLibrary.createBloomStage();
+  var smaa = PostProcessStageLibrary.createSMAAStage();
 
   // Auto-exposure is currently disabled because most shaders output a value in [0.0, 1.0].
   // Some shaders, such as the atmosphere and ground atmosphere, output values slightly over 1.0.
@@ -50,7 +52,7 @@ function PostProcessStageCollection() {
 
   var tonemapping = this._tonemapping;
 
-  fxaa.enabled = false;
+  smaa.enabled = false;
   ao.enabled = false;
   bloom.enabled = false;
   tonemapping.enabled = false; // will be enabled if necessary in update
@@ -59,7 +61,7 @@ function PostProcessStageCollection() {
 
   var stageNames = {};
   var stack = stackScratch;
-  stack.push(fxaa, ao, bloom, tonemapping);
+  stack.push(smaa, ao, bloom, tonemapping);
   while (stack.length > 0) {
     var stage = stack.pop();
     stageNames[stage.name] = stage;
@@ -80,18 +82,24 @@ function PostProcessStageCollection() {
   this._randomTexture = undefined; // For AO
 
   var that = this;
+  // smaa.uniforms.tArea = function () {
+  //   return buildModuleUrl("Assets/Textures/SMAA/AreaTexDX10.png");
+  // };
+  // smaa.uniforms.tSearch = function () {
+  //   return buildModuleUrl("Assets/Textures/SMAA/SearchTex.png");
+  // };
   ao.uniforms.randomTexture = function () {
     return that._randomTexture;
   };
 
   this._ao = ao;
   this._bloom = bloom;
-  this._fxaa = fxaa;
+  this._smaa = smaa;
 
   this._aoEnabled = undefined;
   this._bloomEnabled = undefined;
   this._tonemappingEnabled = undefined;
-  this._fxaaEnabled = undefined;
+  this._smaaEnabled = undefined;
 
   this._activeStagesChanged = false;
   this._stagesRemoved = false;
@@ -119,12 +127,12 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         readyAndEnabled = readyAndEnabled || (stage.ready && stage.enabled);
       }
 
-      var fxaa = this._fxaa;
+      var smaa = this._smaa;
       var ao = this._ao;
       var bloom = this._bloom;
       var tonemapping = this._tonemapping;
 
-      readyAndEnabled = readyAndEnabled || (fxaa.ready && fxaa.enabled);
+      readyAndEnabled = readyAndEnabled || (smaa.ready && smaa.enabled);
       readyAndEnabled = readyAndEnabled || (ao.ready && ao.enabled);
       readyAndEnabled = readyAndEnabled || (bloom.ready && bloom.enabled);
       readyAndEnabled =
@@ -143,9 +151,9 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * @type {PostProcessStage}
    * @readonly
    */
-  fxaa: {
+  smaa: {
     get: function () {
-      return this._fxaa;
+      return this._smaa;
     },
   },
   /**
@@ -251,9 +259,9 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    */
   outputTexture: {
     get: function () {
-      var fxaa = this._fxaa;
-      if (fxaa.enabled && fxaa.ready) {
-        return this.getOutputTexture(fxaa.name);
+      var smaa = this._smaa;
+      if (smaa.enabled && smaa.ready) {
+        return this.getOutputTexture(smaa.name);
       }
 
       var stages = this._stages;
@@ -591,7 +599,7 @@ PostProcessStageCollection.prototype.update = function (
   var bloom = this._bloom;
   var autoexposure = this._autoExposure;
   var tonemapping = this._tonemapping;
-  var fxaa = this._fxaa;
+  var smaa = this._smaa;
 
   tonemapping.enabled = useHdr;
 
@@ -599,7 +607,7 @@ PostProcessStageCollection.prototype.update = function (
   var bloomEnabled = bloom.enabled && bloom._isSupported(context);
   var tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
-  var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+  var smaaEnabled = smaa.enabled && smaa._isSupported(context);
 
   if (
     activeStagesChanged ||
@@ -607,7 +615,7 @@ PostProcessStageCollection.prototype.update = function (
     aoEnabled !== this._aoEnabled ||
     bloomEnabled !== this._bloomEnabled ||
     tonemappingEnabled !== this._tonemappingEnabled ||
-    fxaaEnabled !== this._fxaaEnabled
+    smaaEnabled !== this._smaaEnabled
   ) {
     // The number of stages to execute has changed.
     // Update dependencies and recreate framebuffers.
@@ -616,7 +624,7 @@ PostProcessStageCollection.prototype.update = function (
     this._aoEnabled = aoEnabled;
     this._bloomEnabled = bloomEnabled;
     this._tonemappingEnabled = tonemappingEnabled;
-    this._fxaaEnabled = fxaaEnabled;
+    this._smaaEnabled = smaaEnabled;
     this._textureCacheDirty = false;
   }
 
@@ -652,7 +660,7 @@ PostProcessStageCollection.prototype.update = function (
 
   this._textureCache.update(context);
 
-  fxaa.update(context, useLogDepth);
+  smaa.update(context, useLogDepth);
   ao.update(context, useLogDepth);
   bloom.update(context, useLogDepth);
   tonemapping.update(context, useLogDepth);
@@ -763,7 +771,7 @@ PostProcessStageCollection.prototype.execute = function (
 ) {
   var activeStages = this._activeStages;
   var length = activeStages.length;
-  var fxaa = this._fxaa;
+  var smaa = this._smaa;
   var ao = this._ao;
   var bloom = this._bloom;
   var autoexposure = this._autoExposure;
@@ -774,10 +782,10 @@ PostProcessStageCollection.prototype.execute = function (
   var autoExposureEnabled = this._autoExposureEnabled;
   var tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
-  var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+  var smaaEnabled = smaa.enabled && smaa._isSupported(context);
 
   if (
-    !fxaaEnabled &&
+    !smaaEnabled &&
     !aoEnabled &&
     !bloomEnabled &&
     !tonemappingEnabled &&
@@ -819,8 +827,8 @@ PostProcessStageCollection.prototype.execute = function (
     lastTexture = getOutputTexture(activeStages[length - 1]);
   }
 
-  if (fxaaEnabled && fxaa.ready) {
-    execute(fxaa, context, lastTexture, depthTexture, idTexture);
+  if (smaaEnabled && smaa.ready) {
+    execute(smaa, context, lastTexture, depthTexture, idTexture);
   }
 };
 
@@ -878,7 +886,7 @@ PostProcessStageCollection.prototype.isDestroyed = function () {
  * @see PostProcessStageCollection#isDestroyed
  */
 PostProcessStageCollection.prototype.destroy = function () {
-  this._fxaa.destroy();
+  this._smaa.destroy();
   this._ao.destroy();
   this._bloom.destroy();
   this._autoExposure.destroy();

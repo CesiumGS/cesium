@@ -38,7 +38,7 @@ function Texture(options) {
     }
   }
 
-  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGB);
   var pixelDatatype = defaultValue(
     options.pixelDatatype,
     PixelDatatype.UNSIGNED_BYTE
@@ -187,7 +187,7 @@ function Texture(options) {
     options.preMultiplyAlpha ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.LUMINANCE;
-  var flipY = defaultValue(options.flipY, true);
+  var flipY = defaultValue(options.flipY, false);
   var skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
     false
@@ -399,7 +399,17 @@ function Texture(options) {
   this._initialized = initialized;
   this._sampler = undefined;
 
-  this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
+  if (
+    options.source &&
+    options.source.currentSrc &&
+    options.source.currentSrc.includes("SearchTex")
+  ) {
+    this.sampler = new Sampler({
+      minificationFilter: TextureMinificationFilter.NEAREST,
+    });
+  } else {
+    this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
+  }
 }
 
 /**

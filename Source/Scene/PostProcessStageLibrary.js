@@ -27,6 +27,11 @@ import PostProcessStage from "./PostProcessStage.js";
 import PostProcessStageComposite from "./PostProcessStageComposite.js";
 import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
+import SMAAEdges from "../Shaders/PostProcessStages/SMAAEdges.js";
+import SMAAWeights from "../Shaders/PostProcessStages/SMAAWeights.js";
+import SMAABlend from "../Shaders/PostProcessStages/SMAABlend.js";
+import PixelFormat from "../Core/PixelFormat.js";
+
 /**
  * Contains functions for creating common post-process stages.
  *
@@ -476,6 +481,64 @@ PostProcessStageLibrary.createBloomStage = function () {
   return new PostProcessStageComposite({
     name: "czm_bloom",
     stages: [generateComposite, bloomComposite],
+    inputPreviousStageTexture: false,
+    uniforms: uniforms,
+  });
+};
+
+PostProcessStageLibrary.createSMAAStage = function () {
+  var edges = new PostProcessStage({
+    name: "czm_smaa_edges",
+    fragmentShader: SMAAEdges,
+    sampleMode: PostProcessStageSampleMode.LINEAR,
+    pixelFormat: PixelFormat.RGB,
+  });
+  var weights = new PostProcessStage({
+    name: "czm_smaa_weights",
+    fragmentShader: SMAAWeights,
+    uniforms: {
+      tArea: buildModuleUrl("Assets/Textures/SMAA/AreaTex.png"),
+      tSearch: buildModuleUrl("Assets/Textures/SMAA/SearchTex.png"),
+    },
+    sampleMode: PostProcessStageSampleMode.LINEAR,
+  });
+
+  var edgesAndWeights = new PostProcessStageComposite({
+    name: "czm_smaa_edges_weights",
+    stages: [edges, weights],
+  });
+
+  var smaaBlend = new PostProcessStage({
+    name: "czm_smaa_blend",
+    fragmentShader: SMAABlend,
+    uniforms: {
+      smaaTexture: edgesAndWeights.name,
+    },
+  });
+
+  var uniforms = {};
+  Object.defineProperties(uniforms, {
+    tArea: {
+      get: function () {
+        return weights.uniforms.tArea;
+      },
+      set: function (value) {
+        weights.uniforms.tArea = value;
+      },
+    },
+    tSearch: {
+      get: function () {
+        return weights.uniforms.tSearch;
+      },
+      set: function (value) {
+        weights.uniforms.tSearch = value;
+      },
+    },
+  });
+
+  return new PostProcessStageComposite({
+    name: "czm_smaa",
+    stages: [edgesAndWeights, smaaBlend],
     inputPreviousStageTexture: false,
     uniforms: uniforms,
   });
