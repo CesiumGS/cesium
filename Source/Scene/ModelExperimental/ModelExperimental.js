@@ -202,17 +202,17 @@ function initialize(model) {
       });
       model._resourcesLoaded = true;
     })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
-    });
+    .otherwise(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
 
   loader.texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
-    });
+    .otherwise(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
 }
 
 Object.defineProperties(ModelExperimental.prototype, {
