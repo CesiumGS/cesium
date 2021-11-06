@@ -168,7 +168,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mark Aubin](https://github.com/markaubin)
   - [Michael Shantzis](https://github.com/shantzis1962)
   - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
-- [Beijing Xibushijie]
+- Beijing Xibushijie
   - [Tang Xiaofei](https://github.com/vtxf)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
