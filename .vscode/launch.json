@@ -5,13 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
+            "name": "Chrome",
+            "type": "chrome",
             "request": "launch",
-            "name": "Launch Program",
-            "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "start"],
-            "noDebug": true
+            "url": "http://localhost:8080/",
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }

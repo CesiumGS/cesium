@@ -2,8 +2,11 @@ import { ModelExperimental, when } from "../../../Source/Cesium.js";
 import pollToPromise from "../../pollToPromise.js";
 
 function loadAndZoomToModelExperimental(options, scene) {
+
+  var model;
+
   try {
-    var model = ModelExperimental.fromGltf({
+    model = ModelExperimental.fromGltf({
       content: options.content,
       color: options.color,
       gltf: options.gltf,
