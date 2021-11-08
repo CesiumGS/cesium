@@ -2,7 +2,6 @@ import { ModelExperimental, when } from "../../../Source/Cesium.js";
 import pollToPromise from "../../pollToPromise.js";
 
 function loadAndZoomToModelExperimental(options, scene) {
-
   var model;
 
   try {
@@ -20,7 +19,7 @@ function loadAndZoomToModelExperimental(options, scene) {
       debugShowBoundingVolume: options.debugShowBoundingVolume,
       featureIdAttributeIndex: options.featureIdAttributeIndex,
       featureIdTextureIndex: options.featureIdTextureIndex,
-      incrementallyLoadTextures: options.incrementallyLoadTextures
+      incrementallyLoadTextures: options.incrementallyLoadTextures,
     });
   } catch (error) {
     return when.reject(error);
