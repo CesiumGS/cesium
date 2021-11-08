@@ -124,6 +124,8 @@ function createModelFeatureTables(model, featureMetadata) {
     if (modelFeatureTable.featuresLength > 0) {
       modelFeatureTables.push(modelFeatureTable);
     }
+
+    modelFeatureTable.applyStyle(model.style);
   }
 
   return modelFeatureTables;
