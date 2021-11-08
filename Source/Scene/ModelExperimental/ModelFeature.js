@@ -10,7 +10,7 @@ import defined from "../../Core/defined.js";
  * Modifications to a <code>ModelFeature</code> object have the lifetime of the model.
  * </p>
  * <p>
- * Do not construct this directly. Access it through {@link ModelFeatureTable#getFeature}, {@link Cesium3DTileContent#getFeature} or
+ * Do not construct this directly. Access it through {@link Cesium3DTileContent#getFeature} or
  * picking using {@link Scene#pick}.
  * </p>
  *
@@ -20,7 +20,6 @@ import defined from "../../Core/defined.js";
  * @param {Object} options Object with the following properties:
  * @param {ModelExperimental} options.model The model the feature belongs to.
  * @param {Number} options.featureId The unique integral identifier for this feature.
- * @param {ModelFeatureTable} options.featureTable The {@link ModelFeatureTable} that this feature belongs to.
  *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
@@ -31,12 +30,15 @@ import defined from "../../Core/defined.js";
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeature(options) {
   this._model = options.model;
+
+  // This ModelFeatureTable is not documented as an option since it is
+  // part of the private API and should not appear in the documentation.
   this._featureTable = options.featureTable;
+
   this._featureId = options.featureId;
   this._color = undefined; // for calling getColor
 }
@@ -147,7 +149,20 @@ ModelFeature.prototype.getProperty = function (name) {
 };
 
 /**
- * @private
+ * Returns a copy of the feature's property with the given name, examining all
+ * the metadata from the EXT_mesh_features and legacy EXT_feature_metadata glTF
+ * extensions. Metadata is checked against name from most specific to most
+ * general and the first match is returned. Metadata is checked in this order:
+ *
+ * <ol>
+ *   <li>Feature metadata property by semantic</li>
+ *   <li>Feature metadata property by property ID</li>
+ * </ol>
+ *
+ * @param {String} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+ * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ *
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ModelFeature.prototype.getPropertyInherited = function (name) {
   var value = this._featureTable.getPropertyBySemantic(this._featureId, name);

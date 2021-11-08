@@ -951,14 +951,6 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
-  /**
-   * A {@link CustomShader} that will be applied to every tile content in the
-   * tileset. Any primitives within the tiles that are not compatible with the
-   * shader code will be rendered as if no custom shader is applied.
-   *
-   * @type {CustomShader|undefined}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
   this._customShader = options.customShader;
 
   this._schemaLoader = undefined;
@@ -1324,9 +1316,11 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * A custom shader to apply to the tileset. Only used for contents that use
-   * {@link ModelExperimental}. Using custom shaders with a {@link Cesium3DTileStyle}
-   * may lead to undefined behavior.
+   * A custom shader to apply to all tiles in the tileset. Only used for
+   * contents that use {@link ModelExperimental}. Using custom shaders with a
+   * {@link Cesium3DTileStyle} may lead to undefined behavior. Any primitive
+   * that is incompatible with the custom shader code (e.g. due to missing
+   * vertex attributes) will be rendered as if no custom shader were applied.
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -1334,7 +1328,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @default undefined
    *
-   * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   customShader: {

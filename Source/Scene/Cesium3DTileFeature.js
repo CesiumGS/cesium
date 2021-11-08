@@ -212,7 +212,30 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 };
 
 /**
- * @private
+ * Returns a copy of the feature's property with the given name, examining all
+ * the metadata from 3D Tiles 1.0 formats, the EXT_mesh_features and legacy
+ * EXT_feature_metadata glTF extensions, and the 3DTILES_metadata 3D Tiles
+ * extension. Metadata is checked against name from most specific to most
+ * general and the first match is returned. Metadata is checked in this order:
+ *
+ * <ol>
+ *   <li>Batch table (feature metadata) property by semantic</li>
+ *   <li>Batch table (feature metadata) property by property ID</li>
+ *   <li>Tile metadata property by semantic</li>
+ *   <li>Tile metadata property by property ID</li>
+ *   <li>Group metadata property by semantic</li>
+ *   <li>Group metadata property by property ID</li>
+ *   <li>Tileset metadata property by semantic</li>
+ *   <li>Tileset metadata property by property ID</li>
+ *   <li>Otherwise, return undefined</li>
+ * </ol>
+ *
+ * @param {Cesium3DTileContent} content The content for accessing the metadata
+ * @param {Number} batchId The batch ID (or feature ID) of the feature to get a property for
+ * @param {String} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+ * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ *
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
   var value;
