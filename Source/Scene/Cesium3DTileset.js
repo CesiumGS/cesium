@@ -951,6 +951,14 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
+  /**
+   * A {@link CustomShader} that will be applied to every tile content in the
+   * tileset. Any primitives within the tiles that are not compatible with the
+   * shader code will be rendered as if no custom shader is applied.
+   *
+   * @type {CustomShader|undefined}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
   this._customShader = options.customShader;
 
   this._schemaLoader = undefined;

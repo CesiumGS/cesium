@@ -12,15 +12,12 @@
  *   <li>Experimental flags should be short-lived. Make it clear in the PR what it would take to promote the feature to a regular feature.</li>
  *   <li>To avoid cluttering the code, check the flag in as few places as possible. Ideally this would be a single place.</li>
  * </ul>
- *
- * @private
  */
 var ExperimentalFeatures = {
   /**
    * Toggles the usage of the ModelExperimental class.
    *
    * @type {Boolean}
-   * @private
    */
   enableModelExperimental: false,
 };

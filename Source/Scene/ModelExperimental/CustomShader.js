@@ -13,7 +13,8 @@ import TextureManager from "./TextureManager.js";
  * @typedef {Object} UniformSpecifier
  * @property {UniformType} type The Glsl type of the uniform.
  * @property {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|TextureUniform} value The initial value of the uniform
- * @private
+ *
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
 /**
@@ -77,7 +78,6 @@ import TextureManager from "./TextureManager.js";
  * @alias CustomShader
  * @constructor
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @example
@@ -120,7 +120,6 @@ export default function CustomShader(options) {
    *
    * @type {CustomShaderMode}
    * @readonly
-   * @private
    */
   this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
   /**
@@ -129,7 +128,6 @@ export default function CustomShader(options) {
    *
    * @type {LightingModel}
    * @readonly
-   * @private
    */
   this.lightingModel = options.lightingModel;
   /**
@@ -137,7 +135,6 @@ export default function CustomShader(options) {
    *
    * @type {Object.<String, UniformSpecifier>}
    * @readonly
-   * @private
    */
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
   /**
@@ -146,7 +143,6 @@ export default function CustomShader(options) {
    *
    * @type {Object.<String, VaryingType>}
    * @readonly
-   * @private
    */
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
   /**
@@ -154,7 +150,6 @@ export default function CustomShader(options) {
    *
    * @type {String}
    * @readonly
-   * @private
    */
   this.vertexShaderText = options.vertexShaderText;
   /**
@@ -162,7 +157,6 @@ export default function CustomShader(options) {
    *
    * @type {String}
    * @readonly
-   * @private
    */
   this.fragmentShaderText = options.fragmentShaderText;
   /**
@@ -170,7 +164,6 @@ export default function CustomShader(options) {
    *
    * @type {Boolean}
    * @readonly
-   * @private
    */
   this.isTranslucent = defaultValue(options.isTranslucent, false);
 
