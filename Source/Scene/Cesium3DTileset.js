@@ -1318,9 +1318,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * A custom shader to apply to all tiles in the tileset. Only used for
    * contents that use {@link ModelExperimental}. Using custom shaders with a
-   * {@link Cesium3DTileStyle} may lead to undefined behavior. Any primitive
-   * that is incompatible with the custom shader code (e.g. due to missing
-   * vertex attributes) will be rendered as if no custom shader were applied.
+   * {@link Cesium3DTileStyle} may lead to undefined behavior.
    * <p>
    * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code>.
    * </p>
