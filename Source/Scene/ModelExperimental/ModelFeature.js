@@ -10,8 +10,7 @@ import defined from "../../Core/defined.js";
  * Modifications to a <code>ModelFeature</code> object have the lifetime of the model.
  * </p>
  * <p>
- * Do not construct this directly. Access it through {@link Cesium3DTileContent#getFeature} or
- * picking using {@link Scene#pick}.
+ * Do not construct this directly. Access it through picking using {@link Scene#pick}.
  * </p>
  *
  * @alias ModelFeature

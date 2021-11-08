@@ -309,6 +309,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {Cesium3DTileContent}
    * @readonly
+   *
+   * @private
    */
   content: {
     get: function () {
@@ -322,6 +324,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   *
+   * @private
    */
   featureTableId: {
     get: function () {
