@@ -153,7 +153,6 @@ ModelFeature.prototype.getProperty = function (name) {
  * the metadata from the EXT_mesh_features and legacy EXT_feature_metadata glTF
  * extensions. Metadata is checked against name from most specific to most
  * general and the first match is returned. Metadata is checked in this order:
- *
  * <ol>
  *   <li>Feature metadata property by semantic</li>
  *   <li>Feature metadata property by property ID</li>

@@ -1321,6 +1321,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * {@link Cesium3DTileStyle} may lead to undefined behavior. Any primitive
    * that is incompatible with the custom shader code (e.g. due to missing
    * vertex attributes) will be rendered as if no custom shader were applied.
+   * <p>
+   * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code>.
+   * </p>
    *
    * @memberof Cesium3DTileset.prototype
    *

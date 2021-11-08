@@ -65,6 +65,9 @@ import TextureManager from "./TextureManager.js";
  *      is responsible for calling this method.
  *   </li>
  * </ul>
+ * <p>
+ * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code>.
+ * </p>
  *
  * @param {Object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
