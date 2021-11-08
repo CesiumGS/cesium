@@ -37,15 +37,13 @@
         //Sandcastle_Begin
 
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
-        Cesium.Ion.defaultAccessToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2Y2I2NzUxMS1lMTcxLTQwNTktYmViMi0wNTI0NWVlMGM1NjkiLCJpZCI6MTA2ODEsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NTcxNTU1ODJ9.B-TrNVt7Tui3DG7cGPIm_FM4DtPamfLZtA4qMmeyvYU";
 
         var viewer = new Cesium.Viewer("cesiumContainer", {});
 
         // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
         var tileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(451012),
+            url: Cesium.IonResource.fromAssetId(666378),
           })
         );
         tileset.readyPromise.then(function (tileset) {
