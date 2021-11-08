@@ -22,7 +22,10 @@ void main()
     #endif
 
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
-    featureStage();
+    Feature feature;
+    featureStage(feature);
+    cpuStylingStage(attributes.positionMC, feature);
+    updateFeatureStruct(feature);
     #endif
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER

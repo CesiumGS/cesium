@@ -319,12 +319,14 @@ function Indices() {
  */
 function FeatureIdAttribute() {
   /**
-   * The ID of the feature table that feature IDs index into.
+   * The ID of the feature table that feature IDs index into. If undefined,
+   * feature IDs are used for classification, but no metadata is associated.
    *
-   * @type {String}
+   *
+   * @type {Number}
    * @private
    */
-  this.featureTableId = undefined;
+  this.propertyTableId = undefined;
 
   /**
    * The set index of feature ID attribute containing feature IDs.
@@ -335,22 +337,21 @@ function FeatureIdAttribute() {
   this.setIndex = undefined;
 
   /**
-   * A constant feature ID to use when setIndex is undefined.
+   * The first feature ID to use when setIndex is undefined
    *
    * @type {Number}
    * @default 0
    * @private
    */
-  this.constant = 0;
+  this.offset = 0;
 
   /**
-   * The rate at which feature IDs increment when setIndex is undefined.
+   * Number of times each feature ID is repeated before being incremented.
    *
    * @type {Number}
-   * @default 0
    * @private
    */
-  this.divisor = 0;
+  this.repeat = undefined;
 }
 
 /**
@@ -368,7 +369,7 @@ function FeatureIdTexture() {
    * @type {String}
    * @private
    */
-  this.featureTableId = undefined;
+  this.propertyTableId = undefined;
 
   /**
    * The texture reader containing feature IDs.
@@ -471,9 +472,10 @@ function Primitive() {
   this.featureIdTextures = [];
 
   /**
-   * The feature texture IDs.
+   * The feature texture IDs. These indices correspond to the array of
+   * feature textures.
    *
-   * @type {String[]}
+   * @type {Number[]}
    * @private
    */
   this.featureTextureIds = [];

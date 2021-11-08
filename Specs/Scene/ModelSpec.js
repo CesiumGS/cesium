@@ -3240,6 +3240,39 @@ describe(
       });
     });
 
+    it("loads a draco compressed glTF and dequantizes in the shader", function () {
+      return loadModel(dracoCompressedModelUrl, {
+        dequantizeInShader: true,
+      }).then(function (m) {
+        verifyRender(m);
+
+        var atrributeData = m._decodedData["0.primitive.0"].attributes;
+        expect(atrributeData["POSITION"].quantization).toBeDefined();
+        expect(atrributeData["TEXCOORD_0"].quantization).toBeDefined();
+        expect(atrributeData["NORMAL"].quantization).toBeDefined();
+        expect(atrributeData["NORMAL"].quantization.octEncoded).toBe(true);
+
+        primitives.remove(m);
+      });
+    });
+
+    it("loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes", function () {
+      return loadModel(dracoCompressedModelWithAnimationUrl, {
+        dequantizeInShader: true,
+        forwardAxis: Axis.X,
+      }).then(function (m) {
+        verifyRender(m);
+
+        var atrributeData = m._decodedData["0.primitive.0"].attributes;
+        expect(atrributeData["POSITION"].quantization).toBeDefined();
+        expect(atrributeData["TEXCOORD_0"].quantization).toBeDefined();
+        expect(atrributeData["NORMAL"].quantization).toBeDefined();
+        expect(atrributeData["JOINTS_0"].quantization).toBeUndefined();
+
+        primitives.remove(m);
+      });
+    });
+
     it("loads draco compressed glTF with RGBA per-vertex color", function () {
       return loadModel(dracoBoxVertexColorsRGBAUrl).then(function (m) {
         verifyRender(m);

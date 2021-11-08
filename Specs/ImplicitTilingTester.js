@@ -22,7 +22,7 @@ export default function ImplicitTilingTester() {}
  * A description of 3DTILES_metadata properties stored in the subtree.
  * @typedef {Object} MetadataDescription
  * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
- * @property {Object} featureTables Options to pass into {@link MetadataTester.createFeatureTables} to create the feature table buffer views.
+ * @property {Object} propertyTables Options to pass into {@link MetadataTester.createPropertyTables} to create the feature table buffer views.
  * @private
  */
 
@@ -350,8 +350,8 @@ function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
 }
 
 function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
-  var featureTableResults = MetadataTester.createFeatureTables(
-    metadataOptions.featureTables
+  var propertyTableResults = MetadataTester.createPropertyTables(
+    metadataOptions.propertyTables
   );
 
   // Add bufferViews to the list -----------------------------------
@@ -364,7 +364,7 @@ function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
     ? bufferViewsU8.internal
     : bufferViewsU8.external;
 
-  var metadataBufferViewsU8 = featureTableResults.bufferViews;
+  var metadataBufferViewsU8 = propertyTableResults.bufferViews;
   var metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
   for (var i = 0; i < metadataBufferViewCount; i++) {
     var bufferViewU8 = metadataBufferViewsU8[i];
@@ -387,8 +387,8 @@ function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
   }
 
   // Renumber buffer views ----------------------------------------------
-  // This tester assumes a feature table called "tiles"
-  var tileTable = featureTableResults.featureTables.tiles;
+  // This tester assumes there's a single property table for the tile metadata
+  var tileTable = propertyTableResults.propertyTables[0];
   var tileTableProperties = tileTable.properties;
 
   var firstMetadataIndex = bufferViewsU8.count;

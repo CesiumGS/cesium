@@ -13,7 +13,7 @@
           "residential": {
             "properties": {
               "population": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               },
               "neighborhoods": {
                 "type": "ARRAY",
@@ -24,7 +24,7 @@
           "commercial": {
             "properties": {
               "businessCount": {
-                "type": "UINT16"
+                "componentType": "UINT16"
               },
               "majorIndustries": {
                 "type": "ARRAY",

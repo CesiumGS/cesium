@@ -54,6 +54,8 @@ describe(
       "./Data/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json";
     var pointCloudDracoPartialUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial/tileset.json";
+    var pointCloudDracoBatchedUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudDracoBatched/tileset.json";
     var pointCloudWGS84Url =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWGS84/tileset.json";
     var pointCloudBatchedUrl =
@@ -277,10 +279,36 @@ describe(
       });
     });
 
+    it("renders point cloud with draco encoded positions, normals, colors, and batch table properties", function () {
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(
+        function (tileset) {
+          Cesium3DTilesTester.expectRender(scene, tileset);
+          // Test that Draco-encoded batch table properties are functioning correctly
+          tileset.style = new Cesium3DTileStyle({
+            color: "vec4(Number(${secondaryColor}[0] < 1.0), 0.0, 0.0, 1.0)",
+          });
+          expect(scene).toRenderAndCall(function (rgba) {
+            // Produces a red color
+            expect(rgba[0]).toBeGreaterThan(rgba[1]);
+            expect(rgba[0]).toBeGreaterThan(rgba[2]);
+          });
+        }
+      );
+    });
+
     it("renders point cloud with draco encoded positions and uncompressed normals and colors", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         pointCloudDracoPartialUrl
+      ).then(function (tileset) {
+        Cesium3DTilesTester.expectRender(scene, tileset);
+      });
+    });
+
+    it("renders point cloud with draco encoded positions, colors, and batch ids", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        pointCloudDracoBatchedUrl
       ).then(function (tileset) {
         Cesium3DTilesTester.expectRender(scene, tileset);
       });
@@ -878,20 +906,6 @@ describe(
       );
     });
 
-    it("throws when shader style reference a non-existent property", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        pointCloudWithPerPointPropertiesUrl
-      ).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: "color() * ${non_existent_property}",
-        });
-        expect(function () {
-          scene.renderForSpecs();
-        }).toThrowRuntimeError();
-      });
-    });
-
     it("does not apply shader style if the point cloud has a batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(
         function (tileset) {
@@ -1158,10 +1172,10 @@ describe(
         class: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },

@@ -15,13 +15,12 @@
           "tile": {
             "properties": {
               "quadrant": {
-                "type": "ENUM",
+                "componentType": "ENUM",
                 "enumType": "quadrantType"
               },
               "color": {
-                "type": "ARRAY",
-                "componentType": "UINT8",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "UINT8"
               }
             }
           }
