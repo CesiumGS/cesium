@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Load a 3D Tile Next tileset converted from CDB."
+    />
+    <meta name="cesium-sandcastle-labels" content="Experimental" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        Cesium.ExperimentalFeatures.enableModelExperimental = true;
+        Cesium.Ion.defaultAccessToken =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2Y2I2NzUxMS1lMTcxLTQwNTktYmViMi0wNTI0NWVlMGM1NjkiLCJpZCI6MTA2ODEsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NTcxNTU1ODJ9.B-TrNVt7Tui3DG7cGPIm_FM4DtPamfLZtA4qMmeyvYU";
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {});
+
+        // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
+        var tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(451012),
+          })
+        );
+        tileset.readyPromise.then(function (tileset) {
+          viewer.zoomTo(tileset);
+        });
+
+        // --- Style ---
+
+        var buildingStyle = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${HGT} !== undefined && ${HGT} < 5", "color('#f5fd2d')"],
+              [
+                "${HGT} !== undefined && ${HGT} >= 5 && ${HGT} < 10",
+                "color('#d3a34a')",
+              ],
+              [
+                "${HGT} !== undefined && ${HGT} >= 10 && ${HGT} < 15",
+                "color('#947e75')",
+              ],
+              [
+                "${HGT} !== undefined && ${HGT} >= 15 && ${HGT} < 20",
+                "color('#565a9f')",
+              ],
+              ["${HGT} !== undefined && ${HGT} > 20", "color('#223bc3')"],
+              ["true", "color('white')"],
+            ],
+          },
+        });
+
+        var terrainStyle = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${name} === 'OCEAN'", "color('#436d9d')"],
+              ["${name} === 'LAKE'", "color('#3987c9')"],
+              ["${name} === 'CALCAREOUS'", "color('#BBB6B1')"],
+              ["${name} === 'GRASS'", "color('#567d46')"],
+              ["${name} === 'FOREST'", "color('green')"],
+              ["${name} === 'CITY'", "color('lightgray')"],
+              ["${name} === 'ASPHALTROAD'", "color('#434343')"],
+              ["${name} === 'ASPHALT'", "color('#463d39')"],
+              ["${name} === 'CONCRETE'", "color('#b9b4ab')"],
+              ["${name} === 'DRYGROUND'", "color('#9B7653')"],
+              ["${name} === 'WETGROUND'", "color('#5a4332')"],
+              ["${name} === 'SAND'", "color('gold')"],
+              ["true", "color('white')"],
+            ],
+          },
+        });
+
+        // --- UI ---
+
+        var modes = [
+          {
+            text: "No style",
+            onselect: function () {
+              tileset.style = undefined;
+            },
+          },
+          {
+            text: "Style buildings based on height",
+            onselect: function () {
+              tileset.style = buildingStyle;
+            },
+          },
+          {
+            text: "Style terrain based on materials",
+            onselect: function () {
+              tileset.style = terrainStyle;
+            },
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(modes);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

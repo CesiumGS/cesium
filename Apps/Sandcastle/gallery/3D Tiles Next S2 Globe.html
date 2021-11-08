@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Load a global scale 3D Tiles Next tileset that uses 3DTILES_bounding_volume_S2."
+    />
+    <meta name="cesium-sandcastle-labels" content="Experimental" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        Cesium.ExperimentalFeatures.enableModelExperimental = true;
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          globe: false,
+        });
+
+        // MAXAR OWT WFF 1.2 Base Globe
+        var tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(666330),
+            maximumScreenSpaceError: 4,
+          })
+        );
+        tileset.readyPromise.then(function (tileset) {
+          viewer.zoomTo(tileset);
+        });
+
+        // --- Style ---
+
+        var style = new Cesium.Cesium3DTileStyle({
+          defines: {
+            LandCoverColor: "rgb(${color}[0], ${color}[1], ${color}[2])",
+          },
+          color:
+            "${LandCoverColor} === vec4(1.0) ? rgb(254, 254, 254) : ${LandCoverColor}",
+        });
+
+        // --- Custom Shader ---
+
+        var customShader = new Cesium.CustomShader({
+          uniforms: {
+            u_time: {
+              type: Cesium.UniformType.FLOAT,
+              value: 0,
+            },
+          },
+          fragmentShaderText: [
+            "// Based on https://thebookofshaders.com/13/",
+            "float random (in vec2 _st)",
+            "{",
+            "  return fract(sin(dot(_st.xy, vec2(12.9898,78.233))) * 43758.5453123);",
+            "}",
+            "float noise (in vec2 _st)",
+            "{",
+            "  vec2 i = floor(_st);",
+            "  vec2 f = fract(_st);",
+            "  float a = random(i);",
+            "  float b = random(i + vec2(1.0, 0.0));",
+            "  float c = random(i + vec2(0.0, 1.0));",
+            "  float d = random(i + vec2(1.0, 1.0));",
+            "  vec2 u = f * f * (3.0 - 2.0 * f);",
+            "  return mix(a, b, u.x) +",
+            "          (c - a)* u.y * (1.0 - u.x) +",
+            "          (d - b) * u.x * u.y;",
+            "}",
+            "float fbm ( in vec2 _st)",
+            "{",
+            "  float v = 0.0;",
+            "  float a = 0.5;",
+            "  vec2 shift = vec2(100.0);",
+            "  mat2 rot = mat2(cos(0.5), sin(0.5),",
+            "                  -sin(0.5), cos(0.50));",
+            "  for (int i = 0; i < 6; ++i) {",
+            "      v += a * noise(_st);",
+            "      _st = rot * _st * 2.0 + shift;",
+            "      a *= 0.5;",
+            "  }",
+            "  return v;",
+            "}",
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "  vec2 st = gl_FragCoord.xy/vec2(400);",
+            "  vec3 color = vec3(0.0, 0.0, 0.0);",
+            "  vec2 q = vec2(0.);",
+            "  q.x = fbm( st + 0.00*u_time);",
+            "  q.y = fbm( st + vec2(1.0));",
+            "  vec2 r = vec2(0.);",
+            "  r.x = fbm( st + 1.0*q + vec2(1.7,9.2)+ 0.15*u_time );",
+            "  r.y = fbm( st + 1.0*q + vec2(8.3,2.8)+ 0.126*u_time);",
+            "  float f = fbm(st+r);",
+            "  color = mix(vec3(0.101961,0.619608,0.666667),",
+            "              vec3(0.666667,0.666667,0.498039),",
+            "              clamp((f*f)*4.0,0.0,1.0));",
+            "  color = mix(color,",
+            "              vec3(0,0,0.164706),",
+            "              clamp(length(q),0.0,1.0));",
+            "  color = mix(color,",
+            "              vec3(0.029,0.187,1.000),",
+            "              clamp(length(r.x),0.0,1.0));",
+            "  // Water Feature ID",
+            "  if (featureId == 60.0)",
+            "  {",
+            "    material.diffuse = mix(material.diffuse, (f*f*f+.6*f*f+.5*f)*color, 0.25);",
+            "  }",
+            "}",
+          ].join("\n"),
+        });
+
+        var startTime = performance.now();
+        var customShaderUpdate = function () {
+          var elapsedTimeSeconds = (performance.now() - startTime) / 1000;
+          customShader.setUniform("u_time", elapsedTimeSeconds);
+        };
+
+        viewer.scene.postUpdate.addEventListener(function () {
+          customShaderUpdate();
+        });
+
+        // --- UI ---
+
+        var modes = [
+          {
+            text: "Globe View",
+            onselect: function () {
+              tileset.customShader = undefined;
+              tileset.debugShowBoundingVolume = false;
+              tileset.style = undefined;
+            },
+          },
+          {
+            text: "Show S2 Bounding Volumes",
+            onselect: function () {
+              tileset.customShader = undefined;
+              tileset.debugShowBoundingVolume = true;
+              tileset.style = undefined;
+            },
+          },
+          {
+            text: "Apply Style",
+            onselect: function () {
+              tileset.customShader = undefined;
+              tileset.debugShowBoundingVolume = false;
+              tileset.style = style;
+            },
+          },
+          {
+            text: "Apply Custom Shader",
+            onselect: function () {
+              tileset.customShader = customShader;
+              tileset.debugShowBoundingVolume = false;
+              tileset.style = undefined;
+            },
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(modes);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
