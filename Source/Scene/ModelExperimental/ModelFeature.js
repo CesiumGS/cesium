@@ -156,6 +156,10 @@ ModelFeature.prototype.getProperty = function (name) {
  *   <li>Feature metadata property by semantic</li>
  *   <li>Feature metadata property by property ID</li>
  * </ol>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * </p>
  *
  * @param {String} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
  * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
