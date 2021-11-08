@@ -11,7 +11,7 @@
       name="description"
       content="Load glTF models using Model Experimental."
     />
-    <meta name="cesium-sandcastle-labels" content="Experimental" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -41,30 +41,44 @@
         // Models
         var models = [
           {
+            text: "Cesium Balloon",
+            onselect: function () {
+              selectModel(
+                "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+                15
+              );
+            },
+          },
+          {
             text: "Skinned Character",
             onselect: function () {
-              selectModel("../../SampleData/models/CesiumMan/Cesium_Man.glb");
+              selectModel(
+                "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+                0
+              );
             },
           },
           {
             text: "Draco Compressed Model",
             onselect: function () {
               selectModel(
-                "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf"
+                "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
+                0
               );
             },
           },
           {
             text: "Unlit Box",
             onselect: function () {
-              selectModel("/Specs/Data/Models/PBR/BoxUnlit/BoxUnlit.gltf");
+              selectModel("/Specs/Data/Models/PBR/BoxUnlit/BoxUnlit.gltf", 0);
             },
           },
           {
             text: "Drone",
             onselect: function () {
               selectModel(
-                "../../SampleData/models/CesiumDrone/CesiumDrone.glb"
+                "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+                15
               );
             },
           },
@@ -72,15 +86,8 @@
             text: "Ground Vehicle",
             onselect: function () {
               selectModel(
-                "../../SampleData/models/GroundVehicle/GroundVehicle.glb"
-              );
-            },
-          },
-          {
-            text: "Cesium Balloon",
-            onselect: function () {
-              selectModel(
-                "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb"
+                "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+                0
               );
             },
           },
@@ -88,7 +95,8 @@
             text: "Instanced Box",
             onselect: function () {
               selectModel(
-                "/Specs/Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf"
+                "/Specs/Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf",
+                15
               );
             },
           },
@@ -100,11 +108,11 @@
           "west"
         );
 
-        function selectModel(url) {
+        function selectModel(url, height) {
           var position = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
-            10
+            height
           );
 
           viewer.scene.primitives.removeAll();
@@ -124,8 +132,8 @@
             viewer.camera.lookAt(
               position,
               new Cesium.HeadingPitchRange(
-                0,
-                0,
+                Cesium.Math.toRadians(45),
+                Cesium.Math.toRadians(-15),
                 model.boundingSphere.radius * 5
               )
             );

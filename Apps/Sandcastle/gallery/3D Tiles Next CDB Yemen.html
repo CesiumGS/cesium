@@ -11,7 +11,7 @@
       name="description"
       content="Load a 3D Tile Next tileset converted from CDB."
     />
-    <meta name="cesium-sandcastle-labels" content="Experimental" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -27,6 +27,15 @@
   >
     <style>
       @import url(../templates/bucket.css);
+      table,
+      th,
+      td {
+        border: 1px solid white;
+        border-collapse: collapse;
+      }
+      tt {
+        padding: 8px;
+      }
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -39,6 +48,10 @@
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
         var viewer = new Cesium.Viewer("cesiumContainer", {});
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T07:27:37.016064475348684937Z"
+        );
+        var scene = viewer.scene;
 
         // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
         var tileset = viewer.scene.primitives.add(
@@ -46,8 +59,97 @@
             url: Cesium.IonResource.fromAssetId(666378),
           })
         );
+
+        var cameraTransforms = {
+          tileset: {
+            destination: new Cesium.Cartesian3(
+              4397999.822774582,
+              4404502.67774069,
+              1397782.4709840622
+            ),
+            direction: new Cesium.Cartesian3(
+              -0.29335588497705106,
+              -0.6066709587467911,
+              0.7388454997917905
+            ),
+            up: new Cesium.Cartesian3(
+              0.6240972421637774,
+              0.46391380837591956,
+              0.6287182283994301
+            ),
+          },
+          airport: {
+            destination: new Cesium.Cartesian3(
+              4394719.151490939,
+              4402317.401942875,
+              1406608.6602404779
+            ),
+            direction: new Cesium.Cartesian3(
+              0.4146699515908668,
+              -0.8887814163588482,
+              0.1952342828060377
+            ),
+            up: new Cesium.Cartesian3(
+              0.8415067525520951,
+              0.4561872920946922,
+              0.28941240460723
+            ),
+          },
+          crater: {
+            destination: new Cesium.Cartesian3(
+              4398179.160380196,
+              4402518.469409466,
+              1399161.7612076725
+            ),
+            direction: new Cesium.Cartesian3(
+              -0.2800903637088597,
+              -0.6348021519070498,
+              0.7201219452923355
+            ),
+            up: new Cesium.Cartesian3(
+              0.6319189548885261,
+              0.4427783126727723,
+              0.6361020360596605
+            ),
+          },
+          port: {
+            destination: new Cesium.Cartesian3(
+              4399698.85724341,
+              4399019.639078034,
+              1405153.7766045567
+            ),
+            direction: new Cesium.Cartesian3(
+              -0.5651458936543287,
+              0.17696574231117793,
+              -0.8057873447342694
+            ),
+            up: new Cesium.Cartesian3(
+              0.4886488937394081,
+              0.8587605935024302,
+              -0.15411846642958343
+            ),
+          },
+        };
+
+        function flyCameraTo(cameraTransform, duration) {
+          // Fly to a nice overview of the city.
+          viewer.camera.flyTo({
+            destination: cameraTransform.destination,
+            orientation: {
+              direction: cameraTransform.direction,
+              up: cameraTransform.up,
+            },
+            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+          });
+        }
+
         tileset.readyPromise.then(function (tileset) {
-          viewer.zoomTo(tileset);
+          var center = Cesium.Cartesian3.fromDegrees(45.04192, 12.753525, 2000);
+          var heading = Cesium.Math.toRadians(50.0);
+          var pitch = Cesium.Math.toRadians(-20.0);
+          var range = 5000.0;
+
+          flyCameraTo(cameraTransforms.tileset);
         });
 
         // --- Style ---
@@ -94,7 +196,88 @@
           },
         });
 
+        // --- Picking ---
+
+        var enablePicking = true;
+        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+        var metadataOverlay = document.createElement("div");
+        viewer.container.appendChild(metadataOverlay);
+        metadataOverlay.className = "backdrop";
+        metadataOverlay.style.display = "none";
+        metadataOverlay.style.position = "absolute";
+        metadataOverlay.style.bottom = "0";
+        metadataOverlay.style.left = "0";
+        metadataOverlay.style["pointer-events"] = "none";
+        metadataOverlay.style.padding = "4px";
+        metadataOverlay.style.backgroundColor = "#303030";
+        metadataOverlay.style.whiteSpace = "pre-line";
+        metadataOverlay.style.fontSize = "16px";
+        metadataOverlay.style.borderRadius = "4px";
+
+        var tableHtmlScratch;
+        var i;
+
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            var feature = scene.pick(movement.endPosition);
+            if (feature instanceof Cesium.Cesium3DTileFeature) {
+              metadataOverlay.style.display = "block";
+              metadataOverlay.style.bottom =
+                viewer.canvas.clientHeight - movement.endPosition.y + "px";
+              metadataOverlay.style.left = movement.endPosition.x + "px";
+
+              tableHtmlScratch =
+                "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
+
+              var propertyNames = feature.getPropertyNames();
+              var length = propertyNames.length;
+              for (var i = 0; i < length; ++i) {
+                var propertyName = propertyNames[i];
+                var propertyValue = feature.getProperty(propertyName);
+                tableHtmlScratch +=
+                  "<tr><td><tt>" +
+                  propertyName +
+                  "</tt></td><td><tt>" +
+                  propertyValue +
+                  "</tt></td></tr>";
+              }
+              tableHtmlScratch += "</tbody></table>";
+              metadataOverlay.innerHTML = tableHtmlScratch;
+            } else {
+              metadataOverlay.style.display = "none";
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
         // --- UI ---
+
+        var locations = [
+          {
+            text: "Overview",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.tileset);
+            },
+          },
+          {
+            text: "Airport",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.airport);
+            },
+          },
+          {
+            text: "Crater",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.crater);
+            },
+          },
+          {
+            text: "Port",
+            onselect: function () {
+              flyCameraTo(cameraTransforms.port);
+            },
+          },
+        ];
 
         var modes = [
           {
@@ -117,7 +300,17 @@
           },
         ];
 
+        Sandcastle.addToolbarMenu(locations);
         Sandcastle.addToolbarMenu(modes);
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
+          checked
+        ) {
+          if (enablePicking) {
+            metadataOverlay.style.display = "none";
+          }
+
+          enablePicking = checked;
+        });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
