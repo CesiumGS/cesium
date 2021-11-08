@@ -139,26 +139,27 @@
           "attributes": {
             "POSITION": 0,
             "NORMAL": 1,
-            "_FEATURE_ID_0": 2
+            "FEATURE_ID_0": 2
           },
           "indices": 3,
           "material": 0,
           "mode": 4,
           "extensions": {
-            "EXT_feature_metadata": {
-              "featureIdAttributes": [
+            "EXT_mesh_features": {
+              "propertyTables": [
+                0,
+                0
+              ],
+              "featureIds": [
                 {
-                  "featureTable": "buildings",
-                  "featureIds": {
-                    "attribute": "_FEATURE_ID_0"
-                  }
+                  "attribute": 0
                 },
                 {
-                  "featureTable": "buildings",
-                  "featureIds": {
-                    "constant": 0,
-                    "divisor": 24
-                  }
+                  "offset": 0,
+                  "repeat": 2
+                },
+                {
+                  "offset": 3
                 }
               ]
             }
@@ -222,13 +223,13 @@
     }
   ],
   "extensionsUsed": [
-    "EXT_feature_metadata"
+    "EXT_mesh_features"
   ],
   "extensionsRequired": [
-    "EXT_feature_metadata"
+    "EXT_mesh_features"
   ],
   "extensions": {
-    "EXT_feature_metadata": {
+    "EXT_mesh_features": {
       "schema": {
         "classes": {
           "building": {
@@ -243,8 +244,9 @@
           }
         }
       },
-      "featureTables": {
-        "buildings": {
+      "propertyTables": [
+        {
+          "name": "Buildings",
           "class": "building",
           "count": 10,
           "properties": {
@@ -256,7 +258,7 @@
             }
           }
         }
-      }
+      ]
     }
   }
 }

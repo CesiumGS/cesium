@@ -106,36 +106,29 @@ function buildPickObject(renderResources, instanceId) {
 
 function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
-  var content = model.content;
   var featureTableId;
   var featureIdAttribute;
   var featureIdAttributeIndex = model.featureIdAttributeIndex;
 
-  if (defined(content)) {
+  if (defined(model.featureTableId)) {
     // Extract the Feature Table ID from the Cesium3DTileContent.
-    featureTableId = content.featureTableId;
+    featureTableId = model.featureTableId;
   } else if (defined(instances)) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
-    featureTableId = featureIdAttribute.featureTableId;
+    featureTableId = featureIdAttribute.propertyTableId;
   } else if (primitive.featureIdTextures.length > 0) {
     // Extract the Feature Table ID from the instanced Feature ID textures.
     var featureIdTextureIndex = model.featureIdTextureIndex;
     var featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
-    featureTableId = featureIdTexture.featureTableId;
+    featureTableId = featureIdTexture.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
     featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
-    featureTableId = featureIdAttribute.featureTableId;
+    featureTableId = featureIdAttribute.propertyTableId;
   }
 
-  var featureTable;
-
-  if (defined(content)) {
-    featureTable = content.featureTables[featureTableId];
-  } else {
-    featureTable = model.featureTables[featureTableId];
-  }
+  var featureTable = model.featureTables[featureTableId];
 
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addUniform(
@@ -161,7 +154,7 @@ function processPickTexture(renderResources, primitive, instances) {
 
   // The feature ID  is ignored if it is greater than the number of features.
   renderResources.pickId =
-    "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))";
+    "((feature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))";
 }
 
 function processInstancedPickIds(renderResources, instances, context) {

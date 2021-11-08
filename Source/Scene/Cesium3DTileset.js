@@ -951,15 +951,7 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
-  /**
-   * A custom shader to apply to the tileset. Only used for contents that use
-   * {@link ModelExperimental}
-   *
-   * @type {CustomShader}
-   * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.customShader = options.customShader;
+  this._customShader = options.customShader;
 
   this._schemaLoader = undefined;
 
@@ -1320,6 +1312,29 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._styleEngine.style = value;
+    },
+  },
+
+  /**
+   * A custom shader to apply to the tileset. Only used for contents that use
+   * {@link ModelExperimental}. Using custom shaders with a {@link Cesium3DTileStyle}
+   * may lead to undefined behavior.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {CustomShader|undefined}
+   *
+   * @default undefined
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  customShader: {
+    get: function () {
+      return this._customShader;
+    },
+    set: function (value) {
+      this._customShader = value;
     },
   },
 

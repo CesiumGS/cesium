@@ -1,28 +1,68 @@
-import { ModelFeatureTable, ModelFeature } from "../../../Source/Cesium.js";
+import {
+  Cesium3DTileFeature,
+  ModelFeatureTable,
+  ModelFeature,
+} from "../../../Source/Cesium.js";
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   var properties = {
     height: {
-      type: "FLOAT32",
+      semantic: "HEIGHT_SEMANTIC",
+      componentType: "FLOAT32",
     },
     name: {
-      type: "STRING",
+      componentType: "STRING",
+    },
+    HEIGHT_SEMANTIC: {
+      componentType: "FLOAT32",
     },
   };
   var propertyValues = {
     height: [1.0, 2.0],
     name: ["A", "B"],
+    HEIGHT_SEMANTIC: [3.0, 4.0],
   };
 
-  var mockFeatureTable = MetadataTester.createFeatureTable({
+  var mockPropertyTable = MetadataTester.createPropertyTable({
     properties: properties,
     propertyValues: propertyValues,
   });
 
+  it("creates ModelFeatures when model does not have content", function () {
+    var table = new ModelFeatureTable({
+      propertyTable: mockPropertyTable,
+      model: {},
+    });
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
+    var modelFeatures = table._features;
+    for (var i = 0; i < modelFeatures.length; i++) {
+      var feature = table.getFeature(i);
+      expect(feature).toBeInstanceOf(ModelFeature);
+    }
+  });
+
+  it("creates ModelFeatures when model has content", function () {
+    var table = new ModelFeatureTable({
+      propertyTable: mockPropertyTable,
+      model: {
+        content: {
+          tileset: {},
+        },
+      },
+    });
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
+    var modelFeatures = table._features;
+    for (var i = 0; i < modelFeatures.length; i++) {
+      var feature = table.getFeature(i);
+      expect(feature).toBeInstanceOf(Cesium3DTileFeature);
+    }
+  });
+
   it("hasProperty works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      model: {},
+      propertyTable: mockPropertyTable,
     });
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
@@ -34,9 +74,10 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getFeature works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      model: {},
+      propertyTable: mockPropertyTable,
     });
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
     for (var i = 0; i < modelFeatures.length; i++) {
       var feature = table.getFeature(i);
@@ -47,9 +88,10 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getProperty works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      model: {},
+      propertyTable: mockPropertyTable,
     });
-    expect(table._featuresLength).toEqual(mockFeatureTable.count);
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
 
     for (var propertyName in properties) {
@@ -64,22 +106,57 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     }
   });
 
+  it("getPropertyInherited works", function () {
+    var table = new ModelFeatureTable({
+      model: {},
+      propertyTable: mockPropertyTable,
+    });
+    expect(table._featuresLength).toEqual(mockPropertyTable.count);
+    var modelFeatures = table._features;
+
+    var i;
+    var feature;
+
+    for (i = 0; i < modelFeatures.length; i++) {
+      feature = modelFeatures[i];
+      expect(feature.getPropertyInherited("height")).toEqual(
+        propertyValues["height"][i]
+      );
+      expect(feature.getPropertyInherited("_height")).toBeUndefined();
+    }
+
+    // Check if the semantic is prioritized over the property name.
+    for (i = 0; i < modelFeatures.length; i++) {
+      feature = modelFeatures[i];
+      expect(feature.getPropertyInherited("HEIGHT_SEMANTIC")).toEqual(
+        propertyValues["height"][i]
+      );
+      expect(feature.getPropertyInherited("_HEIGHT_")).toBeUndefined();
+    }
+  });
+
   it("getPropertyNames works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      model: {},
+      propertyTable: mockPropertyTable,
     });
     var modelFeatures = table._features;
     var results;
     for (var i = 0; i < modelFeatures.length; i++) {
       results = [];
       var feature = modelFeatures[i];
-      expect(feature.getPropertyNames(results)).toEqual(["height", "name"]);
+      expect(feature.getPropertyNames(results)).toEqual([
+        "height",
+        "name",
+        "HEIGHT_SEMANTIC",
+      ]);
     }
   });
 
   it("setProperty works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      model: {},
+      propertyTable: mockPropertyTable,
     });
     var feature = table._features[0];
     expect(feature.getProperty("height")).toEqual(1.0);
@@ -89,7 +166,8 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("destroy works", function () {
     var table = new ModelFeatureTable({
-      featureTable: mockFeatureTable,
+      model: {},
+      propertyTable: mockPropertyTable,
     });
     var batchTexture = table._batchTexture;
     expect(batchTexture.isDestroyed()).toEqual(false);

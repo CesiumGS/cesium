@@ -209,7 +209,9 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       },
       runtimeNode: {
         node: {
-          instances: {},
+          instances: {
+            featureIdAttributes: [{}, {}],
+          },
         },
       },
       attributes: [],
@@ -276,9 +278,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       model: {
         featureIdTextureIndex: 0,
         _resources: [],
-        featureTables: {
-          landCoverTable: mockModelFeatureTable,
-        },
+        featureTables: [mockModelFeatureTable],
       },
       runtimeNode: {
         node: {},
@@ -307,7 +307,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       ]);
 
       expect(renderResources.pickId).toEqual(
-        "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))"
+        "((feature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))"
       );
     });
   });

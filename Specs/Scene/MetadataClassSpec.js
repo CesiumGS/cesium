@@ -1,5 +1,6 @@
 import {
   MetadataClass,
+  MetadataComponentType,
   MetadataEnum,
   MetadataType,
 } from "../../Source/Cesium.js";
@@ -39,7 +40,7 @@ describe("Scene/MetadataClass", function () {
         extensions: extensions,
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           position: {
             type: "ARRAY",
@@ -48,7 +49,7 @@ describe("Scene/MetadataClass", function () {
             semantic: "_POSITION",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
             semantic: "_COLOR",
           },
         },
@@ -66,9 +67,12 @@ describe("Scene/MetadataClass", function () {
     var positionProperty = properties.position;
     var colorProperty = properties.color;
 
-    expect(heightProperty.type).toBe(MetadataType.FLOAT32);
+    expect(heightProperty.type).toBe(MetadataType.SINGLE);
+    expect(heightProperty.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(positionProperty.type).toBe(MetadataType.ARRAY);
-    expect(colorProperty.type).toBe(MetadataType.STRING);
+    expect(positionProperty.componentType).toBe(MetadataComponentType.FLOAT32);
+    expect(colorProperty.type).toBe(MetadataType.SINGLE);
+    expect(colorProperty.componentType).toBe(MetadataComponentType.STRING);
     expect(Object.keys(properties).sort()).toEqual([
       "color",
       "height",
@@ -106,7 +110,7 @@ describe("Scene/MetadataClass", function () {
       class: {
         properties: {
           color: {
-            type: "ENUM",
+            componentType: "ENUM",
             enumType: "color",
           },
         },
@@ -114,7 +118,10 @@ describe("Scene/MetadataClass", function () {
       enums: enums,
     });
 
-    expect(buildingClass.properties.color.type).toBe(MetadataType.ENUM);
+    expect(buildingClass.properties.color.type).toBe(MetadataType.SINGLE);
+    expect(buildingClass.properties.color.componentType).toBe(
+      MetadataComponentType.ENUM
+    );
     expect(buildingClass.properties.color.enumType).toBe(colorEnum);
   });
 

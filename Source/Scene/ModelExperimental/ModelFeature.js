@@ -1,3 +1,6 @@
+import Color from "../../Core/Color.js";
+import defined from "../../Core/defined.js";
+
 /**
  * A feature of a {@link ModelExperimental}.
  * <p>
@@ -35,9 +38,51 @@ export default function ModelFeature(options) {
   this._model = options.model;
   this._featureTable = options.featureTable;
   this._featureId = options.featureId;
+  this._color = undefined; // for calling getColor
 }
 
 Object.defineProperties(ModelFeature.prototype, {
+  /**
+   * Gets or sets if the feature will be shown. This is set for all features
+   * when a style's show is evaluated.
+   *
+   * @memberof ModelFeature.prototype
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  show: {
+    get: function () {
+      return this._featureTable.getShow(this._featureId);
+    },
+    set: function (value) {
+      this._featureTable.setShow(this._featureId, value);
+    },
+  },
+
+  /**
+   * Gets or sets the highlight color multiplied with the feature's color.  When
+   * this is white, the feature's color is not changed. This is set for all features
+   * when a style's color is evaluated.
+   *
+   * @memberof ModelFeature.prototype
+   *
+   * @type {Color}
+   *
+   * @default {@link Color.WHITE}
+   */
+  color: {
+    get: function () {
+      if (!defined(this._color)) {
+        this._color = new Color();
+      }
+      return this._featureTable.getColor(this._featureId, this._color);
+    },
+    set: function (value) {
+      this._featureTable.setColor(this._featureId, value);
+    },
+  },
   /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
    * the model containing the feature.
@@ -98,6 +143,18 @@ ModelFeature.prototype.hasProperty = function (name) {
  * }
  */
 ModelFeature.prototype.getProperty = function (name) {
+  return this._featureTable.getProperty(this._featureId, name);
+};
+
+/**
+ * @private
+ */
+ModelFeature.prototype.getPropertyInherited = function (name) {
+  var value = this._featureTable.getPropertyBySemantic(this._featureId, name);
+  if (defined(value)) {
+    return value;
+  }
+
   return this._featureTable.getProperty(this._featureId, name);
 };
 
