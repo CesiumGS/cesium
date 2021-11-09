@@ -54,9 +54,15 @@
         var scene = viewer.scene;
 
         // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
-        var tileset = viewer.scene.primitives.add(
+        var terrainTileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(666378),
+            url: Cesium.IonResource.fromAssetId(666748),
+          })
+        );
+        var buildingsTileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(666747),
+            maximumScreenSpaceError: 12,
           })
         );
 
@@ -134,6 +140,7 @@
         function flyCameraTo(cameraTransform, duration) {
           // Fly to a nice overview of the city.
           viewer.camera.flyTo({
+            duration: duration,
             destination: cameraTransform.destination,
             orientation: {
               direction: cameraTransform.direction,
@@ -143,7 +150,7 @@
           });
         }
 
-        tileset.readyPromise.then(function (tileset) {
+        buildingsTileset.readyPromise.then(function (tileset) {
           var center = Cesium.Cartesian3.fromDegrees(45.04192, 12.753525, 2000);
           var heading = Cesium.Math.toRadians(50.0);
           var pitch = Cesium.Math.toRadians(-20.0);
@@ -283,19 +290,22 @@
           {
             text: "No style",
             onselect: function () {
-              tileset.style = undefined;
+              buildingsTileset.style = undefined;
+              terrainTileset.style = undefined;
             },
           },
           {
             text: "Style buildings based on height",
             onselect: function () {
-              tileset.style = buildingStyle;
+              buildingsTileset.style = buildingStyle;
+              terrainTileset.style = undefined;
             },
           },
           {
             text: "Style terrain based on materials",
             onselect: function () {
-              tileset.style = terrainStyle;
+              buildingsTileset.style = undefined;
+              terrainTileset.style = terrainStyle;
             },
           },
         ];
