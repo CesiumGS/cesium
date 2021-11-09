@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.88 - 2021-12-1
+
+##### Fixes :wrench:
+
+- Fixed a bug with .ktx2 textures having an incorrect minification filter. [#9876](https://github.com/CesiumGS/cesium/pull/9876/)
+
 ### 1.87.1 - 2021-11-09
 
 ##### Additions :tada:
