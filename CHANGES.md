@@ -1,6 +1,21 @@
 # Change Log
 
-### 1.87 - 2021-11-1
+### 1.87.1 - 2021-11-09
+
+##### Additions :tada:
+
+- Added experimental implementations of [3D Tiles Next](https://github.com/CesiumGS/3d-tiles/tree/main/next). The following extensions are supported:
+  - [3DTILES_content_gltf](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_content_gltf) for using glTF models directly as tile contents
+  - [3DTILES_metadata](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata) for adding structured metadata to tilesets, tiles, or groups of tile content
+  - [EXT_mesh_features](https://github.com/KhronosGroup/glTF/pull/2082) for adding feature identification and feature metadata to glTF models
+  - [3DTILES_implicit_tiling](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_implicit_tiling) for a compact representation of quadtrees and octrees
+  - [3DTILES_bounding_volume_S2](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_bounding_volume_S2) for [S2](https://s2geometry.io/) bounding volumes
+  - [3DTILES_multiple_contents](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents) for storing multiple contents within a single tile
+- Added `ModelExperimental`, a new experimental architecture for loading glTF models
+- Added `CustomShader` class for styling `Cesium3DTileset` or `ModelExperimental` with custom GLSL shaders
+- Added `ExperimentalFeatures.enableModelExperimental` for enabling certain experimental features. `ModelExperimental`, `EXT_mesh_features` and `CustomShader` are only enabled when this flag is set to true.
+
+### 1.87 - 2021-11-01
 
 ##### Additions :tada:
 
