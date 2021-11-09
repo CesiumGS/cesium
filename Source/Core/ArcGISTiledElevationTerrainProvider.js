@@ -174,18 +174,15 @@ function ArcGISTiledElevationTerrainProvider(options) {
         );
       }
 
-      if(metadata.minValues && metadata.maxValues)
-      {
+      if (metadata.minValues && metadata.maxValues) {
         that._terrainDataStructure = {
           elementMultiplier: 1.0,
           lowestEncodedHeight: metadata.minValues[0],
           highestEncodedHeight: metadata.maxValues[0],
         };
-      }
-      else
-      {
+      } else {
         that._terrainDataStructure = {
-          elementMultiplier: 1.0
+          elementMultiplier: 1.0,
         };
       }
 
