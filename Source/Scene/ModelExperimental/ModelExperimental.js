@@ -17,15 +17,15 @@ import Color from "../../Core/Color.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
- *
+ * <p>
  * Do not call this function directly, instead use the `from` functions to create
  * the Model from your source data type.
+ * </p>
  *
  * @alias ModelExperimental
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {ResourceLoader} options.loader The loader responsible for loading the 3D model.
  * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -41,7 +41,6 @@ import Color from "../../Core/Color.js";
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -53,6 +52,8 @@ export default function ModelExperimental(options) {
 
   /**
    * The loader used to load resources for this model.
+   * The corresponding constructor parameter is undocumented, since
+   * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
    *
@@ -124,8 +125,6 @@ function createModelFeatureTables(model, featureMetadata) {
     if (modelFeatureTable.featuresLength > 0) {
       modelFeatureTables.push(modelFeatureTable);
     }
-
-    modelFeatureTable.applyStyle(model.style);
   }
 
   return modelFeatureTables;
@@ -202,17 +201,17 @@ function initialize(model) {
       });
       model._resourcesLoaded = true;
     })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
-    });
+    .otherwise(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
 
   loader.texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
-    });
+    .otherwise(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
 }
 
 Object.defineProperties(ModelExperimental.prototype, {
@@ -288,9 +287,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {CustomShader}
-   * @readonly
-   *
-   * @private
    */
   customShader: {
     get: function () {
@@ -326,7 +322,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
-   * @readonly
    *
    * @private
    */
@@ -376,9 +371,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
    *
    * @type {Cesium3DTileStyle}
-   * @readonly
-   *
-   * @private
    */
   style: {
     get: function () {
@@ -398,8 +390,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Color}
-   *
-   * @private
    */
   color: {
     get: function () {
@@ -418,10 +408,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Cesium3DTileColorBlend|ColorBlendMode}
+   * @type {Cesium3DTileColorBlendMode|ColorBlendMode}
    * @default ColorBlendMode.HIGHLIGHT
-   *
-   * @private
    */
   colorBlendMode: {
     get: function () {
@@ -439,8 +427,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {Number}
    * @default 0.5
-   *
-   * @private
    */
   colorBlendAmount: {
     get: function () {
@@ -458,8 +444,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @type {BoundingSphere}
    * @readonly
-   *
-   * @private
    */
   boundingSphere: {
     get: function () {
@@ -630,12 +614,18 @@ ModelExperimental.prototype.update = function (frameState) {
     this._drawCommandsBuilt = true;
 
     var model = this;
-    // Set the model as ready after the first frame render since the user might set up events subscribed to
-    // the post render event, and the model may not be ready for those past the first frame.
-    frameState.afterRender.push(function () {
-      model._ready = true;
-      model._readyPromise.resolve(model);
-    });
+
+    if (!model._ready) {
+      // Set the model as ready after the first frame render since the user might set up events subscribed to
+      // the post render event, and the model may not be ready for those past the first frame.
+      frameState.afterRender.push(function () {
+        model._ready = true;
+        model._readyPromise.resolve(model);
+      });
+
+      // Don't render until the next frame after the ready promise is resolved
+      return;
+    }
   }
 
   if (this._debugShowBoundingVolumeDirty) {
@@ -743,8 +733,6 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
  * @returns {ModelExperimental} The newly created model.
- *
- * @private
  */
 ModelExperimental.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
