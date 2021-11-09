@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Create 3D models using glTF." />
-    <meta name="cesium-sandcastle-labels" content="Development" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -46,6 +46,10 @@
         var viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
         });
+
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T20:27:37.016064475348684937Z"
+        );
 
         // Model positioning ===============================================
 
