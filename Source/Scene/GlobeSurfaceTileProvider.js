@@ -1817,7 +1817,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       localizedTranslucencyRectangle: new Cartesian4(),
       undergroundColor: Color.clone(Color.TRANSPARENT),
       undergroundColorAlphaByDistance: new Cartesian4(),
-      lambertDiffuseMultiplier: 0.9
+      lambertDiffuseMultiplier: 0.9,
     },
   };
 
