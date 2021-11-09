@@ -38,6 +38,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1N2U0ZGUzZS01NTgyLTQxYjYtYWM1ZS1mZDczY2UyNDE4ZWIiLCJpZCI6Mjg0NjcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTExMzUzNjB9.TVYF3wBTwODi-6HYXABxfYSp7Tfq3zJQvtdd-adBOMM';
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.createWorldTerrain({}),
           animation: false,
