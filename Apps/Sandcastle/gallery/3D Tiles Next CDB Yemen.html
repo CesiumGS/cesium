@@ -44,7 +44,6 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
         var viewer = new Cesium.Viewer("cesiumContainer", {});
@@ -52,6 +51,7 @@
           "2021-11-09T07:27:37.016064475348684937Z"
         );
         var scene = viewer.scene;
+        scene.light.intensity = 7.0;
 
         // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
         var terrainTileset = viewer.scene.primitives.add(
@@ -227,14 +227,32 @@
         var weightsScratch;
         var i;
 
+        var highlighted = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
+        var selected = {
+          feature: undefined,
+          originalColor: new Cesium.Color(),
+        };
+
         handler.setInputAction(function (movement) {
           if (enablePicking) {
+            // If a feature was previously highlighted, undo the highlight
+            if (Cesium.defined(highlighted.feature)) {
+              highlighted.feature.color = highlighted.originalColor;
+              highlighted.feature = undefined;
+            }
+
             var feature = scene.pick(movement.endPosition);
-            if (
-              feature instanceof Cesium.Cesium3DTileFeature &&
-              // Make sure we only handle the terrain features for picking by hovering.
-              feature.hasProperty("substrates")
-            ) {
+            var featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
+
+            var isTerrainFeature =
+              featurePicked && feature.hasProperty("substrates");
+            var isBuildingFeature = featurePicked && feature.hasProperty("HGT");
+
+            if (isTerrainFeature) {
               metadataOverlay.style.display = "block";
               metadataOverlay.style.bottom =
                 viewer.canvas.clientHeight - movement.endPosition.y + "px";
@@ -263,19 +281,51 @@
             } else {
               metadataOverlay.style.display = "none";
             }
+
+            if (isBuildingFeature) {
+              // Highlight the feature if it's not already selected.
+              if (feature !== selected.feature) {
+                highlighted.feature = feature;
+                Cesium.Color.clone(feature.color, highlighted.originalColor);
+                feature.color = Cesium.Color.MAGENTA;
+              }
+            }
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
         handler.setInputAction(function (movement) {
+          // If a feature was previously selected, undo the highlight
+          if (Cesium.defined(selected.feature)) {
+            selected.feature.color = selected.originalColor;
+            selected.feature = undefined;
+          }
+
           var feature = scene.pick(movement.position);
-          if (
-            feature instanceof Cesium.Cesium3DTileFeature &&
-            // Make sure we only handle the terrain features for picking by clicking.
-            feature.hasProperty("HGT")
-          ) {
+          var featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
+          var isBuildingFeature = featurePicked && feature.hasProperty("HGT");
+
+          if (isBuildingFeature) {
+            // Select the feature if it's not already selected
+            if (selected.feature === feature) {
+              return;
+            }
+            selected.feature = feature;
+
+            // Save the selected feature's original color
+            if (feature === highlighted.feature) {
+              Cesium.Color.clone(
+                highlighted.originalColor,
+                selected.originalColor
+              );
+              highlighted.feature = undefined;
+            } else {
+              Cesium.Color.clone(feature.color, selected.originalColor);
+            }
+            feature.color = Cesium.Color.LIME;
+
             tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
             tableHtmlScratch +=
-              "<tr><th colspan=2>Property Name</th><th>ID</th><th>Data Type</th><th>Value</th></tr><tbody>";
+              "<tr><th colspan=2>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
             var metadataClass = feature.content.batchTable._propertyTable.class;
             var propertyNames = feature.getPropertyNames();
             var length = propertyNames.length;
@@ -295,7 +345,7 @@
               var property = metadataClass.properties[propertyName];
 
               tableHtmlScratch +=
-                "<tr style='font-family: monospace'><th style='min-width:250px'><a href='' style='text-decoration:none'>" +
+                "<tr style='font-family: monospace'><th style='min-width:200px'><a href='' style='text-decoration:none'>" +
                 property.name +
                 "</a></th><th><a href='' title='" +
                 property.description +
@@ -341,10 +391,22 @@
           },
         ];
 
+        function resetHighlight() {
+          if (Cesium.defined(selected.feature)) {
+            selected.feature.color = selected.originalColor;
+            selected.feature = undefined;
+          }
+          if (Cesium.defined(highlighted.feature)) {
+            highlighted.feature.color = highlighted.originalColor;
+            highlighted.feature = undefined;
+          }
+        }
+
         var modes = [
           {
             text: "No style",
             onselect: function () {
+              resetHighlight();
               buildingsTileset.style = undefined;
               terrainTileset.style = undefined;
             },
@@ -352,6 +414,7 @@
           {
             text: "Style buildings based on height",
             onselect: function () {
+              resetHighlight();
               buildingsTileset.style = buildingStyle;
               terrainTileset.style = undefined;
             },

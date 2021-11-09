@@ -47,6 +47,10 @@
           orderIndependentTranslucency: false,
         });
 
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T20:27:37.016064475348684937Z"
+        );
+
         // Model positioning ===============================================
 
         var position = Cesium.Cartesian3.fromDegrees(
