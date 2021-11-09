@@ -223,31 +223,40 @@
         metadataOverlay.style.borderRadius = "4px";
 
         var tableHtmlScratch;
+        var materialsScratch;
+        var weightsScratch;
         var i;
 
         handler.setInputAction(function (movement) {
           if (enablePicking) {
             var feature = scene.pick(movement.endPosition);
-            if (feature instanceof Cesium.Cesium3DTileFeature) {
+            if (
+              feature instanceof Cesium.Cesium3DTileFeature &&
+              // Make sure we only handle the terrain features for picking by hovering.
+              feature.hasProperty("substrates")
+            ) {
               metadataOverlay.style.display = "block";
               metadataOverlay.style.bottom =
                 viewer.canvas.clientHeight - movement.endPosition.y + "px";
               metadataOverlay.style.left = movement.endPosition.x + "px";
 
               tableHtmlScratch =
-                "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
+                "<table><thead><tr><td>Material:</td><th><tt>" +
+                feature.getProperty("name") +
+                "</tt></tr></thead><tbody>";
 
-              var propertyNames = feature.getPropertyNames();
-              var length = propertyNames.length;
-              for (var i = 0; i < length; ++i) {
-                var propertyName = propertyNames[i];
-                var propertyValue = feature.getProperty(propertyName);
+              materialsScratch = feature.getProperty("substrates");
+              weightsScratch = feature.getProperty("weights");
+              tableHtmlScratch +=
+                "<tr><td colspan='2' style='text-align: center;'><b>Substrates</b></td></tr>";
+
+              for (i = 0; i < materialsScratch.length; i++) {
                 tableHtmlScratch +=
                   "<tr><td><tt>" +
-                  propertyName +
-                  "</tt></td><td><tt>" +
-                  propertyValue +
-                  "</tt></td></tr>";
+                  materialsScratch[i].slice(3) +
+                  "</tt></td><td style='text-align: right;'><tt>" +
+                  weightsScratch[i] +
+                  "%</tt></td></tr>";
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;
@@ -256,6 +265,52 @@
             }
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction(function (movement) {
+          var feature = scene.pick(movement.position);
+          if (
+            feature instanceof Cesium.Cesium3DTileFeature &&
+            // Make sure we only handle the terrain features for picking by clicking.
+            feature.hasProperty("HGT")
+          ) {
+            tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
+            tableHtmlScratch +=
+              "<tr><th colspan=2>Property Name</th><th>ID</th><th>Data Type</th><th>Value</th></tr><tbody>";
+            var metadataClass = feature.content.batchTable._propertyTable.class;
+            var propertyNames = feature.getPropertyNames();
+            var length = propertyNames.length;
+            for (var i = 0; i < length; ++i) {
+              var propertyName = propertyNames[i];
+
+              // Skip these properties, since they are always empty.
+              if (
+                propertyName === "APID" ||
+                propertyName === "FACC" ||
+                propertyName === "RWID"
+              ) {
+                continue;
+              }
+
+              var propertyValue = feature.getProperty(propertyName);
+              var property = metadataClass.properties[propertyName];
+
+              tableHtmlScratch +=
+                "<tr style='font-family: monospace'><th style='min-width:250px'><a href='' style='text-decoration:none'>" +
+                property.name +
+                "</a></th><th><a href='' title='" +
+                property.description +
+                "' style='text-decoration:none'>ℹ️</a></th><th><b>" +
+                property.id +
+                "</b></th><td>" +
+                property.componentType +
+                "</td><td>" +
+                propertyValue +
+                "</td></tr>";
+            }
+            tableHtmlScratch += "</tbody></table>";
+            viewer.selectedEntity.description = tableHtmlScratch;
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // --- UI ---
 
@@ -312,15 +367,17 @@
 
         Sandcastle.addToolbarMenu(locations);
         Sandcastle.addToolbarMenu(modes);
-        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
-          checked
-        ) {
-          if (enablePicking) {
-            metadataOverlay.style.display = "none";
-          }
+        Sandcastle.addToggleButton(
+          "Enable terrain picking",
+          enablePicking,
+          function (checked) {
+            if (enablePicking) {
+              metadataOverlay.style.display = "none";
+            }
 
-          enablePicking = checked;
-        });
+            enablePicking = checked;
+          }
+        );
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
