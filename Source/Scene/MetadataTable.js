@@ -10,7 +10,7 @@ import MetadataType from "./MetadataType.js";
  * used for representing binary properties of a batch table, as well as binary
  * metadata in 3D Tiles next extensions.
  * <p>
- * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -83,14 +83,29 @@ Object.defineProperties(MetadataTable.prototype, {
 });
 
 /**
- * Returns whether this property exists.
+ * Returns whether the table has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the table has this property.
  * @private
  */
 MetadataTable.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
+};
+
+/**
+ * Returns whether the table has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the table has a property with the given semantic.
+ * @private
+ */
+MetadataTable.prototype.hasPropertyBySemantic = function (semantic) {
+  return MetadataEntity.hasPropertyBySemantic(
+    semantic,
+    this._properties,
+    this._class
+  );
 };
 
 /**
@@ -124,7 +139,7 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
@@ -195,7 +210,7 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {Number} index The index of the entity.
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this semantic.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
@@ -269,6 +284,29 @@ MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
   return undefined;
 };
 
+/**
+ * Returns a typed array containing the property values for the property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
+ * @private
+ */
+MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  if (defined(this._class)) {
+    var property = this._class.propertiesBySemantic[semantic];
+    if (defined(property)) {
+      return this.getPropertyTypedArray(property.id);
+    }
+  }
+
+  return undefined;
+};
+
 function getDefault(classDefinition, propertyId) {
   if (defined(classDefinition)) {
     var classProperty = classDefinition.properties[propertyId];
@@ -278,7 +316,7 @@ function getDefault(classDefinition, propertyId) {
         value = value.slice(); // clone
       }
       value = classProperty.normalize(value);
-      return classProperty.unpackVectorTypes(value);
+      return classProperty.unpackVectorAndMatrixTypes(value);
     }
   }
 }

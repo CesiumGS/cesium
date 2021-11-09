@@ -27,8 +27,8 @@ import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -314,6 +314,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
+    showOutline: tileset.showOutline,
   };
 
   if (gltfFormat === 0) {

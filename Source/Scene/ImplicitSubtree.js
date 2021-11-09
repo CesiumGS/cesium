@@ -5,7 +5,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import MetadataTable from "./MetadataTable.js";
@@ -19,7 +19,7 @@ import when from "../ThirdParty/when.js";
  * Subtrees handle tile metadata from the <code>3DTILES_metadata</code> extension
  * </p>
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0#implicit-tile-metadata|Implicit Tile Metadata in the 3DTILES_metadata specification}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata#implicit-tile-metadata|Implicit Tile Metadata in the 3DTILES_metadata specification}
  *
  * @alias ImplicitSubtree
  * @constructor
@@ -266,7 +266,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
   subtree._subtreeJson = subtreeJson;
 
   var metadataExtension;
-  if (has3DTilesExtension(subtreeJson, "3DTILES_metadata")) {
+  if (hasExtension(subtreeJson, "3DTILES_metadata")) {
     metadataExtension = subtreeJson.extensions["3DTILES_metadata"];
   }
   subtree._metadataExtension = metadataExtension;
@@ -281,7 +281,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
   // contents extension. Either way, put the results in this new array
   // for consistent processing later
   subtreeJson.contentAvailabilityHeaders = [];
-  if (has3DTilesExtension(subtreeJson, "3DTILES_multiple_contents")) {
+  if (hasExtension(subtreeJson, "3DTILES_multiple_contents")) {
     subtreeJson.contentAvailabilityHeaders =
       subtreeJson.extensions["3DTILES_multiple_contents"].contentAvailability;
   } else {
@@ -624,7 +624,7 @@ function parseAvailability(
 
   // availableCount is only needed for the metadata jump buffer, which
   // corresponds to the tile availability bitstream.
-  var computeAvailableCountEnabled = has3DTilesExtension(
+  var computeAvailableCountEnabled = hasExtension(
     subtreeJson,
     "3DTILES_metadata"
   );

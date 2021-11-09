@@ -258,7 +258,33 @@ describe(
       expect(collection.isDestroyed()).toEqual(true);
     });
 
-    describe("pickImageryLayerFeatures", function () {
+    /**
+     * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
+     * once the load queue is empty.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @return {Promise.<Boolean>}
+     *
+     * @private
+     *
+     */
+    function updateUntilDone(globe, scene) {
+      // update until the load queue is empty.
+      return pollToPromise(function () {
+        globe._surface._debug.enableDebugOutput = true;
+        scene.render();
+        return (
+          globe._surface.tileProvider.ready &&
+          globe._surface._tileLoadQueueHigh.length === 0 &&
+          globe._surface._tileLoadQueueMedium.length === 0 &&
+          globe._surface._tileLoadQueueLow.length === 0 &&
+          globe._surface._debug.tilesWaitingForChildren === 0
+        );
+      });
+    }
+
+    describe("pickImageryLayers", function () {
       var scene;
       var globe;
       var camera;
@@ -279,24 +305,154 @@ describe(
         globe.imageryLayers.removeAll();
       });
 
-      /**
-       * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
-       * once the load queue is empty.
-       */
-      function updateUntilDone(globe) {
-        // update until the load queue is empty.
-        return pollToPromise(function () {
-          globe._surface._debug.enableDebugOutput = true;
-          scene.render();
-          return (
-            globe._surface.tileProvider.ready &&
-            globe._surface._tileLoadQueueHigh.length === 0 &&
-            globe._surface._tileLoadQueueMedium.length === 0 &&
-            globe._surface._tileLoadQueueLow.length === 0 &&
-            globe._surface._debug.tilesWaitingForChildren === 0
-          );
+      it("returns undefined when pick ray does not intersect surface", function () {
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+
+        var ray = new Ray(
+          camera.position,
+          Cartesian3.negate(camera.direction, new Cartesian3())
+        );
+        var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(imagery).toBeUndefined();
+      });
+
+      it("returns undefined when globe has no pickable layers", function () {
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+
+        var ray = new Ray(camera.position, camera.direction);
+        var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(imagery).toBeUndefined();
+      });
+
+      it("returns undefined if there are zero imagery layers", function () {
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        return updateUntilDone(globe, scene).then(function () {
+          var ray = new Ray(camera.position, camera.direction);
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeUndefined();
         });
-      }
+      });
+
+      it("returns imagery from one layer", function () {
+        var provider = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        var currentLayer = globe.imageryLayers.addImageryProvider(provider);
+
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        return updateUntilDone(globe, scene).then(function () {
+          var ray = new Ray(camera.position, camera.direction);
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeDefined();
+          expect(imagery.length).toBe(1);
+          expect(imagery[0]).toBe(currentLayer);
+        });
+      });
+
+      it("returns imagery from two layers", function () {
+        var provider1 = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        var currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
+
+        var provider2 = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Green.png");
+          },
+        };
+
+        var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
+        var ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        return updateUntilDone(globe, scene).then(function () {
+          var ray = new Ray(camera.position, camera.direction);
+          var imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeDefined();
+          expect(imagery.length).toBe(2);
+          expect(imagery[0]).toBe(currentLayer2);
+          expect(imagery[1]).toBe(currentLayer1);
+        });
+      });
+    });
+
+    describe("pickImageryLayerFeatures", function () {
+      var scene;
+      var globe;
+      var camera;
+
+      beforeAll(function () {
+        scene = createScene();
+        globe = scene.globe = new Globe();
+        camera = scene.camera;
+
+        scene.frameState.passes.render = true;
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      beforeEach(function () {
+        globe.imageryLayers.removeAll();
+      });
 
       it("returns undefined when pick ray does not intersect surface", function () {
         var ellipsoid = Ellipsoid.WGS84;
@@ -350,7 +506,7 @@ describe(
 
         globe.imageryLayers.addImageryProvider(provider);
 
-        return updateUntilDone(globe).then(function () {
+        return updateUntilDone(globe, scene).then(function () {
           var ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
@@ -389,7 +545,7 @@ describe(
 
         globe.imageryLayers.addImageryProvider(provider);
 
-        return updateUntilDone(globe).then(function () {
+        return updateUntilDone(globe, scene).then(function () {
           var ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
@@ -435,7 +591,7 @@ describe(
 
         var currentLayer = globe.imageryLayers.addImageryProvider(provider);
 
-        return updateUntilDone(globe).then(function () {
+        return updateUntilDone(globe, scene).then(function () {
           var ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
@@ -519,7 +675,7 @@ describe(
 
         var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
 
-        return updateUntilDone(globe).then(function () {
+        return updateUntilDone(globe, scene).then(function () {
           var ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
@@ -589,7 +745,7 @@ describe(
           destination: Rectangle.fromDegrees(-180.0, 0, 0, 90),
         });
 
-        return updateUntilDone(globe).then(function () {
+        return updateUntilDone(globe, scene).then(function () {
           var ray = new Ray(camera.position, camera.direction);
           var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,

@@ -81,12 +81,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
   if (defined(boundingSphere)) {
     // ARRAY with 4 elements is automatically converted to a Cartesian4
     return {
-      sphere: [
-        boundingSphere.x,
-        boundingSphere.y,
-        boundingSphere.z,
-        boundingSphere.w,
-      ],
+      sphere: boundingSphere,
     };
   }
 
@@ -103,7 +98,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
  * @return {Number} The minimum height
  * @private
  */
-function parseMinimumHeight(prefix, tileMetadata, results) {
+function parseMinimumHeight(prefix, tileMetadata) {
   var minimumHeightSemantic = prefix + "_MINIMUM_HEIGHT";
   return tileMetadata.getPropertyBySemantic(minimumHeightSemantic);
 }

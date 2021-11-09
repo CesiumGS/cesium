@@ -6,7 +6,7 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
+import ForEach from "./GltfPipeline/ForEach.js";
 
 // glTF does not allow an index value of 65535 because this is the primitive
 // restart value in some APIs.

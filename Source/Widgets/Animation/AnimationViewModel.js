@@ -5,7 +5,6 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import JulianDate from "../../Core/JulianDate.js";
 import knockout from "../../ThirdParty/knockout.js";
-import sprintf from "../../ThirdParty/sprintf.js";
 import createCommand from "../createCommand.js";
 import ToggleButtonViewModel from "../ToggleButtonViewModel.js";
 
@@ -441,19 +440,23 @@ AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
   var gregorianDate = JulianDate.toGregorianDate(date);
   var millisecond = Math.round(gregorianDate.millisecond);
   if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
-    return sprintf(
-      "%02d:%02d:%02d.%03d",
-      gregorianDate.hour,
-      gregorianDate.minute,
-      gregorianDate.second,
-      millisecond
+    return (
+      gregorianDate.hour.toString().padStart(2, "0") +
+      ":" +
+      gregorianDate.minute.toString().padStart(2, "0") +
+      ":" +
+      gregorianDate.second.toString().padStart(2, "0") +
+      "." +
+      millisecond.toString().padStart(3, "0")
     );
   }
-  return sprintf(
-    "%02d:%02d:%02d UTC",
-    gregorianDate.hour,
-    gregorianDate.minute,
-    gregorianDate.second
+  return (
+    gregorianDate.hour.toString().padStart(2, "0") +
+    ":" +
+    gregorianDate.minute.toString().padStart(2, "0") +
+    ":" +
+    gregorianDate.second.toString().padStart(2, "0") +
+    " UTC"
   );
 };
 

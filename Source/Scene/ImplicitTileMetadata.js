@@ -9,7 +9,7 @@ import defaultValue from "../Core/defaultValue.js";
  * tile metadata is stored in a {@link MetadataTable} rather than a JSON object.
  * </p>
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
@@ -86,14 +86,25 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
 });
 
 /**
- * Returns whether this property exists.
+ * Returns whether the tile has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
+ * @returns {Boolean} Whether the tile has this property.
  * @private
  */
 ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
   return this._metadataTable.hasProperty(propertyId);
+};
+
+/**
+ * Returns whether the tile has a property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {Boolean} Whether the tile has a property with the given semantic.
+ * @private
+ */
+ImplicitTileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+  return this._metadataTable.hasPropertyBySemantic(semantic);
 };
 
 /**
@@ -114,7 +125,7 @@ ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
 ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
@@ -140,7 +151,7 @@ ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
 ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {

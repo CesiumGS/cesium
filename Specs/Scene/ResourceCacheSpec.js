@@ -849,6 +849,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -888,15 +889,15 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
+        attributeSemantic: "POSITION",
       });
       var vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
-        dracoAccessorId: 0,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
       });
 
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -910,8 +911,8 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: 0,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
         })
       ).toBe(vertexBufferLoader);
 
@@ -965,8 +966,8 @@ describe(
           baseResource: gltfResource,
           bufferViewId: 0,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: 0,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
         });
       }).toThrowDeveloperError();
     });
@@ -981,28 +982,28 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("loadVertexBuffer throws if draco is defined and dracoAttributeSemantic is not defined", function () {
+    it("loadVertexBuffer throws if draco is defined and attributeSemantic is not defined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: undefined,
-          dracoAccessorId: 0,
+          attributeSemantic: undefined,
+          accessorId: 0,
         });
       }).toThrowDeveloperError();
     });
 
-    it("loadVertexBuffer throws if draco is defined and dracoAccessorId is not defined", function () {
+    it("loadVertexBuffer throws if draco is defined and accessorId is not defined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: undefined,
+          attributeSemantic: "POSITION",
+          accessorId: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -1150,14 +1151,12 @@ describe(
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
       var imageLoader = ResourceCache.loadImage({
         gltf: gltfWithTextures,
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
-        supportedImageFormats: new SupportedImageFormats(),
       });
       var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(imageLoader.cacheKey).toBe(expectedCacheKey);
@@ -1170,7 +1169,6 @@ describe(
           imageId: 0,
           gltfResource: gltfResource,
           baseResource: gltfResource,
-          supportedImageFormats: new SupportedImageFormats(),
         })
       ).toBe(imageLoader);
 
@@ -1183,60 +1181,44 @@ describe(
 
     it("loadImage throws if gltf is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadImage({
           gltf: undefined,
           imageId: 0,
           gltfResource: gltfResource,
           baseResource: gltfResource,
-          supportedImageFormats: new SupportedImageFormats(),
         });
       }).toThrowDeveloperError();
     });
 
     it("loadImage throws if imageId is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadImage({
           gltf: gltfWithTextures,
           imageId: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
-          supportedImageFormats: new SupportedImageFormats(),
         });
       }).toThrowDeveloperError();
     });
 
     it("loadImage throws if gltfResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadImage({
           gltf: gltfWithTextures,
           imageId: 0,
           gltfResource: undefined,
           baseResource: gltfResource,
-          supportedImageFormats: new SupportedImageFormats(),
         });
       }).toThrowDeveloperError();
     });
 
     it("loadImage throws if baseResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadImage({
           gltf: gltfWithTextures,
           imageId: 0,
           gltfResource: gltfResource,
           baseResource: undefined,
-          supportedImageFormats: new SupportedImageFormats(),
-        });
-      }).toThrowDeveloperError();
-    });
-
-    it("loadImage throws if supportedImageFormats is undefined", function () {
-      expect(function () {
-        ResourceCache.loadIndexBuffer({
-          gltf: gltfWithTextures,
-          imageId: 0,
-          gltfResource: gltfResource,
-          baseResource: gltfResource,
-          supportedImageFormats: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -1286,7 +1268,7 @@ describe(
 
     it("loadTexture throws if gltf is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadTexture({
           gltf: undefined,
           textureInfo: gltfWithTextures.materials[0].emissiveTexture,
           gltfResource: gltfResource,
@@ -1298,7 +1280,7 @@ describe(
 
     it("loadTexture throws if textureInfo is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadTexture({
           gltf: gltfWithTextures,
           textureInfo: undefined,
           gltfResource: gltfResource,
@@ -1310,7 +1292,7 @@ describe(
 
     it("loadTexture throws if gltfResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadTexture({
           gltf: gltfWithTextures,
           textureInfo: gltfWithTextures.materials[0].emissiveTexture,
           gltfResource: undefined,
@@ -1322,7 +1304,7 @@ describe(
 
     it("loadTexture throws if baseResource is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadTexture({
           gltf: gltfWithTextures,
           textureInfo: gltfWithTextures.materials[0].emissiveTexture,
           gltfResource: gltfResource,
@@ -1334,7 +1316,7 @@ describe(
 
     it("loadTexture throws if supportedImageFormats is undefined", function () {
       expect(function () {
-        ResourceCache.loadIndexBuffer({
+        ResourceCache.loadTexture({
           gltf: gltfWithTextures,
           textureInfo: gltfWithTextures.materials[0].emissiveTexture,
           gltfResource: gltfResource,

@@ -1,12 +1,12 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import MetadataEnumValue from "./MetadataEnumValue.js";
-import MetadataType from "./MetadataType.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * A metadata enum.
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -37,8 +37,8 @@ function MetadataEnum(options) {
   });
 
   var valueType = defaultValue(
-    MetadataType[enumDefinition.valueType],
-    MetadataType.UINT16
+    MetadataComponentType[enumDefinition.valueType],
+    MetadataComponentType.UINT16
   );
 
   this._values = values;
@@ -101,7 +101,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * The enum value type.
    *
    * @memberof MetadataEnum.prototype
-   * @type {MetadataType}
+   * @type {MetadataComponentType}
    * @readonly
    *
    * @private

@@ -52,7 +52,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
    * </p>
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud#batched-points}
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -129,7 +129,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   /**
    * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite|Composite specification}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}
    *
    * @memberof Cesium3DTileContent.prototype
    *
@@ -247,12 +247,11 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 });
 
 /**
- * Determines if the tile's batch table has a property.  If it does, each feature in
- * the tile will have the property.
+ * Returns whether the feature has this property.
  *
  * @param {Number} batchId The batchId for the feature.
  * @param {String} name The case-sensitive name of the property.
- * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
+ * @returns {Boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
  */
 Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
   DeveloperError.throwInstantiationError();
@@ -266,7 +265,7 @@ Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
  * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
  * </p>
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/BatchTable}.
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
  *
  * @param {Number} batchId The batchId for the feature.
  * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.

@@ -228,7 +228,15 @@ function WebMapTileServiceImageryProvider(options) {
   var style = options.style;
   var tileMatrixSetID = options.tileMatrixSetID;
   var url = resource.url;
-  if (url.indexOf("{") >= 0) {
+
+  var bracketMatch = url.match(/{/g);
+  if (
+    !defined(bracketMatch) ||
+    (bracketMatch.length === 1 && /{s}/.test(url))
+  ) {
+    resource.setQueryParameters(defaultParameters);
+    this._useKvp = true;
+  } else {
     var templateValues = {
       style: style,
       Style: style,
@@ -237,9 +245,6 @@ function WebMapTileServiceImageryProvider(options) {
 
     resource.setTemplateValues(templateValues);
     this._useKvp = false;
-  } else {
-    resource.setQueryParameters(defaultParameters);
-    this._useKvp = true;
   }
 
   this._resource = resource;
@@ -330,8 +335,9 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
   var resource;
+  var templateValues;
   if (!imageryProvider._useKvp) {
-    var templateValues = {
+    templateValues = {
       TileMatrix: tileMatrix,
       TileRow: row.toString(),
       TileCol: col.toString(),
@@ -368,10 +374,16 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
     if (defined(dynamicIntervalData)) {
       query = combine(query, dynamicIntervalData);
     }
+
+    templateValues = {
+      s: subdomains[(col + row + level) % subdomains.length],
+    };
+
     resource = imageryProvider._resource.getDerivedResource({
       queryParameters: query,
       request: request,
     });
+    resource.setTemplateValues(templateValues);
   }
 
   return ImageryProvider.loadImage(imageryProvider, resource);

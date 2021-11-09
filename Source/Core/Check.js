@@ -205,6 +205,21 @@ Check.typeOf.bool = function (name, test) {
 };
 
 /**
+ * Throws if test is not typeof 'bigint'
+ *
+ * @param {String} name The name of the variable being tested
+ * @param {*} test The value to test
+ * @exception {DeveloperError} test must be typeof 'bigint'
+ */
+Check.typeOf.bigint = function (name, test) {
+  if (typeof test !== "bigint") {
+    throw new DeveloperError(
+      getFailedTypeErrorMessage(typeof test, "bigint", name)
+    );
+  }
+};
+
+/**
  * Throws if test1 and test2 is not typeof 'number' and not equal in value
  *
  * @param {String} name1 The name of the first variable being tested

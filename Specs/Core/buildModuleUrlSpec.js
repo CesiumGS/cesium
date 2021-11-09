@@ -7,7 +7,9 @@ describe("Core/buildModuleUrl", function () {
     var url = buildModuleUrl("Workers/transferTypedArrayTest.js");
 
     expect(url).toMatch(/Workers\/transferTypedArrayTest.js$/);
-    expect(new Uri(url).isAbsolute()).toBe(true);
+    var uri = new Uri(url);
+    expect(uri.scheme().length).toBeGreaterThan(0);
+    expect(uri.fragment().length).toEqual(0);
 
     // make sure it actually exists at that URL
     return Resource.fetchText(url);

@@ -19,12 +19,11 @@
           "layer": {
             "properties": {
               "color": {
-                "type": "ARRAY",
-                "componentType": "UINT8",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "UINT8"
               },
               "priority": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               }
             }
           }

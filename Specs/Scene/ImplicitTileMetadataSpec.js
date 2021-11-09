@@ -20,6 +20,7 @@ describe("Scene/ImplicitTileMetadata", function () {
   var buildingCounts = [100, 350, 200];
 
   var tileTableDescription = {
+    name: "Tiles",
     class: "tile",
     properties: {
       highlightColor: highlightColors,
@@ -32,13 +33,12 @@ describe("Scene/ImplicitTileMetadata", function () {
       tile: {
         properties: {
           highlightColor: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "UINT8",
-            componentCount: 3,
             semantic: "_HIGHLIGHT_COLOR",
           },
           buildingCount: {
-            type: "UINT16",
+            componentType: "UINT16",
           },
         },
       },
@@ -50,11 +50,9 @@ describe("Scene/ImplicitTileMetadata", function () {
     class: schema.classes.tile,
   });
 
-  var featureTablesDescription = {
+  var propertyTablesDescription = {
     schema: schema,
-    featureTables: {
-      tiles: tileTableDescription,
-    },
+    propertyTables: [tileTableDescription],
   };
 
   var subtreeDescription = {
@@ -78,7 +76,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
     metadata: {
       isInternal: true,
-      featureTables: featureTablesDescription,
+      propertyTables: propertyTablesDescription,
     },
   };
 
@@ -197,12 +195,20 @@ describe("Scene/ImplicitTileMetadata", function () {
     expect(tileMetadata.extensions).toBe(undefined);
   });
 
-  it("hasProperty returns true if a property exists", function () {
+  it("hasProperty returns true if the tile has this property", function () {
     expect(tileMetadata.hasProperty("highlightColor")).toBe(true);
   });
 
-  it("hasProperty returns false if a property does not exist", function () {
+  it("hasProperty returns false if the tile does not have this property", function () {
     expect(tileMetadata.hasProperty("numberOfPoints")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic returns true if the tile has a property with the given semantic", function () {
+    expect(tileMetadata.hasPropertyBySemantic("_HIGHLIGHT_COLOR")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic returns false if the tile does not have a property with the given semantic", function () {
+    expect(tileMetadata.hasPropertyBySemantic("_NUMBER_OF_POINTS")).toBe(false);
   });
 
   it("getPropertyIds returns array of property IDs", function () {

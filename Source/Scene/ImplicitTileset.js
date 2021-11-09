@@ -3,7 +3,7 @@ import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 /**
@@ -66,10 +66,11 @@ export default function ImplicitTileset(
 
   if (
     !defined(tileJson.boundingVolume.box) &&
-    !defined(tileJson.boundingVolume.region)
+    !defined(tileJson.boundingVolume.region) &&
+    !hasExtension(tileJson.boundingVolume, "3DTILES_bounding_volume_S2")
   ) {
     throw new RuntimeError(
-      "Only box and region are supported for implicit tiling"
+      "Only box, region and 3DTILES_bounding_volume_S2 are supported for implicit tiling"
     );
   }
 
@@ -218,7 +219,7 @@ export default function ImplicitTileset(
  * @private
  */
 function gatherContentHeaders(tileJson) {
-  if (has3DTilesExtension(tileJson, "3DTILES_multiple_contents")) {
+  if (hasExtension(tileJson, "3DTILES_multiple_contents")) {
     return tileJson.extensions["3DTILES_multiple_contents"].content;
   }
 

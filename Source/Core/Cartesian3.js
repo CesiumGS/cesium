@@ -1102,6 +1102,14 @@ Cartesian3.fromRadiansArrayHeights = function (coordinates, ellipsoid, result) {
 Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 
 /**
+ * An immutable Cartesian3 instance initialized to (1.0, 1.0, 1.0).
+ *
+ * @type {Cartesian3}
+ * @constant
+ */
+Cartesian3.ONE = Object.freeze(new Cartesian3(1.0, 1.0, 1.0));
+
+/**
  * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
  *
  * @type {Cartesian3}

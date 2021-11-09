@@ -12,7 +12,7 @@ const request = require("request");
 
 const globby = require("globby");
 const gulpTap = require("gulp-tap");
-const gulpUglify = require("gulp-uglify");
+const gulpTerser = require("gulp-terser");
 const open = require("open");
 const rimraf = require("rimraf");
 const glslStripComments = require("glsl-strip-comments");
@@ -32,7 +32,9 @@ const mime = require("mime");
 const rollup = require("rollup");
 const rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 const rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
-const rollupPluginUglify = require("rollup-plugin-uglify");
+const rollupPluginTerser = require("rollup-plugin-terser");
+const rollupCommonjs = require("@rollup/plugin-commonjs");
+const rollupResolve = require("@rollup/plugin-node-resolve").default;
 const cleanCSS = require("gulp-clean-css");
 const typescript = require("typescript");
 
@@ -65,6 +67,14 @@ if (!concurrency) {
   concurrency = os.cpus().length;
 }
 
+// Work-around until all third party libraries use npm
+const filesToLeaveInThirdParty = [
+  "!Source/ThirdParty/Workers/basis_transcoder.js",
+  "!Source/ThirdParty/basis_transcoder.wasm",
+  "!Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!Source/ThirdParty/knockout*.js",
+];
+
 const sourceFiles = [
   "Source/**/*.js",
   "!Source/*.js",
@@ -73,8 +83,7 @@ const sourceFiles = [
   "Source/WorkersES6/createTaskProcessorWorker.js",
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/pako_inflate.js",
-  "!Source/ThirdParty/crunch.js",
+  "!Source/ThirdParty/_*",
 ];
 
 const watchedFiles = [
@@ -124,12 +133,10 @@ const filesToConvertES6 = [
 
 function rollupWarning(message) {
   // Ignore eval warnings in third-party code we don't have control over
-  if (
-    message.code === "EVAL" &&
-    /(protobuf-minimal|crunch)\.js$/.test(message.loc.file)
-  ) {
+  if (message.code === "EVAL" && /protobufjs/.test(message.loc.file)) {
     return;
   }
+
   console.log(message);
 }
 
@@ -176,8 +183,43 @@ function createWorkers() {
     });
 }
 
-gulp.task("build", function () {
+async function buildThirdParty() {
+  rimraf.sync("Build/createWorkers");
+  globby.sync(filesToLeaveInThirdParty).forEach(function (file) {
+    rimraf.sync(file);
+  });
+
+  const workers = globby.sync(["ThirdParty/npm/**"]);
+
+  return rollup
+    .rollup({
+      input: workers,
+      plugins: [rollupResolve(), rollupCommonjs()],
+      onwarn: rollupWarning,
+    })
+    .then(function (bundle) {
+      return bundle.write({
+        dir: "Build/createThirdPartyNpm",
+        banner:
+          "/* This file is automatically rebuilt by the Cesium build process. */",
+        format: "es",
+      });
+    })
+    .then(function () {
+      return streamToPromise(
+        gulp
+          .src("Build/createThirdPartyNpm/**")
+          .pipe(gulp.dest("Source/ThirdParty"))
+      );
+    })
+    .then(function () {
+      rimraf.sync("Build/createThirdPartyNpm");
+    });
+}
+
+gulp.task("build", async function () {
   mkdirp.sync("Build");
+
   fs.writeFileSync(
     "Build/package.json",
     JSON.stringify({
@@ -185,6 +227,8 @@ gulp.task("build", function () {
     }),
     "utf8"
   );
+
+  await buildThirdParty();
   glslToJavaScript(minifyShaders, "Build/minifyShaders.state");
   createCesiumJs();
   createSpecList();
@@ -318,7 +362,7 @@ function combine() {
   const outputDirectory = path.join("Build", "CesiumUnminified");
   return combineJavaScript({
     removePragmas: false,
-    optimizer: "none",
+    minify: false,
     outputDirectory: outputDirectory,
   });
 }
@@ -330,12 +374,38 @@ function combineRelease() {
   const outputDirectory = path.join("Build", "CesiumUnminified");
   return combineJavaScript({
     removePragmas: true,
-    optimizer: "none",
+    minify: false,
     outputDirectory: outputDirectory,
   });
 }
 
 gulp.task("combineRelease", gulp.series("build", combineRelease));
+
+gulp.task("prepare", function (done) {
+  // Copy Draco3D files from node_modules into Source
+  fs.copyFileSync(
+    "node_modules/draco3d/draco_decoder_nodejs.js",
+    "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
+  );
+  fs.copyFileSync(
+    "node_modules/draco3d/draco_decoder.wasm",
+    "Source/ThirdParty/draco_decoder.wasm"
+  );
+  // Copy pako and zip.js worker files to Source/ThirdParty
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_inflate.min.js",
+    "Source/ThirdParty/Workers/pako_inflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/pako/dist/pako_deflate.min.js",
+    "Source/ThirdParty/Workers/pako_deflate.min.js"
+  );
+  fs.copyFileSync(
+    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
+    "Source/ThirdParty/Workers/z-worker-pako.js"
+  );
+  done();
+});
 
 //Builds the documentation
 function generateDocumentation() {
@@ -377,6 +447,17 @@ gulp.task(
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, "Build/minifyShaders.state");
 
+    // Remove prepare step from package.json to avoid running "prepare" an extra time.
+    delete packageJson.scripts.prepare;
+    fs.writeFileSync(
+      "./Build/package.noprepare.json",
+      JSON.stringify(packageJson, null, 2)
+    );
+
+    const packageJsonSrc = gulp
+      .src("Build/package.noprepare.json")
+      .pipe(gulpRename("package.json"));
+
     const builtSrc = gulp.src(
       [
         "Build/Cesium/**",
@@ -400,7 +481,6 @@ gulp.task(
         "gulpfile.cjs",
         "server.cjs",
         "index.cjs",
-        "package.json",
         "LICENSE.md",
         "CHANGES.md",
         "README.md",
@@ -415,7 +495,7 @@ gulp.task(
       .src("index.release.html")
       .pipe(gulpRename("index.html"));
 
-    return mergeStream(builtSrc, staticSrc, indexSrc)
+    return mergeStream(packageJsonSrc, builtSrc, staticSrc, indexSrc)
       .pipe(
         gulpTap(function (file) {
           // Work around an issue with gulp-zip where archives generated on Windows do
@@ -427,7 +507,10 @@ gulp.task(
         })
       )
       .pipe(gulpZip("Cesium-" + version + ".zip"))
-      .pipe(gulp.dest("."));
+      .pipe(gulp.dest("."))
+      .on("finish", function () {
+        rimraf.sync("./Build/package.noprepare.json");
+      });
   })
 );
 
@@ -436,7 +519,7 @@ gulp.task(
   gulp.series("build", function () {
     return combineJavaScript({
       removePragmas: false,
-      optimizer: "uglify2",
+      minify: true,
       outputDirectory: path.join("Build", "Cesium"),
     });
   })
@@ -445,7 +528,7 @@ gulp.task(
 function minifyRelease() {
   return combineJavaScript({
     removePragmas: true,
-    optimizer: "uglify2",
+    minify: true,
     outputDirectory: path.join("Build", "Cesium"),
   });
 }
@@ -737,7 +820,7 @@ function getMimeType(filename) {
     return { type: "text/plain", compress: true };
   } else if (/\.(czml|topojson)$/i.test(filename)) {
     return { type: "application/json", compress: true };
-  } else if (/\.(crn|tgz)$/i.test(filename)) {
+  } else if (/\.tgz$/i.test(filename)) {
     return { type: "application/octet-stream", compress: false };
   }
 
@@ -1152,7 +1235,7 @@ gulp.task("convertToModules", function () {
   });
 });
 
-function combineCesium(debug, optimizer, combineOutput) {
+function combineCesium(debug, minify, combineOutput) {
   const plugins = [];
 
   if (!debug) {
@@ -1162,8 +1245,8 @@ function combineCesium(debug, optimizer, combineOutput) {
       })
     );
   }
-  if (optimizer === "uglify2") {
-    plugins.push(rollupPluginUglify.uglify());
+  if (minify) {
+    plugins.push(rollupPluginTerser.terser());
   }
 
   return rollup
@@ -1183,7 +1266,7 @@ function combineCesium(debug, optimizer, combineOutput) {
     });
 }
 
-function combineWorkers(debug, optimizer, combineOutput) {
+function combineWorkers(debug, minify, combineOutput) {
   //This is done waterfall style for concurrency reasons.
   // Copy files that are already minified
   return globby(["Source/ThirdParty/Workers/draco*.js"])
@@ -1209,7 +1292,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
           return streamToPromise(
             gulp
               .src(file)
-              .pipe(gulpUglify())
+              .pipe(gulpTerser())
               .pipe(
                 gulp.dest(
                   path.dirname(
@@ -1235,8 +1318,8 @@ function combineWorkers(debug, optimizer, combineOutput) {
           })
         );
       }
-      if (optimizer === "uglify2") {
-        plugins.push(rollupPluginUglify.uglify());
+      if (minify) {
+        plugins.push(rollupPluginTerser.terser());
       }
 
       return rollup
@@ -1269,21 +1352,25 @@ function minifyModules(outputDirectory) {
   return streamToPromise(
     gulp
       .src("Source/ThirdParty/google-earth-dbroot-parser.js")
-      .pipe(gulpUglify())
+      .pipe(gulpTerser())
       .pipe(gulp.dest(outputDirectory + "/ThirdParty/"))
   );
 }
 
 function combineJavaScript(options) {
-  const optimizer = options.optimizer;
+  const minify = options.minify;
   const outputDirectory = options.outputDirectory;
   const removePragmas = options.removePragmas;
 
-  const combineOutput = path.join("Build", "combineOutput", optimizer);
+  const combineOutput = path.join(
+    "Build",
+    "combineOutput",
+    minify ? "minified" : "combined"
+  );
 
   const promise = Promise.join(
-    combineCesium(!removePragmas, optimizer, combineOutput),
-    combineWorkers(!removePragmas, optimizer, combineOutput),
+    combineCesium(!removePragmas, minify, combineOutput),
+    combineWorkers(!removePragmas, minify, combineOutput),
     minifyModules(outputDirectory)
   );
 
@@ -1298,7 +1385,7 @@ function combineJavaScript(options) {
     promises.push(streamToPromise(stream));
 
     const everythingElse = ["Source/**", "!**/*.js", "!**/*.glsl"];
-    if (optimizer === "uglify2") {
+    if (minify) {
       promises.push(minifyCSS(outputDirectory));
       everythingElse.push("!**/*.css");
     }
@@ -1827,7 +1914,7 @@ function buildCesiumViewer() {
           rollupPluginStripPragma({
             pragmas: ["debug"],
           }),
-          rollupPluginUglify.uglify(),
+          rollupPluginTerser.terser(),
         ],
         onwarn: rollupWarning,
       })

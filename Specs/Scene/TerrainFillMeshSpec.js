@@ -1217,7 +1217,7 @@ describe("Scene/TerrainFillMesh", function () {
     var rectangle = fill.tile.rectangle;
     var encoding = mesh.encoding;
     var vertices = mesh.vertices;
-    var stride = encoding.getStride();
+    var stride = encoding.stride;
     var count = mesh.vertices.length / stride;
 
     for (var i = 0; i < count; ++i) {
@@ -1259,8 +1259,6 @@ describe("Scene/TerrainFillMesh", function () {
   }
 
   function expectVertexCount(fill, count) {
-    expect(fill.mesh.vertices.length).toBe(
-      count * fill.mesh.encoding.getStride()
-    );
+    expect(fill.mesh.vertices.length).toBe(count * fill.mesh.encoding.stride);
   }
 });

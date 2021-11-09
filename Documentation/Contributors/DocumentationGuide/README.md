@@ -6,7 +6,7 @@ This guide describes best practices for writing reference doc.
 
 Always include doc for new identifiers (classes, functions, properties, constants) in the public CesiumJS API.
 
-Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/CesiumGS/cesium/blob/master/Source/Scene/Model.js).
+Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/CesiumGS/cesium/blob/main/Source/Scene/Model.js).
 
 - [Building the Doc](#building-the-doc)
 - [Basics](#basics)
@@ -126,7 +126,7 @@ The CesiumJS classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
 
-Each property of an `options` parameter (see the [Coding Guide](https://github.com/CesiumGS/cesium/true/master/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
+Each property of an `options` parameter (see the [Coding Guide](https://github.com/CesiumGS/cesium/true/main/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
 
 ```
  * @param {Object} [options] Object with the following properties:
@@ -411,7 +411,7 @@ Queue.prototype.sort = function (compareFunction) {
 
 ## Private
 
-Documentation is not generated for private members that start with `_`. It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/CesiumGS/cesium/tree/master/Documentation/Contributors/CodingGuide/README.md#design)).
+Documentation is not generated for private members that start with `_`. It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide/README.md#design)).
 
 If a member or function doesn't start with `_`, but is intended to be private, use the `@private` tag at the bottom of the documentation, e.g.,
 
