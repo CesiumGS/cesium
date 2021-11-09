@@ -184,6 +184,7 @@ function WebMapServiceImageryProvider(options) {
   // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
   if (defined(options.getFeatureInfoUrl))
     this._getFeatureInfoUrl = options.getFeatureInfoUrl;
+  else this._getFeatureInfoUrl = options.url;
 
   var resource = Resource.createIfNeeded(options.url);
   var pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
