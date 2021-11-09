@@ -11,9 +11,8 @@
   - [3DTILES_implicit_tiling](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_implicit_tiling) for a compact representation of quadtrees and octrees
   - [3DTILES_bounding_volume_S2](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_bounding_volume_S2) for [S2](https://s2geometry.io/) bounding volumes
   - [3DTILES_multiple_contents](https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents) for storing multiple contents within a single tile
-- Added `ModelExperimental`, a new experimental architecture for loading glTF models
+- Added `ModelExperimental`, a new experimental architecture for loading glTF models. It is disabled by default; set `ExperimentalFeatures.enableModelExperimental = true` to enable it.
 - Added `CustomShader` class for styling `Cesium3DTileset` or `ModelExperimental` with custom GLSL shaders
-- Added `ExperimentalFeatures.enableModelExperimental` for enabling certain experimental features. `ModelExperimental`, `EXT_mesh_features` and `CustomShader` are only enabled when this flag is set to true.
 - Added Sandcastle examples for 3D Tiles Next: [Photogrammetry Classification](http://sandcastle.cesium.com/Apps/Sandcastle/index.html?src=3D%20Tiles%20Next%20Photogrammetry%20Classification.html&label=3D%20Tiles%20Next), [CDB Yemen](http://sandcastle.cesium.com/Apps/Sandcastle/index.html?src=3D%20Tiles%20Next%20CDB%20Yemen.html&label=3D%20Tiles%20Next), and [S2 Globe](http://sandcastle.cesium.com/Apps/Sandcastle/index.html?src=3D%20Tiles%20Next%20S2%20Globe.html&label=3D%20Tiles%20Next)
 
 ### 1.87 - 2021-11-01
