@@ -37,7 +37,7 @@
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
         "use strict";
-        //Sandcastle_Begin        
+        //Sandcastle_Begin
         // Create a Viewer instances wiht ArcGIS Tiled Elevation Layer
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
@@ -50,13 +50,9 @@
         //Create an I3S DataSource with the camera autocentered to the I3S layers' extent
         //No need to do a geoid conversion as both the elevation proivder (ArcGISTiledElevationTerrainProvider)
         //and the I3S layer to be added (Frankfurt) use orthometric height systems .
-        var dataSource = new Cesium.I3SDataSource(
-          "Frankfurt",
-          viewer.scene,
-          {
-            autoCenterCameraOnStart: true,
-          }
-        );
+        var dataSource = new Cesium.I3SDataSource("Frankfurt", viewer.scene, {
+          autoCenterCameraOnStart: true,
+        });
         dataSource.camera = viewer.camera;
         //populate the I3S DataSource with an IntegratedMesh I3S layer URL and add it to the viewer
         dataSource
