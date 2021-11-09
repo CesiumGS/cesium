@@ -1,6 +1,4 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
 import AxisAlignedBoundingBox from "../Core/AxisAlignedBoundingBox.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -10,7 +8,6 @@ import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainProvider from "../Core/TerrainProvider.js";
@@ -25,9 +22,6 @@ var scratchMinimum = new Cartesian3();
 var scratchMaximum = new Cartesian3();
 var cartographicScratch = new Cartographic();
 var toPack = new Cartesian2();
-var scratchNormal = new Cartesian3();
-var scratchToENU = new Matrix4();
-var scratchFromENU = new Matrix4();
 
 function createVerticesFromQuantizedTerrainMesh(
   parameters,
@@ -43,6 +37,11 @@ function createVerticesFromQuantizedTerrainMesh(
     parameters.northIndices.length;
   var includeWebMercatorT = parameters.includeWebMercatorT;
 
+  var exaggeration = parameters.exaggeration;
+  var exaggerationRelativeHeight = parameters.exaggerationRelativeHeight;
+  var hasExaggeration = exaggeration !== 1.0;
+  var includeGeodeticSurfaceNormals = hasExaggeration;
+
   var rectangle = Rectangle.clone(parameters.rectangle);
   var west = rectangle.west;
   var south = rectangle.south;
@@ -51,9 +50,8 @@ function createVerticesFromQuantizedTerrainMesh(
 
   var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
 
-  var exaggeration = parameters.exaggeration;
-  var minimumHeight = parameters.minimumHeight * exaggeration;
-  var maximumHeight = parameters.maximumHeight * exaggeration;
+  var minimumHeight = parameters.minimumHeight;
+  var maximumHeight = parameters.maximumHeight;
 
   var center = parameters.relativeToCenter;
   var fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
@@ -86,6 +84,9 @@ function createVerticesFromQuantizedTerrainMesh(
   var heights = new Array(quantizedVertexCount);
   var positions = new Array(quantizedVertexCount);
   var webMercatorTs = includeWebMercatorT
+    ? new Array(quantizedVertexCount)
+    : [];
+  var geodeticSurfaceNormals = includeGeodeticSurfaceNormals
     ? new Array(quantizedVertexCount)
     : [];
 
@@ -140,6 +141,10 @@ function createVerticesFromQuantizedTerrainMesh(
         oneOverMercatorHeight;
     }
 
+    if (includeGeodeticSurfaceNormals) {
+      geodeticSurfaceNormals[i] = ellipsoid.geodeticSurfaceNormal(position);
+    }
+
     Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
 
     Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
@@ -171,23 +176,9 @@ function createVerticesFromQuantizedTerrainMesh(
     return uvs[a].x - uvs[b].x;
   });
 
-  var orientedBoundingBox;
-  var boundingSphere;
-
-  if (exaggeration !== 1.0) {
-    // Bounding volumes need to be recomputed since the tile payload assumes no exaggeration.
-    boundingSphere = BoundingSphere.fromPoints(positions);
-    orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-      rectangle,
-      minimumHeight,
-      maximumHeight,
-      ellipsoid
-    );
-  }
-
   var occludeePointInScaledSpace;
-  if (exaggeration !== 1.0 || minimumHeight < 0.0) {
-    // Horizon culling point needs to be recomputed since the tile payload assumes no exaggeration.
+  if (minimumHeight < 0.0) {
+    // Horizon culling point needs to be recomputed since the tile is at least partly under the ellipsoid.
     var occluder = new EllipsoidalOccluder(ellipsoid);
     occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
       center,
@@ -256,14 +247,18 @@ function createVerticesFromQuantizedTerrainMesh(
 
   var aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
   var encoding = new TerrainEncoding(
+    center,
     aaBox,
     hMin,
     maximumHeight,
     fromENU,
     hasVertexNormals,
-    includeWebMercatorT
+    includeWebMercatorT,
+    includeGeodeticSurfaceNormals,
+    exaggeration,
+    exaggerationRelativeHeight
   );
-  var vertexStride = encoding.getStride();
+  var vertexStride = encoding.stride;
   var size =
     quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
   var vertexBuffer = new Float32Array(size);
@@ -274,32 +269,6 @@ function createVerticesFromQuantizedTerrainMesh(
       var n = j * 2.0;
       toPack.x = octEncodedNormals[n];
       toPack.y = octEncodedNormals[n + 1];
-
-      if (exaggeration !== 1.0) {
-        var normal = AttributeCompression.octDecode(
-          toPack.x,
-          toPack.y,
-          scratchNormal
-        );
-        var fromENUNormal = Transforms.eastNorthUpToFixedFrame(
-          positions[j],
-          ellipsoid,
-          scratchFromENU
-        );
-        var toENUNormal = Matrix4.inverseTransformation(
-          fromENUNormal,
-          scratchToENU
-        );
-
-        Matrix4.multiplyByPointAsVector(toENUNormal, normal, normal);
-        normal.z *= exaggeration;
-        Cartesian3.normalize(normal, normal);
-
-        Matrix4.multiplyByPointAsVector(fromENUNormal, normal, normal);
-        Cartesian3.normalize(normal, normal);
-
-        AttributeCompression.octEncode(normal, toPack);
-      }
     }
 
     bufferIndex = encoding.encode(
@@ -309,7 +278,8 @@ function createVerticesFromQuantizedTerrainMesh(
       uvs[j],
       heights[j],
       toPack,
-      webMercatorTs[j]
+      webMercatorTs[j],
+      geodeticSurfaceNormals[j]
     );
   }
 
@@ -346,7 +316,6 @@ function createVerticesFromQuantizedTerrainMesh(
     ellipsoid,
     rectangle,
     parameters.westSkirtHeight,
-    exaggeration,
     southMercatorY,
     oneOverMercatorHeight,
     westLongitudeOffset,
@@ -364,7 +333,6 @@ function createVerticesFromQuantizedTerrainMesh(
     ellipsoid,
     rectangle,
     parameters.southSkirtHeight,
-    exaggeration,
     southMercatorY,
     oneOverMercatorHeight,
     southLongitudeOffset,
@@ -382,7 +350,6 @@ function createVerticesFromQuantizedTerrainMesh(
     ellipsoid,
     rectangle,
     parameters.eastSkirtHeight,
-    exaggeration,
     southMercatorY,
     oneOverMercatorHeight,
     eastLongitudeOffset,
@@ -400,7 +367,6 @@ function createVerticesFromQuantizedTerrainMesh(
     ellipsoid,
     rectangle,
     parameters.northSkirtHeight,
-    exaggeration,
     southMercatorY,
     oneOverMercatorHeight,
     northLongitudeOffset,
@@ -430,8 +396,6 @@ function createVerticesFromQuantizedTerrainMesh(
     center: center,
     minimumHeight: minimumHeight,
     maximumHeight: maximumHeight,
-    boundingSphere: boundingSphere,
-    orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
     encoding: encoding,
     indexCountWithoutSkirts: parameters.indices.length,
@@ -495,7 +459,6 @@ function addSkirt(
   ellipsoid,
   rectangle,
   skirtLength,
-  exaggeration,
   southMercatorY,
   oneOverMercatorHeight,
   longitudeOffset,
@@ -533,32 +496,6 @@ function addSkirt(
       var n = index * 2.0;
       toPack.x = octEncodedNormals[n];
       toPack.y = octEncodedNormals[n + 1];
-
-      if (exaggeration !== 1.0) {
-        var normal = AttributeCompression.octDecode(
-          toPack.x,
-          toPack.y,
-          scratchNormal
-        );
-        var fromENUNormal = Transforms.eastNorthUpToFixedFrame(
-          cartesian3Scratch,
-          ellipsoid,
-          scratchFromENU
-        );
-        var toENUNormal = Matrix4.inverseTransformation(
-          fromENUNormal,
-          scratchToENU
-        );
-
-        Matrix4.multiplyByPointAsVector(toENUNormal, normal, normal);
-        normal.z *= exaggeration;
-        Cartesian3.normalize(normal, normal);
-
-        Matrix4.multiplyByPointAsVector(fromENUNormal, normal, normal);
-        Cartesian3.normalize(normal, normal);
-
-        AttributeCompression.octEncode(normal, toPack);
-      }
     }
 
     var webMercatorT;
@@ -571,6 +508,11 @@ function addSkirt(
         oneOverMercatorHeight;
     }
 
+    var geodeticSurfaceNormal;
+    if (encoding.hasGeodeticSurfaceNormals) {
+      geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(position);
+    }
+
     vertexBufferIndex = encoding.encode(
       vertexBuffer,
       vertexBufferIndex,
@@ -578,7 +520,8 @@ function addSkirt(
       uv,
       cartographicScratch.height,
       toPack,
-      webMercatorT
+      webMercatorT,
+      geodeticSurfaceNormal
     );
   }
 }

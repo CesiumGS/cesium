@@ -1,3 +1,4 @@
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -323,52 +324,38 @@ function exportKml(options) {
 }
 
 function createKmz(kmlString, externalFiles) {
-  var deferred = when.defer();
-  zip.createWriter(new zip.BlobWriter(), function (writer) {
-    // We need to only write one file at a time so the zip doesn't get corrupted
-    addKmlToZip(writer, kmlString)
-      .then(function () {
-        var keys = Object.keys(externalFiles);
-        return addExternalFilesToZip(writer, keys, externalFiles, 0);
-      })
-      .then(function () {
-        writer.close(function (blob) {
-          deferred.resolve({
-            kmz: blob,
-          });
-        });
+  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
+  zip.configure({
+    workerScripts: {
+      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
+      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
+    },
+  });
+  var blobWriter = new zip.BlobWriter();
+  var writer = new zip.ZipWriter(blobWriter);
+  // We need to only write one file at a time so the zip doesn't get corrupted
+  return when(writer.add("doc.kml", new zip.TextReader(kmlString)))
+    .then(function () {
+      var keys = Object.keys(externalFiles);
+      return addExternalFilesToZip(writer, keys, externalFiles, 0);
+    })
+    .then(function () {
+      return when(writer.close()).then(function (blob) {
+        return {
+          kmz: blob,
+        };
       });
-  });
-
-  return deferred.promise;
-}
-
-function addKmlToZip(writer, kmlString) {
-  var deferred = when.defer();
-  writer.add("doc.kml", new zip.TextReader(kmlString), function () {
-    deferred.resolve();
-  });
-
-  return deferred.promise;
+    });
 }
 
 function addExternalFilesToZip(writer, keys, externalFiles, index) {
   if (keys.length === index) {
     return;
   }
-
   var filename = keys[index];
-
-  var deferred = when.defer();
-  writer.add(
-    filename,
-    new zip.BlobReader(externalFiles[filename]),
-    function () {
-      deferred.resolve();
-    }
-  );
-
-  return deferred.promise.then(function () {
+  return when(
+    writer.add(filename, new zip.BlobReader(externalFiles[filename]))
+  ).then(function () {
     return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
   });
 }

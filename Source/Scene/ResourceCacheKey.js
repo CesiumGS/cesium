@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import hasExtension from "./hasExtension.js";
 
 /**
  * Compute cache keys for resources in {@link ResourceCache}.
@@ -21,6 +22,13 @@ function getExternalResourceCacheKey(resource) {
 function getBufferViewCacheKey(bufferView) {
   var byteOffset = bufferView.byteOffset;
   var byteLength = bufferView.byteLength;
+
+  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
+    var meshopt = bufferView.extensions.EXT_meshopt_compression;
+    byteOffset = defaultValue(meshopt.byteOffset, 0);
+    byteLength = meshopt.byteLength;
+  }
+
   return byteOffset + "-" + (byteOffset + byteLength);
 }
 
@@ -70,21 +78,10 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
   return bufferCacheKey + "-range-" + bufferViewCacheKey;
 }
 
-function getImageCacheKey(
-  gltf,
-  imageId,
-  gltfResource,
-  baseResource,
-  supportedImageFormats
-) {
-  var results = GltfLoaderUtil.getImageUriOrBufferView({
-    gltf: gltf,
-    imageId: imageId,
-    supportedImageFormats: supportedImageFormats,
-  });
-
-  var bufferViewId = results.bufferViewId;
-  var uri = results.uri;
+function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
+  var image = gltf.images[imageId];
+  var bufferViewId = image.bufferView;
+  var uri = image.uri;
 
   if (defined(uri)) {
     var resource = baseResource.getDerivedResource({
@@ -251,6 +248,10 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
   var bufferView = gltf.bufferViews[bufferViewId];
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
+  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
+    var meshopt = bufferView.extensions.EXT_meshopt_compression;
+    bufferId = meshopt.buffer;
+  }
 
   var bufferCacheKey = getBufferCacheKey(
     buffer,
@@ -302,10 +303,10 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
- * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
+ * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
+ * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  *
  * @returns {String} The vertex buffer cache key.
  * @private
@@ -317,7 +318,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   var baseResource = options.baseResource;
   var bufferViewId = options.bufferViewId;
   var draco = options.draco;
-  var dracoAttributeSemantic = options.dracoAttributeSemantic;
+  var attributeSemantic = options.attributeSemantic;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -326,7 +327,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   var hasBufferViewId = defined(bufferViewId);
   var hasDraco = defined(draco);
-  var hasDracoAttributeSemantic = defined(dracoAttributeSemantic);
+  var hasAttributeSemantic = defined(attributeSemantic);
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
@@ -334,18 +335,15 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     );
   }
 
-  if (hasDraco && !hasDracoAttributeSemantic) {
+  if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.dracoAttributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined."
     );
   }
 
   if (hasDraco) {
     Check.typeOf.object("options.draco", draco);
-    Check.typeOf.string(
-      "options.dracoAttributeSemantic",
-      dracoAttributeSemantic
-    );
+    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
   }
   //>>includeEnd('debug');
 
@@ -356,9 +354,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       gltfResource,
       baseResource
     );
-    return (
-      "vertex-buffer:" + dracoCacheKey + "-draco-" + dracoAttributeSemantic
-    );
+    return "vertex-buffer:" + dracoCacheKey + "-draco-" + attributeSemantic;
   }
 
   var bufferView = gltf.bufferViews[bufferViewId];
@@ -441,7 +437,6 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  * @param {Number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
  * @returns {String} The image cache key.
  * @private
@@ -452,22 +447,19 @@ ResourceCacheKey.getImageCacheKey = function (options) {
   var imageId = options.imageId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
-  var supportedImageFormats = options.supportedImageFormats;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
   //>>includeEnd('debug');
 
   var imageCacheKey = getImageCacheKey(
     gltf,
     imageId,
     gltfResource,
-    baseResource,
-    supportedImageFormats
+    baseResource
   );
 
   return "image:" + imageCacheKey;
@@ -514,8 +506,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
     gltf,
     imageId,
     gltfResource,
-    baseResource,
-    supportedImageFormats
+    baseResource
   );
 
   // Include the sampler cache key in the texture cache key since textures and

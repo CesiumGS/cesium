@@ -31,11 +31,12 @@ import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findGroupMetadata from "./findGroupMetadata.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
+import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
+import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
@@ -204,7 +205,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
+  if (hasExtension(header, "3DTILES_multiple_contents")) {
     hasMultipleContents = true;
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
@@ -282,7 +283,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * When <code>true</code>, the tile has multiple contents via the
    * <code>3DTILES_multiple_contents</code> extension.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
    *
    * @type {Boolean}
    * @readonly
@@ -292,7 +293,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasMultipleContents = hasMultipleContents;
 
   var metadata;
-  if (has3DTilesExtension(header, "3DTILES_metadata")) {
+  if (hasExtension(header, "3DTILES_metadata")) {
     // This assumes that tileset.metadata has been created before any
     // tiles are constructed.
     var extension = header.extensions["3DTILES_metadata"];
@@ -559,7 +560,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @type {*}
    * @readonly
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
    */
   extras: {
     get: function () {
@@ -1644,6 +1645,12 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   if (!defined(boundingVolumeHeader)) {
     throw new RuntimeError("boundingVolume must be defined");
   }
+  if (hasExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
+    return new TileBoundingS2Cell(
+      boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"]
+    );
+  }
+
   if (defined(boundingVolumeHeader.box)) {
     return createBox(boundingVolumeHeader.box, transform, result);
   }

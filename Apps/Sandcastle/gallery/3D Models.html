@@ -133,6 +133,20 @@
               );
             },
           },
+          {
+            text: "KTX2 Compressed Balloon",
+            onselect: function () {
+              if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
+                window.alert(
+                  "This browser does not support Basis Universal compressed textures"
+                );
+              }
+              createModel(
+                "../../SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
+                1000.0
+              );
+            },
+          },
         ];
 
         Sandcastle.addToolbarMenu(options);

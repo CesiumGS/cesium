@@ -1,6 +1,7 @@
 import ArcType from "../Core/ArcType.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -42,6 +43,7 @@ import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import zip from "../ThirdParty/zip.js";
+import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import DataSource from "./DataSource.js";
@@ -181,7 +183,7 @@ var featureTypes = {
   NetworkLink: processNetworkLink,
   GroundOverlay: processGroundOverlay,
   PhotoOverlay: processUnsupportedFeature,
-  ScreenOverlay: processUnsupportedFeature,
+  ScreenOverlay: processScreenOverlay,
   Tour: processTour,
 };
 
@@ -390,23 +392,23 @@ function removeDuplicateNamespaces(text) {
   return text;
 }
 
-function loadXmlFromZip(entry, uriResolver, deferred) {
-  entry.getData(new zip.TextWriter(), function (text) {
+function loadXmlFromZip(entry, uriResolver) {
+  return when(entry.getData(new zip.TextWriter())).then(function (text) {
     text = insertNamespaces(text);
     text = removeDuplicateNamespaces(text);
     uriResolver.kml = parser.parseFromString(text, "application/xml");
-    deferred.resolve();
   });
 }
 
-function loadDataUriFromZip(entry, uriResolver, deferred) {
+function loadDataUriFromZip(entry, uriResolver) {
   var mimeType = defaultValue(
     MimeTypes.detectFromFilename(entry.filename),
     "application/octet-stream"
   );
-  entry.getData(new zip.Data64URIWriter(mimeType), function (dataUri) {
+  return when(entry.getData(new zip.Data64URIWriter(mimeType))).then(function (
+    dataUri
+  ) {
     uriResolver[entry.filename] = dataUri;
-    deferred.resolve();
   });
 }
 
@@ -417,7 +419,8 @@ function embedDataUris(div, elementType, attributeName, uriResolver) {
   for (var i = 0; i < elements.length; i++) {
     var element = elements[i];
     var value = element.getAttribute(attributeName);
-    var uri = new Uri(value).resolve(baseUri).toString();
+    var relativeUri = new Uri(value);
+    var uri = relativeUri.absoluteTo(baseUri).toString();
     var index = keys.indexOf(uri);
     if (index !== -1) {
       var key = keys[index];
@@ -636,7 +639,7 @@ function resolveHref(href, sourceResource, uriResolver) {
       // Needed for multiple levels of KML files in a KMZ
       var baseUri = new Uri(sourceResource.getUrlComponent());
       var uri = new Uri(href);
-      blob = uriResolver[uri.resolve(baseUri)];
+      blob = uriResolver[uri.absoluteTo(baseUri)];
       if (defined(blob)) {
         resource = new Resource({
           url: blob,
@@ -2389,11 +2392,7 @@ function processTour(dataSource, node, processingData, deferredLoading) {
     }
   }
 
-  if (!defined(dataSource.kmlTours)) {
-    dataSource.kmlTours = [];
-  }
-
-  dataSource.kmlTours.push(tour);
+  dataSource._kmlTours.push(tour);
 }
 
 function processTourUnsupportedNode(tour, entryNode) {
@@ -2490,6 +2489,160 @@ function processLookAt(featureNode, entity, ellipsoid) {
 
     entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);
   }
+}
+
+function processScreenOverlay(
+  dataSource,
+  screenOverlayNode,
+  processingData,
+  deferredLoading
+) {
+  var screenOverlay = processingData.screenOverlayContainer;
+  if (!defined(screenOverlay)) {
+    return undefined;
+  }
+
+  var sourceResource = processingData.sourceResource;
+  var uriResolver = processingData.uriResolver;
+
+  var iconNode = queryFirstNode(screenOverlayNode, "Icon", namespaces.kml);
+  var icon = getIconHref(
+    iconNode,
+    dataSource,
+    sourceResource,
+    uriResolver,
+    false
+  );
+
+  if (!defined(icon)) {
+    return undefined;
+  }
+
+  var img = document.createElement("img");
+  dataSource._screenOverlays.push(img);
+
+  img.src = icon.url;
+  img.onload = function () {
+    var styles = ["position: absolute"];
+
+    var screenXY = queryFirstNode(
+      screenOverlayNode,
+      "screenXY",
+      namespaces.kml
+    );
+    var overlayXY = queryFirstNode(
+      screenOverlayNode,
+      "overlayXY",
+      namespaces.kml
+    );
+    var size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
+
+    var x, y;
+    var xUnit, yUnit;
+    var xStyle, yStyle;
+
+    if (defined(size)) {
+      x = queryNumericAttribute(size, "x");
+      y = queryNumericAttribute(size, "y");
+      xUnit = queryStringAttribute(size, "xunits");
+      yUnit = queryStringAttribute(size, "yunits");
+
+      if (defined(x) && x !== -1 && x !== 0) {
+        if (xUnit === "fraction") {
+          xStyle = "width: " + Math.floor(x * 100) + "%";
+        } else if (xUnit === "pixels") {
+          xStyle = "width: " + x + "px";
+        }
+
+        styles.push(xStyle);
+      }
+
+      if (defined(y) && y !== -1 && y !== 0) {
+        if (yUnit === "fraction") {
+          yStyle = "height: " + Math.floor(y * 100) + "%";
+        } else if (yUnit === "pixels") {
+          yStyle = "height: " + y + "px";
+        }
+
+        styles.push(yStyle);
+      }
+    }
+
+    // set the interim style so the width/height properties get calculated
+    img.style = styles.join(";");
+
+    var xOrigin = 0;
+    var yOrigin = img.height;
+
+    if (defined(overlayXY)) {
+      x = queryNumericAttribute(overlayXY, "x");
+      y = queryNumericAttribute(overlayXY, "y");
+      xUnit = queryStringAttribute(overlayXY, "xunits");
+      yUnit = queryStringAttribute(overlayXY, "yunits");
+
+      if (defined(x)) {
+        if (xUnit === "fraction") {
+          xOrigin = x * img.width;
+        } else if (xUnit === "pixels") {
+          xOrigin = x;
+        } else if (xUnit === "insetPixels") {
+          xOrigin = x;
+        }
+      }
+
+      if (defined(y)) {
+        if (yUnit === "fraction") {
+          yOrigin = y * img.height;
+        } else if (yUnit === "pixels") {
+          yOrigin = y;
+        } else if (yUnit === "insetPixels") {
+          yOrigin = y;
+        }
+      }
+    }
+
+    if (defined(screenXY)) {
+      x = queryNumericAttribute(screenXY, "x");
+      y = queryNumericAttribute(screenXY, "y");
+      xUnit = queryStringAttribute(screenXY, "xunits");
+      yUnit = queryStringAttribute(screenXY, "yunits");
+
+      if (defined(x)) {
+        if (xUnit === "fraction") {
+          xStyle =
+            "left: " + "calc(" + Math.floor(x * 100) + "% - " + xOrigin + "px)";
+        } else if (xUnit === "pixels") {
+          xStyle = "left: " + (x - xOrigin) + "px";
+        } else if (xUnit === "insetPixels") {
+          xStyle = "right: " + (x - xOrigin) + "px";
+        }
+
+        styles.push(xStyle);
+      }
+
+      if (defined(y)) {
+        if (yUnit === "fraction") {
+          yStyle =
+            "bottom: " +
+            "calc(" +
+            Math.floor(y * 100) +
+            "% - " +
+            yOrigin +
+            "px)";
+        } else if (yUnit === "pixels") {
+          yStyle = "bottom: " + (y - yOrigin) + "px";
+        } else if (yUnit === "insetPixels") {
+          yStyle = "top: " + (y - yOrigin) + "px";
+        }
+
+        styles.push(yStyle);
+      }
+    }
+
+    img.style = styles.join(";");
+  };
+
+  screenOverlay.appendChild(img);
 }
 
 function processGroundOverlay(
@@ -2938,6 +3091,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
         sourceUri: newSourceUri,
         uriResolver: uriResolver,
         context: networkEntity.id,
+        screenOverlayContainer: processingData.screenOverlayContainer,
       };
       var networkLinkCollection = new EntityCollection();
       var promise = load(dataSource, networkLinkCollection, href, options)
@@ -3103,6 +3257,7 @@ function loadKml(
   kml,
   sourceResource,
   uriResolver,
+  screenOverlayContainer,
   context
 ) {
   entityCollection.removeAll();
@@ -3155,6 +3310,7 @@ function loadKml(
         sourceResource: sourceResource,
         uriResolver: uriResolver,
         context: context,
+        screenOverlayContainer: screenOverlayContainer,
       };
 
       entityCollection.suspendEvents();
@@ -3167,75 +3323,69 @@ function loadKml(
     });
 }
 
-function loadKmz(dataSource, entityCollection, blob, sourceResource) {
-  var deferred = when.defer();
-  zip.createReader(
-    new zip.BlobReader(blob),
-    function (reader) {
-      reader.getEntries(function (entries) {
-        var promises = [];
-        var uriResolver = {};
-        var docEntry;
-        var docDefer;
-        for (var i = 0; i < entries.length; i++) {
-          var entry = entries[i];
-          if (!entry.directory) {
-            var innerDefer = when.defer();
-            promises.push(innerDefer.promise);
-            if (/\.kml$/i.test(entry.filename)) {
-              // We use the first KML document we come across
-              //  https://developers.google.com/kml/documentation/kmzarchives
-              // Unless we come across a .kml file at the root of the archive because GE does this
-              if (!defined(docEntry) || !/\//i.test(entry.filename)) {
-                if (defined(docEntry)) {
-                  // We found one at the root so load the initial kml as a data uri
-                  loadDataUriFromZip(docEntry, uriResolver, docDefer);
-                }
-                docEntry = entry;
-                docDefer = innerDefer;
-              } else {
-                // Wasn't the first kml and wasn't at the root
-                loadDataUriFromZip(entry, uriResolver, innerDefer);
-              }
-            } else {
-              loadDataUriFromZip(entry, uriResolver, innerDefer);
-            }
-          }
-        }
-
-        // Now load the root KML document
-        if (defined(docEntry)) {
-          loadXmlFromZip(docEntry, uriResolver, docDefer);
-        }
-        when
-          .all(promises)
-          .then(function () {
-            reader.close();
-            if (!defined(uriResolver.kml)) {
-              deferred.reject(
-                new RuntimeError("KMZ file does not contain a KML document.")
-              );
-              return;
-            }
-            uriResolver.keys = Object.keys(uriResolver);
-            return loadKml(
-              dataSource,
-              entityCollection,
-              uriResolver.kml,
-              sourceResource,
-              uriResolver
-            );
-          })
-          .then(deferred.resolve)
-          .otherwise(deferred.reject);
-      });
+function loadKmz(
+  dataSource,
+  entityCollection,
+  blob,
+  sourceResource,
+  screenOverlayContainer
+) {
+  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
+  zip.configure({
+    workerScripts: {
+      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
+      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
     },
-    function (e) {
-      deferred.reject(e);
-    }
-  );
+  });
 
-  return deferred.promise;
+  var reader = new zip.ZipReader(new zip.BlobReader(blob));
+  return when(reader.getEntries()).then(function (entries) {
+    var promises = [];
+    var uriResolver = {};
+    var docEntry;
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      if (!entry.directory) {
+        if (/\.kml$/i.test(entry.filename)) {
+          // We use the first KML document we come across
+          //  https://developers.google.com/kml/documentation/kmzarchives
+          // Unless we come across a .kml file at the root of the archive because GE does this
+          if (!defined(docEntry) || !/\//i.test(entry.filename)) {
+            if (defined(docEntry)) {
+              // We found one at the root so load the initial kml as a data uri
+              promises.push(loadDataUriFromZip(docEntry, uriResolver));
+            }
+            docEntry = entry;
+          } else {
+            // Wasn't the first kml and wasn't at the root
+            promises.push(loadDataUriFromZip(entry, uriResolver));
+          }
+        } else {
+          promises.push(loadDataUriFromZip(entry, uriResolver));
+        }
+      }
+    }
+
+    // Now load the root KML document
+    if (defined(docEntry)) {
+      promises.push(loadXmlFromZip(docEntry, uriResolver));
+    }
+    return when.all(promises).then(function () {
+      reader.close();
+      if (!defined(uriResolver.kml)) {
+        throw new RuntimeError("KMZ file does not contain a KML document.");
+      }
+      uriResolver.keys = Object.keys(uriResolver);
+      return loadKml(
+        dataSource,
+        entityCollection,
+        uriResolver.kml,
+        sourceResource,
+        uriResolver,
+        screenOverlayContainer
+      );
+    });
+  });
 }
 
 function load(dataSource, entityCollection, data, options) {
@@ -3243,6 +3393,7 @@ function load(dataSource, entityCollection, data, options) {
   var sourceUri = options.sourceUri;
   var uriResolver = options.uriResolver;
   var context = options.context;
+  var screenOverlayContainer = options.screenOverlayContainer;
 
   var promise = data;
   if (typeof data === "string" || data instanceof Resource) {
@@ -3265,12 +3416,22 @@ function load(dataSource, entityCollection, data, options) {
 
   sourceUri = Resource.createIfNeeded(sourceUri);
 
+  if (defined(screenOverlayContainer)) {
+    screenOverlayContainer = getElement(screenOverlayContainer);
+  }
+
   return when(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return isZipFile(dataToLoad).then(function (isZip) {
           if (isZip) {
-            return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
+            return loadKmz(
+              dataSource,
+              entityCollection,
+              dataToLoad,
+              sourceUri,
+              screenOverlayContainer
+            );
           }
           return readBlobAsText(dataToLoad).then(function (text) {
             //There's no official way to validate if a parse was successful.
@@ -3317,6 +3478,7 @@ function load(dataSource, entityCollection, data, options) {
               kml,
               sourceUri,
               uriResolver,
+              screenOverlayContainer,
               context
             );
           });
@@ -3328,6 +3490,7 @@ function load(dataSource, entityCollection, data, options) {
         dataToLoad,
         sourceUri,
         uriResolver,
+        screenOverlayContainer,
         context
       );
     })
@@ -3349,6 +3512,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Element|String} [screenOverlayContainer] A container for ScreenOverlay images.
  */
 
 /**
@@ -3441,6 +3605,10 @@ function KmlDataSource(options) {
 
   // Create a list of Credit's from the resource that the user can't remove
   this._resourceCredits = [];
+
+  this._kmlTours = [];
+
+  this._screenOverlays = [];
 }
 
 /**
@@ -3600,6 +3768,16 @@ Object.defineProperties(KmlDataSource.prototype, {
       return this._credit;
     },
   },
+  /**
+   * Gets the KML Tours that are used to guide the camera to specified destinations on given time intervals.
+   * @memberof KmlDataSource.prototype
+   * @type {KmlTour[]}
+   */
+  kmlTours: {
+    get: function () {
+      return this._kmlTours;
+    },
+  },
 });
 
 /**
@@ -3610,6 +3788,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @param {Element|String} [options.screenOverlayContainer] A container for ScreenOverlay images.
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
@@ -3693,6 +3872,16 @@ KmlDataSource.prototype.load = function (data, options) {
       console.log(error);
       return when.reject(error);
     });
+};
+
+/**
+ * Cleans up any non-entity elements created by the data source. Currently this only affects ScreenOverlay elements.
+ */
+KmlDataSource.prototype.destroy = function () {
+  while (this._screenOverlays.length > 0) {
+    var elem = this._screenOverlays.pop();
+    elem.remove();
+  }
 };
 
 function mergeAvailabilityWithParent(child) {
@@ -3976,7 +4165,9 @@ KmlDataSource.prototype.update = function (time) {
           ellipsoid
         );
 
-        load(that, newEntityCollection, href, { context: entity.id })
+        load(that, newEntityCollection, href, {
+          context: entity.id,
+        })
           .then(
             getNetworkLinkUpdateCallback(
               that,

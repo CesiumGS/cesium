@@ -4,17 +4,18 @@ import deprecationWarning from "../Core/deprecationWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import FeatureMetadata from "./FeatureMetadata.js";
-import FeatureTable from "./FeatureTable.js";
+import PropertyTable from "./PropertyTable.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
+import MetadataClass from "./MetadataClass.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
- * be compatible with feature metadata from the `EXT_feature_metadata` glTF extension
+ * be compatible with feature metadata from the <code>EXT_mesh_features</code> glTF extension
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -46,8 +47,11 @@ export default function parseBatchTable(options) {
 
   var hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
 
+  var className = MetadataClass.BATCH_TABLE_CLASS_NAME;
+
   var binaryResults = transcodeBinaryProperties(
     featureCount,
+    className,
     partitionResults.binaryProperties,
     binaryBody
   );
@@ -61,18 +65,18 @@ export default function parseBatchTable(options) {
     bufferViews: binaryResults.bufferViewsU8,
   });
 
-  var featureTables = {
-    _batchTable: new FeatureTable({
-      count: featureTableJson.count,
-      metadataTable: metadataTable,
-      jsonMetadataTable: jsonMetadataTable,
-      batchTableHierarchy: hierarchy,
-    }),
-  };
+  var propertyTable = new PropertyTable({
+    id: 0,
+    name: "Batch Table",
+    count: featureTableJson.count,
+    metadataTable: metadataTable,
+    jsonMetadataTable: jsonMetadataTable,
+    batchTableHierarchy: hierarchy,
+  });
 
   return new FeatureMetadata({
     schema: binaryResults.transcodedSchema,
-    featureTables: featureTables,
+    propertyTables: [propertyTable],
     extensions: partitionResults.extensions,
     extras: partitionResults.extras,
   });
@@ -135,16 +139,22 @@ function partitionProperties(batchTable) {
 
 /**
  * Transcode the binary properties of the batch table to be compatible with
- * <code>EXT_feature_metadata</code>
+ * <code>EXT_mesh_features</code>
  *
  * @param {Number} featureCount The number of features in the batch table
+ * @param {String} className The name of the metadata class to be created.
  * @param {Object.<String, Object>} binaryProperties A dictionary of property ID to property definition
  * @param {Uint8Array} [binaryBody] The binary body of the batch table
  * @return {Object} Transcoded data needed for constructing a {@link FeatureMetadata} object.
  *
  * @private
  */
-function transcodeBinaryProperties(featureCount, binaryProperties, binaryBody) {
+function transcodeBinaryProperties(
+  featureCount,
+  className,
+  binaryProperties,
+  binaryBody
+) {
   var classProperties = {};
   var featureTableProperties = {};
   var bufferViewsU8 = {};
@@ -179,16 +189,16 @@ function transcodeBinaryProperties(featureCount, binaryProperties, binaryBody) {
   }
 
   var schemaJson = {
-    classes: {
-      _batchTable: {
-        properties: classProperties,
-      },
-    },
+    classes: {},
   };
+  schemaJson.classes[className] = {
+    properties: classProperties,
+  };
+
   var transcodedSchema = new MetadataSchema(schemaJson);
 
   var featureTableJson = {
-    class: "_batchTable",
+    class: className,
     count: featureCount,
     properties: featureTableProperties,
   };
@@ -197,13 +207,13 @@ function transcodeBinaryProperties(featureCount, binaryProperties, binaryBody) {
     featureTableJson: featureTableJson,
     bufferViewsU8: bufferViewsU8,
     transcodedSchema: transcodedSchema,
-    transcodedClass: transcodedSchema.classes._batchTable,
+    transcodedClass: transcodedSchema.classes[className],
   };
 }
 
 /**
  * Given a property definition from the batch table, compute the equivalent
- * <code>EXT_feature_metadata</code> type definition
+ * <code>EXT_mesh_features</code> type definition
  *
  * @param {Object} property The batch table property definition
  * @return {Object} The corresponding feature metadata property definition
@@ -212,20 +222,19 @@ function transcodeBinaryProperties(featureCount, binaryProperties, binaryBody) {
 function transcodePropertyType(property) {
   var componentType = transcodeComponentType(property.componentType);
 
-  var propertyType = property.type;
-  if (propertyType === "SCALAR") {
+  var type = property.type;
+  if (type === "SCALAR") {
     return {
-      type: componentType,
+      type: "SINGLE",
+      componentType: componentType,
     };
   }
 
-  // propertyType is one of VEC2, VEC3, or VEC4
-  var componentCount = parseInt(propertyType.charAt(3));
-
   return {
-    type: "ARRAY",
+    // type is one of VEC2, VEC3 or VEC4, the same names as
+    // EXT_mesh_features uses.
+    type: type,
     componentType: componentType,
-    componentCount: componentCount,
   };
 }
 

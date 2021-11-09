@@ -58,11 +58,11 @@ describe("Scene/JsonMetadataTable", function () {
     expect(table.getProperty(0, "sizeInfo")).toEqual(sizeInfo);
   });
 
-  it("hasProperty returns true if the property exists", function () {
+  it("hasProperty returns true if the table has this property", function () {
     expect(table.hasProperty("priority")).toBe(true);
   });
 
-  it("hasProperty returns false if the property does not exist", function () {
+  it("hasProperty returns false if the table does not have this property", function () {
     expect(table.hasProperty("price")).toBe(false);
   });
 

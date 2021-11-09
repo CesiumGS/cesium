@@ -365,9 +365,12 @@ Object.defineProperties(Label.prototype, {
 
       if (this._text !== value) {
         this._text = value;
+
+        // Strip soft-hyphen (auto-wrap) characters from input string
+        var renderedValue = value.replace(/\u00ad/g, "");
         this._renderedText = Label.enableRightToLeftDetection
-          ? reverseRtl(value)
-          : value;
+          ? reverseRtl(renderedValue)
+          : renderedValue;
         rebindAllGlyphs(this);
       }
     },

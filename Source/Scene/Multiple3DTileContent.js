@@ -18,7 +18,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
  *
  * @alias Multiple3DTileContent
  * @constructor

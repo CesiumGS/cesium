@@ -13,6 +13,7 @@ import {
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
@@ -271,8 +272,8 @@ describe(
           baseResource: gltfResource,
           bufferViewId: 0,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: 0,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
         });
       }).toThrowDeveloperError();
     });
@@ -288,7 +289,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if draco is defined and dracoAttributeSemantic is not defined", function () {
+    it("throws if draco is defined and attributeSemantic is not defined", function () {
       expect(function () {
         return new GltfVertexBufferLoader({
           resourceCache: ResourceCache,
@@ -296,13 +297,13 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: undefined,
-          dracoAccessorId: 0,
+          attributeSemantic: undefined,
+          accessorId: 0,
         });
       }).toThrowDeveloperError();
     });
 
-    it("throws if draco is defined and dracoAccessorId is not defined", function () {
+    it("throws if draco is defined and accessorId is not defined", function () {
       expect(function () {
         return new GltfVertexBufferLoader({
           resourceCache: ResourceCache,
@@ -310,8 +311,8 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           draco: dracoExtension,
-          dracoAttributeSemantic: "POSITION",
-          dracoAccessorId: undefined,
+          attributeSemantic: "POSITION",
+          accessorId: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -359,8 +360,8 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
-        dracoAccessorId: 0,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -402,6 +403,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -409,7 +411,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
         expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
           positions.byteLength
         );
@@ -428,6 +430,7 @@ describe(
         baseResource: gltfResource,
         bufferViewId: 0,
         asynchronous: false,
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -462,8 +465,8 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
-        dracoAccessorId: 0,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -471,7 +474,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        vertexBufferLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
+        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
         expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
           decodedPositions.byteLength
         );
@@ -484,7 +487,9 @@ describe(
         expect(quantization.quantizedVolumeDimensions).toEqual(
           new Cartesian3(2.0, 2.0, 2.0)
         );
-        expect(quantization.normalizationRange).toBe(16383);
+        expect(quantization.normalizationRange).toEqual(
+          new Cartesian3(16383, 16383, 16383)
+        );
         expect(quantization.componentDatatype).toBe(
           ComponentDatatype.UNSIGNED_SHORT
         );
@@ -506,8 +511,8 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "NORMAL",
-        dracoAccessorId: 1,
+        attributeSemantic: "NORMAL",
+        accessorId: 1,
       });
 
       vertexBufferLoader.load();
@@ -521,6 +526,7 @@ describe(
 
         var quantization = vertexBufferLoader.quantization;
         expect(quantization.octEncoded).toBe(true);
+        expect(quantization.octEncodedZXY).toBe(true);
         expect(quantization.quantizedVolumeOffset).toBeUndefined();
         expect(quantization.quantizedVolumeDimensions).toBeUndefined();
         expect(quantization.normalizationRange).toBe(1023);
@@ -551,6 +557,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -595,8 +602,8 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
-        dracoAccessorId: 0,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
       });
 
       vertexBufferLoader.load();
@@ -692,14 +699,14 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
-        dracoAttributeSemantic: "POSITION",
-        dracoAccessorId: 0,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
       });
 
       expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
 
       vertexBufferLoader.load();
-      vertexBufferLoader.process(scene.frameState);
+      loaderProcess(vertexBufferLoader, scene);
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
       vertexBufferLoader.destroy();

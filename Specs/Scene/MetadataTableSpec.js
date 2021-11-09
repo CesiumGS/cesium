@@ -151,6 +151,81 @@ describe("Scene/MetadataTable", function () {
     }).toThrowDeveloperError();
   });
 
+  it("hasPropertyBySemantic returns false when there's no properties", function () {
+    var metadataTable = new MetadataTable({
+      count: 10,
+    });
+    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+      },
+    };
+    var propertyValues = {
+      height: [1.0, 2.0],
+    };
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(false);
+  });
+
+  it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+        semantic: "HEIGHT",
+      },
+    };
+    var propertyValues = {
+      height: [1.0, 2.0],
+    };
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+        semantic: "HEIGHT",
+        default: 10.0,
+        optional: true,
+      },
+      name: {
+        type: "STRING",
+      },
+    };
+    var propertyValues = {
+      name: ["A", "B"],
+    };
+
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(true);
+  });
+
+  it("hasPropertyBySemantic throws without semantic", function () {
+    var metadataTable = new MetadataTable({
+      count: 10,
+    });
+    expect(function () {
+      metadataTable.hasPropertyBySemantic(undefined);
+    }).toThrowDeveloperError();
+  });
+
   it("getPropertyIds returns empty array when there are no properties", function () {
     var metadataTable = new MetadataTable({
       count: 10,
@@ -281,9 +356,8 @@ describe("Scene/MetadataTable", function () {
 
     var properties = {
       position: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
         optional: true,
         default: position,
       },
@@ -797,6 +871,59 @@ describe("Scene/MetadataTable", function () {
 
     expect(function () {
       metadataTable.getPropertyTypedArray(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("getPropertyTypedArrayBySemantic returns typed array", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+        semantic: "HEIGHT",
+      },
+    };
+    var propertyValues = {
+      height: [1.0, 2.0],
+    };
+
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    var expectedTypedArray = new Float32Array([1.0, 2.0]);
+
+    expect(metadataTable.getPropertyTypedArrayBySemantic("HEIGHT")).toEqual(
+      expectedTypedArray
+    );
+  });
+
+  it("getPropertyTypedArrayBySemantic returns undefined if semantic does not exist", function () {
+    var properties = {
+      height: {
+        type: "FLOAT32",
+      },
+    };
+    var propertyValues = {
+      height: [1.0, 2.0],
+    };
+
+    var metadataTable = MetadataTester.createMetadataTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
+
+    expect(
+      metadataTable.getPropertyTypedArrayBySemantic("HEIGHT")
+    ).toBeUndefined();
+  });
+
+  it("getPropertyTypedArrayBySemantic throws if semantic is undefined", function () {
+    var metadataTable = new MetadataTable({
+      count: 10,
+    });
+
+    expect(function () {
+      metadataTable.getPropertyTypedArrayBySemantic(undefined);
     }).toThrowDeveloperError();
   });
 });

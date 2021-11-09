@@ -69,7 +69,8 @@ function Cesium3DTileBatchTable(
   this._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
-    content: content,
+    owner: content,
+    statistics: content.tileset.statistics,
   });
 }
 
@@ -230,10 +231,13 @@ Cesium3DTileBatchTable.prototype.applyStyle = function (style) {
   for (var i = 0; i < length; ++i) {
     var feature = content.getFeature(i);
     var color = defined(style.color)
-      ? style.color.evaluateColor(feature, scratchColor)
+      ? defaultValue(
+          style.color.evaluateColor(feature, scratchColor),
+          DEFAULT_COLOR_VALUE
+        )
       : DEFAULT_COLOR_VALUE;
     var show = defined(style.show)
-      ? style.show.evaluate(feature)
+      ? defaultValue(style.show.evaluate(feature), DEFAULT_SHOW_VALUE)
       : DEFAULT_SHOW_VALUE;
     this.setColor(i, color);
     this.setShow(i, show);
@@ -339,6 +343,16 @@ Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   }
 
   return results;
+};
+
+/**
+ * @private
+ */
+Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (
+  batchId,
+  name
+) {
+  return undefined;
 };
 
 Cesium3DTileBatchTable.prototype.getProperty = function (batchId, name) {

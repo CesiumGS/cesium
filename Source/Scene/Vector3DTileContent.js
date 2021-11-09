@@ -22,7 +22,7 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
 /**
  * Represents the contents of a
  * {@link https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData|Vector}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -589,7 +589,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       rectangle: rectangle,
       boundingVolume: content.tile.boundingVolume.boundingVolume,
       batchTable: batchTable,
-      tileset: tileset,
+      classificationType: tileset.classificationType,
+      keepDecodedPositions: tileset.vectorKeepDecodedPositions,
     });
   }
 
@@ -715,6 +716,15 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
         that._readyPromise.reject(error);
       });
   }
+};
+
+Vector3DTileContent.prototype.getPolylinePositions = function (batchId) {
+  var polylines = this._polylines;
+  if (!defined(polylines)) {
+    return undefined;
+  }
+
+  return polylines.getPositions(batchId);
 };
 
 Vector3DTileContent.prototype.isDestroyed = function () {

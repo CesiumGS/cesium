@@ -3,7 +3,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Represents empty content for tiles in a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset that
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset that
  * do not have content, e.g., because they are used to optimize hierarchical culling.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.

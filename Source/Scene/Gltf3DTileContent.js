@@ -8,10 +8,7 @@ import Model from "./Model.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
- * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
- * <p>
- * This class does not yet support the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension}.
- * </p>
+ * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/|3DTILES_content_gltf} extension.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -148,6 +145,7 @@ function initialize(content, gltf) {
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
+    showOutline: tileset.showOutline,
   });
   content._model.readyPromise.then(function (model) {
     model.activeAnimations.addAll({
