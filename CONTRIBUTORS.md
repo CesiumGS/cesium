@@ -291,3 +291,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Ben Murphy](https://github.com/littlemurph)
 - [Ethan Wong](https://github.com/GetToSet)
 - [Calogero Mauceri](https://github.com/kalosma)
+- [Martin Chan](https://github.com/martin-bom)

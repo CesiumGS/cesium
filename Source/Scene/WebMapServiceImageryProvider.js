@@ -45,6 +45,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *                          an array, each element in the array is a subdomain.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+ * @property {Resource|String} getFeatureInfoUrl The FeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  */
 
 /**
@@ -180,15 +181,12 @@ function WebMapServiceImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(options.url);
+  // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
+  if (defined(options.getFeatureInfoUrl))
+    this._getFeatureInfoUrl = options.getFeatureInfoUrl;
 
-  /**
-   * the pickFeatureResource should be able to modify, because some
-   * WMS servers might have different URL for GetFeatureInfo, e.g. ALA
-   */
-  var pickFeatureResource = defined(options.getFeatureInfoUrl)
-    ? Resource.createIfNeeded(options.getFeatureInfoUrl)
-    : resource.clone();
+  var resource = Resource.createIfNeeded(options.url);
+  var pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
@@ -275,8 +273,6 @@ function WebMapServiceImageryProvider(options) {
 
   this._resource = resource;
 
-  // TODO: change this pickFeatureResource to something like options.getFeaturesUrl if this option exists, else use the getCapabilities default URL
-  // UPDATE: a new paramter getFeatureInfoUrl has been introduced, if the parameter is found in options, the pickFeaturesRource will refer to the paramter
   this._pickFeaturesResource = pickFeatureResource;
   this._layers = options.layers;
 
@@ -576,6 +572,18 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
     },
     set: function (value) {
       this._timeDynamicImagery.times = value;
+    },
+  },
+
+  /**
+   * Gets the getFeatureInfo URL of the WMS server.
+   * @memberof WebMapServiceImageryProvider.prototype
+   * @type {String}
+   * @readonly
+   */
+  getFeatureInfoUrl: {
+    get: function () {
+      return this._resource._url;
     },
   },
 });
