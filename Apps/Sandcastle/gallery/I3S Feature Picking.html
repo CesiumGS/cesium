@@ -86,7 +86,7 @@
             i3sNode.loadFields().then(function () {
               var geometry = i3sNode.geometryData[0];
               if (pickedPosition) {
-                var location = geometry.getClosestPointIndex(
+                var location = geometry.getClosestPointIndexOnTriangle(
                   pickedPosition.x,
                   pickedPosition.y,
                   pickedPosition.z

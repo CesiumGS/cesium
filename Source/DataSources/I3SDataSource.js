@@ -130,7 +130,7 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
             var geometry = i3sNode.geometryData[0];
             console.log(geometry);
             if (pickedPosition) {
-                var location = geometry.getClosestPointIndex(
+                var location = geometry.getClosestPointIndexOnTriangle(
                     pickedPosition.x, pickedPosition.y, pickedPosition.z);
                 console.log("Location", location);
                 if (location.index !== -1 && geometry.customAttributes["feature-index"]) {
@@ -163,7 +163,6 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
 import Batched3DModel3DTileContent from "../Scene/Batched3DModel3DTileContent.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTile from "../Scene/Cesium3DTile.js";
 import Cesium3DTileset from "../Scene/Cesium3DTileset.js";
@@ -285,23 +284,24 @@ function I3SDataSource(name, scene, options) {
   this._traceVisuals = false;
   this._autoCenterCameraOnStart = false;
   this._GLTFProcessingQueue = new I3SGLTFProcessingQueue();
-
+  
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   if (defined(options.traceVisuals)) {
-    this._traceVisuals = options.traceVisuals;
+     this._traceVisuals = options.traceVisuals;
   }
   if (defined(options.traceFetches)) {
-    this._traceFetches = options.traceFetches;
+     this._traceFetches = options.traceFetches;
   }
 
   if (defined(options.autoCenterCameraOnStart)) {
-    this._autoCenterCameraOnStart = options.autoCenterCameraOnStart;
+     this._autoCenterCameraOnStart = options.autoCenterCameraOnStart;
+  }
+    
+  if (defined(options.geoidTiledTerrainProvider)) {
+     this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
   }
 
-  if (defined(options.geoidTiledTerrainProvider)) {
-    this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
-  }
 }
 
 /*
@@ -468,7 +468,7 @@ Object.defineProperties(I3SDataSource.prototype, {
     },
   },
 
-  /**
+    /**
    * The terrain provider referencing the GEOID service to be used for orthometric to ellipsoidal conversion
    * @memberof Viewer.prototype
    *
@@ -507,8 +507,8 @@ I3SDataSource.prototype.loadUrl = function (url) {
 
   var deferredPromise = new when.defer();
   this._sceneServer = new I3SSceneServer(this);
-  this._sceneServer.load(this._completeUrl).then(function () {
-    deferredPromise.resolve();
+  this._sceneServer.load(this._completeUrl).then(function() {
+        deferredPromise.resolve();
   });
 
   return deferredPromise;
@@ -557,13 +557,13 @@ I3SDataSource.prototype._setLoading = function (isLoading) {
  */
 I3SDataSource.prototype._loadJson = function (uri, success, fail) {
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     if (that._traceFetches) {
       console.log("I3S FETCH:", uri);
     }
     var request = fetch(uri);
-    request.then(function (response) {
-      response.json().then(function (data) {
+    request.then(function(response) {
+      response.json().then(function(data) {
         if (data.error) {
           console.error(that._data.error.message);
           fail(reject);
@@ -580,13 +580,13 @@ I3SDataSource.prototype._loadJson = function (uri, success, fail) {
  */
 I3SDataSource.prototype._loadBinary = function (uri, success, fail) {
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     if (that._traceFetches) {
       traceCode("I3S FETCH:", uri);
     }
     var request = fetch(uri);
-    request.then(function (response) {
-      response.arrayBuffer().then(function (data) {
+    request.then(function(response) {
+      response.arrayBuffer().then(function(data) {
         if (data.error) {
           console.error(that._data.error.message);
           fail(reject);
@@ -866,15 +866,11 @@ I3SSceneServer.prototype.load = function (uri) {
   this._uri = uri;
   return this._dataSource._loadJson(
     uri,
-    function (data, resolve) {
+    function(data, resolve) {
       // Success
       that._data = data;
       var layerPromises = [];
-      for (
-        var layerIndex = 0;
-        layerIndex < that._data.layers.length;
-        layerIndex++
-      ) {
+      for (var layerIndex=0; layerIndex < that._data.layers.length; layerIndex++) {
         var newLayer = new I3SLayer(
           that,
           that._data.layers[layerIndex],
@@ -884,7 +880,8 @@ I3SSceneServer.prototype.load = function (uri) {
         layerPromises.push(newLayer.load());
       }
 
-      _Promise.all(layerPromises).then(function () {
+      _Promise.all(layerPromises).then(function() {
+        
         that._computeExtent();
 
         if (that._dataSource._autoCenterCameraOnStart) {
@@ -895,7 +892,7 @@ I3SSceneServer.prototype.load = function (uri) {
         that._createVisualElements();
       });
     },
-    function (reject) {
+    function(reject) {
       // Fail
       reject();
     }
@@ -936,21 +933,15 @@ I3SSceneServer.prototype.centerCamera = function (mode) {
  * @private
  */
 I3SSceneServer.prototype._computeExtent = function () {
+
   var minLongitude = Number.MAX_VALUE;
   var maxLongitude = -Number.MAX_VALUE;
   var minLatitude = Number.MAX_VALUE;
   var maxLatitude = -Number.MAX_VALUE;
 
   // Compute the extent from all layers
-  for (
-    var layerIndex = 0;
-    layerIndex < this._layerCollection.length;
-    layerIndex++
-  ) {
-    if (
-      this._layerCollection[layerIndex]._data.store &&
-      this._layerCollection[layerIndex]._data.store.extent
-    ) {
+  for (var layerIndex=0; layerIndex < this._layerCollection.length; layerIndex++) {
+    if (this._layerCollection[layerIndex]._data.store && this._layerCollection[layerIndex]._data.store.extent) {
       var layerExtent = this._layerCollection[layerIndex]._data.store.extent;
       minLongitude = Math.min(minLongitude, layerExtent[0]);
       minLatitude = Math.min(minLatitude, layerExtent[1]);
@@ -1107,7 +1098,7 @@ Object.defineProperties(I3SLayer.prototype, {
 });
 
 /**
- * @private
+ * @private 
  */
 function getCoveredTiles(terrainProvider, extents) {
   return terrainProvider.readyPromise.then(function () {
@@ -1121,24 +1112,20 @@ function getTiles(terrainProvider, extents) {
   // Sort points into a set of tiles
   var tileRequests = []; // Result will be an Array as it's easier to work with
   var tileRequestSet = {}; // A unique set
-
+  
   var maxLevel = terrainProvider._lodCount;
-
-  var minCorner = Cartographic.fromDegrees(
-    extents.minLongitude,
-    extents.minLatitude
-  );
-  var maxCorner = Cartographic.fromDegrees(
-    extents.maxLongitude,
-    extents.maxLatitude
-  );
+  
+  var minCorner = Cartographic.fromDegrees(extents.minLongitude, extents.minLatitude);
+  var maxCorner = Cartographic.fromDegrees(extents.maxLongitude, extents.maxLatitude);
   var minCornerXY = tilingScheme.positionToTileXY(minCorner, maxLevel);
   var maxCornerXY = tilingScheme.positionToTileXY(maxCorner, maxLevel);
-
+  
   //Get all the tiles in between
-  for (var x = minCornerXY.x; x <= maxCornerXY.x; x++) {
-    for (var y = minCornerXY.y; y <= maxCornerXY.y; y++) {
-      var xy = new Cartesian2(x, y);
+  for(var x = minCornerXY.x; x <= maxCornerXY.x; x++)
+  {
+    for(var y = minCornerXY.y; y <= maxCornerXY.y; y++)
+    {
+      var xy = new Cartesian2(x,y);
       var key = xy.toString();
       if (!tileRequestSet.hasOwnProperty(key)) {
         // When tile is requested for the first time
@@ -1155,7 +1142,7 @@ function getTiles(terrainProvider, extents) {
       }
     }
   }
-
+  
   // Send request for each required tile
   var tilePromises = [];
   for (var i = 0; i < tileRequests.length; ++i) {
@@ -1168,47 +1155,46 @@ function getTiles(terrainProvider, extents) {
 
     tilePromises.push(requestPromise);
   }
-
-  return when.all(tilePromises).then(function (heightMapBuffers) {
+  
+  return when.all(tilePromises).then(function(heightMapBuffers) {
     var heightMaps = [];
-    for (var i = 0; i < heightMapBuffers.length; i++) {
+    for (var i=0; i< heightMapBuffers.length; i++) 
+    {
       var options = {
         tilingScheme: tilingScheme,
         x: tileRequests[i].x,
-        y: tileRequests[i].y,
-        level: tileRequests[i].level,
+        y: tileRequests[i].y, 
+        level: tileRequests[i].level
       };
       var heightMap = heightMapBuffers[i];
-
+      
       var projectionType = "Geographic";
-      if (tilingScheme._projection instanceof WebMercatorProjection) {
-        projectionType = "WebMercator";
+      if(tilingScheme._projection instanceof WebMercatorProjection)
+      {
+          projectionType = "WebMercator";
       }
-
+      
       var heightMapData = {
-        projectionType: projectionType,
-        projection: tilingScheme._projection,
-        nativeExtent: tilingScheme.tileXYToNativeRectangle(
-          options.x,
-          options.y,
-          options.level
-        ),
-        height: heightMap._height,
-        width: heightMap._width,
-        scale: heightMap._structure.heightScale,
-        offset: heightMap._structure.heightOffset,
+          projectionType: projectionType,
+          projection: tilingScheme._projection,
+          nativeExtent : tilingScheme.tileXYToNativeRectangle(options.x, options.y, options.level),
+          height: heightMap._height,
+          width: heightMap._width,
+          scale: heightMap._structure.heightScale,
+          offset: heightMap._structure.heightOffset
       };
-
-      if (heightMap._encoding === HeightmapEncoding.LERC) {
+      
+      if(heightMap._encoding === HeightmapEncoding.LERC) {
         var result = Lerc.decode(heightMap._buffer);
         heightMapData.buffer = result.pixels[0];
-      } else {
+      }
+      else {
         heightMapData.buffer = heightMap._buffer;
       }
-
+          
       heightMaps.push(heightMapData);
     }
-
+    
     return heightMaps;
   });
 }
@@ -1219,61 +1205,55 @@ function getTiles(terrainProvider, extents) {
  */
 I3SLayer.prototype.load = function () {
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     that._computeExtent();
-
+    
+    
     //Load tiles from arcgis
 
     var geoidTerrainProvider = that._dataSource._geoidTiledTerrainProvider;
-
+    
     var dataIsReady = new when.defer();
     var geoidDataList = [];
     if (defined(geoidTerrainProvider)) {
-      if (geoidTerrainProvider.ready) {
-        var tilesReadyPromise = getCoveredTiles(
-          geoidTerrainProvider,
-          that._extent
-        );
-        when(tilesReadyPromise, function (heightMaps) {
-          geoidDataList = heightMaps;
+        if (geoidTerrainProvider.ready) {
+          var tilesReadyPromise = getCoveredTiles(geoidTerrainProvider, that._extent);
+          when(tilesReadyPromise, function(heightMaps) {
+            geoidDataList = heightMaps;
+            dataIsReady.resolve();
+          });
+        } else {
+          console.log("Geoid Terrain service not available - no geoid conversion will be performed.");
           dataIsReady.resolve();
-        });
-      } else {
-        console.log(
-          "Geoid Terrain service not available - no geoid conversion will be performed."
-        );
-        dataIsReady.resolve();
-      }
+        }
     } else {
-      console.log(
-        "No Geoid Terrain service provided - no geoid conversion will be performed."
-      );
+      console.log("No Geoid Terrain service provided - no geoid conversion will be performed.");
       dataIsReady.resolve();
     }
 
-    dataIsReady.then(function () {
-      that._dataSource._geoidDataList = geoidDataList;
-      console.log("Starting to load visual elements");
-      that._createVisualElements();
-      if (that._data.spatialReference.wkid === 4326) {
-        that._loadNodePage(0).then(function () {
-          that._loadRootNode().then(function () {
-            that._create3DTileSet();
-            if (that._data.store.version === "1.6") {
-              that._rootNode._loadChildren().then(function () {
+    dataIsReady.then(function() {
+        that._dataSource._geoidDataList = geoidDataList;
+        console.log("Starting to load visual elements");
+        that._createVisualElements();
+        if (that._data.spatialReference.wkid === 4326) {
+          that._loadNodePage(0).then(function() {
+            that._loadRootNode().then(function() {
+              that._create3DTileSet();
+              if (that._data.store.version === "1.6") {
+                that._rootNode._loadChildren().then(function() {
+                  resolve();
+                });
+              } else {
                 resolve();
-              });
-            } else {
-              resolve();
-            }
+              }
+            });
           });
-        });
-      } else {
-        console.log(
-          "Unsupported spatial reference: " + that._data.spatialReference.wkid
-        );
-        resolve();
-      }
+        } else {
+          console.log(
+            "Unsupported spatial reference: " + that._data.spatialReference.wkid
+          );
+          resolve();
+        }
     });
   });
 };
@@ -1289,16 +1269,11 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
   this._geometryDefinitions = [];
 
   if (this._data.geometryDefinitions) {
-    for (
-      var defIndex = 0;
-      defIndex < this._data.geometryDefinitions.length;
-      defIndex++
-    ) {
+    for (var defIndex=0; defIndex < this._data.geometryDefinitions.length; defIndex++) {
       var geometryBuffersInfo = [];
-      var geometryBuffers = this._data.geometryDefinitions[defIndex]
-        .geometryBuffers;
+      var geometryBuffers = this._data.geometryDefinitions[defIndex].geometryBuffers;
 
-      for (var bufIndex = 0; bufIndex < geometryBuffers.length; bufIndex++) {
+      for (var bufIndex=0; bufIndex < geometryBuffers.length; bufIndex++) {
         var geometryBuffer = geometryBuffers[bufIndex];
         var collectedAttributes = [];
         var compressed = false;
@@ -1307,7 +1282,7 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
           // check if compressed
           compressed = true;
           var attributes = geometryBuffer.compressedAttributes.attributes;
-          for (var i = 0; i < attributes.length; i++) {
+          for (var i=0; i < attributes.length; i++) {
             collectedAttributes.push(attributes[i]);
           }
         } else {
@@ -1327,7 +1302,7 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
       }
 
       // rank the buffer info
-      geometryBuffersInfo.sort(function (a, b) {
+      geometryBuffersInfo.sort(function(a, b) {
         if (a.compressed && !b.compressed) {
           return -1;
         } else if (!a.compressed && b.compressed) {
@@ -1358,7 +1333,7 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
       var geometryBufferInfo = geometryDefinition[index];
       var missed = false;
       var geometryAttributes = geometryBufferInfo.attributes;
-      for (var attrIndex = 0; attrIndex < attributes.length; attrIndex++) {
+      for (var attrIndex=0; attrIndex < attributes.length; attrIndex++) {
         if (!geometryAttributes.includes(attributes[attrIndex])) {
           missed = true;
           break;
@@ -1401,8 +1376,8 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
   var Index = Math.floor(nodeIndex / this._data.nodePages.nodesPerPage);
   var offsetInPage = nodeIndex % this._data.nodePages.nodesPerPage;
   var that = this;
-  return new _Promise(function (resolve, reject) {
-    that._loadNodePage(Index).then(function () {
+  return new _Promise(function(resolve, reject) {
+    that._loadNodePage(Index).then(function() {
       resolve(that._nodePages[Index][offsetInPage]);
     });
   });
@@ -1413,13 +1388,13 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
  */
 I3SLayer.prototype._loadNodePage = function (page) {
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     if (that._nodePages[page] !== undefined) {
       resolve();
     } else if (that._nodePageFetches[page] !== undefined) {
       that._nodePageFetches[page]._promise = that._nodePageFetches[
         page
-      ]._promise.then(function () {
+      ]._promise.then(function() {
         resolve();
       });
     } else {
@@ -1432,10 +1407,7 @@ I3SLayer.prototype._loadNodePage = function (page) {
       nodePageURI += page + query;
 
       that._nodePageFetches[page] = {};
-      that._nodePageFetches[page]._promise = new _Promise(function (
-        resolve,
-        reject
-      ) {
+      that._nodePageFetches[page]._promise = new _Promise(function(resolve, reject) {
         that._nodePageFetches[page]._resolve = resolve;
       });
 
@@ -1447,10 +1419,10 @@ I3SLayer.prototype._loadNodePage = function (page) {
       };
 
       fetch(nodePageURI)
-        .then(function (response) {
+        .then(function(response) {
           response
             .json()
-            .then(function (data) {
+            .then(function(data) {
               if (data.error && data.error.code !== 200) {
                 _resolve();
               } else {
@@ -1458,11 +1430,11 @@ I3SLayer.prototype._loadNodePage = function (page) {
                 _resolve();
               }
             })
-            .catch(function () {
+            .catch(function() {
               _resolve();
             });
         })
-        .catch(function () {
+        .catch(function() {
           _resolve();
         });
     }
@@ -1473,6 +1445,7 @@ I3SLayer.prototype._loadNodePage = function (page) {
  * @private
  */
 I3SLayer.prototype._computeExtent = function () {
+
   var layerExtent = this._data.store.extent;
   this._extent = _computeExtent(
     layerExtent[0],
@@ -1480,6 +1453,7 @@ I3SLayer.prototype._computeExtent = function () {
     layerExtent[2],
     layerExtent[3]
   );
+
 };
 
 /**
@@ -1539,15 +1513,15 @@ I3SLayer.prototype._create3DTileSet = function () {
   this._tileset._isI3STileSet = true;
 
   var that = this;
-  this._tileset.readyPromise.then(function () {
-    that._tileset.tileLoad.addEventListener(function (tile) {});
+  this._tileset.readyPromise.then(function() {
+    that._tileset.tileLoad.addEventListener(function(tile) {});
 
-    that._tileset.tileUnload.addEventListener(function (tile) {
+    that._tileset.tileUnload.addEventListener(function(tile) {
       tile._i3sNode._clearGeometryData();
       tile._contentResource._url = tile._i3sNode._completeUriWithoutQuery;
     });
 
-    that._tileset.tileVisible.addEventListener(function (tile) {
+    that._tileset.tileVisible.addEventListener(function(tile){
       if (tile._i3sNode) {
         tile._i3sNode._loadChildren();
       }
@@ -1594,25 +1568,26 @@ function I3SNode(parent, ref) {
   if (this._level === 0) {
     if (typeof ref === "number") {
       this._nodeIndex = ref;
-      this._uri = "./nodes/" + ref;
     } else {
       this._uri = ref;
     }
   } else if (typeof ref === "number") {
     this._nodeIndex = ref;
-    this._uri = "../" + ref;
   } else {
     this._uri = ref;
   }
 
-  var query = "";
-  if (this._dataSource._query && this._dataSource._query !== "") {
-    query = "?" + this._dataSource._query;
-  }
+  if(this._uri !== undefined)
+  {
+    var query = "";
+    if (this._dataSource._query && this._dataSource._query !== "") {
+      query = "?" + this._dataSource._query;
+    }
 
-  this._completeUriWithoutQuery =
-    this._parent._completeUriWithoutQuery + "/" + this._uri;
-  this._completeUri = this._completeUriWithoutQuery + query;
+    this._completeUriWithoutQuery =
+      this._parent._completeUriWithoutQuery + "/" + this._uri;
+    this._completeUri = this._completeUriWithoutQuery + query;
+  }
 
   this._entities = {};
   this._tile = null;
@@ -1758,22 +1733,44 @@ I3SNode.prototype.load = function (isRoot) {
   if (this._nodeIndex === undefined) {
     return this._dataSource._loadJson(
       this._completeUri,
-      function (data, resolve) {
+      function(data, resolve) {
         // Success
         that._data = data;
         processData();
         resolve();
       },
-      function (reject) {
+      function(reject) {
         // Fail
         reject();
       }
     );
   }
 
-  return new _Promise(function (resolve, reject) {
-    that._layer._getNodeInNodePages(that._nodeIndex).then(function (data) {
+  return new _Promise(function(resolve, reject){
+    that._layer._getNodeInNodePages(that._nodeIndex).then(function(data) {
       that._data = data;
+      
+      var pageSize = that._layer._data.nodePages.nodesPerPage;
+      var node = that._layer._nodePages[Math.floor(that._nodeIndex/pageSize)][that._nodeIndex%pageSize];
+      if (isRoot)
+      {
+        that._uri = "nodes/root";
+      }
+      else if(node.mesh !== undefined)
+      {
+        var uriIndex = that._layer._nodePages[Math.floor(that._nodeIndex/pageSize)][that._nodeIndex%pageSize].mesh.geometry.resource;
+        that._uri = "../" + uriIndex;
+      }
+      if (that._uri !== undefined)
+      {
+        that._completeUriWithoutQuery = that._parent._completeUriWithoutQuery + "/" + that._uri;
+        var query = "";
+        if (that._dataSource._query && that._dataSource._query !== "") {
+            query = "?" + that._dataSource._query;
+        }
+        that._completeUri = that._completeUriWithoutQuery + query;
+      }
+      
       processData();
       resolve();
     });
@@ -1787,23 +1784,22 @@ I3SNode.prototype.load = function (isRoot) {
 I3SNode.prototype.loadFields = function () {
   // check if we must load fields
   var fields = this._layer._data.attributeStorageInfo;
-  var fieldPromiseReady = when.defer();
 
   var that = this;
-  function createAndLoadField(fields, index) {
-    if (!fields || index >= fields.length) {
-      return fieldPromiseReady.resolve();
-    }
-
+  function createAndLoadField(fields, index) 
+  {
     var newField = new I3SField(that, fields[index]);
     that._fields[newField._storageInfo.name] = newField;
-    newField.load().then(function () {
-      createAndLoadField(fields, index + 1);
-    });
+    return newField.load();
+  }
+  
+  var promises = [];
+  for(var i=0; i<fields.length; i++)
+  {
+      promises.push(createAndLoadField(fields, i));
   }
 
-  createAndLoadField(fields, 0);
-  return fieldPromiseReady;
+  return _Promise.all(promises);
 };
 
 /**
@@ -1811,16 +1807,12 @@ I3SNode.prototype.loadFields = function () {
  */
 I3SNode.prototype._loadChildren = function (waitAllChildren) {
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     if (!that._childrenAreLoaded) {
       that._childrenAreLoaded = true;
       var childPromises = [];
       if (that._data.children) {
-        for (
-          var childIndex = 0;
-          childIndex < that._data.children.length;
-          childIndex++
-        ) {
+        for (var childIndex=0; childIndex < that._data.children.length; childIndex++) {
           var child = that._data.children[childIndex];
           var newChild = new I3SNode(that, child.href ? child.href : child);
           that._children.push(newChild);
@@ -1828,16 +1820,12 @@ I3SNode.prototype._loadChildren = function (waitAllChildren) {
           if (waitAllChildren) {
             childPromises.push(childIsLoaded);
           }
-          childIsLoaded.then(
-            (function (theChild) {
-              return function () {
-                that._tile.children.push(theChild._tile);
-              };
-            })(newChild)
-          );
+          childIsLoaded.then(function (theChild) { return function() {
+            that._tile.children.push(theChild._tile);
+          }}(newChild));
         }
         if (waitAllChildren) {
-          _Promise.all(childPromises).then(function () {
+          _Promise.all(childPromises).then(function() {
             resolve();
           });
         } else {
@@ -1861,15 +1849,8 @@ I3SNode.prototype._loadGeometryData = function () {
   // To debug decoding for a specific tile, add a condition
   // that wraps this if/else to match the tile uri
   if (this._data.geometryData) {
-    for (
-      var geomIndex = 0;
-      geomIndex < this._data.geometryData.length;
-      geomIndex++
-    ) {
-      var curGeometryData = new I3SGeometry(
-        this,
-        this._data.geometryData[geomIndex].href
-      );
+    for (var geomIndex=0; geomIndex < this._data.geometryData.length; geomIndex++) {
+      var curGeometryData = new I3SGeometry(this, this._data.geometryData[geomIndex].href);
       this._geometryData.push(curGeometryData);
       geometryPromises.push(curGeometryData.load());
     }
@@ -1899,15 +1880,8 @@ I3SNode.prototype._loadFeatureData = function () {
   // To debug decoding for a specific tile, add a condition
   // that wraps this if/else to match the tile uri
   if (this._data.featureData) {
-    for (
-      var featureIndex = 0;
-      featureIndex < this._data.featureData.length;
-      featureIndex++
-    ) {
-      var newfeatureData = new I3SFeature(
-        this,
-        this._data.featureData[featureIndex].href
-      );
+    for (var featureIndex=0; featureIndex < this._data.featureData.length; featureIndex++) {
+      var newfeatureData = new I3SFeature(this, this._data.featureData[featureIndex].href);
       this._featureData.push(newfeatureData);
       featurePromises.push(newfeatureData.load());
     }
@@ -1986,14 +1960,8 @@ I3SNode.prototype._create3DTileDefinition = function () {
       console.error("Unsupported lodSelectionMetricType in Layer");
     }
   } else if (this._data.lodSelection !== undefined) {
-    for (
-      var lodIndex = 0;
-      lodIndex < this._data.lodSelection.length;
-      lodIndex++
-    ) {
-      if (
-        this._data.lodSelection[lodIndex].metricType === "maxScreenThreshold"
-      ) {
+    for (var lodIndex=0; lodIndex < this._data.lodSelection.length; lodIndex++) {
+      if (this._data.lodSelection[lodIndex].metricType === "maxScreenThreshold") {
         metersPerPixel = span / this._data.lodSelection[lodIndex].maxError;
       }
     }
@@ -2057,10 +2025,8 @@ I3SNode.prototype._create3DTileDefinition = function () {
 
   // get children definition
   var childrenDefinition = [];
-  for (var childIndex = 0; childIndex < this._children.length; childIndex++) {
-    childrenDefinition.push(
-      this._children[childIndex]._create3DTileDefinition()
-    );
+  for (var childIndex=0; childIndex < this._children.length; childIndex++) {
+    childrenDefinition.push(this._children[childIndex]._create3DTileDefinition());
   }
 
   // Create a tile set
@@ -2105,7 +2071,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
  */
 I3SNode.prototype._scheduleCreateContentURL = function () {
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     that._createContentURL(resolve, that._tile);
   });
 };
@@ -2149,9 +2115,9 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
   var dataPromises = [this._loadFeatureData(), this._loadGeometryData()];
 
   var that = this;
-  _Promise.all(dataPromises).then(function () {
+  _Promise.all(dataPromises).then(function() {
     // Binary GLTF
-    var generateGLTF = new _Promise(function (resolve, reject) {
+    var generateGLTF = new _Promise(function(resolve, reject) {
       if (that._geometryData && that._geometryData.length > 0) {
         var task = that._dataSource._GLTFProcessingQueue.addTask({
           geometryData: that._geometryData[0],
@@ -2160,7 +2126,7 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
           url: that._geometryData[0]._completeUri,
           tile: that._tile,
         });
-        task.then(function (data) {
+        task.then(function(data) {
           rawGLTF = data.gltfData;
           that._geometryData[0].customAttributes = data.customAttributes;
           resolve();
@@ -2170,7 +2136,7 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
       }
     });
 
-    generateGLTF.then(function () {
+    generateGLTF.then(function() {
       var binaryGLTFData = that._dataSource._binarizeGLTF(rawGLTF);
       var b3dmRawData = that._dataSource._binarizeB3DM(
         featureTableJSON,
@@ -2318,11 +2284,11 @@ I3SFeature.prototype.load = function () {
   var that = this;
   return this._dataSource._loadJson(
     this._completeUri,
-    function (data, resolve) {
+    function(data, resolve) {
       that._data = data;
       resolve();
     },
-    function (reject) {
+    function(reject) {
       reject();
     }
   );
@@ -2424,7 +2390,7 @@ I3SField.prototype.load = function () {
   var that = this;
   return this._dataSource._loadBinary(
     this._completeUri,
-    function (data, resolve) {
+    function(data, resolve) {
       // check if we have a 404
       var dataView = new DataView(data);
       var success = true;
@@ -2455,7 +2421,7 @@ I3SField.prototype.load = function () {
 
       resolve();
     },
-    function (reject) {
+    function(reject) {
       reject();
     }
   );
@@ -2516,11 +2482,7 @@ I3SField.prototype._parseValue = function (dataView, type, offset) {
 I3SField.prototype._parseHeader = function (dataView) {
   var offset = 0;
   this._header = {};
-  for (
-    var itemIndex = 0;
-    itemIndex < this._storageInfo.header.length;
-    itemIndex++
-  ) {
+  for (var itemIndex=0; itemIndex < this._storageInfo.header.length; itemIndex++) {
     var item = this._storageInfo.header[itemIndex];
     var parsedValue = this._parseValue(dataView, item.valueType, offset);
     this._header[item.property] = parsedValue.value;
@@ -2534,11 +2496,7 @@ I3SField.prototype._parseHeader = function (dataView) {
  */
 I3SField.prototype._parseBody = function (dataView, offset) {
   this._values = {};
-  for (
-    var itemIndex = 0;
-    itemIndex < this._storageInfo.ordering.length;
-    itemIndex++
-  ) {
+  for (var itemIndex=0; itemIndex < this._storageInfo.ordering.length; itemIndex++) {
     var item = this._storageInfo.ordering[itemIndex];
     var desc = this._storageInfo[item];
     if (desc) {
@@ -2652,18 +2610,42 @@ I3SGeometry.prototype.load = function () {
   var that = this;
   return this._dataSource._loadBinary(
     this._completeUri,
-    function (data, resolve) {
+    function(data, resolve) {
       that._data = data;
       resolve();
     },
-    function (reject) {
+    function(reject) {
       reject();
     }
   );
 };
 
+function dot(a, b) {
+  return a.x*b.x + a.y*b.y + a.z*b.z;
+}
+function cross(a, b) {
+  return new Cartesian3(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+}
+function subtract(a,b) {
+  return new Cartesian3(a.x-b.x, a.y-b.y, a.z-b.z);
+}
+function scale(v, scalar) {
+  return new Cartesian3(v.x*scalar, v.y*scalar, v.z*scalar);
+}
+function normalize(a) {
+  return Cartesian3.magnitude(a) > 0 ? scale(a, 1/Cartesian3.magnitude(a)) : a;
+}
+
+function sameSide (p1, p2, a, b)
+{
+  var cp1 = cross(subtract(b, a), subtract(p1, a));
+  var cp2 = cross(subtract(b, a), subtract(p2, a));
+  return dot(cp1, cp2) >= 0;
+}
+
+
 /**
- * Gets the closest point to px,py,pz in this geometry
+ * Find a triangle touching the point px,py,pz, then return the vertex closest to the search point
  * @param {number} [px] the x component of the point to query
  * @param {number} [py] the y component of the point to query
  * @param {number} [pz] the z component of the point to query
@@ -2673,56 +2655,125 @@ I3SGeometry.prototype.load = function () {
  * the queried position in local space
  * the closest position in local space
  */
-I3SGeometry.prototype.getClosestPointIndex = function (px, py, pz) {
-  if (this.customAttributes && this.customAttributes.positions) {
-    var transformation = new Matrix4();
-    transformation = Matrix4.inverse(
-      this._parent._tile.computedTransform,
-      transformation
-    );
-
+I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
+  if (this.customAttributes && this.customAttributes.positions) 
+  {
     // convert queried position to local
-    var position = new Cartesian4(px, py, pz, 1);
-    position = Matrix4.multiplyByVector(transformation, position, position);
+    var position = new Cartesian3(px, py, pz);
+
+    position.x -= this.customAttributes.cartesianCenter.x;
+    position.y -= this.customAttributes.cartesianCenter.y;
+    position.z -= this.customAttributes.cartesianCenter.z;
+    Matrix3.multiplyByVector(this.customAttributes.parentRotation, position, position);
+
+    var bestTriDist = Number.MAX_VALUE;
+    var bestTri;
+    var bestDistSq;
+    var bestIndex;
+    var bestPt;
 
     // Brute force lookup, @TODO: this can be improved with a spatial partitioning search system
-    var count = this.customAttributes.positions.length;
-    var bestIndex = -1;
-    var bestDistanceSquared = Number.MAX_VALUE;
-    var bestX, bestY, bestZ;
-    var x, y, z, distanceSquared;
     var positions = this.customAttributes.positions;
-    for (var loop = 0; loop < count; loop += 3) {
-      x = positions[loop] - position.x;
-      y = positions[loop + 1] - position.y;
-      z = positions[loop + 2] - position.z;
+    var indices = this.customAttributes.indices;
+    
+    //We may have indexed or non-indexed triangles here
+    var triCount;
+    if(indices)
+    {
+      triCount = indices.length;
+    }
+    else
+    {
+      triCount = positions.length/3;
+    }
+    
+    for (var triIndex = 0; triIndex < triCount; triIndex++) 
+    {
+      var v0, v1, v2, i0, i1, i2;
+      if(indices)
+      {
+        i0 = indices[triIndex];
+        i1 = indices[triIndex+1];
+        i2 = indices[triIndex+2];
+      }
+      else
+      {
+        i0 = triIndex*3;
+        i1 = triIndex*3 + 3;
+        i2 = triIndex*3 + 6;
+      }
+      
+      
+      v0 = new Cartesian3(positions[i0*3], positions[i0*3+1], positions[i0*3+2]);
+      v1 = new Cartesian3(positions[i1*3], positions[i1*3+1], positions[i1*3+2]);
+      v2 = new Cartesian3(positions[i2*3], positions[i2*3+1], positions[i2*3+2]);
+      
+      //Check how the point is positioned relative to the triangle. 
+      //This will tell us whether the projection of the point in the triangle's plane lands in the triangle
+      if(!sameSide(position, v0, v1, v2) || !sameSide(position, v1, v0, v2) || !sameSide(position, v2, v0, v1))
+        continue;
+      
+      //Because of precision issues, we can't always reliably tell if the point lands directly on the face, so the most robust way is just to find the closest one
+      var v0v1 = subtract(v1, v0);
+      var v0v2 = subtract(v2, v0); 
+      var normal = normalize(cross(v0v1, v0v2));
+      //Skip "triangles" with 3 colinear points
+      if(Cartesian3.magnitude(normal) === 0)
+        continue;
 
-      distanceSquared = x * x + y * y + z * z;
-      if (bestDistanceSquared > distanceSquared) {
-        bestDistanceSquared = distanceSquared;
-        bestIndex = loop / 3;
-        bestX = positions[loop];
-        bestY = positions[loop + 1];
-        bestZ = positions[loop + 2];
+      var v0p = subtract(position, v0);
+      var normalDist = Math.abs(dot(v0p, normal));
+      if(normalDist < bestTriDist)
+      {
+        bestTriDist = normalDist;
+        bestTri = triIndex;
+        
+        //Found a triangle, return the index of the closest point
+        var d0 = Cartesian3.magnitudeSquared(subtract(position, v0));
+        var d1 = Cartesian3.magnitudeSquared(subtract(position, v1));
+        var d2 = Cartesian3.magnitudeSquared(subtract(position, v2));
+        if(d0 < d1 && d0 < d2)
+        {
+          bestIndex = i0;
+          bestPt = v0;
+          bestDistSq = d0;
+        }
+        else if (d1<d2)
+        {
+          bestIndex = i1;
+          bestPt = v1;
+          bestDistSq = d1;
+        }
+        else
+        {
+          bestIndex = i2;
+          bestPt = v2;
+          bestDistSq = d2;
+        }
       }
     }
-
-    return {
-      index: bestIndex,
-      distanceSquared: bestDistanceSquared,
-      distance: Math.sqrt(bestDistanceSquared),
-      queriedPosition: {
-        x: position.x,
-        y: position.y,
-        z: position.z,
-      },
-      closestPosition: {
-        x: bestX,
-        y: bestY,
-        z: bestZ,
-      },
-    };
+    
+    if(bestTri !== undefined)
+    {
+      return {
+        index: bestIndex,
+        distanceSquared: bestDistSq,
+        distance: Math.sqrt(bestDistSq),
+        queriedPosition: {
+          x: position.x,
+          y: position.y,
+          z: position.z,
+        },
+        closestPosition: {
+          x: bestPt.x,
+          y: bestPt.y,
+          z: bestPt.z,
+        },
+      };
+    }
   }
+  
+  //No hits found 
   return {
     index: -1,
     distanceSquared: Number.Infinity,
@@ -2794,19 +2845,9 @@ I3SGeometry.prototype._generateGLTF = function (
     var textureName = "0";
 
     if (this._layer._data.textureSetDefinitions) {
-      for (
-        var defIndex = 0;
-        defIndex < this._layer._data.textureSetDefinitions.length;
-        defIndex++
-      ) {
-        var textureSetDefinition = this._layer._data.textureSetDefinitions[
-          defIndex
-        ];
-        for (
-          var formatIndex = 0;
-          formatIndex < textureSetDefinition.formats.length;
-          formatIndex++
-        ) {
+      for (var defIndex = 0; defIndex < this._layer._data.textureSetDefinitions.length; defIndex++) {
+        var textureSetDefinition = this._layer._data.textureSetDefinitions[defIndex];
+        for (var formatIndex=0; formatIndex < textureSetDefinition.formats.length; formatIndex++) {
           var textureFormat = textureSetDefinition.formats[formatIndex];
           if (textureFormat.format === "jpg") {
             textureName = textureFormat.name;
@@ -2918,13 +2959,13 @@ Cesium3DTile.prototype._resolveHookedObject = function () {
 
   // Fulfill the promises
   if (_contentReadyToProcessPromise) {
-    this._contentReadyToProcessPromise.then(function () {
+    this._contentReadyToProcessPromise.then(function() {
       _contentReadyToProcessPromise.resolve();
     });
   }
 
   if (_contentReadyPromise) {
-    this._contentReadyPromise.then(function () {
+    this._contentReadyPromise.then(function() {
       that._isLoading = false;
       that._content._contentReadyPromise.resolve();
     });
@@ -2962,7 +3003,7 @@ Cesium3DTile.prototype.requestContent = function () {
       this._contentReadyToProcessPromise = when.defer();
       this._contentReadyPromise = when.defer();
 
-      this._i3sNode._scheduleCreateContentURL().then(function () {
+      this._i3sNode._scheduleCreateContentURL().then(function() {
         if (!that._contentResource._originalUrl) {
           that._contentResource._originalUrl = that._contentResource._url;
         }
@@ -3120,31 +3161,37 @@ function _workerCode() {
   .##.......##.......##........##..##........##....##.##.....##..##..##.....##.##.....##.##......
   .########.########.########.####.##.........######...#######..####.########..##.....##.########
   */
-
-  function mercatorAngleToGeodeticLatitude(mercatorAngle) {
-    return Math.PI / 2.0 - 2.0 * Math.atan(Math.exp(-mercatorAngle));
+  
+  function mercatorAngleToGeodeticLatitude (  mercatorAngle ) 
+  {
+    return Math.PI/2.0 - 2.0 * Math.atan(Math.exp(-mercatorAngle));
   }
-
-  function geodeticLatitudeToMercatorAngle(latitude) {
-    var maximumLatitude = mercatorAngleToGeodeticLatitude(Math.PI);
-
-    // Clamp the latitude coordinate to the valid Mercator bounds.
-    if (latitude > maximumLatitude) {
-      latitude = maximumLatitude;
-    } else if (latitude < -maximumLatitude) {
-      latitude = -maximumLatitude;
-    }
-    var sinLatitude = Math.sin(latitude);
-    return 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+  
+  function geodeticLatitudeToMercatorAngle (latitude) {
+      
+      var maximumLatitude = mercatorAngleToGeodeticLatitude(Math.PI);
+      
+      // Clamp the latitude coordinate to the valid Mercator bounds.
+      if (latitude > maximumLatitude) {
+        latitude = maximumLatitude;
+      } else if (latitude < -maximumLatitude) {
+        latitude = -maximumLatitude;
+      }
+      var sinLatitude = Math.sin(latitude);
+      return 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
   }
-
+  
   function geographicToWebMercator(lon, lat, ellipsoid) {
-    var semimajorAxis = ellipsoid._maximumRadius;
+      
+      var semimajorAxis = ellipsoid._maximumRadius;
+      
+      var x = lon * semimajorAxis;
+      var y =
+        geodeticLatitudeToMercatorAngle(
+          lat
+        ) * semimajorAxis;
 
-    var x = lon * semimajorAxis;
-    var y = geodeticLatitudeToMercatorAngle(lat) * semimajorAxis;
-
-    return { x: x, y: y };
+      return {x:x, y:y};
   }
 
   function bilinearInterpolate(tx, ty, h00, h10, h01, h11) {
@@ -3158,26 +3205,26 @@ function _workerCode() {
     return data[address];
   }
 
-  function sampleGeoid(sampleX, sampleY, geoidData) {
+  function sampleGeoid(
+    sampleX,
+    sampleY,
+    geoidData
+  ) {
     var extent = geoidData.nativeExtent;
-    var x =
-      ((sampleX - extent.west) / (extent.east - extent.west)) *
-      (geoidData.width - 1);
-    var y =
-      ((sampleY - extent.south) / (extent.north - extent.south)) *
-      (geoidData.height - 1);
+    var x = (sampleX - extent.west) / (extent.east - extent.west) * (geoidData.width-1);
+    var y = (sampleY - extent.south) / (extent.north - extent.south) * (geoidData.height-1);
     var xi = Math.floor(x);
-    var yi = Math.floor(y);
+    var yi =  Math.floor(y);
 
     x -= xi;
     y -= yi;
-
-    var xNext = xi < geoidData.width ? xi + 1 : xi;
-    var yNext = yi < geoidData.height ? yi + 1 : yi;
-
+    
+    var xNext = xi < geoidData.width ? xi+1 : xi;
+    var yNext = yi < geoidData.height ? yi+1 : yi;
+    
     yi = geoidData.height - 1 - yi;
     yNext = geoidData.height - 1 - yNext;
-
+    
     var h00 = sampleMap(xi, yi, geoidData.width, geoidData.buffer);
     var h10 = sampleMap(xNext, yi, geoidData.width, geoidData.buffer);
     var h01 = sampleMap(xi, yNext, geoidData.width, geoidData.buffer);
@@ -3187,36 +3234,38 @@ function _workerCode() {
     finalHeight = finalHeight * geoidData.scale + geoidData.offset;
     return finalHeight;
   }
-
-  function sampleGeoidFromList(lon, lat, geoidDataList) {
-    for (var i = 0; i < geoidDataList.length; i++) {
-      var localExtent = geoidDataList[i].nativeExtent;
-      var lonRadian = (lon / 180) * Math.PI;
-      var latRadian = (lat / 180) * Math.PI;
-
-      var localPt = {};
-      if (geoidDataList[i].projectionType === "WebMercator") {
-        localPt = geographicToWebMercator(
-          lonRadian,
-          latRadian,
-          geoidDataList[i].projection._ellipsoid
-        );
-      } else {
-        localPt.x = lonRadian;
-        localPt.y = latRadian;
+  
+  
+  function sampleGeoidFromList(
+    lon,
+    lat,
+    geoidDataList
+  ) {
+      for(var i=0; i < geoidDataList.length; i++)
+      {
+        var localExtent = geoidDataList[i].nativeExtent;
+        var lonRadian = lon/180*Math.PI;
+        var latRadian = lat/180*Math.PI;
+        
+        var localPt = {};
+        if(geoidDataList[i].projectionType === "WebMercator")
+        {
+          localPt = geographicToWebMercator(lonRadian, latRadian, geoidDataList[i].projection._ellipsoid);
+        }
+        else
+        {
+          localPt.x = lonRadian;
+          localPt.y = latRadian;
+        }
+        
+        if (localPt.x > localExtent.west && localPt.x < localExtent.east
+        && localPt.y > localExtent.south && localPt.y < localExtent.north) 
+        {
+          return sampleGeoid(localPt.x, localPt.y, geoidDataList[i]);
+        }
       }
-
-      if (
-        localPt.x > localExtent.west &&
-        localPt.x < localExtent.east &&
-        localPt.y > localExtent.south &&
-        localPt.y < localExtent.north
-      ) {
-        return sampleGeoid(localPt.x, localPt.y, geoidDataList[i]);
-      }
-    }
-
-    return 0;
+      
+      return 0;
   }
 
   function orthometricToEllipsoidal(
@@ -3234,7 +3283,7 @@ function _workerCode() {
       center.lat,
       geoidDataList
     );
-
+    
     if (fast) {
       for (var i = 0; i < vertexCount; ++i) {
         position[i * 3 + 2] += centerHeight;
@@ -3259,7 +3308,7 @@ function _workerCode() {
   ....##....##...##...#########.##..####.......##.##.......##.....##.##...##...##.....##
   ....##....##....##..##.....##.##...###.##....##.##.......##.....##.##....##..##.....##
   ....##....##.....##.##.....##.##....##..######..##........#######..##.....##.##.....##
-
+  
   .##........#######...######.....###....##......
   .##.......##.....##.##....##...##.##...##......
   .##.......##.....##.##........##...##..##......
@@ -3366,7 +3415,7 @@ function _workerCode() {
   .##....##..##.......##..####.##.......##...##...#########....##....##......
   .##....##..##.......##...###.##.......##....##..##.....##....##....##......
   ..######...########.##....##.########.##.....##.##.....##....##....########
-
+  
   .####.##....##.########.########.########..##....##....###....##......
   ..##..###...##....##....##.......##.....##.###...##...##.##...##......
   ..##..####..##....##....##.......##.....##.####..##..##...##..##......
@@ -3374,7 +3423,7 @@ function _workerCode() {
   ..##..##..####....##....##.......##...##...##..####.#########.##......
   ..##..##...###....##....##.......##....##..##...###.##.....##.##......
   .####.##....##....##....########.##.....##.##....##.##.....##.########
-
+  
   .########..##.....##.########.########.########.########.
   .##.....##.##.....##.##.......##.......##.......##.....##
   .##.....##.##.....##.##.......##.......##.......##.....##
@@ -3430,11 +3479,7 @@ function _workerCode() {
       }
     } else {
       // generate indices
-      for (
-        var newVertexIndex = 0;
-        newVertexIndex < vertexCount;
-        ++newVertexIndex
-      ) {
+      for (var newVertexIndex = 0; newVertexIndex < vertexCount; ++newVertexIndex) {
         indexArray[newVertexIndex] = newVertexIndex;
       }
     }
@@ -3651,7 +3696,7 @@ function _workerCode() {
   .##....##..##.......##.....##.##.....##.##..........##....##...##......##...
   .##....##..##.......##.....##.##.....##.##..........##....##....##.....##...
   ..######...########..#######..##.....##.########....##....##.....##....##...
-
+  
   .########..########..######...#######..########..########.########.
   .##.....##.##.......##....##.##.....##.##.....##.##.......##.....##
   .##.....##.##.......##.......##.....##.##.....##.##.......##.....##
@@ -3683,7 +3728,7 @@ function _workerCode() {
   .##.....##.##...##...#########.##.......##.....##
   .##.....##.##....##..##.....##.##....##.##.....##
   .########..##.....##.##.....##..######...#######.
-
+  
   .########..########..######...#######..########..########.########.
   .##.....##.##.......##....##.##.....##.##.....##.##.......##.....##
   .##.....##.##.......##.......##.....##.##.....##.##.......##.....##
@@ -3746,10 +3791,7 @@ function _workerCode() {
       dracoDecoderModule.destroy(face);
 
       for (var attrIndex = 0; attrIndex < attributesCount; ++attrIndex) {
-        var dracoAttribute = dracoDecoder.GetAttribute(
-          dracoGeometry,
-          attrIndex
-        );
+        var dracoAttribute = dracoDecoder.GetAttribute(dracoGeometry, attrIndex);
 
         var attributeData = decodeDracoAttribute(
           dracoDecoderModule,
@@ -3774,10 +3816,7 @@ function _workerCode() {
         }
 
         // get the metadata
-        var metadata = dracoDecoder.GetAttributeMetadata(
-          dracoGeometry,
-          attrIndex
-        );
+        var metadata = dracoDecoder.GetAttributeMetadata(dracoGeometry, attrIndex);
 
         if (metadata.ptr) {
           var numEntries = metadataQuerier.NumEntries(metadata);
@@ -4008,7 +4047,7 @@ function _workerCode() {
   .##.....##..##..##..####.#########.##...##......##...
   .##.....##..##..##...###.##.....##.##....##.....##...
   .########..####.##....##.##.....##.##.....##....##...
-
+  
   .########..########..######...#######..########..########.########.
   .##.....##.##.......##....##.##.....##.##.....##.##.......##.....##
   .##.....##.##.......##.......##.....##.##.....##.##.......##.....##
@@ -4044,46 +4083,14 @@ function _workerCode() {
       return offset;
     },
     featureId: function (decodedGeometry, data, offset) {
+      //We don't need to use this for anything so just increment the offset
       var count = decodedGeometry.featureCount;
-      var decodedGeometryBytes = new Uint8Array(data, offset, 8);
-      var id = decodedGeometryBytes[7];
-      id <<= 8;
-      id = decodedGeometryBytes[6];
-      id <<= 8;
-      id = decodedGeometryBytes[5];
-      id <<= 8;
-      id = decodedGeometryBytes[4];
-      id <<= 8;
-      id = decodedGeometryBytes[3];
-      id <<= 8;
-      id = decodedGeometryBytes[2];
-      id <<= 8;
-      id = decodedGeometryBytes[1];
-      id <<= 8;
-      id = decodedGeometryBytes[0];
-      decodedGeometry.featureId = id;
       offset += count * 8;
       return offset;
     },
     id: function (decodedGeometry, data, offset) {
+      //We don't need to use this for anything so just increment the offset
       var count = decodedGeometry.featureCount;
-      var decodedGeometryBytes = new Uint8Array(data, offset, 8);
-      var id = decodedGeometryBytes[7];
-      id <<= 8;
-      id = decodedGeometryBytes[6];
-      id <<= 8;
-      id = decodedGeometryBytes[5];
-      id <<= 8;
-      id = decodedGeometryBytes[4];
-      id <<= 8;
-      id = decodedGeometryBytes[3];
-      id <<= 8;
-      id = decodedGeometryBytes[2];
-      id <<= 8;
-      id = decodedGeometryBytes[1];
-      id <<= 8;
-      id = decodedGeometryBytes[0];
-      decodedGeometry.featureId = id;
       offset += count * 8;
       return offset;
     },
@@ -4125,11 +4132,7 @@ function _workerCode() {
       offset += 4;
 
       if (bufferInfo) {
-        for (
-          var attrIndex = 0;
-          attrIndex < bufferInfo.attributes.length;
-          attrIndex++
-        ) {
+        for (var attrIndex=0; attrIndex < bufferInfo.attributes.length; attrIndex++) {
           if (binaryAttributeDecoders[bufferInfo.attributes[attrIndex]]) {
             offset = binaryAttributeDecoders[bufferInfo.attributes[attrIndex]](
               decodedGeometry,
@@ -4137,10 +4140,7 @@ function _workerCode() {
               offset
             );
           } else {
-            console.error(
-              "Unknown decoder for",
-              bufferInfo.attributes[attrIndex]
-            );
+            console.error("Unknown decoder for", bufferInfo.attributes[attrIndex]);
           }
         }
       } else {
@@ -4162,7 +4162,7 @@ function _workerCode() {
         }
 
         // use default geometry schema
-        for (var i = 0; i < ordering.length; i++) {
+        for (var i=0; i < ordering.length; i++) {
           var decoder = binaryAttributeDecoders[ordering[i]];
           if (!decoder) {
             console.log(ordering[i]);
@@ -4170,7 +4170,7 @@ function _workerCode() {
           offset = decoder(decodedGeometry, data, offset);
         }
 
-        for (var j = 0; j < featureAttributeOrder.length; j++) {
+        for (var j=0; j < featureAttributeOrder.length; j++) {
           var curDecoder = binaryAttributeDecoders[featureAttributeOrder[j]];
           if (!curDecoder) {
             console.log(featureAttributeOrder[j]);
@@ -4256,12 +4256,32 @@ function _workerCode() {
     var customAttributes = {};
     if (geometryData["feature-index"]) {
       customAttributes.positions = geometryData.positions;
+      customAttributes.indices = geometryData.indices;
       customAttributes["feature-index"] = geometryData["feature-index"];
+      customAttributes.cartesianCenter = e.data.cartesianCenter;
+      customAttributes.parentRotation = e.data.parentRotation;
     }
-
-    if (geometryData["featureId"]) {
+    else if (geometryData["faceRange"]) {
       customAttributes.positions = geometryData.positions;
-      customAttributes["featureId"] = geometryData["featureId"];
+      customAttributes.indices = geometryData.indices;
+      customAttributes.sourceURL = e.data.url;
+      customAttributes.cartesianCenter = e.data.cartesianCenter;
+      customAttributes.parentRotation = e.data.parentRotation;
+      
+      //Build the feature index array from the faceRange. This should store the 
+      customAttributes["feature-index"] = new Array(geometryData.positions.length);
+      for(var range=0; range< geometryData["faceRange"].length-1; range+=2)
+      {
+          var curIndex = range/2;
+          var rangeStart = geometryData["faceRange"][range];
+          var rangeEnd = geometryData["faceRange"][range+1];
+          for(var i=rangeStart; i <= rangeEnd; i++)
+          {
+              customAttributes["feature-index"][i*3] = curIndex;
+              customAttributes["feature-index"][i*3 + 1] = curIndex;
+              customAttributes["feature-index"][i*3 + 2] = curIndex;
+          }
+      }
     }
 
     meshData.customAttributes = customAttributes;
@@ -4290,14 +4310,14 @@ function I3SGLTFProcessingQueue() {
   var that = this;
   this._queue = [];
   this._processing = false;
-  this._createWorkers(function () {
+  this._createWorkers(function() {
     that._process();
   });
 }
 
 I3SGLTFProcessingQueue.prototype._process = function () {
   var that = this;
-  for (var workerIndex = 0; workerIndex < this._workers.length; workerIndex++) {
+  for (var workerIndex=0; workerIndex < this._workers.length; workerIndex++) {
     if (this._workers[workerIndex].isReadyToWork) {
       if (this._queue.length > 0) {
         var task = this._queue.shift();
@@ -4306,7 +4326,7 @@ I3SGLTFProcessingQueue.prototype._process = function () {
       }
     }
   }
-  setTimeout(function () {
+  setTimeout(function() {
     that._process();
   }, 100);
 };
@@ -4322,10 +4342,10 @@ I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
   for (var index = 0; index < externalModules.length; ++index) {
     fetchPromises.push(when.defer());
     externalModuleData.push("");
-
-    var fetchFunction = function (curIndex) {
-      fetch(externalModules[curIndex]).then(function (response) {
-        response.text().then(function (data) {
+    
+    var fetchFunction = function(curIndex) {
+      fetch(externalModules[curIndex]).then(function(response) {
+        response.text().then(function(data) {
           externalModuleData[curIndex] = data;
           fetchPromises[curIndex].resolve();
         });
@@ -4333,14 +4353,16 @@ I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
     };
     fetchFunction(index);
   }
+  
 
   var externalModulesLoaded = when.all(fetchPromises);
   var that = this;
-  externalModulesLoaded.then(function () {
+  externalModulesLoaded.then(function() {
+      
     var externalModuleCode = "";
-    for (var i = 0; i < externalModuleData.length; i++)
+    for(var i=0; i<externalModuleData.length; i++)
       externalModuleCode += externalModuleData[i];
-
+      
     workerCode = workerCode.replace("function _workerCode() {", "");
     workerCode = workerCode.slice(0, -1);
     var blob = new Blob([externalModuleCode + workerCode], {
@@ -4355,15 +4377,15 @@ I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
     for (var loop = 0; loop < workerCount; ++loop) {
       var worker = new Worker(window.URL.createObjectURL(blob));
 
-      worker.setTask = (function (thisWorker) {
+      worker.setTask = function (thisWorker) { 
         return function (task) {
           thisWorker._task = task;
           thisWorker.isReadyToWork = false;
           thisWorker.postMessage(task.payload);
-        };
-      })(worker);
+        }
+      }(worker);
 
-      worker.onmessage = (function (thisWorker) {
+      worker.onmessage = function (thisWorker) { 
         return function (e) {
           var task = thisWorker._task;
 
@@ -4382,8 +4404,8 @@ I3SGLTFProcessingQueue.prototype._createWorkers = function (cb) {
             gltfData: gltfData,
             customAttributes: e.data.customAttributes,
           });
-        };
-      })(worker);
+        }
+      }(worker);
 
       worker.isReadyToWork = true;
       that._workers.push(worker);
@@ -4468,9 +4490,9 @@ I3SGLTFProcessingQueue.prototype.addTask = function (data) {
       worker.setTask(this);
     },
   };
-
+  
   var that = this;
-  return new _Promise(function (resolve, reject) {
+  return new _Promise(function(resolve, reject) {
     newTask.resolve = resolve;
     newTask.reject = reject;
     that._queue.push(newTask);
