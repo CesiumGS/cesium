@@ -181,7 +181,7 @@ function WebMapServiceImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
+  // Use the featureInfoUrl value defined in options if it exists, else use the property value of url
   if (defined(options.featureInfoUrl))
     this._featureInfoUrl = options.featureInfoUrl;
   else this._featureInfoUrl = options.url;
