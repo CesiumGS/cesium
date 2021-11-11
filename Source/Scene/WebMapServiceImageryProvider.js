@@ -45,7 +45,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *                          an array, each element in the array is a subdomain.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
- * @property {Resource|String} getFeatureInfoUrl The FeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
+ * @property {Resource|String} [featureInfoUrl] The FeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  */
 
 /**
@@ -182,12 +182,12 @@ function WebMapServiceImageryProvider(options) {
   this.defaultMagnificationFilter = undefined;
 
   // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
-  if (defined(options.getFeatureInfoUrl))
-    this._getFeatureInfoUrl = options.getFeatureInfoUrl;
-  else this._getFeatureInfoUrl = options.url;
+  if (defined(options.featureInfoUrl))
+    this._featureInfoUrl = options.featureInfoUrl;
+  else this._featureInfoUrl = options.url;
 
   var resource = Resource.createIfNeeded(options.url);
-  var pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
+  var pickFeatureResource = Resource.createIfNeeded(this._featureInfoUrl);
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
@@ -577,14 +577,17 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the getFeatureInfo URL of the WMS server.
+   * Gets the FeatureInfo URL of the WMS server.
    * @memberof WebMapServiceImageryProvider.prototype
    * @type {String}
    * @readonly
    */
-  getFeatureInfoUrl: {
+  featureInfoUrl: {
     get: function () {
-      return this._resource._url;
+      return this._featureInfoUrl;
+    },
+    set: function (value) {
+      this._featureInfoUrl = value;
     },
   },
 });

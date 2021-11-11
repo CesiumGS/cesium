@@ -1868,12 +1868,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
   });
 
-  it("uses getFeatureInfoUrl in options for getFeatureInfo", function () {
+  it("uses featureInfoUrl in options for getting FeatureInfo", function () {
     var featureUrl = "made/up/wms/feature/server";
     var provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
-      getFeatureInfoUrl: featureUrl,
+      featureInfoUrl: featureUrl,
     });
 
     return pollToPromise(function () {
@@ -1883,7 +1883,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
   });
 
-  it("uses url in options if getFeatureInfoUrl is absent for pickResources", function () {
+  it("uses url in options if featureInfoUrl is absent for pickResources", function () {
     var featureUrl = "made/up/wms/feature/server";
     var getCapabilitiesUrl = "made/up/wms/server";
     var provider = new WebMapServiceImageryProvider({
