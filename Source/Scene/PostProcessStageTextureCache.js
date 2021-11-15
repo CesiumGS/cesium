@@ -148,6 +148,7 @@ function getDependencies(collection, context) {
     var bloom = collection.bloom;
     var tonemapping = collection._tonemapping;
     var fxaa = collection.fxaa;
+    var passThrough = collection.passThrough;
 
     var previousName = getCompositeDependencies(
       collection,
@@ -175,6 +176,13 @@ function getDependencies(collection, context) {
       context,
       dependencies,
       collection,
+      previousName
+    );
+    previousName = getStageDependencies(
+      collection,
+      context,
+      dependencies,
+      passThrough,
       previousName
     );
     getStageDependencies(collection, context, dependencies, fxaa, previousName);
@@ -345,13 +353,18 @@ PostProcessStageTextureCache.prototype.update = function (context) {
     defined(collection.fxaa) &&
     collection.fxaa.enabled &&
     collection.fxaa._isSupported(context);
+  var passThroughEnabled =
+    defined(collection.passThrough) &&
+    collection.passThrough.enabled &&
+    collection.passThrough._isSupported(context);
   var needsCheckDimensionsUpdate =
     !defined(collection._activeStages) ||
     collection._activeStages.length > 0 ||
     aoEnabled ||
     bloomEnabled ||
     tonemappingEnabled ||
-    fxaaEnabled;
+    fxaaEnabled ||
+    passThroughEnabled;
   if (
     updateDependencies ||
     (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)
