@@ -22,6 +22,7 @@ function SceneFramebuffer() {
   this._framebufferAA = undefined;
   this._framebufferDraw = undefined;
   this._idFramebuffer = undefined;
+  this._numSamples = undefined;
 
   this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
@@ -65,16 +66,23 @@ function destroyResources(post) {
   post._depthStencilIdRenderbuffer = undefined;
 }
 
-SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
+SceneFramebuffer.prototype.update = function (
+  context,
+  viewport,
+  hdr,
+  numSamples
+) {
   var width = viewport.width;
   var height = viewport.height;
   var colorTexture = this._colorTexture;
   var colorRenderbuffer = this._colorRenderbuffer;
+  var msaaSamples = defined(numSamples) ? numSamples : 0;
   if (
     defined(colorTexture) &&
     colorTexture.width === width &&
     colorTexture.height === height &&
-    hdr === this._useHdr
+    hdr === this._useHdr &&
+    this._numSamples === msaaSamples
   ) {
     return;
   }
@@ -83,13 +91,15 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
     defined(colorRenderbuffer) &&
     colorRenderbuffer.width === width &&
     colorRenderbuffer.height === height &&
-    hdr === this._useHdr
+    hdr === this._useHdr &&
+    this._numSamples === msaaSamples
   ) {
     return;
   }
 
   destroyResources(this);
   this._useHdr = hdr;
+  this._numSamples = msaaSamples;
 
   var pixelDatatype = hdr
     ? context.halfFloatingPointTexture
@@ -111,7 +121,7 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
     height: height,
     format: RenderbufferFormat.RGBA8,
     multisample: true,
-    numSamples: 8,
+    numSamples: msaaSamples,
   });
 
   this._idTexture = new Texture({
@@ -147,7 +157,7 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
       height: height,
       format: RenderbufferFormat.DEPTH24_STENCIL8,
       multisample: true,
-      numSamples: 8,
+      numSamples: msaaSamples,
     });
     this._depthStencilIdRenderbuffer = new Renderbuffer({
       context: context,

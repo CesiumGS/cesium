@@ -605,6 +605,12 @@ function Scene(options) {
   this.eyeSeparation = undefined;
 
   /**
+   * The number of samples for multisampled renderbuffers.
+   * @type {Number}
+   */
+  this.numberMSAASamples = undefined;
+
+  /**
    * Post processing effects applied to the final render.
    * @type {PostProcessStageCollection}
    */
@@ -3467,7 +3473,12 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       postProcess.bloom.enabled));
   environmentState.usePostProcessSelected = false;
   if (usePostProcess) {
-    view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
+    view.sceneFramebuffer.update(
+      context,
+      view.viewport,
+      scene._hdr,
+      scene.numberMSAASamples
+    );
     view.sceneFramebuffer.clear(context, passState, clearColor);
 
     postProcess.update(context, frameState.useLogDepth, scene._hdr);
