@@ -663,7 +663,7 @@ Object.defineProperties(Context.prototype, {
    */
   depthTexture: {
     get: function () {
-      return this._depthTexture || this._webgl2;
+      return false; //this._depthTexture || this._webgl2;
     },
   },
 

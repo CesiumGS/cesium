@@ -59,7 +59,17 @@ function Renderbuffer(options) {
   this._renderbuffer = this._gl.createRenderbuffer();
 
   gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
-  gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  if (options.multisample) {
+    gl.renderbufferStorageMultisample(
+      gl.RENDERBUFFER,
+      options.numSamples,
+      format,
+      this._width,
+      this._height
+    );
+  } else {
+    gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  }
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
 

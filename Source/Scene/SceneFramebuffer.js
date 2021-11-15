@@ -15,10 +15,12 @@ import Texture from "../Renderer/Texture.js";
  */
 function SceneFramebuffer() {
   this._colorTexture = undefined;
+  this._colorRenderbuffer = undefined;
   this._idTexture = undefined;
   this._depthStencilTexture = undefined;
   this._depthStencilRenderbuffer = undefined;
-  this._framebuffer = undefined;
+  this._framebufferAA = undefined;
+  this._framebufferDraw = undefined;
   this._idFramebuffer = undefined;
 
   this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
@@ -33,9 +35,13 @@ function SceneFramebuffer() {
 }
 
 function destroyResources(post) {
-  post._framebuffer = post._framebuffer && post._framebuffer.destroy();
+  post._framebufferAA = post._framebufferAA && post._framebufferAA.destroy();
+  post._framebufferDraw =
+    post._framebufferDraw && post._framebufferDraw.destroy();
   post._idFramebuffer = post._idFramebuffer && post._idFramebuffer.destroy();
   post._colorTexture = post._colorTexture && post._colorTexture.destroy();
+  post._colorRenderbuffer =
+    post._colorRenderbuffer && post._colorRenderbuffer.destroy();
   post._idTexture = post._idTexture && post._idTexture.destroy();
   post._depthStencilTexture =
     post._depthStencilTexture && post._depthStencilTexture.destroy();
@@ -47,9 +53,11 @@ function destroyResources(post) {
     post._depthStencilIdRenderbuffer &&
     post._depthStencilIdRenderbuffer.destroy();
 
-  post._framebuffer = undefined;
+  post._framebufferAA = undefined;
+  post._framebufferDraw = undefined;
   post._idFramebuffer = undefined;
   post._colorTexture = undefined;
+  post._colorRenderbuffer = undefined;
   post._idTexture = undefined;
   post._depthStencilTexture = undefined;
   post._depthStencilRenderbuffer = undefined;
@@ -61,10 +69,20 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
   var width = viewport.width;
   var height = viewport.height;
   var colorTexture = this._colorTexture;
+  var colorRenderbuffer = this._colorRenderbuffer;
   if (
     defined(colorTexture) &&
     colorTexture.width === width &&
     colorTexture.height === height &&
+    hdr === this._useHdr
+  ) {
+    return;
+  }
+
+  if (
+    defined(colorRenderbuffer) &&
+    colorRenderbuffer.width === width &&
+    colorRenderbuffer.height === height &&
     hdr === this._useHdr
   ) {
     return;
@@ -85,6 +103,15 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: pixelDatatype,
     sampler: Sampler.NEAREST,
+  });
+
+  this._colorRenderbuffer = new Renderbuffer({
+    context: context,
+    width: width,
+    height: height,
+    format: RenderbufferFormat.RGBA8,
+    multisample: true,
+    numSamples: 8,
   });
 
   this._idTexture = new Texture({
@@ -118,7 +145,9 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
       context: context,
       width: width,
       height: height,
-      format: RenderbufferFormat.DEPTH_STENCIL,
+      format: RenderbufferFormat.DEPTH24_STENCIL8,
+      multisample: true,
+      numSamples: 8,
     });
     this._depthStencilIdRenderbuffer = new Renderbuffer({
       context: context,
@@ -128,11 +157,20 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
     });
   }
 
-  this._framebuffer = new Framebuffer({
+  this._framebufferAA = new Framebuffer({
+    context: context,
+    // colorTextures: [this._colorTexture],
+    colorRenderbuffers: [this._colorRenderbuffer],
+    // depthStencilTexture: this._depthStencilTexture,
+    depthStencilRenderbuffer: this._depthStencilRenderbuffer,
+    destroyAttachments: false,
+  });
+
+  this._framebufferDraw = new Framebuffer({
     context: context,
     colorTextures: [this._colorTexture],
     depthStencilTexture: this._depthStencilTexture,
-    depthStencilRenderbuffer: this._depthStencilRenderbuffer,
+    // depthStencilRenderbuffer: this._depthStencilRenderbuffer,
     destroyAttachments: false,
   });
 
@@ -148,7 +186,11 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
 SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
   var framebuffer = passState.framebuffer;
 
-  passState.framebuffer = this._framebuffer;
+  passState.framebuffer = this._framebufferAA;
+  Color.clone(clearColor, this._clearCommand.color);
+  this._clearCommand.execute(context, passState);
+
+  passState.framebuffer = this._framebufferDraw;
   Color.clone(clearColor, this._clearCommand.color);
   this._clearCommand.execute(context, passState);
 
@@ -159,8 +201,32 @@ SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
   passState.framebuffer = framebuffer;
 };
 
-SceneFramebuffer.prototype.getFramebuffer = function () {
-  return this._framebuffer;
+SceneFramebuffer.prototype.getFramebufferAA = function () {
+  return this._framebufferAA;
+};
+
+SceneFramebuffer.prototype.getFramebufferDraw = function () {
+  return this._framebufferDraw;
+};
+
+SceneFramebuffer.prototype.blitColorFramebuffers = function (context) {
+  this._framebufferAA.bindRead();
+  this._framebufferDraw.bindDraw();
+  var width = context.canvas.clientWidth;
+  var height = context.canvas.clientHeight;
+  var gl = context._gl;
+  gl.blitFramebuffer(
+    0,
+    0,
+    width,
+    height,
+    0,
+    0,
+    width,
+    height,
+    gl.COLOR_BUFFER_BIT,
+    gl.LINEAR
+  );
 };
 
 SceneFramebuffer.prototype.getIdFramebuffer = function () {

@@ -366,6 +366,16 @@ Framebuffer.prototype._getActiveColorAttachments = function () {
   return this._activeColorAttachments;
 };
 
+Framebuffer.prototype.bindDraw = function () {
+  var gl = this._gl;
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._framebuffer);
+};
+
+Framebuffer.prototype.bindRead = function () {
+  var gl = this._gl;
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._framebuffer);
+};
+
 Framebuffer.prototype.getColorTexture = function (index) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(index) || index < 0 || index >= this._colorTextures.length) {
