@@ -55,7 +55,9 @@ function View(scene, camera, viewport) {
   this.passState = passState;
   this.pickFramebuffer = new PickFramebuffer(context);
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
-  this.sceneFramebuffer = new SceneFramebuffer();
+  this.sceneFramebuffer = new SceneFramebuffer({
+    multisample: true,
+  });
   this.globeDepth = globeDepth;
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;

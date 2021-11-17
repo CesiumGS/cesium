@@ -2324,7 +2324,7 @@ function executeCommands(scene, passState) {
         if (environmentState.useGlobeDepthFramebuffer) {
           framebuffer = view.globeDepth.framebuffer;
         } else if (environmentState.usePostProcess) {
-          framebuffer = view.sceneFramebuffer.getFramebufferAA();
+          framebuffer = view.sceneFramebuffer.getFramebuffer();
         } else {
           framebuffer = environmentState.originalFramebuffer;
         }
@@ -3495,7 +3495,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   } else if (useGlobeDepthFramebuffer) {
     passState.framebuffer = view.globeDepth.framebuffer;
   } else if (usePostProcess) {
-    passState.framebuffer = view.sceneFramebuffer.getFramebufferAA();
+    passState.framebuffer = view.sceneFramebuffer.getFramebuffer();
   }
 
   if (defined(passState.framebuffer)) {
@@ -3560,7 +3560,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     ? globeDepth.framebuffer
     : undefined;
 
-  var sceneFramebuffer = view.sceneFramebuffer.getFramebufferAA();
+  var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
   var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
 
   if (environmentState.separatePrimitiveFramebuffer) {
@@ -3575,10 +3575,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     view.oit.execute(context, passState);
   }
 
-  if (defined(view.sceneFramebuffer.getFramebufferAA())) {
-    view.sceneFramebuffer.blitColorFramebuffers(context);
-  }
-
   var translucentTileClassification = view.translucentTileClassification;
   if (
     translucentTileClassification.hasTranslucentDepth &&
@@ -3588,8 +3584,10 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   if (usePostProcess) {
-    var sceneFramebufferDraw = view.sceneFramebuffer.getFramebufferDraw();
-    var inputFramebuffer = sceneFramebufferDraw;
+    if (view.sceneFramebuffer._multisample) {
+      sceneFramebuffer = view.sceneFramebuffer.blitColorFramebuffers(context);
+    }
+    var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;
     }
@@ -3597,7 +3595,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     var postProcess = this.postProcessStages;
     var colorTexture = inputFramebuffer.getColorTexture(0);
     var idTexture = idFramebuffer.getColorTexture(0);
-    var depthTexture = defaultValue(globeFramebuffer, sceneFramebufferDraw)
+    var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer)
       .depthStencilTexture;
     postProcess.execute(context, colorTexture, depthTexture, idTexture);
     postProcess.copy(context, defaultFramebuffer);
