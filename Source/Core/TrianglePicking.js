@@ -603,6 +603,17 @@ function isAABBContainsAABB(
   //  contains the next triangle... if it does then we know that's the only octree node we need to check
   //  since it's a fully contained check... very good optimization for heightmap terrain where most triangles
   //  should hopefully be in the same node next to eachother.
+
+  // todo(dan) --- urhg I just guessed this implementatipn, is it even correct??
+  //  we need to check for full containment or just intersection here
+  return (
+    aMinX >= bMinX &&
+    aMaxX <= bMaxX &&
+    aMinY >= bMinY &&
+    aMaxY <= bMaxY &&
+    aMinZ >= bMinZ &&
+    aMaxZ <= bMaxZ
+  );
   return false;
 }
 
@@ -810,8 +821,30 @@ function createOctree(triangles) {
   //  and just eat the CPU time on the main thread
   var maxTrianglesPerNode = 50;
 
+  var quickMatchSuccess = 0;
+  var quickMatchFailure = 0;
+
+  var lastMatch;
   for (var x = 0; x < triangleCount; x++) {
-    nodeAddTriangle(
+    if (lastMatch) {
+      var isTriangleContainedWithinLastMatchedNode = isNodeInteraction(
+        lastMatch.level,
+        lastMatch.x,
+        lastMatch.y,
+        lastMatch.z,
+        triangles,
+        x
+      );
+      if (isTriangleContainedWithinLastMatchedNode) {
+        quickMatchSuccess += 1;
+        lastMatch.node.intersectingTriangles.push(x);
+        continue;
+      } else {
+        quickMatchFailure += 1;
+        lastMatch = null;
+      }
+    }
+    lastMatch = nodeAddTriangle(
       maxTrianglesPerNode,
       maxLevels,
       rootNode,
@@ -825,7 +858,27 @@ function createOctree(triangles) {
     );
   }
   console.timeEnd("creating actual octree");
+  console.log(`quick match ${quickMatchSuccess}; failure ${quickMatchFailure}`);
   return nodes;
+}
+
+function isNodeInteraction(level, x, y, z, triangles, triangleIdx) {
+  // todo(dan) inline all this
+  var aabb = onTheFlyNodeAABB(level, x, y, z);
+  return isAABBContainsAABB(
+    triangles[triangleIdx * 6], // triangle aabb min x
+    triangles[triangleIdx * 6 + 1], // triangle aabb max x
+    triangles[triangleIdx * 6 + 2], // triangle aabb min y
+    triangles[triangleIdx * 6 + 3], // triangle aabb max y
+    triangles[triangleIdx * 6 + 4], // triangle aabb min z
+    triangles[triangleIdx * 6 + 5], // triangle aabb max z
+    aabb.aabbMinX,
+    aabb.aabbMaxX,
+    aabb.aabbMinY,
+    aabb.aabbMaxY,
+    aabb.aabbMinZ,
+    aabb.aabbMaxZ
+  );
 }
 
 function nodeAddTriangle(
@@ -856,15 +909,19 @@ function nodeAddTriangle(
     aabb.aabbMaxZ
   );
 
+  var isMaxLevel = level === maxLevels;
   if (isIntersection) {
-    node.intersectingTriangles = node.intersectingTriangles || [];
-    node.intersectingTriangles.push(triangleIdx);
+    if (isMaxLevel) {
+      node.intersectingTriangles = node.intersectingTriangles || [];
+      node.intersectingTriangles.push(triangleIdx);
+      return { level: level, x: x, y: y, z: z, node: node };
+    }
   } else {
-    return;
+    return null;
   }
 
-  if (level === maxLevels) {
-    return;
+  if (isMaxLevel) {
+    return null;
   }
 
   if (!node.children) {
@@ -888,6 +945,7 @@ function nodeAddTriangle(
     ];
   }
 
+  var lastMatch = null;
   for (var childIdx = 0; childIdx < node.children.length; childIdx++) {
     var childNode = node.children[childIdx];
     var _x;
@@ -950,7 +1008,7 @@ function nodeAddTriangle(
         _z = z * 2 + 1;
       }
     }
-    nodeAddTriangle(
+    var lastCheck = nodeAddTriangle(
       maxTrianglesPerNode,
       maxLevels,
       childNode,
@@ -962,7 +1020,14 @@ function nodeAddTriangle(
       triangles,
       nodes
     );
+    if (lastCheck) {
+      // of all 8 children nodes, take the one (or last one) that intersects
+      //  with the triangle. That's our best bet for full containment of the next triangle to add
+      //  providing they're in order
+      lastMatch = lastCheck;
+    }
   }
+  return lastMatch;
 }
 
 /**
