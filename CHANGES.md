@@ -10,7 +10,7 @@
 
 ##### Additions :tada:
 
-- Added `WebMapServiceImageryProvider.featureInfoUrl` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
+- Added `WebMapServiceImageryProvider.getFeatureInfoUrl` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
 
 ### 1.87.1 - 2021-11-09
 

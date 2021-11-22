@@ -45,7 +45,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *                          an array, each element in the array is a subdomain.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
- * @property {Resource|String} [featureInfoUrl] The FeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
+ * @property {Resource|String} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  */
 
 /**
@@ -181,13 +181,13 @@ function WebMapServiceImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  // Use the featureInfoUrl value defined in options if it exists, else use the property value of url
-  if (defined(options.featureInfoUrl))
-    this._featureInfoUrl = options.featureInfoUrl;
-  else this._featureInfoUrl = options.url;
+  // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
+  if (defined(options.getFeatureInfoUrl))
+    this._getFeatureInfoUrl = options.getFeatureInfoUrl;
+  else this._getFeatureInfoUrl = options.url;
 
   var resource = Resource.createIfNeeded(options.url);
-  var pickFeatureResource = Resource.createIfNeeded(this._featureInfoUrl);
+  var pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
@@ -271,7 +271,6 @@ function WebMapServiceImageryProvider(options) {
     pickFeatureParams.y = "{j}";
   }
   pickFeatureResource.setQueryParameters(pickFeatureParams, true);
-
   this._resource = resource;
 
   this._pickFeaturesResource = pickFeatureResource;
@@ -577,17 +576,17 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the FeatureInfo URL of the WMS server.
+   * Gets the getFeatureInfo URL of the WMS server.
    * @memberof WebMapServiceImageryProvider.prototype
    * @type {String}
    * @readonly
    */
-  featureInfoUrl: {
+  getFeatureInfoUrl: {
     get: function () {
-      return this._featureInfoUrl;
+      return this._getFeatureInfoUrl;
     },
     set: function (value) {
-      this._featureInfoUrl = value;
+      this._getFeatureInfoUrl = value;
     },
   },
 });
