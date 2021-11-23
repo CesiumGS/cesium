@@ -957,8 +957,16 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset.json";
       var implicitTileBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
+      var implicitHeightAndSphereSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset.json";
+      var implicitHeightAndRegionSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset.json";
       var implicitContentBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset.json";
+      var implicitContentHeightSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset.json";
+      var implicitContentHeightAndRegionSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset.json";
       var implicitGeometricErrorSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
 
@@ -1149,7 +1157,7 @@ describe(
         });
       });
 
-      it("uses tile bounding volume from metadata semantics if present", function () {
+      it("uses tile bounding box from metadata semantics if present", function () {
         viewCartographicOrigin(124000);
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -1179,7 +1187,15 @@ describe(
         });
       });
 
-      it("uses content bounding volume from metadata semantics if present", function () {
+      it("prioritizes height semantics over bounding volume semantics", function () {
+        console.log(implicitHeightAndSphereSemanticsUrl);
+      });
+
+      it("uses height semantics to adjust region semantic", function () {
+        console.log(implicitHeightAndRegionSemanticsUrl);
+      });
+
+      it("uses content bounding box from metadata semantics if present", function () {
         viewCartographicOrigin(124000);
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -1200,6 +1216,14 @@ describe(
             expect(tile.contentBoundingVolume).not.toBe(tile.boundingVolume);
           });
         });
+      });
+
+      it("uses content height semantics to adjust implicit region", function () {
+        console.log(implicitContentHeightSemanticsUrl);
+      });
+
+      it("uses content height semantics to adjust content region semantic", function () {
+        console.log(implicitContentHeightAndRegionSemanticsUrl);
       });
 
       it("uses geometric error from metadata semantics if present", function () {
