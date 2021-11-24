@@ -90,104 +90,6 @@ var matrix4Scratch = new Matrix4();
 var minimumScratch = new Cartesian3();
 var maximumScratch = new Cartesian3();
 
-function Point(x, y) {
-  this.x = x;
-  this.y = y;
-}
-
-function QuadtreeNode(level, topLeft, bottomRight) {
-  this.level = level;
-  // details about this node
-  this.topLeft = topLeft;
-  this.bottomRight = bottomRight;
-  this.maxHeight = -1; // sufficiently lower than what should be the minimum height of about -0.5
-  this.minHeight = 1; // sufficiently higher than what should be the maximum height of about 0.5
-
-  if (level < 5) {
-    this.topLeftTree = new QuadtreeNode(
-      level + 1,
-      new Point(topLeft.x, topLeft.y),
-      new Point(
-        (topLeft.x + bottomRight.x) / 2,
-        (topLeft.y + bottomRight.y) / 2
-      )
-    );
-    this.bottomLeftTree = new QuadtreeNode(
-      level + 1,
-      new Point(topLeft.x, (topLeft.y + bottomRight.y) / 2),
-      new Point((topLeft.x + bottomRight.x) / 2, bottomRight.y)
-    );
-
-    this.topRightTree = new QuadtreeNode(
-      level + 1,
-      new Point((topLeft.x + bottomRight.x) / 2, topLeft.y),
-      new Point(bottomRight.x, (topLeft.y + bottomRight.y) / 2)
-    );
-    this.bottomRightTree = new QuadtreeNode(
-      level + 1,
-      new Point(
-        (topLeft.x + bottomRight.x) / 2,
-        (topLeft.y + bottomRight.y) / 2
-      ),
-      new Point(bottomRight.x, bottomRight.y)
-    );
-  }
-}
-
-function createPackedQuadtree(
-  positions,
-  invTransform,
-  width,
-  triangleIndexEnd
-) {
-  var axisAlignedPositions = [];
-  var i;
-  for (i = 0; i < positions.length; i++) {
-    var position = positions[i];
-    var v0 = new Cartesian3();
-    Matrix4.multiplyByPoint(invTransform, position, v0);
-    axisAlignedPositions.push(v0);
-  }
-
-  var rootNode = new QuadtreeNode(
-    0,
-    new Point(-0.5, -0.5),
-    new Point(0.5, 0.5)
-  );
-
-  for (i = 0; i < axisAlignedPositions.length; i++) {
-    var pos = axisAlignedPositions[i];
-    var node = rootNode;
-    while (node) {
-      var topLeft = node.topLeft;
-      var botRight = node.bottomRight;
-
-      node.maxHeight = Math.max(pos.z, node.maxHeight);
-      node.minHeight = Math.min(pos.z, node.minHeight);
-
-      if ((topLeft.x + botRight.x) / 2 >= pos.x) {
-        if ((topLeft.y + botRight.y) / 2 >= pos.y) {
-          // Indicates topLeftTree
-          node = node.topLeftTree;
-        } else {
-          // Indicates botLeftTree
-          node = node.bottomLeftTree;
-        }
-      } else {
-        if ((topLeft.y + botRight.y) / 2 >= pos.y) {
-          // Indicates topRightTree
-          node = node.topRightTree;
-        } else {
-          // Indicates botRightTree
-          node = node.bottomRightTree;
-        }
-      }
-    }
-  }
-
-  return rootNode;
-}
-
 /**
  * Fills an array of vertices from a heightmap image.
  *
@@ -643,15 +545,6 @@ HeightmapTessellator.computeVertices = function (options) {
       transform,
       orientedBoundingBox
     );
-
-    console.time("making packed quadtree");
-    quadtree = createPackedQuadtree(
-      positions,
-      inverseTransform,
-      width,
-      gridTriangleCount
-    );
-    console.timeEnd("making packed quadtree");
   }
 
   var occludeePointInScaledSpace;
