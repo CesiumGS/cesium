@@ -692,7 +692,7 @@ HeightmapTessellator.computeVertices = function (options) {
   }
 
   console.timeEnd("terrain encoding");
-  console.timeEnd("compute vertices");
+  console.timeEnd("computeVertices");
   return {
     vertices: vertices,
     maximumHeight: maximumHeight,

@@ -9,7 +9,6 @@ import Ray from "./Ray.js";
 // TODO: need to handle 2d picking somehow
 
 var invalidIntersection = Number.MAX_VALUE;
-var invalidTriangleIndex = -1;
 
 /**
  * @param {Ray} ray
@@ -54,37 +53,6 @@ function Node(x, y, z, level) {
   this.firstChildNodeIdx = -1;
   this.triangles = [];
 }
-
-/**
- * @constructor
- */
-function TraversalResult() {
-  this.triangleIndex = invalidTriangleIndex;
-  this.t = invalidIntersection;
-  this.level = -1;
-  this.x = -1;
-  this.y = -1;
-  this.z = -1;
-}
-
-TraversalResult.prototype.reset = function () {
-  this.triangleIndex = invalidTriangleIndex;
-  this.t = invalidIntersection;
-  this.level = -1;
-  this.x = -1;
-  this.y = -1;
-  this.z = -1;
-};
-
-TraversalResult.prototype.print = function () {
-  console.log("Traversal result:");
-  console.log("tri index: " + this.triangleIndex);
-  console.log("t: " + this.t);
-  console.log("level: " + this.level);
-  console.log("x: " + this.x);
-  console.log("y: " + this.y);
-  console.log("z: " + this.z);
-};
 
 function isRayIntersectAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
   var tmp;
@@ -530,8 +498,6 @@ function nodeAddTriangle(
 
 /**
  * @constructor
- * @param {{packedNodes: Float32Array, packedTriangles: Float32Array, inverseTransform: Matrix4}} packedOctree
- * @param {Function} triangleVerticesCallback
  */
 function TrianglePicking(packedOctree, triangleVerticesCallback) {
   //>>includeStart('debug', pragmas.debug);
@@ -539,21 +505,13 @@ function TrianglePicking(packedOctree, triangleVerticesCallback) {
     "packedOctree.inverseTransform",
     packedOctree.inverseTransform
   );
-  Check.typeOf.object("packedOctree.packedNodes", packedOctree.packedNodes);
-  Check.typeOf.object(
-    "packedOctree.packedTriangles",
-    packedOctree.packedTriangles
-  );
   Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
   //>>includeEnd('debug');
 
   this._inverseTransform = Matrix4.unpack(packedOctree.inverseTransform);
-  this._packedNodes = packedOctree.packedNodes;
-  this._packedTriangles = packedOctree.packedTriangles;
   this._triangles = packedOctree.triangles;
   this._unpackedOctree = packedOctree.unpackedOctree;
   this._transform = Matrix4.unpack(packedOctree.transform);
-  this._obb = OrientedBoundingBox.unpack(packedOctree.obb);
 
   this._triangleVerticesCallback = triangleVerticesCallback;
 }
@@ -564,6 +522,7 @@ var scratchTransformedRay = new Ray();
  * @param {Ray} ray
  * @param {Boolean} cullBackFaces
  * @param {Cartesian3} result
+ * @param {object} trace
  * @returns {Cartesian3} result
  */
 TrianglePicking.prototype.rayIntersect = function (
@@ -572,12 +531,7 @@ TrianglePicking.prototype.rayIntersect = function (
   result,
   trace
 ) {
-  if (!defined(result)) {
-    result = new Cartesian3();
-  }
   var invTransform = this._inverseTransform;
-  var packedTriangleSets = this._packedTriangles;
-  var packedNodes = this._packedNodes;
 
   var transformedRay = scratchTransformedRay;
   transformedRay.origin = Matrix4.multiplyByPoint(
@@ -605,7 +559,6 @@ TrianglePicking.prototype.rayIntersect = function (
  *
  * @param { Float32Array} triangles
  * @param {Matrix4 }inverseTransform
- * @return {{packedNodes: Int32Array, inverseTransform: Array<number>, packedTriangles: Int32Array}}
  */
 TrianglePicking.createPackedOctree = function (
   triangles,
@@ -614,34 +567,7 @@ TrianglePicking.createPackedOctree = function (
   obb
 ) {
   var nodes = createOctree(triangles);
-  console.time("creating packed");
-  // var packedNodeSpace = 3;
-  // var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
-  var packedNodes = new Int32Array();
-  // var triangleSets = [];
-  // var n;
-  // for (var w = 0; w < nodes.length; w++) {
-  //   n = nodes[w];
-  //   // a reference to the packed node index (*3)
-  //   packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
-  //   // the number of triangles this node contains
-  //   packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
-  //   // the index of the first triangle in thee packed triangles
-  //   packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
-  //   // TODO keep a counter of the total triangle count during octree creation - so we can go straight
-  //   //  to the packedTriangles typed array here - instead of triangleSets
-  //   for (var i = 0; i < n.triangles.length; i++) {
-  //     // this for loop was actually 10% faster than .push(...items) and 120% faster than .concat(items)
-  //     triangleSets.push(n.triangles[i]);
-  //   }
-  // }
-  // var packedTriangles = new Int32Array(triangleSets);
-  var packedTriangles = new Int32Array();
-  console.timeEnd("creating packed");
-
   return {
-    packedTriangles: packedTriangles,
-    packedNodes: packedNodes,
     triangles: triangles,
     unpackedOctree: nodes,
     inverseTransform: Matrix4.pack(inverseTransform, [], 0),
