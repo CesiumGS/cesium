@@ -330,29 +330,6 @@
             ];
           }
 
-          function drawTreeAtLevel(node, level, prims, transform) {
-            var children = getChildren(node);
-            if (node.level === level) {
-              var i = 0;
-              for (var n of children) {
-                var color = Cesium.Color.fromCssColorString(colors[i % 8]);
-                drawOctreeNode(
-                  n,
-                  color,
-                  prims,
-                  transform,
-                  [],
-                  root._triangleVerticesCallback
-                );
-                i++;
-              }
-            } else {
-              for (var n of children) {
-                drawTreeAtLevel(n, level, prims, transform);
-              }
-            }
-          }
-
           function drawOctreeLayer(prims, level) {
             prims.removeAll();
             if (level == null) {
@@ -634,7 +611,7 @@
             },
           ];
           var optionLevel = 0;
-          while (optionLevel <= 2) {
+          while (optionLevel <= 5) {
             showOctreeOptions.push({
               text: "Octree Level " + optionLevel,
               onselect: onSelectShowOctree.bind(this, optionLevel),

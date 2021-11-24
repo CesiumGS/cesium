@@ -3,7 +3,6 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Ray from "./Ray.js";
 
 // TODO: need to handle 2d picking somehow
@@ -282,8 +281,6 @@ function createOctree(triangles) {
   // we can build a more spread out octree
   //  for smaller tiles because it'll be quicker
   var maxLevels = 2;
-  //  and just eat the CPU time on the main thread
-  var maxTrianglesPerNode = 50;
 
   var quickMatchSuccess = 0;
   var quickMatchFailure = 0;
@@ -309,7 +306,6 @@ function createOctree(triangles) {
       }
     }
     lastMatch = nodeAddTriangle(
-      maxTrianglesPerNode,
       maxLevels,
       rootNode,
       0,
@@ -346,7 +342,6 @@ function isNodeContainsTriangle(level, x, y, z, triangles, triangleIdx) {
 }
 
 function nodeAddTriangle(
-  maxTrianglesPerNode,
   maxLevels,
   node,
   level,
@@ -474,7 +469,6 @@ function nodeAddTriangle(
       }
     }
     var match = nodeAddTriangle(
-      maxTrianglesPerNode,
       maxLevels,
       childNode,
       level + 1,
