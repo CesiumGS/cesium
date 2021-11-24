@@ -32,7 +32,7 @@ import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester
  * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
  * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
- * @param {OctreeTrianglePicking} trianglePicking A custom triangle picking instance to use if you have one
+ * @param {OctreeTrianglePicking} octreeTrianglePicking An octree triangle picking instance if you have one, otherwise defaults to a iterative triangle search
  *
  * @private
  */
@@ -54,7 +54,7 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  trianglePicking
+  octreeTrianglePicking
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -172,7 +172,7 @@ function TerrainMesh(
     vertices
   );
 
-  this._octree = octreeTrianglePicking;
+  this._octreeTrianglePicking = octreeTrianglePicking;
 }
 
 function isCartesianAlmostEqual(a, b) {
@@ -209,8 +209,8 @@ TerrainMesh.prototype.pickRay = function (
 
   var newPickValue, oldPickValue;
 
-  if (this._octree) {
-    newPickValue = this._octree.rayIntersect(
+  if (this._octreeTrianglePicking) {
+    newPickValue = this._octreeTrianglePicking.rayIntersect(
       ray,
       cullBackFaces,
       null,
@@ -231,11 +231,11 @@ TerrainMesh.prototype.pickRay = function (
   // whoops
   if (
     !window.disableDefaultPickStategy &&
-    this._octree &&
+    this._octreeTrianglePicking &&
     !isCartesianAlmostEqual(newPickValue, oldPickValue)
   ) {
     console.error("pick values are different", newPickValue, oldPickValue);
-    var newPickAgain = this._octree.rayIntersect(
+    var newPickAgain = this._octreeTrianglePicking.rayIntersect(
       ray,
       cullBackFaces,
       null,

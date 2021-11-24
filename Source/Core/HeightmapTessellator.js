@@ -515,7 +515,6 @@ HeightmapTessellator.computeVertices = function (options) {
   console.timeEnd("creating bounding sphere");
 
   var orientedBoundingBox;
-  var quadtree;
   var transform;
   var inverseTransform;
   var octree;
@@ -598,17 +597,6 @@ HeightmapTessellator.computeVertices = function (options) {
     boundingSphere3D: boundingSphere3D,
     orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
-    packedQuadtree: {
-      orientedBoundingBox: orientedBoundingBox,
-      boundingSphere3D: boundingSphere3D,
-      inverseTransform: inverseTransform,
-      rectangle: Rectangle.pack(rectangle, []),
-      transform: transform,
-      quadtree: quadtree,
-      width: width,
-      height: height,
-      skirtHeight: skirtHeight,
-    },
     octree: octree,
   };
 };

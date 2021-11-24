@@ -35,7 +35,6 @@
       <div id="zoomButtons"></div>
       <div id="showOctreeLevel"></div>
       <div id="showTestedTriangles"></div>
-      <div id="showTileRectangle"></div>
       <div id="sampleButtons"></div>
       <div id="showOBB"></div>
       <script id="cesium_sandcastle_script">
@@ -129,12 +128,7 @@
 
           var selectedOctreeLevel = null;
           var showTestedTriangles = false;
-          var selectedShowTileRectangle = false;
           var selectedShowOBB = false;
-
-          var tileRectDataSource = new Cesium.CustomDataSource(
-            "tileRectDataSource"
-          );
 
           var intersectedTriangleDataSource = new Cesium.CustomDataSource(
             "intersectedTriangleDataSource"
@@ -142,17 +136,12 @@
           var testedTrianglesDataSource = new Cesium.CustomDataSource(
             "testedTrianglesDataSource"
           );
-          var testedPointsDataSource = new Cesium.CustomDataSource(
-            "testedPoints"
-          );
           var obbDataSource = new Cesium.CustomDataSource("obbDataSource");
           var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
           var octreePrimitives = new Cesium.PrimitiveCollection();
 
           viewer.dataSources.add(intersectedTriangleDataSource);
-          viewer.dataSources.add(tileRectDataSource);
           viewer.dataSources.add(testedTrianglesDataSource);
-          viewer.dataSources.add(testedPointsDataSource);
           viewer.dataSources.add(obbDataSource);
           viewer.scene.primitives.add(axisPrimitiveCollection);
           viewer.scene.primitives.add(octreePrimitives);
@@ -372,7 +361,7 @@
             var root =
               window.lastPickDetails &&
               window.lastPickDetails.mesh &&
-              window.lastPickDetails.mesh._octree;
+              window.lastPickDetails.mesh._octreeTrianglePicking;
             if (!root) {
               return;
             }
@@ -568,7 +557,6 @@
 
           function setShowTestTriangles(value) {
             testedTrianglesDataSource.entities.removeAll();
-            testedPointsDataSource.entities.removeAll();
 
             if (value) {
               var triangles =
@@ -581,46 +569,18 @@
                 testedTrianglesDataSource,
                 triangles
               );
-
-              // var points =
-              //   (window.lastPickDetails &&
-              //     window.lastPickDetails.traceDetails &&
-              //     window.lastPickDetails.traceDetails.testedPoints) ||
-              //   [];
-              // drawPointList(Cesium.Color.PINK, testedPointsDataSource, points);
-            }
-          }
-
-          function drawRectangle(dataSource, rect) {
-            dataSource.entities.add({
-              id: "tile-rect",
-              rectangle: {
-                coordinates: rect,
-                material: Cesium.Color.CYAN.withAlpha(0.5),
-                rotation: Cesium.Math.toRadians(0),
-                extrudedHeight: 10000,
-                height: 0,
-                outline: true,
-                outlineColor: Cesium.Color.BLACK,
-              },
-            });
-          }
-
-          function showTileRectangle(show) {
-            var rect =
-              window.lastPickDetails &&
-              window.lastPickDetails.mesh &&
-              window.lastPickDetails.mesh._trianglePicking &&
-              window.lastPickDetails.mesh._trianglePicking._rectangle;
-            tileRectDataSource.entities.removeAll();
-            if (rect && show) {
-              drawRectangle(tileRectDataSource, rect);
             }
           }
 
           function showOBB(show, dataSource) {
+            var transform =
+              window.lastPickDetails &&
+              window.lastPickDetails.mesh &&
+              window.lastPickDetails.mesh._octreeTrianglePicking &&
+              window.lastPickDetails.mesh._octreeTrianglePicking._transform;
+
             dataSource.entities.removeAll();
-            if (!show) {
+            if (!show || !transform) {
               return;
             }
 
@@ -629,7 +589,8 @@
             }
 
             var C = Cesium.Color;
-            var transform = window.lastPickDetails.mesh._octree._transform;
+            var radius =
+              window.lastPickDetails.mesh.boundingSphere3D.radius / 50;
 
             var x;
             var y;
@@ -655,7 +616,7 @@
                     // TOP RIGHT
                     color = C.GOLD;
                   }
-                  addDot(transform, c(x, y, z), color, 50000, dataSource);
+                  addDot(transform, c(x, y, z), color, radius, dataSource);
                 }
               }
             }
@@ -721,26 +682,6 @@
             "showOBB"
           );
 
-          Sandcastle.addToolbarMenu(
-            [
-              {
-                text: "Hide Tile Rectangle",
-                onselect: function () {
-                  selectedShowTileRectangle = false;
-                  showTileRectangle(selectedShowTileRectangle);
-                },
-              },
-              {
-                text: "Show Tile Rectangle",
-                onselect: function () {
-                  selectedShowTileRectangle = true;
-                  showTileRectangle(selectedShowTileRectangle);
-                },
-              },
-            ],
-            "showTileRectangle"
-          );
-
           var scene = viewer.scene;
           var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 
@@ -783,7 +724,6 @@
 
               setShowTestTriangles(showTestedTriangles);
               showIntersectedTriangles();
-              showTileRectangle(selectedShowTileRectangle);
               showOBB(selectedShowOBB, obbDataSource);
 
               drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
