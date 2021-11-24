@@ -1,13 +1,14 @@
 import path from "path";
 import fs from "fs";
 const name = path.resolve(path.dirname(""));
-const directoryPath = path.join(name, "traces");
+const directoryPath = path.join(name, "Apps/Sandcastle/traces");
 
 const methodNamesWeCareAbout = [
   "nodeAddTriangle",
   "getOverlap",
   "TrianglePicking",
   "computeVertices",
+  "createOctree",
 ];
 
 const isLastOnlyArg = Array.from(process.argv).find((arg) =>
@@ -18,10 +19,9 @@ const isIncludeLogsArg = Array.from(process.argv).find((arg) =>
 );
 
 const isLastOnly = !!isLastOnlyArg;
-const isLastOnlyValue = isLastOnlyArg
-  .replace("--last", "")
-  .replace("=", "")
-  .trim();
+const isLastOnlyValue = isLastOnly
+  ? isLastOnlyArg.replace("--last", "").replace("=", "").trim()
+  : undefined;
 const lastCount = isLastOnlyValue ? parseInt(isLastOnlyValue) : 1;
 
 const isIncludeLogs = !!isIncludeLogsArg;
@@ -53,11 +53,11 @@ fs.readdir(directoryPath, function (err, files) {
     // Do whatever you want to do with the file
     const timestamp = new Date(file.ts).toLocaleString();
     let relevantLines = "";
-    var data = fs.readFileSync("traces/" + file.name, "utf8");
+    var data = fs.readFileSync("Apps/Sandcastle/traces/" + file.name, "utf8");
     let logs;
     try {
       logs = fs.readFileSync(
-        "traces/" + file.name.replace(".json", ".txt"),
+        "Apps/Sandcastle/traces/" + file.name.replace(".json", ".txt"),
         "utf8"
       );
     } catch (err) {}

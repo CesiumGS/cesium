@@ -14,10 +14,8 @@ const cesiumWorldTerrainUrl =
   let commit = shell.exec("git rev-parse --short HEAD");
   commit = `${commit}`.trim();
 
-  const path = `traces/cesium_trace_${commit}__${now}.json`;
-
-  const logPath = `traces/cesium_trace_${commit}__${now}.txt`;
-
+  const path = `Apps/Sandcastle/traces/cesium_trace_${commit}__${now}.json`;
+  const logPath = `Apps/Sandcastle/traces/cesium_trace_${commit}__${now}.txt`;
   const access = fs.createWriteStream(logPath);
 
   var stdoutWrite = process.stdout.write;

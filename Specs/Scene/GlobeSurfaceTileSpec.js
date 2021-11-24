@@ -745,7 +745,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             var location = pickResultToLocation(pickResult);
             expect(location.latitude).toBeCloseTo(27.993258048265453, 10);
             expect(location.longitude).toBeCloseTo(86.97703198692928, 10);
-            expect(location.height).toBeCloseTo(5560, 0);
+            expect(location.height).toBeCloseTo(5587.6, 0);
           });
         });
       });

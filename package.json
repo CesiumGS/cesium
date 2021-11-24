@@ -81,12 +81,14 @@
     "open": "^7.0.0",
     "prettier": "2.1.2",
     "pretty-quick": "^3.0.2",
+    "puppeteer": "11.0.0",
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
     "rollup": "^2.22.1",
     "rollup-plugin-external-globals": "^0.6.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
+    "shelljs": "0.8.4",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.2",
@@ -130,6 +132,8 @@
     "deploy-set-version": "gulp deploy-set-version",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\"",
-    "pretty-quick": "pretty-quick"
+    "pretty-quick": "pretty-quick",
+    "run_terrain_trace": "node Apps/Sandcastle/puppeteer.js",
+    "parse_traces": "node Apps/Sandcastle/parse_traces.js --logs --last"
   }
 }

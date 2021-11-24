@@ -258,6 +258,7 @@ function createPackedQuadtree(
  * var position = encoding.decodePosition(statistics.vertices, index * encoding.getStride());
  */
 HeightmapTessellator.computeVertices = function (options) {
+  console.time("computeVertices");
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options) || !defined(options.heightmap)) {
     throw new DeveloperError("options.heightmap is required.");
@@ -691,7 +692,7 @@ HeightmapTessellator.computeVertices = function (options) {
   }
 
   console.timeEnd("terrain encoding");
-
+  console.timeEnd("compute vertices");
   return {
     vertices: vertices,
     maximumHeight: maximumHeight,
