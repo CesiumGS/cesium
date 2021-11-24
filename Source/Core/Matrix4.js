@@ -2008,6 +2008,24 @@ Matrix4.multiplyByPoint = function (matrix, cartesian, result) {
   return result;
 };
 
+Matrix4.multiplyByPointFast = function (matrix, cartesian, result) {
+  result.x =
+    matrix[0] * cartesian.x +
+    matrix[4] * cartesian.y +
+    matrix[8] * cartesian.z +
+    matrix[12];
+  result.y =
+    matrix[1] * cartesian.x +
+    matrix[5] * cartesian.y +
+    matrix[9] * cartesian.z +
+    matrix[13];
+  result.z =
+    matrix[2] * cartesian.x +
+    matrix[6] * cartesian.y +
+    matrix[10] * cartesian.z +
+    matrix[14];
+};
+
 /**
  * Computes the product of a matrix and a scalar.
  *

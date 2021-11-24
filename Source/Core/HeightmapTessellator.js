@@ -39,23 +39,21 @@ HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
   isBigEndian: false,
 });
 
+var v0 = new Cartesian3();
+var v1 = new Cartesian3();
+var v2 = new Cartesian3();
+
+var trianglesPerRow;
+var base;
+var isEven;
+var triIdx;
+
 function createPackedTriangles(
   positions,
   invTransform,
   width,
   triangleIndexEnd
 ) {
-  var v0 = new Cartesian3();
-  var v1 = new Cartesian3();
-  var v2 = new Cartesian3();
-  var idx0;
-  var idx1;
-  var idx2;
-  var trianglesPerRow;
-  var base;
-  var isEven;
-  var triIdx;
-
   var triangles = new Float32Array(triangleIndexEnd * 6);
 
   for (triIdx = 0; triIdx < triangleIndexEnd; triIdx++) {
@@ -64,15 +62,21 @@ function createPackedTriangles(
       width * Math.floor(triIdx / trianglesPerRow) +
       Math.floor((triIdx % trianglesPerRow) / 2);
     isEven = triIdx % 2 === 0;
+
     // isEven: TL, BL, TR
     // isOdd: TR, BL, BR
-    idx0 = base + (isEven ? 0 : 1);
-    idx1 = base + width;
-    idx2 = base + 1 + (isEven ? 0 : width);
 
-    Matrix4.multiplyByPoint(invTransform, positions[idx0], v0);
-    Matrix4.multiplyByPoint(invTransform, positions[idx1], v1);
-    Matrix4.multiplyByPoint(invTransform, positions[idx2], v2);
+    Matrix4.multiplyByPointFast(
+      invTransform,
+      positions[base + (isEven ? 0 : 1)],
+      v0
+    );
+    Matrix4.multiplyByPointFast(invTransform, positions[base + width], v1);
+    Matrix4.multiplyByPointFast(
+      invTransform,
+      positions[base + 1 + (isEven ? 0 : width)],
+      v2
+    );
 
     // Get local space AABBs for triangle
     triangles[triIdx * 6 + 0] = Math.min(v0.x, v1.x, v2.x);
