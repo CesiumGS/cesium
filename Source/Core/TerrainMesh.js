@@ -32,7 +32,7 @@ import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester
  * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
  * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
- * @param {TrianglePicking} trianglePicking The triangle picking instance to use.
+ * @param {TrianglePicking} octreeTrianglePicking The triangle picking instance to use.
  *
  * @private
  */
@@ -54,7 +54,6 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  trianglePicking,
   octreeTrianglePicking
 ) {
   /**
@@ -167,21 +166,12 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
-  /**
-   * Used when calling {@link TerrainMesh#getPickRay}
-   * @type {TrianglePicking}
-   * @private
-   */
-  this._trianglePicking = trianglePicking;
-
   this._defaultPickStrategy = new TriangleSearchIntersectionTester(
     encoding,
     indices,
     vertices
   );
-  if (!this._trianglePicking) {
-    this._trianglePicking = this._defaultPickStrategy;
-  }
+
   this._octree = octreeTrianglePicking;
 }
 
@@ -217,18 +207,7 @@ TerrainMesh.prototype.pickRay = function (
     traceDetails = {};
   }
 
-  // var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
   var newPickValue, oldPickValue;
-  // if (canNewPick) {
-  //   // console.time("new pick");
-  //   newPickValue = this._trianglePicking.rayIntersect(
-  //     ray,
-  //     cullBackFaces,
-  //     null,
-  //     traceDetails
-  //   );
-  //   // console.timeEnd("new pick");
-  // }
 
   if (this._octree) {
     newPickValue = this._octree.rayIntersect(
@@ -269,6 +248,7 @@ TerrainMesh.prototype.pickRay = function (
       projection,
       traceDetails
     );
+    console.error("after running again", newPickAgain, oldPickAgain);
   }
 
   // record details on the window

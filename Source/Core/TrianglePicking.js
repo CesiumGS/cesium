@@ -106,7 +106,8 @@ function isNodeIntersection(
   ray,
   node,
   cullBackFaces,
-  triangleVerticesCallback
+  triangleVerticesCallback,
+  traceDetails
 ) {
   var result = {
     t: Number.MAX_VALUE,
@@ -119,7 +120,7 @@ function isNodeIntersection(
     var v0 = new Cartesian3();
     var v1 = new Cartesian3();
     var v2 = new Cartesian3();
-    triangleVerticesCallback(triIndex, v0, v1, v2);
+    triangleVerticesCallback(triIndex, v0, v1, v2, traceDetails);
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
@@ -189,7 +190,8 @@ function rayIntersectOctree(
       ray,
       test.node,
       cullBackFaces,
-      triangleVerticesCallback
+      triangleVerticesCallback,
+      trace
     );
     triangleTestCount += intersectionResult.triangleTestCount;
     minT = Math.min(intersectionResult.t, minT);

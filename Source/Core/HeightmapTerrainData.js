@@ -16,7 +16,6 @@ import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import QuadtreeTrianglePicker from "./QuadtreeTrianglePicker.js";
 import TrianglePicking from "./TrianglePicking.js";
 import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
@@ -289,13 +288,6 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
     var encoding = TerrainEncoding.clone(result.encoding);
     var vertices = new Float32Array(result.vertices);
 
-    var quadtreeTrianglePicker = new QuadtreeTrianglePicker(
-      result.packedQuadtree,
-      encoding,
-      vertices,
-      indicesAndEdges.indices
-    );
-
     var octreeTrianglePicker = new TrianglePicking(
       result.octree,
       createTriangleVerticesCallback(
@@ -323,7 +315,6 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
       indicesAndEdges.northIndicesWestToEast,
-      quadtreeTrianglePicker,
       octreeTrianglePicker
     );
 

@@ -33,7 +33,6 @@
     <div id="toolbar">
       <div id="terrainMenu"></div>
       <div id="zoomButtons"></div>
-      <div id="showQuadtreeLevel"></div>
       <div id="showOctreeLevel"></div>
       <div id="showTestedTriangles"></div>
       <div id="showTileRectangle"></div>
@@ -128,7 +127,6 @@
 
           window.viewer = viewer;
 
-          var selectedQuadTreeAtLevel = null;
           var selectedOctreeLevel = null;
           var showTestedTriangles = false;
           var selectedShowTileRectangle = false;
@@ -137,7 +135,6 @@
           var tileRectDataSource = new Cesium.CustomDataSource(
             "tileRectDataSource"
           );
-          var quadTreeDataSource = new Cesium.CustomDataSource("quadtree");
 
           var intersectedTriangleDataSource = new Cesium.CustomDataSource(
             "intersectedTriangleDataSource"
@@ -152,7 +149,6 @@
           var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
           var octreePrimitives = new Cesium.PrimitiveCollection();
 
-          viewer.dataSources.add(quadTreeDataSource);
           viewer.dataSources.add(intersectedTriangleDataSource);
           viewer.dataSources.add(tileRectDataSource);
           viewer.dataSources.add(testedTrianglesDataSource);
@@ -167,138 +163,6 @@
               local,
               new Cesium.Cartesian3()
             );
-          }
-
-          function rainbow(numOfSteps, step) {
-            // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
-            // Adam Cole, 2011-Sept-14
-            // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
-            var r, g, b;
-            var h = step / numOfSteps;
-            var i = ~~(h * 6);
-            var f = h * 6 - i;
-            var q = 1 - f;
-            switch (i % 6) {
-              case 0:
-                r = 1;
-                g = f;
-                b = 0;
-                break;
-              case 1:
-                r = q;
-                g = 1;
-                b = 0;
-                break;
-              case 2:
-                r = 0;
-                g = 1;
-                b = f;
-                break;
-              case 3:
-                r = 0;
-                g = q;
-                b = 1;
-                break;
-              case 4:
-                r = f;
-                g = 0;
-                b = 1;
-                break;
-              case 5:
-                r = 1;
-                g = 0;
-                b = q;
-                break;
-            }
-            var c =
-              "#" +
-              ("00" + (~~(r * 255)).toString(16)).slice(-2) +
-              ("00" + (~~(g * 255)).toString(16)).slice(-2) +
-              ("00" + (~~(b * 255)).toString(16)).slice(-2);
-            return c;
-          }
-
-          function drawQuadTreeNode(transform, node, obb, color) {
-            var topLeft = node.topLeft;
-            var bottomRight = node.bottomRight;
-            var minHeight = node.minHeight;
-            var maxHeight = node.maxHeight;
-
-            var topLeftWorldSpace = localToWorld(
-              transform,
-              new Cesium.Cartesian3(topLeft.x, topLeft.y, 0)
-            );
-            var bottomRightWorldSpace = localToWorld(
-              transform,
-              new Cesium.Cartesian3(bottomRight.x, bottomRight.y, 0)
-            );
-
-            var minHeightWorldSpace = localToWorld(
-              transform,
-              new Cesium.Cartesian3(0, 0, minHeight)
-            );
-            var maxHeightWorldSpace = localToWorld(
-              transform,
-              new Cesium.Cartesian3(0, 0, maxHeight)
-            );
-
-            var topLeftCartographic = Cesium.Cartographic.fromCartesian(
-              topLeftWorldSpace
-            );
-            var bottomRightCartographic = Cesium.Cartographic.fromCartesian(
-              bottomRightWorldSpace
-            );
-            var minHeightCartographic = Cesium.Cartographic.fromCartesian(
-              minHeightWorldSpace
-            );
-            var maxHeightCartographic = Cesium.Cartographic.fromCartesian(
-              maxHeightWorldSpace
-            );
-
-            var rect = new Cesium.Rectangle(
-              Math.min(
-                topLeftCartographic.longitude,
-                bottomRightCartographic.longitude
-              ),
-              Math.min(
-                topLeftCartographic.latitude,
-                bottomRightCartographic.latitude
-              ),
-              Math.max(
-                bottomRightCartographic.longitude,
-                topLeftCartographic.longitude
-              ),
-              Math.max(
-                bottomRightCartographic.latitude,
-                topLeftCartographic.latitude
-              )
-            );
-
-            if (rect.north < rect.south) {
-              console.warn("invalid node", rect, node);
-              var tmp = rect.north;
-              rect.north = rect.south;
-              rect.south = tmp;
-            }
-
-            // if (rect.north < rect.south) {
-            //   console.warn("invalid node", rect, node);
-            //   var tmp = rect.north;
-            //   rect.north = rect.south;
-            //   rect.south = tmp;
-            // }
-
-            quadTreeDataSource.entities.add({
-              rectangle: {
-                coordinates: rect,
-                material: color,
-                rotation: Cesium.Math.toRadians(0),
-                extrudedHeight: maxHeightCartographic.height,
-                height: minHeightCartographic.height,
-                outline: true, // height must be set for outline to display
-                outlineColor: Cesium.Color.BLACK,
-              },
-            });
           }
 
           function onTheFlyNodeAABB(level, x, y, z) {
@@ -520,10 +384,6 @@
 
             var unpackedOctreeNodes = root._unpackedOctree;
             var transform = root._transform;
-            // var nodesToDraw = unpackedOctreeNodes.filter(
-            //   (n) => n.level === level
-            // );
-
             const allNodes = flattenOctree(unpackedOctreeNodes[0]);
             var nodesToDraw = allNodes.filter((n) => n.level === level);
 
@@ -550,7 +410,6 @@
               );
               i++;
             }
-            // drawTreeAtLevel(root, level, prims, transform);
           }
 
           function addDot(transform, local, color, radius, dataSource) {
@@ -631,7 +490,7 @@
                 var tri = triangles[i];
                 dataSource.entities.add({
                   polygon: {
-                    hierarchy: tri,
+                    hierarchy: tri.positions,
                     perPositionHeight: true,
                     material: color,
                     outline: true,
@@ -715,7 +574,7 @@
               var triangles =
                 (window.lastPickDetails &&
                   window.lastPickDetails.traceDetails &&
-                  window.lastPickDetails.traceDetails.testedTriangles) ||
+                  window.lastPickDetails.traceDetails.trianglesTested) ||
                 [];
               drawTriangleList(
                 Cesium.Color.ORANGE,
@@ -830,53 +689,6 @@
             }
           }
 
-          function showQuadTreeAtLevel(level) {
-            if (window.lastPickDetails) {
-              var root = window.lastPickDetails.mesh._trianglePicking._quadtree;
-              var transform = window.lastPickDetails.traceDetails.transform;
-              var obb = window.lastPickDetails.mesh._trianglePicking.obb;
-
-              var nodes = flatten(root);
-              var nodesAtLevel = nodes.filter(function (n) {
-                return n.level === level;
-              });
-
-              quadTreeDataSource.entities.removeAll();
-              for (var i = 0; i < nodesAtLevel.length; i++) {
-                var n = nodesAtLevel[i];
-                var color = Cesium.Color.GREEN.withAlpha(0.4);
-                if (n.isHit) {
-                  color = Cesium.Color.GOLD.withAlpha(0.4);
-                }
-                drawQuadTreeNode(transform, n, obb, color);
-              }
-            }
-          }
-
-          function getShowAtLevelFn(level) {
-            return function () {
-              selectedQuadTreeAtLevel = level;
-              showQuadTreeAtLevel(selectedQuadTreeAtLevel);
-            };
-          }
-
-          var showQuadTreeOptions = [
-            {
-              text: "Hide Quadtree",
-              onselect: getShowAtLevelFn(null),
-            },
-          ];
-          var optionLevel = 0;
-          while (optionLevel < 6) {
-            showQuadTreeOptions.push({
-              text: "Quadtree Level " + optionLevel,
-              onselect: getShowAtLevelFn(optionLevel),
-            });
-            optionLevel++;
-          }
-
-          Sandcastle.addToolbarMenu(showQuadTreeOptions, "showQuadtreeLevel");
-
           function onSelectShowOctree(value) {
             selectedOctreeLevel = value;
             drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
@@ -888,8 +700,8 @@
               onselect: onSelectShowOctree.bind(this, null),
             },
           ];
-          optionLevel = 0;
-          while (optionLevel < 6) {
+          var optionLevel = 0;
+          while (optionLevel <= 2) {
             showOctreeOptions.push({
               text: "Octree Level " + optionLevel,
               onselect: onSelectShowOctree.bind(this, optionLevel),
@@ -999,7 +811,6 @@
 
               setShowTestTriangles(showTestedTriangles);
               showIntersectedTriangles();
-              showQuadTreeAtLevel(selectedQuadTreeAtLevel);
               showTileRectangle(selectedShowTileRectangle);
               showOBB(selectedShowOBB, obbDataSource);
 

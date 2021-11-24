@@ -401,7 +401,6 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
       result.northIndicesWestToEast,
-      null,
       trianglePicking
     );
 

@@ -134,6 +134,6 @@
     "prettier-check": "prettier --check \"**/*\"",
     "pretty-quick": "pretty-quick",
     "run_terrain_trace": "node Apps/Sandcastle/puppeteer.js",
-    "parse_traces": "node Apps/Sandcastle/parse_traces.js --logs --last"
+    "parse_traces": "node Apps/Sandcastle/parse_traces.js"
   }
 }

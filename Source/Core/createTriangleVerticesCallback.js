@@ -19,17 +19,7 @@ export default function createTriangleVerticesCallback(
    * @param {Cartesian3} v1
    * @param {Cartesian3} v2
    */
-  function triangleVerticesCallback(
-    triIdx,
-    v0,
-    v1,
-    v2,
-    traceDetails,
-    x,
-    y,
-    z,
-    level
-  ) {
+  function triangleVerticesCallback(triIdx, v0, v1, v2, traceDetails) {
     encoding.decodePosition(vertices, indices[triIdx * 3], v0);
     encoding.decodePosition(vertices, indices[triIdx * 3 + 1], v1);
     encoding.decodePosition(vertices, indices[triIdx * 3 + 2], v2);
@@ -39,10 +29,6 @@ export default function createTriangleVerticesCallback(
         traceDetails.trianglesTested = [];
       }
       traceDetails.trianglesTested.push({
-        x: x,
-        y: y,
-        z: z,
-        level: level,
         idx: triIdx,
         positions: [
           Cartesian3.clone(v0),
