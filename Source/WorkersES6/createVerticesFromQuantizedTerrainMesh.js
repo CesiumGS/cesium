@@ -15,7 +15,7 @@ import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainProvider from "../Core/TerrainProvider.js";
 import Transforms from "../Core/Transforms.js";
-import TrianglePicking from "../Core/TrianglePicking.js";
+import OctreeTrianglePicking from "../Core/OctreeTrianglePicking.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -230,7 +230,7 @@ function createVerticesFromQuantizedTerrainMesh(
     inverseTransform
   );
   console.timeEnd("making packed triangles");
-  var packedOctree = TrianglePicking.createPackedOctree(
+  var packedOctree = OctreeTrianglePicking.createPackedOctree(
     packedTriangles,
     inverseTransform,
     transform,

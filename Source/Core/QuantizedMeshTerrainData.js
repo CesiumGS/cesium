@@ -14,7 +14,7 @@ import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
-import TrianglePicking from "./TrianglePicking.js";
+import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
 import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
 /**
@@ -372,7 +372,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     var stride = result.vertexStride;
     var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
-    var trianglePicking = new TrianglePicking(
+    var trianglePicking = new OctreeTrianglePicking(
       result.packedOctree,
       createTriangleVerticesCallback(
         vertices,

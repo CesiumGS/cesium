@@ -16,7 +16,7 @@ import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import TrianglePicking from "./TrianglePicking.js";
+import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
 import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
 /**
@@ -288,7 +288,7 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
     var encoding = TerrainEncoding.clone(result.encoding);
     var vertices = new Float32Array(result.vertices);
 
-    var octreeTrianglePicker = new TrianglePicking(
+    var octreeTrianglePicker = new OctreeTrianglePicking(
       result.octree,
       createTriangleVerticesCallback(
         vertices,

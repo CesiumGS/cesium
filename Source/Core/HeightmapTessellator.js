@@ -14,7 +14,7 @@ import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import Transforms from "./Transforms.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
-import TrianglePicking from "./TrianglePicking.js";
+import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
 
 /**
  * Contains functions to create a mesh from a heightmap image.
@@ -543,7 +543,7 @@ HeightmapTessellator.computeVertices = function (options) {
     );
     console.timeEnd("making packed triangles");
 
-    octree = TrianglePicking.createPackedOctree(
+    octree = OctreeTrianglePicking.createPackedOctree(
       packedTriangles,
       inverseTransform,
       transform,

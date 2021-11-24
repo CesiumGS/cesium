@@ -32,7 +32,7 @@ import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester
  * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
  * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
- * @param {TrianglePicking} octreeTrianglePicking The triangle picking instance to use.
+ * @param {OctreeTrianglePicking} trianglePicking A custom triangle picking instance to use if you have one
  *
  * @private
  */
@@ -54,7 +54,7 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  octreeTrianglePicking
+  trianglePicking
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.

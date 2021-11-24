@@ -501,7 +501,7 @@ function nodeAddTriangle(
 /**
  * @constructor
  */
-function TrianglePicking(packedOctree, triangleVerticesCallback) {
+function OctreeTrianglePicking(packedOctree, triangleVerticesCallback) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
     "packedOctree.inverseTransform",
@@ -527,7 +527,7 @@ var scratchTransformedRay = new Ray();
  * @param {object} trace
  * @returns {Cartesian3} result
  */
-TrianglePicking.prototype.rayIntersect = function (
+OctreeTrianglePicking.prototype.rayIntersect = function (
   ray,
   cullBackFaces,
   result,
@@ -559,10 +559,12 @@ TrianglePicking.prototype.rayIntersect = function (
 
 /**
  *
- * @param { Float32Array} triangles
- * @param {Matrix4 }inverseTransform
+ * @param {Float32Array} triangles
+ * @param {Matrix4} inverseTransform
+ * @param {Matrix4} transform
+ * @param {OrientedBoundingBox} obb
  */
-TrianglePicking.createPackedOctree = function (
+OctreeTrianglePicking.createPackedOctree = function (
   triangles,
   inverseTransform,
   transform,
@@ -578,14 +580,4 @@ TrianglePicking.createPackedOctree = function (
   };
 };
 
-/**
- * A function that gets the three vertices from a triangle index
- *
- * @callback TrianglePicking~TriangleVerticesCallback
- * @param {Number} triangleIndex The triangle index
- * @param {Cartesian3} v0 The first vertex
- * @param {Cartesian3} v1 The second vertex
- * @param {Cartesian3} v2 The third vertex
- * @param traceDetails
- */
-export default TrianglePicking;
+export default OctreeTrianglePicking;

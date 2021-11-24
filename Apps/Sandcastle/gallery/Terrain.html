@@ -606,34 +606,6 @@
             });
           }
 
-          // function drawBoundingBox() {
-          //   var obb =
-          //     window.lastPickDetails &&
-          //     window.lastPickDetails.mesh &&
-          //     window.lastPickDetails.mesh._trianglePicking &&
-          //     window.lastPickDetails.mesh._trianglePicking.obb;
-          //   if (oob) {
-          //     drawPointList(Cesium.Color.CYAN, testedTrianglesDataSource, [
-          //       oob.center,
-          //     ]);
-          //   }
-          // }
-
-          function drawBoundingSphere() {
-            var sphere =
-              window.lastPickDetails &&
-              window.lastPickDetails.mesh &&
-              window.lastPickDetails.mesh._trianglePicking &&
-              window.lastPickDetails.mesh._trianglePicking.sphere;
-            if (sphere) {
-              drawSphere(
-                Cesium.Color.ORANGE.withAlpha(0.1),
-                testedTrianglesDataSource,
-                [sphere]
-              );
-            }
-          }
-
           function showTileRectangle(show) {
             var rect =
               window.lastPickDetails &&
