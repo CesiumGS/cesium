@@ -27,15 +27,7 @@
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
-    <div id="toolbar">
-      <label for="heading">Heading</label>
-      <input type="range" id="heading" min="0" max="360" step="0.1" />
-      <label for="pitch">Pitch</label>
-      <input type="range" id="pitch" min="0" max="360" step="0.1" />
-      <label for="roll">Roll</label>
-      <input type="range" id="roll" min="0" max="360" step="0.1" />
-    </div>
-
+    <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
         "use strict";
@@ -43,105 +35,121 @@
         var viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false,
           selectionIndicator: false,
+          shadows: true,
+          shouldAnimate: true,
         });
 
-        var polylineCollection = new Cesium.PolylineCollection();
-        viewer.scene.primitives.add(polylineCollection);
+        function createModel(url, height) {
+          viewer.entities.removeAll();
 
-        var axis = new Cesium.DebugModelMatrixPrimitive({
-          // modelMatrix: transform,
-          length: 10000000.0,
-          width: 2.0,
-        });
-        viewer.scene.primitives.add(axis);
-
-        function createROIfromRotation(cartesianPosition, rotation) {
-          rotation.heading = rotation.heading - Cesium.Math.toRadians(90);
-          var referenceFrame1 = Cesium.Transforms.headingPitchRollQuaternion(
-            cartesianPosition,
-            rotation
+          var position = Cesium.Cartesian3.fromDegrees(
+            -123.0744619,
+            44.0503706,
+            height
           );
-          var rotationMatrix = Cesium.Matrix3.fromQuaternion(
-            referenceFrame1,
-            new Cesium.Matrix3()
+          var heading = Cesium.Math.toRadians(135);
+          var pitch = 0;
+          var roll = 0;
+          var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+          var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+            position,
+            hpr
           );
-          // Replace 1000 for changing the distance
-          var rotationScaled = Cesium.Matrix3.multiplyByVector(
-            rotationMatrix,
-            new Cesium.Cartesian3(1000000, 0, 0),
-            new Cesium.Cartesian3()
-          );
-          var roiPos = Cesium.Cartesian3.add(
-            cartesianPosition,
-            rotationScaled,
-            new Cesium.Cartesian3()
-          );
-          return roiPos;
-        }
 
-        var polylines = [];
-
-        for (var lon = -180; lon < 180; lon += 20) {
-          for (var lat = -90; lat < 90; lat += 20) {
-            var tail = Cesium.Cartesian3.fromDegrees(lon, lat);
-            var e = viewer.entities.add({
-              position: tail,
-              point: {
-                pixelSize: 10,
-              },
-            });
-
-            var polyline = polylineCollection.add({
-              show: true,
-              positions: [tail, tail],
-              width: 10,
-              material: Cesium.Material.fromType(
-                Cesium.Material.PolylineArrowType,
-                {
-                  color: Cesium.Color.RED,
-                }
-              ),
-            });
-            polylines.push(polyline);
-          }
-        }
-
-        function watchChanges(id, onChange) {
-          var el = document.getElementById(id);
-          el.addEventListener("input", function (e) {
-            var value = e.target.value;
-            onChange(parseFloat(value));
+          var entity = viewer.entities.add({
+            name: url,
+            position: position,
+            orientation: orientation,
+            model: {
+              uri: url,
+              minimumPixelSize: 128,
+              maximumScale: 20000,
+            },
           });
-          el.value = 0;
+          viewer.trackedEntity = entity;
         }
 
-        var heading, pitch, roll;
+        var options = [
+          {
+            text: "Aircraft",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+                5000.0
+              );
+            },
+          },
+          {
+            text: "Drone",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+                150.0
+              );
+            },
+          },
+          {
+            text: "Ground Vehicle",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+                0
+              );
+            },
+          },
+          {
+            text: "Hot Air Balloon",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+                1000.0
+              );
+            },
+          },
+          {
+            text: "Milk Truck",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+                0
+              );
+            },
+          },
+          {
+            text: "Skinned Character",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+                0
+              );
+            },
+          },
+          {
+            text: "Draco Compressed Model",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
+                0
+              );
+            },
+          },
+          {
+            text: "KTX2 Compressed Balloon",
+            onselect: function () {
+              if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
+                window.alert(
+                  "This browser does not support Basis Universal compressed textures"
+                );
+              }
+              createModel(
+                "../../SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
+                1000.0
+              );
+            },
+          },
+        ];
 
-        function update(heading, pitch, roll) {
-          for (var i = 0; i < polylines.length; i++) {
-            var poly = polylines[i];
-            var tail = poly.positions[0];
-            var head = createROIfromRotation(
-              tail,
-              Cesium.HeadingPitchRoll.fromDegrees(heading, pitch, roll)
-            );
-            poly.positions = [tail, head];
-          }
-        }
-
-        watchChanges("heading", function (value) {
-          heading = value;
-          update(heading, pitch, roll);
-        });
-        watchChanges("pitch", function (value) {
-          pitch = value;
-          update(heading, pitch, roll);
-        });
-        watchChanges("roll", function (value) {
-          roll = value;
-          update(heading, pitch, roll);
-        });
-
+        Sandcastle.addToolbarMenu(options);
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="A little example using heading pitch and roll"
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <label for="heading">Heading</label>
+      <input type="range" id="heading" min="0" max="360" step="0.1" />
+      <label for="pitch">Pitch</label>
+      <input type="range" id="pitch" min="0" max="360" step="0.1" />
+      <label for="roll">Roll</label>
+      <input type="range" id="roll" min="0" max="360" step="0.1" />
+    </div>
+
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          infoBox: false,
+          selectionIndicator: false,
+        });
+
+        var polylineCollection = new Cesium.PolylineCollection();
+        viewer.scene.primitives.add(polylineCollection);
+
+        var axis = new Cesium.DebugModelMatrixPrimitive({
+          // modelMatrix: transform,
+          length: 10000000.0,
+          width: 2.0,
+        });
+        viewer.scene.primitives.add(axis);
+
+        function createROIFromRotation(cartesianPosition, rotation) {
+          rotation.heading = rotation.heading - Cesium.Math.toRadians(90);
+          var referenceFrame1 = Cesium.Transforms.headingPitchRollQuaternion(
+            cartesianPosition,
+            rotation
+          );
+          var rotationMatrix = Cesium.Matrix3.fromQuaternion(
+            referenceFrame1,
+            new Cesium.Matrix3()
+          );
+          // Replace 1000 for changing the distance
+          var rotationScaled = Cesium.Matrix3.multiplyByVector(
+            rotationMatrix,
+            new Cesium.Cartesian3(1000000, 0, 0),
+            new Cesium.Cartesian3()
+          );
+          var roiPos = Cesium.Cartesian3.add(
+            cartesianPosition,
+            rotationScaled,
+            new Cesium.Cartesian3()
+          );
+          return roiPos;
+        }
+
+        var polylines = [];
+
+        for (var lon = -180; lon < 180; lon += 20) {
+          for (var lat = -90; lat < 90; lat += 20) {
+            var tail = Cesium.Cartesian3.fromDegrees(lon, lat);
+            var e = viewer.entities.add({
+              position: tail,
+              point: {
+                pixelSize: 10,
+              },
+            });
+
+            var polyline = polylineCollection.add({
+              show: true,
+              positions: [tail, tail],
+              width: 10,
+              material: Cesium.Material.fromType(
+                Cesium.Material.PolylineArrowType,
+                {
+                  color: Cesium.Color.RED,
+                }
+              ),
+            });
+            polylines.push(polyline);
+          }
+        }
+
+        function watchChanges(id, onChange) {
+          var el = document.getElementById(id);
+          el.addEventListener("input", function (e) {
+            var value = e.target.value;
+            onChange(parseFloat(value));
+          });
+          el.value = 0;
+        }
+
+        var heading = 0,
+          pitch = 0,
+          roll = 0;
+
+        function update(heading, pitch, roll) {
+          for (var i = 0; i < polylines.length; i++) {
+            var poly = polylines[i];
+            var tail = poly.positions[0];
+            var head = createROIFromRotation(
+              tail,
+              Cesium.HeadingPitchRoll.fromDegrees(heading, pitch, roll)
+            );
+            poly.positions = [tail, head];
+          }
+        }
+
+        watchChanges("heading", function (value) {
+          heading = value;
+          update(heading, pitch, roll);
+        });
+        watchChanges("pitch", function (value) {
+          pitch = value;
+          update(heading, pitch, roll);
+        });
+        watchChanges("roll", function (value) {
+          roll = value;
+          update(heading, pitch, roll);
+        });
+
+        update(heading, pitch, roll);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

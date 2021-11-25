@@ -33,688 +33,319 @@
     <div id="toolbar">
       <div id="terrainMenu"></div>
       <div id="zoomButtons"></div>
-      <div id="showOctreeLevel"></div>
-      <div id="showTestedTriangles"></div>
       <div id="sampleButtons"></div>
-      <div id="showOBB"></div>
-      <script id="cesium_sandcastle_script">
-        function startup(Cesium) {
-          "use strict";
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var worldTerrain = Cesium.createWorldTerrain({
+          requestWaterMask: true,
+          requestVertexNormals: true,
+        });
 
-          // function addDropdownOption(viewer, name, options, onSelect) {
-          //   var primitives = new Cesium.PrimitiveCollection();
-          //   viewer.scene.primitives.add(primitives);
-          //
-          //   function internalOnSelect(value) {
-          //     primitives.removeAll();
-          //     onSelect(primitives, value);
-          //   }
-          //
-          //   var actualOptions = []
-          //   for (var v of options) {
-          //     actualOptions.push({
-          //       text: v,
-          //       onselect: internalOnSelect.bind(this, v)
-          //     })
-          //   }
-          //
-          //   Sandcastle.addToolbarMenu(actualOptions, name);
-          // }
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: worldTerrain,
+        });
 
-          //Sandcastle_Begin
-          var worldTerrain = Cesium.createWorldTerrain({
-            requestWaterMask: true,
-            requestVertexNormals: true,
-          });
+        // set lighting to true
+        viewer.scene.globe.enableLighting = true;
 
-          var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
-            {
-              url:
-                "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
-            }
-          );
+        // setup alternative terrain providers
+        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
-          var locationOptions = [
-            {
-              name: "Mount Everest",
-              target: new Cesium.Cartesian3(
-                300770.50872389384,
-                5634912.131394585,
-                2978152.2865545116
-              ),
-              offset: new Cesium.Cartesian3(
-                6344.974098678562,
-                -793.3419798081741,
-                2499.9508860763162
-              ),
-            },
-            {
-              name: "Half Dome",
-              target: new Cesium.Cartesian3(
-                -2489625.0836225147,
-                -4393941.44443024,
-                3882535.9454173897
-              ),
-              offset: new Cesium.Cartesian3(
-                -6857.40902037546,
-                412.3284835694358,
-                2147.5545426812023
-              ),
-            },
-            {
-              name: "San Francisco Bay",
-              target: new Cesium.Cartesian3(
-                -2708814.85583248,
-                -4254159.450845907,
-                3891403.9457429945
-              ),
-              offset: new Cesium.Cartesian3(
-                70642.66030209465,
-                -31661.517948317807,
-                35505.179997143336
-              ),
-            },
-          ];
+        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+          url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
+          credit: "Terrain data courtesy VT MÄK",
+        });
 
-          var viewer = new Cesium.Viewer("cesiumContainer", {
-            // terrainProvider: worldTerrain,
-            terrainProvider: arcGisTerrainProvider,
-          });
-          viewer.scene.globe.enableLighting = false;
-          // viewer.scene.globe.depthTestAgainstTerrain = false;
-          viewer.scene.fog.enabled = false;
+        var arcGisProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+        });
 
-          window.viewer = viewer;
+        // Sine wave
+        var customHeightmapWidth = 32;
+        var customHeightmapHeight = 32;
+        var customHeightmapProvider = new Cesium.CustomHeightmapTerrainProvider(
+          {
+            width: customHeightmapWidth,
+            height: customHeightmapHeight,
+            callback: function (x, y, level) {
+              var width = customHeightmapWidth;
+              var height = customHeightmapHeight;
+              var buffer = new Float32Array(width * height);
 
-          var selectedOctreeLevel = null;
-          var showTestedTriangles = false;
-          var selectedShowOBB = false;
+              for (var yy = 0; yy < height; yy++) {
+                for (var xx = 0; xx < width; xx++) {
+                  var u = (x + xx / (width - 1)) / Math.pow(2, level);
+                  var v = (y + yy / (height - 1)) / Math.pow(2, level);
 
-          var intersectedTriangleDataSource = new Cesium.CustomDataSource(
-            "intersectedTriangleDataSource"
-          );
-          var testedTrianglesDataSource = new Cesium.CustomDataSource(
-            "testedTrianglesDataSource"
-          );
-          var obbDataSource = new Cesium.CustomDataSource("obbDataSource");
-          var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
-          var octreePrimitives = new Cesium.PrimitiveCollection();
+                  var heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
 
-          viewer.dataSources.add(intersectedTriangleDataSource);
-          viewer.dataSources.add(testedTrianglesDataSource);
-          viewer.dataSources.add(obbDataSource);
-          viewer.scene.primitives.add(axisPrimitiveCollection);
-          viewer.scene.primitives.add(octreePrimitives);
-
-          function localToWorld(transform, local) {
-            return Cesium.Matrix4.multiplyByPoint(
-              transform,
-              local,
-              new Cesium.Cartesian3()
-            );
-          }
-
-          function onTheFlyNodeAABB(level, x, y, z) {
-            var sizeAtLevel = 1.0 / Math.pow(2, level);
-            return {
-              aabbMinX: x * sizeAtLevel - 0.5,
-              aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
-              aabbCenterX: (x + 0.5) * sizeAtLevel - 0.5,
-              aabbMinY: y * sizeAtLevel - 0.5,
-              aabbMaxY: (y + 1) * sizeAtLevel - 0.5,
-              aabbCenterY: (y + 0.5) * sizeAtLevel - 0.5,
-              aabbMinZ: z * sizeAtLevel - 0.5,
-              aabbMaxZ: (z + 1) * sizeAtLevel - 0.5,
-              aabbCenterZ: (z + 0.5) * sizeAtLevel - 0.5,
-            };
-          }
-
-          var colors = [
-            "#e6194B",
-            "#3cb44b",
-            "#ffe119",
-            "#4363d8",
-            "#f58231",
-            "#911eb4",
-            "#42d4f4",
-            "#f032e6",
-          ];
-
-          function drawOctreeNode(
-            node,
-            color,
-            prims,
-            transform,
-            triangles,
-            triangleVerticesCallback,
-            isSpecial
-          ) {
-            var aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
-            var min = new Cesium.Cartesian3(
-              aabb.aabbMinX,
-              aabb.aabbMinY,
-              aabb.aabbMinZ
-            );
-            var max = new Cesium.Cartesian3(
-              aabb.aabbMaxX,
-              aabb.aabbMaxY,
-              aabb.aabbMaxZ
-            );
-            var box = new Cesium.BoxGeometry({
-              maximum: max,
-              minimum: min,
-            });
-            var outline = new Cesium.BoxOutlineGeometry({
-              maximum: max,
-              minimum: min,
-            });
-
-            if (isSpecial) {
-              prims.add(
-                new Cesium.Primitive({
-                  asynchronous: false,
-                  appearance: new Cesium.PerInstanceColorAppearance(),
-                  geometryInstances: [
-                    new Cesium.GeometryInstance({
-                      geometry: box,
-                      modelMatrix: transform,
-                      attributes: {
-                        color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                          color.withAlpha(0.2)
-                        ),
-                      },
-                    }),
-                  ],
-                })
-              );
-            }
-            prims.add(
-              new Cesium.Primitive({
-                asynchronous: false,
-                appearance: new Cesium.PerInstanceColorAppearance({
-                  translucent: false,
-                  flat: true,
-                }),
-                geometryInstances: [
-                  new Cesium.GeometryInstance({
-                    geometry: outline,
-                    modelMatrix: transform,
-                    attributes: {
-                      color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                        color.withAlpha(1)
-                      ),
-                    },
-                  }),
-                ],
-              })
-            );
-
-            var trianglePolygons = [];
-            var trianglePolygonOutlines = [];
-            triangles = triangles || [];
-            for (var triangleIdx of triangles) {
-              var v0 = new Cesium.Cartesian3();
-              var v1 = new Cesium.Cartesian3();
-              var v2 = new Cesium.Cartesian3();
-              triangleVerticesCallback(triangleIdx, v0, v1, v2);
-
-              var outlineGeometry = new Cesium.PolygonOutlineGeometry({
-                polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
-                perPositionHeight: true,
-              });
-              var outlineInstance = new Cesium.GeometryInstance({
-                geometry: outlineGeometry,
-                attributes: {
-                  color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    color.withAlpha(1)
-                  ),
-                },
-              });
-              trianglePolygonOutlines.push(outlineInstance);
-
-              var geometry = new Cesium.PolygonGeometry({
-                polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
-                perPositionHeight: true,
-              });
-              var instance = new Cesium.GeometryInstance({
-                geometry: geometry,
-                attributes: {
-                  color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    color.withAlpha(0.7)
-                  ),
-                },
-              });
-              trianglePolygons.push(instance);
-            }
-            prims.add(
-              new Cesium.Primitive({
-                asynchronous: false,
-                appearance: new Cesium.PerInstanceColorAppearance({
-                  translucent: false,
-                  flat: true,
-                }),
-                geometryInstances: trianglePolygonOutlines,
-              })
-            );
-            prims.add(
-              new Cesium.Primitive({
-                asynchronous: false,
-                appearance: new Cesium.PerInstanceColorAppearance({
-                  translucent: true,
-                  flat: true,
-                }),
-                geometryInstances: trianglePolygons,
-              })
-            );
-          }
-
-          function n(x, y, z, level) {
-            return {
-              x,
-              y,
-              z,
-              level,
-            };
-          }
-
-          function getChildren(node) {
-            return [
-              n(node.x * 2, node.y * 2, node.z * 2, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2, node.z * 2, node.level + 1),
-              n(node.x * 2, node.y * 2 + 1, node.z * 2, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2 + 1, node.z * 2, node.level + 1),
-              n(node.x * 2, node.y * 2, node.z * 2 + 1, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2, node.z * 2 + 1, node.level + 1),
-              n(node.x * 2, node.y * 2 + 1, node.z * 2 + 1, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2 + 1, node.z * 2 + 1, node.level + 1),
-            ];
-          }
-
-          function drawOctreeLayer(prims, level) {
-            prims.removeAll();
-            if (level == null) {
-              return;
-            }
-            var root =
-              window.lastPickDetails &&
-              window.lastPickDetails.mesh &&
-              window.lastPickDetails.mesh._octreeTrianglePicking;
-            if (!root) {
-              return;
-            }
-
-            var nodeHits =
-              (window.lastPickDetails.traceDetails &&
-                window.lastPickDetails.traceDetails.hits) ||
-              [];
-
-            var unpackedOctreeNodes = root._unpackedOctree;
-            var transform = root._transform;
-            const allNodes = flattenOctree(unpackedOctreeNodes[0]);
-            var nodesToDraw = allNodes.filter((n) => n.level === level);
-
-            var i = 0;
-            for (var n of nodesToDraw) {
-              var color = Cesium.Color.fromCssColorString(colors[i % 8]);
-
-              const isSpecial = nodeHits.some(
-                (h) =>
-                  h.level === n.level &&
-                  h.x === n.x &&
-                  h.y === n.y &&
-                  h.z === n.z
-              );
-
-              drawOctreeNode(
-                n,
-                color,
-                prims,
-                transform,
-                n.intersectingTriangles,
-                root._triangleVerticesCallback,
-                isSpecial
-              );
-              i++;
-            }
-          }
-
-          function addDot(transform, local, color, radius, dataSource) {
-            radius = radius || 50;
-            var point = localToWorld(transform, local);
-            dataSource.entities.add({
-              position: point,
-              ellipsoid: {
-                radii: new Cesium.Cartesian3(radius, radius, radius),
-                material: color,
-              },
-            });
-          }
-
-          function drawPointList(color, dataSource, points) {
-            if (points && points.length) {
-              for (var i = 0; i < points.length; i++) {
-                var p = points[i];
-                dataSource.entities.add({
-                  position: p,
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(10000.0, 10000.0, 10000.0),
-                    material: color,
-                  },
-                });
-              }
-            }
-          }
-
-          function drawSphere(color, dataSource, spheres) {
-            if (spheres && spheres.length) {
-              for (var i = 0; i < spheres.length; i++) {
-                var sphere = spheres[i];
-                dataSource.entities.add({
-                  position: sphere.center,
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(
-                      sphere.radius,
-                      sphere.radius,
-                      sphere.radius
-                    ),
-                    material: color,
-                  },
-                });
-              }
-            }
-          }
-
-          function sortCartesianList(values) {
-            return values.slice(0).sort(function (a, b) {
-              return a.x - b.x;
-            });
-          }
-
-          function isTriangleAlmostEqual(a, b) {
-            a = sortCartesianList(a);
-            b = sortCartesianList(b);
-            return (
-              isCartesianAlmostEqual(a[0], b[0]) &&
-              isCartesianAlmostEqual(a[1], b[1]) &&
-              isCartesianAlmostEqual(a[2], b[2])
-            );
-          }
-
-          function isCartesianAlmostEqual(a, b) {
-            return (
-              a &&
-              b &&
-              Math.abs(a.x - b.x) < 0.1 &&
-              Math.abs(a.y - b.y) < 0.1 &&
-              Math.abs(a.z - b.z) < 0.1
-            );
-          }
-
-          function drawTriangleList(color, dataSource, triangles) {
-            if (triangles && triangles.length) {
-              for (var i = 0; i < triangles.length; i++) {
-                var tri = triangles[i];
-                dataSource.entities.add({
-                  polygon: {
-                    hierarchy: tri.positions,
-                    perPositionHeight: true,
-                    material: color,
-                    outline: true,
-                    outlineColor: color,
-                    outlineWidth: 10,
-                  },
-                });
-              }
-            }
-          }
-
-          Sandcastle.addDefaultToolbarMenu(
-            locationOptions.map(function (option) {
-              return {
-                text: option.name,
-                onselect: function () {
-                  viewer.camera.lookAt(option.target, option.offset);
-                  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-                },
-              };
-            }),
-            "zoomButtons"
-          );
-
-          function flatten(node) {
-            if (!node) {
-              return [];
-            }
-            return [node]
-              .concat(flatten(node.topLeftTree))
-              .concat(flatten(node.bottomLeftTree))
-              .concat(flatten(node.topRightTree))
-              .concat(flatten(node.bottomRightTree));
-          }
-
-          function flattenOctree(node) {
-            return [node].concat((node.children || []).flatMap(flattenOctree));
-          }
-
-          function showIntersectedTriangles() {
-            intersectedTriangleDataSource.entities.removeAll();
-            var oldTriangle =
-              window.lastPickDetails &&
-              window.lastPickDetails.traceDetails &&
-              window.lastPickDetails.traceDetails.oldIntersectedTriangle;
-            var newTriangle =
-              window.lastPickDetails &&
-              window.lastPickDetails.traceDetails &&
-              window.lastPickDetails.traceDetails.newIntersectedTriangle;
-
-            if (
-              oldTriangle &&
-              newTriangle &&
-              isTriangleAlmostEqual(oldTriangle, newTriangle)
-            ) {
-              drawTriangleList(
-                Cesium.Color.GREEN,
-                intersectedTriangleDataSource,
-                [newTriangle]
-              );
-            } else {
-              drawTriangleList(
-                Cesium.Color.GOLD,
-                intersectedTriangleDataSource,
-                oldTriangle && [oldTriangle]
-              );
-
-              drawTriangleList(
-                Cesium.Color.BLUE,
-                intersectedTriangleDataSource,
-                newTriangle && [newTriangle]
-              );
-            }
-          }
-
-          function setShowTestTriangles(value) {
-            testedTrianglesDataSource.entities.removeAll();
-
-            if (value) {
-              var triangles =
-                (window.lastPickDetails &&
-                  window.lastPickDetails.traceDetails &&
-                  window.lastPickDetails.traceDetails.trianglesTested) ||
-                [];
-              drawTriangleList(
-                Cesium.Color.ORANGE,
-                testedTrianglesDataSource,
-                triangles
-              );
-            }
-          }
-
-          function showOBB(show, dataSource) {
-            var transform =
-              window.lastPickDetails &&
-              window.lastPickDetails.mesh &&
-              window.lastPickDetails.mesh._octreeTrianglePicking &&
-              window.lastPickDetails.mesh._octreeTrianglePicking._transform;
-
-            dataSource.entities.removeAll();
-            if (!show || !transform) {
-              return;
-            }
-
-            function c(x, y, z) {
-              return new Cesium.Cartesian3(x, y, z);
-            }
-
-            var C = Cesium.Color;
-            var radius =
-              window.lastPickDetails.mesh.boundingSphere3D.radius / 50;
-
-            var x;
-            var y;
-            var z;
-            var amount = 0.2;
-            for (x = -0.5; x <= 0.5; x += amount) {
-              for (y = -0.5; y <= 0.5; y += amount) {
-                for (z = -0.5; z <= 0.5; z += amount) {
-                  var color = C.VIOLET;
-                  if (x < 0 && y < 0) {
-                    // TOP LEFT
-                    color = C.BLUE;
-                  }
-                  if (x > 0 && y > 0) {
-                    // BOTTOM RIGHT
-                    color = C.ORANGE;
-                  }
-                  if (x < 0 && y > 0) {
-                    // BOTTOM LEFT
-                    color = C.GREEN;
-                  }
-                  if (x > 0 && y < 0) {
-                    // TOP RIGHT
-                    color = C.GOLD;
-                  }
-                  addDot(transform, c(x, y, z), color, radius, dataSource);
+                  var index = yy * width + xx;
+                  buffer[index] = heightValue;
                 }
               }
-            }
-          }
 
-          function onSelectShowOctree(value) {
-            selectedOctreeLevel = value;
-            drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
-          }
-
-          var showOctreeOptions = [
-            {
-              text: "Hide Octree",
-              onselect: onSelectShowOctree.bind(this, null),
+              return buffer;
             },
-          ];
-          var optionLevel = 0;
-          while (optionLevel <= 5) {
-            showOctreeOptions.push({
-              text: "Octree Level " + optionLevel,
-              onselect: onSelectShowOctree.bind(this, optionLevel),
-            });
-            optionLevel++;
           }
-          Sandcastle.addToolbarMenu(showOctreeOptions, "showOctreeLevel");
+        );
 
-          Sandcastle.addToolbarMenu(
-            [
-              {
-                text: "Hide Tested Triangles",
-                onselect: function () {
-                  showTestedTriangles = false;
-                  setShowTestTriangles(showTestedTriangles);
-                },
+        Sandcastle.addToolbarMenu(
+          [
+            {
+              text: "CesiumTerrainProvider - Cesium World Terrain",
+              onselect: function () {
+                viewer.terrainProvider = worldTerrain;
+                viewer.scene.globe.enableLighting = true;
               },
-              {
-                text: "Show Tested Triangles",
-                onselect: function () {
-                  showTestedTriangles = true;
-                  setShowTestTriangles(showTestedTriangles);
-                },
+            },
+            {
+              text: "CesiumTerrainProvider - Cesium World Terrain - no effects",
+              onselect: function () {
+                viewer.terrainProvider = Cesium.createWorldTerrain();
               },
-            ],
-            "showTestedTriangles"
+            },
+            {
+              text: "CesiumTerrainProvider - Cesium World Terrain w/ Lighting",
+              onselect: function () {
+                viewer.terrainProvider = Cesium.createWorldTerrain({
+                  requestVertexNormals: true,
+                });
+                viewer.scene.globe.enableLighting = true;
+              },
+            },
+            {
+              text: "CesiumTerrainProvider - Cesium World Terrain w/ Water",
+              onselect: function () {
+                viewer.terrainProvider = Cesium.createWorldTerrain({
+                  requestWaterMask: true,
+                });
+              },
+            },
+            {
+              text: "EllipsoidTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = ellipsoidProvider;
+              },
+            },
+            {
+              text: "CustomHeightmapTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = customHeightmapProvider;
+              },
+            },
+            {
+              text: "VRTheWorldTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = vrTheWorldProvider;
+              },
+            },
+            {
+              text: "ArcGISTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = arcGisProvider;
+              },
+            },
+          ],
+          "terrainMenu"
+        );
+
+        Sandcastle.addDefaultToolbarMenu(
+          [
+            {
+              text: "Mount Everest",
+              onselect: function () {
+                lookAtMtEverest();
+              },
+            },
+            {
+              text: "Half Dome",
+              onselect: function () {
+                var target = new Cesium.Cartesian3(
+                  -2489625.0836225147,
+                  -4393941.44443024,
+                  3882535.9454173897
+                );
+                var offset = new Cesium.Cartesian3(
+                  -6857.40902037546,
+                  412.3284835694358,
+                  2147.5545426812023
+                );
+                viewer.camera.lookAt(target, offset);
+                viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+              },
+            },
+            {
+              text: "San Francisco Bay",
+              onselect: function () {
+                var target = new Cesium.Cartesian3(
+                  -2708814.85583248,
+                  -4254159.450845907,
+                  3891403.9457429945
+                );
+                var offset = new Cesium.Cartesian3(
+                  70642.66030209465,
+                  -31661.517948317807,
+                  35505.179997143336
+                );
+                viewer.camera.lookAt(target, offset);
+                viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+              },
+            },
+          ],
+          "zoomButtons"
+        );
+
+        var terrainSamplePositions;
+
+        function lookAtMtEverest() {
+          var target = new Cesium.Cartesian3(
+            300770.50872389384,
+            5634912.131394585,
+            2978152.2865545116
           );
-          Sandcastle.addToolbarMenu(
-            [
-              {
-                text: "Hide Orientated Bounding Box",
-                onselect: function () {
-                  selectedShowOBB = false;
-                  showOBB(selectedShowOBB, obbDataSource);
-                },
-              },
-              {
-                text: "Show Orientated Bounding Box",
-                onselect: function () {
-                  selectedShowOBB = true;
-                  showOBB(selectedShowOBB, obbDataSource);
-                },
-              },
-            ],
-            "showOBB"
+          var offset = new Cesium.Cartesian3(
+            6344.974098678562,
+            -793.3419798081741,
+            2499.9508860763162
           );
+          viewer.camera.lookAt(target, offset);
+          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        }
 
-          var scene = viewer.scene;
-          var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        function sampleTerrainSuccess(terrainSamplePositions) {
+          var ellipsoid = Cesium.Ellipsoid.WGS84;
 
-          handler.setInputAction(function (movement) {
-            window.showPickDetails = true;
-            var scene = viewer.scene;
-            var camera = scene.camera;
+          //By default, Cesium does not obsure geometry
+          //behind terrain. Setting this flag enables that.
+          viewer.scene.globe.depthTestAgainstTerrain = true;
 
-            var ray = camera.getPickRay(movement.position);
-            var pickPosition = scene.globe.pick(ray, scene);
+          viewer.entities.suspendEvents();
+          viewer.entities.removeAll();
 
-            window.showPickDetails = false;
+          for (var i = 0; i < terrainSamplePositions.length; ++i) {
+            var position = terrainSamplePositions[i];
 
-            var details = window.lastPickDetails;
-            console.trace("details here");
+            viewer.entities.add({
+              name: position.height.toFixed(1),
+              position: ellipsoid.cartographicToCartesian(position),
+              billboard: {
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                scale: 0.7,
+                image: "../images/facility.gif",
+              },
+              label: {
+                text: position.height.toFixed(1),
+                font: "10pt monospace",
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                pixelOffset: new Cesium.Cartesian2(0, -14),
+                fillColor: Cesium.Color.BLACK,
+                outlineColor: Cesium.Color.BLACK,
+                showBackground: true,
+                backgroundColor: new Cesium.Color(0.9, 0.9, 0.9, 0.7),
+                backgroundPadding: new Cesium.Cartesian2(4, 3),
+              },
+            });
+          }
+          viewer.entities.resumeEvents();
+        }
 
-            if (details) {
-              viewer.entities.removeAll();
-
-              debugger;
-              var transform = details.traceDetails.transform;
-              var inverseTransform = details.traceDetails.inverseTransform;
-
-              var axis = new Cesium.DebugModelMatrixPrimitive({
-                modelMatrix: transform,
-                length: 100000.0,
-                width: 2.0,
-              });
-              axisPrimitiveCollection.removeAll();
-              axisPrimitiveCollection.add(axis);
-
-              viewer.entities.add({
-                name: "ray",
-                position: Cesium.Cartesian3.ZERO,
-                polyline: {
-                  positions: [ray.origin, Cesium.Ray.getPoint(ray, 10000)],
-                  material: Cesium.Color.GOLDENROD,
-                },
-              });
-
-              setShowTestTriangles(showTestedTriangles);
-              showIntersectedTriangles();
-              showOBB(selectedShowOBB, obbDataSource);
-
-              drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
+        function createGrid(rectangleHalfSize) {
+          var gridWidth = 41;
+          var gridHeight = 41;
+          var everestLatitude = Cesium.Math.toRadians(27.988257);
+          var everestLongitude = Cesium.Math.toRadians(86.925145);
+          var e = new Cesium.Rectangle(
+            everestLongitude - rectangleHalfSize,
+            everestLatitude - rectangleHalfSize,
+            everestLongitude + rectangleHalfSize,
+            everestLatitude + rectangleHalfSize
+          );
+          var terrainSamplePositions = [];
+          for (var y = 0; y < gridHeight; ++y) {
+            for (var x = 0; x < gridWidth; ++x) {
+              var longitude = Cesium.Math.lerp(
+                e.west,
+                e.east,
+                x / (gridWidth - 1)
+              );
+              var latitude = Cesium.Math.lerp(
+                e.south,
+                e.north,
+                y / (gridHeight - 1)
+              );
+              var position = new Cesium.Cartographic(longitude, latitude);
+              terrainSamplePositions.push(position);
             }
-          }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+          }
+          return terrainSamplePositions;
+        }
 
-          //Sandcastle_End
-          Sandcastle.finishedLoading();
-        }
-        if (typeof Cesium !== "undefined") {
-          window.startupCalled = true;
-          startup(Cesium);
-        }
-      </script>
-    </div>
+        Sandcastle.addToggleButton(
+          "Enable Lighting",
+          viewer.scene.globe.enableLighting,
+          function (checked) {
+            viewer.scene.globe.enableLighting = checked;
+          }
+        );
+
+        Sandcastle.addToggleButton(
+          "Enable fog",
+          viewer.scene.fog.enabled,
+          function (checked) {
+            viewer.scene.fog.enabled = checked;
+          }
+        );
+
+        Sandcastle.addToolbarButton(
+          "Sample Everest Terrain at Level 9",
+          function () {
+            var terrainSamplePositions = createGrid(0.005);
+            Cesium.when(
+              Cesium.sampleTerrain(
+                viewer.terrainProvider,
+                9,
+                terrainSamplePositions
+              ),
+              sampleTerrainSuccess
+            );
+            lookAtMtEverest();
+          },
+          "sampleButtons"
+        );
+
+        Sandcastle.addToolbarButton(
+          "Sample Most Detailed Everest Terrain",
+          function () {
+            if (!Cesium.defined(viewer.terrainProvider.availability)) {
+              window.alert(
+                "sampleTerrainMostDetailed is not supported for the selected terrain provider"
+              );
+              return;
+            }
+            var terrainSamplePositions = createGrid(0.0005);
+            Cesium.when(
+              Cesium.sampleTerrainMostDetailed(
+                viewer.terrainProvider,
+                terrainSamplePositions
+              ),
+              sampleTerrainSuccess
+            );
+            lookAtMtEverest();
+          },
+          "sampleButtons"
+        );
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
   </body>
 </html>
