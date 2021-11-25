@@ -2,9 +2,9 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
-import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
+import addToArray from "./GltfPipeline/addToArray.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -15,7 +15,7 @@ function processPbrMaterials(gltf, options) {
 
   // No need to create new techniques if they already exist,
   // the shader should handle these values
-  if (hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return gltf;
   }
 
@@ -273,7 +273,7 @@ function generateTechnique(
   var techniqueUniforms = {
     // Add matrices
     u_modelViewMatrix: {
-      semantic: hasExtension(gltf, "CESIUM_RTC")
+      semantic: usesExtension(gltf, "CESIUM_RTC")
         ? "CESIUM_RTC_MODELVIEW"
         : "MODELVIEW",
       type: WebGLConstants.FLOAT_MAT4,

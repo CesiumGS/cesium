@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Create 3D models using glTF." />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        Cesium.ExperimentalFeatures.enableModelExperimental = true;
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          orderIndependentTranslucency: false,
+        });
+
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T20:27:37.016064475348684937Z"
+        );
+
+        // Model positioning ===============================================
+
+        var position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706,
+          0
+        );
+        var hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
+        var fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+          "north",
+          "west"
+        );
+
+        // Custom Shader Definitions ========================================
+
+        // Dragging the mouse will expand/shrink the model.
+        var expandModelShader = new Cesium.CustomShader({
+          uniforms: {
+            // Vector from latest drag center to the mouse
+            u_drag: {
+              type: Cesium.UniformType.VEC2,
+              value: new Cesium.Cartesian2(0.0, 0.0),
+            },
+          },
+          vertexShaderText: [
+            // If the mouse is dragged to the right, the model grows
+            // If the mouse is dragged to the left, the model shrinks
+            "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+            "{",
+            "    positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;",
+            "}",
+          ].join("\n"),
+        });
+
+        var textureUniformShader = new Cesium.CustomShader({
+          uniforms: {
+            // elapsed time in seconds for animation
+            u_time: {
+              type: Cesium.UniformType.FLOAT,
+              value: 0,
+            },
+            // user-defined texture
+            u_stripes: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: new Cesium.TextureUniform({
+                url: "../../SampleData/cesium_stripes.png",
+              }),
+            },
+          },
+          // Apply the texture to the model, but move the texture coordinates
+          // a bit over time so it's animated.
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0 + 0.1 * vec2(u_time, 0.0);",
+            "    material.diffuse = texture2D(u_stripes, texCoord).rgb;",
+            "}",
+          ].join("\n"),
+        });
+
+        // make a checkerboard texture with an alpha that increases with the
+        // diagonal number
+        function makeCheckerboardTexture(textureSize) {
+          var checkerboard = new Uint8Array(4 * textureSize * textureSize);
+
+          var maxDiagonal = 2 * (textureSize - 1);
+          for (var i = 0; i < textureSize; i++) {
+            for (var j = 0; j < textureSize; j++) {
+              var index = i * textureSize + j;
+              // Checking the parity of the diagonal number gives a checkerboard
+              // pattern.
+              var diagonal = i + j;
+              if (diagonal % 2 === 0) {
+                // set the square red. We only need to set the red channel!
+                checkerboard[4 * index] = 255;
+              }
+              // otherwise we'd set the square to black. But arrays are already
+              // initialized to 0s so nothing needed here.
+
+              // for the alpha channel, map the diagonal number to [0, 255]
+              checkerboard[4 * index + 3] = (255 * diagonal) / maxDiagonal;
+            }
+          }
+          return new Cesium.TextureUniform({
+            typedArray: checkerboard,
+            width: textureSize,
+            height: textureSize,
+            // Don't interpolate, we want crisp checkerboard edges
+            minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
+            magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
+          });
+        }
+        var checkerboardTexture = makeCheckerboardTexture(8);
+
+        // Use the checkerboard red channel as a mask
+        var checkerboardMaskShader = new Cesium.CustomShader({
+          uniforms: {
+            u_checkerboard: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: checkerboardTexture,
+            },
+          },
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
+            "    material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);",
+            "}",
+          ].join("\n"),
+        });
+
+        // Color like a checkerboard but make the transparency vary with
+        // the diagonal
+        var checkerboardAlphaShader = new Cesium.CustomShader({
+          uniforms: {
+            u_checkerboard: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: checkerboardTexture,
+            },
+          },
+          // necessary when setting material.alpha
+          isTranslucent: true,
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
+            "    material.diffuse = checkerboard.rgb;",
+            "    material.alpha = checkerboard.a;",
+            "}",
+          ].join("\n"),
+        });
+
+        // Use the checkerboard to cut holes in the model
+        var checkerboardHolesShader = new Cesium.CustomShader({
+          uniforms: {
+            u_checkerboard: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: checkerboardTexture,
+            },
+          },
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
+            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
+            "    if (checkerboard.r > 0.0) {",
+            "        discard;",
+            "    }",
+            "}",
+          ].join("\n"),
+        });
+
+        // This example is to demonstrate the conventions used for orienting
+        // the texture. +x is to the right and +y is from **bottom to top**.
+        // This is to be consistent with WebGL conventions.
+        //
+        // This example also demonstrates how to use a different pixel format,
+        // in this case, RGB.
+        function makeGradientTexture() {
+          var size = 256;
+          var typedArray = new Uint8Array(3 * size * size);
+          for (var i = 0; i < size; i++) {
+            for (var j = 0; j < size; j++) {
+              var index = i * size + j;
+              // red increases in the +x direction (to the right)
+              typedArray[3 * index + 0] = j;
+              // Green increases in the +y direction (from bottom to top)
+              typedArray[3 * index + 1] = i;
+              // blue is 0 so it is omitted.
+            }
+          }
+
+          return new Cesium.TextureUniform({
+            typedArray: typedArray,
+            width: size,
+            height: size,
+            pixelFormat: Cesium.PixelFormat.RGB,
+          });
+        }
+        var gradientTexture = makeGradientTexture();
+
+        // Color the texture along its UV coordinates.
+        var gradientShader = new Cesium.CustomShader({
+          uniforms: {
+            u_gradient: {
+              type: Cesium.UniformType.SAMPLER_2D,
+              value: gradientTexture,
+            },
+          },
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            "    material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;",
+            "}",
+          ].join("\n"),
+        });
+
+        // Dragging the mouse will modify the PBR values
+        var modifyPbrShader = new Cesium.CustomShader({
+          uniforms: {
+            // Vector from latest drag center to the mouse
+            u_drag: {
+              type: Cesium.UniformType.VEC2,
+              value: new Cesium.Cartesian2(0.0, 0.0),
+            },
+          },
+          fragmentShaderText: [
+            // Click and drag to vary the PBR values
+            "void fragmentMain(FragmentInput vsInput, inout czm_modelMaterial material)",
+            "{",
+            "    float dragDistance = length(u_drag);",
+            "    float variation = smoothstep(0.0, 300.0, dragDistance);",
+            // variation adds an golden tint to the specular highlights
+            "    material.specular = mix(material.specular, vec3(0.8, 0.5, 0.1), variation);",
+            // variation makes the material glossier
+            "    material.roughness = clamp(1.0 - variation, 0.01, 1.0);",
+            // variation mixes some red into the diffuse color
+            "    material.diffuse += vec3(0.5, 0.0, 0.0) * variation;",
+            "}",
+          ].join("\n"),
+        });
+
+        // Demos ==============================================================
+
+        var models = {
+          balloon: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+          drone: "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+          pawns: "../../SampleData/models/CesiumDrone/Pawns.glb",
+          milkTruck:
+            "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+          groundVehicle:
+            "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+        };
+
+        var needsDrag = false;
+        var demos = [
+          {
+            text: "Custom Texture",
+            onselect: function () {
+              selectModel(models.groundVehicle, textureUniformShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Procedural Texture",
+            onselect: function () {
+              selectModel(models.balloon, checkerboardMaskShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Translucent materials",
+            onselect: function () {
+              selectModel(models.balloon, checkerboardAlphaShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Use Texture as Mask",
+            onselect: function () {
+              selectModel(models.balloon, checkerboardHolesShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Procedural Gradient Texture",
+            onselect: function () {
+              selectModel(models.balloon, gradientShader);
+              needsDrag = false;
+            },
+          },
+          {
+            text: "Modify PBR values via Mouse Drag",
+            onselect: function () {
+              selectModel(models.groundVehicle, modifyPbrShader);
+              needsDrag = true;
+            },
+          },
+          {
+            text: "Expand Model via Mouse Drag",
+            onselect: function () {
+              selectModel(models.milkTruck, expandModelShader);
+              needsDrag = true;
+            },
+          },
+        ];
+
+        function selectModel(url, customShader) {
+          viewer.scene.primitives.removeAll();
+          var model = viewer.scene.primitives.add(
+            Cesium.ModelExperimental.fromGltf({
+              gltf: url,
+              customShader: customShader,
+              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                position,
+                hpr,
+                Cesium.Ellipsoid.WGS84,
+                fixedFrameTransform
+              ),
+            })
+          );
+
+          model.readyPromise.then(function (model) {
+            viewer.camera.flyToBoundingSphere(model.boundingSphere, {
+              duration: 0.5,
+            });
+          });
+        }
+        Sandcastle.addToolbarMenu(demos);
+
+        // Event handlers =====================================================
+
+        var startTime = performance.now();
+        viewer.scene.postUpdate.addEventListener(function () {
+          var elapsedTimeSeconds = (performance.now() - startTime) / 1000;
+          textureUniformShader.setUniform("u_time", elapsedTimeSeconds);
+        });
+
+        var dragActive = false;
+        var dragCenter = new Cesium.Cartesian2();
+
+        viewer.screenSpaceEventHandler.setInputAction(function (movement) {
+          if (!needsDrag) {
+            return;
+          }
+
+          var pickedFeature = viewer.scene.pick(movement.position);
+          if (!Cesium.defined(pickedFeature)) {
+            return;
+          }
+
+          viewer.scene.screenSpaceCameraController.enableInputs = false;
+
+          // set the new drag center
+          dragActive = true;
+          movement.position.clone(dragCenter);
+        }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+        var scratchDrag = new Cesium.Cartesian2();
+        viewer.screenSpaceEventHandler.setInputAction(function (movement) {
+          if (!needsDrag) {
+            return;
+          }
+
+          if (dragActive) {
+            // get the mouse position relative to the center of the screen
+            var drag = Cesium.Cartesian3.subtract(
+              movement.endPosition,
+              dragCenter,
+              scratchDrag
+            );
+
+            // Update uniforms
+            expandModelShader.setUniform("u_drag", drag);
+            modifyPbrShader.setUniform("u_drag", drag);
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        viewer.screenSpaceEventHandler.setInputAction(function (movement) {
+          if (!needsDrag) {
+            return;
+          }
+
+          viewer.scene.screenSpaceCameraController.enableInputs = true;
+
+          dragActive = false;
+        }, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

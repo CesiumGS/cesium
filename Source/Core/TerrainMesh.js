@@ -27,7 +27,6 @@ import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester
  * @param {Number} [vertexStride=6] The number of components in each vertex.
  * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
  * @param {TerrainEncoding} encoding Information used to decode the mesh.
- * @param {Number} exaggeration The amount that this mesh was exaggerated.
  * @param {Number[]} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
  * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
@@ -49,7 +48,6 @@ function TerrainMesh(
   vertexStride,
   orientedBoundingBox,
   encoding,
-  exaggeration,
   westIndicesSouthToNorth,
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
@@ -135,12 +133,6 @@ function TerrainMesh(
    * @type {TerrainEncoding}
    */
   this.encoding = encoding;
-
-  /**
-   * The amount that this mesh was exaggerated.
-   * @type {Number}
-   */
-  this.exaggeration = exaggeration;
 
   /**
    * The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).

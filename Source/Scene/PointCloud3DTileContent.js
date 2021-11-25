@@ -15,8 +15,8 @@ import SceneMode from "./SceneMode.js";
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -41,6 +41,7 @@ function PointCloud3DTileContent(
   this._styleDirty = false;
   this._features = undefined;
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
@@ -131,6 +132,15 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });

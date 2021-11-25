@@ -15,7 +15,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     this._properties[name] = value;
   };
 
-  MockFeature.prototype.getProperty = function (name) {
+  MockFeature.prototype.getPropertyInherited = function (name) {
     return this._properties[name];
   };
 
@@ -4131,5 +4131,21 @@ describe("Scene/Cesium3DTileStyle", function () {
     expect(colorFunction).toBeUndefined();
     expect(showFunction).toBeUndefined();
     expect(pointSizeFunction).toBeUndefined();
+  });
+
+  it("gets variables", function () {
+    var style = new Cesium3DTileStyle({
+      pointSize: {
+        conditions: [
+          ["(${Height} >= 100.0)", "6"],
+          ["true", "${PointSize}"],
+        ],
+      },
+      color: "${Height} * color('red')",
+      show: "${Floors} > 10",
+    });
+
+    var variables = style.getVariables();
+    expect(variables.sort()).toEqual(["Floors", "Height", "PointSize"]);
   });
 });

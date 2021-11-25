@@ -1235,7 +1235,7 @@ Matrix4.setColumn = function (matrix, index, cartesian, result) {
 
 /**
  * Computes a new matrix that replaces the translation in the rightmost column of the provided
- * matrix with the provided translation.  This assumes the matrix is an affine transformation
+ * matrix with the provided translation. This assumes the matrix is an affine transformation.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} translation The translation that replaces the translation of the provided matrix.
@@ -1274,7 +1274,8 @@ Matrix4.setTranslation = function (matrix, translation, result) {
 
 var scaleScratch = new Cartesian3();
 /**
- * Computes a new matrix that replaces the scale with the provided scale.  This assumes the matrix is an affine transformation
+ * Computes a new matrix that replaces the scale with the provided scale.
+ * This assumes the matrix is an affine transformation.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} scale The scale that replaces the scale of the provided matrix.
@@ -1606,10 +1607,10 @@ Matrix4.subtract = function (left, right, result) {
 };
 
 /**
- * Computes the product of two matrices assuming the matrices are
- * affine transformation matrices, where the upper left 3x3 elements
- * are a rotation matrix, and the upper three elements in the fourth
- * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+ * Computes the product of two matrices assuming the matrices are affine transformation matrices,
+ * where the upper left 3x3 elements are any matrix, and
+ * the upper three elements in the fourth column are the translation.
+ * The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
  * This method is faster than computing the product for general 4x4
  * matrices using {@link Matrix4.multiply}.
@@ -1852,7 +1853,7 @@ Matrix4.multiplyByUniformScale = function (matrix, scale, result) {
 
 /**
  * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
- * by an implicit non-uniform scale matrix.  This is an optimization
+ * by an implicit non-uniform scale matrix. This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
  * <code>m</code> must be an affine matrix.
  * This function performs fewer allocations and arithmetic operations.
@@ -2327,7 +2328,7 @@ Matrix4.equalsEpsilon = function (left, right, epsilon) {
 };
 
 /**
- * Gets the translation portion of the provided matrix, assuming the matrix is a affine transformation matrix.
+ * Gets the translation portion of the provided matrix, assuming the matrix is an affine transformation matrix.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} result The object onto which to store the result.
@@ -2346,7 +2347,7 @@ Matrix4.getTranslation = function (matrix, result) {
 };
 
 /**
- * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is an affine transformation matrix.
+ * Gets the upper left 3x3 matrix of the provided matrix.
  *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Matrix3} result The object onto which to store the result.
@@ -2393,7 +2394,7 @@ var scratchExpectedBottomRow = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 /**
  * Computes the inverse of the provided matrix using Cramers Rule.
  * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
- * If the matrix is an affine transformation matrix, it is more efficient
+ * If the matrix is a proper rigid transformation, it is more efficient
  * to invert it with {@link Matrix4.inverseTransformation}.
  *
  * @param {Matrix4} matrix The matrix to invert.
@@ -2604,10 +2605,10 @@ Matrix4.inverse = function (matrix, result) {
 };
 
 /**
- * Computes the inverse of the provided matrix assuming it is
- * an affine transformation matrix, where the upper left 3x3 elements
- * are a rotation matrix, and the upper three elements in the fourth
- * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+ * Computes the inverse of the provided matrix assuming it is a proper rigid matrix,
+ * where the upper left 3x3 elements are a rotation matrix,
+ * and the upper three elements in the fourth column are the translation.
+ * The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
  * This method is faster than computing the inverse for a general 4x4
  * matrix using {@link Matrix4.inverse}.

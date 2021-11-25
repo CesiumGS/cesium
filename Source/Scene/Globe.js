@@ -283,6 +283,26 @@ function Globe(ellipsoid) {
   this.atmosphereBrightnessShift = 0.0;
 
   /**
+   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
+   * A value of <code>2.0</code> scales the terrain by 2x.
+   * A value of <code>0.0</code> makes the terrain completely flat.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * @type {Number}
+   * @default 1.0
+   */
+  this.terrainExaggeration = 1.0;
+
+  /**
+   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
+   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
+   * @type {Number}
+   * @default 0.0
+   */
+  this.terrainExaggerationRelativeHeight = 0.0;
+
+  /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
    * Skirts are always hidden when the camera is underground or translucency is enabled.
    *
@@ -672,7 +692,7 @@ Globe.prototype.pickWorldCoordinates = function (
       );
     } else if (defined(surfaceTile.renderedMesh)) {
       BoundingSphere.clone(
-        surfaceTile.renderedMesh.boundingSphere3D,
+        surfaceTile.tileBoundingRegion.boundingSphere,
         boundingVolume
       );
     } else {
@@ -814,6 +834,7 @@ Globe.prototype.getHeight = function (cartographic, mode) {
     return undefined;
   }
 
+  var projection = this._surface._tileProvider.tilingScheme.projection;
   var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
 
   //cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
@@ -858,7 +879,7 @@ Globe.prototype.getHeight = function (cartographic, mode) {
   var intersection = tile.data.pick(
     ray,
     mode,
-    undefined,
+    projection,
     false,
     scratchGetHeightIntersection
   );

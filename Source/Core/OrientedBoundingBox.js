@@ -708,6 +708,8 @@ OrientedBoundingBox.intersectPlane = function (box, plane) {
 var scratchCartesianU = new Cartesian3();
 var scratchCartesianV = new Cartesian3();
 var scratchCartesianW = new Cartesian3();
+var scratchValidAxis2 = new Cartesian3();
+var scratchValidAxis3 = new Cartesian3();
 var scratchPPrime = new Cartesian3();
 
 /**
@@ -715,7 +717,7 @@ var scratchPPrime = new Cartesian3();
  *
  * @param {OrientedBoundingBox} box The box.
  * @param {Cartesian3} cartesian The point
- * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+ * @returns {Number} The distance squared from the oriented bounding box to the point. Returns 0 if the point is inside the box.
  *
  * @example
  * // Sort bounding boxes from back to front
@@ -746,9 +748,87 @@ OrientedBoundingBox.distanceSquaredTo = function (box, cartesian) {
   var vHalf = Cartesian3.magnitude(v);
   var wHalf = Cartesian3.magnitude(w);
 
-  Cartesian3.normalize(u, u);
-  Cartesian3.normalize(v, v);
-  Cartesian3.normalize(w, w);
+  var uValid = true;
+  var vValid = true;
+  var wValid = true;
+
+  if (uHalf > 0) {
+    Cartesian3.divideByScalar(u, uHalf, u);
+  } else {
+    uValid = false;
+  }
+
+  if (vHalf > 0) {
+    Cartesian3.divideByScalar(v, vHalf, v);
+  } else {
+    vValid = false;
+  }
+
+  if (wHalf > 0) {
+    Cartesian3.divideByScalar(w, wHalf, w);
+  } else {
+    wValid = false;
+  }
+
+  var numberOfDegenerateAxes = !uValid + !vValid + !wValid;
+  var validAxis1;
+  var validAxis2;
+  var validAxis3;
+
+  if (numberOfDegenerateAxes === 1) {
+    var degenerateAxis = u;
+    validAxis1 = v;
+    validAxis2 = w;
+    if (!vValid) {
+      degenerateAxis = v;
+      validAxis1 = u;
+    } else if (!wValid) {
+      degenerateAxis = w;
+      validAxis2 = u;
+    }
+
+    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, scratchValidAxis3);
+
+    if (degenerateAxis === u) {
+      u = validAxis3;
+    } else if (degenerateAxis === v) {
+      v = validAxis3;
+    } else if (degenerateAxis === w) {
+      w = validAxis3;
+    }
+  } else if (numberOfDegenerateAxes === 2) {
+    validAxis1 = u;
+    if (vValid) {
+      validAxis1 = v;
+    } else if (wValid) {
+      validAxis1 = w;
+    }
+
+    var crossVector = Cartesian3.UNIT_Y;
+    if (crossVector.equalsEpsilon(validAxis1, CesiumMath.EPSILON3)) {
+      crossVector = Cartesian3.UNIT_X;
+    }
+
+    validAxis2 = Cartesian3.cross(validAxis1, crossVector, scratchValidAxis2);
+    Cartesian3.normalize(validAxis2, validAxis2);
+    validAxis3 = Cartesian3.cross(validAxis1, validAxis2, scratchValidAxis3);
+    Cartesian3.normalize(validAxis3, validAxis3);
+
+    if (validAxis1 === u) {
+      v = validAxis2;
+      w = validAxis3;
+    } else if (validAxis1 === v) {
+      w = validAxis2;
+      u = validAxis3;
+    } else if (validAxis1 === w) {
+      u = validAxis2;
+      v = validAxis3;
+    }
+  } else if (numberOfDegenerateAxes === 3) {
+    u = Cartesian3.UNIT_X;
+    v = Cartesian3.UNIT_Y;
+    w = Cartesian3.UNIT_Z;
+  }
 
   var pPrime = scratchPPrime;
   pPrime.x = Cartesian3.dot(offset, u);

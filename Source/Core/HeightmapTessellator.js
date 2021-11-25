@@ -106,6 +106,7 @@ var maximumScratch = new Cartesian3();
  *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
  *                 projection, this is meters.
  * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Number} [options.exaggerationRelativeHeight=0.0] The height from which terrain is exaggerated.
  * @param {Rectangle} [options.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
  *                 west properties in radians.  Either rectangle or nativeRectangle must be provided.  If both
  *                 are provided, they're assumed to be consistent.
@@ -161,7 +162,7 @@ var maximumScratch = new Cartesian3();
  * });
  *
  * var encoding = statistics.encoding;
- * var position = encoding.decodePosition(statistics.vertices, index * encoding.getStride());
+ * var position = encoding.decodePosition(statistics.vertices, index);
  */
 HeightmapTessellator.computeVertices = function (options) {
   console.time("computeVertices");
@@ -199,20 +200,21 @@ HeightmapTessellator.computeVertices = function (options) {
   var width = options.width;
   var height = options.height;
   var skirtHeight = options.skirtHeight;
+  var hasSkirts = skirtHeight > 0.0;
 
   var isGeographic = defaultValue(options.isGeographic, true);
   var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
   var oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
-  var nativeRectangle = options.nativeRectangle;
+  var nativeRectangle = Rectangle.clone(options.nativeRectangle);
+  var rectangle = Rectangle.clone(options.rectangle);
 
   var geographicWest;
   var geographicSouth;
   var geographicEast;
   var geographicNorth;
 
-  var rectangle = options.rectangle;
   if (!defined(rectangle)) {
     if (isGeographic) {
       geographicWest = toRadians(nativeRectangle.west);
@@ -239,8 +241,15 @@ HeightmapTessellator.computeVertices = function (options) {
   var relativeToCenter = options.relativeToCenter;
   var hasRelativeToCenter = defined(relativeToCenter);
   relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
-  var exaggeration = defaultValue(options.exaggeration, 1.0);
   var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
+
+  var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var exaggerationRelativeHeight = defaultValue(
+    options.exaggerationRelativeHeight,
+    0.0
+  );
+  var hasExaggeration = exaggeration !== 1.0;
+  var includeGeodeticSurfaceNormals = hasExaggeration;
 
   var structure = defaultValue(
     options.structure,
@@ -326,13 +335,16 @@ HeightmapTessellator.computeVertices = function (options) {
   var heights = new Array(vertexCount);
   var uvs = new Array(vertexCount);
   var webMercatorTs = includeWebMercatorT ? new Array(vertexCount) : [];
+  var geodeticSurfaceNormals = includeGeodeticSurfaceNormals
+    ? new Array(vertexCount)
+    : [];
 
   var startRow = 0;
   var endRow = height;
   var startCol = 0;
   var endCol = width;
 
-  if (skirtHeight > 0.0) {
+  if (hasSkirts) {
     --startRow;
     ++endRow;
     --startCol;
@@ -425,7 +437,7 @@ HeightmapTessellator.computeVertices = function (options) {
         }
       }
 
-      heightSample = (heightSample * heightScale + heightOffset) * exaggeration;
+      heightSample = heightSample * heightScale + heightOffset;
 
       maximumHeight = Math.max(maximumHeight, heightSample);
       minimumHeight = Math.min(minimumHeight, heightSample);
@@ -491,19 +503,24 @@ HeightmapTessellator.computeVertices = function (options) {
       position.y = rSurfaceY + nY * heightSample;
       position.z = rSurfaceZ + nZ * heightSample;
 
+      Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
+      Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
+      Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
+      hMin = Math.min(hMin, heightSample);
+
       positions[index] = position;
-      heights[index] = heightSample;
       uvs[index] = new Cartesian2(u, v);
+      heights[index] = heightSample;
 
       if (includeWebMercatorT) {
         webMercatorTs[index] = webMercatorT;
       }
 
-      Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
-
-      Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
-      Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
-      hMin = Math.min(hMin, heightSample);
+      if (includeGeodeticSurfaceNormals) {
+        geodeticSurfaceNormals[index] = ellipsoid.geodeticSurfaceNormal(
+          position
+        );
+      }
     }
   }
 
@@ -565,14 +582,18 @@ HeightmapTessellator.computeVertices = function (options) {
   console.time("terrain encoding");
   var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
   var encoding = new TerrainEncoding(
+    relativeToCenter,
     aaBox,
     hMin,
     maximumHeight,
     fromENU,
     false,
-    includeWebMercatorT
+    includeWebMercatorT,
+    includeGeodeticSurfaceNormals,
+    exaggeration,
+    exaggerationRelativeHeight
   );
-  var vertices = new Float32Array(vertexCount * encoding.getStride());
+  var vertices = new Float32Array(vertexCount * encoding.stride);
 
   var bufferIndex = 0;
   for (var j = 0; j < vertexCount; ++j) {
@@ -583,7 +604,8 @@ HeightmapTessellator.computeVertices = function (options) {
       uvs[j],
       heights[j],
       undefined,
-      webMercatorTs[j]
+      webMercatorTs[j],
+      geodeticSurfaceNormals[j]
     );
   }
 

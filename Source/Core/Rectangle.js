@@ -740,10 +740,10 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
     rectangleWest += CesiumMath.TWO_PI;
   }
 
-  var west = CesiumMath.convertLongitudeRange(
+  var west = CesiumMath.negativePiToPi(
     Math.min(rectangleWest, otherRectangleWest)
   );
-  var east = CesiumMath.convertLongitudeRange(
+  var east = CesiumMath.negativePiToPi(
     Math.max(rectangleEast, otherRectangleEast)
   );
 

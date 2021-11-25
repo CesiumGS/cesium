@@ -15,6 +15,7 @@ import { QuadtreeTile } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
 import { TerrainState } from "../../Source/Cesium.js";
+import { TileProviderError } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import { when } from "../../Source/Cesium.js";
 import {
@@ -129,6 +130,19 @@ describe("Scene/GlobeSurfaceTile", function () {
       return processor.process([rootTile]).then(function () {
         expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
         expect(rootTile.data.terrainState).toBe(TerrainState.FAILED);
+      });
+    });
+
+    it("prints error message when a root tile fails to load", function () {
+      spyOn(TileProviderError, "handleError").and.callThrough();
+      mockTerrain.requestTileGeometryWillFail(rootTile);
+
+      return processor.process([rootTile]).then(function () {
+        expect(TileProviderError.handleError.calls.count()).toBe(1);
+        // Test that message argument is defined.
+        expect(TileProviderError.handleError.calls.argsFor(0)[3]).toContain(
+          "RuntimeError: requestTileGeometry failed as requested."
+        );
       });
     });
 

@@ -155,13 +155,40 @@ function updatePriority(request) {
   }
 }
 
-function serverHasOpenSlots(serverKey) {
+/**
+ * Check if there are open slots for a particular server key. If desiredRequests is greater than 1, this checks if the queue has room for scheduling multiple requests.
+ * @param {String} serverKey The server key returned by {@link RequestScheduler.getServerKey}.
+ * @param {Number} [desiredRequests=1] How many requests the caller plans to request
+ * @return {Boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.
+ * @private
+ */
+RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
+  desiredRequests = defaultValue(desiredRequests, 1);
+
   var maxRequests = defaultValue(
     RequestScheduler.requestsByServer[serverKey],
     RequestScheduler.maximumRequestsPerServer
   );
-  return numberOfActiveRequestsByServer[serverKey] < maxRequests;
-}
+  var hasOpenSlotsServer =
+    numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
+
+  return hasOpenSlotsServer;
+};
+
+/**
+ * Check if the priority heap has open slots, regardless of which server they
+ * are from. This is used in {@link Multiple3DTileContent} for determining when
+ * all requests can be scheduled
+ * @param {Number} desiredRequests The number of requests the caller intends to make
+ * @return {Boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
+ *
+ * @private
+ */
+RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
+  var hasOpenSlotsHeap =
+    requestHeap.length + desiredRequests <= priorityHeapLength;
+  return hasOpenSlotsHeap;
+};
 
 function issueRequest(request) {
   if (request.state === RequestState.UNISSUED) {
@@ -295,7 +322,10 @@ RequestScheduler.update = function () {
       continue;
     }
 
-    if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+    if (
+      request.throttleByServer &&
+      !RequestScheduler.serverHasOpenSlots(request.serverKey)
+    ) {
       // Open slots are available, but the request is throttled by its server. Cancel and try again later.
       cancelRequest(request);
       continue;
@@ -320,12 +350,16 @@ RequestScheduler.getServerKey = function (url) {
   Check.typeOf.string("url", url);
   //>>includeEnd('debug');
 
-  var uri = new Uri(url).resolve(pageUri);
-  uri.normalize();
-  var serverKey = uri.authority;
+  var uri = new Uri(url);
+  if (uri.scheme() === "") {
+    uri = new Uri(url).absoluteTo(pageUri);
+    uri.normalize();
+  }
+
+  var serverKey = uri.authority();
   if (!/:/.test(serverKey)) {
     // If the authority does not contain a port number, add port 443 for https or port 80 for http
-    serverKey = serverKey + ":" + (uri.scheme === "https" ? "443" : "80");
+    serverKey = serverKey + ":" + (uri.scheme() === "https" ? "443" : "80");
   }
 
   var length = numberOfActiveRequestsByServer[serverKey];
@@ -368,7 +402,7 @@ RequestScheduler.request = function (request) {
   if (
     RequestScheduler.throttleRequests &&
     request.throttleByServer &&
-    !serverHasOpenSlots(request.serverKey)
+    !RequestScheduler.serverHasOpenSlots(request.serverKey)
   ) {
     // Server is saturated. Try again later.
     return undefined;

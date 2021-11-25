@@ -73,7 +73,9 @@ function isVisible(tile) {
 }
 
 function hasEmptyContent(tile) {
-  return tile.hasEmptyContent || tile.hasTilesetContent;
+  return (
+    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent
+  );
 }
 
 function hasUnloadedContent(tile) {
@@ -85,7 +87,7 @@ function canTraverse(tileset, tile) {
     return false;
   }
 
-  if (tile.hasTilesetContent) {
+  if (tile.hasTilesetContent || tile.hasImplicitContent) {
     // Traverse external tileset to visit its root tile
     // Don't traverse if the subtree is expired because it will be destroyed
     return !tile.contentExpired;
