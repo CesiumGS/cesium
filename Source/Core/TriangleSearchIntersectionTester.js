@@ -8,22 +8,33 @@ import Cartographic from "./Cartographic.js";
 var scratchCartographic = new Cartographic();
 
 function getPosition(encoding, mode, projection, vertices, index, result) {
-  encoding.decodePosition(vertices, index, result);
+  var position = encoding.getExaggeratedPosition(vertices, index, result);
 
   if (defined(mode) && mode !== SceneMode.SCENE3D) {
-    // TODO why do we need to do this?....
     var ellipsoid = projection.ellipsoid;
-    var positionCart = ellipsoid.cartesianToCartographic(
-      result,
+    var positionCartographic = ellipsoid.cartesianToCartographic(
+      position,
       scratchCartographic
     );
-    projection.project(positionCart, result);
-    Cartesian3.fromElements(result.z, result.x, result.y, result);
+    position = projection.project(positionCartographic, result);
+    position = Cartesian3.fromElements(
+      position.z,
+      position.x,
+      position.y,
+      result
+    );
   }
 
-  return result;
+  return position;
 }
 
+/**
+ *
+ * @param encoding
+ * @param indices
+ * @param vertices
+ * @constructor
+ */
 function TriangleSearchIntersectionTester(encoding, indices, vertices) {
   this._encoding = encoding;
   this._indices = indices;
