@@ -35,7 +35,7 @@
       <div id="zoomButtons"></div>
       <div id="showOctreeLevel"></div>
       <div id="showTestedTriangles"></div>
-      <div id="sampleButtons"></div>
+      <div id="disableDefaultPickStrategy"></div>
       <div id="showOBB"></div>
       <script id="cesium_sandcastle_script">
         function startup(Cesium) {
@@ -121,6 +121,7 @@
             terrainProvider: arcGisTerrainProvider,
           });
           viewer.scene.globe.enableLighting = false;
+          viewer.scene.globe.terrainExaggeration = 1;
           // viewer.scene.globe.depthTestAgainstTerrain = false;
           viewer.scene.fog.enabled = false;
 
@@ -619,6 +620,25 @@
             optionLevel++;
           }
           Sandcastle.addToolbarMenu(showOctreeOptions, "showOctreeLevel");
+
+          Sandcastle.addToolbarMenu(
+            [
+              {
+                text: "Enable Default Pick Strategy",
+                onselect: function () {
+                  window.disableDefaultPickStrategy = false;
+                },
+              },
+              {
+                text: "Disable Default Pick Strategy",
+                onselect: function () {
+                  window.disableDefaultPickStrategy = true;
+                },
+              },
+            ],
+            "disableDefaultPickStrategy"
+          );
+          window.disableDefaultPickStrategy = false;
 
           Sandcastle.addToolbarMenu(
             [

@@ -210,7 +210,7 @@ TerrainMesh.prototype.pickRay = function (
     );
   }
 
-  if (!window.disableDefaultPickStategy) {
+  if (!window.disableDefaultPickStrategy) {
     oldPickValue = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
@@ -222,7 +222,7 @@ TerrainMesh.prototype.pickRay = function (
 
   // whoops
   if (
-    !window.disableDefaultPickStategy &&
+    !window.disableDefaultPickStrategy &&
     this._octreeTrianglePicking &&
     !isCartesianAlmostEqual(newPickValue, oldPickValue)
   ) {
