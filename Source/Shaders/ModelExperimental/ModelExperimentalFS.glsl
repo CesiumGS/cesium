@@ -31,6 +31,8 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 }
 
+Feature feature;
+
 void main() 
 {
     czm_modelMaterial material = defaultModelMaterial();
@@ -38,8 +40,13 @@ void main()
     ProcessedAttributes attributes;
     geometryStage(attributes);
 
+    #ifdef HAS_FEATURES
+    featureStage(feature);
+    #endif
+
+
     #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
-    materialStage(material, attributes);
+    materialStage(material, attributes, feature);
     #endif
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
@@ -48,15 +55,15 @@ void main()
 
     lightingStage(material);
 
+    #ifdef HAS_FEATURES
+    cpuStylingStage(material, feature);
+    #endif
+    
     #ifdef HAS_MODEL_COLOR
     modelColorStage(material);
-    #endif
+    #endif 
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
-
-    #ifdef HAS_FEATURES
-    featureStage();
-    #endif
 
     gl_FragColor = color;
 }

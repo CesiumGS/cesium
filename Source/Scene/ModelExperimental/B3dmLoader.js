@@ -285,6 +285,10 @@ function createFeatureMetadata(loader, components) {
   var batchTable = loader._batchTable;
   var batchLength = loader._batchLength;
 
+  if (batchLength === 0) {
+    return;
+  }
+
   var featureMetadata;
   if (defined(batchTable.json)) {
     // Add the feature metadata from the batch table to the model components.

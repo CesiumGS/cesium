@@ -7,11 +7,15 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The model color pipeline stage is responsible for handling the application of a static color to the model.
+ *
+ * @namespace ModelColorPipelineStage
+ *
+ * @private
  */
-var ModelColorStage = {};
+var ModelColorPipelineStage = {};
 
-ModelColorStage.COLOR_UNIFORM_NAME = "model_color";
-ModelColorStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
+ModelColorPipelineStage.COLOR_UNIFORM_NAME = "model_color";
+ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
 
 /**
  * Process a model. This modifies the following parts of the render resources:
@@ -26,8 +30,14 @@ ModelColorStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {ModelExperimental} model The model.
  * @param {FrameState} frameState The frameState.
+ *
+ * @private
  */
-ModelColorStage.process = function (renderResources, model, frameState) {
+ModelColorPipelineStage.process = function (
+  renderResources,
+  model,
+  frameState
+) {
   var shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
@@ -48,20 +58,22 @@ ModelColorStage.process = function (renderResources, model, frameState) {
 
   shaderBuilder.addUniform(
     "vec4",
-    ModelColorStage.COLOR_UNIFORM_NAME,
+    ModelColorPipelineStage.COLOR_UNIFORM_NAME,
     ShaderDestination.FRAGMENT
   );
-  stageUniforms[ModelColorStage.COLOR_UNIFORM_NAME] = function () {
+  stageUniforms[ModelColorPipelineStage.COLOR_UNIFORM_NAME] = function () {
     return model.color;
   };
 
   // Create a colorBlend from the model's colorBlendMode and colorBlendAmount and pass it as a uniform.
   shaderBuilder.addUniform(
     "float",
-    ModelColorStage.COLOR_BLEND_UNIFORM_NAME,
+    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME,
     ShaderDestination.FRAGMENT
   );
-  stageUniforms[ModelColorStage.COLOR_BLEND_UNIFORM_NAME] = function () {
+  stageUniforms[
+    ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME
+  ] = function () {
     return ColorBlendMode.getColorBlend(
       model.colorBlendMode,
       model.colorBlendAmount
@@ -74,4 +86,4 @@ ModelColorStage.process = function (renderResources, model, frameState) {
   );
 };
 
-export default ModelColorStage;
+export default ModelColorPipelineStage;

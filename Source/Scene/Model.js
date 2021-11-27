@@ -2934,7 +2934,7 @@ function createTexture(gltfTexture, model, context) {
       );
     }
 
-    var minificationFilter;
+    var minificationFilter = sampler.minificationFilter;
     if (
       !defined(gltfTexture.mipLevels) &&
       (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
