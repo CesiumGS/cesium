@@ -1,5 +1,4 @@
 import defaultValue from "./defaultValue.js";
-import defined from "./defined.js";
 import SceneMode from "../Scene/SceneMode.js";
 import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester.js";
 
@@ -180,16 +179,16 @@ function isCartesianAlmostEqual(a, b) {
 
 /**
  * Gives the point on the mesh where the give ray intersects
- * @param ray
- * @param cullBackFaces
- * @param mode
+ * @param {Ray} ray
+ * @param {boolean} cullBackFaces
+ * @param {FrameState} frameState
  * @param projection
  * @returns {Cartesian3}
  */
 TerrainMesh.prototype.pickRay = function (
   ray,
   cullBackFaces,
-  mode,
+  frameState,
   projection
 ) {
   var trace = window.showPickDetails;
@@ -201,7 +200,14 @@ TerrainMesh.prototype.pickRay = function (
 
   var newPickValue, oldPickValue;
 
-  if (this._octreeTrianglePicking) {
+  var hasOctree = !!this._octreeTrianglePicking;
+  var canUseOctree =
+    frameState /* not always passed in */ &&
+    frameState.mode === SceneMode.SCENE3D /* 3d mode only*/ &&
+    frameState.terrainExaggeration ===
+      1; /* the octree is baked for default terrain exaggeration */
+
+  if (hasOctree && canUseOctree) {
     newPickValue = this._octreeTrianglePicking.rayIntersect(
       ray,
       cullBackFaces,
@@ -214,7 +220,7 @@ TerrainMesh.prototype.pickRay = function (
     oldPickValue = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
-      mode,
+      frameState.mode,
       projection,
       traceDetails
     );
@@ -236,7 +242,7 @@ TerrainMesh.prototype.pickRay = function (
     var oldPickAgain = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
-      mode,
+      frameState.mode,
       projection,
       traceDetails
     );

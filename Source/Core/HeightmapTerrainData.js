@@ -294,14 +294,18 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
     var encoding = TerrainEncoding.clone(result.encoding);
     var vertices = new Float32Array(result.vertices);
 
-    var octreeTrianglePicker = new OctreeTrianglePicking(
-      result.octree,
-      createTriangleVerticesCallback(
-        vertices,
-        indicesAndEdges.indices,
-        encoding
-      )
-    );
+    var octreeTrianglePicker = null;
+    if (encoding.exaggeration === 1 && result.octree) {
+      // ahhh, sorry, the octree data structure is built off non-exaggerated triangles
+      octreeTrianglePicker = new OctreeTrianglePicking(
+        result.octree,
+        createTriangleVerticesCallback(
+          vertices,
+          indicesAndEdges.indices,
+          encoding
+        )
+      );
+    }
 
     that._mesh = new TerrainMesh(
       center,

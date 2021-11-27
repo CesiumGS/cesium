@@ -15,6 +15,7 @@ import Transforms from "../Core/Transforms.js";
 import OctreeTrianglePicking from "../Core/OctreeTrianglePicking.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import OrientedBoundingBox from "../Core/OrientedBoundingBox";
 
 var maxShort = 32767;
 
@@ -211,6 +212,13 @@ function createVerticesFromQuantizedTerrainMesh(
       minimumHeight
     );
   }
+
+  var orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+    rectangle,
+    minimumHeight,
+    maximumHeight,
+    ellipsoid
+  );
 
   var transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
   var inverseTransform = Matrix4.inverse(transform, new Matrix4());

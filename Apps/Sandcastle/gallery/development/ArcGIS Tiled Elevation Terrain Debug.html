@@ -31,7 +31,7 @@
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
-      <div id="terrainMenu"></div>
+      <div id="pickTerrainProvider"></div>
       <div id="zoomButtons"></div>
       <div id="showOctreeLevel"></div>
       <div id="showTestedTriangles"></div>
@@ -40,26 +40,6 @@
       <script id="cesium_sandcastle_script">
         function startup(Cesium) {
           "use strict";
-
-          // function addDropdownOption(viewer, name, options, onSelect) {
-          //   var primitives = new Cesium.PrimitiveCollection();
-          //   viewer.scene.primitives.add(primitives);
-          //
-          //   function internalOnSelect(value) {
-          //     primitives.removeAll();
-          //     onSelect(primitives, value);
-          //   }
-          //
-          //   var actualOptions = []
-          //   for (var v of options) {
-          //     actualOptions.push({
-          //       text: v,
-          //       onselect: internalOnSelect.bind(this, v)
-          //     })
-          //   }
-          //
-          //   Sandcastle.addToolbarMenu(actualOptions, name);
-          // }
 
           //Sandcastle_Begin
           var worldTerrain = Cesium.createWorldTerrain({
@@ -318,19 +298,6 @@
             };
           }
 
-          function getChildren(node) {
-            return [
-              n(node.x * 2, node.y * 2, node.z * 2, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2, node.z * 2, node.level + 1),
-              n(node.x * 2, node.y * 2 + 1, node.z * 2, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2 + 1, node.z * 2, node.level + 1),
-              n(node.x * 2, node.y * 2, node.z * 2 + 1, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2, node.z * 2 + 1, node.level + 1),
-              n(node.x * 2, node.y * 2 + 1, node.z * 2 + 1, node.level + 1),
-              n(node.x * 2 + 1, node.y * 2 + 1, node.z * 2 + 1, node.level + 1),
-            ];
-          }
-
           function drawOctreeLayer(prims, level) {
             prims.removeAll();
             if (level == null) {
@@ -391,40 +358,6 @@
             });
           }
 
-          function drawPointList(color, dataSource, points) {
-            if (points && points.length) {
-              for (var i = 0; i < points.length; i++) {
-                var p = points[i];
-                dataSource.entities.add({
-                  position: p,
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(10000.0, 10000.0, 10000.0),
-                    material: color,
-                  },
-                });
-              }
-            }
-          }
-
-          function drawSphere(color, dataSource, spheres) {
-            if (spheres && spheres.length) {
-              for (var i = 0; i < spheres.length; i++) {
-                var sphere = spheres[i];
-                dataSource.entities.add({
-                  position: sphere.center,
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(
-                      sphere.radius,
-                      sphere.radius,
-                      sphere.radius
-                    ),
-                    material: color,
-                  },
-                });
-              }
-            }
-          }
-
           function sortCartesianList(values) {
             return values.slice(0).sort(function (a, b) {
               return a.x - b.x;
@@ -481,17 +414,6 @@
             }),
             "zoomButtons"
           );
-
-          function flatten(node) {
-            if (!node) {
-              return [];
-            }
-            return [node]
-              .concat(flatten(node.topLeftTree))
-              .concat(flatten(node.bottomLeftTree))
-              .concat(flatten(node.topRightTree))
-              .concat(flatten(node.bottomRightTree));
-          }
 
           function flattenOctree(node) {
             return [node].concat((node.children || []).flatMap(flattenOctree));
@@ -612,7 +534,7 @@
             },
           ];
           var optionLevel = 0;
-          while (optionLevel <= 5) {
+          while (optionLevel <= 2) {
             showOctreeOptions.push({
               text: "Octree Level " + optionLevel,
               onselect: onSelectShowOctree.bind(this, optionLevel),
@@ -643,6 +565,25 @@
           Sandcastle.addToolbarMenu(
             [
               {
+                text: "ArcGIS Terrain",
+                onselect: function () {
+                  viewer.terrainProvider = arcGisTerrainProvider;
+                },
+              },
+              {
+                text: "Cesium World Terrain",
+                onselect: function () {
+                  viewer.terrainProvider = worldTerrain;
+                },
+              },
+            ],
+            "pickTerrainProvider"
+          );
+          viewer.terrainProvider = arcGisTerrainProvider;
+
+          Sandcastle.addToolbarMenu(
+            [
+              {
                 text: "Hide Tested Triangles",
                 onselect: function () {
                   showTestedTriangles = false;
@@ -659,6 +600,7 @@
             ],
             "showTestedTriangles"
           );
+
           Sandcastle.addToolbarMenu(
             [
               {
@@ -693,12 +635,11 @@
             window.showPickDetails = false;
 
             var details = window.lastPickDetails;
-            console.trace("details here");
+            console.trace("stack trace here to debug the sandcastle script");
 
             if (details) {
               viewer.entities.removeAll();
 
-              debugger;
               var transform = details.traceDetails.transform;
               var inverseTransform = details.traceDetails.inverseTransform;
 

@@ -3620,7 +3620,7 @@ function getGlobeHeight(scene) {
   var camera = scene.camera;
   var cartographic = camera.positionCartographic;
   if (defined(globe) && globe.show && defined(cartographic)) {
-    return globe.getHeight(cartographic, scene._mode);
+    return globe.getHeight(cartographic, scene.frameState);
   }
   return undefined;
 }
