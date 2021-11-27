@@ -273,6 +273,72 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
   return result;
 };
 
+function getSplittingShaderProgram(context, shaderProgram) {
+  var shader = context.shaderCache.getDerivedShaderProgram(
+    shaderProgram,
+    "splitting"
+  );
+  if (!defined(shader)) {
+    var fs = shaderProgram.fragmentShaderSource.clone();
+
+    var sources = fs.sources;
+    var length = sources.length;
+
+    for (var i = 0; i < length; i++) {
+      sources[i] = ShaderSource.replaceMain(sources[i], "czm_splitting_main");
+    }
+
+    var splittingSource =
+      "\n" +
+      "void main() \n" +
+      "{ \n" +
+      "  float splitPosition = czm_imagerySplitPosition; \n" +
+      "  if (czm_primitiveSplitDirection < 0.0 && gl_FragCoord.x > splitPosition) discard; \n" +
+      "  if (czm_primitiveSplitDirection > 0.0 && gl_FragCoord.x < splitPosition) discard; \n" +
+      "  czm_splitting_main(); \n" +
+      "} \n";
+
+    sources.push(splittingSource);
+
+    shader = context.shaderCache.createDerivedShaderProgram(
+      shaderProgram,
+      "splitting",
+      {
+        vertexShaderSource: shaderProgram.vertexShaderSource,
+        fragmentShaderSource: fs,
+        attributeLocations: shaderProgram._attributeLocations,
+      }
+    );
+  }
+
+  return shader;
+}
+
+DerivedCommand.createSplittingCommand = function (command, context, result) {
+  if (!defined(result)) {
+    result = {};
+  }
+
+  var shader;
+  if (defined(result.command)) {
+    shader = result.command.shaderProgram;
+  }
+
+  result.command = DrawCommand.shallowClone(command, result.command);
+
+  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+    result.command.shaderProgram = getSplittingShaderProgram(
+      context,
+      command.shaderProgram
+    );
+    result.shaderProgramId = command.shaderProgram.id;
+  } else {
+    result.command.shaderProgram = shader;
+  }
+
+  return result;
+};
+
 function getPickShaderProgram(context, shaderProgram, pickId) {
   var shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,

@@ -49,6 +49,7 @@ import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
+import ImagerySplitDirection from "./ImagerySplitDirection.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
@@ -1759,9 +1760,29 @@ Scene.prototype.updateDerivedCommands = function (command) {
     shadowsDirty = true;
   }
 
+  var derivedCommands = command.derivedCommands;
+
+  var useSplitting =
+    defined(command.owner) &&
+    defined(command.owner.primitive) &&
+    defined(command.owner.primitive.splitDirection) &&
+    command.owner.primitive.splitDirection !== ImagerySplitDirection.NONE;
+
+  if (useSplitting) {
+    if (!defined(derivedCommands.splitting) || command.dirty) {
+      derivedCommands.splitting = DerivedCommand.createSplittingCommand(
+        command,
+        context,
+        derivedCommands.splitting
+      );
+    }
+
+    command = derivedCommands.splitting.command;
+    derivedCommands = command.derivedCommands;
+  }
+
   var useLogDepth = frameState.useLogDepth;
   var useHdr = this._hdr;
-  var derivedCommands = command.derivedCommands;
   var hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
   var hasHdrCommands = defined(derivedCommands.hdr);
   var hasDerivedCommands = defined(derivedCommands.originalCommand);
@@ -2100,6 +2121,19 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
 
   if (command.debugShowBoundingVolume && defined(command.boundingVolume)) {
     debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
+  }
+
+  if (defined(command.derivedCommands.splitting)) {
+    command = command.derivedCommands.splitting.command;
+
+    var splitDirection =
+      defined(command.owner) &&
+      defined(command.owner.primitive) &&
+      defined(command.owner.primitive.splitDirection)
+        ? command.owner.primitive.splitDirection
+        : ImagerySplitDirection.NONE;
+
+    context._us._primitiveSplitDirection = splitDirection;
   }
 
   if (frameState.useLogDepth && defined(command.derivedCommands.logDepth)) {

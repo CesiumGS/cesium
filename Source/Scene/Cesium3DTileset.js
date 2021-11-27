@@ -37,6 +37,7 @@ import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import hasExtension from "./hasExtension.js";
+import ImagerySplitDirection from "./ImagerySplitDirection.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
@@ -99,6 +100,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
+ * @param {ImagerySplitDirection} [options.splitDirection] The {@link ImagerySplitDirection} split to apply to this tileset.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -794,6 +796,17 @@ function Cesium3DTileset(options) {
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The {@link ImagerySplitDirection} to apply to this tileset.
+   *
+   * @type {ImagerySplitDirection}
+   * @default {@link ImagerySplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    ImagerySplitDirection.NONE
+  );
 
   /**
    * This property is for debugging only; it is not optimized for production use.

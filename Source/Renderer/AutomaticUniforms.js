@@ -1621,5 +1621,17 @@ var AutomaticUniforms = {
       return uniformState.ellipsoid.oneOverRadii;
     },
   }),
+
+  /**
+   * An automatic GLSL uniform that stores the split direction (none=0.0, left=-1.0, right=1.0)
+   * of the current primitive.
+   */
+  czm_primitiveSplitDirection: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.primitiveSplitDirection;
+    },
+  }),
 };
 export default AutomaticUniforms;
