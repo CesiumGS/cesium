@@ -152,7 +152,7 @@ function GlobeSurfaceTileProvider(options) {
   this._vertexArraysToDestroy = [];
 
   this._debug = {
-    wireframe: true,
+    wireframe: false,
     boundingSphereTile: undefined,
   };
 
