@@ -75,6 +75,7 @@ import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
 import StencilConstants from "./StencilConstants.js";
 
 var boundingSphereCartesian3Scratch = new Cartesian3();
@@ -227,6 +228,7 @@ var uriToGuid = {};
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  *
  * @see Model.fromGltf
  *
@@ -528,6 +530,17 @@ function Model(options) {
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The {@link SplitDirection} to apply to this model.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.

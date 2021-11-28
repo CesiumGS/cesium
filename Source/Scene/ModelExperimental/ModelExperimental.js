@@ -4,6 +4,7 @@ import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
+import SplitDirection from "../SplitDirection.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import Pass from "../../Renderer/Pass.js";
@@ -40,6 +41,7 @@ import Color from "../../Core/Color.js";
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -108,6 +110,17 @@ export default function ModelExperimental(options) {
    * @private
    */
   this._pickObject = options.pickObject;
+
+  /**
+   * The {@link SplitDirection} to apply to this model.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
