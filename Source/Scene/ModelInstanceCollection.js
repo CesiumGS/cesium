@@ -164,6 +164,7 @@ function ModelInstanceCollection(options) {
   this.specularEnvironmentMaps = options.specularEnvironmentMaps;
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCulling = this.backFaceCulling;
+  this._pickObject = options.pickObject;
 }
 
 Object.defineProperties(ModelInstanceCollection.prototype, {
@@ -695,6 +696,7 @@ function createModel(collection, context) {
     sphericalHarmonicCoefficients: collection.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: collection.specularEnvironmentMaps,
     showOutline: collection.showOutline,
+    pickObject: collection._pickObject,
   };
 
   if (!usesBatchTable) {

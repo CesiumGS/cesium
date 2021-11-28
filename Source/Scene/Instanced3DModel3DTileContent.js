@@ -315,6 +315,10 @@ function initialize(content, arrayBuffer, byteOffset) {
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
+    pickObject: {
+      content: content,
+      primitive: tileset,
+    },
   };
 
   if (gltfFormat === 0) {
