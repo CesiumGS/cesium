@@ -1768,15 +1768,18 @@ Scene.prototype.updateDerivedCommands = function (command) {
     defined(command.owner.primitive.splitDirection) &&
     command.owner.primitive.splitDirection !== ImagerySplitDirection.NONE;
 
-  if (useSplitting) {
-    if (!defined(derivedCommands.splitting) || command.dirty) {
-      derivedCommands.splitting = DerivedCommand.createSplittingCommand(
-        command,
-        context,
-        derivedCommands.splitting
-      );
-    }
+  if (
+    (useSplitting && !defined(derivedCommands.splitting)) ||
+    (command.dirty && defined(derivedCommands.splitting))
+  ) {
+    derivedCommands.splitting = DerivedCommand.createSplittingCommand(
+      command,
+      context,
+      derivedCommands.splitting
+    );
+  }
 
+  if (defined(derivedCommands.splitting)) {
     command = derivedCommands.splitting.command;
     derivedCommands = command.derivedCommands;
   }
