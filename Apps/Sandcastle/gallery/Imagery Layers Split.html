@@ -69,7 +69,7 @@
         var earthAtNight = layers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3812 })
         );
-        earthAtNight.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
+        earthAtNight.splitDirection = Cesium.SplitDirection.LEFT; // Only show to the left of the slider.
 
         // Sync the position of the slider with the split position
         var slider = document.getElementById("slider");

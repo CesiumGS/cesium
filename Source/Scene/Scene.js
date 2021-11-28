@@ -49,7 +49,6 @@ import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
-import ImagerySplitDirection from "./ImagerySplitDirection.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
@@ -65,6 +64,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SplitDirection from "./SplitDirection.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
@@ -1766,7 +1766,7 @@ Scene.prototype.updateDerivedCommands = function (command) {
     defined(command.owner) &&
     defined(command.owner.primitive) &&
     defined(command.owner.primitive.splitDirection) &&
-    command.owner.primitive.splitDirection !== ImagerySplitDirection.NONE;
+    command.owner.primitive.splitDirection !== SplitDirection.NONE;
 
   if (
     (useSplitting && !defined(derivedCommands.splitting)) ||
@@ -2134,7 +2134,7 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
       defined(command.owner.primitive) &&
       defined(command.owner.primitive.splitDirection)
         ? command.owner.primitive.splitDirection
-        : ImagerySplitDirection.NONE;
+        : SplitDirection.NONE;
 
     context._us._primitiveSplitDirection = splitDirection;
   }
