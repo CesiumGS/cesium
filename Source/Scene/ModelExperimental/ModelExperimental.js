@@ -102,6 +102,13 @@ export default function ModelExperimental(options) {
 
   this._boundingSphere = undefined;
 
+  /**
+   * Used for picking primitives that wrap a model.
+   *
+   * @private
+   */
+  this._pickObject = options.pickObject;
+
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,

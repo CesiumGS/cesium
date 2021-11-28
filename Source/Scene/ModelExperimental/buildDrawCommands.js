@@ -50,6 +50,13 @@ export default function buildDrawCommands(
 
   var pass = primitiveRenderResources.alphaOptions.pass;
 
+  var owner = model._pickObject;
+  if (!defined(owner)) {
+    owner = {
+      primitive: model,
+    };
+  }
+
   var command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
     modelMatrix: primitiveRenderResources.modelMatrix,
@@ -64,6 +71,7 @@ export default function buildDrawCommands(
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
+    owner: owner,
   });
 
   var styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
