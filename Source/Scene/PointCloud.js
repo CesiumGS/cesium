@@ -146,6 +146,13 @@ function PointCloud(options) {
   this.geometricErrorScale = 1.0;
   this.maximumAttenuation = this._pointSize;
 
+  /**
+   * Used for picking primitives that wrap a point cloud.
+   *
+   * @private
+   */
+  this._pickObject = defaultValue(options.pickObject, this);
+
   initialize(this, options);
 }
 
@@ -865,7 +872,7 @@ function createResources(pointCloud, frameState) {
       ? pointCloud._translucentRenderState
       : pointCloud._opaqueRenderState,
     pass: isTranslucent ? Pass.TRANSLUCENT : pointCloud._opaquePass,
-    owner: pointCloud,
+    owner: pointCloud._pickObject,
     castShadows: false,
     receiveShadows: false,
     pickId: pointCloud._pickIdLoaded(),
