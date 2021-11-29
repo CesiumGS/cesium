@@ -4,8 +4,9 @@ import Resource from "./Resource.js";
 
 var defaultTokenCredit;
 
+// This is the "cesium.com - sandcastle & cesium viewer" token from the CesiumJS account
 var cesiumWebsiteToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNjJkMTQwMS0zNTI1LTRlZGYtOGNmOC1jZTY1ZDFkZmQ3MTgiLCJpZCI6MjU5LCJpYXQiOjE2MzU3OTMzMjZ9.XCLJvr0UWfmimcVFWLu1-kid2ZMxr3daOK38zdk3dKM";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ODZkMDQzOS03ZGJjLTQzZWUtYjlmYy04ZmM5Y2UwNzNhMmYiLCJpZCI6MjU5LCJpYXQiOjE2MzgyMDYwMDB9.cK1hsaFBgz0l2dG9Ry5vBFHWp-HF2lwjLC0tcK8Z8tY";
 var defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNmY0NTdiNi0yMWU0LTQ4ODYtOTI4ZC01YTNkMjBmOGJiNWIiLCJpZCI6MjU5LCJpYXQiOjE2MzU3ODA2MDR9.y50NF0p5ljbH7Tau2KiGsZdCNx0Icx905QiljL43nYM";
 /**
