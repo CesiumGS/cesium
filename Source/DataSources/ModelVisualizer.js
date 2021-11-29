@@ -214,7 +214,9 @@ ModelVisualizer.prototype.update = function (time) {
       time
     );
 
-    model.splitDirection = this._entityCollection.owner.splitDirection;
+    if (defined(this._entityCollection.owner)) {
+      model.splitDirection = this._entityCollection.owner.splitDirection;
+    }
 
     if (model.ready) {
       var runAnimations = Property.getValueOrDefault(
