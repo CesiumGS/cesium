@@ -413,7 +413,7 @@ describe(
         indexBufferLoader
       ) {
         loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
         expect(indexBufferLoader.typedArray).toBeUndefined();
@@ -439,7 +439,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
       });
@@ -469,7 +469,7 @@ describe(
         expect(indexBufferLoader.typedArray.byteLength).toBe(
           indicesUint16.byteLength
         );
-        expect(indexBufferLoader.indexBuffer).toBeUndefined();
+        expect(indexBufferLoader.buffer).toBeUndefined();
         expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
       });
     });
@@ -492,9 +492,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-          expectedByteLength
-        );
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
       });
     }
 
@@ -544,7 +542,7 @@ describe(
         indexBufferLoader
       ) {
         loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           decodedIndices.byteLength
         );
       });
@@ -578,12 +576,12 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(false);
 
         indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadBufferView).toHaveBeenCalled();
         expect(destroyIndexBuffer).toHaveBeenCalled();
@@ -623,12 +621,12 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(false);
 
         indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadDraco).toHaveBeenCalled();
         expect(destroyIndexBuffer).toHaveBeenCalled();
@@ -658,7 +656,7 @@ describe(
         baseResource: gltfResource,
       });
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       indexBufferLoader.destroy();
@@ -669,7 +667,7 @@ describe(
         deferredPromise.resolve(arrayBuffer);
       }
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(bufferViewLoaderCopy);
@@ -714,7 +712,7 @@ describe(
         draco: dracoExtension,
       });
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       loaderProcess(indexBufferLoader, scene);
@@ -728,7 +726,7 @@ describe(
         deferredPromise.resolve(decodeDracoResults);
       }
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(dracoLoaderCopy);

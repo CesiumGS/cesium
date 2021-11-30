@@ -67,7 +67,7 @@ export default function GltfIndexBufferLoader(options) {
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._typedArray = undefined;
-  this._indexBuffer = undefined;
+  this._buffer = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
 }
@@ -115,9 +115,9 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    * @readonly
    * @private
    */
-  indexBuffer: {
+  buffer: {
     get: function () {
-      return this._indexBuffer;
+      return this._buffer;
     },
   },
   /**
@@ -249,7 +249,7 @@ function CreateIndexBufferJob() {
   this.typedArray = undefined;
   this.indexDatatype = undefined;
   this.context = undefined;
-  this.indexBuffer = undefined;
+  this.buffer = undefined;
 }
 
 CreateIndexBufferJob.prototype.set = function (
@@ -263,7 +263,7 @@ CreateIndexBufferJob.prototype.set = function (
 };
 
 CreateIndexBufferJob.prototype.execute = function () {
-  this.indexBuffer = createIndexBuffer(
+  this.buffer = createIndexBuffer(
     this.typedArray,
     this.indexDatatype,
     this.context
@@ -271,14 +271,14 @@ CreateIndexBufferJob.prototype.execute = function () {
 };
 
 function createIndexBuffer(typedArray, indexDatatype, context) {
-  var indexBuffer = Buffer.createIndexBuffer({
+  var buffer = Buffer.createIndexBuffer({
     typedArray: typedArray,
     context: context,
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
   });
-  indexBuffer.vertexArrayDestroyable = false;
-  return indexBuffer;
+  buffer.vertexArrayDestroyable = false;
+  return buffer;
 }
 
 var scratchIndexBufferJob = new CreateIndexBufferJob();
@@ -325,7 +325,7 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     return;
   }
 
-  var indexBuffer;
+  var buffer;
 
   if (this._asynchronous) {
     var indexBufferJob = scratchIndexBufferJob;
@@ -335,19 +335,15 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
       // Job scheduler is full. Try again next frame.
       return;
     }
-    indexBuffer = indexBufferJob.indexBuffer;
+    buffer = indexBufferJob.buffer;
   } else {
-    indexBuffer = createIndexBuffer(
-      typedArray,
-      indexDatatype,
-      frameState.context
-    );
+    buffer = createIndexBuffer(typedArray, indexDatatype, frameState.context);
   }
 
   // Unload everything except the index buffer
   this.unload();
 
-  this._indexBuffer = indexBuffer;
+  this._buffer = buffer;
   this._state = ResourceLoaderState.READY;
   this._promise.resolve(this);
 };
@@ -357,8 +353,8 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
  * @private
  */
 GltfIndexBufferLoader.prototype.unload = function () {
-  if (defined(this._indexBuffer)) {
-    this._indexBuffer.destroy();
+  if (defined(this._buffer)) {
+    this._buffer.destroy();
   }
 
   var resourceCache = this._resourceCache;
@@ -374,6 +370,6 @@ GltfIndexBufferLoader.prototype.unload = function () {
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._typedArray = undefined;
-  this._indexBuffer = undefined;
+  this._buffer = undefined;
   this._gltf = undefined;
 };

@@ -111,7 +111,7 @@ export default function GltfVertexBufferLoader(options) {
   this._dracoLoader = undefined;
   this._quantization = undefined;
   this._typedArray = undefined;
-  this._vertexBuffer = undefined;
+  this._buffer = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
 }
@@ -159,9 +159,9 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    * @readonly
    * @private
    */
-  vertexBuffer: {
+  buffer: {
     get: function () {
-      return this._vertexBuffer;
+      return this._buffer;
     },
   },
   /**
@@ -349,7 +349,7 @@ function CreateVertexBufferJob() {
   this.type = undefined;
   this.count = undefined;
   this.context = undefined;
-  this.vertexBuffer = undefined;
+  this.buffer = undefined;
 }
 
 CreateVertexBufferJob.prototype.set = function (
@@ -369,7 +369,7 @@ CreateVertexBufferJob.prototype.set = function (
 };
 
 CreateVertexBufferJob.prototype.execute = function () {
-  this.vertexBuffer = createVertexBuffer(
+  this.buffer = createVertexBuffer(
     this.typedArray,
     this.dequantize,
     this.componentType,
@@ -396,13 +396,13 @@ function createVertexBuffer(
     );
   }
 
-  var vertexBuffer = Buffer.createVertexBuffer({
+  var buffer = Buffer.createVertexBuffer({
     typedArray: typedArray,
     context: context,
     usage: BufferUsage.STATIC_DRAW,
   });
-  vertexBuffer.vertexArrayDestroyable = false;
-  return vertexBuffer;
+  buffer.vertexArrayDestroyable = false;
+  return buffer;
 }
 
 var scratchVertexBufferJob = new CreateVertexBufferJob();
@@ -451,7 +451,7 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
 
   var accessor = this._gltf.accessors[this._accessorId];
 
-  var vertexBuffer;
+  var buffer;
 
   if (this._asynchronous) {
     var vertexBufferJob = scratchVertexBufferJob;
@@ -468,9 +468,9 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
       // Job scheduler is full. Try again next frame.
       return;
     }
-    vertexBuffer = vertexBufferJob.vertexBuffer;
+    buffer = vertexBufferJob.buffer;
   } else {
-    vertexBuffer = createVertexBuffer(
+    buffer = createVertexBuffer(
       typedArray,
       dequantize,
       accessor.componentType,
@@ -483,7 +483,7 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
   // Unload everything except the vertex buffer
   this.unload();
 
-  this._vertexBuffer = vertexBuffer;
+  this._buffer = buffer;
   this._state = ResourceLoaderState.READY;
   this._promise.resolve(this);
 };
@@ -493,8 +493,8 @@ GltfVertexBufferLoader.prototype.process = function (frameState) {
  * @private
  */
 GltfVertexBufferLoader.prototype.unload = function () {
-  if (defined(this._vertexBuffer)) {
-    this._vertexBuffer.destroy();
+  if (defined(this._buffer)) {
+    this._buffer.destroy();
   }
 
   var resourceCache = this._resourceCache;
@@ -510,6 +510,6 @@ GltfVertexBufferLoader.prototype.unload = function () {
   this._bufferViewLoader = undefined;
   this._dracoLoader = undefined;
   this._typedArray = undefined;
-  this._vertexBuffer = undefined;
+  this._buffer = undefined;
   this._gltf = undefined;
 };

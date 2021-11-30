@@ -246,7 +246,7 @@ function Attribute() {
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
    */
-  this.values = undefined;
+  this.packedTypedArray = undefined;
 
   /**
    * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
@@ -254,7 +254,7 @@ function Attribute() {
    * @type {Buffer}
    * @private
    */
-  this.vertexBuffer = undefined;
+  this.buffer = undefined;
 
   /**
    * A typed array containing vertex buffer data. Attribute values are accessed using byteOffset and byteStride.
@@ -262,7 +262,7 @@ function Attribute() {
    * @type {Uint8Array}
    * @private
    */
-  this.vertexBufferTypedArray = undefined;
+  this.typedArray = undefined;
 
   /**
    * The byte offset of elements in the buffer.
@@ -313,7 +313,7 @@ function Indices() {
    * @type {Buffer}
    * @private
    */
-  this.indexBuffer = undefined;
+  this.buffer = undefined;
 
   /**
    * A typed array containing indices.
@@ -321,7 +321,7 @@ function Indices() {
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @private
    */
-  this.indexBufferTypedArray = undefined;
+  this.typedArray = undefined;
 }
 
 /**

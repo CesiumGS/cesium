@@ -871,7 +871,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
       });
     });
 
@@ -921,7 +921,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
       });
     });
 
@@ -952,7 +952,7 @@ describe(
         vertexBufferLoader
       ) {
         expect(vertexBufferLoader.typedArray).toBeDefined();
-        expect(vertexBufferLoader.vertexBuffer).toBeUndefined();
+        expect(vertexBufferLoader.buffer).toBeUndefined();
       });
     });
 
@@ -1076,7 +1076,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
       });
     });
 
@@ -1124,7 +1124,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
       });
     });
 
@@ -1154,7 +1154,7 @@ describe(
         indexBufferLoader
       ) {
         expect(indexBufferLoader.typedArray).toBeDefined();
-        expect(indexBufferLoader.indexBuffer).toBeUndefined();
+        expect(indexBufferLoader.buffer).toBeUndefined();
       });
     });
 

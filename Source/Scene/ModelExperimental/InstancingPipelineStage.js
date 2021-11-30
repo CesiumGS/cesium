@@ -70,7 +70,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     if (defined(translationAttribute)) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
-        vertexBuffer: translationAttribute.vertexBuffer,
+        vertexBuffer: translationAttribute.buffer,
         componentsPerAttribute: AttributeType.getNumberOfComponents(
           translationAttribute.type
         ),
@@ -96,7 +96,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     if (defined(scaleAttribute)) {
       instancingVertexAttributes.push({
         index: renderResources.attributeIndex++,
-        vertexBuffer: scaleAttribute.vertexBuffer,
+        vertexBuffer: scaleAttribute.buffer,
         componentsPerAttribute: AttributeType.getNumberOfComponents(
           scaleAttribute.type
         ),
@@ -165,16 +165,16 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
 
   // Translations get initialized to (0, 0, 0).
   var translationTypedArray = hasTranslation
-    ? translationAttribute.values
+    ? translationAttribute.packedTypedArray
     : new Float32Array(count * 3);
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   var rotationTypedArray = hasRotation
-    ? rotationAttribute.values
+    ? rotationAttribute.packedTypedArray
     : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
   var scaleTypedArray;
   if (hasScale) {
-    scaleTypedArray = scaleAttribute.values;
+    scaleTypedArray = scaleAttribute.packedTypedArray;
   } else {
     scaleTypedArray = new Float32Array(count * 3);
     scaleTypedArray.fill(1);
@@ -269,7 +269,7 @@ function processFeatureIdAttributes(
 
     var vertexBuffer = Buffer.createVertexBuffer({
       context: frameState.context,
-      typedArray: attribute.values,
+      typedArray: attribute.packedTypedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;

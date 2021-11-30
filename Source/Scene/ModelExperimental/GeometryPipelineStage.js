@@ -195,8 +195,8 @@ function addAttributeToRenderResources(
 
   var vertexAttribute = {
     index: attributeIndex,
-    value: defined(attribute.vertexBuffer) ? undefined : attribute.constant,
-    vertexBuffer: attribute.vertexBuffer,
+    value: defined(attribute.buffer) ? undefined : attribute.constant,
+    vertexBuffer: attribute.buffer,
     componentsPerAttribute: AttributeType.getNumberOfComponents(type),
     componentDatatype: componentDatatype,
     offsetInBytes: attribute.byteOffset,

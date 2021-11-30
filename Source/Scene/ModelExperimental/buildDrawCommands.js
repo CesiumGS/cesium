@@ -29,7 +29,7 @@ export default function buildDrawCommands(
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
   var indexBuffer = defined(primitiveRenderResources.indices)
-    ? primitiveRenderResources.indices.indexBuffer
+    ? primitiveRenderResources.indices.buffer
     : undefined;
 
   var vertexArray = new VertexArray({

@@ -69,7 +69,7 @@ var GltfLoaderState = {
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
  *
  * @private
  */
@@ -409,7 +409,7 @@ function loadBufferView(loader, gltf, bufferViewId) {
   return bufferViewLoader;
 }
 
-function getPackedValues(gltf, accessor, bufferViewTypedArray) {
+function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   var byteOffset = accessor.byteOffset;
   var byteStride = getAccessorByteStride(gltf, accessor);
   var count = accessor.count;
@@ -549,13 +549,17 @@ function loadAttribute(
       // The accessor's byteOffset and byteStride should be ignored since values
       // are tightly packed in a typed array
       var bufferViewTypedArray = vertexBufferLoader.typedArray;
-      attribute.values = getPackedValues(gltf, accessor, bufferViewTypedArray);
+      attribute.packedTypedArray = getPackedTypedArray(
+        gltf,
+        accessor,
+        bufferViewTypedArray
+      );
       attribute.byteOffset = 0;
       attribute.byteStride = undefined;
     } else if (loadAsTypedArray) {
-      attribute.vertexBufferTypedArray = vertexBufferLoader.typedArray;
+      attribute.typedArray = vertexBufferLoader.typedArray;
     } else {
-      attribute.vertexBuffer = vertexBufferLoader.vertexBuffer;
+      attribute.buffer = vertexBufferLoader.buffer;
     }
 
     if (
@@ -637,9 +641,9 @@ function loadIndices(loader, gltf, accessorId, draco) {
     }
 
     if (loadAsTypedArray) {
-      indices.indexBufferTypedArray = indexBufferLoader.typedArray;
+      indices.typedArray = indexBufferLoader.typedArray;
     } else {
-      indices.indexBuffer = indexBufferLoader.indexBuffer;
+      indices.buffer = indexBufferLoader.buffer;
     }
   });
 
@@ -1208,14 +1212,14 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
           return;
         }
         var bufferViewTypedArray = bufferViewLoader.typedArray;
-        var packedValues = getPackedValues(
+        var packedTypedArray = getPackedTypedArray(
           gltf,
           accessor,
           bufferViewTypedArray
         );
         var inverseBindMatrices = new Array(jointsLength);
         for (var i = 0; i < jointsLength; ++i) {
-          inverseBindMatrices[i] = Matrix4.unpack(packedValues, i * 16);
+          inverseBindMatrices[i] = Matrix4.unpack(packedTypedArray, i * 16);
         }
         skin.inverseBindMatrices = inverseBindMatrices;
       });

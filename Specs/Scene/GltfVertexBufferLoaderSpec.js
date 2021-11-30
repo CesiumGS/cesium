@@ -412,7 +412,7 @@ describe(
         vertexBufferLoader
       ) {
         loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
+        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           positions.byteLength
         );
         expect(vertexBufferLoader.typedArray).toBeUndefined();
@@ -439,7 +439,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
+        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           positions.byteLength
         );
       });
@@ -470,7 +470,7 @@ describe(
         expect(vertexBufferLoader.typedArray.byteLength).toBe(
           positions.byteLength
         );
-        expect(vertexBufferLoader.vertexBuffer).toBeUndefined();
+        expect(vertexBufferLoader.buffer).toBeUndefined();
         expect(Buffer.createVertexBuffer.calls.count()).toBe(0);
       });
     });
@@ -506,7 +506,7 @@ describe(
         vertexBufferLoader
       ) {
         loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
+        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           decodedPositions.byteLength
         );
 
@@ -551,7 +551,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer.sizeInBytes).toBe(
+        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
           decodedNormals.byteLength
         );
 
@@ -596,12 +596,12 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
         expect(vertexBufferLoader.isDestroyed()).toBe(false);
 
         vertexBufferLoader.destroy();
 
-        expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
+        expect(vertexBufferLoader.buffer).not.toBeDefined();
         expect(vertexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadBufferView).toHaveBeenCalled();
         expect(destroyVertexBuffer).toHaveBeenCalled();
@@ -642,12 +642,12 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
         expect(vertexBufferLoader.isDestroyed()).toBe(false);
 
         vertexBufferLoader.destroy();
 
-        expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
+        expect(vertexBufferLoader.buffer).not.toBeDefined();
         expect(vertexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadDraco).toHaveBeenCalled();
         expect(destroyVertexBuffer).toHaveBeenCalled();
@@ -677,7 +677,7 @@ describe(
         bufferViewId: 0,
       });
 
-      expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
 
       vertexBufferLoader.load();
       vertexBufferLoader.destroy();
@@ -688,7 +688,7 @@ describe(
         deferredPromise.resolve(arrayBuffer);
       }
 
-      expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
       expect(vertexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(bufferViewLoaderCopy);
@@ -734,7 +734,7 @@ describe(
         accessorId: 0,
       });
 
-      expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
 
       vertexBufferLoader.load();
       loaderProcess(vertexBufferLoader, scene);
@@ -748,7 +748,7 @@ describe(
         deferredPromise.resolve(decodeDracoResults);
       }
 
-      expect(vertexBufferLoader.vertexBuffer).not.toBeDefined();
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
       expect(vertexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(dracoLoaderCopy);
