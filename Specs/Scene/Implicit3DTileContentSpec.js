@@ -957,8 +957,16 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset.json";
       var implicitTileBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
+      var implicitHeightAndSphereSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset.json";
+      var implicitHeightAndRegionSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset.json";
       var implicitContentBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset.json";
+      var implicitContentHeightSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset.json";
+      var implicitContentHeightAndRegionSemanticsUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset.json";
       var implicitGeometricErrorSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
 
@@ -1149,7 +1157,7 @@ describe(
         });
       });
 
-      it("uses tile bounding volume from metadata semantics if present", function () {
+      it("uses tile bounding box from metadata semantics if present", function () {
         viewCartographicOrigin(124000);
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -1179,7 +1187,73 @@ describe(
         });
       });
 
-      it("uses content bounding volume from metadata semantics if present", function () {
+      it("prioritizes height semantics over bounding volume semantics", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightAndSphereSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          var minimumHeight = implicitRegion[4];
+          var maximumHeight = implicitRegion[5];
+
+          // This tileset uses TILE_BOUNDING_SPHERE, TILE_MINIMUM_HEIGHT, and
+          // TILE_MAXIMUM_HEIGHT but TILE_BOUNDING_SPHERE is ignored
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var tileRegion = tiles[i].boundingVolume;
+            expect(tileRegion.minimumHeight).toBeDefined();
+            expect(tileRegion.maximumHeight).toBeDefined();
+            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses height semantics to adjust region semantic", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitHeightAndRegionSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          var west = implicitRegion[0];
+          var south = implicitRegion[1];
+          var east = implicitRegion[2];
+          var north = implicitRegion[3];
+          var minimumHeight = implicitRegion[4];
+          var maximumHeight = implicitRegion[5];
+
+          // This tileset uses TILE_BOUNDING_REGION, TILE_MINIMUM_HEIGHT, and
+          // TILE_MAXIMUM_HEIGHT to set tighter bounding volumes
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var tileRegion = tiles[i].boundingVolume;
+            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+            // Check that the bounding volume is using the explicit tile regions
+            // which are shrunken compared to the implicit tile regions
+            expect(tileRegion.rectangle.west).toBeGreaterThan(west);
+            expect(tileRegion.rectangle.south).toBeGreaterThan(south);
+            expect(tileRegion.rectangle.east).toBeLessThan(east);
+            expect(tileRegion.rectangle.north).toBeLessThan(north);
+          }
+        });
+      });
+
+      it("uses content bounding box from metadata semantics if present", function () {
         viewCartographicOrigin(124000);
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -1199,6 +1273,70 @@ describe(
             ).toBe(true);
             expect(tile.contentBoundingVolume).not.toBe(tile.boundingVolume);
           });
+        });
+      });
+
+      it("uses content height semantics to adjust implicit region", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentHeightSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          var minimumHeight = implicitRegion[4];
+          var maximumHeight = implicitRegion[5];
+
+          // This tileset uses CONTENT_MINIMUM_HEIGHT and CONTENT_MAXIMUM_HEIGHT
+          // to set tighter bounding volumes
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var contentRegion = tiles[i].contentBoundingVolume;
+            expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
+          }
+        });
+      });
+
+      it("uses content height semantics to adjust content region semantic", function () {
+        viewCartographicOrigin(10000);
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentHeightAndRegionSemanticsUrl
+        ).then(function (tileset) {
+          var placeholderTile = tileset.root;
+          var subtreeRootTile = placeholderTile.children[0];
+
+          var implicitRegion =
+            placeholderTile.implicitTileset.boundingVolume.region;
+
+          var west = implicitRegion[0];
+          var south = implicitRegion[1];
+          var east = implicitRegion[2];
+          var north = implicitRegion[3];
+          var minimumHeight = implicitRegion[4];
+          var maximumHeight = implicitRegion[5];
+
+          // This tileset uses CONTENT_BOUNDING_REGION, CONTENT_MINIMUM_HEIGHT, and
+          // CONTENT_MAXIMUM_HEIGHT to set tighter bounding volumes
+          var tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+          for (var i = 0; i < tiles.length; i++) {
+            var contentRegion = tiles[i].contentBoundingVolume;
+            expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+            expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
+            // Check that the content bounding volume is using the explicit tile
+            // regions which are shrunken compared to the implicit tile regions
+            expect(contentRegion.rectangle.west).toBeGreaterThan(west);
+            expect(contentRegion.rectangle.south).toBeGreaterThan(south);
+            expect(contentRegion.rectangle.east).toBeLessThan(east);
+            expect(contentRegion.rectangle.north).toBeLessThan(north);
+          }
         });
       });
 

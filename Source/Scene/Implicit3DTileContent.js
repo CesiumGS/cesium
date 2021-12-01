@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -412,6 +413,15 @@ function deriveChildTile(
     contentBounds = boundingVolumeSemantics.content;
   }
 
+  var boundingVolume = getTileBoundingVolume(
+    implicitTileset,
+    implicitCoordinates,
+    childIndex,
+    parentIsPlaceholderTile,
+    parentTile,
+    tileBounds
+  );
+
   var contentJsons = [];
   for (var i = 0; i < implicitTileset.contentCount; i++) {
     if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
@@ -425,48 +435,18 @@ function deriveChildTile(
       uri: childContentUri,
     };
 
-    // content bounding volumes can only be specified via
-    // metadata semantics such as CONTENT_BOUNDING_BOX
-    if (defined(contentBounds) && defined(contentBounds.boundingVolume)) {
-      contentJson.boundingVolume = contentBounds.boundingVolume;
+    var contentBoundingVolume = getContentBoundingVolume(
+      boundingVolume,
+      contentBounds
+    );
+
+    if (defined(contentBoundingVolume)) {
+      contentJson.boundingVolume = contentBoundingVolume;
     }
 
     // combine() is used to pass through any additional properties the
     // user specified such as extras or extensions
     contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
-  }
-
-  var boundingVolume;
-
-  if (defined(tileBounds) && defined(tileBounds.boundingVolume)) {
-    boundingVolume = tileBounds.boundingVolume;
-  } else {
-    boundingVolume = deriveBoundingVolume(
-      implicitTileset,
-      implicitCoordinates,
-      childIndex,
-      defaultValue(parentIsPlaceholderTile, false),
-      parentTile
-    );
-
-    // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
-    // can be used to tighten the bounding volume
-    if (
-      hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
-      defined(tileBounds)
-    ) {
-      updateS2CellHeights(
-        boundingVolume.extensions["3DTILES_bounding_volume_S2"],
-        tileBounds.minimumHeight,
-        tileBounds.maximumHeight
-      );
-    } else if (defined(boundingVolume.region) && defined(tileBounds)) {
-      updateRegionHeights(
-        boundingVolume.region,
-        tileBounds.minimumHeight,
-        tileBounds.maximumHeight
-      );
-    }
   }
 
   var childGeometricError = getGeometricError(
@@ -491,13 +471,17 @@ function deriveChildTile(
     };
   }
 
+  // combine() is used to pass through any additional properties the
+  // user specified such as extras or extensions.
   var deep = true;
+  var rootHeader = clone(implicitTileset.tileHeader, deep);
+  delete rootHeader.boundingVolume;
+  var combinedTileJson = combine(tileJson, rootHeader, deep);
+
   var childTile = makeTile(
     implicitContent,
     implicitTileset.baseResource,
-    // combine() is used to pass through any additional properties the
-    // user specified such as extras or extensions
-    combine(tileJson, implicitTileset.tileHeader, deep),
+    combinedTileJson,
     parentTile
   );
   childTile.implicitCoordinates = implicitCoordinates;
@@ -508,7 +492,62 @@ function deriveChildTile(
 }
 
 /**
- * For a derived bounding region, update the minimum and maximum height. This
+ * Checks whether the bounding volume's heights can be updated.
+ * Returns true if the minimumHeight/maximumHeight parameter
+ * is defined and the bounding volume is a region or S2 cell.
+ *
+ * @param {Object} [boundingVolume] The bounding voume
+ * @param {Object} [tileBounds] The tile bounds
+ * @param {Number} [tileBounds.minimumHeight] The minimum height
+ * @param {Number} [tileBounds.maximumHeight] The maximum height
+ * @returns {Boolean} Whether the bounding volume's heights can be updated
+ * @private
+ */
+function canUpdateHeights(boundingVolume, tileBounds) {
+  return (
+    defined(boundingVolume) &&
+    defined(tileBounds) &&
+    (defined(tileBounds.minimumHeight) || defined(tileBounds.maximumHeight)) &&
+    (hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") ||
+      defined(boundingVolume.region))
+  );
+}
+
+/**
+ * Update the minimum and maximum height of the bounding volume.
+ * This is typically used to tighten a bounding volume using the
+ * <code>TILE_MINIMUM_HEIGHT</code> and <code>TILE_MAXIMUM_HEIGHT</code>
+ * semantics. Heights are only updated if the respective
+ * minimumHeight/maximumHeight parameter is defined and the
+ * bounding volume is a region or S2 cell.
+ *
+ * @param {Object} boundingVolume The bounding voume
+ * @param {Object} [tileBounds] The tile bounds
+ * @param {Number} [tileBounds.minimumHeight] The new minimum height
+ * @param {Number} [tileBounds.maximumHeight] The new maximum height
+ * @private
+ */
+function updateHeights(boundingVolume, tileBounds) {
+  if (
+    hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
+    defined(tileBounds)
+  ) {
+    updateS2CellHeights(
+      boundingVolume.extensions["3DTILES_bounding_volume_S2"],
+      tileBounds.minimumHeight,
+      tileBounds.maximumHeight
+    );
+  } else if (defined(boundingVolume.region) && defined(tileBounds)) {
+    updateRegionHeights(
+      boundingVolume.region,
+      tileBounds.minimumHeight,
+      tileBounds.maximumHeight
+    );
+  }
+}
+
+/**
+ * For a bounding region, update the minimum and maximum height. This
  * is typically used to tighten a bounding volume using the
  * <code>TILE_MINIMUM_HEIGHT</code> and <code>TILE_MAXIMUM_HEIGHT</code>
  * semantics. Heights are only updated if the respective
@@ -530,13 +569,13 @@ function updateRegionHeights(region, minimumHeight, maximumHeight) {
 }
 
 /**
- * For a derived bounding S2 cell, update the minimum and maximum height. This
+ * For a bounding S2 cell, update the minimum and maximum height. This
  * is typically used to tighten a bounding volume using the
  * <code>TILE_MINIMUM_HEIGHT</code> and <code>TILE_MAXIMUM_HEIGHT</code>
  * semantics. Heights are only updated if the respective
  * minimumHeight/maximumHeight parameter is defined.
  *
- * @param {Array} region A 6-element array describing the bounding region
+ * @param {Object} s2CellVolume An object describing the S2 cell
  * @param {Number} [minimumHeight] The new minimum height
  * @param {Number} [maximumHeight] The new maximum height
  * @private
@@ -549,6 +588,116 @@ function updateS2CellHeights(s2CellVolume, minimumHeight, maximumHeight) {
   if (defined(maximumHeight)) {
     s2CellVolume.maximumHeight = maximumHeight;
   }
+}
+
+/**
+ * Gets the tile's bounding volume, which may be specified via
+ * metadata semantics such as TILE_BOUNDING_BOX or implicitly
+ * derived from the implicit root tile's bounding volume.
+ * <p>
+ * Priority of bounding volume types:
+ * <ol>
+ * <li>Explicit min/max height
+ *   <ol>
+ *     <li>With explicit region</li>
+ *     <li>With implicit S2</li>
+ *     <li>With implicit region</li>
+ *   </ol>
+ * </li>
+ * <li>Explicit box</li>
+ * <li>Explicit region</li>
+ * <li>Explicit sphere</li>
+ * <li>Implicit S2</li>
+ * <li>Implicit box</li>
+ * <li>Implicit region</li>
+ * </ol>
+ * </p>
+ *
+ * @param {ImplicitTileset} implicitTileset The implicit tileset struct which holds the root bounding volume
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the child tile
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
+ * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {Cesium3DTile} parentTile The parent of the new child tile
+ * @param {Object} [tileBounds] The tile bounds
+ * @returns {Object} An object containing the JSON for a bounding volume
+ * @private
+ */
+function getTileBoundingVolume(
+  implicitTileset,
+  implicitCoordinates,
+  childIndex,
+  parentIsPlaceholderTile,
+  parentTile,
+  tileBounds
+) {
+  var boundingVolume;
+
+  if (
+    !defined(tileBounds) ||
+    !defined(tileBounds.boundingVolume) ||
+    (!canUpdateHeights(tileBounds.boundingVolume, tileBounds) &&
+      canUpdateHeights(implicitTileset.boundingVolume, tileBounds))
+  ) {
+    boundingVolume = deriveBoundingVolume(
+      implicitTileset,
+      implicitCoordinates,
+      childIndex,
+      defaultValue(parentIsPlaceholderTile, false),
+      parentTile
+    );
+  } else {
+    boundingVolume = tileBounds.boundingVolume;
+  }
+
+  // The TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT metadata semantics
+  // can be used to tighten the bounding volume
+  updateHeights(boundingVolume, tileBounds);
+
+  return boundingVolume;
+}
+
+/**
+ * Gets the content bounding volume, which may be specified via
+ * metadata semantics such as CONTENT_BOUNDING_BOX.
+ * <p>
+ * Priority of bounding volume types:
+ * <ol>
+ * <li>Explicit min/max height
+ *   <ol>
+ *     <li>With explicit region</li>
+ *     <li>With tile bounding volume (S2 or region)</li>
+ *   </ol>
+ * </li>
+ * <li>Explicit box</li>
+ * <li>Explicit region</li>
+ * <li>Explicit sphere</li>
+ * <li>Tile bounding volume (when content.boundingVolume is undefined)</li>
+ * </ol>
+ * </p>
+ *
+ * @param {Object} tileBoundingVolume An object containing the JSON for the tile's bounding volume
+ * @param {Object} [contentBounds] The content bounds
+ * @returns {Object|undefined} An object containing the JSON for a bounding volume, or <code>undefined</code> if there is no bounding volume
+ * @private
+ */
+function getContentBoundingVolume(tileBoundingVolume, contentBounds) {
+  // content bounding volumes can only be specified via
+  // metadata semantics such as CONTENT_BOUNDING_BOX
+  var contentBoundingVolume;
+  if (defined(contentBounds)) {
+    contentBoundingVolume = contentBounds.boundingVolume;
+  }
+
+  // The CONTENT_MINIMUM_HEIGHT and CONTENT_MAXIMUM_HEIGHT metadata semantics
+  // can be used to tighten the bounding volume
+  if (canUpdateHeights(contentBoundingVolume, contentBounds)) {
+    updateHeights(contentBoundingVolume, contentBounds);
+  } else if (canUpdateHeights(tileBoundingVolume, contentBounds)) {
+    contentBoundingVolume = clone(tileBoundingVolume, true);
+    updateHeights(contentBoundingVolume, contentBounds);
+  }
+
+  return contentBoundingVolume;
 }
 
 /**
