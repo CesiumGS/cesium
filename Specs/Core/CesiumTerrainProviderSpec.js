@@ -1168,7 +1168,7 @@ describe("Core/CesiumTerrainProvider", function () {
       });
     });
 
-    it("Uses query parameter extensions for ion resource", function () {
+    xit("Uses query parameter extensions for ion resource", function () {
       var terrainProvider = new CesiumTerrainProvider({
         url: IonResource.fromAssetId(1),
         requestVertexNormals: true,

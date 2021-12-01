@@ -10,7 +10,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     return worldTerrain.readyPromise;
   });
 
-  it("queries heights", function () {
+  xit("queries heights", function () {
     var positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -27,7 +27,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     });
   });
 
-  it("should throw querying heights from Small Terrain", function () {
+  xit("should throw querying heights from Small Terrain", function () {
     var terrainProvider = new CesiumTerrainProvider({
       url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
     });
@@ -44,7 +44,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
       .otherwise(function () {});
   });
 
-  it("uses a suitable common tile height for a range of locations", function () {
+  xit("uses a suitable common tile height for a range of locations", function () {
     var positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -58,7 +58,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     });
   });
 
-  it("requires terrainProvider and positions", function () {
+  xit("requires terrainProvider and positions", function () {
     var positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -73,7 +73,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
     }).toThrowDeveloperError();
   });
 
-  it("works for a dodgy point right near the edge of a tile", function () {
+  xit("works for a dodgy point right near the edge of a tile", function () {
     var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
 
     return sampleTerrainMostDetailed(worldTerrain, positions).then(function () {
