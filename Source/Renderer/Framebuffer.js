@@ -362,6 +362,16 @@ Framebuffer.prototype._unBind = function () {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 };
 
+Framebuffer.prototype.bindDraw = function () {
+  var gl = this._gl;
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._framebuffer);
+};
+
+Framebuffer.prototype.bindRead = function () {
+  var gl = this._gl;
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._framebuffer);
+};
+
 Framebuffer.prototype._getActiveColorAttachments = function () {
   return this._activeColorAttachments;
 };
