@@ -6,8 +6,8 @@ import RenderbufferFormat from "./RenderbufferFormat.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import PixelFormat from "../Core/PixelFormat.js";
 
 /**
@@ -18,6 +18,7 @@ import PixelFormat from "../Core/PixelFormat.js";
  */
 function FramebufferManager(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  this._depthStencil = defaultValue(options.depthStencil, false);
   this._numSamples = defaultValue(options.numSamples, 1);
   this._useHdr = false;
 
@@ -29,103 +30,121 @@ function FramebufferManager(options) {
   this._depthStencilTexture = undefined;
 }
 
-FramebufferManager.prototype.update = function (
-  context,
-  viewport,
+FramebufferManager.prototype.isDirty = function (
+  width,
+  height,
   hdr,
   numSamples
 ) {
-  var width = viewport.width;
-  var height = viewport.height;
+  numSamples = defaultValue(numSamples, 1);
   var colorTexture = this._colorTexture;
+  return (
+    !defined(colorTexture) ||
+    colorTexture.width !== width ||
+    colorTexture.height !== height ||
+    this._useHdr !== hdr ||
+    numSamples !== this._numSamples
+  );
+};
+
+FramebufferManager.prototype.update = function (
+  context,
+  width,
+  height,
+  depthTexture,
+  hdr,
+  numSamples
+) {
+  depthTexture = defaultValue(depthTexture, false);
   hdr = defaultValue(hdr, false);
   numSamples = defaultValue(numSamples, 1);
 
-  if (
-    defined(colorTexture) &&
-    colorTexture.width === width &&
-    colorTexture.height === height &&
-    hdr === this._useHdr &&
-    numSamples === this._numSamples
-  ) {
-    return;
-  }
+  if (this.isDirty(width, height, hdr, numSamples)) {
+    this.destroyResources();
+    this._useHdr = hdr;
+    this._numSamples = numSamples;
 
-  this.destroyResources();
-  this._useHdr = hdr;
-  this._numSamples = numSamples;
-
-  // Create color texture and/or renderbuffer
-  var pixelDatatype = hdr
-    ? context.halfFloatingPointTexture
-      ? PixelDatatype.HALF_FLOAT
-      : PixelDatatype.FLOAT
-    : PixelDatatype.UNSIGNED_BYTE;
-  this._colorTexture = new Texture({
-    context: context,
-    width: width,
-    height: height,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: pixelDatatype,
-    sampler: Sampler.NEAREST,
-  });
-
-  if (this._numSamples > 1) {
-    this._colorRenderbuffer = new Renderbuffer({
+    // Create color texture and/or renderbuffer
+    var pixelDatatype = hdr
+      ? context.halfFloatingPointTexture
+        ? PixelDatatype.HALF_FLOAT
+        : PixelDatatype.FLOAT
+      : PixelDatatype.UNSIGNED_BYTE;
+    this._colorTexture = new Texture({
       context: context,
       width: width,
       height: height,
-      format: RenderbufferFormat.RGBA8,
-      numSamples: this._numSamples,
-    });
-  }
-
-  // Create depth texture and/or renderbuffer
-  if (context.depthTexture) {
-    this._depthStencilTexture = new Texture({
-      context: context,
-      width: width,
-      height: height,
-      pixelFormat: PixelFormat.DEPTH_STENCIL,
-      pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: pixelDatatype,
       sampler: Sampler.NEAREST,
     });
-  } else if (this._numSamples > 1) {
-    this._depthStencilRenderbuffer = new Renderbuffer({
-      context: context,
-      width: width,
-      height: height,
-      format: RenderbufferFormat.DEPTH24_STENCIL8,
-      numSamples: this._numSamples,
-    });
-  } else {
-    this._depthStencilRenderbuffer = new Renderbuffer({
-      context: context,
-      width: width,
-      height: height,
-      format: RenderbufferFormat.DEPTH_STENCIL,
-    });
-  }
 
-  // Create color framebuffer
-  if (this._multisampleFramebuffer > 1) {
-    this._framebuffer = new MultisampleFramebuffer({
-      context: context,
-      colorTexture: this._colorTexture,
-      colorRenderbuffer: this._colorRenderbuffer,
-      depthStencilTexture: this._depthStencilTexture,
-      depthStencilRenderbuffer: this._depthStencilRenderbuffer,
-      destroyAttachments: false,
-    });
-  } else {
-    this._framebuffer = new Framebuffer({
-      context: context,
-      colorTextures: [this._colorTexture],
-      depthStencilTexture: this._depthStencilTexture,
-      depthStencilRenderbuffer: this._depthStencilRenderbuffer,
-      destroyAttachments: false,
-    });
+    if (this._numSamples > 1) {
+      this._colorRenderbuffer = new Renderbuffer({
+        context: context,
+        width: width,
+        height: height,
+        format: RenderbufferFormat.RGBA8,
+        numSamples: this._numSamples,
+      });
+    }
+
+    // Create depth stencil texture or renderbuffer
+    if (this._depthStencil) {
+      if (depthTexture) {
+        this._depthStencilTexture = new Texture({
+          context: context,
+          width: width,
+          height: height,
+          pixelFormat: PixelFormat.DEPTH_STENCIL,
+          pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+          sampler: Sampler.NEAREST,
+        });
+      } else if (this._numSamples > 1) {
+        this._depthStencilRenderbuffer = new Renderbuffer({
+          context: context,
+          width: width,
+          height: height,
+          format: RenderbufferFormat.DEPTH24_STENCIL8,
+          numSamples: this._numSamples,
+        });
+      } else {
+        this._depthStencilRenderbuffer = new Renderbuffer({
+          context: context,
+          width: width,
+          height: height,
+          format: RenderbufferFormat.DEPTH_STENCIL,
+        });
+      }
+    }
+
+    // Create color framebuffer
+    if (this._multisampleFramebuffer > 1) {
+      this._framebuffer = new MultisampleFramebuffer({
+        context: context,
+        colorTexture: this._colorTexture,
+        colorRenderbuffer: this._colorRenderbuffer,
+        depthStencilTexture: this._depthStencilTexture,
+        depthStencilRenderbuffer: this._depthStencilRenderbuffer,
+        destroyAttachments: false,
+      });
+    } else {
+      this._framebuffer = new Framebuffer({
+        context: context,
+        colorTextures: [this._colorTexture],
+        depthStencilTexture: this._depthStencilTexture,
+        depthStencilRenderbuffer: this._depthStencilRenderbuffer,
+        destroyAttachments: false,
+      });
+    }
   }
+};
+
+FramebufferManager.prototype.getFramebuffer = function () {
+  if (this._numSamples > 1) {
+    return this._multisampleFramebuffer.getRenderFramebuffer();
+  }
+  return this._framebuffer;
 };
 
 FramebufferManager.prototype.clear = function (

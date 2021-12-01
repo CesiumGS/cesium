@@ -47,7 +47,6 @@ import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
-import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
@@ -2245,16 +2244,6 @@ function executeTranslucentCommandsFrontToBack(
   }
 }
 
-function getDebugGlobeDepth(scene, index) {
-  var globeDepths = scene._view.debugGlobeDepths;
-  var globeDepth = globeDepths[index];
-  if (!defined(globeDepth) && scene.context.depthTexture) {
-    globeDepth = new GlobeDepth();
-    globeDepths[index] = globeDepth;
-  }
-  return globeDepth;
-}
-
 var scratchPerspectiveFrustum = new PerspectiveFrustum();
 var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -2402,10 +2391,7 @@ function executeCommands(scene, passState) {
       us.updateFrustum(frustum);
     }
 
-    var globeDepth = scene.debugShowGlobeDepth
-      ? getDebugGlobeDepth(scene, index)
-      : view.globeDepth;
-
+    var globeDepth = view.globeDepth;
     if (separatePrimitiveFramebuffer) {
       // Render to globe framebuffer in GLOBE pass
       passState.framebuffer = globeDepth.framebuffer;
@@ -3591,12 +3577,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   var useLogDepth = frameState.useLogDepth;
-
-  if (this.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
-    var gd = getDebugGlobeDepth(this, this.debugShowDepthFrustum - 1);
-    gd.executeDebugGlobeDepth(context, passState, useLogDepth);
-  }
-
   if (this.debugShowPickDepth && useGlobeDepthFramebuffer) {
     var pd = this._picking.getPickDepth(this, this.debugShowDepthFrustum - 1);
     pd.executeDebugPickDepth(context, passState, useLogDepth);

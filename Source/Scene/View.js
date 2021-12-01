@@ -63,7 +63,6 @@ function View(scene, camera, viewport) {
     context
   );
   this.pickDepths = [];
-  this.debugGlobeDepths = [];
   this.frustumCommandsList = [];
   this.debugFrustumStatistics = undefined;
 
@@ -426,16 +425,9 @@ View.prototype.destroy = function () {
   var length;
 
   var pickDepths = this.pickDepths;
-  var debugGlobeDepths = this.debugGlobeDepths;
-
   length = pickDepths.length;
   for (i = 0; i < length; ++i) {
     pickDepths[i].destroy();
-  }
-
-  length = debugGlobeDepths.length;
-  for (i = 0; i < length; ++i) {
-    debugGlobeDepths[i].destroy();
   }
 };
 export default View;

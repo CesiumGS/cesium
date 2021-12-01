@@ -7,13 +7,14 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
  * @private
  */
 function SceneFramebuffer() {
-  this._colorFramebufferManager = new FramebufferManager();
-  this._idFramebufferManager = new FramebufferManager();
+  this._colorFramebuffer = new FramebufferManager({
+    depthStencil: true,
+  });
+  this._idFramebuffer = new FramebufferManager({
+    depthStencil: true,
+  });
 
   this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
-
-  this._useHdr = undefined;
-
   this._clearCommand = new ClearCommand({
     color: new Color(0.0, 0.0, 0.0, 0.0),
     depth: 1.0,
@@ -22,10 +23,8 @@ function SceneFramebuffer() {
 }
 
 function destroyResources(post) {
-  post._colorFramebufferManager.destroy();
-  post._idFramebufferManager.destroy();
-  post._colorFramebufferManager = undefined;
-  post._idFramebufferManager = undefined;
+  post._colorFramebuffer.destroyResources();
+  post._idFramebuffer.destroyResources();
 }
 
 SceneFramebuffer.prototype.update = function (
@@ -34,31 +33,41 @@ SceneFramebuffer.prototype.update = function (
   hdr,
   numSamples
 ) {
-  this._colorFramebufferManager.update(context, viewport, hdr, numSamples);
-  this._idFramebufferManager.update(context, viewport);
+  var width = viewport.width;
+  var height = viewport.height;
+  var depthTexture = context.depthTexture;
+  this._colorFramebuffer.update(
+    context,
+    width,
+    height,
+    depthTexture,
+    hdr,
+    numSamples
+  );
+  this._idFramebuffer.update(context, width, height, depthTexture);
 };
 
 SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
-  this._colorFramebufferManager.clear(
+  this._colorFramebuffer.clear(
     context,
     passState,
     clearColor,
     this._clearCommand
   );
-  this._idFramebufferManager.clear(
+  this._idFramebuffer.clear(
     context,
     passState,
-    clearColor,
+    this.__idClearColor,
     this._clearCommand
   );
 };
 
 SceneFramebuffer.prototype.getFramebuffer = function () {
-  return this._colorFramebufferManager._framebuffer;
+  return this._colorFramebuffer.getFramebuffer();
 };
 
 SceneFramebuffer.prototype.getIdFramebuffer = function () {
-  return this._idFramebufferManager._framebuffer;
+  return this._idFramebuffer.getFramebuffer();
 };
 
 SceneFramebuffer.prototype.isDestroyed = function () {
