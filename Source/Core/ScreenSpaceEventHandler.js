@@ -406,9 +406,21 @@ function handleDblClick(screenSpaceEventHandler, event) {
   );
 
   if (defined(action)) {
-    getPosition(screenSpaceEventHandler, event, mouseDblClickEvent.position);
-
-    action(mouseDblClickEvent);
+    var position = getPosition(
+      screenSpaceEventHandler,
+      event,
+      mouseDblClickEvent.position
+    );
+    var startPosition = screenSpaceEventHandler._primaryStartPosition;
+    if (
+      checkPixelTolerance(
+        startPosition,
+        position,
+        screenSpaceEventHandler._clickPixelTolerance
+      )
+    ) {
+      action(mouseDblClickEvent);
+    }
   }
 }
 
