@@ -1,6 +1,13 @@
 # Change Log
 
-### 1.88 - 2021-12-1
+### 1.89 - 2022-01-03
+
+##### Fixes :wrench:
+
+- Fixed handling of vec3 vertex colors in `ModelExperimental`. [#9955](https://github.com/CesiumGS/cesium/pull/9955)
+- Fixed handling of Draco quantized vec3 vertex colors in `ModelExperimental`. [#9957](https://github.com/CesiumGS/cesium/pull/9957)
+
+### 1.88 - 2021-12-01
 
 ##### Fixes :wrench:
 
