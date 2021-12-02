@@ -96,6 +96,23 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     });
   });
 
+  it("getAttributeInfo promotes vertex colors to vec4 for GLSL", function () {
+    var attribute = {
+      semantic: "COLOR",
+      setIndex: 0,
+      type: AttributeType.VEC3,
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "color_0",
+      hasSemantic: true,
+      glslType: "vec4",
+      quantizedGlslType: undefined,
+    });
+  });
+
   it("getAttributeInfo works for custom attributes", function () {
     var attribute = {
       name: "_TEMPERATURE",
