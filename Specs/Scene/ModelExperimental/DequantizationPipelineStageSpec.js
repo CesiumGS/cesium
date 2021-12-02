@@ -1,6 +1,7 @@
 import {
   Cartesian2,
   Cartesian3,
+  Cartesian4,
   combine,
   DequantizationPipelineStage,
   GltfLoader,
@@ -20,6 +21,8 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     "./Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf";
   var milkTruck =
     "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
+  var boxDracoRGBColors =
+    "./Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf";
 
   var scene;
   var gltfLoaders = [];
@@ -141,6 +144,71 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
         texCoordStepSize: new Cartesian2(
           0.0002397004064622816,
           0.0002397004064622816
+        ),
+      };
+
+      expect(uniformValues).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+  });
+
+  it("promotes vertex color dequantization uniforms to vec4", function () {
+    var uniformMap = {};
+    var shaderBuilder = new ShaderBuilder();
+    var renderResources = {
+      uniformMap: uniformMap,
+      shaderBuilder: shaderBuilder,
+    };
+
+    return loadGltf(boxDracoRGBColors).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[2].primitives[0];
+      DequantizationPipelineStage.process(renderResources, primitive);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform float model_normalizationRange_normalMC;",
+        "uniform vec2 model_quantizedVolumeOffset_texCoord_0;",
+        "uniform vec2 model_quantizedVolumeStepSize_texCoord_0;",
+        "uniform vec3 model_quantizedVolumeOffset_positionMC;",
+        "uniform vec3 model_quantizedVolumeStepSize_positionMC;",
+        "uniform vec4 model_quantizedVolumeOffset_color_0;",
+        "uniform vec4 model_quantizedVolumeStepSize_color_0;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+
+      var uniformValues = {
+        normalRange: uniformMap.model_normalizationRange_normalMC(),
+        texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),
+        texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
+        positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
+        positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
+        colorOffset: uniformMap.model_quantizedVolumeOffset_color_0(),
+        colorStepSize: uniformMap.model_quantizedVolumeStepSize_color_0(),
+      };
+
+      var expected = {
+        normalRange: 1023,
+        positionOffset: new Cartesian3(-0.5, -0.5, -0.5),
+        positionStepSize: new Cartesian3(
+          0.00006103888176768602,
+          0.00006103888176768602,
+          0.00006103888176768602
+        ),
+        texCoordOffset: new Cartesian2(0, 0),
+        texCoordStepSize: new Cartesian2(
+          0.0002442002442002442,
+          0.0002442002442002442
+        ),
+        colorOffset: new Cartesian4(
+          4.908018991223173e-10,
+          0.0006933663971722126,
+          0.000028382812160998583,
+          0
+        ),
+        colorStepSize: new Cartesian4(
+          0.00392145689795999,
+          0.00392145689795999,
+          0.00392145689795999,
+          1
         ),
       };
 
