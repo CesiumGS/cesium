@@ -122,6 +122,13 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
   var attributeType = attribute.type;
   var glslType = AttributeType.getGlslType(attributeType);
 
+  // color_n can be either a vec3 or a vec4. But in GLSL we can always use
+  // attribute vec4 since GLSL promotes vec3 attribute data to vec4 with
+  // the .a channel set to 1.0
+  if (/^color_\d+$/.test(variableName)) {
+    glslType = "vec4";
+  }
+
   var isQuantized = defined(attribute.quantization);
   var quantizedGlslType;
   if (isQuantized) {
