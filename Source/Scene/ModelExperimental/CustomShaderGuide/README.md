@@ -259,9 +259,26 @@ Custom attributes are also available, though they are renamed to use lowercase
 letters and underscores. For example, an attribute called `_SURFACE_TEMPERATURE`
 in the model would become `fsInput.attributes.surface_temperature` in the shader.
 
+## `czm_modelVertexOutput` struct
+
+This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
+
+This struct contains the output of the custom vertex shader. This includes:
+
+- `positionMC` - The vertex position in model space coordinates. This struct
+  field can be used e.g. to perturb or animate vertices. It is initialized to
+  `vsInput.attributes.positionMC`. The custom shader may modify this, and the
+  result is used to compute `gl_Position`.
+- `pointSize` - corresponds to `gl_PointSize`. This is only applied for models
+  rendered as `gl.POINTS`, and ignored otherwise.
+
+> **Implementation Note**: `positionMC` does not modify the primitive's bounding
+> sphere. If vertices are moved outside the bounding sphere, the primitive may
+> be unintentionally culled depending on the view frustum.
+
 ## `czm_modelMaterial` struct
 
-This one is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 
