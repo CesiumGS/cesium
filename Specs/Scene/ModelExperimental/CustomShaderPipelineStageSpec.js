@@ -48,7 +48,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   };
 
   var emptyVertexShader =
-    "void vertexMain(VertexInput vsInput, inout vec3 positionMC) {}";
+    "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
   var emptyShader = new CustomShader({
@@ -223,7 +223,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    vec3 normalMC = vsInput.attributes.normalMC;",
           "    vec2 texCoord = vsInput.attributes.texCoord_0;",
@@ -302,7 +302,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    float temperature = vsInput.attributes.temperature;",
           "    positionMC = vsInput.attributes.positionMC;",
@@ -380,7 +380,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
           "}",
@@ -582,7 +582,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    vec2 texCoords = vsInput.attributes.texCoord_1;",
           "}",
@@ -649,7 +649,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    vec3 texCoords = vsInput.attributes.notAnAttribute;",
           "}",

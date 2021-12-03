@@ -42,9 +42,8 @@ var customShader = new Cesium.CustomShader({
   vertexShaderText: `
     // IMPORTANT: the function signature must use these parameter names. This
     // makes it easier for the runtime to generate the shader and make optimizations.
-    void vertexMain(VertexInput vsInput, inout vec3 positionMC) {
-        // code goes here. e.g. for a no-op:
-        return positionMC;
+    void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+        // code goes here. An empty body is a no-op.
     }
   `,
   // Custom fragment shader.
@@ -155,14 +154,13 @@ var customShader = new Cesium.CustomShader({
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
-    void vertexMain(VertexInput vsInput, inout vec3 positionMC) {
+    void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
         float positiveX = step(0.0, positionMC.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,
             vsInput.attributes.color_1,
-            positionMC.x
+            vsOutput.positionMC.x
         );
-        return positionMC;
     }
   `,
   // User uses the varying in the fragment shader

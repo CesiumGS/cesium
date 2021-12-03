@@ -78,9 +78,9 @@
           vertexShaderText: [
             // If the mouse is dragged to the right, the model grows
             // If the mouse is dragged to the left, the model shrinks
-            "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+            "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
             "{",
-            "    positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;",
+            "    vsOutput.positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;",
             "}",
           ].join("\n"),
         });
