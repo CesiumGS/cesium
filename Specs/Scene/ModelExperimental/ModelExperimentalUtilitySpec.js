@@ -167,6 +167,26 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     });
   });
 
+  it("getAttributeInfo handles quantized vertex colors correctly", function () {
+    var attribute = {
+      semantic: "COLOR",
+      setIndex: 0,
+      type: AttributeType.VEC3,
+      quantization: {
+        type: AttributeType.VEC3,
+      },
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: true,
+      variableName: "color_0",
+      hasSemantic: true,
+      glslType: "vec4",
+      quantizedGlslType: "vec4",
+    });
+  });
+
   it("createBoundingSphere works", function () {
     var mockPrimitive = {
       attributes: [
