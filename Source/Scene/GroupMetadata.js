@@ -34,8 +34,6 @@ function GroupMetadata(options) {
   this._class = options.class;
   this._properties = properties;
   this._id = id;
-  this._name = group.name;
-  this._description = group.description;
   this._extras = group.extras;
   this._extensions = group.extensions;
 }
@@ -66,34 +64,6 @@ Object.defineProperties(GroupMetadata.prototype, {
   id: {
     get: function () {
       return this._id;
-    },
-  },
-
-  /**
-   * The name of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  name: {
-    get: function () {
-      return this._name;
-    },
-  },
-
-  /**
-   * The description of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  description: {
-    get: function () {
-      return this._description;
     },
   },
 

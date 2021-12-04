@@ -30,8 +30,6 @@ function TilesetMetadata(options) {
 
   this._class = options.class;
   this._properties = properties;
-  this._name = tileset.name;
-  this._description = tileset.description;
   this._extras = tileset.extras;
   this._extensions = tileset.extensions;
 }
@@ -48,34 +46,6 @@ Object.defineProperties(TilesetMetadata.prototype, {
   class: {
     get: function () {
       return this._class;
-    },
-  },
-
-  /**
-   * The name of the tileset.
-   *
-   * @memberof TilesetMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  name: {
-    get: function () {
-      return this._name;
-    },
-  },
-
-  /**
-   * The description of the tileset.
-   *
-   * @memberof TilesetMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  description: {
-    get: function () {
-      return this._description;
     },
   },
 

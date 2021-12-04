@@ -48,6 +48,7 @@ function MetadataSchema(schema) {
 
   this._classes = classes;
   this._enums = enums;
+  this._id = schema.id;
   this._name = schema.name;
   this._description = schema.description;
   this._version = schema.version;
@@ -81,6 +82,20 @@ Object.defineProperties(MetadataSchema.prototype, {
   enums: {
     get: function () {
       return this._enums;
+    },
+  },
+
+  /**
+   * The ID of the schema.
+   *
+   * @memberof MetadataSchema.prototype
+   * @type {String}
+   * @readonly
+   * @private
+   */
+  id: {
+    get: function () {
+      return this._id;
     },
   },
 

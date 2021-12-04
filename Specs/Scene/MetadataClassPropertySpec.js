@@ -103,7 +103,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         name: "Population",
         description: "Population (thousands)",
-        type: "INT32",
+        componentType: "INT32",
         normalized: true,
         max: max,
         min: min,
@@ -199,7 +199,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(function () {
       return new MetadataClassProperty({
         property: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       });
     }).toThrowDeveloperError();

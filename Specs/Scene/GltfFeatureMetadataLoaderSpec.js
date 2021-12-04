@@ -65,7 +65,7 @@ describe(
         ortho: {
           properties: {
             vegetation: {
-              type: "UINT8",
+              componentType: "UINT8",
               normalized: true,
             },
           },
