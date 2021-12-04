@@ -473,18 +473,6 @@ function Scene(options) {
   /**
    * This property is for debugging only; it is not for production use.
    * <p>
-   * Displays depth information for the indicated frustum.
-   * </p>
-   *
-   * @type Boolean
-   *
-   * @default false
-   */
-  this.debugShowGlobeDepth = false;
-
-  /**
-   * This property is for debugging only; it is not for production use.
-   * <p>
    * Indicates which frustum will have depth information displayed.
    * </p>
    *
@@ -602,6 +590,12 @@ function Scene(options) {
    * @type {Number}
    */
   this.eyeSeparation = undefined;
+
+  /**
+   * The number of samples for multisampled renderbuffers.
+   * @type {Number}
+   */
+  this.numberMSAASamples = undefined;
 
   /**
    * Post processing effects applied to the final render.
@@ -2397,24 +2391,6 @@ function executeCommands(scene, passState) {
       passState.framebuffer = globeDepth.framebuffer;
     }
 
-    var fb;
-    if (
-      scene.debugShowGlobeDepth &&
-      defined(globeDepth) &&
-      environmentState.useGlobeDepthFramebuffer
-    ) {
-      globeDepth.update(
-        context,
-        passState,
-        view.viewport,
-        scene._hdr,
-        clearGlobeDepth
-      );
-      globeDepth.clear(context, passState, scene._clearColorCommand.color);
-      fb = passState.framebuffer;
-      passState.framebuffer = globeDepth.framebuffer;
-    }
-
     clearDepth.execute(context, passState);
 
     if (context.stencilBuffer) {
@@ -2441,14 +2417,6 @@ function executeCommands(scene, passState) {
 
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
-    }
-
-    if (
-      scene.debugShowGlobeDepth &&
-      defined(globeDepth) &&
-      environmentState.useGlobeDepthFramebuffer
-    ) {
-      passState.framebuffer = fb;
     }
 
     // Draw terrain classification
@@ -3449,10 +3417,16 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       postProcess.length > 0 ||
       postProcess.ambientOcclusion.enabled ||
       postProcess.fxaa.enabled ||
+      postProcess.passThrough.enabled ||
       postProcess.bloom.enabled));
   environmentState.usePostProcessSelected = false;
   if (usePostProcess) {
-    view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
+    view.sceneFramebuffer.update(
+      context,
+      view.viewport,
+      scene._hdr,
+      scene.numberMSAASamples
+    );
     view.sceneFramebuffer.clear(context, passState, clearColor);
 
     postProcess.update(context, frameState.useLogDepth, scene._hdr);
@@ -3557,6 +3531,10 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   if (usePostProcess) {
+    if (this.numberMSAASamples > 1) {
+      sceneFramebuffer = view.sceneFramebuffer.blitFramebuffers(context);
+      // sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
+    }
     var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;

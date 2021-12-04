@@ -43,7 +43,7 @@ FramebufferManager.prototype.isDirty = function (
     colorTexture.width !== width ||
     colorTexture.height !== height ||
     this._useHdr !== hdr ||
-    numSamples !== this._numSamples
+    this._numSamples !== numSamples
   );
 };
 
@@ -119,8 +119,8 @@ FramebufferManager.prototype.update = function (
     }
 
     // Create color framebuffer
-    if (this._multisampleFramebuffer > 1) {
-      this._framebuffer = new MultisampleFramebuffer({
+    if (this._numSamples > 1) {
+      this._multisampleFramebuffer = new MultisampleFramebuffer({
         context: context,
         colorTexture: this._colorTexture,
         colorRenderbuffer: this._colorRenderbuffer,
@@ -140,9 +140,15 @@ FramebufferManager.prototype.update = function (
   }
 };
 
+FramebufferManager.prototype.blitFramebuffers = function (context) {
+  if (this._numSamples > 1) {
+    return this._multisampleFramebuffer.blitFramebuffers(context);
+  }
+};
+
 FramebufferManager.prototype.getFramebuffer = function () {
   if (this._numSamples > 1) {
-    return this._multisampleFramebuffer.getRenderFramebuffer();
+    return this._multisampleFramebuffer.getFramebuffer();
   }
   return this._framebuffer;
 };
@@ -174,9 +180,11 @@ FramebufferManager.prototype.clear = function (
 FramebufferManager.prototype.destroyResources = function () {
   if (defined(this._framebuffer)) {
     this._framebuffer.destroy();
+    this._framebuffer = undefined;
   }
   if (defined(this._multisampleFramebuffer)) {
     this._multisampleFramebuffer.destroy();
+    this._multisampleFramebuffer = undefined;
   }
 };
 export default FramebufferManager;

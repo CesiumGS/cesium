@@ -70,6 +70,10 @@ SceneFramebuffer.prototype.getIdFramebuffer = function () {
   return this._idFramebuffer.getFramebuffer();
 };
 
+SceneFramebuffer.prototype.blitFramebuffers = function (context) {
+  return this._colorFramebuffer.blitFramebuffers(context);
+};
+
 SceneFramebuffer.prototype.isDestroyed = function () {
   return false;
 };

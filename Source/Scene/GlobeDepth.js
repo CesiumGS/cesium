@@ -222,11 +222,10 @@ GlobeDepth.prototype.update = function (
   var width = viewport.width;
   var height = viewport.height;
 
-  var textureChanged = this._colorFramebuffer.isDirty(width, height, hdr);
-  if (textureChanged) {
-    this._colorFramebuffer.update(context, width, height, true, hdr);
-    this._copyDepthFramebuffer.update(context, width, height);
-  }
+  // if (textureChanged) {
+  this._colorFramebuffer.update(context, width, height, true, hdr);
+  this._copyDepthFramebuffer.update(context, width, height);
+  // }
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;
 

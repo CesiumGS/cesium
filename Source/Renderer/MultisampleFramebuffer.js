@@ -44,7 +44,13 @@ function MultisampleFramebuffer(options) {
     depthStencilTexture: depthStencilTexture,
     destroyAttachments: options.destroyAttachments,
   });
+  this._blitReady = false;
 }
+
+MultisampleFramebuffer.prototype.getFramebuffer = function () {
+  // return this._blitReady ? this._colorFramebuffer : this._renderFramebuffer;
+  return this._renderFramebuffer;
+};
 
 MultisampleFramebuffer.prototype.getRenderFramebuffer = function () {
   return this._renderFramebuffer;
@@ -72,12 +78,14 @@ MultisampleFramebuffer.prototype.blitFramebuffers = function (context) {
     gl.COLOR_BUFFER_BIT,
     gl.LINEAR
   );
+  this._blitReady = true;
   return this._colorFramebuffer;
 };
 
 MultisampleFramebuffer.prototype.destroy = function () {
   this._renderFramebuffer.destroy();
   this._colorFramebuffer.destroy();
+  this._blitReady = false;
 };
 
 export default MultisampleFramebuffer;
