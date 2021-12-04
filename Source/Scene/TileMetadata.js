@@ -6,7 +6,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * Metadata about a 3D Tile. This represents the <code>3DTILES_metadata</code>
  * extension on a single {@link Cesium3DTile}
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
