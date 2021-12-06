@@ -69,7 +69,8 @@ function createUpdateDepthResources(globeDepth, context, passState) {
   globeDepth._updateDepthFramebuffer = new Framebuffer({
     context: context,
     colorTextures: [globeDepth._copyDepthFramebuffer._colorTexture],
-    depthStencilTexture: passState.framebuffer.depthStencilTexture,
+    // depthStencilTexture: passState.framebuffer.depthStencilTexture,
+    depthStencilTexture: globeDepth._colorFramebuffer._depthStencilTexture,
     destroyAttachments: false,
   });
 }
@@ -152,6 +153,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
     );
   }
 
+  // globeDepth._copyDepthCommand.framebuffer = globeDepth._copyDepthFramebuffer._multisampleFramebuffer._colorFramebuffer;
   globeDepth._copyDepthCommand.framebuffer = globeDepth._copyDepthFramebuffer.getFramebuffer();
   globeDepth._copyDepthCommand.renderState = globeDepth._rs;
 
@@ -250,7 +252,7 @@ GlobeDepth.prototype.update = function (
 
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
-    this.blitFramebuffers(context);
+    // this._copyDepthFramebuffer.blitFramebuffers(context);
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture = this._copyDepthFramebuffer._colorTexture;
   }
@@ -261,8 +263,10 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   passState,
   clearGlobeDepth
 ) {
+  this.blitFramebuffers(context);
+
   // var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
-  var depthTextureToCopy = this.framebuffer2.depthStencilTexture;
+  var depthTextureToCopy = this._colorFramebuffer._depthStencilTexture;
   if (
     clearGlobeDepth ||
     depthTextureToCopy !== this._colorFramebuffer._depthStencilTexture

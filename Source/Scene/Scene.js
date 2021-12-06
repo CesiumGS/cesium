@@ -502,7 +502,7 @@ function Scene(options) {
    * @type Boolean
    * @default true
    */
-  this.useDepthPicking = true;
+  this.useDepthPicking = false;
 
   /**
    * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for enabling this to work.
@@ -3443,6 +3443,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     scene._sunPostProcess.clear(context, passState, clearColor);
   } else if (useGlobeDepthFramebuffer) {
     passState.framebuffer = view.globeDepth.framebuffer;
+    // view.globeDepth.blitFramebuffers(context);
   } else if (usePostProcess) {
     passState.framebuffer = view.sceneFramebuffer.getFramebuffer();
   }
@@ -3506,7 +3507,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
 
   var defaultFramebuffer = environmentState.originalFramebuffer;
   var globeFramebuffer = useGlobeDepthFramebuffer
-    ? globeDepth.framebuffer
+    ? globeDepth.framebuffer2
     : undefined;
   var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
   var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
