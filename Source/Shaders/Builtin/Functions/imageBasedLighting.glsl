@@ -57,11 +57,11 @@ void proceduralIBL(
     float gamma = acos(NdotL);
     float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));
     float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * pow(LdotZenith,2.0)) * (1.0 - exp(-0.32));
-    float luminance = gltf_luminanceAtZenith * (numerator / denominator);
+    float luminance = model_luminanceAtZenith * (numerator / denominator);
     #endif 
     
     vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;
-    vec3 iblColor = (diffuseIrradiance * diffuseColor * gltf_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * gltf_iblFactor.y);
+    vec3 iblColor = (diffuseIrradiance * diffuseColor * model_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * model_iblFactor.y);
     float maximumComponent = max(max(lightColorHdr.x, lightColorHdr.y), lightColorHdr.z);
     vec3 lightColor = lightColorHdr / max(maximumComponent, 1.0);
     iblColor *= lightColor;
@@ -85,11 +85,11 @@ void textureIBL(
         0.0, 0.0, -1.0, 
         0.0, 1.0, 0.0
     ); 
-    vec3 cubeDir = normalize(yUpToZUp * gltf_iblReferenceFrameMatrix * normalize(reflect(-view, n))); 
+    vec3 cubeDir = normalize(yUpToZUp * model_iblReferenceFrameMatrix * normalize(reflect(-view, n))); 
 
     #ifdef DIFFUSE_IBL 
         #ifdef CUSTOM_SPHERICAL_HARMONICS 
-        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); 
+        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, model_sphericalHarmonicCoefficients); 
         #else
         vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); 
         #endif 
@@ -101,7 +101,7 @@ void textureIBL(
     #ifdef SPECULAR_IBL 
     vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;
       #ifdef CUSTOM_SPECULAR_IBL 
-      vec3 specularIBL = czm_sampleOctahedralProjection(gltf_specularMap, gltf_specularMapSize, cubeDir, roughness * gltf_maxSpecularLOD, gltf_maxSpecularLOD);
+      vec3 specularIBL = czm_sampleOctahedralProjection(model_specularMap, model_specularMapSize, cubeDir, roughness * model_maxSpecularLOD, model_maxSpecularLOD);
       #else 
       vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);
       #endif 

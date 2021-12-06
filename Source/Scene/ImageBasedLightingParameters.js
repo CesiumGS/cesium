@@ -151,8 +151,11 @@ Object.defineProperties(ImageBasedLightingParameters.prototype, {
     get: function () {
       return this._sphericalHarmonicCoefficients;
     },
+    set: function (value) {
+      this._sphericalHarmonicCoefficients = value;
+    },
   },
-  specularEnvironmentMapAtlas: {
+  specularEnvironmentMaps: {
     get: function () {
       return this._specularEnvironmentMaps;
     },
