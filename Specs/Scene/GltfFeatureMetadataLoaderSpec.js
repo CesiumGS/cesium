@@ -166,7 +166,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if neither extension nor extension is defined", function () {
+    it("throws if neither extension nor extensionLegacy is defined", function () {
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,

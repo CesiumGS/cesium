@@ -103,7 +103,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         name: "Population",
         description: "Population (thousands)",
-        componentType: "INT32",
+        type: "INT32",
         normalized: true,
         max: max,
         min: min,

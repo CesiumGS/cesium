@@ -16,17 +16,17 @@ describe(
         building: {
           properties: {
             name: {
-              componentType: "STRING",
+              type: "STRING",
             },
             height: {
-              componentType: "FLOAT64",
+              type: "FLOAT64",
             },
           },
         },
         tree: {
           properties: {
             species: {
-              componentType: "STRING",
+              type: "STRING",
             },
           },
         },
@@ -43,14 +43,14 @@ describe(
               componentCount: 3,
             },
             intensity: {
-              componentType: "UINT8",
+              type: "UINT8",
             },
           },
         },
         ortho: {
           properties: {
             vegetation: {
-              componentType: "UINT8",
+              type: "UINT8",
               normalized: true,
             },
           },
