@@ -2,6 +2,11 @@
 
 ### 1.89 - 2022-01-03
 
+##### Additions :tada:
+
+- Added a `pointSize` field to custom vertex shaders for more control over
+  shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
+
 ##### Fixes :wrench:
 
 - Fixed handling of vec3 vertex colors in `ModelExperimental`. [#9955](https://github.com/CesiumGS/cesium/pull/9955)
