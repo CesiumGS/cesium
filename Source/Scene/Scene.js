@@ -3406,7 +3406,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   var useOIT = (environmentState.useOIT =
     !picking && defined(oit) && oit.isSupported());
   if (useOIT) {
-    oit.update(context, passState, view.globeDepth.framebuffer, scene._hdr);
+    oit.update(context, passState, view.globeDepth.framebuffer2, scene._hdr);
     oit.clear(context, passState, clearColor);
     environmentState.useOIT = oit.isSupported();
   }

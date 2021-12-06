@@ -850,7 +850,6 @@ OIT.prototype.clear = function (context, passState, clearColor) {
 };
 
 OIT.prototype.isSupported = function () {
-  return false;
   return this._translucentMRTSupport || this._translucentMultipassSupport;
 };
 
