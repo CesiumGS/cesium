@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import MetadataEnumValue from "./MetadataEnumValue.js";
-import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataBasicType from "./MetadataBasicType.js";
 
 /**
  * A metadata enum.
@@ -37,8 +37,8 @@ function MetadataEnum(options) {
   });
 
   var valueType = defaultValue(
-    MetadataComponentType[enumDefinition.valueType],
-    MetadataComponentType.UINT16
+    MetadataBasicType[enumDefinition.valueType],
+    MetadataBasicType.UINT16
   );
 
   this._values = values;
@@ -101,7 +101,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * The enum value type.
    *
    * @memberof MetadataEnum.prototype
-   * @type {MetadataComponentType}
+   * @type {MetadataBasicType}
    * @readonly
    *
    * @private

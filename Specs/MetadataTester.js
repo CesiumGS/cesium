@@ -4,10 +4,10 @@ import {
   FeatureDetection,
   PropertyTable,
   MetadataClass,
-  MetadataComponentType,
+  MetadataBasicType,
   MetadataEnum,
   MetadataTable,
-  MetadataType,
+  MetadataCompoundType,
 } from "../Source/Cesium.js";
 
 function MetadataTester() {}
@@ -106,7 +106,7 @@ function createProperties(options) {
       }
 
       if (
-        classProperty.type === MetadataType.ARRAY &&
+        classProperty.type === MetadataCompoundType.ARRAY &&
         !defined(classProperty.componentCount)
       ) {
         var arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
@@ -118,7 +118,7 @@ function createProperties(options) {
         property.arrayOffsetBufferView = arrayOffsetBufferView;
       }
 
-      if (classProperty.componentType === MetadataComponentType.STRING) {
+      if (classProperty.componentType === MetadataBasicType.STRING) {
         var stringOffsetBufferType = defaultValue(stringOffsetType, offsetType);
         var stringOffsetBuffer = addPadding(
           createStringOffsetBuffer(values, stringOffsetBufferType)
@@ -378,41 +378,41 @@ MetadataTester.createGltf = function (options) {
 function createBuffer(values, componentType) {
   var typedArray;
   switch (componentType) {
-    case MetadataComponentType.INT8:
+    case MetadataBasicType.INT8:
       typedArray = new Int8Array(values);
       break;
-    case MetadataComponentType.UINT8:
+    case MetadataBasicType.UINT8:
       typedArray = new Uint8Array(values);
       break;
-    case MetadataComponentType.INT16:
+    case MetadataBasicType.INT16:
       typedArray = new Int16Array(values);
       break;
-    case MetadataComponentType.UINT16:
+    case MetadataBasicType.UINT16:
       typedArray = new Uint16Array(values);
       break;
-    case MetadataComponentType.INT32:
+    case MetadataBasicType.INT32:
       typedArray = new Int32Array(values);
       break;
-    case MetadataComponentType.UINT32:
+    case MetadataBasicType.UINT32:
       typedArray = new Uint32Array(values);
       break;
-    case MetadataComponentType.INT64:
+    case MetadataBasicType.INT64:
       typedArray = new BigInt64Array(values); // eslint-disable-line
       break;
-    case MetadataComponentType.UINT64:
+    case MetadataBasicType.UINT64:
       typedArray = new BigUint64Array(values); // eslint-disable-line
       break;
-    case MetadataComponentType.FLOAT32:
+    case MetadataBasicType.FLOAT32:
       typedArray = new Float32Array(values);
       break;
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.FLOAT64:
       typedArray = new Float64Array(values);
       break;
-    case MetadataComponentType.STRING:
+    case MetadataBasicType.STRING:
       var encoder = new TextEncoder();
       typedArray = encoder.encode(values.join(""));
       break;
-    case MetadataComponentType.BOOLEAN:
+    case MetadataBasicType.BOOLEAN:
       var length = Math.ceil(values.length / 8);
       typedArray = new Uint8Array(length); // Initialized as 0's
       for (var i = 0; i < values.length; ++i) {
@@ -458,7 +458,7 @@ function createStringOffsetBuffer(values, offsetType) {
     offset += encoder.encode(strings[i]).length;
   }
   offsets[length] = offset;
-  offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
+  offsetType = defaultValue(offsetType, MetadataBasicType.UINT32);
   return createBuffer(offsets, offsetType);
 }
 
@@ -471,7 +471,7 @@ function createArrayOffsetBuffer(values, offsetType) {
     offset += values[i].length;
   }
   offsets[length] = offset;
-  offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
+  offsetType = defaultValue(offsetType, MetadataBasicType.UINT32);
   return createBuffer(offsets, offsetType);
 }
 

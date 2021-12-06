@@ -1,8 +1,8 @@
 import {
   MetadataClass,
-  MetadataComponentType,
+  MetadataBasicType,
   MetadataEnum,
-  MetadataType,
+  MetadataCompoundType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataClass", function () {
@@ -67,12 +67,12 @@ describe("Scene/MetadataClass", function () {
     var positionProperty = properties.position;
     var colorProperty = properties.color;
 
-    expect(heightProperty.type).toBe(MetadataType.SINGLE);
-    expect(heightProperty.componentType).toBe(MetadataComponentType.FLOAT32);
-    expect(positionProperty.type).toBe(MetadataType.ARRAY);
-    expect(positionProperty.componentType).toBe(MetadataComponentType.FLOAT32);
-    expect(colorProperty.type).toBe(MetadataType.SINGLE);
-    expect(colorProperty.componentType).toBe(MetadataComponentType.STRING);
+    expect(heightProperty.type).toBe(MetadataCompoundType.SINGLE);
+    expect(heightProperty.componentType).toBe(MetadataBasicType.FLOAT32);
+    expect(positionProperty.type).toBe(MetadataCompoundType.ARRAY);
+    expect(positionProperty.componentType).toBe(MetadataBasicType.FLOAT32);
+    expect(colorProperty.type).toBe(MetadataCompoundType.SINGLE);
+    expect(colorProperty.componentType).toBe(MetadataBasicType.STRING);
     expect(Object.keys(properties).sort()).toEqual([
       "color",
       "height",
@@ -118,9 +118,11 @@ describe("Scene/MetadataClass", function () {
       enums: enums,
     });
 
-    expect(buildingClass.properties.color.type).toBe(MetadataType.SINGLE);
+    expect(buildingClass.properties.color.type).toBe(
+      MetadataCompoundType.SINGLE
+    );
     expect(buildingClass.properties.color.componentType).toBe(
-      MetadataComponentType.ENUM
+      MetadataBasicType.ENUM
     );
     expect(buildingClass.properties.color.enumType).toBe(colorEnum);
   });

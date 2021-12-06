@@ -7,8 +7,8 @@ import defined from "../Core/defined.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
-import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataBasicType from "./MetadataBasicType.js";
+import MetadataCompoundType from "./MetadataCompoundType.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}
@@ -33,42 +33,19 @@ function MetadataClassProperty(options) {
   Check.typeOf.object("options.property", property);
   //>>includeEnd('debug');
 
-  var enumType;
-  if (defined(property.enumType)) {
-    enumType = options.enums[property.enumType];
+  var result = parsePropertyLegacy(property);
+  if (!defined(result)) {
+    result = parseProperty(property, options.enums);
   }
-
-  var type = property.type;
-  var componentType;
-  if (MetadataComponentType.hasOwnProperty(type)) {
-    // For EXT_feature_metadata, single values were part of type, not
-    // componentType. Transcode to the newer format.
-    componentType = MetadataComponentType[type];
-    type = MetadataType.SINGLE;
-  } else {
-    type = defaultValue(MetadataType[type], MetadataType.SINGLE);
-    componentType = MetadataComponentType[property.componentType];
-  }
-  var valueType = getValueType(componentType, enumType);
-
-  var normalized =
-    MetadataComponentType.isIntegerType(componentType) &&
-    defaultValue(property.normalized, false);
-
-  var componentCount =
-    type === MetadataType.ARRAY
-      ? property.componentCount
-      : MetadataType.getComponentCount(type);
 
   this._id = id;
   this._name = property.name;
   this._description = property.description;
-  this._type = type;
-  this._enumType = enumType;
-  this._valueType = valueType;
-  this._componentType = componentType;
-  this._componentCount = componentCount;
-  this._normalized = normalized;
+  this._basicType = result.basicType;
+  this._compoundType = result.compoundType;
+  this._enumType = options.enums[result.enumId];
+  this._normalized = result.normalized;
+  this._count = result.count;
   this._min = property.min;
   this._max = property.max;
   this._default = property.default;
@@ -122,23 +99,35 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The type of the property. Each type holds one (SINGLE) or more components
-   * (ARRAY, VECN, MATN).
-   *
+   * The basic type of the property.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {MetadataType}
+   * @type {MetadataBasicType}
    * @readonly
    * @private
    */
-  type: {
+  basicType: {
     get: function () {
-      return this._type;
+      return this._basicType;
     },
   },
 
   /**
-   * The enum type of the property. Only defined when componentType is ENUM.
+   * The compound type of the property.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {MetadataCompoundType}
+   * @readonly
+   * @private
+   */
+  compoundType: {
+    get: function () {
+      return this._compoundType;
+    },
+  },
+
+  /**
+   * The enum type of the property.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
@@ -152,48 +141,16 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The component type of the property. This includes integer
-   * (e.g. INT8 or UINT16), floating point (FLOAT32 and FLOAT64), STRING,
-   * BOOLEAN, and ENUM component types.
-   *
-   * @memberof MetadataClassProperty.prototype
-   * @type {MetadataComponentType}
-   * @readonly
-   * @private
-   */
-  componentType: {
-    get: function () {
-      return this._componentType;
-    },
-  },
-
-  /**
-   * The datatype used for storing each component of the property. This
-   * is usually the same as componentType except for ENUM, where this
-   * returns an integer type
-   *
-   * @memberof MetadataClassProperty.prototype
-   * @type {MetadataComponentType}
-   * @readonly
-   * @private
-   */
-  valueType: {
-    get: function () {
-      return this._valueType;
-    },
-  },
-
-  /**
-   * The number of components per element. Only defined when type is a fixed size ARRAY.
+   * The number of elements. Undefined if the property is a variable size array.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
    * @private
    */
-  componentCount: {
+  count: {
     get: function () {
-      return this._componentCount;
+      return this._count;
     },
   },
 
@@ -212,7 +169,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * A number or an array of numbers storing the maximum allowable value of this property. Only defined when type or componentType is a numeric type.
+   * A number or an array of numbers storing the maximum allowable value of this property. Only defined when the basic type is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]}
@@ -226,7 +183,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * A number or an array of numbers storing the minimum allowable value of this property. Only defined when type or componentType is a numeric type.
+   * A number or an array of numbers storing the minimum allowable value of this property. Only defined when the basic type is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]}
@@ -310,6 +267,107 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 });
 
+function parsePropertyLegacy(property) {
+  var basicType;
+  var compoundType;
+  var normalized = false;
+  var count = 1;
+  var enumId;
+
+  if (property.type === "ARRAY") {
+    count = property.componentCount;
+  }
+
+  if (property.type === "ENUM") {
+    enumId = property.enumType;
+  }
+
+  if (property.componentType === "ENUM") {
+    enumId = property.enumType;
+  }
+
+  if (defined(MetadataBasicType[property.type])) {
+    basicType = property.type;
+  }
+
+  if (defined(MetadataBasicType[property.componentType])) {
+    basicType = property.componentType;
+  }
+
+  if (defined(property.normalized)) {
+    normalized = property.normalized;
+  }
+
+  if (defined(MetadataCompoundType[property.type])) {
+    compoundType = property.type;
+  }
+
+  if (defined(basicType) || defined(enumId)) {
+    return {
+      basicType: basicType,
+      compoundType: compoundType,
+      normalized: normalized,
+      count: count,
+      enumId: enumId,
+    };
+  }
+}
+
+function parseProperty(property, enums) {
+  var basicType;
+  var compoundType;
+  var normalized = false;
+  var count = 1;
+  var enumId;
+
+  var type = property.type;
+
+  var arrayRegex = /\[([2-9]|[1-9]\d+)?\]$/;
+  var match = type.match(arrayRegex);
+
+  if (match !== null) {
+    count = defined(match[1]) ? parseInt(match[1]) : undefined;
+    type = type.slice(0, match.index);
+  }
+
+  if (defined(enums[type])) {
+    enumId = type;
+
+    return {
+      basicType: basicType,
+      compoundType: compoundType,
+      normalized: normalized,
+      count: count,
+      enumId: enumId,
+    };
+  }
+
+  var tokens = type.split("_");
+  var tokenIndex = 0;
+
+  if (defined(MetadataCompoundType[tokens[tokenIndex]])) {
+    compoundType = tokens[tokenIndex++];
+  }
+
+  if (defined(MetadataBasicType[tokens[tokenIndex]])) {
+    basicType = tokens[tokenIndex++];
+  }
+
+  if (MetadataBasicType.isIntegerType(basicType)) {
+    if (tokenIndex < tokens.length && tokens[tokenIndex] === "NORM") {
+      normalized = true;
+    }
+  }
+
+  return {
+    basicType: basicType,
+    compoundType: compoundType,
+    normalized: normalized,
+    count: count,
+    enumId: enumId,
+  };
+}
+
 /**
  * Normalizes integer property values. If the property is not normalized
  * the value is returned unmodified.
@@ -320,7 +378,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
  * @private
  */
 MetadataClassProperty.prototype.normalize = function (value) {
-  return normalize(this, value, MetadataComponentType.normalize);
+  return normalize(this, value, MetadataBasicType.normalize);
 };
 
 /**
@@ -333,7 +391,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.unnormalize = function (value) {
-  return normalize(this, value, MetadataComponentType.unnormalize);
+  return normalize(this, value, MetadataBasicType.unnormalize);
 };
 
 /**
@@ -347,18 +405,18 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
-  switch (this._type) {
-    case MetadataType.VEC2:
+  switch (this._compoundType) {
+    case MetadataCompoundType.VEC2:
       return Cartesian2.unpack(value);
-    case MetadataType.VEC3:
+    case MetadataCompoundType.VEC3:
       return Cartesian3.unpack(value);
-    case MetadataType.VEC4:
+    case MetadataCompoundType.VEC4:
       return Cartesian4.unpack(value);
-    case MetadataType.MAT2:
+    case MetadataCompoundType.MAT2:
       return Matrix2.unpack(value);
-    case MetadataType.MAT3:
+    case MetadataCompoundType.MAT3:
       return Matrix3.unpack(value);
-    case MetadataType.MAT4:
+    case MetadataCompoundType.MAT4:
       return Matrix4.unpack(value);
     default:
       return value;
@@ -377,18 +435,18 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
-  switch (this._type) {
-    case MetadataType.VEC2:
+  switch (this._compoundType) {
+    case MetadataCompoundType.VEC2:
       return Cartesian2.pack(value, []);
-    case MetadataType.VEC3:
+    case MetadataCompoundType.VEC3:
       return Cartesian3.pack(value, []);
-    case MetadataType.VEC4:
+    case MetadataCompoundType.VEC4:
       return Cartesian4.pack(value, []);
-    case MetadataType.MAT2:
+    case MetadataCompoundType.MAT2:
       return Matrix2.pack(value, []);
-    case MetadataType.MAT3:
+    case MetadataCompoundType.MAT3:
       return Matrix3.pack(value, []);
-    case MetadataType.MAT4:
+    case MetadataCompoundType.MAT4:
       return Matrix4.pack(value, []);
     default:
       return value;
@@ -403,25 +461,29 @@ MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
-  var type = this._type;
-  var componentType = this._componentType;
+  var compoundType = this._compoundType;
+  var basicType = this._basicType;
+  var count = this._count;
 
-  if (MetadataType.isVectorType(type) || MetadataType.isMatrixType(type)) {
-    return validateVectorOrMatrix(value, type, componentType);
-  } else if (type === MetadataType.ARRAY) {
-    return validateArray(this, value, this._componentCount);
+  if (
+    MetadataCompoundType.isVectorType(compoundType) ||
+    MetadataCompoundType.isMatrixType(compoundType)
+  ) {
+    return validateVectorOrMatrix(value, compoundType, basicType);
+  } else if (count > 0) {
+    return validateArray(this, value, count);
   }
 
   return checkValue(this, value);
 };
 
-function validateArray(classProperty, value, componentCount) {
+function validateArray(classProperty, value, count) {
   if (!Array.isArray(value)) {
-    return getTypeErrorMessage(value, MetadataType.ARRAY);
+    return "value " + value + " is not an array";
   }
   var length = value.length;
-  if (defined(componentCount) && componentCount !== length) {
-    return "Array length does not match componentCount";
+  if (defined(count) && count !== length) {
+    return "Array length does not match count";
   }
   for (var i = 0; i < length; ++i) {
     var message = checkValue(classProperty, value[i]);
@@ -431,75 +493,93 @@ function validateArray(classProperty, value, componentCount) {
   }
 }
 
-function validateVectorOrMatrix(value, type, componentType) {
-  if (!MetadataComponentType.isVectorCompatible(componentType)) {
-    var message = "componentType " + componentType + " is incompatible with ";
-    if (MetadataType.isVectorType(type)) {
-      return message + "vector type " + type;
+function validateVectorOrMatrix(value, compoundType, basicType) {
+  if (!MetadataBasicType.isVectorCompatible(basicType)) {
+    var message = "basic type " + basicType + " is incompatible with ";
+    if (MetadataCompoundType.isVectorType(compoundType)) {
+      return message + "vector type " + compoundType;
     }
 
-    return message + "matrix type " + type;
+    return message + "matrix type " + compoundType;
   }
 
-  if (type === MetadataType.VEC2 && !(value instanceof Cartesian2)) {
+  if (
+    compoundType === MetadataCompoundType.VEC2 &&
+    !(value instanceof Cartesian2)
+  ) {
     return "vector value " + value + " must be a Cartesian2";
   }
 
-  if (type === MetadataType.VEC3 && !(value instanceof Cartesian3)) {
+  if (
+    compoundType === MetadataCompoundType.VEC3 &&
+    !(value instanceof Cartesian3)
+  ) {
     return "vector value " + value + " must be a Cartesian3";
   }
 
-  if (type === MetadataType.VEC4 && !(value instanceof Cartesian4)) {
+  if (
+    compoundType === MetadataCompoundType.VEC4 &&
+    !(value instanceof Cartesian4)
+  ) {
     return "vector value " + value + " must be a Cartesian4";
   }
 
-  if (type === MetadataType.MAT2 && !(value instanceof Matrix2)) {
+  if (
+    compoundType === MetadataCompoundType.MAT2 &&
+    !(value instanceof Matrix2)
+  ) {
     return "matrix value " + value + " must be a Matrix2";
   }
 
-  if (type === MetadataType.MAT3 && !(value instanceof Matrix3)) {
+  if (
+    compoundType === MetadataCompoundType.MAT3 &&
+    !(value instanceof Matrix3)
+  ) {
     return "matrix value " + value + " must be a Matrix3";
   }
 
-  if (type === MetadataType.MAT4 && !(value instanceof Matrix4)) {
+  if (
+    compoundType === MetadataCompoundType.MAT4 &&
+    !(value instanceof Matrix4)
+  ) {
     return "matrix value " + value + " must be a Matrix4";
   }
 }
 
-function getTypeErrorMessage(value, type) {
-  return "value " + value + " does not match type " + type;
+function getTypeErrorMessage(value, basicType) {
+  // TODO
+  return "value " + value + " does not match type " + basicType;
 }
 
-function getOutOfRangeErrorMessage(value, type, normalized) {
-  var errorMessage = "value " + value + " is out of range for type " + type;
+function getOutOfRangeErrorMessage(value, basicType, normalized) {
+  var errorMessage =
+    "value " + value + " is out of range for type " + basicType;
   if (normalized) {
     errorMessage += " (normalized)";
   }
   return errorMessage;
 }
 
-function checkInRange(value, componentType, normalized) {
+function checkInRange(value, basicType, normalized) {
   if (normalized) {
-    var min = MetadataComponentType.isUnsignedIntegerType(componentType)
-      ? 0.0
-      : -1.0;
+    var min = MetadataBasicType.isUnsignedIntegerType(basicType) ? 0.0 : -1.0;
     var max = 1.0;
     if (value < min || value > max) {
-      return getOutOfRangeErrorMessage(value, componentType, normalized);
+      return getOutOfRangeErrorMessage(value, basicType, normalized);
     }
     return;
   }
 
   if (
-    value < MetadataComponentType.getMinimum(componentType) ||
-    value > MetadataComponentType.getMaximum(componentType)
+    value < MetadataBasicType.getMinimum(basicType) ||
+    value > MetadataBasicType.getMaximum(basicType)
   ) {
-    return getOutOfRangeErrorMessage(value, componentType, normalized);
+    return getOutOfRangeErrorMessage(value, basicType, normalized);
   }
 }
 
-function getNonFiniteErrorMessage(value, type) {
-  return "value " + value + " of type " + type + " must be finite";
+function getNonFiniteErrorMessage(value, basicType) {
+  return "value " + value + " of type " + basicType + " must be finite";
 }
 
 function checkValue(classProperty, value) {
@@ -513,50 +593,50 @@ function checkValue(classProperty, value) {
     return;
   }
 
-  var valueType = classProperty._valueType;
+  var basicType = classProperty._basicType;
   var normalized = classProperty._normalized;
 
-  switch (valueType) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
+  switch (basicType) {
+    case MetadataBasicType.INT8:
+    case MetadataBasicType.UINT8:
+    case MetadataBasicType.INT16:
+    case MetadataBasicType.UINT16:
+    case MetadataBasicType.INT32:
+    case MetadataBasicType.UINT32:
       if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, basicType);
       }
-      return checkInRange(value, valueType, normalized);
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
+      return checkInRange(value, basicType, normalized);
+    case MetadataBasicType.INT64:
+    case MetadataBasicType.UINT64:
       if (javascriptType !== "number" && javascriptType !== "bigint") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, basicType);
       }
-      return checkInRange(value, valueType, normalized);
-    case MetadataComponentType.FLOAT32:
+      return checkInRange(value, basicType, normalized);
+    case MetadataBasicType.FLOAT32:
       if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, basicType);
       }
       if (isFinite(value)) {
-        return checkInRange(value, valueType, normalized);
+        return checkInRange(value, basicType, normalized);
       }
-      return getNonFiniteErrorMessage(value, valueType);
-    case MetadataComponentType.FLOAT64:
+      return getNonFiniteErrorMessage(value, basicType);
+    case MetadataBasicType.FLOAT64:
       if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, basicType);
       }
       if (isFinite(value)) {
-        return checkInRange(value, valueType, normalized);
+        return checkInRange(value, basicType, normalized);
       }
-      return getNonFiniteErrorMessage(value, valueType);
-    case MetadataComponentType.BOOLEAN:
+      return getNonFiniteErrorMessage(value, basicType);
+    case MetadataBasicType.BOOLEAN:
       if (javascriptType !== "boolean") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, basicType);
       }
       break;
-    case MetadataComponentType.STRING:
+    case MetadataBasicType.STRING:
       if (javascriptType !== "string") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, basicType);
       }
       break;
   }
@@ -568,37 +648,31 @@ function normalize(classProperty, value, normalizeFunction) {
     return value;
   }
 
-  var type = classProperty._type;
-  var valueType = classProperty._valueType;
+  var compoundType = classProperty._compoundType;
+  var basicType = classProperty._basicType;
+  var count = classProperty._count;
 
   var i;
   var length;
-  if (type === MetadataType.ARRAY) {
+
+  if (count !== 1) {
     length = value.length;
     for (i = 0; i < length; ++i) {
-      value[i] = normalizeFunction(value[i], valueType);
+      value[i] = normalizeFunction(value[i], basicType);
     }
   } else if (
-    MetadataType.isVectorType(type) ||
-    MetadataType.isMatrixType(type)
+    MetadataCompoundType.isVectorType(compoundType) ||
+    MetadataCompoundType.isMatrixType(compoundType)
   ) {
-    length = MetadataType.getComponentCount(type);
+    length = MetadataCompoundType.getComponentCount(compoundType);
     for (i = 0; i < length; ++i) {
-      value[i] = normalizeFunction(value[i], valueType);
+      value[i] = normalizeFunction(value[i], basicType);
     }
   } else {
-    value = normalizeFunction(value, valueType);
+    value = normalizeFunction(value, basicType);
   }
 
   return value;
-}
-
-function getValueType(componentType, enumType) {
-  if (componentType === MetadataComponentType.ENUM) {
-    return enumType.valueType;
-  }
-
-  return componentType;
 }
 
 export default MetadataClassProperty;

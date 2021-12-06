@@ -2,7 +2,7 @@ import {
   defaultValue,
   Cartesian3,
   MetadataClassProperty,
-  MetadataComponentType,
+  MetadataBasicType,
   MetadataTableProperty,
 } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
@@ -105,11 +105,9 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
     expect(property._stringOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataBasicType.UINT16
     );
-    expect(property._arrayOffsets._componentType).toBe(
-      MetadataComponentType.UINT8
-    );
+    expect(property._arrayOffsets._componentType).toBe(MetadataBasicType.UINT8);
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
@@ -156,10 +154,10 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
     expect(property._stringOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataBasicType.UINT16
     );
     expect(property._arrayOffsets._componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataBasicType.UINT16
     );
     expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);

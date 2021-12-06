@@ -82,7 +82,7 @@ describe(
 
     describe("3DTILES_metadata", function () {
       var tilesetWithMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/AllMetadataTypes/tileset.json";
+        "Data/Cesium3DTiles/Metadata/AllMetadataCompoundTypes/tileset.json";
 
       var centerLongitude = -1.31968;
       var centerLatitude = 0.698874;

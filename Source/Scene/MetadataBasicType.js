@@ -3,13 +3,13 @@ import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 
 /**
- * An enum of metadata component types.
+ * An enum of metadata basic types.
  *
- * @enum MetadataComponentType
+ * @enum MetadataBasicType
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-var MetadataComponentType = {
+var MetadataBasicType = {
   /**
    * An 8-bit signed integer
    *
@@ -110,16 +110,6 @@ var MetadataComponentType = {
    * @private
    */
   STRING: "STRING",
-  /**
-   * An enumerated value. This type is used in conjunction with a {@link MetadataEnum} to describe the valid values.
-   *
-   * @see MetadataEnum
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  ENUM: "ENUM",
 };
 
 /**
@@ -129,47 +119,47 @@ var MetadataComponentType = {
  * Otherwise an approximate number is returned.
  * </p>
  *
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Number|BigInt} The minimum value.
  *
  * @exception {DeveloperError} type must be a numeric type
  *
  * @private
  */
-MetadataComponentType.getMinimum = function (type) {
+MetadataBasicType.getMinimum = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
+  if (!MetadataBasicType.isNumericType(type)) {
     throw new DeveloperError("type must be a numeric type");
   }
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataComponentType.INT8:
+    case MetadataBasicType.INT8:
       return -128;
-    case MetadataComponentType.UINT8:
+    case MetadataBasicType.UINT8:
       return 0;
-    case MetadataComponentType.INT16:
+    case MetadataBasicType.INT16:
       return -32768;
-    case MetadataComponentType.UINT16:
+    case MetadataBasicType.UINT16:
       return 0;
-    case MetadataComponentType.INT32:
+    case MetadataBasicType.INT32:
       return -2147483648;
-    case MetadataComponentType.UINT32:
+    case MetadataBasicType.UINT32:
       return 0;
-    case MetadataComponentType.INT64:
+    case MetadataBasicType.INT64:
       if (FeatureDetection.supportsBigInt()) {
         return BigInt("-9223372036854775808"); // eslint-disable-line
       }
       return -Math.pow(2, 63);
-    case MetadataComponentType.UINT64:
+    case MetadataBasicType.UINT64:
       if (FeatureDetection.supportsBigInt()) {
         return BigInt(0); // eslint-disable-line
       }
       return 0;
-    case MetadataComponentType.FLOAT32:
+    case MetadataBasicType.FLOAT32:
       // Maximum 32-bit floating point number. This value will be converted to the nearest 64-bit Number
       return -340282346638528859811704183484516925440.0;
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.FLOAT64:
       return -Number.MAX_VALUE;
   }
 };
@@ -181,49 +171,49 @@ MetadataComponentType.getMinimum = function (type) {
  * Otherwise an approximate number is returned.
  * </p>
  *
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Number|BigInt} The maximum value.
  *
  * @exception {DeveloperError} type must be a numeric type
  *
  * @private
  */
-MetadataComponentType.getMaximum = function (type) {
+MetadataBasicType.getMaximum = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
+  if (!MetadataBasicType.isNumericType(type)) {
     throw new DeveloperError("type must be a numeric type");
   }
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataComponentType.INT8:
+    case MetadataBasicType.INT8:
       return 127;
-    case MetadataComponentType.UINT8:
+    case MetadataBasicType.UINT8:
       return 255;
-    case MetadataComponentType.INT16:
+    case MetadataBasicType.INT16:
       return 32767;
-    case MetadataComponentType.UINT16:
+    case MetadataBasicType.UINT16:
       return 65535;
-    case MetadataComponentType.INT32:
+    case MetadataBasicType.INT32:
       return 2147483647;
-    case MetadataComponentType.UINT32:
+    case MetadataBasicType.UINT32:
       return 4294967295;
-    case MetadataComponentType.INT64:
+    case MetadataBasicType.INT64:
       if (FeatureDetection.supportsBigInt()) {
         // Need to initialize with a string otherwise the value will be 9223372036854775808
         return BigInt("9223372036854775807"); // eslint-disable-line
       }
       return Math.pow(2, 63) - 1;
-    case MetadataComponentType.UINT64:
+    case MetadataBasicType.UINT64:
       if (FeatureDetection.supportsBigInt()) {
         // Need to initialize with a string otherwise the value will be 18446744073709551616
         return BigInt("18446744073709551615"); // eslint-disable-line
       }
       return Math.pow(2, 64) - 1;
-    case MetadataComponentType.FLOAT32:
+    case MetadataBasicType.FLOAT32:
       // Maximum 32-bit floating point number
       return 340282346638528859811704183484516925440.0;
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.FLOAT64:
       return Number.MAX_VALUE;
   }
 };
@@ -231,27 +221,27 @@ MetadataComponentType.getMaximum = function (type) {
 /**
  * Returns whether the type is a numeric type.
  *
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Boolean} Whether the type is a numeric type.
  *
  * @private
  */
-MetadataComponentType.isNumericType = function (type) {
+MetadataBasicType.isNumericType = function (type) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-    case MetadataComponentType.FLOAT32:
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.INT8:
+    case MetadataBasicType.UINT8:
+    case MetadataBasicType.INT16:
+    case MetadataBasicType.UINT16:
+    case MetadataBasicType.INT32:
+    case MetadataBasicType.UINT32:
+    case MetadataBasicType.INT64:
+    case MetadataBasicType.UINT64:
+    case MetadataBasicType.FLOAT32:
+    case MetadataBasicType.FLOAT64:
       return true;
     default:
       return false;
@@ -261,25 +251,25 @@ MetadataComponentType.isNumericType = function (type) {
 /**
  * Returns whether the type is an integer type.
  *
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Boolean} Whether the type is an integer type.
  *
  * @private
  */
-MetadataComponentType.isIntegerType = function (type) {
+MetadataBasicType.isIntegerType = function (type) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
+    case MetadataBasicType.INT8:
+    case MetadataBasicType.UINT8:
+    case MetadataBasicType.INT16:
+    case MetadataBasicType.UINT16:
+    case MetadataBasicType.INT32:
+    case MetadataBasicType.UINT32:
+    case MetadataBasicType.INT64:
+    case MetadataBasicType.UINT64:
       return true;
     default:
       return false;
@@ -289,21 +279,21 @@ MetadataComponentType.isIntegerType = function (type) {
 /**
  * Returns whether the type is an unsigned integer type.
  *
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Boolean} Whether the type is an unsigned integer type.
  *
  * @private
  */
-MetadataComponentType.isUnsignedIntegerType = function (type) {
+MetadataBasicType.isUnsignedIntegerType = function (type) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.UINT64:
+    case MetadataBasicType.UINT8:
+    case MetadataBasicType.UINT16:
+    case MetadataBasicType.UINT32:
+    case MetadataBasicType.UINT64:
       return true;
     default:
       return false;
@@ -314,24 +304,24 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
  * Returns whether a type can be used in a vector, i.e. the {@link Cartesian2},
  * {@link Cartesian3}, or {@link Cartesian4} classes. This includes all numeric
  * types except for types requiring 64-bit integers
- * @param {MetadataComponentType} type The type to check
+ * @param {MetadataBasicType} type The type to check
  * @return {Boolean} <code>true</code> if the type can be encoded as a vector type, or <code>false</code> otherwise
  * @private
  */
-MetadataComponentType.isVectorCompatible = function (type) {
+MetadataBasicType.isVectorCompatible = function (type) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.FLOAT32:
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.INT8:
+    case MetadataBasicType.UINT8:
+    case MetadataBasicType.INT16:
+    case MetadataBasicType.UINT16:
+    case MetadataBasicType.INT32:
+    case MetadataBasicType.UINT32:
+    case MetadataBasicType.FLOAT32:
+    case MetadataBasicType.FLOAT64:
       return true;
     default:
       return false;
@@ -348,7 +338,7 @@ MetadataComponentType.isVectorCompatible = function (type) {
  * </p>
  *
  * @param {Number|BigInt} value The integer value.
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Number} The normalized value.
  *
  * @exception {DeveloperError} value must be a number or a BigInt
@@ -356,25 +346,25 @@ MetadataComponentType.isVectorCompatible = function (type) {
  *
  * @private
  */
-MetadataComponentType.normalize = function (value, type) {
+MetadataBasicType.normalize = function (value, type) {
   //>>includeStart('debug', pragmas.debug);
   if (typeof value !== "number" && typeof value !== "bigint") {
     throw new DeveloperError("value must be a number or a BigInt");
   }
-  if (!MetadataComponentType.isIntegerType(type)) {
+  if (!MetadataBasicType.isIntegerType(type)) {
     throw new DeveloperError("type must be an integer type");
   }
   //>>includeEnd('debug');
 
   if (value >= 0) {
     return Math.min(
-      Number(value) / Number(MetadataComponentType.getMaximum(type)),
+      Number(value) / Number(MetadataBasicType.getMaximum(type)),
       1.0
     );
   }
 
   return -Math.min(
-    Number(value) / Number(MetadataComponentType.getMinimum(type)),
+    Number(value) / Number(MetadataBasicType.getMinimum(type)),
     1.0
   );
 };
@@ -388,23 +378,23 @@ MetadataComponentType.normalize = function (value, type) {
  * </p>
  *
  * @param {Number} value The normalized value.
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Number|BigInt} The integer value.
  *
  * @exception {DeveloperError} type must be an integer type
  *
  * @private
  */
-MetadataComponentType.unnormalize = function (value, type) {
+MetadataBasicType.unnormalize = function (value, type) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("value", value);
-  if (!MetadataComponentType.isIntegerType(type)) {
+  if (!MetadataBasicType.isIntegerType(type)) {
     throw new DeveloperError("type must be an integer type");
   }
   //>>includeEnd('debug');
 
-  var min = MetadataComponentType.getMinimum(type);
-  var max = MetadataComponentType.getMaximum(type);
+  var min = MetadataBasicType.getMinimum(type);
+  var max = MetadataBasicType.getMaximum(type);
 
   if (value >= 0.0) {
     value = value * Number(max);
@@ -413,8 +403,7 @@ MetadataComponentType.unnormalize = function (value, type) {
   }
 
   if (
-    (type === MetadataComponentType.INT64 ||
-      type === MetadataComponentType.UINT64) &&
+    (type === MetadataBasicType.INT64 || type === MetadataBasicType.UINT64) &&
     FeatureDetection.supportsBigInt()
   ) {
     value = BigInt(value); // eslint-disable-line
@@ -434,37 +423,37 @@ MetadataComponentType.unnormalize = function (value, type) {
 /**
  * Gets the size in bytes for the numeric type.
  *
- * @param {MetadataComponentType} type The type.
+ * @param {MetadataBasicType} type The type.
  * @returns {Number} The size in bytes.
  *
  * @exception {DeveloperError} type must be a numeric type
  *
  * @private
  */
-MetadataComponentType.getSizeInBytes = function (type) {
+MetadataBasicType.getSizeInBytes = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
+  if (!MetadataBasicType.isNumericType(type)) {
     throw new DeveloperError("type must be a numeric type");
   }
   //>>includeEnd('debug');
   switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
+    case MetadataBasicType.INT8:
+    case MetadataBasicType.UINT8:
       return 1;
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
+    case MetadataBasicType.INT16:
+    case MetadataBasicType.UINT16:
       return 2;
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
+    case MetadataBasicType.INT32:
+    case MetadataBasicType.UINT32:
       return 4;
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
+    case MetadataBasicType.INT64:
+    case MetadataBasicType.UINT64:
       return 8;
-    case MetadataComponentType.FLOAT32:
+    case MetadataBasicType.FLOAT32:
       return 4;
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.FLOAT64:
       return 8;
   }
 };
 
-export default Object.freeze(MetadataComponentType);
+export default Object.freeze(MetadataBasicType);

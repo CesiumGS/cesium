@@ -6,10 +6,10 @@ import {
   Matrix3,
   Matrix4,
   FeatureDetection,
+  MetadataBasicType,
   MetadataClassProperty,
-  MetadataComponentType,
+  MetadataCompoundType,
   MetadataEnum,
-  MetadataType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataClassProperty", function () {
@@ -17,18 +17,17 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "height",
       property: {
-        componentType: "FLOAT32",
+        type: "FLOAT32",
       },
     });
 
     expect(property.id).toBe("height");
     expect(property.name).toBeUndefined();
     expect(property.description).toBeUndefined();
-    expect(property.type).toBe(MetadataType.SINGLE);
+    expect(property.compoundType).toBeUndefined();
     expect(property.enumType).toBeUndefined();
-    expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
-    expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
-    expect(property.componentCount).toBe(1);
+    expect(property.basicType).toBe(MetadataBasicType.FLOAT32);
+    expect(property.count).toBe(1);
     expect(property.normalized).toBe(false);
     expect(property.max).toBeUndefined();
     expect(property.min).toBeUndefined();
@@ -55,10 +54,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         name: "Position",
         description: "Position (X, Y, Z)",
-        type: "ARRAY",
-        componentType: "INT16",
-        componentCount: 3,
-        normalized: true,
+        type: "INT16_NORM[3]",
         max: max,
         min: min,
         default: propertyDefault,
@@ -72,11 +68,10 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.id).toBe("position");
     expect(property.name).toBe("Position");
     expect(property.description).toBe("Position (X, Y, Z)");
-    expect(property.type).toBe(MetadataType.ARRAY);
+    expect(property.compoundType).toBeUndefined();
     expect(property.enumType).toBeUndefined();
-    expect(property.componentType).toBe(MetadataComponentType.INT16);
-    expect(property.valueType).toBe(MetadataComponentType.INT16);
-    expect(property.componentCount).toBe(3);
+    expect(property.basicType).toBe(MetadataBasicType.INT16);
+    expect(property.count).toBe(3);
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
@@ -87,6 +82,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.extensions).toBe(extensions);
   });
 
+  // TODO: add more
   it("transcodes single properties from EXT_feature_metadata", function () {
     var max = [32767, 0, 100];
     var min = [-32768, 0, -100];
@@ -118,11 +114,10 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.id).toBe("population");
     expect(property.name).toBe("Population");
     expect(property.description).toBe("Population (thousands)");
-    expect(property.type).toBe(MetadataType.SINGLE);
+    expect(property.compoundType).toBeUndefined();
     expect(property.enumType).toBeUndefined();
-    expect(property.componentType).toBe(MetadataComponentType.INT32);
-    expect(property.valueType).toBe(MetadataComponentType.INT32);
-    expect(property.componentCount).toBe(1);
+    expect(property.basicType).toBe(MetadataBasicType.INT32);
+    expect(property.count).toBe(1);
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
@@ -153,46 +148,52 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "color",
       property: {
-        componentType: "ENUM",
-        enumType: "color",
+        type: "color",
       },
       enums: enums,
     });
 
-    expect(property.type).toBe(MetadataType.SINGLE);
-    expect(property.componentType).toBe(MetadataComponentType.ENUM);
+    expect(property.compoundType).toBeUndefined();
     expect(property.enumType).toBe(colorEnum);
-    expect(property.valueType).toBe(MetadataComponentType.UINT16); // default enum valueType
+    expect(property.basicType).toBe(MetadataBasicType.ENUM);
+    expect(property.count).toBe(1);
+    expect(property.normalized).toBe(false);
   });
 
   it("creates vector and matrix types", function () {
     var property = new MetadataClassProperty({
       id: "speed",
       property: {
-        type: "VEC2",
-        componentType: "FLOAT32",
+        type: "VEC2_FLOAT32",
       },
     });
 
     expect(property.id).toBe("speed");
-    expect(property.type).toBe(MetadataType.VEC2);
-    expect(property.componentCount).toBe(2);
-    expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
-    expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
+    expect(property.compoundType).toBe(MetadataCompoundType.VEC2);
+    expect(property.enumType).toBeUndefined();
+    expect(property.basicType).toBe(MetadataBasicType.FLOAT32);
+    expect(property.count).toBe(1);
+    expect(property.normalized).toBe(false);
+
+    expect(property.compoundType).toBeUndefined();
+    expect(property.enumType).toBeUndefined();
+    expect(property.basicType).toBe(MetadataBasicType.FLOAT32);
+    expect(property.count).toBe(1);
+    expect(property.normalized).toBe(false);
 
     property = new MetadataClassProperty({
       id: "scale",
       property: {
-        type: "MAT3",
-        componentType: "FLOAT64",
+        type: "MAT3_FLOAT64",
       },
     });
 
     expect(property.id).toBe("scale");
-    expect(property.type).toBe(MetadataType.MAT3);
-    expect(property.componentCount).toBe(9);
-    expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
-    expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
+    expect(property.compoundType).toBe(MetadataCompoundType.MAT3);
+    expect(property.enumType).toBeUndefined();
+    expect(property.basicType).toBe(MetadataBasicType.FLOAT64);
+    expect(property.count).toBe(1);
+    expect(property.normalized).toBe(false);
   });
 
   it("constructor throws without id", function () {
@@ -220,38 +221,28 @@ describe("Scene/MetadataClassProperty", function () {
 
     var properties = {
       propertyInt8: {
-        type: "SINGLE",
-        componentType: "INT8",
-        normalized: true,
+        type: "INT8_NORM",
       },
       propertyUint8: {
-        // SINGLE is the default type
-        componentType: "UINT8",
-        normalized: true,
+        type: "UINT8_NORM",
       },
       propertyInt16: {
-        componentType: "INT16",
-        normalized: true,
+        type: "INT16_NORM",
       },
       propertyUint16: {
-        componentType: "UINT16",
-        normalized: true,
+        type: "UINT16_NORM",
       },
       propertyInt32: {
-        componentType: "INT32",
-        normalized: true,
+        type: "INT32_NORM",
       },
       propertyUint32: {
-        componentType: "UINT32",
-        normalized: true,
+        type: "UINT32_NORM",
       },
       propertyInt64: {
-        componentType: "INT64",
-        normalized: true,
+        type: "INT64_NORM",
       },
       propertyUint64: {
-        componentType: "UINT64",
-        normalized: true,
+        type: "UINT64_NORM",
       },
     };
 
@@ -304,15 +295,10 @@ describe("Scene/MetadataClassProperty", function () {
   it("normalize array values", function () {
     var properties = {
       propertyInt8: {
-        type: "ARRAY",
-        componentType: "INT8",
-        normalized: true,
+        type: "INT8_NORM[]",
       },
       propertyUint8: {
-        type: "ARRAY",
-        componentType: "UINT8",
-        componentCount: 2,
-        normalized: true,
+        type: "UINT8_NORM[2]",
       },
     };
 
@@ -352,25 +338,21 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("normalize vector and matrix values", function () {
     var properties = {
-      vec4Int8: {
-        type: "VEC4",
-        componentType: "INT8",
-        normalized: true,
+      propertyVec4Int8: {
+        type: "VEC4_INT8_NORM",
       },
-      mat2Uint8: {
-        type: "MAT2",
-        componentType: "UINT8",
-        normalized: true,
+      propertyMat2Uint8: {
+        type: "MAT2_UINT8_NORM",
       },
     };
 
     var propertyValues = {
-      vec4Int8: [
+      propertyVec4Int8: [
         [-128, 0, 127, 0],
         [-128, -128, -128, 0],
         [127, 127, 127, 127],
       ],
-      mat2Uint8: [
+      propertyMat2Uint8: [
         [0, 255, 0, 0],
         [0, 51, 51, 0],
         [255, 0, 0, 255],
@@ -378,12 +360,12 @@ describe("Scene/MetadataClassProperty", function () {
     };
 
     var normalizedValues = {
-      vec4Int8: [
+      propertyVec4Int8: [
         [-1.0, 0.0, 1.0, 0],
         [-1.0, -1.0, -1.0, 0],
         [1.0, 1.0, 1.0, 1.0],
       ],
-      mat2Uint8: [
+      propertyMat2Uint8: [
         [0.0, 1.0, 0.0, 0.0],
         [0.0, 0.2, 0.2, 0.0],
         [1.0, 0.0, 0.0, 1.0],
@@ -429,23 +411,16 @@ describe("Scene/MetadataClassProperty", function () {
 
     var properties = {
       propertyEnum: {
-        componentType: "ENUM",
-        enumType: "myEnum",
-        normalized: true,
+        type: "myEnum",
       },
       propertyEnumArray: {
-        type: "ARRAY",
-        componentType: "ENUM",
-        enumType: "myEnum",
-        normalized: true,
+        type: "myEnum[]",
       },
       propertyString: {
-        componentType: "STRING",
-        normalized: true,
+        type: "STRING",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
-        normalized: true,
+        type: "BOOLEAN",
       },
     };
 
@@ -477,59 +452,53 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("packVectorAndMatrixTypes packs vectors and matrices", function () {
     var properties = {
-      propertyVec2: {
-        type: "VEC2",
-        componentType: "FLOAT32",
+      propertyVec2Float32: {
+        type: "VEC2_FLOAT32",
       },
-      propertyIVec3: {
-        type: "VEC3",
-        componentType: "INT32",
+      propertyVec3Int32: {
+        type: "VEC3_INT32",
       },
-      propertyDVec4: {
-        type: "VEC4",
-        componentType: "FLOAT64",
+      propertyVec4Float64: {
+        type: "VEC4_FLOAT64",
       },
-      propertyMat4: {
-        type: "MAT4",
-        componentType: "FLOAT32",
+      propertyMat4Float32: {
+        type: "MAT4_FLOAT32",
       },
-      propertyIMat3: {
-        type: "MAT3",
-        componentType: "FLOAT32",
+      propertyMat3Int32: {
+        type: "MAT3_INT32",
       },
-      propertyDMat2: {
-        type: "MAT2",
-        componentType: "FLOAT32",
+      propertyMat2Float64: {
+        type: "MAT2_FLOAT64",
       },
     };
 
     var propertyValues = {
-      propertyVec2: [
+      propertyVec2Float32: [
         new Cartesian2(0.1, 0.8),
         new Cartesian2(0.3, 0.5),
         new Cartesian2(0.7, 0.2),
       ],
-      propertyIVec3: [
+      propertyVec3Int32: [
         new Cartesian3(1, 2, 3),
         new Cartesian3(4, 5, 6),
         new Cartesian3(7, 8, 9),
       ],
-      propertyDVec4: [
+      propertyVec4Float64: [
         new Cartesian4(0.1, 0.2, 0.3, 0.4),
         new Cartesian4(0.3, 0.2, 0.1, 0.0),
         new Cartesian4(0.1, 0.2, 0.4, 0.5),
       ],
-      propertyMat4: [
+      propertyMat4Float32: [
         new Matrix4(1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1),
         new Matrix4(0, 2.5, 0, 0, 0, 0.5, 0.25, 0, 0, 0, 3.5, 0, 0, 0, 0, 1),
         new Matrix4(1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0),
       ],
-      propertyIMat3: [
+      propertyMat3Int32: [
         new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
         new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
         new Matrix3(1, 2, 3, 2, 3, 1, 3, 1, 2),
       ],
-      propertyDMat2: [
+      propertyMat2Float64: [
         new Matrix2(1.5, 0.0, 0.0, 2.5),
         new Matrix2(1.0, 0.0, 0.0, 1.0),
         new Matrix2(1.5, 2.5, 3.5, 4.5),
@@ -537,34 +506,34 @@ describe("Scene/MetadataClassProperty", function () {
     };
 
     var packedValues = {
-      propertyVec2: [
+      propertyVec2Float32: [
         [0.1, 0.8],
         [0.3, 0.5],
         [0.7, 0.2],
       ],
-      propertyIVec3: [
+      propertyVec3Int32: [
         [1, 2, 3],
         [4, 5, 6],
         [7, 8, 9],
       ],
-      propertyDVec4: [
+      propertyVec4Float64: [
         [0.1, 0.2, 0.3, 0.4],
         [0.3, 0.2, 0.1, 0.0],
         [0.1, 0.2, 0.4, 0.5],
       ],
-      propertyMat4: [
+      propertyMat4Float32: [
         // the MatrixN constructor is row-major, but internally things are
         // stored column-major. So these are the transpose of the above
         [1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 2.5, 0.5, 0, 0, 0, 0.25, 3.5, 0, 0, 0, 0, 1],
         [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0],
       ],
-      propertyIMat3: [
+      propertyMat3Int32: [
         [2, 0, 0, 0, 2, 0, 0, 0, 2],
         [1, 0, 0, 0, 1, 0, 0, 0, 1],
         [1, 2, 3, 2, 3, 1, 3, 1, 2],
       ],
-      propertyDMat2: [
+      propertyMat2Float64: [
         [1.5, 0.0, 0.0, 2.5],
         [1.0, 0.0, 0.0, 1.0],
         [1.5, 3.5, 2.5, 4.5],
@@ -594,20 +563,16 @@ describe("Scene/MetadataClassProperty", function () {
 
     var properties = {
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
       },
       propertyArray: {
-        type: "ARRAY",
-        componentType: "UINT8",
-        componentCount: 5,
+        type: "UINT8[5]",
       },
       propertyBigIntArray: {
-        type: "ARRAY",
-        componentType: "UINT64",
-        componentCount: 2,
+        type: "UINT64[2]",
       },
     };
 
@@ -644,29 +609,23 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("unpackVectorAndMatrixTypes unpacks vectors and matrices", function () {
     var properties = {
-      propertyVec2: {
-        type: "VEC2",
-        componentType: "FLOAT32",
+      propertyVec2Float32: {
+        type: "VEC2_FLOAT32",
       },
-      propertyIVec3: {
-        type: "VEC3",
-        componentType: "INT32",
+      propertyVec3Int32: {
+        type: "VEC3_INT32",
       },
-      propertyDVec4: {
-        type: "VEC3",
-        componentType: "FLOAT64",
+      propertyVec4Float64: {
+        type: "VEC3_FLOAT64",
       },
-      propertyMat4: {
-        type: "MAT4",
-        componentType: "FLOAT32",
+      propertyMat4Float32: {
+        type: "MAT4_FLOAT32",
       },
-      propertyIMat3: {
-        type: "MAT3",
-        componentType: "FLOAT32",
+      propertyMat3Int32: {
+        type: "MAT3_INT32",
       },
-      propertyDMat2: {
-        type: "MAT2",
-        componentType: "FLOAT32",
+      propertyMat2Float64: {
+        type: "MAT2_FLOAT64",
       },
     };
 
@@ -761,20 +720,16 @@ describe("Scene/MetadataClassProperty", function () {
 
     var properties = {
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
       },
       propertyArray: {
-        type: "ARRAY",
-        componentType: "UINT8",
-        componentCount: 5,
+        type: "UINT8[5]",
       },
       propertyBigIntArray: {
-        type: "ARRAY",
-        componentType: "UINT64",
-        componentCount: 2,
+        type: "UINT64[2]",
       },
     };
 
@@ -813,8 +768,7 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "position",
       property: {
-        type: "VEC3",
-        componentType: "FLOAT32",
+        type: "VEC3_FLOAT32",
       },
     });
 
@@ -825,16 +779,14 @@ describe("Scene/MetadataClassProperty", function () {
     var property = new MetadataClassProperty({
       id: "position",
       property: {
-        type: "ARRAY",
-        componentType: "FLOAT32",
-        componentCount: 8,
+        type: "FLOAT32[8]",
       },
     });
 
     expect(property.validate(8.0)).toBe("value 8 does not match type ARRAY");
   });
 
-  it("validate returns error message if type is a vector or matrix and the component type is not vector-compatibile", function () {
+  it("validate returns error message if type is a vector or matrix and the component type is not vector-compatible", function () {
     var property = new MetadataClassProperty({
       id: "position",
       property: {

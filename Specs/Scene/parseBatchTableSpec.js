@@ -4,8 +4,8 @@ import {
   Cartesian4,
   parseBatchTable,
   MetadataClass,
-  MetadataComponentType,
-  MetadataType,
+  MetadataBasicType,
+  MetadataCompoundType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
@@ -123,28 +123,26 @@ describe("Scene/parseBatchTable", function () {
     var properties = metadata.schema.classes[className].properties;
 
     expect(properties.uint8Property.componentType).toBe(
-      MetadataComponentType.UINT8
+      MetadataBasicType.UINT8
     );
     expect(properties.uint16Property.componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataBasicType.UINT16
     );
     expect(properties.uint32Property.componentType).toBe(
-      MetadataComponentType.UINT32
+      MetadataBasicType.UINT32
     );
-    expect(properties.int8Property.componentType).toBe(
-      MetadataComponentType.INT8
-    );
+    expect(properties.int8Property.componentType).toBe(MetadataBasicType.INT8);
     expect(properties.int16Property.componentType).toBe(
-      MetadataComponentType.INT16
+      MetadataBasicType.INT16
     );
     expect(properties.int32Property.componentType).toBe(
-      MetadataComponentType.INT32
+      MetadataBasicType.INT32
     );
     expect(properties.floatProperty.componentType).toBe(
-      MetadataComponentType.FLOAT32
+      MetadataBasicType.FLOAT32
     );
     expect(properties.doubleProperty.componentType).toBe(
-      MetadataComponentType.FLOAT64
+      MetadataBasicType.FLOAT64
     );
 
     var propertyTable = metadata.getPropertyTable(0);
@@ -186,17 +184,17 @@ describe("Scene/parseBatchTable", function () {
     });
     var properties = metadata.schema.classes[className].properties;
 
-    expect(properties.vec2Property.type).toBe(MetadataType.VEC2);
-    expect(properties.uvec3Property.type).toBe(MetadataType.VEC3);
-    expect(properties.dvec4Property.type).toBe(MetadataType.VEC4);
+    expect(properties.vec2Property.type).toBe(MetadataCompoundType.VEC2);
+    expect(properties.uvec3Property.type).toBe(MetadataCompoundType.VEC3);
+    expect(properties.dvec4Property.type).toBe(MetadataCompoundType.VEC4);
     expect(properties.vec2Property.componentType).toBe(
-      MetadataComponentType.FLOAT32
+      MetadataBasicType.FLOAT32
     );
     expect(properties.uvec3Property.componentType).toBe(
-      MetadataComponentType.UINT32
+      MetadataBasicType.UINT32
     );
     expect(properties.dvec4Property.componentType).toBe(
-      MetadataComponentType.FLOAT64
+      MetadataBasicType.FLOAT64
     );
     expect(properties.vec2Property.componentCount).toBe(2);
     expect(properties.uvec3Property.componentCount).toBe(3);

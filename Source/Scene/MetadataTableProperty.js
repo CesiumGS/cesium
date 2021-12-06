@@ -6,8 +6,8 @@ import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
-import MetadataComponentType from "./MetadataComponentType.js";
-import MetadataType from "./MetadataType.js";
+import MetadataBasicType from "./MetadataBasicType.js";
+import MetadataCompoundType from "./MetadataCompoundType.js";
 
 /**
  * A binary property in a {@MetadataTable}
@@ -44,16 +44,17 @@ function MetadataTableProperty(options) {
   //>>includeEnd('debug');
 
   var type = classProperty.type;
-  var isArray = type === MetadataType.ARRAY;
+  var isArray = type === MetadataCompoundType.ARRAY;
   var isVariableSizeArray = isArray && !defined(classProperty.componentCount);
   var isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+    MetadataCompoundType.isVectorType(type) ||
+    MetadataCompoundType.isMatrixType(type);
 
   var valueType = classProperty.valueType;
   var enumType = classProperty.enumType;
 
-  var hasStrings = valueType === MetadataComponentType.STRING;
-  var hasBooleans = valueType === MetadataComponentType.BOOLEAN;
+  var hasStrings = valueType === MetadataBasicType.STRING;
+  var hasBooleans = valueType === MetadataBasicType.BOOLEAN;
 
   var arrayOffsets;
   if (isVariableSizeArray) {
@@ -63,8 +64,8 @@ function MetadataTableProperty(options) {
       property.offsetType
     );
     arrayOffsetType = defaultValue(
-      MetadataComponentType[arrayOffsetType],
-      MetadataComponentType.UINT32
+      MetadataBasicType[arrayOffsetType],
+      MetadataBasicType.UINT32
     );
     arrayOffsets = new BufferView(
       bufferViews[property.arrayOffsetBufferView],
@@ -90,8 +91,8 @@ function MetadataTableProperty(options) {
       property.offsetType
     );
     stringOffsetType = defaultValue(
-      MetadataComponentType[stringOffsetType],
-      MetadataComponentType.UINT32
+      MetadataBasicType[stringOffsetType],
+      MetadataBasicType.UINT32
     );
     stringOffsets = new BufferView(
       bufferViews[property.stringOffsetBufferView],
@@ -102,7 +103,7 @@ function MetadataTableProperty(options) {
 
   if (hasStrings || hasBooleans) {
     // STRING and BOOLEAN types need to be parsed differently than other types
-    valueType = MetadataComponentType.UINT8;
+    valueType = MetadataBasicType.UINT8;
   }
 
   var valueCount;
@@ -277,16 +278,17 @@ function get(property, index) {
 
   if (defined(property._unpackedValues)) {
     var value = property._unpackedValues[index];
-    if (classProperty.type === MetadataType.ARRAY) {
+    if (classProperty.type === MetadataCompoundType.ARRAY) {
       return value.slice(); // clone
     }
     return value;
   }
 
   var type = classProperty.type;
-  var isArray = classProperty.type === MetadataType.ARRAY;
+  var isArray = classProperty.type === MetadataCompoundType.ARRAY;
   var isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+    MetadataCompoundType.isVectorType(type) ||
+    MetadataCompoundType.isMatrixType(type);
   if (!isArray && !isVectorOrMatrix) {
     return property._getValue(index);
   }
@@ -319,7 +321,7 @@ function set(property, index, value) {
   var classProperty = property._classProperty;
 
   if (defined(property._unpackedValues)) {
-    if (classProperty.type === MetadataType.ARRAY) {
+    if (classProperty.type === MetadataCompoundType.ARRAY) {
       value = value.slice(); // clone
     }
     property._unpackedValues[index] = value;
@@ -330,9 +332,10 @@ function set(property, index, value) {
   // property has strings. No need to handle these cases below.
 
   var type = classProperty.type;
-  var isArray = classProperty.type === MetadataType.ARRAY;
+  var isArray = classProperty.type === MetadataCompoundType.ARRAY;
   var isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+    MetadataCompoundType.isVectorType(type) ||
+    MetadataCompoundType.isMatrixType(type);
   if (!isArray && !isVectorOrMatrix) {
     property._setValue(index, value);
     return;
@@ -466,21 +469,21 @@ function getUint64BigIntFallback(index, values) {
 
 function getComponentDatatype(componentType) {
   switch (componentType) {
-    case MetadataComponentType.INT8:
+    case MetadataBasicType.INT8:
       return ComponentDatatype.BYTE;
-    case MetadataComponentType.UINT8:
+    case MetadataBasicType.UINT8:
       return ComponentDatatype.UNSIGNED_BYTE;
-    case MetadataComponentType.INT16:
+    case MetadataBasicType.INT16:
       return ComponentDatatype.SHORT;
-    case MetadataComponentType.UINT16:
+    case MetadataBasicType.UINT16:
       return ComponentDatatype.UNSIGNED_SHORT;
-    case MetadataComponentType.INT32:
+    case MetadataBasicType.INT32:
       return ComponentDatatype.INT;
-    case MetadataComponentType.UINT32:
+    case MetadataBasicType.UINT32:
       return ComponentDatatype.UNSIGNED_INT;
-    case MetadataComponentType.FLOAT32:
+    case MetadataBasicType.FLOAT32:
       return ComponentDatatype.FLOAT;
-    case MetadataComponentType.FLOAT64:
+    case MetadataBasicType.FLOAT64:
       return ComponentDatatype.DOUBLE;
   }
 }
@@ -492,13 +495,13 @@ function requiresUnpackForGet(property) {
 
   var valueType = property._classProperty.valueType;
 
-  if (valueType === MetadataComponentType.STRING) {
+  if (valueType === MetadataBasicType.STRING) {
     // Unpack since UTF-8 decoding is expensive
     return true;
   }
 
   if (
-    valueType === MetadataComponentType.INT64 &&
+    valueType === MetadataBasicType.INT64 &&
     !FeatureDetection.supportsBigInt64Array()
   ) {
     // Unpack since the fallback INT64 getters are expensive
@@ -506,7 +509,7 @@ function requiresUnpackForGet(property) {
   }
 
   if (
-    valueType === MetadataComponentType.UINT64 &&
+    valueType === MetadataBasicType.UINT64 &&
     !FeatureDetection.supportsBigUint64Array()
   ) {
     // Unpack since the fallback UINT64 getters are expensive
@@ -550,7 +553,7 @@ function unpackValues(property) {
   var unpackedValues = new Array(count);
 
   var classProperty = property._classProperty;
-  if (classProperty.type !== MetadataType.ARRAY) {
+  if (classProperty.type !== MetadataCompoundType.ARRAY) {
     for (i = 0; i < count; ++i) {
       unpackedValues[i] = property._getValue(i);
     }
@@ -594,7 +597,7 @@ function BufferView(bufferView, componentType, length) {
   var getFunction;
   var setFunction;
 
-  if (componentType === MetadataComponentType.INT64) {
+  if (componentType === MetadataBasicType.INT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
         "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read."
@@ -628,7 +631,7 @@ function BufferView(bufferView, componentType, length) {
         that.typedArray[index] = BigInt(value); // eslint-disable-line
       };
     }
-  } else if (componentType === MetadataComponentType.UINT64) {
+  } else if (componentType === MetadataBasicType.UINT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
         "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read."
