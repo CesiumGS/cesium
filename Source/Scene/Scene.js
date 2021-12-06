@@ -2415,6 +2415,7 @@ function executeCommands(scene, passState) {
       }
     }
 
+    // var globeDepth = view.globeDepth;
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
     }
@@ -2638,7 +2639,7 @@ function executeCommands(scene, passState) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
       var depthStencilTexture = renderTranslucentDepthForPick
         ? passState.framebuffer.depthStencilTexture
-        : globeDepth.framebuffer.depthStencilTexture;
+        : globeDepth.framebuffer2.depthStencilTexture;
       var pickDepth = scene._picking.getPickDepth(scene, index);
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
@@ -3533,7 +3534,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   if (usePostProcess) {
     if (this.numberMSAASamples > 1) {
       sceneFramebuffer = view.sceneFramebuffer.blitFramebuffers(context);
-      // sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
     }
     var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {

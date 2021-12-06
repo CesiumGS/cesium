@@ -53,7 +53,8 @@ FramebufferManager.prototype.update = function (
   height,
   depthTexture,
   hdr,
-  numSamples
+  numSamples,
+  name
 ) {
   depthTexture = defaultValue(depthTexture, false);
   hdr = defaultValue(hdr, false);
@@ -100,14 +101,15 @@ FramebufferManager.prototype.update = function (
           pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
           sampler: Sampler.NEAREST,
         });
-      } else if (this._numSamples > 1) {
-        this._depthStencilRenderbuffer = new Renderbuffer({
-          context: context,
-          width: width,
-          height: height,
-          format: RenderbufferFormat.DEPTH24_STENCIL8,
-          numSamples: this._numSamples,
-        });
+        if (this._numSamples > 1) {
+          this._depthStencilRenderbuffer = new Renderbuffer({
+            context: context,
+            width: width,
+            height: height,
+            format: RenderbufferFormat.DEPTH24_STENCIL8,
+            numSamples: this._numSamples,
+          });
+        }
       } else {
         this._depthStencilRenderbuffer = new Renderbuffer({
           context: context,
@@ -127,6 +129,7 @@ FramebufferManager.prototype.update = function (
         depthStencilTexture: this._depthStencilTexture,
         depthStencilRenderbuffer: this._depthStencilRenderbuffer,
         destroyAttachments: false,
+        name: name,
       });
     } else {
       this._framebuffer = new Framebuffer({

@@ -51,6 +51,11 @@ Object.defineProperties(GlobeDepth.prototype, {
       return this._colorFramebuffer.getFramebuffer();
     },
   },
+  framebuffer2: {
+    get: function () {
+      return this._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
+    },
+  },
 });
 
 function destroyUpdateDepthResources(globeDepth) {
@@ -212,6 +217,10 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
   globeDepth._clearGlobeColorCommand.framebuffer = globeDepth._colorFramebuffer.getFramebuffer();
 }
 
+GlobeDepth.prototype.blitFramebuffers = function (context) {
+  return this._colorFramebuffer.blitFramebuffers(context);
+};
+
 GlobeDepth.prototype.update = function (
   context,
   passState,
@@ -222,10 +231,16 @@ GlobeDepth.prototype.update = function (
   var width = viewport.width;
   var height = viewport.height;
 
-  // if (textureChanged) {
-  this._colorFramebuffer.update(context, width, height, true, hdr);
+  this._colorFramebuffer.update(
+    context,
+    width,
+    height,
+    true,
+    hdr,
+    4,
+    "colorFB"
+  );
   this._copyDepthFramebuffer.update(context, width, height);
-  // }
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;
 
@@ -235,6 +250,7 @@ GlobeDepth.prototype.update = function (
 
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
+    this.blitFramebuffers(context);
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture = this._copyDepthFramebuffer._colorTexture;
   }
@@ -245,7 +261,8 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   passState,
   clearGlobeDepth
 ) {
-  var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
+  // var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
+  var depthTextureToCopy = this.framebuffer2.depthStencilTexture;
   if (
     clearGlobeDepth ||
     depthTextureToCopy !== this._colorFramebuffer._depthStencilTexture
