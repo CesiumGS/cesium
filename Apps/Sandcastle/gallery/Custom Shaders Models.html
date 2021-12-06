@@ -313,7 +313,8 @@
             // of the wave, but at a different speed.
             // Coefficients were chosen arbitrarily
             "    vec2 uv = fsInput.attributes.positionMC.xy;",
-            "    material.diffuse = vec3(0.2, 0.3, 0.4) + vec3(0.2, 0.3, 0.4) * sin(2.0 * czm_pi * vec3(3.0, 2.0, 1.0) * uv.x - 3.0 * u_time);",
+            "    material.diffuse = 0.2 * fsInput.attributes.color_0.rgb;",
+            "    material.diffuse += vec3(0.2, 0.3, 0.4) + vec3(0.2, 0.3, 0.4) * sin(2.0 * czm_pi * vec3(3.0, 2.0, 1.0) * uv.x - 3.0 * u_time);",
             "}",
           ].join("\n"),
         });

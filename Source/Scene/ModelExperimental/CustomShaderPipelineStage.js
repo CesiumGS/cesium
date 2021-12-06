@@ -5,10 +5,9 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import CustomShaderStageVS from "../../Shaders/ModelExperimental/CustomShaderStageVS.js";
 import CustomShaderStageFS from "../../Shaders/ModelExperimental/CustomShaderStageFS.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import AttributeType from "../AttributeType.js";
 import AlphaMode from "../AlphaMode.js";
 import CustomShaderMode from "./CustomShaderMode.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The custom shader pipeline stage takes GLSL callbacks from the
@@ -154,37 +153,15 @@ CustomShaderPipelineStage.process = function (
   );
 };
 
-function getAttributeNames(attributes) {
+function getAttributesByName(attributes) {
   var names = {};
   for (var i = 0; i < attributes.length; i++) {
     var attribute = attributes[i];
-    var semantic = attribute.semantic;
-    var setIndex = attribute.setIndex;
+    var attributeInfo = ModelExperimentalUtility.getAttributeInfo(attribute);
 
-    var variableName;
-    if (defined(semantic)) {
-      variableName = VertexAttributeSemantic.getVariableName(
-        semantic,
-        setIndex
-      );
-    } else {
-      // Handle user defined vertex attributes. They must begin with an underscore
-      // For example, "_TEMPERATURE" will be converted to "temperature".
-      variableName = attribute.name.substring(1).toLowerCase();
-    }
-
-    names[variableName] = attribute;
+    names[attributeInfo.variableName] = attributeInfo;
   }
   return names;
-}
-
-function generateAttributeField(name, attribute) {
-  var attributeType = attribute.type;
-  var glslType = AttributeType.getGlslType(attributeType);
-
-  // Fields for the Attribute struct. for example:
-  // ["vec3", "normal"];
-  return [glslType, name];
 }
 
 // GLSL types of standard attribute types when uniquely defined
@@ -194,7 +171,7 @@ var attributeTypeLUT = {
   tangent: "vec3",
   bitangent: "vec3",
   texCoord: "vec2",
-  color: "vec3",
+  color: "vec4",
   joints: "ivec4",
   weights: "vec4",
 };
@@ -231,9 +208,13 @@ function inferAttributeDefaults(attributeName) {
   };
 }
 
-function generateVertexShaderLines(customShader, namedAttributes, vertexLines) {
+function generateVertexShaderLines(
+  customShader,
+  attributesByName,
+  vertexLines
+) {
   var categories = partitionAttributes(
-    namedAttributes,
+    attributesByName,
     customShader.usedVariablesVertex.attributeSet,
     false
   );
@@ -246,8 +227,8 @@ function generateVertexShaderLines(customShader, namedAttributes, vertexLines) {
   var initializationLines = [];
   for (variableName in addToShader) {
     if (addToShader.hasOwnProperty(variableName)) {
-      var attribute = addToShader[variableName];
-      var attributeField = generateAttributeField(variableName, attribute);
+      var attributeInfo = addToShader[variableName];
+      var attributeField = [attributeInfo.glslType, variableName];
       attributeFields.push(attributeField);
 
       // Initializing attribute structs are just a matter of copying the
@@ -326,11 +307,11 @@ function generatePositionBuiltins(customShader) {
 
 function generateFragmentShaderLines(
   customShader,
-  namedAttributes,
+  attributesByName,
   fragmentLines
 ) {
   var categories = partitionAttributes(
-    namedAttributes,
+    attributesByName,
     customShader.usedVariablesFragment.attributeSet,
     true
   );
@@ -343,9 +324,9 @@ function generateFragmentShaderLines(
   var initializationLines = [];
   for (variableName in addToShader) {
     if (addToShader.hasOwnProperty(variableName)) {
-      var attribute = addToShader[variableName];
+      var attributeInfo = addToShader[variableName];
 
-      var attributeField = generateAttributeField(variableName, attribute);
+      var attributeField = [attributeInfo.glslType, variableName];
       attributeFields.push(attributeField);
 
       // Initializing attribute structs are just a matter of copying the
@@ -484,13 +465,13 @@ function generateShaderLines(customShader, primitive) {
 
   // Attempt to generate vertex and fragment shader lines before adding any
   // code to the shader.
-  var namedAttributes = getAttributeNames(primitive.attributes);
+  var attributesByName = getAttributesByName(primitive.attributes);
   if (defined(customShader.vertexShaderText)) {
-    generateVertexShaderLines(customShader, namedAttributes, vertexLines);
+    generateVertexShaderLines(customShader, attributesByName, vertexLines);
   }
 
   if (defined(customShader.fragmentShaderText)) {
-    generateFragmentShaderLines(customShader, namedAttributes, fragmentLines);
+    generateFragmentShaderLines(customShader, attributesByName, fragmentLines);
   }
 
   // positionWC must be computed in the vertex shader
