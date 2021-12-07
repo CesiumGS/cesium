@@ -8,7 +8,6 @@ import Framebuffer from "../Renderer/Framebuffer.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";

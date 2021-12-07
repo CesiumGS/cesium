@@ -47,7 +47,6 @@ import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
-import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
@@ -2386,8 +2385,6 @@ function executeCommands(scene, passState) {
       // Render to globe framebuffer in GLOBE pass
       passState.framebuffer = globeDepth.framebuffer;
     }
-
-    var fb;
 
     clearDepth.execute(context, passState);
 
