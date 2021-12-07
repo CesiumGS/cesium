@@ -474,18 +474,6 @@ function Scene(options) {
   /**
    * This property is for debugging only; it is not for production use.
    * <p>
-   * Displays depth information for the indicated frustum.
-   * </p>
-   *
-   * @type Boolean
-   *
-   * @default false
-   */
-  this.debugShowGlobeDepth = false;
-
-  /**
-   * This property is for debugging only; it is not for production use.
-   * <p>
    * Indicates which frustum will have depth information displayed.
    * </p>
    *
@@ -2245,16 +2233,6 @@ function executeTranslucentCommandsFrontToBack(
   }
 }
 
-function getDebugGlobeDepth(scene, index) {
-  var globeDepths = scene._view.debugGlobeDepths;
-  var globeDepth = globeDepths[index];
-  if (!defined(globeDepth) && scene.context.depthTexture) {
-    globeDepth = new GlobeDepth();
-    globeDepths[index] = globeDepth;
-  }
-  return globeDepth;
-}
-
 var scratchPerspectiveFrustum = new PerspectiveFrustum();
 var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -2402,9 +2380,7 @@ function executeCommands(scene, passState) {
       us.updateFrustum(frustum);
     }
 
-    var globeDepth = scene.debugShowGlobeDepth
-      ? getDebugGlobeDepth(scene, index)
-      : view.globeDepth;
+    var globeDepth = view.globeDepth;
 
     if (separatePrimitiveFramebuffer) {
       // Render to globe framebuffer in GLOBE pass
@@ -2412,22 +2388,6 @@ function executeCommands(scene, passState) {
     }
 
     var fb;
-    if (
-      scene.debugShowGlobeDepth &&
-      defined(globeDepth) &&
-      environmentState.useGlobeDepthFramebuffer
-    ) {
-      globeDepth.update(
-        context,
-        passState,
-        view.viewport,
-        scene._hdr,
-        clearGlobeDepth
-      );
-      globeDepth.clear(context, passState, scene._clearColorCommand.color);
-      fb = passState.framebuffer;
-      passState.framebuffer = globeDepth.framebuffer;
-    }
 
     clearDepth.execute(context, passState);
 
@@ -2455,14 +2415,6 @@ function executeCommands(scene, passState) {
 
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
-    }
-
-    if (
-      scene.debugShowGlobeDepth &&
-      defined(globeDepth) &&
-      environmentState.useGlobeDepthFramebuffer
-    ) {
-      passState.framebuffer = fb;
     }
 
     // Draw terrain classification
@@ -3591,11 +3543,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   var useLogDepth = frameState.useLogDepth;
-
-  if (this.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
-    var gd = getDebugGlobeDepth(this, this.debugShowDepthFrustum - 1);
-    gd.executeDebugGlobeDepth(context, passState, useLogDepth);
-  }
 
   if (this.debugShowPickDepth && useGlobeDepthFramebuffer) {
     var pd = this._picking.getPickDepth(this, this.debugShowDepthFrustum - 1);
