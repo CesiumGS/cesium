@@ -22,12 +22,22 @@ ImageBasedLightingPipelineStage.process = function (
       undefined,
       ShaderDestination.FRAGMENT
     );
+    shaderBuilder.addUniform(
+      "vec2",
+      "model_iblFactor",
+      ShaderDestination.FRAGMENT
+    );
   }
 
   if (defined(iblParameters.lightColor)) {
     shaderBuilder.addDefine(
       "USE_CUSTOM_LIGHT_COLOR",
       undefined,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addUniform(
+      "vec3",
+      "model_lightColor",
       ShaderDestination.FRAGMENT
     );
   }

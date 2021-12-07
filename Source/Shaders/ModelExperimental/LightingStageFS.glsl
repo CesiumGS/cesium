@@ -19,7 +19,14 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     );
     #endif
 
-    /*color += czm_iblLighting(pbrParameters);*/
+    #ifdef USE_IBL_LIGHTING
+    color += czm_imageBasedLighting(
+        v_positionEC,
+        czm_lightDirectionEC,
+        lightColorHdr,
+        pbrParameters
+    );
+    #endif
     color *= inputMaterial.occlusion;
     color += inputMaterial.emissive;
 

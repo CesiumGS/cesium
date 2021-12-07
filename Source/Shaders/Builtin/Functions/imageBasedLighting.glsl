@@ -1,12 +1,19 @@
-void proceduralIBL(
-  vec3 viewDirectionEC,
-  vec3 normalEC,
-  vec3 lightDirectionEC,
-  vec3 lightColorHdr,
-  czm_pbrParameters pbrParameters
+vec3 proceduralIBL(
+    vec3 positionEC,
+    vec3 normalEC,
+    vec3 lightDirectionEC,
+    vec3 lightColorHdr,
+    czm_pbrParameters pbrParameters
 ) {
-    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));
-    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(viewDirectionEC, normalEC)));
+    vec3 v = -normalize(positionEC);
+    vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
+    vec3 vWC = -normalize(positionWC);
+    vec3 l = normalize(lightDirectionEC);
+    vec3 n = normalEC;
+    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));
+    
+    float NdotL = clamp(dot(n, l), 0.001, 1.0);
+    float NdotV = abs(dot(n, v)) + 0.001;
     
     // Figure out if the reflection vector hits the ellipsoid
     float vertexRadius = length(positionWC);
@@ -49,10 +56,10 @@ void proceduralIBL(
     // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
     #ifdef USE_SUN_LUMINANCE 
     // Angle between sun and zenith
-    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * lightDirectionEC), normalize(-positionWC)), 0.001, 1.0);
+    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), vWC), 0.001, 1.0);
     float S = acos(LdotZenith);
     // Angle between zenith and current pixel
-    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * normalEC), normalize(-positionWC)), 0.001, 1.0);
+    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), vWC), 0.001, 1.0);
     // Angle between sun and current pixel
     float gamma = acos(NdotL);
     float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));
@@ -73,19 +80,25 @@ void proceduralIBL(
     return iblColor;
 }
 
-void textureIBL(
-  czm_pbrParameters pbrParameters
+vec3 textureIBL(
+    vec3 positionEC,
+    vec3 normalEC,
+    czm_pbrParameters pbrParameters
 ) {
     float diffuseColor = pbrParameters.diffuseColor;
     float roughness = pbrParameters.roughness;
     vec3 specularColor = pbrParameters.f0;
+
+    vec3 v = -normalize(positionEC);
+    vec3 n = normalEC;
+    float NdotV = abs(dot(n, v)) + 0.001;
 
     const mat3 yUpToZUp = mat3(
         -1.0, 0.0, 0.0,
         0.0, 0.0, -1.0, 
         0.0, 1.0, 0.0
     ); 
-    vec3 cubeDir = normalize(yUpToZUp * model_iblReferenceFrameMatrix * normalize(reflect(-view, n))); 
+    vec3 cubeDir = normalize(yUpToZUp * model_iblReferenceFrameMatrix * normalize(reflect(-v, n))); 
 
     #ifdef DIFFUSE_IBL 
         #ifdef CUSTOM_SPHERICAL_HARMONICS 
@@ -97,7 +110,6 @@ void textureIBL(
     vec3 diffuseIrradiance = vec3(0.0); 
     #endif 
 
-    float roughness = pbrParameters.roughness;
     #ifdef SPECULAR_IBL 
     vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;
       #ifdef CUSTOM_SPECULAR_IBL 
@@ -113,14 +125,28 @@ void textureIBL(
     return diffuseIrradiance * diffuseColor + specularColor * specularIBL;
 }
 
-void czm_imageBasedLighting(
-  czm_pbrParameters pbrParameters
+vec3 czm_imageBasedLighting(
+    vec3 positionEC,
+    vec3 normalEC,
+    vec3 lightDirectionEC,
+    vec3 lightColorHdr,
+    czm_pbrParameters pbrParameters
 ) {
   #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
   // Environment maps were provided, use them for IBL
-  return textureIBL(pbrParameters);
+  return textureIBL(
+      positionEC,
+      normalEC,
+      pbrParameters
+  );
   #else
   // Use the procedural IBL if there are no environment maps
-  return proceduralIBL(pbrParameters);
+  return proceduralIBL(
+      positionEC,
+      normalEC,
+      lightDirectionEC,
+      lightColorHdr,
+      pbrParameters
+  );
   #endif
 }

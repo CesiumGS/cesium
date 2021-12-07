@@ -4,6 +4,7 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
@@ -360,6 +361,8 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
   }
+
+  modelPipelineStages.push(ImageBasedLightingPipelineStage);
 };
 
 ModelExperimentalSceneGraph.prototype.update = function (frameState) {

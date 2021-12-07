@@ -621,6 +621,20 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._featureIdTextureIndex;
     },
   },
+
+  /**
+   * Get the parameters object for image-based lighting.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ImageBasedLightingParameters}
+   * @readonly
+   */
+  imageBasedLightingParameters: {
+    get: function () {
+      return this._imageBasedLightingParameters;
+    },
+  },
 });
 
 /**

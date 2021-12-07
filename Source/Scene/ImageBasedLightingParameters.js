@@ -182,6 +182,15 @@ Object.defineProperties(ImageBasedLightingParameters.prototype, {
       this._luminanceAtZenith = value;
     },
   },
+
+  isEnabled: {
+    get: function () {
+      return (
+        this._imageBasedLightingFactor.x > 0.0 ||
+        this._imageBasedLightingFactor.y > 0.0
+      );
+    },
+  },
 });
 
 function createSpecularMapAtlas(iblParameters, context) {
