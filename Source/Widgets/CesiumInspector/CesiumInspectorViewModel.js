@@ -410,20 +410,6 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
       that._scene.requestRender();
     });
 
-  this._globeDepthSubscription = knockout
-    .getObservable(this, "globeDepth")
-    .subscribe(function (val) {
-      that._scene.debugShowGlobeDepth = val;
-      that._scene.requestRender();
-    });
-
-  this._pickDepthSubscription = knockout
-    .getObservable(this, "pickDepth")
-    .subscribe(function (val) {
-      that._scene.debugShowPickDepth = val;
-      that._scene.requestRender();
-    });
-
   this._depthFrustumSubscription = knockout
     .getObservable(this, "depthFrustum")
     .subscribe(function (val) {

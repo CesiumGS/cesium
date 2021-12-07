@@ -5,7 +5,6 @@ import PixelFormat from "../Core/PixelFormat.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 
 /**
@@ -19,49 +18,6 @@ function PickDepth() {
   this._copyDepthCommand = undefined;
 
   this._useLogDepth = undefined;
-
-  this._debugPickDepthViewportCommand = undefined;
-}
-
-function executeDebugPickDepth(pickDepth, context, passState, useLogDepth) {
-  if (
-    !defined(pickDepth._debugPickDepthViewportCommand) ||
-    useLogDepth !== pickDepth._useLogDepth
-  ) {
-    var fsSource =
-      "uniform highp sampler2D u_texture;\n" +
-      "varying vec2 v_textureCoordinates;\n" +
-      "void main()\n" +
-      "{\n" +
-      "    float z_window = czm_unpackDepth(texture2D(u_texture, v_textureCoordinates));\n" +
-      "    z_window = czm_reverseLogDepth(z_window); \n" +
-      "    float n_range = czm_depthRange.near;\n" +
-      "    float f_range = czm_depthRange.far;\n" +
-      "    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n" +
-      "    float scale = pow(z_ndc * 0.5 + 0.5, 8.0);\n" +
-      "    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);\n" +
-      "}\n";
-    var fs = new ShaderSource({
-      defines: [useLogDepth ? "LOG_DEPTH" : ""],
-      sources: [fsSource],
-    });
-
-    pickDepth._debugPickDepthViewportCommand = context.createViewportQuadCommand(
-      fs,
-      {
-        uniformMap: {
-          u_texture: function () {
-            return pickDepth._depthTexture;
-          },
-        },
-        owner: pickDepth,
-      }
-    );
-
-    pickDepth._useLogDepth = useLogDepth;
-  }
-
-  pickDepth._debugPickDepthViewportCommand.execute(context, passState);
 }
 
 function destroyTextures(pickDepth) {
@@ -136,15 +92,6 @@ function updateCopyCommands(pickDepth, context, depthTexture) {
   pickDepth._textureToCopy = depthTexture;
   pickDepth._copyDepthCommand.framebuffer = pickDepth._framebuffer;
 }
-
-PickDepth.prototype.executeDebugPickDepth = function (
-  context,
-  passState,
-  useLogDepth
-) {
-  executeDebugPickDepth(this, context, passState, useLogDepth);
-};
-
 PickDepth.prototype.update = function (context, depthTexture) {
   updateFramebuffers(this, context, depthTexture);
   updateCopyCommands(this, context, depthTexture);
