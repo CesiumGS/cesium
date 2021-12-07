@@ -157,20 +157,6 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
   this.wireframe = false;
 
   /**
-   * Gets or sets the show globe depth state.  This property is observable.
-   * @type {Boolean}
-   * @default false
-   */
-  this.globeDepth = false;
-
-  /**
-   * Gets or sets the show pick depth state.  This property is observable.
-   * @type {Boolean}
-   * @default false
-   */
-  this.pickDepth = false;
-
-  /**
    * Gets or sets the index of the depth frustum to display.  This property is observable.
    * @type {Number}
    * @default 1
@@ -280,8 +266,6 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
     "tileBoundingSphere",
     "filterTile",
     "wireframe",
-    "globeDepth",
-    "pickDepth",
     "depthFrustum",
     "suspendUpdates",
     "tileCoordinates",
@@ -996,8 +980,6 @@ CesiumInspectorViewModel.prototype.destroy = function () {
   this._primitiveReferenceFrameSubscription.dispose();
   this._filterPrimitiveSubscription.dispose();
   this._wireframeSubscription.dispose();
-  this._globeDepthSubscription.dispose();
-  this._pickDepthSubscription.dispose();
   this._depthFrustumSubscription.dispose();
   this._suspendUpdatesSubscription.dispose();
   this._tileCoordinatesSubscription.dispose();
