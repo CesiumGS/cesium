@@ -16,8 +16,6 @@ function PickDepth() {
   this._depthTexture = undefined;
   this._textureToCopy = undefined;
   this._copyDepthCommand = undefined;
-
-  this._useLogDepth = undefined;
 }
 
 function destroyTextures(pickDepth) {

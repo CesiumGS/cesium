@@ -49,7 +49,6 @@ function GlobeDepth() {
   this._useScissorTest = false;
   this._scissorRectangle = undefined;
 
-  this._useLogDepth = undefined;
   this._useHdr = undefined;
   this._clearGlobeDepth = undefined;
 }

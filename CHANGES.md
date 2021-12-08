@@ -2,6 +2,11 @@
 
 ### 1.89 - 2022-01-03
 
+##### Breaking Changes :mega:
+
+- Removed `Scene.debugShowGlobeDepth`. [#9965](https://github.com/CesiumGS/cesium/pull/9965)
+- Removed `CesiumInspectorViewModel.globeDepth` and `CesiumInspectorViewModel.pickDepth`. [#9965](https://github.com/CesiumGS/cesium/pull/9965)
+
 ##### Additions :tada:
 
 - Added a `pointSize` field to custom vertex shaders for more control over
