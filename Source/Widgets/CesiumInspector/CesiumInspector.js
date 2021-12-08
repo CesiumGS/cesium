@@ -91,15 +91,6 @@ function CesiumInspector(container, scene) {
   shaderCacheDisplay.setAttribute("data-bind", "html: shaderCacheText");
   generalSection.appendChild(shaderCacheDisplay);
 
-  // https://github.com/CesiumGS/cesium/issues/6763
-  // var globeDepth = createCheckbox('Show globe depth', 'globeDepth');
-  // generalSection.appendChild(globeDepth);
-  //
-  // var globeDepthFrustum = document.createElement('div');
-  // globeDepth.appendChild(globeDepthFrustum);
-  //
-  // generalSection.appendChild(createCheckbox('Show pick depth', 'pickDepth'));
-
   var depthFrustum = document.createElement("div");
   generalSection.appendChild(depthFrustum);
 
