@@ -1,12 +1,19 @@
-import { I3dmParser, ResourceCache } from "../../../Source/Cesium.js";
+import {
+  I3dmLoader,
+  I3dmParser,
+  Resource,
+  ResourceCache,
+} from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
+import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/I3dmLoader", function () {
-  /*
   var InstancedGltfExternalUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedGltfExternal/instancedGltfExternal.i3dm";
+
   var InstancedWithBatchTableUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/instancedWithBatchTable.i3dm";
+  /*
   var InstancedWithBatchTableBinaryUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/tileset.json";
   var InstancedWithoutBatchTableUrl =
@@ -57,40 +64,40 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
     ResourceCache.clearForSpecs();
   });
 
-  // function loadI3dm(path) {
-  //   var resource = Resource.createIfNeeded(path);
+  function loadI3dm(path) {
+    var resource = Resource.createIfNeeded(path);
 
-  //   return Resource.fetchArrayBuffer({
-  //     url: path,
-  //   }).then(function (arrayBuffer) {
-  //     var loader = new I3dmLoader({
-  //       i3dmResource: resource,
-  //       arrayBuffer: arrayBuffer,
-  //     });
-  //     i3dmLoaders.push(loader);
-  //     loader.load();
+    return Resource.fetchArrayBuffer({
+      url: path,
+    }).then(function (arrayBuffer) {
+      var loader = new I3dmLoader({
+        i3dmResource: resource,
+        arrayBuffer: arrayBuffer,
+      });
+      i3dmLoaders.push(loader);
+      loader.load();
 
-  //     return waitForLoaderProcess(loader, scene);
-  //   });
-  // }
+      return waitForLoaderProcess(loader, scene);
+    });
+  }
 
-  // it("loads InstancedGltfExternalUrl", function () {
-  //   return loadI3dm(InstancedGltfExternalUrl).then(function (loader) {
-  //     var components = loader.components;
-  //     var instances = components.scene.nodes[0].instances;
+  it("loads InstancedGltfExternalUrl", function () {
+    return loadI3dm(InstancedGltfExternalUrl).then(function (loader) {
+      var components = loader.components;
+      var instances = components.scene.nodes[0].instances;
 
-  //     expect(instances).toBeDefined();
-  //   });
-  // });
+      expect(instances).toBeDefined();
+    });
+  });
 
-  // it("loads InstancedWithBatchTableUrl", function () {
-  //   return loadI3dm(InstancedWithBatchTableUrl).then(function (loader) {
-  //     var components = loader.components;
-  //     var instances = components.scene.nodes[0].instances;
-  //     var featureMetadata = components.featureMetadata;
+  it("loads InstancedWithBatchTableUrl", function () {
+    return loadI3dm(InstancedWithBatchTableUrl).then(function (loader) {
+      var components = loader.components;
+      var instances = components.scene.nodes[0].instances;
+      var featureMetadata = components.featureMetadata;
 
-  //     expect(instances).toBeDefined();
-  //     expect(featureMetadata).toBeDefined();
-  //   });
-  // });
+      expect(instances).toBeDefined();
+      expect(featureMetadata).toBeDefined();
+    });
+  });
 });

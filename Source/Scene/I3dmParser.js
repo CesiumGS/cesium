@@ -22,7 +22,7 @@ var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  *
  * @param {ArrayBuffer} arrayBuffer The array buffer containing the I3DM.
  * @param {Number} [byteOffset=0] The byte offset of the beginning of the I3DM in the array buffer.
- * @returns {Object} Returns an object with the feature table (binary and json), batch table (binary and json) and glTF parts of the I3DM.
+ * @returns {Object} Returns an object with the glTF format, feature table (binary and json), batch table (binary and json) and glTF parts of the I3DM.
  */
 I3dmParser.parse = function (arrayBuffer, byteOffset) {
   //>>includeStart('debug', pragmas.debug);
@@ -132,6 +132,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   }
 
   return {
+    gltfFormat: gltfFormat,
     featureTableJson: featureTableJson,
     featureTableBinary: featureTableBinary,
     batchTableJson: batchTableJson,

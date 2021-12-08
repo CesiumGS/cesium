@@ -8,6 +8,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import FeatureMetadata from "../FeatureMetadata.js";
+import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
 import I3dmParser from "../I3dmParser.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -202,6 +203,7 @@ I3dmLoader.prototype.load = function () {
   var featureTableBinary = i3dm.featureTableBinary;
   var batchTableJson = i3dm.batchTableJson;
   var batchTableBinary = i3dm.batchTableBinary;
+  var gltfFormat = i3dm.gltfFormat;
 
   // Generate the feature table.
   var featureTable = new Cesium3DTileFeatureTable(
@@ -236,17 +238,31 @@ I3dmLoader.prototype.load = function () {
     binary: batchTableBinary,
   };
 
-  // Create the GltfLoader, update the state and load the glTF.
-  var gltfLoader = new GltfLoader({
+  var loaderOptions = {
     upAxis: this._upAxis,
-    typedArray: i3dm.gltf,
     forwardAxis: this._forwardAxis,
-    gltfResource: this._i3dmResource,
     baseResource: this._baseResource,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAsTypedArray: this._loadAsTypedArray,
-  });
+  };
+
+  if (gltfFormat === 0) {
+    var gltfUrl = getStringFromTypedArray(i3dm.gltf);
+
+    // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
+    // This removes all white space and null characters from the end of the string.
+    gltfUrl = gltfUrl.replace(/[\s\0]+$/, "");
+    loaderOptions.gltfResource = this._i3dmResource.getDerivedResource({
+      url: gltfUrl,
+    });
+  } else {
+    loaderOptions.gltfResource = this._i3dmResource;
+    loaderOptions.typedArray = i3dm.gltf;
+  }
+
+  // Create the GltfLoader, update the state and load the glTF.
+  var gltfLoader = new GltfLoader(loaderOptions);
 
   this._gltfLoader = gltfLoader;
   this._state = I3dmLoaderState.LOADING;
@@ -422,7 +438,9 @@ function createInstances(loader, components) {
     if (hasScale) {
       processScale(featureTable, i, instanceScale);
       Cartesian3.pack(instanceScale, instanceScaleArray, 0);
-      scaleTypedArray[i] = instanceScaleArray;
+      scaleTypedArray[3 * i + 0] = instanceScaleArray[0];
+      scaleTypedArray[3 * i + 1] = instanceScaleArray[1];
+      scaleTypedArray[3 * i + 2] = instanceScaleArray[2];
     }
 
     // Get the batchId
@@ -442,7 +460,7 @@ function createInstances(loader, components) {
   // Create instances.
   var instances = new Instances();
 
-  // Create translation instance attribute.
+  // Create translation vertex attribute.
   var translationAttribute = new Attribute();
   translationAttribute.name = "Instance Translation";
   translationAttribute.semantic = InstanceAttributeSemantic.TRANSLATION;
@@ -452,7 +470,7 @@ function createInstances(loader, components) {
   translationAttribute.packedTypedArray = translationTypedArray;
   instances.attributes.push(translationAttribute);
 
-  // Create rotation instance attribute.
+  // Create rotation vertex attribute.
   if (hasRotation) {
     var rotationAttribute = new Attribute();
     rotationAttribute.name = "Instance Rotation";
@@ -464,7 +482,7 @@ function createInstances(loader, components) {
     instances.attributes.push(rotationAttribute);
   }
 
-  // Create scale instance attribute.
+  // Create scale vertex attribute.
   if (hasScale) {
     var scaleAttribute = new Attribute();
     scaleAttribute.name = "Instance Scale";
@@ -476,11 +494,22 @@ function createInstances(loader, components) {
     instances.attributes.push(scaleAttribute);
   }
 
-  // Create feature ID instance attribute.
-  var featureIdAttribute = new FeatureIdAttribute();
-  featureIdAttribute.propertyTableId = 0;
+  // Create feature ID vertex attribute.
+  var featureIdAttribute = new Attribute();
+  featureIdAttribute.name = "Instance Feature ID";
   featureIdAttribute.setIndex = 0;
-  instances.featureIdAttributes.push(featureIdAttribute);
+  featureIdAttribute.semantic = InstanceAttributeSemantic.FEATURE_ID;
+  featureIdAttribute.componentDatatype = ComponentDatatype.UNSIGNED_SHORT;
+  featureIdAttribute.type = AttributeType.SCALAR;
+  featureIdAttribute.count = instancesLength;
+  featureIdAttribute.packedTypedArray = featureIdArray;
+  instances.attributes.push(featureIdAttribute);
+
+  // Create feature ID attribute.
+  var featureIdInstanceAttribute = new FeatureIdAttribute();
+  featureIdInstanceAttribute.propertyTableId = 0;
+  featureIdInstanceAttribute.setIndex = 0;
+  instances.featureIdAttributes.push(featureIdInstanceAttribute);
 
   // Create instanced node.
   components.scene.nodes[0].instances = instances;
