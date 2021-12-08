@@ -24,6 +24,7 @@ import Transforms from "../../Core/Transforms.js";
 import when from "../../ThirdParty/when.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 
 var I3dmLoaderState = {
   UNLOADED: 0,
@@ -344,8 +345,10 @@ function createFeatureMetadata(loader, components) {
   components.featureMetadata = featureMetadata;
 }
 
+var positionScratch = new Cartesian3();
 var propertyScratch1 = new Array(4);
 function createInstances(loader, components) {
+  var i;
   var featureTable = loader._featureTable;
   var instancesLength = loader._instancesLength;
 
@@ -353,16 +356,23 @@ function createInstances(loader, components) {
     return;
   }
 
+  var rtcCenter = featureTable.getGlobalProperty(
+    "RTC_CENTER",
+    ComponentDatatype.FLOAT,
+    3
+  );
+
   var eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
   var hasRotation =
     featureTable.hasProperty("NORMAL_UP") ||
     featureTable.hasProperty("NORMAL_UP_OCT32P") ||
     eastNorthUp;
+
   var hasScale =
     featureTable.hasProperty("SCALE") ||
     featureTable.hasProperty("SCALE_NON_UNIFORM");
 
-  var translationTypedArray = new Float32Array(3 * instancesLength);
+  var translationTypedArray = getPositions(featureTable, instancesLength);
   var rotationTypedArray;
   if (hasRotation) {
     rotationTypedArray = new Float32Array(4 * instancesLength);
@@ -373,8 +383,8 @@ function createInstances(loader, components) {
   }
   var featureIdArray = new Uint32Array(instancesLength);
 
+  var instancePositions = Cartesian3.unpackArray(translationTypedArray);
   var instancePosition = new Cartesian3();
-  var instancePositionArray = new Array(3);
 
   var instanceNormalRight = new Cartesian3();
   var instanceNormalUp = new Cartesian3();
@@ -388,30 +398,35 @@ function createInstances(loader, components) {
 
   var instanceTransform = new Matrix4();
 
-  for (var i = 0; i < instancesLength; i++) {
-    // Get the instance position
-    var position = featureTable.getProperty(
-      "POSITION",
-      ComponentDatatype.FLOAT,
-      3,
-      i,
-      propertyScratch1
-    );
-    if (!defined(position)) {
-      processPositionQuantized(featureTable, i, instancePositionArray);
-      position = instancePositionArray;
+  // For I3DMs that do not define an RTC center, we manually compute a BoundingSphere and store
+  // positions relative to the center, to be uploaded to the GPU. This avoids jittering at higher
+  // precisions.
+  if (!defined(rtcCenter)) {
+    var positionBoundingSphere = BoundingSphere.fromPoints(instancePositions);
+
+    for (i = 0; i < instancePositions.length; i++) {
+      Cartesian3.subtract(
+        instancePositions[i],
+        positionBoundingSphere.center,
+        positionScratch
+      );
+
+      translationTypedArray[3 * i + 0] = positionScratch.x;
+      translationTypedArray[3 * i + 1] = positionScratch.y;
+      translationTypedArray[3 * i + 2] = positionScratch.z;
     }
 
-    Cartesian3.unpack(position, 0, instancePosition);
-    translationTypedArray[3 * i + 0] = position[0];
-    translationTypedArray[3 * i + 1] = position[1];
-    translationTypedArray[3 * i + 2] = position[2];
+    // Set the center of the bounding sphere as the RTC center transform.
+    loader._transform = Matrix4.fromTranslation(positionBoundingSphere.center);
+  }
 
-    // var rtcCenter;
-    // if (defined(rtcCenter)) {
-    //   Cartesian3.add(instancePosition, rtcCenter, instancePosition);
-    // }
-    // instanceTranslationRotationScale.translation = instancePosition;
+  for (i = 0; i < instancesLength; i++) {
+    // Get the instance position
+    instancePosition = instancePositions[i];
+
+    if (defined(rtcCenter)) {
+      Cartesian3.add(instancePosition, rtcCenter, instancePosition);
+    }
 
     // Get the instance rotation, if present
     if (hasRotation) {
@@ -511,47 +526,73 @@ function createInstances(loader, components) {
   featureIdInstanceAttribute.setIndex = 0;
   instances.featureIdAttributes.push(featureIdInstanceAttribute);
 
-  // Create instanced node.
-  components.scene.nodes[0].instances = instances;
+  // Apply instancing to every node that has at least one primitive.
+  for (i = 0; i < components.nodes.length; i++) {
+    var node = components.nodes[i];
+    if (node.primitives.length > 0) {
+      node.instances = instances;
+    }
+  }
 }
 
-function processPositionQuantized(featureTable, i, position) {
-  var positionQuantized = featureTable.getProperty(
-    "POSITION_QUANTIZED",
-    ComponentDatatype.UNSIGNED_SHORT,
-    3,
-    i,
-    propertyScratch1
-  );
-  if (!defined(positionQuantized)) {
+/**
+ * Returns a typed array of positions from the I3DM's feature table. The positions
+ * returned are dequantized, if dequantization is applied.
+ *
+ * @private
+ */
+function getPositions(featureTable, instancesLength) {
+  if (featureTable.hasProperty("POSITION")) {
+    // Handle positions.
+    return featureTable.getPropertyArray(
+      "POSITION",
+      ComponentDatatype.FLOAT,
+      3
+    );
+  } else if (featureTable.hasProperty("POSITION_QUANTIZED")) {
+    // Handle quantized positions.
+    var quantizedPositions = featureTable.getPropertyArray(
+      "POSITION_QUANTIZED",
+      ComponentDatatype.FLOAT,
+      3
+    );
+
+    var quantizedVolumeOffset = featureTable.getGlobalProperty(
+      "QUANTIZED_VOLUME_OFFSET",
+      ComponentDatatype.FLOAT,
+      3
+    );
+    if (!defined(quantizedVolumeOffset)) {
+      throw new RuntimeError(
+        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
+      );
+    }
+
+    var quantizedVolumeScale = featureTable.getGlobalProperty(
+      "QUANTIZED_VOLUME_SCALE",
+      ComponentDatatype.FLOAT,
+      3
+    );
+    if (!defined(quantizedVolumeScale)) {
+      throw new RuntimeError(
+        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
+      );
+    }
+
+    for (var i = 0; i < quantizedPositions.length / 3; i++) {
+      var quantizedPosition = quantizedPositions[i];
+      for (var j = 0; j < 3; j++) {
+        quantizedPositions[3 * i + j] =
+          (quantizedPosition[j] / 65535.0) * quantizedVolumeScale[j] +
+          quantizedVolumeOffset[j];
+      }
+    }
+
+    return quantizedPositions;
+  } else {
     throw new RuntimeError(
       "Either POSITION or POSITION_QUANTIZED must be defined for each instance."
     );
-  }
-  var quantizedVolumeOffset = featureTable.getGlobalProperty(
-    "QUANTIZED_VOLUME_OFFSET",
-    ComponentDatatype.FLOAT,
-    3
-  );
-  if (!defined(quantizedVolumeOffset)) {
-    throw new RuntimeError(
-      "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
-    );
-  }
-  var quantizedVolumeScale = featureTable.getGlobalProperty(
-    "QUANTIZED_VOLUME_SCALE",
-    ComponentDatatype.FLOAT,
-    3
-  );
-  if (!defined(quantizedVolumeScale)) {
-    throw new RuntimeError(
-      "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
-    );
-  }
-  for (var j = 0; j < 3; j++) {
-    position[j] =
-      (positionQuantized[j] / 65535.0) * quantizedVolumeScale[j] +
-      quantizedVolumeOffset[j];
   }
 }
 
