@@ -422,10 +422,14 @@ function createInstances(loader, components) {
 
   for (i = 0; i < instancesLength; i++) {
     // Get the instance position
-    instancePosition = instancePositions[i];
+    instancePosition = Cartesian3.clone(instancePositions[i]);
 
     if (defined(rtcCenter)) {
-      Cartesian3.add(instancePosition, rtcCenter, instancePosition);
+      Cartesian3.add(
+        instancePosition,
+        Cartesian3.unpack(rtcCenter),
+        instancePosition
+      );
     }
 
     // Get the instance rotation, if present
@@ -553,7 +557,7 @@ function getPositions(featureTable, instancesLength) {
     // Handle quantized positions.
     var quantizedPositions = featureTable.getPropertyArray(
       "POSITION_QUANTIZED",
-      ComponentDatatype.FLOAT,
+      ComponentDatatype.UNSIGNED_SHORT,
       3
     );
 
@@ -589,6 +593,8 @@ function getPositions(featureTable, instancesLength) {
     }
 
     return quantizedPositions;
+
+    // eslint-disable-next-line no-else-return
   } else {
     throw new RuntimeError(
       "Either POSITION or POSITION_QUANTIZED must be defined for each instance."
