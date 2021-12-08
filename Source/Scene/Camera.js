@@ -368,10 +368,14 @@ Camera.prototype._updateCameraChanged = function () {
     camera._changedHeading = currentHeading;
   }
 
-  var headingChanged = camera._changedHeading !== camera.heading;
+  var headingChanged = camera._changedHeading !== currentHeading;
+  var headingChangedPercentage =
+    (Math.abs(camera._changedHeading - currentHeading) /
+      ((camera._changedHeading + currentHeading) / 2)) *
+    100;
 
   if (headingChanged) {
-    camera._changed.raiseEvent("Camera Heading Changed");
+    camera._changed.raiseEvent(headingChangedPercentage);
     camera._changedHeading = currentHeading;
   }
 
