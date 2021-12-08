@@ -35,7 +35,6 @@ var I3dmLoaderState = {
 var Attribute = ModelComponents.Attribute;
 var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 var Instances = ModelComponents.Instances;
-var Node = ModelComponents.Node;
 
 /**
  * Loads an Instanced 3D Model.
