@@ -368,7 +368,7 @@ Camera.prototype._updateCameraChanged = function () {
     camera._changedHeading = currentHeading;
   }
 
-  var headingChanged = camera._changedHeading === currentHeading ? false : true;
+  var headingChanged = camera._changedHeading !== camera.heading;
 
   if (headingChanged) {
     camera._changed.raiseEvent("Camera Heading Changed");
