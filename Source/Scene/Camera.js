@@ -366,6 +366,8 @@ Camera.prototype._updateCameraChanged = function () {
     camera._changedHeading = camera.heading;
   }
 
+  var headingChanged = camera._changedHeading === camera.heading ? false : true;
+
   if (camera._mode === SceneMode.SCENE2D) {
     if (!defined(camera._changedFrustum)) {
       camera._changedPosition = Cartesian3.clone(
