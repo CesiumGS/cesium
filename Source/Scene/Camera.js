@@ -362,6 +362,10 @@ Camera.prototype._updateCameraChanged = function () {
 
   var percentageChanged = camera.percentageChanged;
 
+  if (!defined(camera._changedHeading)) {
+    camera._changedHeading = camera.heading;
+  }
+
   if (camera._mode === SceneMode.SCENE2D) {
     if (!defined(camera._changedFrustum)) {
       camera._changedPosition = Cartesian3.clone(
