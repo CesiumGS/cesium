@@ -45,6 +45,15 @@ var Cesium3DTileContentFactory = {
     );
   },
   i3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    if (ExperimentalFeatures.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromI3dm(
+        tileset,
+        tile,
+        resource,
+        arrayBuffer,
+        byteOffset
+      );
+    }
     return new Instanced3DModel3DTileContent(
       tileset,
       tile,

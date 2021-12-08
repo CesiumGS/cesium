@@ -14,6 +14,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import B3dmLoader from "./B3dmLoader.js";
 import Color from "../../Core/Color.js";
+import I3dmLoader from "./I3dmLoader.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -807,6 +808,40 @@ ModelExperimental.fromB3dm = function (options) {
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.b3dmResource,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+  var model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromI3dm = function (options) {
+  var loaderOptions = {
+    i3dmResource: options.resource,
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+    releaseGltfJson: options.releaseGltfJson,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+  };
+
+  var loader = new I3dmLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.i3dmResource,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,

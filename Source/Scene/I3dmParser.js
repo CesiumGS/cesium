@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
@@ -15,13 +16,20 @@ I3dmParser._deprecationWarning = deprecationWarning;
 var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
- * TODO: Add documentation
+ * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Instanced3DModel|Instanced 3D Model}.
+ *
+ * @private
+ *
+ * @param {ArrayBuffer} arrayBuffer The array buffer containing the I3DM.
+ * @param {Number} [byteOffset=0] The byte offset of the beginning of the I3DM in the array buffer.
+ * @returns {Object} Returns an object with the feature table (binary and json), batch table (binary and json) and glTF parts of the I3DM.
  */
 I3dmParser.parse = function (arrayBuffer, byteOffset) {
-  var byteStart = defaultValue(byteOffset, 0);
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
+
+  var byteStart = defaultValue(byteOffset, 0);
 
   var uint8Array = new Uint8Array(arrayBuffer);
   var view = new DataView(arrayBuffer);
@@ -66,4 +74,70 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
     );
   }
   byteOffset += sizeOfUint32;
+
+  var featureTableJson = getJsonFromTypedArray(
+    uint8Array,
+    byteOffset,
+    featureTableJsonByteLength
+  );
+  byteOffset += featureTableJsonByteLength;
+
+  var featureTableBinary = new Uint8Array(
+    arrayBuffer,
+    byteOffset,
+    featureTableBinaryByteLength
+  );
+  byteOffset += featureTableBinaryByteLength;
+
+  var batchTableJson;
+  var batchTableBinary;
+  if (batchTableJsonByteLength > 0) {
+    batchTableJson = getJsonFromTypedArray(
+      uint8Array,
+      byteOffset,
+      batchTableJsonByteLength
+    );
+    byteOffset += batchTableJsonByteLength;
+
+    if (batchTableBinaryByteLength > 0) {
+      // Has a batch table binary
+      batchTableBinary = new Uint8Array(
+        arrayBuffer,
+        byteOffset,
+        batchTableBinaryByteLength
+      );
+      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+      batchTableBinary = new Uint8Array(batchTableBinary);
+      byteOffset += batchTableBinaryByteLength;
+    }
+  }
+
+  var gltfByteLength = byteStart + byteLength - byteOffset;
+  if (gltfByteLength === 0) {
+    throw new RuntimeError("glTF byte length must be greater than 0.");
+  }
+
+  var gltfView;
+  if (byteOffset % 4 === 0) {
+    gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
+  } else {
+    // Create a copy of the glb so that it is 4-byte aligned
+    I3dmParser._deprecationWarning(
+      "i3dm-glb-unaligned",
+      "The embedded glb is not aligned to a 4-byte boundary."
+    );
+    gltfView = new Uint8Array(
+      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength)
+    );
+  }
+
+  return {
+    featureTableJson: featureTableJson,
+    featureTableBinary: featureTableBinary,
+    batchTableJson: batchTableJson,
+    batchTableBinary: batchTableBinary,
+    gltf: gltfView,
+  };
 };
+
+export default I3dmParser;
