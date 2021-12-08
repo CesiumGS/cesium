@@ -1324,10 +1324,10 @@ describe(
       s.initializeFrame();
       s.render();
 
-      expect(spyListener.calls.count()).toBe(1);
+      expect(spyListener.calls.count()).toBe(2);
 
       var args = spyListener.calls.allArgs();
-      expect(args.length).toEqual(1);
+      expect(args.length).toEqual(2);
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
 
