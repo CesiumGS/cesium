@@ -7,6 +7,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 
 var PntsParser = {};
@@ -91,18 +92,6 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     featureTableBinary
   );
 
-  var dracoProperties = parseDracoProperties(featureTable, batchTableJson);
-
-  /*
-  return {
-    draco: draco,
-    hasPositions: hasPositions,
-    hasColors: hasColors,
-    isTranslucent: isTranslucent,
-    hasNormals: hasNormals,
-    hasBatchIds: hasBatchIds,
-  }*/
-
   var pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
   featureTable.featuresLength = pointsLength;
 
@@ -113,14 +102,40 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   );
   rtcCenter = Cartesian3.unpack(rtcCenter);
 
-  var normals = parseNormals(featureTable);
-
-  return {
+  var dracoProperties = parseDracoProperties(featureTable, batchTableJson);
+  var results = {
     pointsLength: pointsLength,
     rtcCenter: rtcCenter,
     draco: dracoProperties.draco,
-    normals: normals,
   };
+
+  if (!dracoProperties.hasPositions) {
+    results.positions = parsePositions(featureTable);
+  }
+
+  if (!dracoProperties.hasNormals) {
+    results.normals = parseNormals(featureTable);
+  }
+
+  if (!dracoProperties.hasColors) {
+    results.colors = parseColors(featureTable);
+  }
+
+  if (!dracoProperties.hasBatchIds) {
+    results.batchIds = parseBatchIds(featureTable);
+  }
+
+  var hasBatchIds = defined(results.batchIds) || dracoProperties.hasBatchIds;
+
+  if (!hasBatchIds && defined(batchTableBinary)) {
+    results.styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
+      pointsLength,
+      batchTableJson,
+      batchTableBinary
+    );
+  }
+
+  return results;
 };
 
 function parseDracoProperties(featureTable, batchTableJson) {
@@ -207,6 +222,7 @@ function parsePositions(featureTable) {
       ComponentDatatype.FLOAT,
       3
     );
+
     return {
       typedArray: positions,
       isQuantized: false,
@@ -347,7 +363,7 @@ function parseNormals(featureTable) {
   return undefined;
 }
 
-function getBatchIds(featureTable) {
+function parseBatchIds(featureTable) {
   var featureTableJson = featureTable.json;
   if (defined(featureTableJson.BATCH_ID)) {
     var batchIds = featureTable.getPropertyArray(

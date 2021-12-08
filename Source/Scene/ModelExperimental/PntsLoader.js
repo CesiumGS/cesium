@@ -1,8 +1,12 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
+import Check from "../../Core/Check.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import when from "../../ThirdParty/when.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import AttributeType from "../AttributeType.js";
 import DracoLoader from "../DracoLoader.js";
 import ResourceLoader from "../ResourceLoader.js";
 import ModelComponents from "../ModelComponents.js";
@@ -13,13 +17,33 @@ var Components = ModelComponents.Components;
 var Scene = ModelComponents.Scene;
 var Node = ModelComponents.Node;
 var Primitive = ModelComponents.Primitive;
-var Attribute = ModelComponents.Attribute;
+//var Attribute = ModelComponents.Attribute;
 var Quantization = ModelComponents.Quantization;
 var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 
 export default function PntsLoader(options) {
-  this._promise = when.defer();
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  var pntsResource = options.pntsResource;
+  var baseResource = options.baseResource;
+  var arrayBuffer = options.arrayBuffer;
+  var byteOffset = defaultValue(options.byteOffset, 0);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.pntsResource", pntsResource);
+  Check.typeOf.object("options.arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
+
+  this._pntsResource = pntsResource;
+  this._baseResource = baseResource;
+  this._arrayBuffer = arrayBuffer;
+  this._byteOffset = byteOffset;
+
+  this._parsedContent = undefined;
+  this._decodePromise = undefined;
+  this._decodedAttributes = undefined;
+
+  this._promise = when.defer();
   this._state = ResourceLoaderState.UNLOADED;
 
   // The batch table object contains a json and a binary component access using keys of the same name.
@@ -100,96 +124,59 @@ Object.defineProperties(PntsLoader.prototype, {
  * @private
  */
 PntsLoader.prototype.load = function () {
-  var pnts = PntsParser.parse(this._arrayBuffer, this._byteOffset);
-
-  var primitive = makePrimitive(pnts);
-
-  var node = new Node();
-  node.primitives = [primitive];
-  node.matrix = undefined; // TODO: where should RTC be handled again?
-
-  var scene = new Scene();
-  scene.nodes = [node];
-  scene.upAxis = undefined; // TODO
-  scene.forwardAxis = undefined; // TODO
-
-  var components = new Components();
-  components.scene = scene;
-  components.nodes = [node];
-  components.featureMetadata = undefined; // TODO
-
-  this._components = components;
-  this._promise.resolve(this);
+  this._parsedContent = PntsParser.parse(this._arrayBuffer, this._byteOffset);
+  this._state = ResourceLoaderState.PROCESSING;
 };
 
-function makePositionAttribute(pnts) {
-  var positionInfo = pnts.position;
-
-  var quantization;
-  if (positionInfo.isQuantized) {
-    quantization = new Quantization();
-    // TODO: Check these names
-    quantization.normalizationRange = positionInfo.quantizationRange;
-    quantization.quantizedVolumeOffset = positionInfo.quantizedVolumeOffset;
-    quantization.quantizedVolumeDimensions =
-      positionInfo.quantizedVolumeDimensions;
-    // TODO: Check how GltfLoader does this. should be dimensions / offset
-    quantization.quantizedVolumeStepSize = undefined;
-    quantization.componentDatatype = positionInfo.quantizedDatatype;
-    quantization.type = positionInfo.quantizationType;
+PntsLoader.prototype.process = function (frameState) {
+  if (this._state === ResourceLoaderState.PROCESSING) {
+    if (!defined(this._decodePromise)) {
+      decodeDraco(this, frameState.context);
+    }
   }
-
-  var positionAttribute = new Attribute();
-  positionAttribute.name = "POSITION";
-  positionAttribute.semantic = "POSITION";
-  positionAttribute.componentDatatype = positionInfo.componentDatatype;
-  positionAttribute.type = AttributeType.VEC3;
-  positionAttribute.min = undefined; // TODO
-  positionAttribute.max = undefined; // TODO
-  positionAttribute.quantization = undefined; // TODO: handle Draco
-  positionAttribute.buffer = undefined; // TODO
-  positionAttribute.typedArray = positionInfo.typedArray; // TODO: what about packedTypedArray?
-}
-
-function makePrimitive(pnts) {
-  var primitive = new Primitive();
-  primitive.attributes = []; // TODO
-  primitive.indices = undefined; // TODO: do we need this for points?
-  primitive.material = undefined; // TODO: do we supply a material?
-  primitive.primitiveType = PrimitiveType.POINTS;
-
-  // TODO: What if this is draco compressed?
-  if (defined(pnts.batchId)) {
-    var featureIdAttribute = new FeatureIdAttribute();
-    featureIdAttribute.propertyTableId = 0;
-    featureIdAttribute.setIndex = 0;
-    primitive.featureIdAttributes = [featureIdAttribute]; // TODO
-  }
-
-  return primitive;
-}
+};
 
 function decodeDraco(loader, context) {
-  // TODO: only run this when decoding is in process
-
   var parsedContent = loader._parsedContent;
   var draco = parsedContent.draco;
-  var decodePromise = DracoLoader.decodePointCloud(draco, context);
-  if (defined(decodePromise)) {
-    // TODO: point cloud sets a "DECODING" state. is this loading or processing?
-    decodePromise
-      .then(function (result) {
-        handleDracoResult(loader, result);
-      })
-      .otherwise(function (error) {
-        loader._state = ResourceLoaderState.FAILED;
-        loader._readyPromise.reject(error);
-      });
+
+  var decodePromise;
+  if (!defined(draco)) {
+    // The draco extension wasn't present,
+    decodePromise = when.resolve();
+  } else {
+    decodePromise = DracoLoader.decodePointCloud(draco, context);
   }
+
+  if (!defined(decodePromise)) {
+    // Could not schedule Draco decoding this frame.
+    return;
+  }
+
+  decodePromise
+    .then(function (decodeDracoResult) {
+      if (loader.isDestroyed()) {
+        return;
+      }
+
+      if (defined(decodeDracoResult)) {
+        processDracoAttributes(loader, draco, decodeDracoResult);
+      }
+      makeComponents(loader);
+      loader._state = ResourceLoaderState.READY;
+    })
+    .otherwise(function (error) {
+      loader.unload();
+      loader._state = ResourceLoaderState.FAILED;
+      loader._readyPromise.reject(error);
+      var errorMessage = "Failed to load Draco";
+      loader._promise.reject(loader.getError(errorMessage, error));
+    });
 }
 
-function handleDracoResult(loader, result) {
-  loader._state = ResourceLoaderState.READY; // TODO: should this be PROCESSING?
+function processDracoAttributes(loader, draco, result) {
+  loader._state = ResourceLoaderState.READY;
+  var parsedContent = loader._parsedContent;
 
   var decodedPositions = defined(result.POSITION)
     ? result.POSITION.array
@@ -255,18 +242,105 @@ function handleDracoResult(loader, result) {
     }
   }
 
-  parsedContent.positions = defaultValue(
-    decodedPositions,
-    parsedContent.positions
-  );
-  parsedContent.colors = defaultValue(
-    defaultValue(decodedRgba, decodedRgb),
-    parsedContent.colors
-  );
-  parsedContent.normals = defaultValue(decodedNormals, parsedContent.normals);
-  parsedContent.batchIds = defaultValue(
-    decodedBatchIds,
-    parsedContent.batchIds
-  );
-  parsedContent.styleableProperties = styleableProperties;
+  var decodedAttributes = loader._decodedAttributes;
+  decodedAttributes.positions = decodedPositions;
+  decodedAttributes.colors = defaultValue(decodedRgba, decodedRgb);
+  decodedAttributes.normals = decodedNormals;
+  decodedAttributes.batchIds = decodedBatchIds;
+  decodedAttributes.styleableProperties = styleableProperties;
 }
+
+/*
+function makePositionAttribute(positions) {
+
+  var quantization;
+  if (positions.isQuantized) {
+    quantization = new Quantization();
+    // TODO: Check these names
+    var normalizationRange = positions.quantizationRange;
+    quantization.normalizationRange = normalizationRange;
+    quantization.quantizedVolumeOffset = positions.quantizedVolumeOffset;
+    var quantizedVolumeDimensions = positions.quantizedVolumeDimensions;
+    quantization.quantizedVolumeDimensions = quantizedVolumeDimensions;
+    quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(quantizedVolumeDimensions, normalizationRange, new Cartesian3());
+    quantization.componentDatatype = positions.quantizedDatatype;
+    quantization.type = positions.quantizationType;
+  }
+
+  var positionAttribute = new Attribute();
+  positionAttribute.name = "POSITION";
+  positionAttribute.semantic = "POSITION";
+  positionAttribute.componentDatatype = positions.componentDatatype;
+  positionAttribute.type = AttributeType.VEC3;
+  positionAttribute.min = undefined; // TODO
+  positionAttribute.max = undefined; // TODO
+  positionAttribute.quantization = quantization; // TODO: handle Draco
+  positionAttribute.buffer = undefined; // TODO
+  positionAttribute.typedArray = positions.typedArray; // TODO: what about packedTypedArray?
+
+  return positionAttribute;
+}
+
+function makeNormalAttribute(normals) {
+
+}
+
+function makeColorAttribute(colors) {
+
+}
+
+function makeBatchIdAttribute(batchIds) {
+
+}
+
+function makeStylingAttributes(stylingAttributes) {
+
+}
+
+function makeAttribute() {
+
+}
+*/
+
+function makeAttributes(parsedContent) {}
+
+function makePrimitive(parsedContent) {
+  var primitive = new Primitive();
+  primitive.attributes = makeAttributes(parsedContent);
+  primitive.material = undefined; // TODO: do we supply a material?
+  primitive.primitiveType = PrimitiveType.POINTS;
+
+  if (defined(parsedContent.batchId)) {
+    var featureIdAttribute = new FeatureIdAttribute();
+    featureIdAttribute.propertyTableId = 0;
+    featureIdAttribute.setIndex = 0;
+    primitive.featureIdAttributes = [featureIdAttribute]; // TODO
+  }
+
+  return primitive;
+}
+
+function makeComponents(loader) {
+  var parsedContent = loader._parsedContent;
+  var primitive = makePrimitive(parsedContent);
+
+  var node = new Node();
+  node.primitives = [primitive];
+  node.matrix = loader._transform;
+
+  var scene = new Scene();
+  scene.nodes = [node];
+  scene.upAxis = undefined; // TODO
+  scene.forwardAxis = undefined; // TODO
+
+  var components = new Components();
+  components.scene = scene;
+  components.nodes = [node];
+  components.featureMetadata = undefined; // TODO
+
+  loader._components = components;
+}
+
+PntsLoader.prototype.unload = function () {
+  this._components = undefined;
+};
