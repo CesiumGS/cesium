@@ -303,3 +303,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Robin Danielsson](https://github.com/robdan7)
 - [Oskar Havo](https://github.com/OskarHavo)
 - [Mark Williams](https://github.com/markw65)
+- [Rain Liang](https://github.com/rainliang000)
