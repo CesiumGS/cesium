@@ -10,6 +10,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import AttributeType from "./AttributeType.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 var PntsParser = {};
 
@@ -199,7 +200,7 @@ function parseDracoProperties(featureTable, batchTableJson) {
         dracoFeatureTableProperties,
         dracoBatchTableProperties
       ),
-      dequantizeInShader: true, // TODO: this might be set externally...
+      dequantizeInShader: true,
     };
   }
 
@@ -264,12 +265,12 @@ function parsePositions(featureTable) {
 
     return {
       name: "POSITION",
-      semantic: "POSITION",
+      semantic: VertexAttributeSemantic.POSITION,
       typedArray: positions,
       isQuantized: true,
-      quantizedRange: quantizedRange,
       componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC3,
+      quantizedRange: quantizedRange,
       quantizedVolumeOffset: Cartesian3.unpack(quantizedVolumeOffset),
       quantizedVolumeScale: Cartesian3.unpack(quantizedVolumeScale),
       quantizedComponentDatatype: ComponentDatatype.UNSIGNED_SHORT,
@@ -290,7 +291,7 @@ function parseColors(featureTable) {
     );
     return {
       name: "COLOR",
-      semantic: "COLOR",
+      semantic: VertexAttributeSemantic.COLOR,
       setIndex: 0,
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
@@ -304,6 +305,8 @@ function parseColors(featureTable) {
       3
     );
     return {
+      name: "COLOR",
+      semantic: VertexAttributeSemantic.COLOR,
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 3,
@@ -329,7 +332,7 @@ function parseColors(featureTable) {
       ComponentDatatype.UNSIGNED_BYTE,
       4
     );
-    // TODO: should default to DARK_GREY, and avoid an allocation
+    // TODO: default should be dark grey... where should that be handled?
     var constantColor = Color.fromBytes(
       constantRGBA[0],
       constantRGBA[1],
@@ -355,8 +358,10 @@ function parseNormals(featureTable) {
       3
     );
     return {
+      name: "NORMAL",
+      semantic: VertexAttributeSemantic.NORMAL,
       typedArray: normals,
-      isOctEncoded16P: false,
+      isOctEncoded: false,
       componentDatatype: ComponentDatatype.FLOAT,
       componentsPerAttribute: 3,
     };
@@ -367,8 +372,10 @@ function parseNormals(featureTable) {
       2
     );
     return {
+      name: "NORMAL",
+      semantic: VertexAttributeSemantic.COLOR,
       typedArray: normals,
-      isOctEncoded16P: true,
+      isOctEncoded: true,
       componentDatatype: ComponentDatatype.FLOAT,
       componentsPerAttribute: 3,
     };

@@ -15,6 +15,7 @@ import ResourceLoader from "../ResourceLoader.js";
 import ModelComponents from "../ModelComponents.js";
 import PntsParser from "../PntsParser.js";
 import ResourceLoaderState from "../ResourceLoaderState.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 var Components = ModelComponents.Components;
 var Scene = ModelComponents.Scene;
@@ -167,11 +168,11 @@ function decodeDraco(loader, context) {
       }
       makeComponents(loader, context);
       loader._state = ResourceLoaderState.READY;
+      loader._promise.resolve(loader);
     })
     .otherwise(function (error) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
-      loader._readyPromise.reject(error);
       var errorMessage = "Failed to load Draco";
       loader._promise.reject(loader.getError(errorMessage, error));
     });
@@ -181,53 +182,90 @@ function processDracoAttributes(loader, draco, result) {
   loader._state = ResourceLoaderState.READY;
   var parsedContent = loader._parsedContent;
 
-  var decodedPositions = defined(result.POSITION)
-    ? result.POSITION.array
-    : undefined;
-  var decodedRgb = defined(result.RGB) ? result.RGB.array : undefined;
-  var decodedRgba = defined(result.RGBA) ? result.RGBA.array : undefined;
-  var decodedNormals = defined(result.NORMAL) ? result.NORMAL.array : undefined;
-  var decodedBatchIds = defined(result.BATCH_ID)
-    ? result.BATCH_ID.array
-    : undefined;
-  var isQuantizedDraco =
-    defined(decodedPositions) && defined(result.POSITION.data.quantization);
-  var isOctEncodedDraco =
-    defined(decodedNormals) && defined(result.NORMAL.data.quantization);
+  var attribute;
+  if (defined(result.POSITION)) {
+    attribute = {
+      name: "POSITION",
+      semantic: VertexAttributeSemantic.POSITION,
+      typedArray: result.POSITION.array,
+      componentDatatype: ComponentDatatype.FLOAT,
+      type: AttributeType.VEC3,
+      isQuantized: false,
+    };
 
-  if (isQuantizedDraco) {
-    // Draco quantization range == quantized volume scale - size in meters of the quantized volume
-    // Internal quantized range is the range of values of the quantized data, e.g. 255 for 8-bit, 1023 for 10-bit, etc
-    var quantization = result.POSITION.data.quantization;
-    var range = quantization.range;
-    var quantizedVolumeDimensions = Cartesian3.fromElements(
-      range,
-      range,
-      range
-    );
-    var quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
-    var normalizationRange = (1 << quantization.quantizationBits) - 1.0;
+    if (defined(result.POSITION.data.quantization)) {
+      // Draco quantization range == quantized volume scale - size in meters of the quantized volume
+      // Internal quantized range is the range of values of the quantized data, e.g. 255 for 8-bit, 1023 for 10-bit, etc
+      var quantization = result.POSITION.data.quantization;
+      var range = quantization.range;
+      var quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
+      var quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
+      var quantizedRange = (1 << quantization.quantizationBits) - 1.0;
 
-    var quantizedPositions = new Quantization();
-    // TODO: Check these names
-    quantizedPositions.normalizationRange = normalizationRange;
-    quantization.quantizedVolumeOffset = quantizedVolumeOffset;
-    quantization.quantizedVolumeDimensions = quantizedVolumeDimensions;
-    // TODO: Check how GltfLoader does this. should be dimensions / offset
-    quantization.quantizedVolumeStepSize = undefined;
-    quantization.componentDatatype = ComponentDatatype.UNSIGNED_SHORT;
-    quantization.type = AttributeType.VEC3;
+      attribute.isQuantized = true;
+      attribute.quantizedRange = quantizedRange;
+      attribute.quantizedVolumeOffset = quantizedVolumeOffset;
+      attribute.quantizedVolumeScale = quantizedVolumeScale;
+      attribute.quantizedComponentDatatype = ComponentDatatype.UNSIGNED_SHORT;
+      attribute.quantizedType = AttributeType.VEC3;
+    }
+
+    parsedContent.positions = attribute;
   }
 
-  if (isOctEncodedDraco) {
-    var octEncodedRange =
-      (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
+  if (defined(result.NORMAL)) {
+    attribute = {
+      name: "NORMAL",
+      semantic: VertexAttributeSemantic.NORMAL,
+      typedArray: result.NORMAL.array,
+      componentDatatype: ComponentDatatype.FLOAT,
+      type: AttributeType.VEC3,
+      isQuantized: false,
+      isOctEncoded: false,
+    };
 
-    var quantizedNormals = new Quantization();
-    quantizedNormals.normalizationRange = octEncodedRange;
-    quantizedNormals.octEncoded = true;
-    quantizedNormals.octEncodedZYX = true;
-    quantizedNormals.componentDatatype = undefined; // TODO: where can I find this?
+    if (defined(result.NORMAL.data.quantization)) {
+      var octEncodedRange =
+        (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
+      attribute.quantizedRange = octEncodedRange;
+      attribute.octEncoded = true;
+      attribute.octEncodedZYX = true;
+      attribute.quantizedComponentDatatype = ComponentDatatype.UNSIGNED_BYTE;
+      attribute.quantizedType = AttributeType.VEC3;
+    }
+
+    parsedContent.normals = attribute;
+  }
+
+  if (defined(result.RGBA)) {
+    parsedContent.colors = {
+      name: "COLOR",
+      semantic: VertexAttributeSemantic.COLOR,
+      setIndex: 0,
+      typedArray: result.RGBA.array,
+      componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+      type: AttributeType.VEC4,
+    };
+  } else if (defined(result.RGB)) {
+    parsedContent.colors = {
+      name: "COLOR",
+      semantic: VertexAttributeSemantic.COLOR,
+      setIndex: 0,
+      typedArray: result.RGB.array,
+      componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+      type: AttributeType.VEC3,
+    };
+  }
+
+  // Transcode Batch ID (3D Tiles 1.0) -> Feature ID (3D Tiles Next)
+  if (defined(result.BATCH_ID)) {
+    parsedContent.batchIds = {
+      name: "FEATURE_ID",
+      semantic: VertexAttributeSemantic.FEATURE_ID,
+      typedArray: result.BATCH_ID.array,
+      componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      type: AttributeType.SCALAR,
+    };
   }
 
   var styleableProperties = parsedContent.styleableProperties;
@@ -244,20 +282,15 @@ function processDracoAttributes(loader, draco, result) {
       };
     }
   }
-
-  parsedContent.positions = decodedPositions;
-  parsedContent.colors = defaultValue(decodedRgba, decodedRgb);
-  parsedContent.normals = decodedNormals;
-  parsedContent.batchIds = decodedBatchIds;
   parsedContent.styleableProperties = styleableProperties;
 }
 
 function makeAttribute(attributeInfo, context) {
   var typedArray = attributeInfo.typedArray;
   var quantization;
-  if (defined(attributeInfo.isQuantized)) {
+  if (attributeInfo.isQuantized) {
     quantization = new Quantization();
-    var normalizationRange = attributeInfo.quantizationRange;
+    var normalizationRange = attributeInfo.quantizedRange;
     quantization.normalizationRange = normalizationRange;
     quantization.quantizedVolumeOffset = attributeInfo.quantizedVolumeOffset;
     var quantizedVolumeDimensions = attributeInfo.quantizedVolumeScale;
