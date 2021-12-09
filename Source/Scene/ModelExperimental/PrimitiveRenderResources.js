@@ -1,6 +1,7 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -117,7 +118,11 @@ export default function PrimitiveRenderResources(
    * @private
    */
 
-  this.modelMatrix = nodeRenderResources.modelMatrix.clone();
+  this.modelMatrix = Matrix4.multiplyTransformation(
+    this.model.modelMatrix,
+    nodeRenderResources.modelMatrix,
+    new Matrix4()
+  );
   /**
    * An object used to build a shader incrementally. This is cloned from the
    * node render resources because each primitive can compute a different shader.

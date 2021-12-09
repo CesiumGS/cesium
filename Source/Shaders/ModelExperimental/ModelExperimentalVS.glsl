@@ -13,13 +13,6 @@ void main()
     dequantizationStage(attributes);
     #endif
 
-    // Update the position for this instance in place
-    #ifdef HAS_INSTANCING
-    instancingStage(attributes.positionMC);
-        #ifdef USE_PICKING
-        v_pickColor = a_pickColor;
-        #endif
-    #endif
 
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
     Feature feature;
@@ -30,6 +23,21 @@ void main()
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     customShaderStage(attributes);
+    #endif
+
+    // Update the position for this instance in place
+    #ifdef HAS_INSTANCING
+    
+        #ifdef USE_LEGACY_INSTANCING
+        legacyInstancingStage();
+        #else
+        instancingStage(attributes.positionMC);
+        #endif
+
+        #ifdef USE_PICKING
+        v_pickColor = a_pickColor;
+        #endif
+        
     #endif
 
     // Compute the final position in each coordinate system needed.

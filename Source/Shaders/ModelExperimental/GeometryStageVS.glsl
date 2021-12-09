@@ -7,8 +7,22 @@ void geometryStage(inout ProcessedAttributes attributes)
 {
     // Compute positions in different coordinate systems
     vec3 positionMC = attributes.positionMC;
+
+    mat3 normal;
+    mat4 modelView;
+
+    #ifdef USE_LEGACY_INSTANCING
+    normal = instanceModelViewInverseTranspose;
+    modelView = instanceModelView;
+
+    positionMC = (instanceModel * vec4(positionMC, 1.0)).xyz;
+    #else
+    normal = czm_normal;
+    modelView = czm_modelView;
+    #endif
+
     v_positionMC = positionMC;
-    v_positionEC = (czm_modelView * vec4(positionMC, 1.0)).xyz;
+    v_positionEC = (modelView * vec4(positionMC, 1.0)).xyz;
     gl_Position = czm_modelViewProjection * vec4(positionMC, 1.0);
 
     // Sometimes the fragment shader needs this (e.g. custom shaders)
@@ -19,15 +33,15 @@ void geometryStage(inout ProcessedAttributes attributes)
     #endif
 
     #ifdef HAS_NORMALS
-    v_normalEC = czm_normal * attributes.normalMC;
+    v_normalEC = normal * attributes.normalMC;
     #endif
 
     #ifdef HAS_TANGENTS
-    v_tangentEC = normalize(czm_normal * attributes.tangentMC);    
+    v_tangentEC = normalize(normal * attributes.tangentMC);    
     #endif
 
     #ifdef HAS_BITANGENTS
-    v_bitangentEC = normalize(czm_normal * attributes.bitangentMC);
+    v_bitangentEC = normalize(normal * attributes.bitangentMC);
     #endif
 
     // All other varyings need to be dynamically generated in

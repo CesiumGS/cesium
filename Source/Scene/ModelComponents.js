@@ -521,6 +521,14 @@ function Instances() {
    * @private
    */
   this.featureIdAttributes = [];
+
+  /**
+   * Whether the instancing transforms are applied in world space.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.transformInWorldSpace = true;
 }
 
 /**

@@ -8,7 +8,10 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import InstancingStageCommon from "../../Shaders/ModelExperimental/InstancingStageCommon.js";
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
+import LegacyInstancingStageVS from "../../Shaders/ModelExperimental/LegacyInstancingStageVS.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
@@ -37,7 +40,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
-  shaderBuilder.addVertexLines([InstancingStageVS]);
+  shaderBuilder.addVertexLines([InstancingStageCommon]);
 
   var translationAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     instances,
@@ -118,6 +121,34 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     instances,
     instancingVertexAttributes
   );
+
+  if (instances.transformInWorldSpace) {
+    var uniformMap = renderResources.uniformMap;
+    shaderBuilder.addDefine("USE_LEGACY_INSTANCING", ShaderDestination.VERTEX);
+    shaderBuilder.addUniform(
+      "mat4",
+      "u_instance_modifiedModelView",
+      ShaderDestination.VERTEX
+    );
+    shaderBuilder.addUniform(
+      "mat4",
+      "u_instance_nodeTransform",
+      ShaderDestination.VERTEX
+    );
+    uniformMap.u_instance_modifiedModelView = function () {
+      return Matrix4.multiply(
+        frameState.context.uniformState.view,
+        renderResources.model.loader.transform,
+        new Matrix4()
+      );
+    };
+    uniformMap.u_instance_nodeTransform = function () {
+      return renderResources.modelMatrix;
+    };
+    shaderBuilder.addVertexLines([LegacyInstancingStageVS]);
+  } else {
+    shaderBuilder.addVertexLines([InstancingStageVS]);
+  }
 
   renderResources.instanceCount = count;
   renderResources.attributes.push.apply(

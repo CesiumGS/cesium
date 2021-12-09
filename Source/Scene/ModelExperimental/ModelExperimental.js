@@ -253,6 +253,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The loader used by the model
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {GltfLoader|B3dmLoader|I3dmLoader}
+   * @readonly
+   */
+  loader: {
+    get: function () {
+      return this._loader;
+    },
+  },
+
+  /**
    * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
    * will always be false, since the 3D Tiles culling system is used.
    *

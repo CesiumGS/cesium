@@ -120,12 +120,9 @@ function initialize(sceneGraph) {
   var rootNodes = sceneGraph._modelComponents.scene.nodes;
   for (var i = 0; i < rootNodes.length; i++) {
     var rootNode = sceneGraph._modelComponents.scene.nodes[i];
-    var rootNodeModelMatrix = Matrix4.multiply(
-      modelMatrix,
-      ModelExperimentalUtility.getNodeTransform(rootNode),
-      new Matrix4()
+    var rootNodeModelMatrix = ModelExperimentalUtility.getNodeTransform(
+      rootNode
     );
-
     traverseSceneGraph(sceneGraph, rootNode, rootNodeModelMatrix);
   }
 }
