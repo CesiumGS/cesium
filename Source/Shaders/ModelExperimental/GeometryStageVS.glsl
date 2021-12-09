@@ -14,8 +14,6 @@ void geometryStage(inout ProcessedAttributes attributes)
     #ifdef USE_LEGACY_INSTANCING
     normal = instanceModelViewInverseTranspose;
     modelView = instanceModelView;
-
-    positionMC = (instanceModel * vec4(positionMC, 1.0)).xyz;
     #else
     normal = czm_normal;
     modelView = czm_modelView;

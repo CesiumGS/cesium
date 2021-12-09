@@ -29,7 +29,7 @@ void main()
     #ifdef HAS_INSTANCING
     
         #ifdef USE_LEGACY_INSTANCING
-        legacyInstancingStage();
+        legacyInstancingStage(attributes.positionMC);
         #else
         instancingStage(attributes.positionMC);
         #endif
@@ -37,7 +37,7 @@ void main()
         #ifdef USE_PICKING
         v_pickColor = a_pickColor;
         #endif
-        
+
     #endif
 
     // Compute the final position in each coordinate system needed.
