@@ -6,6 +6,7 @@
 
 - Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
 - Added back some support for Draco attribute quantization as a workaround until a full fix in the next Draco version. [#9904](https://github.com/CesiumGS/cesium/pull/9904)
+- Added `CumulusCloud.color` for customizing cloud colors. [#9877](https://github.com/CesiumGS/cesium/pull/9877)
 
 ##### Fixes :wrench:
 
@@ -20,7 +21,6 @@
 
 - Fixed zip.js configurations causing CesiumJS to not work with Node 16. [#9861](https://github.com/CesiumGS/cesium/pull/9861)
 - Fixed a bug in `Rectangle.union` with rectangles that span the entire globe. [#9866](https://github.com/CesiumGS/cesium/pull/9866)
-- Added CumulusCloud.color ,CumulusCloud can customize colors
 
 ### 1.86 - 2021-10-01
 

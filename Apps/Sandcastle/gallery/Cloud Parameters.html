@@ -194,7 +194,7 @@
           slice: 0.36,
           brightness: 1.0,
           color: "White",
-          colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"]
+          colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"],
         };
 
         var cloud = clouds.add({
@@ -208,8 +208,7 @@
             cloudParameters.maximumSizeY,
             cloudParameters.maximumSizeZ
           ),
-
-          color:getColor(cloudParameters.color),
+          color: getColor(cloudParameters.color),
           slice: cloudParameters.renderSlice ? cloudParameters.slice : -1.0,
           brightness: cloudParameters.brightness,
         });
@@ -295,11 +294,13 @@
           .subscribe(function (newValue) {
             cloud.slice = Number(newValue);
           });
+
         Cesium.knockout
           .getObservable(cloudParameters, "color")
           .subscribe(function (newValue) {
             cloud.color = getColor(newValue);
           });
+
         Cesium.knockout
           .getObservable(cloudParameters, "brightness")
           .subscribe(function (newValue) {

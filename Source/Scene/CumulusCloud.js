@@ -58,7 +58,7 @@ function CumulusCloud(options, cloudCollection) {
   }
 
   this._slice = defaultValue(options.slice, -1.0);
-  this._color = defaultValue(options.color, Color.WHITE);
+  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
   this._brightness = defaultValue(options.brightness, 1.0);
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
@@ -230,11 +230,11 @@ Object.defineProperties(CumulusCloud.prototype, {
    * @type {Color}
    * @default Color.WHITE
    */
-  color : {
-    get : function() {
+  color: {
+    get: function () {
       return this._color;
     },
-    set : function(value) {
+    set: function (value) {
       //>>includeStart('debug', pragmas.debug)
       Check.typeOf.object("value", value);
       //>>includeEnd('debug');

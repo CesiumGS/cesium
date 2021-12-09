@@ -3,7 +3,7 @@ uniform vec3 u_noiseTextureDimensions;
 uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
-varying vec3 v_color;
+varying vec4 v_color;
 varying float v_slice;
 varying float v_brightness;
 
@@ -170,7 +170,7 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
     float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
     float It = T(cloudPoint);                                 // texture function
     float intensity = I(Id, Is, It);
-    vec3 color = intensity * clamp(brightness, 0.1, 1.0) * v_color;
+    vec3 color = vec3(intensity * clamp(brightness, 0.1, 1.0));
 
     vec4 noise = sampleNoiseTexture(u_noiseDetail * cloudPoint);
     float W = noise.x;
@@ -226,7 +226,7 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
 
     // Finally, the contrast of the cloud's color is increased.
     vec3 finalColor = mix(vec3(0.5), shading * color, 1.15);
-    return vec4(finalColor, clamp(TR, 0.0, 1.0));
+    return vec4(finalColor, clamp(TR, 0.0, 1.0)) * v_color;
 }
 
 void main() {
@@ -248,7 +248,7 @@ void main() {
     vec3 point, normal;
     if(intersectEllipsoid(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale, v_slice,
                           point, normal)) {
-        gl_FragColor = v_brightness * vec4(1.0);
+        gl_FragColor = v_brightness * v_color;
     }
 #else
 #ifndef DEBUG_BILLBOARDS

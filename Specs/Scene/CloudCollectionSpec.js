@@ -2,6 +2,7 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { CloudCollection } from "../../Source/Cesium.js";
 import { CloudType } from "../../Source/Cesium.js";
+import { Color } from "../../Source/Cesium.js";
 import { ComputeCommand } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import { DrawCommand } from "../../Source/Cesium.js";
@@ -427,6 +428,28 @@ describe(
 
       c.brightness = 0.5;
       expect(scene).notToRender([0, 0, 0, 255]);
+    });
+
+    it("renders using cloud color property", function () {
+      clouds.debugBillboards = false;
+      clouds.debugEllipsoids = true;
+
+      var c = clouds.add({
+        position: Cartesian3.ZERO,
+        scale: new Cartesian3(20.0, 12.0),
+      });
+
+      var initialRgba;
+
+      expect(scene).toRenderAndCall(function(rgba) {
+        initialRgba = rgba;
+        expect(initialRgba).not.toEqual([0, 0, 0, 255]);
+      });
+
+      c.color = Color.RED;
+      expect(scene).toRenderAndCall(function(rgba) {
+        expect(rgba).not.toEqual(initialRgba);
+      });
     });
 
     it("updates 10% of clouds", function () {
