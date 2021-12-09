@@ -1,4 +1,5 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -24,6 +25,7 @@ var Primitive = ModelComponents.Primitive;
 var Attribute = ModelComponents.Attribute;
 var Quantization = ModelComponents.Quantization;
 var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
+var Material = ModelComponents.Material;
 
 export default function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -157,6 +159,7 @@ function decodeDraco(loader, context) {
     return;
   }
 
+  loader._decodePromise = decodePromise;
   decodePromise
     .then(function (decodeDracoResult) {
       if (loader.isDestroyed()) {
@@ -319,13 +322,58 @@ function makeAttribute(attributeInfo, context) {
     usage: BufferUsage.STATIC_DRAW,
   });
   attribute.typedArray = typedArray;
+
+  return attribute;
+}
+
+var randomValues;
+function getRandomValues(samplesLength) {
+  // Use same random values across all runs
+  if (!defined(randomValues)) {
+    CesiumMath.setRandomNumberSeed(0);
+    randomValues = new Array(samplesLength);
+    for (var i = 0; i < samplesLength; ++i) {
+      randomValues[i] = CesiumMath.nextRandomNumber();
+    }
+  }
+  return randomValues;
+}
+
+var scratchMin = new Cartesian3();
+var scratchMax = new Cartesian3();
+var scratchPosition = new Cartesian3();
+function computeApproximateExtrema(positions) {
+  var positionsArray = positions.typedArray;
+  var maximumSamplesLength = 20;
+  var pointsLength = positionsArray.length / 3;
+  var samplesLength = Math.min(pointsLength, maximumSamplesLength);
+  var randomValues = getRandomValues(maximumSamplesLength);
+  var maxValue = Number.MAX_VALUE;
+  var minValue = -Number.MAX_VALUE;
+  var min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
+  var max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
+  for (var i = 0; i < samplesLength; ++i) {
+    var index = Math.floor(randomValues[i] * pointsLength);
+    var position = Cartesian3.unpack(
+      positionsArray,
+      index * 3,
+      scratchPosition
+    );
+    Cartesian3.minimumByComponent(min, position, min);
+    Cartesian3.maximumByComponent(max, position, max);
+  }
+
+  positions.min = min;
+  positions.max = max;
 }
 
 function makeAttributes(parsedContent, context) {
   var attributes = [];
   var attribute;
-  if (defined(parsedContent.positions)) {
-    attribute = makeAttribute(parsedContent.positions, context);
+  var positions = parsedContent.positions;
+  if (defined(positions)) {
+    computeApproximateExtrema(positions);
+    attribute = makeAttribute(positions, context);
     attributes.push(attribute);
   }
 
@@ -340,7 +388,7 @@ function makeAttributes(parsedContent, context) {
   }
 
   if (defined(parsedContent.batchIds)) {
-    attribute = makeAttribute(parsedContent.batchesIds, context);
+    attribute = makeAttribute(parsedContent.batchIds, context);
     attributes.push(attribute);
   }
 
@@ -355,9 +403,12 @@ function makeFeatureMetadata(parsedContent) {
 function makeComponents(loader, context) {
   var parsedContent = loader._parsedContent;
 
+  var material = new Material();
+
   var primitive = new Primitive();
   primitive.attributes = makeAttributes(parsedContent, context);
   primitive.primitiveType = PrimitiveType.POINTS;
+  primitive.material = material;
 
   if (defined(parsedContent.batchIds)) {
     var featureIdAttribute = new FeatureIdAttribute();
