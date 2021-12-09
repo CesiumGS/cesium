@@ -223,7 +223,7 @@ I3dmLoader.prototype.load = function () {
   }
   this._instancesLength = instancesLength;
 
-  // Get the RTC center, if available, and set the laoder's transform.
+  // Get the RTC center, if available, and set the loader's transform.
   var rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
