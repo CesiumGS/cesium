@@ -205,6 +205,14 @@ FramebufferManager.prototype.destroyResources = function () {
   }
   this._colorTextures = [];
 
+  if (
+    defined(this._depthStencilTexture) &&
+    !this._depthStencilTexture.isDestroyed()
+  ) {
+    this._depthStencilTexture.destroy();
+  }
+  this._depthStencilTexture = undefined;
+
   if (defined(this._framebuffer)) {
     this._framebuffer.destroy();
     this._framebuffer = undefined;

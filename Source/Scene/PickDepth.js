@@ -97,6 +97,7 @@ PickDepth.prototype.isDestroyed = function () {
 };
 
 PickDepth.prototype.destroy = function () {
+  this._framebuffer.destroyResources();
   if (defined(this._copyDepthCommand)) {
     this._copyDepthCommand.shaderProgram =
       defined(this._copyDepthCommand.shaderProgram) &&
