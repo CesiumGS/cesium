@@ -3483,7 +3483,6 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
  */
 Scene.prototype.resolveFramebuffers = function (passState) {
   var context = this._context;
-  var frameState = this._frameState;
   var environmentState = this._environmentState;
   var view = this._view;
   var globeDepth = view.globeDepth;
@@ -3537,13 +3536,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
     passState.framebuffer = defaultFramebuffer;
     globeDepth.executeCopyColor(context, passState);
-  }
-
-  var useLogDepth = frameState.useLogDepth;
-
-  if (this.debugShowPickDepth && useGlobeDepthFramebuffer) {
-    var pd = this._picking.getPickDepth(this, this.debugShowDepthFrustum - 1);
-    pd.executeDebugPickDepth(context, passState, useLogDepth);
   }
 };
 

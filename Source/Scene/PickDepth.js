@@ -12,8 +12,6 @@ function PickDepth() {
 
   this._textureToCopy = undefined;
   this._copyDepthCommand = undefined;
-
-  this._useLogDepth = undefined;
 }
 
 Object.defineProperties(PickDepth.prototype, {
