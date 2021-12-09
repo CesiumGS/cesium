@@ -370,6 +370,9 @@ Camera.prototype._updateCameraChanged = function () {
 
   var headingChangedPercentage =
     Math.abs(camera._changedHeading - currentHeading) / Math.PI;
+  if (headingChangedPercentage > 1.98) {
+    headingChangedPercentage = 0.00555556;
+  }
 
   if (headingChangedPercentage > percentageChanged) {
     camera._changed.raiseEvent(headingChangedPercentage);
