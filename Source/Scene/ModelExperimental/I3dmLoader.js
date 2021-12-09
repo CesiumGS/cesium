@@ -381,7 +381,7 @@ function createInstances(loader, components) {
   if (hasScale) {
     scaleTypedArray = new Float32Array(3 * instancesLength);
   }
-  var featureIdArray = new Uint32Array(instancesLength);
+  var featureIdArray = new Float32Array(instancesLength);
 
   var instancePositions = Cartesian3.unpackArray(translationTypedArray);
   var instancePosition = new Cartesian3();
@@ -518,7 +518,7 @@ function createInstances(loader, components) {
   featureIdAttribute.name = "Instance Feature ID";
   featureIdAttribute.setIndex = 0;
   featureIdAttribute.semantic = InstanceAttributeSemantic.FEATURE_ID;
-  featureIdAttribute.componentDatatype = ComponentDatatype.UNSIGNED_SHORT;
+  featureIdAttribute.componentDatatype = ComponentDatatype.FLOAT;
   featureIdAttribute.type = AttributeType.SCALAR;
   featureIdAttribute.count = instancesLength;
   featureIdAttribute.packedTypedArray = featureIdArray;
