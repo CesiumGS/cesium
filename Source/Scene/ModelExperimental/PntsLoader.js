@@ -4,9 +4,12 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import when from "../../ThirdParty/when.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import when from "../../ThirdParty/when.js";
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 import AttributeType from "../AttributeType.js";
+import Axis from "../Axis.js";
 import DracoLoader from "../DracoLoader.js";
 import ResourceLoader from "../ResourceLoader.js";
 import ModelComponents from "../ModelComponents.js";
@@ -17,7 +20,7 @@ var Components = ModelComponents.Components;
 var Scene = ModelComponents.Scene;
 var Node = ModelComponents.Node;
 var Primitive = ModelComponents.Primitive;
-//var Attribute = ModelComponents.Attribute;
+var Attribute = ModelComponents.Attribute;
 var Quantization = ModelComponents.Quantization;
 var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 
@@ -162,7 +165,7 @@ function decodeDraco(loader, context) {
       if (defined(decodeDracoResult)) {
         processDracoAttributes(loader, draco, decodeDracoResult);
       }
-      makeComponents(loader);
+      makeComponents(loader, context);
       loader._state = ResourceLoaderState.READY;
     })
     .otherwise(function (error) {
@@ -242,87 +245,93 @@ function processDracoAttributes(loader, draco, result) {
     }
   }
 
-  var decodedAttributes = loader._decodedAttributes;
-  decodedAttributes.positions = decodedPositions;
-  decodedAttributes.colors = defaultValue(decodedRgba, decodedRgb);
-  decodedAttributes.normals = decodedNormals;
-  decodedAttributes.batchIds = decodedBatchIds;
-  decodedAttributes.styleableProperties = styleableProperties;
+  parsedContent.positions = decodedPositions;
+  parsedContent.colors = defaultValue(decodedRgba, decodedRgb);
+  parsedContent.normals = decodedNormals;
+  parsedContent.batchIds = decodedBatchIds;
+  parsedContent.styleableProperties = styleableProperties;
 }
 
-/*
-function makePositionAttribute(positions) {
-
+function makeAttribute(attributeInfo, context) {
+  var typedArray = attributeInfo.typedArray;
   var quantization;
-  if (positions.isQuantized) {
+  if (defined(attributeInfo.isQuantized)) {
     quantization = new Quantization();
-    // TODO: Check these names
-    var normalizationRange = positions.quantizationRange;
+    var normalizationRange = attributeInfo.quantizationRange;
     quantization.normalizationRange = normalizationRange;
-    quantization.quantizedVolumeOffset = positions.quantizedVolumeOffset;
-    var quantizedVolumeDimensions = positions.quantizedVolumeDimensions;
+    quantization.quantizedVolumeOffset = attributeInfo.quantizedVolumeOffset;
+    var quantizedVolumeDimensions = attributeInfo.quantizedVolumeScale;
     quantization.quantizedVolumeDimensions = quantizedVolumeDimensions;
-    quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(quantizedVolumeDimensions, normalizationRange, new Cartesian3());
-    quantization.componentDatatype = positions.quantizedDatatype;
-    quantization.type = positions.quantizationType;
+    quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(
+      quantizedVolumeDimensions,
+      normalizationRange,
+      new Cartesian3()
+    );
+    quantization.componentDatatype = attributeInfo.quantizedComponentDatatype;
+    quantization.type = attributeInfo.quantizedType;
   }
 
-  var positionAttribute = new Attribute();
-  positionAttribute.name = "POSITION";
-  positionAttribute.semantic = "POSITION";
-  positionAttribute.componentDatatype = positions.componentDatatype;
-  positionAttribute.type = AttributeType.VEC3;
-  positionAttribute.min = undefined; // TODO
-  positionAttribute.max = undefined; // TODO
-  positionAttribute.quantization = quantization; // TODO: handle Draco
-  positionAttribute.buffer = undefined; // TODO
-  positionAttribute.typedArray = positions.typedArray; // TODO: what about packedTypedArray?
-
-  return positionAttribute;
+  var attribute = new Attribute();
+  attribute.name = attributeInfo.name;
+  attribute.semantic = attributeInfo.semantic;
+  attribute.setIndex = attributeInfo.setIndex;
+  attribute.componentDatatype = attributeInfo.componentDatatype;
+  attribute.type = AttributeType.VEC3;
+  attribute.min = attributeInfo.min;
+  attribute.max = attributeInfo.max;
+  attribute.quantization = quantization;
+  attribute.buffer = Buffer.createVertexBuffer({
+    typedArray: typedArray,
+    context: context,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+  attribute.typedArray = typedArray;
 }
 
-function makeNormalAttribute(normals) {
+function makeAttributes(parsedContent, context) {
+  var attributes = [];
+  var attribute;
+  if (defined(parsedContent.positions)) {
+    attribute = makeAttribute(parsedContent.positions, context);
+    attributes.push(attribute);
+  }
 
+  if (defined(parsedContent.normals)) {
+    attribute = makeAttribute(parsedContent.normals, context);
+    attributes.push(attribute);
+  }
+
+  if (defined(parsedContent.colors)) {
+    attribute = makeAttribute(parsedContent.colors, context);
+    attributes.push(attribute);
+  }
+
+  if (defined(parsedContent.batchIds)) {
+    attribute = makeAttribute(parsedContent.batchesIds, context);
+    attributes.push(attribute);
+  }
+
+  return attributes;
 }
 
-function makeColorAttribute(colors) {
-
+function makeFeatureMetadata(parsedContent) {
+  // TODO:
+  return undefined;
 }
 
-function makeBatchIdAttribute(batchIds) {
+function makeComponents(loader, context) {
+  var parsedContent = loader._parsedContent;
 
-}
-
-function makeStylingAttributes(stylingAttributes) {
-
-}
-
-function makeAttribute() {
-
-}
-*/
-
-function makeAttributes(parsedContent) {}
-
-function makePrimitive(parsedContent) {
   var primitive = new Primitive();
-  primitive.attributes = makeAttributes(parsedContent);
-  primitive.material = undefined; // TODO: do we supply a material?
+  primitive.attributes = makeAttributes(parsedContent, context);
   primitive.primitiveType = PrimitiveType.POINTS;
 
-  if (defined(parsedContent.batchId)) {
+  if (defined(parsedContent.batchIds)) {
     var featureIdAttribute = new FeatureIdAttribute();
     featureIdAttribute.propertyTableId = 0;
     featureIdAttribute.setIndex = 0;
-    primitive.featureIdAttributes = [featureIdAttribute]; // TODO
+    primitive.featureIdAttributes = [featureIdAttribute];
   }
-
-  return primitive;
-}
-
-function makeComponents(loader) {
-  var parsedContent = loader._parsedContent;
-  var primitive = makePrimitive(parsedContent);
 
   var node = new Node();
   node.primitives = [primitive];
@@ -330,13 +339,13 @@ function makeComponents(loader) {
 
   var scene = new Scene();
   scene.nodes = [node];
-  scene.upAxis = undefined; // TODO
-  scene.forwardAxis = undefined; // TODO
+  scene.upAxis = Axis.Z;
+  scene.forwardAxis = Axis.X;
 
   var components = new Components();
   components.scene = scene;
   components.nodes = [node];
-  components.featureMetadata = undefined; // TODO
+  components.featureMetadata = makeFeatureMetadata(parsedContent);
 
   loader._components = components;
 }

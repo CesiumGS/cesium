@@ -7,6 +7,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import AttributeType from "./AttributeType.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 
@@ -224,10 +225,12 @@ function parsePositions(featureTable) {
     );
 
     return {
+      name: "POSITION",
+      semantic: "POSITION",
       typedArray: positions,
       isQuantized: false,
       componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 3,
+      type: AttributeType.VEC3,
     };
   } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
     positions = featureTable.getPropertyArray(
@@ -260,11 +263,17 @@ function parsePositions(featureTable) {
     }
 
     return {
+      name: "POSITION",
+      semantic: "POSITION",
       typedArray: positions,
       isQuantized: true,
       quantizedRange: quantizedRange,
+      componentDatatype: ComponentDatatype.FLOAT,
+      type: AttributeType.VEC3,
       quantizedVolumeOffset: Cartesian3.unpack(quantizedVolumeOffset),
       quantizedVolumeScale: Cartesian3.unpack(quantizedVolumeScale),
+      quantizedComponentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      quantizedType: AttributeType.VEC3,
     };
   }
 }
@@ -280,6 +289,9 @@ function parseColors(featureTable) {
       4
     );
     return {
+      name: "COLOR",
+      semantic: "COLOR",
+      setIndex: 0,
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 4,
@@ -298,6 +310,8 @@ function parseColors(featureTable) {
       isRGB565: false,
     };
   } else if (defined(featureTableJson.RGB565)) {
+    // TODO: Parse on the CPU, this feature isn't used often enough to
+    // warrant the GPU complexity.
     colors = featureTable.getPropertyArray(
       "RGB565",
       ComponentDatatype.UNSIGNED_SHORT,

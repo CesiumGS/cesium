@@ -206,7 +206,12 @@ function initialize(model) {
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
     );
 
-  loader.texturesLoadedPromise
+  // Transcoded .pnts models do not have textures
+  var texturesLoadedPromise = defaultValue(
+    loader.texturesLoadedPromise,
+    when.resolve()
+  );
+  texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
