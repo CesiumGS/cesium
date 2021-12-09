@@ -1716,7 +1716,7 @@ describe("Scene/ImplicitSubtree", function () {
           tile: {
             properties: {
               stringProperty: {
-                type: "STRING",
+                componentType: "STRING",
               },
               arrayProperty: {
                 type: "ARRAY",

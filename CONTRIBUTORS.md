@@ -168,6 +168,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mark Aubin](https://github.com/markaubin)
   - [Michael Shantzis](https://github.com/shantzis1962)
   - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
+- Beijing Xibushijie
+  - [Tang Xiaofei](https://github.com/vtxf)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -300,5 +302,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yuki Noda](https://github.com/yukinoda)
 - [Robin Danielsson](https://github.com/robdan7)
 - [Oskar Havo](https://github.com/OskarHavo)
-- [lyqh-ctx](https://github.com/lyqh-ctx)
 - [Mark Williams](https://github.com/markw65)
+- [Mark Williams](https://github.com/markw65)
+- [Rain Liang](https://github.com/rainliang000)
+- [lyqh-ctx](https://github.com/lyqh-ctx)

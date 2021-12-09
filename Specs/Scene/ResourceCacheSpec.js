@@ -871,7 +871,7 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
       });
     });
 
@@ -921,7 +921,38 @@ describe(
       return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
         vertexBufferLoader
       ) {
-        expect(vertexBufferLoader.vertexBuffer).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeDefined();
+      });
+    });
+
+    it("loads vertex buffer as typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(bufferArrayBuffer)
+      );
+
+      var expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        loadAsTypedArray: true,
+      });
+      var vertexBufferLoader = ResourceCache.loadVertexBuffer({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadAsTypedArray: true,
+      });
+
+      expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
+        vertexBufferLoader
+      ) {
+        expect(vertexBufferLoader.typedArray).toBeDefined();
+        expect(vertexBufferLoader.buffer).toBeUndefined();
       });
     });
 
@@ -1045,7 +1076,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
       });
     });
 
@@ -1093,7 +1124,37 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
+      });
+    });
+
+    it("loads index buffer as typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(bufferArrayBuffer)
+      );
+
+      var expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: true,
+      });
+      var indexBufferLoader = ResourceCache.loadIndexBuffer({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: true,
+      });
+
+      expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeUndefined();
       });
     });
 

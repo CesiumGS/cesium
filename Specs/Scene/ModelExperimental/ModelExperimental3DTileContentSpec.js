@@ -18,6 +18,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
   var withoutBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
+  var noBatchIdsUrl =
+    "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
 
   var scene;
   var centerLongitude = -1.31968;
@@ -78,6 +80,15 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
         Cesium3DTilesTester.expectRender(scene, tileset);
       }
     );
+  });
+
+  it("renders B3DM content without features", function () {
+    setCamera(centerLongitude, centerLatitude, 15.0);
+    return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function (
+      tileset
+    ) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
   });
 
   it("picks from glTF", function () {
@@ -166,10 +177,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
       class: {
         properties: {
           name: {
-            type: "STRING",
+            componentType: "STRING",
           },
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },

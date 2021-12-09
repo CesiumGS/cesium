@@ -408,7 +408,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 
   var batchIds = getBatchIds(featureTableJson, featureTableBinary);
-  byteOffset += byteOffset % 4;
+  byteOffset += (4 - (byteOffset % 4)) % 4;
 
   if (numberOfPolygons > 0) {
     featureTable.featuresLength = numberOfPolygons;

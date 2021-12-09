@@ -158,6 +158,47 @@ describe(
       });
     });
 
+    it("rejects ready promise when texture fails to load", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        gltf.images[0].uri = "non-existent-path.png";
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+            incrementallyLoadTextures: false,
+          },
+          scene
+        )
+          .then(function (model) {
+            fail();
+          })
+          .otherwise(function (error) {
+            expect(error).toBeDefined();
+          });
+      });
+    });
+
+    it("rejects ready promise when external buffer fails to load", function () {
+      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      return resource.fetchJson().then(function (gltf) {
+        gltf.buffers[0].uri = "non-existent-path.bin";
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfUrl,
+          },
+          scene
+        )
+          .then(function (model) {
+            fail();
+          })
+          .otherwise(function (error) {
+            expect(error).toBeDefined();
+          });
+      });
+    });
+
     it("show works", function () {
       var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       var loadPromise = resource.fetchArrayBuffer();
