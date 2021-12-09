@@ -17,7 +17,7 @@ function PickDepth() {
 Object.defineProperties(PickDepth.prototype, {
   framebuffer: {
     get: function () {
-      return this._framebuffer.getFramebuffer();
+      return this._framebuffer.framebuffer;
     },
   },
 });

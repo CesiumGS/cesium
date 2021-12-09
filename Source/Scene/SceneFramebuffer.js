@@ -28,6 +28,19 @@ function destroyResources(post) {
   post._idFramebuffer.destroyResources();
 }
 
+Object.defineProperties(SceneFramebuffer.prototype, {
+  framebuffer: {
+    get: function () {
+      return this._colorFramebuffer.framebuffer;
+    },
+  },
+  idFramebuffer: {
+    get: function () {
+      return this._idFramebuffer.framebuffer;
+    },
+  },
+});
+
 SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
   var width = viewport.width;
   var height = viewport.height;
@@ -46,17 +59,17 @@ SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
   this._idFramebuffer.clear(
     context,
     passState,
-    this.__idClearColor,
+    this._idClearColor,
     this._clearCommand
   );
 };
 
 SceneFramebuffer.prototype.getFramebuffer = function () {
-  return this._colorFramebuffer.getFramebuffer();
+  return this._colorFramebuffer.framebuffer;
 };
 
 SceneFramebuffer.prototype.getIdFramebuffer = function () {
-  return this._idFramebuffer.getFramebuffer();
+  return this._idFramebuffer.framebuffer;
 };
 
 SceneFramebuffer.prototype.isDestroyed = function () {
