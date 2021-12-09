@@ -123,6 +123,11 @@ function initialize(sceneGraph) {
     var rootNodeModelMatrix = ModelExperimentalUtility.getNodeTransform(
       rootNode
     );
+    ModelExperimentalUtility.correctModelMatrix(
+      rootNodeModelMatrix,
+      scene.upAxis,
+      scene.forwardAxis
+    );
     traverseSceneGraph(sceneGraph, rootNode, rootNodeModelMatrix);
   }
 }

@@ -12,6 +12,7 @@ import InstancingStageCommon from "../../Shaders/ModelExperimental/InstancingSta
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
 import LegacyInstancingStageVS from "../../Shaders/ModelExperimental/LegacyInstancingStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import Axis from "../Axis.js";
 
 /**
  * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
@@ -251,6 +252,12 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
       scale,
       transformScratch
     );
+
+    // If the transforms are in world space, the Y_UP_TO_Z_UP transform that is applied to the model matrix
+    // should not be applied to the transform.
+    if (instances.transformInWorldSpace) {
+      Matrix4.multiplyTransformation(Axis.Z_UP_TO_Y_UP, transform, transform);
+    }
 
     var offset = elements * i;
 

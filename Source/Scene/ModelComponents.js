@@ -528,7 +528,7 @@ function Instances() {
    * @type {Boolean}
    * @private
    */
-  this.transformInWorldSpace = true;
+  this.transformInWorldSpace = false;
 }
 
 /**

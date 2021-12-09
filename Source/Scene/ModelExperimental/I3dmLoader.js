@@ -478,6 +478,7 @@ function createInstances(loader, components) {
 
   // Create instances.
   var instances = new Instances();
+  instances.transformInWorldSpace = true;
 
   // Create translation vertex attribute.
   var translationAttribute = new Attribute();
