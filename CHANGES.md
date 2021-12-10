@@ -50,6 +50,7 @@
 
 - Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
 - Added back some support for Draco attribute quantization as a workaround until a full fix in the next Draco version. [#9904](https://github.com/CesiumGS/cesium/pull/9904)
+- Added `CumulusCloud.color` for customizing cloud colors. [#9877](https://github.com/CesiumGS/cesium/pull/9877)
 
 ##### Fixes :wrench:
 
