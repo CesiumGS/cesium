@@ -18,14 +18,23 @@ import PixelFormat from "../Core/PixelFormat.js";
  */
 function FramebufferManager(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  this._colorAttachmentsLength = defaultValue(
+    options.colorAttachmentsLength,
+    1
+  );
   this._createColorAttachments = defaultValue(
     options.createColorAttachments,
     true
   );
   this._createDepthAttachments = defaultValue(
-    options.createDepthAttachments,
+    options.createDepthStencilAttachments,
     true
   );
+  this._createDepthStencilAttachments = defaultValue(
+    options.createDepthStencilAttachments,
+    true
+  );
+  this._depth = defaultValue(options.depth, false);
   this._depthStencil = defaultValue(options.depthStencil, false);
   this._useHdr = false;
 
@@ -34,6 +43,7 @@ function FramebufferManager(options) {
   this._colorTextures = [];
   this._depthStencilRenderbuffer = undefined;
   this._depthStencilTexture = undefined;
+  this._depthTexture = undefined;
 }
 
 Object.defineProperties(FramebufferManager.prototype, {
@@ -56,45 +66,48 @@ Object.defineProperties(FramebufferManager.prototype, {
 
 FramebufferManager.prototype.isDirty = function (width, height, hdr) {
   hdr = defaultValue(hdr, false);
+
   var texturesDirty = false;
   var length = this._colorTextures.length;
-
-  if (defined(width) && !defined(height)) {
-    var texture;
-    for (var i = 0; i < length; ++i) {
-      texture = this._colorTextures[i];
-      if (
-        !defined(texture) ||
-        texture.width !== width ||
-        texture.height !== height
-      ) {
-        texturesDirty = true;
-      }
+  var texture;
+  for (var i = 0; i < length; ++i) {
+    texture = this._colorTextures[i];
+    if (
+      !defined(texture) ||
+      texture.width !== width ||
+      texture.height !== height
+    ) {
+      texturesDirty = true;
     }
-    return length === 0 || texturesDirty || this._useHdr !== hdr;
   }
-  return true;
+  return (
+    this._createColorAttachments ||
+    length === 0 ||
+    texturesDirty ||
+    this._useHdr !== hdr
+  );
 };
 
 FramebufferManager.prototype.update = function (
   context,
   width,
   height,
-  depthTexture,
+  depthStencilTexture,
   hdr
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (
     (!defined(width) || !defined(height)) &&
     (this._createColorAttachments ||
-      (this._depthStencil && this._createDepthAttachments))
+      (this._depthStencil && this._createDepthStencilAttachments) ||
+      (this._depth && this._createDepthAttachments))
   ) {
     throw new DeveloperError(
       "width and height must be provided if color or depth attachments are created"
     );
   }
   //>>includeEnd('debug');
-  depthTexture = defaultValue(depthTexture, false);
+  depthStencilTexture = defaultValue(depthStencilTexture, false);
   hdr = defaultValue(hdr, false);
 
   if (this.isDirty(width, height, hdr)) {
@@ -108,21 +121,23 @@ FramebufferManager.prototype.update = function (
           ? PixelDatatype.HALF_FLOAT
           : PixelDatatype.FLOAT
         : PixelDatatype.UNSIGNED_BYTE;
-      this._colorTextures.push(
-        new Texture({
-          context: context,
-          width: width,
-          height: height,
-          pixelFormat: PixelFormat.RGBA,
-          pixelDatatype: pixelDatatype,
-          sampler: Sampler.NEAREST,
-        })
-      );
+      for (var i = 0; i < this._colorAttachmentsLength; ++i) {
+        this._colorTextures.push(
+          new Texture({
+            context: context,
+            width: width,
+            height: height,
+            pixelFormat: PixelFormat.RGBA,
+            pixelDatatype: pixelDatatype,
+            sampler: Sampler.NEAREST,
+          })
+        );
+      }
     }
 
     // Create depth stencil texture or renderbuffer
-    if (this._depthStencil && this._createDepthAttachments) {
-      if (depthTexture) {
+    if (this._depthStencil && this._createDepthStencilAttachments) {
+      if (depthStencilTexture) {
         this._depthStencilTexture = new Texture({
           context: context,
           width: width,
@@ -141,9 +156,22 @@ FramebufferManager.prototype.update = function (
       }
     }
 
+    // Create depth texture
+    if (this._depth && this._createDepthAttachments) {
+      this._depthTexture = new Texture({
+        context: context,
+        width: width,
+        height: height,
+        pixelFormat: PixelFormat.DEPTH_COMPONENT,
+        pixelDatatype: PixelDatatype.UNSIGNED_INT,
+        sampler: Sampler.NEAREST,
+      });
+    }
+
     this._framebuffer = new Framebuffer({
       context: context,
       colorTextures: this._colorTextures,
+      depthTexture: this._depthTexture,
       depthStencilTexture: this._depthStencilTexture,
       depthStencilRenderbuffer: this._depthStencilRenderbuffer,
       destroyAttachments: false,
@@ -170,9 +198,9 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
 
 FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   //>>includeStart('debug', pragmas.debug);
-  if (this._createDepthAttachments) {
+  if (this._createDepthStencilAttachments) {
     throw new DeveloperError(
-      "If setDepthStencilTexture is called, createDepthAttachments must be false."
+      "If setDepthStencilTexture is called, createDepthStencilAttachments must be false."
     );
   }
   //>>includeEnd('debug');
@@ -186,11 +214,13 @@ FramebufferManager.prototype.clear = function (
   clearCommand
 ) {
   var framebuffer = passState.framebuffer;
+  var clearCommandColor = clearCommand.color;
 
   passState.framebuffer = this._framebuffer;
-  Color.clone(clearColor, clearCommand.color);
+  clearCommand.color = Color.clone(clearColor, clearCommand.color);
   clearCommand.execute(context, passState);
 
+  clearCommand.color = clearCommandColor;
   passState.framebuffer = framebuffer;
 };
 
@@ -212,6 +242,11 @@ FramebufferManager.prototype.destroyResources = function () {
     this._depthStencilTexture.destroy();
   }
   this._depthStencilTexture = undefined;
+
+  if (defined(this._depthTexture) && !this._depthTexture.isDestroyed()) {
+    this._depthTexture.destroy();
+  }
+  this._depthTexture = undefined;
 
   if (defined(this._framebuffer)) {
     this._framebuffer.destroy();

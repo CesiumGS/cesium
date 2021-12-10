@@ -2,17 +2,13 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import Pass from "../Renderer/Pass.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
-import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
-import Texture from "../Renderer/Texture.js";
 import BlendingState from "../Scene/BlendingState.js";
 import StencilConstants from "../Scene/StencilConstants.js";
 import PointCloudEyeDomeLightingShader from "../Shaders/PostProcessStages/PointCloudEyeDomeLighting.js";
@@ -24,10 +20,11 @@ import PointCloudEyeDomeLightingShader from "../Shaders/PostProcessStages/PointC
  * @private
  */
 function PointCloudEyeDomeLighting() {
-  this._framebuffer = undefined;
-  this._colorGBuffer = undefined; // color gbuffer
-  this._depthGBuffer = undefined; // depth gbuffer
-  this._depthTexture = undefined; // needed to write depth so camera based on depth works
+  this._framebuffer = new FramebufferManager({
+    colorAttachmentsLength: 2,
+    depth: true,
+  });
+
   this._drawCommand = undefined;
   this._clearCommand = undefined;
 
@@ -35,65 +32,28 @@ function PointCloudEyeDomeLighting() {
   this._radius = 1.0;
 }
 
+Object.defineProperties(PointCloudEyeDomeLighting.prototype, {
+  framebuffer: {
+    get: function () {
+      return this._framebuffer.framebuffer;
+    },
+  },
+  colorGBuffer: {
+    get: function () {
+      return this._framebuffer.getColorTexture(0);
+    },
+  },
+  depthGBuffer: {
+    get: function () {
+      return this._framebuffer.getColorTexture(1);
+    },
+  },
+});
+
 function destroyFramebuffer(processor) {
-  var framebuffer = processor._framebuffer;
-  if (!defined(framebuffer)) {
-    return;
-  }
-
-  processor._colorGBuffer.destroy();
-  processor._depthGBuffer.destroy();
-  processor._depthTexture.destroy();
-  framebuffer.destroy();
-
-  processor._framebuffer = undefined;
-  processor._colorGBuffer = undefined;
-  processor._depthGBuffer = undefined;
-  processor._depthTexture = undefined;
+  processor._framebuffer.destroyResources();
   processor._drawCommand = undefined;
   processor._clearCommand = undefined;
-}
-
-function createFramebuffer(processor, context) {
-  var screenWidth = context.drawingBufferWidth;
-  var screenHeight = context.drawingBufferHeight;
-
-  var colorGBuffer = new Texture({
-    context: context,
-    width: screenWidth,
-    height: screenHeight,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    sampler: Sampler.NEAREST,
-  });
-
-  var depthGBuffer = new Texture({
-    context: context,
-    width: screenWidth,
-    height: screenHeight,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    sampler: Sampler.NEAREST,
-  });
-
-  var depthTexture = new Texture({
-    context: context,
-    width: screenWidth,
-    height: screenHeight,
-    pixelFormat: PixelFormat.DEPTH_COMPONENT,
-    pixelDatatype: PixelDatatype.UNSIGNED_INT,
-    sampler: Sampler.NEAREST,
-  });
-
-  processor._framebuffer = new Framebuffer({
-    context: context,
-    colorTextures: [colorGBuffer, depthGBuffer],
-    depthTexture: depthTexture,
-    destroyAttachments: false,
-  });
-  processor._colorGBuffer = colorGBuffer;
-  processor._depthGBuffer = depthGBuffer;
-  processor._depthTexture = depthTexture;
 }
 
 var distanceAndEdlStrengthScratch = new Cartesian2();
@@ -106,10 +66,10 @@ function createCommands(processor, context) {
 
   var blendUniformMap = {
     u_pointCloud_colorGBuffer: function () {
-      return processor._colorGBuffer;
+      return processor.colorGBuffer;
     },
     u_pointCloud_depthGBuffer: function () {
-      return processor._depthGBuffer;
+      return processor.depthGBuffer;
     },
     u_distanceAndEdlStrength: function () {
       distanceAndEdlStrengthScratch.x = processor._radius;
@@ -136,7 +96,7 @@ function createCommands(processor, context) {
   });
 
   processor._clearCommand = new ClearCommand({
-    framebuffer: processor._framebuffer,
+    framebuffer: processor.framebuffer,
     color: new Color(0.0, 0.0, 0.0, 0.0),
     depth: 1.0,
     renderState: RenderState.fromCache(),
@@ -146,21 +106,12 @@ function createCommands(processor, context) {
 }
 
 function createResources(processor, context) {
-  var screenWidth = context.drawingBufferWidth;
-  var screenHeight = context.drawingBufferHeight;
-  var colorGBuffer = processor._colorGBuffer;
+  var width = context.drawingBufferWidth;
+  var height = context.drawingBufferHeight;
   var nowDirty = false;
-  var resized =
-    defined(colorGBuffer) &&
-    (colorGBuffer.width !== screenWidth ||
-      colorGBuffer.height !== screenHeight);
-
-  if (!defined(colorGBuffer) || resized) {
-    destroyFramebuffer(processor);
-    createFramebuffer(processor, context);
-    createCommands(processor, context);
-    nowDirty = true;
-  }
+  processor._framebuffer.update(context, width, height);
+  createCommands(processor, context);
+  nowDirty = true;
   return nowDirty;
 }
 
@@ -263,12 +214,12 @@ PointCloudEyeDomeLighting.prototype.update = function (
       command.dirty ||
       dirty ||
       originalShaderProgram !== command.shaderProgram ||
-      derivedCommand.framebuffer !== this._framebuffer
+      derivedCommand.framebuffer !== this.framebuffer
     ) {
       // Prevent crash when tiles out-of-view come in-view during context size change or
       // when the underlying shader changes while EDL is disabled
       derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
-      derivedCommand.framebuffer = this._framebuffer;
+      derivedCommand.framebuffer = this.framebuffer;
       derivedCommand.shaderProgram = getECShaderProgram(
         frameState.context,
         command.shaderProgram

@@ -25,7 +25,7 @@ function GlobeDepth() {
   this._tempCopyDepthFramebuffer = new FramebufferManager();
   this._updateDepthFramebuffer = new FramebufferManager({
     createColorAttachments: false,
-    createDepthAttachments: false,
+    createDepthStencilAttachments: false,
   });
 
   this._clearGlobeColorCommand = undefined;
