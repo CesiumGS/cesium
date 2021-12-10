@@ -2,6 +2,7 @@ import {
   AttributeType,
   combine,
   ComponentDatatype,
+  FeatureIdPipelineStage,
   GltfLoader,
   GeometryPipelineStage,
   Resource,
@@ -56,10 +57,14 @@ describe(
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     var boxVertexColors =
       "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
+    var pointCloudRGB =
+      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
     var buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    var dracoMilkTruck =
+      "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
 
     var scene;
     var gltfLoaders = [];
@@ -83,6 +88,21 @@ describe(
       gltfLoaders.length = 0;
       ResourceCache.clearForSpecs();
     });
+
+    function verifyFeatureStruct(shaderBuilder) {
+      ShaderBuilderTester.expectHasVertexStruct(
+        shaderBuilder,
+        FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+        FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+        []
+      );
+      ShaderBuilderTester.expectHasFragmentStruct(
+        shaderBuilder,
+        FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+        FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+        []
+      );
+    }
 
     function getOptions(gltfPath, options) {
       var resource = new Resource({
@@ -168,6 +188,7 @@ describe(
         "attribute vec3 a_positionMC;",
         []
       );
+      verifyFeatureStruct(shaderBuilder);
     });
 
     it("processes POSITION, NORMAL and TEXCOORD attributes from primitive", function () {
@@ -278,6 +299,7 @@ describe(
           "attribute vec3 a_positionMC;",
           ["attribute vec3 a_normalMC;", "attribute vec2 a_texCoord_0;"]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -419,6 +441,7 @@ describe(
             "attribute vec2 a_texCoord_0;",
           ]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -538,6 +561,7 @@ describe(
           "attribute vec3 a_positionMC;",
           ["attribute vec2 a_texCoord_0;", "attribute vec2 a_texCoord_1;"]
         );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -679,6 +703,106 @@ describe(
             "attribute vec2 a_texCoord_0;",
           ]
         );
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("promotes vec3 vertex colors to vec4 in the shader", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+      };
+
+      return loadGltf(pointCloudRGB).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(2);
+
+        var positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(24);
+
+        var color0Attribute = attributes[1];
+        expect(color0Attribute.index).toEqual(1);
+        expect(color0Attribute.vertexBuffer).toBeDefined();
+        expect(color0Attribute.componentsPerAttribute).toEqual(3);
+        expect(color0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(color0Attribute.offsetInBytes).toBe(12);
+        expect(color0Attribute.strideInBytes).toBe(24);
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    vec4 color_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec4 color_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.color_0 = a_color_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    v_color_0 = attributes.color_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    attributes.color_0 = v_color_0;"]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec4 v_color_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_COLOR_0",
+          "PRIMITIVE_TYPE_POINTS",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_COLOR_0",
+          "PRIMITIVE_TYPE_POINTS",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute vec4 a_color_0;"]
+        );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -765,6 +889,7 @@ describe(
         "attribute vec3 a_positionMC;",
         ["attribute vec2 a_temperature;"]
       );
+      verifyFeatureStruct(shaderBuilder);
     });
 
     it("processes POSITION, NORMAL and FEATURE_ID attributes from primitive", function () {
@@ -860,6 +985,7 @@ describe(
           "HAS_FEATURE_ID_0",
           "HAS_NORMALS",
         ]);
+        verifyFeatureStruct(shaderBuilder);
       });
     });
 
@@ -939,6 +1065,99 @@ describe(
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_FEATURE_ID_0",
           "PRIMITIVE_TYPE_POINTS",
+        ]);
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("prepares Draco model for dequantization stage", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+      };
+
+      return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(3);
+
+        var normalAttribute = attributes[0];
+        expect(normalAttribute.index).toEqual(1);
+        expect(normalAttribute.vertexBuffer).toBeDefined();
+        expect(normalAttribute.componentsPerAttribute).toEqual(2);
+        expect(normalAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).not.toBeDefined();
+
+        var positionAttribute = attributes[1];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).not.toBeDefined();
+
+        var texCoord0Attribute = attributes[2];
+        expect(texCoord0Attribute.index).toEqual(2);
+        expect(texCoord0Attribute.vertexBuffer).toBeDefined();
+        expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
+        expect(texCoord0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).not.toBeDefined();
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    vec2 texCoord_0;",
+          ]
+        );
+        // Initialization is skipped for dequantized attributes
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          []
+        );
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_quantized_positionMC;",
+          [
+            "attribute vec2 a_quantized_normalMC;",
+            "attribute vec2 a_quantized_texCoord_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
         ]);
       });
     });

@@ -241,4 +241,14 @@ export default function PrimitiveRenderResources(
     },
     blending: BlendingState.DISABLED,
   };
+
+  /**
+   * An enum describing the types of draw commands needed, based on the style.
+   *
+   * @type {StyleCommandsNeeded}
+   * @readonly
+   *
+   * @private
+   */
+  this.styleCommandsNeeded = undefined;
 }

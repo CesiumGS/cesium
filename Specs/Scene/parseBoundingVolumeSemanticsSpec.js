@@ -46,19 +46,19 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       class: {
         properties: {
           tileMinimumHeight: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "TILE_MINIMUM_HEIGHT",
           },
           tileMaximumHeight: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "TILE_MAXIMUM_HEIGHT",
           },
           contentMinimumHeight: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "CONTENT_MINIMUM_HEIGHT",
           },
           contentMaximumHeight: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "CONTENT_MAXIMUM_HEIGHT",
           },
         },

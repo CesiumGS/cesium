@@ -1,7 +1,13 @@
 import {
   Axis,
+  Cesium3DTileStyle,
+  Color,
+  CustomShader,
+  CustomShaderPipelineStage,
   Matrix4,
+  ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
+  Pass,
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -13,6 +19,8 @@ describe(
     var parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
     var vertexColorGltfUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
+    var buildingsMetadata =
+      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
     var scene;
 
@@ -47,6 +55,85 @@ describe(
       });
     });
 
+    it("builds draw commands for all opaque styled features", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red')"]],
+          },
+        });
+        var frameState = scene.frameState;
+        var sceneGraph = model._sceneGraph;
+        // Reset the draw commands so we can inspect the draw command generation.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+        scene.renderForSpecs();
+        expect(sceneGraph._drawCommands.length).toEqual(1);
+        expect(frameState.commandList.length).toEqual(1);
+        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
+      });
+    });
+
+    it("builds draw commands for all translucent styled features", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [["${height} > 1", "color('red', 0.1)"]],
+          },
+        });
+        var frameState = scene.frameState;
+        var sceneGraph = model._sceneGraph;
+        // Reset the draw commands so we can inspect the draw command generation.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+        scene.renderForSpecs();
+        expect(sceneGraph._drawCommands.length).toEqual(1);
+        expect(frameState.commandList.length).toEqual(1);
+        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
+      });
+    });
+
+    it("builds draw commands for both opaque and translucent styled features", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.style = new Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${height} > 80", "color('red', 0.1)"],
+              ["true", "color('blue')"],
+            ],
+          },
+        });
+        var frameState = scene.frameState;
+        var sceneGraph = model._sceneGraph;
+        // Reset the draw commands so we can inspect the draw command generation.
+        model._drawCommandsBuilt = false;
+        sceneGraph._drawCommands = [];
+        frameState.commandList = [];
+        scene.renderForSpecs();
+        expect(sceneGraph._drawCommands.length).toEqual(2);
+        expect(frameState.commandList.length).toEqual(2);
+        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
+        expect(sceneGraph._drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
+      });
+    });
+
     it("builds draw commands for each primitive", function () {
       spyOn(
         ModelExperimentalSceneGraph.prototype,
@@ -66,8 +153,7 @@ describe(
 
         var frameState = scene.frameState;
         frameState.commandList = [];
-
-        model.update(frameState);
+        scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
         ).toHaveBeenCalled();
@@ -80,8 +166,7 @@ describe(
         model._drawCommandsBuilt = false;
         sceneGraph._drawCommands = [];
         frameState.commandList = [];
-
-        model.update(frameState);
+        scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
         ).toHaveBeenCalled();
@@ -130,6 +215,33 @@ describe(
             new Matrix4()
           )
         );
+      });
+    });
+
+    it("adds ModelColorPipelineStage when color is set on the model", function () {
+      spyOn(ModelColorPipelineStage, "process");
+      return loadAndZoomToModelExperimental(
+        {
+          color: Color.RED,
+          gltf: parentGltfUrl,
+        },
+        scene
+      ).then(function () {
+        expect(ModelColorPipelineStage.process).toHaveBeenCalled();
+      });
+    });
+
+    it("adds CustomShaderPipelineStage when customShader is set on the model", function () {
+      spyOn(CustomShaderPipelineStage, "process");
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.customShader = new CustomShader();
+        model.update(scene.frameState);
+        expect(CustomShaderPipelineStage.process).toHaveBeenCalled();
       });
     });
 

@@ -27,10 +27,10 @@ describe("Scene/PropertyTexture", function () {
             componentCount: 3,
           },
           intensity: {
-            type: "UINT8",
+            componentType: "UINT8",
           },
           ortho: {
-            type: "UINT8",
+            componentType: "UINT8",
             normalized: true,
           },
         },

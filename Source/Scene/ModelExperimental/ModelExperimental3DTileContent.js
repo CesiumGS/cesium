@@ -160,7 +160,7 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
-  return;
+  this._model.applyStyle(style);
 };
 
 ModelExperimental3DTileContent.prototype.update = function (
@@ -170,7 +170,10 @@ ModelExperimental3DTileContent.prototype.update = function (
   var model = this._model;
   var tile = this._tile;
 
+  model.colorBlendAmount = tileset.colorBlendAmount;
+  model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
+  model.customShader = tileset.customShader;
 
   model.update(frameState);
 };
@@ -204,6 +207,8 @@ ModelExperimental3DTileContent.fromGltf = function (
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    colorBlendMode: tileset.colorBlendMode,
+    colorBlendAmount: tileset.colorBlendAmount,
   };
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;
@@ -231,6 +236,8 @@ ModelExperimental3DTileContent.fromB3dm = function (
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    colorBlendMode: tileset.colorBlendMode,
+    colorBlendAmount: tileset.colorBlendAmount,
   };
   content._model = ModelExperimental.fromB3dm(modelOptions);
   return content;

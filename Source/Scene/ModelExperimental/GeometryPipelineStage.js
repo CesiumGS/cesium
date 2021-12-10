@@ -4,6 +4,7 @@ import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
+import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
@@ -62,6 +63,13 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
     GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
     "ProcessedAttributes",
     ShaderDestination.FRAGMENT
+  );
+
+  // The Feature struct is always added since it's required for compilation. It may be unused if features are not present.
+  shaderBuilder.addStruct(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+    ShaderDestination.BOTH
   );
 
   // This initialization function is only needed in the vertex shader,
@@ -247,11 +255,8 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   var vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   var fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
   var variableName = attributeInfo.variableName;
-  if (variableName === "color") {
-    // Always declare color as a vec4, even if it was a vec3
-    shaderBuilder.addStructField(vsStructId, "vec4", "color");
-    shaderBuilder.addStructField(fsStructId, "vec4", "color");
-  } else if (variableName === "tangentMC") {
+
+  if (variableName === "tangentMC") {
     // declare tangent as vec3, the w component is only used for computing
     // the bitangent. Also, the tangent is in model coordinates in the vertex
     // shader but in eye space in the fragment coordinates

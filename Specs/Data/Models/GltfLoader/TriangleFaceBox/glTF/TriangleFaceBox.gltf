@@ -28,14 +28,14 @@
             "perTriangle": {
               "properties": {
                 "value": {
-                  "type": "UINT8"
+                  "componentType": "UINT8"
                 }
               }
             },
             "perFace": {
               "properties": {
                 "value": {
-                  "type": "INT8"
+                  "componentType": "INT8"
                 }
               }
             }

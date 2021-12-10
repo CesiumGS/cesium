@@ -22,6 +22,9 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/batchedWithRtcCenter.b3dm";
   var withBatchTableHierarchy =
     "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tile.b3dm";
+  var noBatchIdsUrl =
+    "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/batchedNoBatchIds.b3dm";
+
   var scene;
   var b3dmLoaders = [];
 
@@ -62,6 +65,15 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
       return waitForLoaderProcess(loader, scene);
     });
   }
+
+  it("loads BatchedNoBatchIds", function () {
+    return loadB3dm(noBatchIdsUrl).then(function (loader) {
+      var components = loader.components;
+      expect(components).toBeDefined();
+      var featureMetadata = components.featureMetadata;
+      expect(featureMetadata).toBeUndefined();
+    });
+  });
 
   it("loads BatchedWithBatchTable", function () {
     return loadB3dm(withBatchTableUrl).then(function (loader) {

@@ -165,16 +165,16 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
 
   // Translations get initialized to (0, 0, 0).
   var translationTypedArray = hasTranslation
-    ? translationAttribute.typedArray
+    ? translationAttribute.packedTypedArray
     : new Float32Array(count * 3);
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   var rotationTypedArray = hasRotation
-    ? rotationAttribute.typedArray
+    ? rotationAttribute.packedTypedArray
     : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
   var scaleTypedArray;
   if (hasScale) {
-    scaleTypedArray = scaleAttribute.typedArray;
+    scaleTypedArray = scaleAttribute.packedTypedArray;
   } else {
     scaleTypedArray = new Float32Array(count * 3);
     scaleTypedArray.fill(1);
@@ -269,7 +269,7 @@ function processFeatureIdAttributes(
 
     var vertexBuffer = Buffer.createVertexBuffer({
       context: frameState.context,
-      typedArray: attribute.typedArray,
+      typedArray: attribute.packedTypedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     vertexBuffer.vertexArrayDestroyable = false;

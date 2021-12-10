@@ -42,9 +42,8 @@ var customShader = new Cesium.CustomShader({
   vertexShaderText: `
     // IMPORTANT: the function signature must use these parameter names. This
     // makes it easier for the runtime to generate the shader and make optimizations.
-    void vertexMain(VertexInput vsInput, inout vec3 positionMC) {
-        // code goes here. e.g. for a no-op:
-        return positionMC;
+    void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+        // code goes here. An empty body is a no-op.
     }
   `,
   // Custom fragment shader.
@@ -155,14 +154,13 @@ var customShader = new Cesium.CustomShader({
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
-    void vertexMain(VertexInput vsInput, inout vec3 positionMC) {
+    void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
         float positiveX = step(0.0, positionMC.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,
             vsInput.attributes.color_1,
-            positionMC.x
+            vsOutput.positionMC.x
         );
-        return positionMC;
     }
   `,
   // User uses the varying in the fragment shader
@@ -261,9 +259,26 @@ Custom attributes are also available, though they are renamed to use lowercase
 letters and underscores. For example, an attribute called `_SURFACE_TEMPERATURE`
 in the model would become `fsInput.attributes.surface_temperature` in the shader.
 
+## `czm_modelVertexOutput` struct
+
+This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
+
+This struct contains the output of the custom vertex shader. This includes:
+
+- `positionMC` - The vertex position in model space coordinates. This struct
+  field can be used e.g. to perturb or animate vertices. It is initialized to
+  `vsInput.attributes.positionMC`. The custom shader may modify this, and the
+  result is used to compute `gl_Position`.
+- `pointSize` - corresponds to `gl_PointSize`. This is only applied for models
+  rendered as `gl.POINTS`, and ignored otherwise.
+
+> **Implementation Note**: `positionMC` does not modify the primitive's bounding
+> sphere. If vertices are moved outside the bounding sphere, the primitive may
+> be unintentionally culled depending on the view frustum.
+
 ## `czm_modelMaterial` struct
 
-This one is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 
