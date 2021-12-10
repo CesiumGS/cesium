@@ -441,13 +441,13 @@ describe(
 
       var initialRgba;
 
-      expect(scene).toRenderAndCall(function(rgba) {
+      expect(scene).toRenderAndCall(function (rgba) {
         initialRgba = rgba;
         expect(initialRgba).not.toEqual([0, 0, 0, 255]);
       });
 
       c.color = Color.RED;
-      expect(scene).toRenderAndCall(function(rgba) {
+      expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba).not.toEqual(initialRgba);
       });
     });
