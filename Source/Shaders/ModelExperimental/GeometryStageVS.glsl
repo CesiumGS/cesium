@@ -1,19 +1,7 @@
-void geometryStage(inout ProcessedAttributes attributes) 
+void geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 normal) 
 {
     // Compute positions in different coordinate systems
     vec3 positionMC = attributes.positionMC;
-
-    mat3 normal;
-    mat4 modelView;
-
-    #ifdef USE_LEGACY_INSTANCING
-    normal = instanceModelViewInverseTranspose;
-    modelView = instanceModelView;
-    #else
-    normal = czm_normal;
-    modelView = czm_modelView;
-    #endif
-
     v_positionMC = positionMC;
     v_positionEC = (modelView * vec4(positionMC, 1.0)).xyz;
     gl_Position = czm_modelViewProjection * vec4(positionMC, 1.0);

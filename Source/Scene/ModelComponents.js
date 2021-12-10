@@ -523,7 +523,9 @@ function Instances() {
   this.featureIdAttributes = [];
 
   /**
-   * Whether the instancing transforms are applied in world space.
+   * Whether the instancing transforms are applied in world space. For glTF models that
+   * use EXT_mesh_gpu_instancing, the transform is applied in object space. For I3DM files,
+   * the instance transform is in world space.
    *
    * @type {Boolean}
    * @private
