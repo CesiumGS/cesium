@@ -26,6 +26,7 @@ var Attribute = ModelComponents.Attribute;
 var Quantization = ModelComponents.Quantization;
 var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 var Material = ModelComponents.Material;
+var MetallicRoughness = ModelComponents.MetallicRoughness;
 
 export default function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -248,6 +249,7 @@ function processDracoAttributes(loader, draco, result) {
       typedArray: result.RGBA.array,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       type: AttributeType.VEC4,
+      normalized: true,
     };
   } else if (defined(result.RGB)) {
     parsedContent.colors = {
@@ -257,6 +259,7 @@ function processDracoAttributes(loader, draco, result) {
       typedArray: result.RGB.array,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       type: AttributeType.VEC3,
+      normalized: true,
     };
   }
 
@@ -313,6 +316,7 @@ function makeAttribute(attributeInfo, context) {
   attribute.setIndex = attributeInfo.setIndex;
   attribute.componentDatatype = attributeInfo.componentDatatype;
   attribute.type = AttributeType.VEC3;
+  attribute.normalized = defaultValue(attributeInfo.normalized, false);
   attribute.min = attributeInfo.min;
   attribute.max = attributeInfo.max;
   attribute.quantization = quantization;
@@ -403,7 +407,12 @@ function makeFeatureMetadata(parsedContent) {
 function makeComponents(loader, context) {
   var parsedContent = loader._parsedContent;
 
+  var metallicRoughness = new MetallicRoughness();
+  metallicRoughness.metallicFactor = 0;
+  metallicRoughness.roughnessFactor = 0.9;
+
   var material = new Material();
+  material.metallicRoughness = metallicRoughness;
 
   var primitive = new Primitive();
   primitive.attributes = makeAttributes(parsedContent, context);
@@ -419,7 +428,10 @@ function makeComponents(loader, context) {
 
   var node = new Node();
   node.primitives = [primitive];
-  node.matrix = loader._transform;
+
+  if (defined(parsedContent.rtcCenter)) {
+    node.matrix = Matrix4.fromTranslation(parsedContent.rtcCenter);
+  }
 
   var scene = new Scene();
   scene.nodes = [node];

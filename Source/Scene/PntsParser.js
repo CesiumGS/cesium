@@ -296,6 +296,7 @@ function parseColors(featureTable) {
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 4,
+      normalized: true,
       isRGB565: false,
     };
   } else if (defined(featureTableJson.RGB)) {
@@ -310,6 +311,7 @@ function parseColors(featureTable) {
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentsPerAttribute: 3,
+      normalized: true,
       isRGB565: false,
     };
   } else if (defined(featureTableJson.RGB565)) {
@@ -324,6 +326,7 @@ function parseColors(featureTable) {
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
       componentsPerAttribute: 1,
+      normalized: false,
       isRGB565: true,
     };
   } else if (defined(featureTableJson.CONSTANT_RGBA)) {
