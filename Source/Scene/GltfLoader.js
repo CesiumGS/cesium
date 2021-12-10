@@ -622,7 +622,6 @@ function loadIndices(loader, gltf, accessorId, draco) {
   }
 
   var indices = new Indices();
-  indices.indexDatatype = accessor.componentType;
   indices.count = accessor.count;
 
   var loadAsTypedArray = loader._loadAsTypedArray;
@@ -639,6 +638,8 @@ function loadIndices(loader, gltf, accessorId, draco) {
     if (loader.isDestroyed()) {
       return;
     }
+
+    indices.indexDatatype = indexBufferLoader.indexDatatype;
 
     if (loadAsTypedArray) {
       indices.typedArray = indexBufferLoader.typedArray;

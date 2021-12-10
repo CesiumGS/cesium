@@ -47,8 +47,27 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     ],
   };
 
+  var primitiveWithColorAttributes = {
+    attributes: [
+      {
+        semantic: "POSITION",
+        type: AttributeType.VEC3,
+      },
+      {
+        semantic: "COLOR",
+        setIndex: 0,
+        type: AttributeType.VEC3,
+      },
+      {
+        semantic: "COLOR",
+        setIndex: 1,
+        type: AttributeType.VEC4,
+      },
+    ],
+  };
+
   var emptyVertexShader =
-    "void vertexMain(VertexInput vsInput, inout vec3 positionMC) {}";
+    "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
   var emptyShader = new CustomShader({
@@ -223,11 +242,11 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    vec3 normalMC = vsInput.attributes.normalMC;",
           "    vec2 texCoord = vsInput.attributes.texCoord_0;",
-          "    positionMC = vsInput.attributes.positionMC;",
+          "    vsOutput.positionMC = vsInput.attributes.positionMC;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -302,7 +321,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    float temperature = vsInput.attributes.temperature;",
           "    positionMC = vsInput.attributes.positionMC;",
@@ -375,14 +394,95 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     );
   });
 
+  it("treats COLOR attributes as vec4", function () {
+    var shaderBuilder = new ShaderBuilder();
+    var model = {
+      customShader: new CustomShader({
+        varyings: {
+          v_color: VaryingType.FLOAT,
+          v_computedMatrix: VaryingType.MAT3,
+        },
+        vertexShaderText: [
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
+          "{",
+          "    vec4 color += vsInput.attributes.color_0 + vsInput.attributes.color_1;",
+          "}",
+        ],
+        fragmentShaderText: [
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+          "{",
+          "    vec4 color += fsInput.attributes.color_0 + fsInput.attributes.color_1;",
+          "}",
+        ],
+      }),
+    };
+
+    var renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
+    };
+
+    CustomShaderPipelineStage.process(
+      renderResources,
+      primitiveWithColorAttributes
+    );
+
+    ShaderBuilderTester.expectHasVertexStruct(
+      shaderBuilder,
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
+      ["    vec4 color_0;", "    vec4 color_1;"]
+    );
+    ShaderBuilderTester.expectHasFragmentStruct(
+      shaderBuilder,
+      CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
+      CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
+      ["    vec4 color_0;", "    vec4 color_1;"]
+    );
+
+    ShaderBuilderTester.expectHasVertexStruct(
+      shaderBuilder,
+      CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
+      "VertexInput",
+      ["    Attributes attributes;"]
+    );
+    ShaderBuilderTester.expectHasFragmentStruct(
+      shaderBuilder,
+      CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
+      "FragmentInput",
+      ["    Attributes attributes;"]
+    );
+
+    ShaderBuilderTester.expectHasVertexFunction(
+      shaderBuilder,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
+      [
+        "    vsInput.attributes.color_0 = attributes.color_0;",
+        "    vsInput.attributes.color_1 = attributes.color_1;",
+      ]
+    );
+    ShaderBuilderTester.expectHasFragmentFunction(
+      shaderBuilder,
+      CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
+      CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
+      [
+        "    fsInput.attributes.color_0 = attributes.color_0;",
+        "    fsInput.attributes.color_1 = attributes.color_1;",
+      ]
+    );
+  });
+
   it("only generates input lines for attributes that are used", function () {
     var shaderBuilder = new ShaderBuilder();
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
-          "    positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
+          "    vsOutput.positionMC = 2.0 * vsInput.attributes.positionMC - 1.0;",
           "}",
         ].join("\n"),
         fragmentShaderText: [
@@ -582,7 +682,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    vec2 texCoords = vsInput.attributes.texCoord_1;",
           "}",
@@ -649,7 +749,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     var model = {
       customShader: new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
           "    vec3 texCoords = vsInput.attributes.notAnAttribute;",
           "}",

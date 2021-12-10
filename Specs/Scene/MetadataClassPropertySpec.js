@@ -199,7 +199,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(function () {
       return new MetadataClassProperty({
         property: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       });
     }).toThrowDeveloperError();

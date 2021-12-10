@@ -119,13 +119,24 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
     variableName = variableName.toLowerCase();
   }
 
+  var isVertexColor = /^color_\d+$/.test(variableName);
   var attributeType = attribute.type;
   var glslType = AttributeType.getGlslType(attributeType);
+
+  // color_n can be either a vec3 or a vec4. But in GLSL we can always use
+  // attribute vec4 since GLSL promotes vec3 attribute data to vec4 with
+  // the .a channel set to 1.0.
+  if (isVertexColor) {
+    glslType = "vec4";
+  }
 
   var isQuantized = defined(attribute.quantization);
   var quantizedGlslType;
   if (isQuantized) {
-    quantizedGlslType = AttributeType.getGlslType(attribute.quantization.type);
+    // The quantized color_n attribute also is promoted to a vec4 in the shader
+    quantizedGlslType = isVertexColor
+      ? "vec4"
+      : AttributeType.getGlslType(attribute.quantization.type);
   }
 
   return {

@@ -1,8 +1,3 @@
-void pointStage()
-{
-    gl_PointSize = 4.0;
-}
-
 void geometryStage(inout ProcessedAttributes attributes) 
 {
     // Compute positions in different coordinate systems
