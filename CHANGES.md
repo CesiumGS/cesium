@@ -11,6 +11,7 @@
 
 - Added a `pointSize` field to custom vertex shaders for more control over
   shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
+- Added `lambertDiffuseMultiplier` property to Globe object to enhance terrain lighting. [#9878](https://github.com/CesiumGS/cesium/pull/9878)
 
 ##### Fixes :wrench:
 
