@@ -368,11 +368,13 @@ Camera.prototype._updateCameraChanged = function () {
     camera._changedHeading = currentHeading;
   }
 
-  var headingChangedPercentage =
-    Math.abs(camera._changedHeading - currentHeading) / Math.PI;
-  if (headingChangedPercentage > 1.98) {
-    headingChangedPercentage = 0.00555556;
-  }
+  var delta =
+    Math.abs(camera._changedHeading - currentHeading) % CesiumMath.TWO_PI;
+  delta = delta > CesiumMath.PI ? CesiumMath.TWO_PI - delta : delta;
+
+  // Since delta is computed as the shortest distance between two angles
+  // the percentage is relative to the half circle.
+  var headingChangedPercentage = delta / Math.PI;
 
   if (headingChangedPercentage > percentageChanged) {
     camera._changed.raiseEvent(headingChangedPercentage);
