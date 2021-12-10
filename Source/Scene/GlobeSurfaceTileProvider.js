@@ -25,6 +25,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Rectangle from "../Core/Rectangle.js";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
+import TerrainExaggeration from "../Core/TerrainExaggeration.js";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import Visibility from "../Core/Visibility.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
@@ -108,6 +109,8 @@ function GlobeSurfaceTileProvider(options) {
   this.undergroundColor = undefined;
   this.undergroundColorAlphaByDistance = undefined;
 
+  this.lambertDiffuseMultiplier = 0.0;
+
   this.materialUniformMap = undefined;
   this._materialUniformMap = undefined;
 
@@ -174,6 +177,9 @@ function GlobeSurfaceTileProvider(options) {
 
   this._hasLoadedTilesThisFrame = false;
   this._hasFillTilesThisFrame = false;
+
+  this._oldTerrainExaggeration = undefined;
+  this._oldTerrainExaggerationRelativeHeight = undefined;
 }
 
 Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -461,6 +467,35 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
     );
   }
 
+  // When terrain exaggeration changes, all of the loaded tiles need to generate
+  // geodetic surface normals so they can scale properly when rendered.
+  // When exaggeration is reset, geodetic surface normals are removed to decrease
+  // memory usage. Some tiles might have been constructed with the correct
+  // exaggeration already, so skip over them.
+
+  // If the geodetic surface normals can't be created because the tile doesn't
+  // have a mesh, keep checking until the tile does have a mesh. This can happen
+  // if the tile's mesh starts construction in a worker thread right before the
+  // exaggeration changes.
+
+  var quadtree = this.quadtree;
+  var exaggeration = frameState.terrainExaggeration;
+  var exaggerationRelativeHeight = frameState.terrainExaggerationRelativeHeight;
+  var exaggerationChanged =
+    this._oldTerrainExaggeration !== exaggeration ||
+    this._oldTerrainExaggerationRelativeHeight !== exaggerationRelativeHeight;
+
+  // Keep track of the next time there is a change in exaggeration
+  this._oldTerrainExaggeration = exaggeration;
+  this._oldTerrainExaggerationRelativeHeight = exaggerationRelativeHeight;
+
+  if (exaggerationChanged) {
+    quadtree.forEachLoadedTile(function (tile) {
+      var surfaceTile = tile.data;
+      surfaceTile.updateExaggeration(tile, frameState, quadtree);
+    });
+  }
+
   // Add the tile render commands to the command list, sorted by texture count.
   var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
   for (
@@ -569,6 +604,7 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
     frameState,
     this.terrainProvider,
     this._imageryLayers,
+    this.quadtree,
     this._vertexArraysToDestroy,
     terrainOnly
   );
@@ -590,6 +626,7 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
         frameState,
         this.terrainProvider,
         this._imageryLayers,
+        this.quadtree,
         this._vertexArraysToDestroy,
         terrainOnly
       );
@@ -689,10 +726,10 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   }
 
   var cullingVolume = frameState.cullingVolume;
-  var boundingVolume = surfaceTile.orientedBoundingBox;
+  var boundingVolume = tileBoundingRegion.boundingVolume;
 
-  if (!defined(boundingVolume) && defined(surfaceTile.renderedMesh)) {
-    boundingVolume = surfaceTile.renderedMesh.boundingSphere3D;
+  if (!defined(boundingVolume)) {
+    boundingVolume = tileBoundingRegion.boundingSphere;
   }
 
   // Check if the tile is outside the limit area in cartographic space
@@ -734,7 +771,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
       defined(surfaceTile.renderedMesh)
     ) {
       boundingVolume = BoundingSphere.union(
-        surfaceTile.renderedMesh.boundingSphere3D,
+        tileBoundingRegion.boundingSphere,
         boundingVolume,
         boundingVolume
       );
@@ -964,7 +1001,7 @@ GlobeSurfaceTileProvider.prototype.computeTileLoadPriority = function (
     return 0.0;
   }
 
-  var obb = surfaceTile.orientedBoundingBox;
+  var obb = surfaceTile.tileBoundingRegion.boundingVolume;
   if (obb === undefined) {
     return 0.0;
   }
@@ -1119,47 +1156,21 @@ GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function (
   // Loading too-detailed tiles is super expensive, so we don't want to do that. We don't know where the child
   // tile really lies within the parent range of heights, but we _do_ know the child tile can't be any closer than
   // the ancestor height surface (min or max) that is _farthest away_ from the camera. So if we compute distance
-  // based that conservative metric, we may end up loading tiles that are not detailed enough, but that's much
+  // based on that conservative metric, we may end up loading tiles that are not detailed enough, but that's much
   // better (faster) than loading tiles that are too detailed.
 
-  var heightSource = updateTileBoundingRegion(
-    tile,
-    this.terrainProvider,
-    frameState
-  );
-  var surfaceTile = tile.data;
-  var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+  updateTileBoundingRegion(tile, this, frameState);
 
-  if (heightSource === undefined) {
+  var surfaceTile = tile.data;
+  var boundingVolumeSourceTile = surfaceTile.boundingVolumeSourceTile;
+  if (boundingVolumeSourceTile === undefined) {
     // Can't find any min/max heights anywhere? Ok, let's just say the
     // tile is really far away so we'll load and render it rather than
     // refining.
     return 9999999999.0;
-  } else if (surfaceTile.boundingVolumeSourceTile !== heightSource) {
-    // Heights are from a new source tile, so update the bounding volume.
-    surfaceTile.boundingVolumeSourceTile = heightSource;
-
-    var rectangle = tile.rectangle;
-    if (defined(rectangle)) {
-      surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-        tile.rectangle,
-        tileBoundingRegion.minimumHeight,
-        tileBoundingRegion.maximumHeight,
-        tile.tilingScheme.ellipsoid,
-        surfaceTile.orientedBoundingBox
-      );
-
-      surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(
-        this,
-        surfaceTile.orientedBoundingBox.center,
-        tile.rectangle,
-        tileBoundingRegion.minimumHeight,
-        tileBoundingRegion.maximumHeight,
-        surfaceTile.occludeePointInScaledSpace
-      );
-    }
   }
 
+  var tileBoundingRegion = surfaceTile.tileBoundingRegion;
   var min = tileBoundingRegion.minimumHeight;
   var max = tileBoundingRegion.maximumHeight;
 
@@ -1184,86 +1195,157 @@ GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function (
   return result;
 };
 
-function updateTileBoundingRegion(tile, terrainProvider, frameState) {
+function updateTileBoundingRegion(tile, tileProvider, frameState) {
   var surfaceTile = tile.data;
   if (surfaceTile === undefined) {
     surfaceTile = tile.data = new GlobeSurfaceTile();
   }
 
+  var ellipsoid = tile.tilingScheme.ellipsoid;
   if (surfaceTile.tileBoundingRegion === undefined) {
     surfaceTile.tileBoundingRegion = new TileBoundingRegion({
       computeBoundingVolumes: false,
       rectangle: tile.rectangle,
-      ellipsoid: tile.tilingScheme.ellipsoid,
+      ellipsoid: ellipsoid,
       minimumHeight: 0.0,
       maximumHeight: 0.0,
     });
   }
 
-  var terrainData = surfaceTile.terrainData;
-  var mesh = surfaceTile.mesh;
   var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+  var oldMinimumHeight = tileBoundingRegion.minimumHeight;
+  var oldMaximumHeight = tileBoundingRegion.maximumHeight;
+  var hasBoundingVolumesFromMesh = false;
+  var sourceTile = tile;
 
+  // Get min and max heights from the mesh.
+  // If the mesh is not available, get them from the terrain data.
+  // If the terrain data is not available either, get them from an ancestor.
+  // If none of the ancestors are available, then there are no min and max heights for this tile at this time.
+  var mesh = surfaceTile.mesh;
+  var terrainData = surfaceTile.terrainData;
   if (
     mesh !== undefined &&
     mesh.minimumHeight !== undefined &&
     mesh.maximumHeight !== undefined
   ) {
-    // We have tight-fitting min/max heights from the mesh.
     tileBoundingRegion.minimumHeight = mesh.minimumHeight;
     tileBoundingRegion.maximumHeight = mesh.maximumHeight;
-    return tile;
-  }
-
-  if (
+    hasBoundingVolumesFromMesh = true;
+  } else if (
     terrainData !== undefined &&
     terrainData._minimumHeight !== undefined &&
     terrainData._maximumHeight !== undefined
   ) {
-    // We have tight-fitting min/max heights from the terrain data.
-    tileBoundingRegion.minimumHeight =
-      terrainData._minimumHeight * frameState.terrainExaggeration;
-    tileBoundingRegion.maximumHeight =
-      terrainData._maximumHeight * frameState.terrainExaggeration;
-    return tile;
+    tileBoundingRegion.minimumHeight = terrainData._minimumHeight;
+    tileBoundingRegion.maximumHeight = terrainData._maximumHeight;
+  } else {
+    // No accurate min/max heights available, so we're stuck with min/max heights from an ancestor tile.
+    tileBoundingRegion.minimumHeight = Number.NaN;
+    tileBoundingRegion.maximumHeight = Number.NaN;
+
+    var ancestorTile = tile.parent;
+    while (ancestorTile !== undefined) {
+      var ancestorSurfaceTile = ancestorTile.data;
+      if (ancestorSurfaceTile !== undefined) {
+        var ancestorMesh = ancestorSurfaceTile.mesh;
+        var ancestorTerrainData = ancestorSurfaceTile.terrainData;
+        if (
+          ancestorMesh !== undefined &&
+          ancestorMesh.minimumHeight !== undefined &&
+          ancestorMesh.maximumHeight !== undefined
+        ) {
+          tileBoundingRegion.minimumHeight = ancestorMesh.minimumHeight;
+          tileBoundingRegion.maximumHeight = ancestorMesh.maximumHeight;
+          break;
+        } else if (
+          ancestorTerrainData !== undefined &&
+          ancestorTerrainData._minimumHeight !== undefined &&
+          ancestorTerrainData._maximumHeight !== undefined
+        ) {
+          tileBoundingRegion.minimumHeight = ancestorTerrainData._minimumHeight;
+          tileBoundingRegion.maximumHeight = ancestorTerrainData._maximumHeight;
+          break;
+        }
+      }
+      ancestorTile = ancestorTile.parent;
+    }
+    sourceTile = ancestorTile;
   }
 
-  // No accurate min/max heights available, so we're stuck with min/max heights from an ancestor tile.
-  tileBoundingRegion.minimumHeight = Number.NaN;
-  tileBoundingRegion.maximumHeight = Number.NaN;
+  // Update bounding regions from the min and max heights
+  if (sourceTile !== undefined) {
+    var exaggeration = frameState.terrainExaggeration;
+    var exaggerationRelativeHeight =
+      frameState.terrainExaggerationRelativeHeight;
+    var hasExaggeration = exaggeration !== 1.0;
+    if (hasExaggeration) {
+      hasBoundingVolumesFromMesh = false;
+      tileBoundingRegion.minimumHeight = TerrainExaggeration.getHeight(
+        tileBoundingRegion.minimumHeight,
+        exaggeration,
+        exaggerationRelativeHeight
+      );
+      tileBoundingRegion.maximumHeight = TerrainExaggeration.getHeight(
+        tileBoundingRegion.maximumHeight,
+        exaggeration,
+        exaggerationRelativeHeight
+      );
+    }
 
-  var ancestor = tile.parent;
-  while (ancestor !== undefined) {
-    var ancestorSurfaceTile = ancestor.data;
-    if (ancestorSurfaceTile !== undefined) {
-      var ancestorMesh = ancestorSurfaceTile.mesh;
-      if (
-        ancestorMesh !== undefined &&
-        ancestorMesh.minimumHeight !== undefined &&
-        ancestorMesh.maximumHeight !== undefined
-      ) {
-        tileBoundingRegion.minimumHeight = ancestorMesh.minimumHeight;
-        tileBoundingRegion.maximumHeight = ancestorMesh.maximumHeight;
-        return ancestor;
+    if (hasBoundingVolumesFromMesh) {
+      if (!surfaceTile.boundingVolumeIsFromMesh) {
+        tileBoundingRegion._orientedBoundingBox = OrientedBoundingBox.clone(
+          mesh.orientedBoundingBox,
+          tileBoundingRegion._orientedBoundingBox
+        );
+        tileBoundingRegion._boundingSphere = BoundingSphere.clone(
+          mesh.boundingSphere3D,
+          tileBoundingRegion._boundingSphere
+        );
+        surfaceTile.occludeePointInScaledSpace = Cartesian3.clone(
+          mesh.occludeePointInScaledSpace,
+          surfaceTile.occludeePointInScaledSpace
+        );
+
+        // If the occludee point is not defined, fallback to calculating it from the OBB
+        if (!defined(surfaceTile.occludeePointInScaledSpace)) {
+          surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(
+            tileProvider,
+            tileBoundingRegion._orientedBoundingBox.center,
+            tile.rectangle,
+            tileBoundingRegion.minimumHeight,
+            tileBoundingRegion.maximumHeight,
+            surfaceTile.occludeePointInScaledSpace
+          );
+        }
       }
-
-      var ancestorTerrainData = ancestorSurfaceTile.terrainData;
-      if (
-        ancestorTerrainData !== undefined &&
-        ancestorTerrainData._minimumHeight !== undefined &&
-        ancestorTerrainData._maximumHeight !== undefined
-      ) {
-        tileBoundingRegion.minimumHeight =
-          ancestorTerrainData._minimumHeight * frameState.terrainExaggeration;
-        tileBoundingRegion.maximumHeight =
-          ancestorTerrainData._maximumHeight * frameState.terrainExaggeration;
-        return ancestor;
+    } else {
+      var needsBounds =
+        tileBoundingRegion._orientedBoundingBox === undefined ||
+        tileBoundingRegion._boundingSphere === undefined;
+      var heightChanged =
+        tileBoundingRegion.minimumHeight !== oldMinimumHeight ||
+        tileBoundingRegion.maximumHeight !== oldMaximumHeight;
+      if (heightChanged || needsBounds) {
+        // Bounding volumes need to be recomputed in some circumstances
+        tileBoundingRegion.computeBoundingVolumes(ellipsoid);
+        surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(
+          tileProvider,
+          tileBoundingRegion._orientedBoundingBox.center,
+          tile.rectangle,
+          tileBoundingRegion.minimumHeight,
+          tileBoundingRegion.maximumHeight,
+          surfaceTile.occludeePointInScaledSpace
+        );
       }
     }
-    ancestor = ancestor.parent;
+    surfaceTile.boundingVolumeSourceTile = sourceTile;
+    surfaceTile.boundingVolumeIsFromMesh = hasBoundingVolumesFromMesh;
+  } else {
+    surfaceTile.boundingVolumeSourceTile = undefined;
+    surfaceTile.boundingVolumeIsFromMesh = false;
   }
-
-  return undefined;
 }
 
 /**
@@ -1526,6 +1608,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_center3D: function () {
       return this.properties.center3D;
     },
+    u_terrainExaggerationAndRelativeHeight: function () {
+      return this.properties.terrainExaggerationAndRelativeHeight;
+    },
     u_tileRectangle: function () {
       return this.properties.tileRectangle;
     },
@@ -1677,6 +1762,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_undergroundColorAlphaByDistance: function () {
       return this.properties.undergroundColorAlphaByDistance;
     },
+    u_lambertDiffuseMultiplier: function () {
+      return this.properties.lambertDiffuseMultiplier;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1693,6 +1781,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       rtc: new Cartesian3(),
       modifiedModelView: new Matrix4(),
       tileRectangle: new Cartesian4(),
+
+      terrainExaggerationAndRelativeHeight: new Cartesian2(1.0, 0.0),
 
       dayTextures: [],
       dayTextureTranslationAndScale: [],
@@ -1729,6 +1819,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       localizedTranslucencyRectangle: new Cartesian4(),
       undergroundColor: Color.clone(Color.TRANSPARENT),
       undergroundColorAlphaByDistance: new Cartesian4(),
+      lambertDiffuseMultiplier: 0.0,
     },
   };
 
@@ -1925,10 +2016,12 @@ var surfaceShaderSetOptionsScratch = {
   hasImageryLayerCutout: undefined,
   colorCorrect: undefined,
   colorToAlpha: undefined,
+  hasGeodeticSurfaceNormals: undefined,
+  hasExaggeration: undefined,
 };
 
 var defaultUndergroundColor = Color.TRANSPARENT;
-var defaultundergroundColorAlphaByDistance = new NearFarScalar();
+var defaultUndergroundColorAlphaByDistance = new NearFarScalar();
 
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   var surfaceTile = tile.data;
@@ -1982,7 +2075,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   );
   var undergroundColorAlphaByDistance = defaultValue(
     tileProvider.undergroundColorAlphaByDistance,
-    defaultundergroundColorAlphaByDistance
+    defaultUndergroundColorAlphaByDistance
   );
   var showUndergroundColor =
     isUndergroundVisible(tileProvider, frameState) &&
@@ -1990,6 +2083,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     undergroundColor.alpha > 0.0 &&
     (undergroundColorAlphaByDistance.nearValue > 0.0 ||
       undergroundColorAlphaByDistance.farValue > 0.0);
+
+  var lambertDiffuseMultiplier = tileProvider.lambertDiffuseMultiplier;
 
   var showReflectiveOcean =
     tileProvider.hasWaterMask && defined(waterMaskTexture);
@@ -2047,6 +2142,12 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   var mesh = surfaceTile.renderedMesh;
   var rtc = mesh.center;
   var encoding = mesh.encoding;
+  var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+
+  var exaggeration = frameState.terrainExaggeration;
+  var exaggerationRelativeHeight = frameState.terrainExaggerationRelativeHeight;
+  var hasExaggeration = exaggeration !== 1.0;
+  var hasGeodeticSurfaceNormals = encoding.hasGeodeticSurfaceNormals;
 
   // Not used in 3D.
   var tileRectangle = tileRectangleScratch;
@@ -2136,6 +2237,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
   surfaceShaderSetOptions.useWebMercatorProjection = useWebMercatorProjection;
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
+  surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
+  surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
 
   var tileImageryCollection = surfaceTile.imagery;
   var imageryIndex = 0;
@@ -2201,16 +2304,15 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     ++tileProvider._usedDrawCommands;
 
     if (tile === tileProvider._debug.boundingSphereTile) {
-      var obb = surfaceTile.orientedBoundingBox;
+      var obb = tileBoundingRegion.boundingVolume;
+      var boundingSphere = tileBoundingRegion.boundingSphere;
       // If a debug primitive already exists for this tile, it will not be
       // re-created, to avoid allocation every frame. If it were possible
       // to have more than one selected tile, this would have to change.
       if (defined(obb)) {
         getDebugOrientedBoundingBox(obb, Color.RED).update(frameState);
-      } else if (defined(mesh) && defined(mesh.boundingSphere3D)) {
-        getDebugBoundingSphere(mesh.boundingSphere3D, Color.RED).update(
-          frameState
-        );
+      } else if (defined(boundingSphere)) {
+        getDebugBoundingSphere(boundingSphere, Color.RED).update(frameState);
       }
     }
 
@@ -2260,6 +2362,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     );
     Color.clone(undergroundColor, uniformMapProperties.undergroundColor);
 
+    uniformMapProperties.lambertDiffuseMultiplier = lambertDiffuseMultiplier;
+
     var highlightFillTile =
       !defined(surfaceTile.vertexArray) &&
       defined(tileProvider.fillHighlightColor) &&
@@ -2270,6 +2374,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         uniformMapProperties.fillHighlightColor
       );
     }
+
+    uniformMapProperties.terrainExaggerationAndRelativeHeight.x = exaggeration;
+    uniformMapProperties.terrainExaggerationAndRelativeHeight.y = exaggerationRelativeHeight;
 
     uniformMapProperties.center3D = mesh.center;
     Cartesian3.clone(rtc, uniformMapProperties.rtc);
@@ -2611,7 +2718,6 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     var orientedBoundingBox = command.orientedBoundingBox;
 
     if (frameState.mode !== SceneMode.SCENE3D) {
-      var tileBoundingRegion = surfaceTile.tileBoundingRegion;
       BoundingSphere.fromRectangleWithHeights2D(
         tile.rectangle,
         frameState.mapProjection,
@@ -2628,18 +2734,18 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
       if (frameState.mode === SceneMode.MORPHING) {
         boundingVolume = BoundingSphere.union(
-          mesh.boundingSphere3D,
+          tileBoundingRegion.boundingSphere,
           boundingVolume,
           boundingVolume
         );
       }
     } else {
       command.boundingVolume = BoundingSphere.clone(
-        mesh.boundingSphere3D,
+        tileBoundingRegion.boundingSphere,
         boundingVolume
       );
       command.orientedBoundingBox = OrientedBoundingBox.clone(
-        surfaceTile.orientedBoundingBox,
+        tileBoundingRegion.boundingVolume,
         orientedBoundingBox
       );
     }

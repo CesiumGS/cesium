@@ -56,13 +56,13 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     var uri = new Uri(actualUrl);
 
     if (withProxy) {
-      uri = new Uri(decodeURIComponent(uri.query));
+      uri = new Uri(decodeURIComponent(uri.query()));
     }
 
-    var params = queryToObject(uri.query);
+    var params = queryToObject(uri.query());
 
     var uriWithoutQuery = new Uri(uri);
-    uriWithoutQuery.query = "";
+    uriWithoutQuery.query("");
 
     expect(uriWithoutQuery.toString()).toEqual(
       appendForwardSlash(expectedBaseUrl)
@@ -339,6 +339,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
             crossOrigin,
             deferred,
             true,
+            false,
             true
           );
         } else {
@@ -416,10 +417,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         var uriWithoutQuery = new Uri(uri);
-        uriWithoutQuery.query = "";
+        uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
           getAbsoluteUri(baseUrl + "export")
@@ -495,10 +496,10 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         deferred
       ) {
         var uri = new Uri(request.url);
-        var params = queryToObject(uri.query);
+        var params = queryToObject(uri.query());
 
         var uriWithoutQuery = new Uri(uri);
-        uriWithoutQuery.query = "";
+        uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
           getAbsoluteUri(baseUrl + "export")
@@ -579,6 +580,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
             crossOrigin,
             deferred,
             true,
+            false,
             true
           );
         } else {
@@ -1197,7 +1199,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         overrideMimeType
       ) {
         var uri = new Uri(url);
-        var query = queryToObject(uri.getQuery());
+        var query = queryToObject(uri.query());
 
         expect(query.layers).toContain("visible:someLayer,anotherLayerYay");
         Resource._DefaultImplementations.loadWithXhr(

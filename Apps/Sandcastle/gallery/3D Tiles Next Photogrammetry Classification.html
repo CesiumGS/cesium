@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Load a photogrammetry dataset with feature ID textures from EXT_mesh_features."
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // San Francisco Ferry Building photogrammetry model provided by Aerometrex
+        Cesium.ExperimentalFeatures.enableModelExperimental = true;
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+          infoBox: false,
+          orderIndependentTranslucency: false,
+        });
+
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T20:27:37.016064475348684937Z"
+        );
+
+        var scene = viewer.scene;
+
+        var tileset = new Cesium.Cesium3DTileset({
+          url: Cesium.IonResource.fromAssetId(666297),
+        });
+
+        var translation = new Cesium.Cartesian3(
+          -1.398521324920626,
+          0.7823052871729486,
+          0.7015244410592609
+        );
+        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+        tileset.maximumScreenSpaceError = 8.0;
+        scene.pickTranslucentDepth = true;
+        scene.light.intensity = 7.0;
+
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset);
+
+        // Fly to a nice overview of the city.
+        viewer.camera.flyTo({
+          destination: new Cesium.Cartesian3(
+            -2703640.80485846,
+            -4261161.990345464,
+            3887439.511104276
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.22426651143535548,
+            -0.2624145362506527,
+            0.000006972977223185239
+          ),
+        });
+
+        // Styles =============================================================================
+
+        var classificationStyle = new Cesium.Cesium3DTileStyle({
+          color: "color(${color})",
+        });
+
+        // Shaders ============================================================================
+
+        // Dummy shader that sets the UNLIT lighting mode. For use with the classification style
+        var emptyFragmentShader =
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
+        var unlitShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.UNLIT,
+          fragmentShaderText: emptyFragmentShader,
+        });
+
+        var translucentWindowsShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.UNLIT,
+          isTranslucent: true,
+          fragmentShaderText: [
+            "const float WINDOW = 0.0;",
+            "const float SKYLIGHT = 4.0;",
+            "const float TOTAL_FEATURES = 12.0;",
+            "",
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
+            "  // NOTE: This is exposing internal details of the shader. It would be better if this was added to fsInput somewhere...",
+            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "",
+            "  if (featureId == WINDOW || featureId == SKYLIGHT) {",
+            "    material.alpha = 0.4;",
+            "    material.roughness = 0.1;",
+            "  }",
+            "}",
+          ].join("\n"),
+        });
+
+        var materialShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.PBR,
+          isTranslucent: true,
+          fragmentShaderText: [
+            "const float WINDOW = 0.0;",
+            "const float FRAME = 1.0;",
+            "const float WALL = 2.0;",
+            "const float ROOF = 3.0;",
+            "const float SKYLIGHT = 4.0;",
+            "const float AIR_CONDITIONER_WHITE = 5.0;",
+            "const float AIR_CONDITIONER_BLACK = 6.0;",
+            "const float AIR_CONDITIONER_TALL = 7.0;",
+            "const float CLOCK = 8.0;",
+            "const float PILLARS = 9.0;",
+            "const float STREET_LIGHT = 10.0;",
+            "const float TRAFFIC_LIGHT = 11.0;",
+            "",
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
+            "  // NOTE: This is exposing internal details of the shader. It would be better if this was added to fsInput somewhere...",
+            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "",
+            "  if (featureId == CLOCK) {",
+            "    // Shiny brass",
+            "    material.specular = vec3(0.98, 0.90, 0.59);",
+            "    material.roughness = 0.3;",
+            "  } else if (",
+            "    featureId == STREET_LIGHT ||",
+            "    featureId == AIR_CONDITIONER_BLACK ||",
+            "    featureId == AIR_CONDITIONER_WHITE ||",
+            "    featureId == AIR_CONDITIONER_TALL ||",
+            "    featureId == ROOF",
+            "  ) {",
+            "    // dull aluminum",
+            "    material.specular = vec3(0.91, 0.92, 0.92);",
+            "    material.roughness = 0.5;",
+            "  } else if (featureId == WINDOW || featureId == SKYLIGHT) {",
+            "    // make translucent, but also set an orange emissive color so it looks like",
+            "    // it's lit from inside",
+            "    material.emissive = vec3(1.0, 0.3, 0.0);",
+            "    material.alpha = 0.5;",
+            "  } else if (featureId == WALL || featureId == FRAME || featureId == PILLARS) {",
+            "    // paint the walls and pillars white to contrast the brass clock",
+            "    material.diffuse = mix(material.diffuse, vec3(1.0), 0.8);",
+            "    material.roughness = 0.9;",
+            "  } else {",
+            "    // brighten everything else",
+            "    material.diffuse += 0.05;",
+            "    material.roughness = 0.9;",
+            "  }",
+            "}",
+          ].join("\n"),
+        });
+
+        var NOTHING_SELECTED = 12;
+        var selectFeatureShader = new Cesium.CustomShader({
+          uniforms: {
+            u_selectedFeature: {
+              type: Cesium.UniformType.FLOAT,
+              value: NOTHING_SELECTED,
+            },
+          },
+          lightingModel: Cesium.LightingModel.PBR,
+          fragmentShaderText: [
+            "const float NOTHING_SELECTED = 12.0;",
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
+            "  // NOTE: This is exposing internal details of the shader. It would be better if this was added to fsInput somewhere...",
+            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "",
+            "  if (u_selectedFeature < NOTHING_SELECTED && featureId == u_selectedFeature) {",
+            "    material.specular = vec3(1.00, 0.85, 0.57);",
+            "    material.roughness = 0.3;",
+            "  }",
+            "}",
+          ].join("\n"),
+        });
+
+        // Demo Functions =====================================================================
+
+        function defaults() {
+          tileset.style = undefined;
+          tileset.customShader = unlitShader;
+          tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+          tileset.colorBlendAmount = 0.5;
+        }
+
+        var showPhotogrammetry = defaults;
+
+        function showClassification() {
+          defaults();
+          tileset.style = classificationStyle;
+          tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.MIX;
+        }
+
+        function translucentWindows() {
+          defaults();
+          tileset.customShader = translucentWindowsShader;
+        }
+
+        function pbrMaterials() {
+          defaults();
+          tileset.customShader = materialShader;
+        }
+
+        function goldenTouch() {
+          defaults();
+          tileset.customShader = selectFeatureShader;
+        }
+
+        // Pick Handlers ======================================================================
+
+        // HTML overlay for showing feature name on mouseover
+        var nameOverlay = document.createElement("div");
+        viewer.container.appendChild(nameOverlay);
+        nameOverlay.className = "backdrop";
+        nameOverlay.style.display = "none";
+        nameOverlay.style.position = "absolute";
+        nameOverlay.style.bottom = "0";
+        nameOverlay.style.left = "0";
+        nameOverlay.style["pointer-events"] = "none";
+        nameOverlay.style.padding = "4px";
+        nameOverlay.style.backgroundColor = "black";
+        nameOverlay.style.whiteSpace = "pre-line";
+        nameOverlay.style.fontSize = "12px";
+
+        var enablePicking = true;
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            var pickedObject = viewer.scene.pick(movement.endPosition);
+            if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
+              nameOverlay.style.display = "block";
+              nameOverlay.style.bottom =
+                viewer.canvas.clientHeight - movement.endPosition.y + "px";
+              nameOverlay.style.left = movement.endPosition.x + "px";
+              var message =
+                "Component: " +
+                pickedObject.getProperty("component") +
+                "\nFeature ID: " +
+                pickedObject._batchId;
+              nameOverlay.textContent = message;
+            } else {
+              nameOverlay.style.display = "none";
+            }
+          } else {
+            nameOverlay.style.display = "none";
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        var clickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            var pickedObject = scene.pick(movement.position);
+            if (
+              Cesium.defined(pickedObject) &&
+              Cesium.defined(pickedObject._batchId)
+            ) {
+              selectFeatureShader.setUniform(
+                "u_selectedFeature",
+                pickedObject._batchId
+              );
+            } else {
+              selectFeatureShader.setUniform(
+                "u_selectedFeature",
+                NOTHING_SELECTED
+              );
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // UI ============================================================================
+
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
+          checked
+        ) {
+          enablePicking = checked;
+        });
+
+        var demos = [
+          {
+            text: "Photogrammetry",
+            onselect: showPhotogrammetry,
+          },
+          {
+            text: "Show Classification",
+            onselect: showClassification,
+          },
+          {
+            text: "Translucent Windows",
+            onselect: translucentWindows,
+          },
+          {
+            text: "Stylized PBR Materials",
+            onselect: pbrMaterials,
+          },
+          {
+            text: "Golden Touch",
+            onselect: goldenTouch,
+          },
+        ];
+        Sandcastle.addToolbarMenu(demos);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

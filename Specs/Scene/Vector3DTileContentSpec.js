@@ -1,19 +1,24 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
-import { destroyObject } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { GeometryInstance } from "../../Source/Cesium.js";
-import { Rectangle } from "../../Source/Cesium.js";
-import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { RenderState } from "../../Source/Cesium.js";
-import { Cesium3DTileset } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { ClassificationType } from "../../Source/Cesium.js";
-import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
-import { Primitive } from "../../Source/Cesium.js";
-import { StencilConstants } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cesium3DTileset,
+  Cesium3DTileStyle,
+  ClassificationType,
+  Color,
+  ColorGeometryInstanceAttribute,
+  destroyObject,
+  Ellipsoid,
+  GeometryInstance,
+  MetadataClass,
+  Math as CesiumMath,
+  GroupMetadata,
+  Pass,
+  PerInstanceColorAppearance,
+  Primitive,
+  Rectangle,
+  RectangleGeometry,
+  RenderState,
+  StencilConstants,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -897,6 +902,117 @@ xdescribe(
       });
     });
 
+    it("gets polyline positions", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        vectorPolylinesWithBatchIds,
+        {
+          vectorKeepDecodedPositions: true,
+        }
+      ).then(function (tileset) {
+        var content = tileset.root.content;
+        var polylinePositions = content.getPolylinePositions(0);
+        expect(polylinePositions.length).toBe(60);
+        expect(polylinePositions[0]).toEqualEpsilon(
+          6378136.806372941,
+          CesiumMath.EPSILON7
+        );
+        expect(polylinePositions[1]).toEqualEpsilon(
+          -1113.194885441724,
+          CesiumMath.EPSILON7
+        );
+        expect(polylinePositions[2]).toEqualEpsilon(
+          1105.675261474196,
+          CesiumMath.EPSILON7
+        );
+      });
+    });
+
+    it("gets polyline positions for individual polylines in a batch", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        vectorPolylinesBatchedChildren,
+        {
+          vectorKeepDecodedPositions: true,
+        }
+      ).then(function (tileset) {
+        var content = tileset.root.children[0].content;
+        expect(content.getPolylinePositions(0).length).toBe(60);
+        expect(content.getPolylinePositions(1).length).toBe(60);
+        expect(content.getPolylinePositions(2).length).toBe(60);
+        expect(content.getPolylinePositions(3).length).toBe(60);
+      });
+    });
+
+    it("gets polyline positions for clamped polylines", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        vectorPolylinesWithBatchIds,
+        {
+          vectorKeepDecodedPositions: true,
+          classificationType: ClassificationType.TERRAIN,
+        }
+      ).then(function (tileset) {
+        var content = tileset.root.content;
+        var polylinePositions = content.getPolylinePositions(0);
+        expect(polylinePositions.length).toBe(54); // duplicate positions are removed
+        expect(polylinePositions[0]).toEqualEpsilon(
+          6378136.806372941,
+          CesiumMath.EPSILON7
+        );
+        expect(polylinePositions[1]).toEqualEpsilon(
+          -1113.194885441724,
+          CesiumMath.EPSILON7
+        );
+        expect(polylinePositions[2]).toEqualEpsilon(
+          1105.675261474196,
+          CesiumMath.EPSILON7
+        );
+      });
+    });
+
+    it("getPolylinePositions returns undefined if there are no positions associated with the given batchId", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        vectorPolylinesWithBatchIds,
+        {
+          vectorKeepDecodedPositions: true,
+        }
+      ).then(function (tileset) {
+        var content = tileset.root.content;
+        var polylinePositions = content.getPolylinePositions(1);
+        expect(polylinePositions).toBeUndefined();
+      });
+    });
+
+    it("getPolylinePositions returns undefined if there are no polylines", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        vectorPolygonsWithBatchIds,
+        {
+          vectorKeepDecodedPositions: true,
+        }
+      ).then(function (tileset) {
+        var content = tileset.root.content;
+        var polylinePositions = content.getPolylinePositions(0);
+        expect(polylinePositions).toBeUndefined();
+      });
+    });
+
+    it("getPolylinePositions returns undefined if tileset.vectorKeepDecodedPositions is false", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        vectorPolylinesWithBatchIds,
+        {
+          vectorKeepDecodedPositions: false,
+        }
+      ).then(function (tileset) {
+        var content = tileset.root.content;
+        var polylinePositions = content.getPolylinePositions(0);
+        expect(polylinePositions).toBeUndefined();
+      });
+    });
+
     it("throws when calling getFeature with invalid index", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
@@ -955,6 +1071,42 @@ xdescribe(
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              componentType: "STRING",
+            },
+            height: {
+              componentType: "FLOAT32",
+            },
+          },
+        },
+      });
+      var groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns groupMetadata", function () {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
+          }
+        );
+      });
     });
   },
   "WebGL"

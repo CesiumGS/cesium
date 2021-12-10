@@ -32,7 +32,6 @@ describe("Scene/ScreenSpaceCameraController", function () {
     this.camera = camera;
     this.globe = undefined;
     this.mapProjection = new GeographicProjection(ellipsoid);
-    this.terrainExaggeration = 1.0;
     this.screenSpaceCameraController = undefined;
     this.cameraUnderground = false;
     this.globeHeight = 0.0;
@@ -57,6 +56,10 @@ describe("Scene/ScreenSpaceCameraController", function () {
         tilesWaitingForChildren: 0,
       },
     };
+
+    this.terrainExaggeration = 1.0;
+    this.terrainExaggerationRelativeHeight = 0.0;
+
     this.show = true;
   }
   beforeAll(function () {

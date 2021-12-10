@@ -4,7 +4,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Derived classes of this interface evaluate expressions in the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * This type describes an interface and is not intended to be instantiated directly.
@@ -21,7 +21,7 @@ function StyleExpression() {}
 /**
  * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
  * the expression in the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
  * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
  * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
  * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -54,8 +54,8 @@ StyleExpression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionName Name to give to the generated function.
- * @param {String} propertyNameMap Maps property variable names to shader attribute names.
+ * @param {String} functionSignature Signature of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -64,11 +64,23 @@ StyleExpression.prototype.evaluateColor = function (feature, result) {
  * @private
  */
 StyleExpression.prototype.getShaderFunction = function (
-  functionName,
-  propertyNameMap,
+  functionSignature,
+  variableSubstitutionMap,
   shaderState,
   returnType
 ) {
   DeveloperError.throwInstantiationError();
 };
+
+/**
+ * Gets the variables used by the expression.
+ *
+ * @returns {String[]} The variables used by the expression.
+ *
+ * @private
+ */
+StyleExpression.prototype.getVariables = function () {
+  DeveloperError.throwInstantiationError();
+};
+
 export default StyleExpression;

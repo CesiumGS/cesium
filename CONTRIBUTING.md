@@ -29,7 +29,7 @@ In addition to contributing core CesiumJS code, we appreciate many types of cont
 
 - Being active on the [Cesium community forum](https://community.cesium.com/) by answering questions and providing input on Cesium's direction.
 - Showcasing your Cesium apps on [Cesium blog](https://cesium.com/blog/categories/userstories/). Contact us at hello@cesium.com.
-- Writing tutorials, creating examples, and improving the reference documentation. See the issues labeled [doc](https://github.com/CesiumGS/cesium/labels/doc).
+- Writing tutorials, creating examples, and improving the reference documentation. See the issues labeled [category - doc](https://github.com/CesiumGS/cesium/labels/category%20-%20doc).
 - Submitting issues as [described above](#submitting-an-issue).
 - Triaging issues. Browse the [issues](https://github.com/CesiumGS/cesium/issues) and comment on issues that are no longer reproducible or on issues which you have additional information.
 - Creating ecosystem projects for [glTF](https://github.com/KhronosGroup/glTF/issues/456), [CZML](https://github.com/CesiumGS/cesium/wiki/CZML-Guide), and [3D Tiles](https://github.com/CesiumGS/3d-tiles).
@@ -37,7 +37,7 @@ In addition to contributing core CesiumJS code, we appreciate many types of cont
 For ideas for CesiumJS code contributions, see:
 
 - issues labeled [`good first issue`](https://github.com/CesiumGS/cesium/labels/good%20first%20issue) and
-- issues labeled [`roadmap`](https://github.com/CesiumGS/cesium/labels/roadmap).
+- issues labeled [`type - roadmap`](https://github.com/CesiumGS/cesium/labels/type%20-%20roadmap).
 
 See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
 
@@ -65,7 +65,7 @@ If you have any questions, feel free to reach out to [hello@cesium.com](mailto:h
 Our code is our lifeblood so maintaining CesiumJS's high code quality is important to us.
 
 - Review the [Contributor Guides](Documentation/Contributors/README.md). In addition to CesiumJS-specific topics, they contain a lot of general software development best practices.
-- If this is your first contribution to CesiumJS, add your name to [CONTRIBUTORS.md](https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md).
+- If this is your first contribution to CesiumJS, add your name to [CONTRIBUTORS.md](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md).
 - For an overview of our workflow see [github pull request workflows](https://cesium.com/blog/2013/10/08/github-pull-request-workflows/).
 - Pull request tips
   - After you open a pull request, the friendly [cesium-concierge](https://github.com/CesiumGS/cesium-concierge) bot will comment with a short automated review. At least one human will also review your pull request.

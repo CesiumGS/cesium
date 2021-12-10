@@ -47,7 +47,7 @@ import SceneMode from "./SceneMode.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html|Cesium Sandcastle Camera Tutorial Example}
- * @demo {@link https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
+ * @demo {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-camera|Camera Tutorial}
  *
  * @example
  * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -198,6 +198,7 @@ function Camera(scene) {
   this._changedPosition = undefined;
   this._changedDirection = undefined;
   this._changedFrustum = undefined;
+  this._changedHeading = undefined;
 
   /**
    * The amount the camera has to change before the <code>changed</code> event is raised. The value is a percentage in the [0, 1] range.
@@ -360,6 +361,25 @@ Camera.prototype._updateCameraChanged = function () {
   }
 
   var percentageChanged = camera.percentageChanged;
+
+  var currentHeading = camera.heading;
+
+  if (!defined(camera._changedHeading)) {
+    camera._changedHeading = currentHeading;
+  }
+
+  var delta =
+    Math.abs(camera._changedHeading - currentHeading) % CesiumMath.TWO_PI;
+  delta = delta > CesiumMath.PI ? CesiumMath.TWO_PI - delta : delta;
+
+  // Since delta is computed as the shortest distance between two angles
+  // the percentage is relative to the half circle.
+  var headingChangedPercentage = delta / Math.PI;
+
+  if (headingChangedPercentage > percentageChanged) {
+    camera._changed.raiseEvent(headingChangedPercentage);
+    camera._changedHeading = currentHeading;
+  }
 
   if (camera._mode === SceneMode.SCENE2D) {
     if (!defined(camera._changedFrustum)) {

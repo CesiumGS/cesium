@@ -11,9 +11,9 @@ import Quaternion from "../Core/Quaternion.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
-import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
+import addToArray from "./GltfPipeline/addToArray.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 
@@ -437,7 +437,7 @@ function getTechniqueAttributeOrUniformFunction(
   semantic,
   ignoreNodes
 ) {
-  if (hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return function (attributeOrUniform, attributeOrUniformName) {
       if (
         attributeOrUniform.semantic === semantic &&
@@ -564,6 +564,7 @@ ModelUtility.supportedExtensions = {
   EXT_texture_webp: true,
   KHR_blend: true,
   KHR_binary_glTF: true,
+  KHR_texture_basisu: true,
   KHR_draco_mesh_compression: true,
   KHR_materials_common: true,
   KHR_techniques_webgl: true,
@@ -633,7 +634,7 @@ function getAttributeVariableName(gltf, primitive, attributeSemantic) {
   var material = gltf.materials[materialId];
 
   if (
-    !hasExtension(gltf, "KHR_techniques_webgl") ||
+    !usesExtension(gltf, "KHR_techniques_webgl") ||
     !defined(material.extensions) ||
     !defined(material.extensions.KHR_techniques_webgl)
   ) {

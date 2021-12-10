@@ -7932,6 +7932,8 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e = dataSource.entities.getById('constant_conicSensor_environmentOcclusionMaterial_checkerboard_evenColor')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_conicSensor_environmentOcclusionMaterial_checkerboard_oddColor')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_conicSensor_environmentIntersectionColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('constant_agi_conicSensor_viewshedVisibleColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('constant_agi_conicSensor_viewshedOccludedColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_customPatternSensor_directions_unitSpherical')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_customPatternSensor_directions_cartesian')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_customPatternSensor_directions_unitCartesian')).toBeDefined();
@@ -7992,6 +7994,8 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e = dataSource.entities.getById('constant_customPatternSensor_environmentOcclusionMaterial_checkerboard_evenColor')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_customPatternSensor_environmentOcclusionMaterial_checkerboard_oddColor')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_customPatternSensor_environmentIntersectionColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('constant_agi_customPatternSensor_viewshedVisibleColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('constant_agi_customPatternSensor_viewshedOccludedColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_rectangularSensor_intersectionColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_rectangularSensor_lateralSurfaceMaterial_solidColor_color')).toBeDefined();
       expect(e = dataSource.entities.getById('material_rectangularSensor_lateralSurfaceMaterial_image')).toBeDefined();
@@ -8049,6 +8053,8 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e = dataSource.entities.getById('constant_rectangularSensor_environmentOcclusionMaterial_checkerboard_evenColor')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_rectangularSensor_environmentOcclusionMaterial_checkerboard_oddColor')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_rectangularSensor_environmentIntersectionColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('constant_agi_rectangularSensor_viewshedVisibleColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('constant_agi_rectangularSensor_viewshedOccludedColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_fan_directions_unitSpherical')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_fan_directions_cartesian')).toBeDefined();
       expect(e = dataSource.entities.getById('constant_agi_fan_directions_unitCartesian')).toBeDefined();
@@ -9881,6 +9887,8 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e = dataSource.entities.getById('sampled_conicSensor_environmentOcclusionMaterial_checkerboard_evenColor')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_conicSensor_environmentOcclusionMaterial_checkerboard_oddColor')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_conicSensor_environmentIntersectionColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('sampled_conicSensor_viewshedVisibleColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('sampled_conicSensor_viewshedOccludedColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_customPatternSensor_intersectionColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_customPatternSensor_lateralSurfaceMaterial_solidColor_color')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_customPatternSensor_lateralSurfaceMaterial_image')).toBeDefined();
@@ -9938,6 +9946,8 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e = dataSource.entities.getById('sampled_customPatternSensor_environmentOcclusionMaterial_checkerboard_evenColor')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_customPatternSensor_environmentOcclusionMaterial_checkerboard_oddColor')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_customPatternSensor_environmentIntersectionColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('sampled_customPatternSensor_viewshedVisibleColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('sampled_customPatternSensor_viewshedOccludedColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_rectangularSensor_intersectionColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_rectangularSensor_lateralSurfaceMaterial_solidColor_color')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_rectangularSensor_lateralSurfaceMaterial_image')).toBeDefined();
@@ -9995,6 +10005,8 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e = dataSource.entities.getById('sampled_rectangularSensor_environmentOcclusionMaterial_checkerboard_evenColor')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_rectangularSensor_environmentOcclusionMaterial_checkerboard_oddColor')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_rectangularSensor_environmentIntersectionColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('sampled_rectangularSensor_viewshedVisibleColor_rgbaf')).toBeDefined();
+      expect(e = dataSource.entities.getById('sampled_rectangularSensor_viewshedOccludedColor_rgbaf')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_fan_material_solidColor_color')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_fan_material_image')).toBeDefined();
       expect(e = dataSource.entities.getById('sampled_fan_material_grid')).toBeDefined();

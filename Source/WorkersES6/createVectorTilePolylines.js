@@ -1,57 +1,10 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
+import combine from "../Core/combine.js";
+import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-
-var maxShort = 32767;
-
-var scratchBVCartographic = new Cartographic();
-var scratchEncodedPosition = new Cartesian3();
-
-function decodePositions(
-  positions,
-  rectangle,
-  minimumHeight,
-  maximumHeight,
-  ellipsoid
-) {
-  var positionsLength = positions.length / 3;
-  var uBuffer = positions.subarray(0, positionsLength);
-  var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
-  var heightBuffer = positions.subarray(
-    2 * positionsLength,
-    3 * positionsLength
-  );
-  AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
-
-  var decoded = new Float64Array(positions.length);
-  for (var i = 0; i < positionsLength; ++i) {
-    var u = uBuffer[i];
-    var v = vBuffer[i];
-    var h = heightBuffer[i];
-
-    var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-    var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
-    var alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
-
-    var cartographic = Cartographic.fromRadians(
-      lon,
-      lat,
-      alt,
-      scratchBVCartographic
-    );
-    var decodedPosition = ellipsoid.cartographicToCartesian(
-      cartographic,
-      scratchEncodedPosition
-    );
-    Cartesian3.pack(decodedPosition, decoded, i * 3);
-  }
-  return decoded;
-}
 
 var scratchRectangle = new Rectangle();
 var scratchEllipsoid = new Ellipsoid();
@@ -77,6 +30,18 @@ function unpackBuffer(packedBuffer) {
   Cartesian3.unpack(packedBuffer, offset, scratchCenter);
 }
 
+function getPositionOffsets(counts) {
+  var countsLength = counts.length;
+  var positionOffsets = new Uint32Array(countsLength + 1);
+  var offset = 0;
+  for (var i = 0; i < countsLength; ++i) {
+    positionOffsets[i] = offset;
+    offset += counts[i];
+  }
+  positionOffsets[countsLength] = offset;
+  return positionOffsets;
+}
+
 var scratchP0 = new Cartesian3();
 var scratchP1 = new Cartesian3();
 var scratchPrev = new Cartesian3();
@@ -96,7 +61,7 @@ function createVectorTilePolylines(parameters, transferableObjects) {
   var minimumHeight = scratchMinMaxHeights.min;
   var maximumHeight = scratchMinMaxHeights.max;
 
-  var positions = decodePositions(
+  var positions = decodeVectorPolylinePositions(
     encodedPositions,
     rectangle,
     minimumHeight,
@@ -214,7 +179,7 @@ function createVectorTilePolylines(parameters, transferableObjects) {
     indices.buffer
   );
 
-  return {
+  var results = {
     indexDatatype:
       indices.BYTES_PER_ELEMENT === 2
         ? IndexDatatype.UNSIGNED_SHORT
@@ -226,5 +191,16 @@ function createVectorTilePolylines(parameters, transferableObjects) {
     batchIds: vertexBatchIds.buffer,
     indices: indices.buffer,
   };
+
+  if (parameters.keepDecodedPositions) {
+    var positionOffsets = getPositionOffsets(counts);
+    transferableObjects.push(positions.buffer, positionOffsets.buffer);
+    results = combine(results, {
+      decodedPositions: positions.buffer,
+      decodedPositionOffsets: positionOffsets.buffer,
+    });
+  }
+
+  return results;
 }
 export default createTaskProcessorWorker(createVectorTilePolylines);

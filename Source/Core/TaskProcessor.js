@@ -200,9 +200,11 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        work to be rescheduled in future frames.
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
-  this._workerPath = new Uri(workerPath).isAbsolute()
-    ? workerPath
-    : TaskProcessor._workerModulePrefix + workerPath;
+  var uri = new Uri(workerPath);
+  this._workerPath =
+    uri.scheme().length !== 0 && uri.fragment().length === 0
+      ? workerPath
+      : TaskProcessor._workerModulePrefix + workerPath;
   this._maximumActiveTasks = defaultValue(
     maximumActiveTasks,
     Number.POSITIVE_INFINITY

@@ -952,4 +952,58 @@ describe("Core/RequestScheduler", function () {
     );
     expect(promise).toBeUndefined();
   });
+
+  it("serverHasOpenSlots works for single requests", function () {
+    var deferreds = [];
+
+    function requestFunction() {
+      var deferred = when.defer();
+      deferreds.push(deferred);
+      return deferred.promise;
+    }
+
+    function createRequest() {
+      return new Request({
+        url: "https://test.invalid:80/1",
+        requestFunction: requestFunction,
+      });
+    }
+
+    RequestScheduler.maximumRequestsPerServer = 5;
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80")).toBe(true);
+
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80")).toBe(false);
+  });
+
+  it("serverHasOpenSlots works for multiple requests on a single server", function () {
+    var deferreds = [];
+
+    function requestFunction() {
+      var deferred = when.defer();
+      deferreds.push(deferred);
+      return deferred.promise;
+    }
+
+    function createRequest() {
+      return new Request({
+        url: "https://test.invalid:80/1",
+        requestFunction: requestFunction,
+      });
+    }
+
+    RequestScheduler.maximumRequestsPerServer = 5;
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80", 3)).toBe(
+      true
+    );
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80", 4)).toBe(
+      false
+    );
+  });
 });

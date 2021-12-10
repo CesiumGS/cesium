@@ -309,7 +309,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
         })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
-          expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
+          expect(mesh.vertices.length).toBe(17 * mesh.encoding.stride); // 9 regular + 8 skirt vertices
           expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
           expect(mesh.minimumHeight).toBe(0);
           expect(mesh.maximumHeight).toBeCloseTo(20, 5);
@@ -317,7 +317,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
           var encoding = mesh.encoding;
           var cartesian = new Cartesian3();
           var cartographic = new Cartographic();
-          var count = mesh.vertices.length / mesh.encoding.getStride();
+          var count = mesh.vertices.length / mesh.encoding.stride;
           for (var i = 0; i < count; ++i) {
             var height = encoding.decodeHeight(mesh.vertices, i);
             if (i < 9) {
@@ -350,13 +350,18 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
         })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
-          expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
+          expect(mesh.vertices.length).toBe(17 * mesh.encoding.stride); // 9 regular + 8 skirt vertices
           expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
+
+          // Even though there's exaggeration, it doesn't affect the mesh's
+          // height, bounding sphere, or any other bounding volumes.
+          // The exaggeration is instead stored in the mesh's TerrainEncoding
           expect(mesh.minimumHeight).toBe(0);
-          expect(mesh.maximumHeight).toBeCloseTo(40, 5);
+          expect(mesh.maximumHeight).toBeCloseTo(20, 5);
+          expect(mesh.encoding.exaggeration).toBe(2.0);
 
           var encoding = mesh.encoding;
-          var count = mesh.vertices.length / mesh.encoding.getStride();
+          var count = mesh.vertices.length / mesh.encoding.stride;
           for (var i = 0; i < count; ++i) {
             var height = encoding.decodeHeight(mesh.vertices, i);
             if (i < 9) {

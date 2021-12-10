@@ -2,7 +2,7 @@
   "name": "eslint-config-cesium",
   "version": "8.0.1",
   "description": "ESLint shareable configs for Cesium",
-  "homepage": "http://cesiumjs.org",
+  "homepage": "http://cesium.com/",
   "license": "Apache-2.0",
   "author": {
     "name": "Cesium GS, Inc.",
@@ -11,7 +11,7 @@
   "contributors": [
     {
       "name": "Cesium community",
-      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
+      "url": "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md"
     }
   ],
   "keywords": [

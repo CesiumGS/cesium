@@ -17,6 +17,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Plane from "../Core/Plane.js";
 import Quaternion from "../Core/Quaternion.js";
 import Ray from "../Core/Ray.js";
+import TerrainExaggeration from "../Core/TerrainExaggeration.js";
 import Transforms from "../Core/Transforms.js";
 import CameraEventAggregator from "./CameraEventAggregator.js";
 import CameraEventType from "./CameraEventType.js";
@@ -2442,7 +2443,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   var constrainedAxis = Cartesian3.UNIT_Z;
 
   var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
-  camera._setTransform(transform);
+  camera._setTransform(verticalTransform);
 
   var tangent = Cartesian3.cross(
     verticalCenter,
@@ -2450,10 +2451,6 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
     tilt3DCartesian3
   );
   var dot = Cartesian3.dot(camera.rightWC, tangent);
-
-  rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
-
-  camera._setTransform(verticalTransform);
 
   if (dot < 0.0) {
     var movementDelta = movement.startPosition.y - movement.endPosition.y;
@@ -2474,6 +2471,9 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   } else {
     rotate3D(controller, startPosition, movement, constrainedAxis, true, false);
   }
+
+  camera._setTransform(transform);
+  rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
 
   if (defined(camera.constrainedAxis)) {
     var right = Cartesian3.cross(
@@ -2818,14 +2818,29 @@ ScreenSpaceCameraController.prototype.update = function () {
       : scene.mapProjection.ellipsoid;
   }
 
-  this._cameraUnderground = scene.cameraUnderground && defined(this._globe);
+  var exaggeration = defined(this._globe)
+    ? this._globe.terrainExaggeration
+    : 1.0;
+  var exaggerationRelativeHeight = defined(this._globe)
+    ? this._globe.terrainExaggerationRelativeHeight
+    : 0.0;
+  this._minimumCollisionTerrainHeight = TerrainExaggeration.getHeight(
+    this.minimumCollisionTerrainHeight,
+    exaggeration,
+    exaggerationRelativeHeight
+  );
+  this._minimumPickingTerrainHeight = TerrainExaggeration.getHeight(
+    this.minimumPickingTerrainHeight,
+    exaggeration,
+    exaggerationRelativeHeight
+  );
+  this._minimumTrackBallHeight = TerrainExaggeration.getHeight(
+    this.minimumTrackBallHeight,
+    exaggeration,
+    exaggerationRelativeHeight
+  );
 
-  this._minimumCollisionTerrainHeight =
-    this.minimumCollisionTerrainHeight * scene.terrainExaggeration;
-  this._minimumPickingTerrainHeight =
-    this.minimumPickingTerrainHeight * scene.terrainExaggeration;
-  this._minimumTrackBallHeight =
-    this.minimumTrackBallHeight * scene.terrainExaggeration;
+  this._cameraUnderground = scene.cameraUnderground && defined(this._globe);
 
   var radius = this._ellipsoid.maximumRadius;
   this._rotateFactor = 1.0 / radius;

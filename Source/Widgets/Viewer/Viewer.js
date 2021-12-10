@@ -45,6 +45,8 @@ import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import Timeline from "../Timeline/Timeline.js";
 import VRButton from "../VRButton/VRButton.js";
 import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
+import JulianDate from "../../Core/JulianDate.js";
+import CesiumMath from "../../Core/Math.js";
 
 var boundingSphereScratch = new BoundingSphere();
 
@@ -135,14 +137,27 @@ function pickEntity(viewer, e) {
   }
 }
 
+var scratchStopTime = new JulianDate();
+
 function trackDataSourceClock(timeline, clock, dataSource) {
   if (defined(dataSource)) {
     var dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock)) {
       dataSourceClock.getValue(clock);
       if (defined(timeline)) {
+        var startTime = dataSourceClock.startTime;
+        var stopTime = dataSourceClock.stopTime;
+        // When the start and stop times are equal, set the timeline to the shortest interval
+        // starting at the start time. This prevents an invalid timeline configuration.
+        if (JulianDate.equals(startTime, stopTime)) {
+          stopTime = JulianDate.addSeconds(
+            startTime,
+            CesiumMath.EPSILON2,
+            scratchStopTime
+          );
+        }
         timeline.updateFromClock();
-        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+        timeline.zoomTo(startTime, stopTime);
       }
     }
   }
@@ -319,7 +334,6 @@ function enableVRUI(viewer, enabled) {
  * @property {Element|String} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
  * @property {DataSourceCollection} [dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
  *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
- * @property {Number} [terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
  * @property {Boolean} [shadows=false] Determines if shadows are cast by light sources.
  * @property {ShadowMode} [terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
  * @property {MapMode2D} [mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
@@ -485,7 +499,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       : bottomContainer,
     creditViewport: options.creditViewport,
     scene3DOnly: scene3DOnly,
-    terrainExaggeration: options.terrainExaggeration,
     shadows: options.shadows,
     terrainShadows: options.terrainShadows,
     mapMode2D: options.mapMode2D,

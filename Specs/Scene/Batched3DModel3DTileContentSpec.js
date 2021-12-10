@@ -1,14 +1,18 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Matrix4 } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Batched3DModel3DTileContent } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { Model } from "../../Source/Cesium.js";
+import {
+  B3dmParser,
+  Cartesian3,
+  Color,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Matrix4,
+  Transforms,
+  Cesium3DTilePass,
+  ClippingPlane,
+  ClippingPlaneCollection,
+  MetadataClass,
+  GroupMetadata,
+  Model,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -37,10 +41,6 @@ describe(
       "./Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json";
     var texturedUrl =
       "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
-    var deprecated1Url =
-      "./Data/Cesium3DTiles/Batched/BatchedDeprecated1/tileset.json";
-    var deprecated2Url =
-      "./Data/Cesium3DTiles/Batched/BatchedDeprecated2/tileset.json";
     var withRtcCenterUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json";
 
@@ -54,7 +54,7 @@ describe(
       scene = createScene();
 
       // Keep the error from logging to the console when running tests
-      spyOn(Batched3DModel3DTileContent, "_deprecationWarning");
+      spyOn(B3dmParser, "_deprecationWarning");
     });
 
     afterAll(function () {
@@ -67,56 +67,6 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
-    });
-
-    it("throws with invalid version", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
-        version: 2,
-      });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
-    });
-
-    it("recognizes the legacy 20-byte header", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
-        function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          var batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
-        }
-      );
-    });
-
-    it("recognizes the legacy 24-byte header", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated2Url).then(
-        function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-          var batchTable = tileset.root.content.batchTable;
-          expect(batchTable._properties).toBeDefined();
-        }
-      );
-    });
-
-    it("logs deprecation warning for use of BATCHID without prefixed underscore", function () {
-      return Cesium3DTilesTester.loadTileset(scene, deprecated1Url).then(
-        function (tileset) {
-          expect(
-            Batched3DModel3DTileContent._deprecationWarning
-          ).toHaveBeenCalled();
-          Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
-      );
-    });
-
-    it("throws with empty gltf", function () {
-      // Expect to throw DeveloperError in Model due to invalid gltf magic
-      var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
     });
 
     it("resolves readyPromise", function () {
@@ -452,6 +402,43 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              componentType: "STRING",
+            },
+            height: {
+              componentType: "FLOAT32",
+            },
+          },
+        },
+      });
+      var groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns groupMetadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withoutBatchTableUrl
+        ).then(function (tileset) {
+          var content = tileset.root.content;
+          content.groupMetadata = groupMetadata;
+          expect(content.groupMetadata).toBe(groupMetadata);
+        });
+      });
     });
   },
   "WebGL"

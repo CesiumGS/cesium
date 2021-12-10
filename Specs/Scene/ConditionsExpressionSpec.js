@@ -7,7 +7,7 @@ describe("Scene/ConditionsExpression", function () {
     this._value = value;
   }
 
-  MockFeature.prototype.getProperty = function () {
+  MockFeature.prototype.getPropertyInherited = function () {
     return this._value;
   };
 
@@ -28,6 +28,14 @@ describe("Scene/ConditionsExpression", function () {
     conditions: [
       ["${halfHeight} > 50 && ${halfHeight} < 100", 'color("blue")'],
       ["${quarterHeight} > 50 && ${quarterHeight} < 52", 'color("red")'],
+      ["true", 'color("lime")'],
+    ],
+  };
+
+  var jsonExpMultipleVariables = {
+    conditions: [
+      ["${Height} > 100", "${FloorColor}"],
+      ["${Height} > 50", "${FloorColor} * 0.5"],
       ["true", 'color("lime")'],
     ],
   };
@@ -95,32 +103,32 @@ describe("Scene/ConditionsExpression", function () {
 
   it("gets shader function", function () {
     var expression = new ConditionsExpression(jsonExp);
-    var properyNameMap = {
+    var variableSubstitutionMap = {
       Height: "a_height",
     };
     var shaderFunction = expression.getShaderFunction(
-      "getColor",
-      properyNameMap,
+      "getColor()",
+      variableSubstitutionMap,
       {},
       "vec4"
     );
     var expected =
-      "vec4 getColor() \n" +
-      "{ \n" +
-      "    if ((a_height > 100.0)) \n" +
-      "    { \n" +
-      "        return vec4(vec3(0.0, 0.0, 1.0), 1.0); \n" +
-      "    } \n" +
-      "    else if ((a_height > 50.0)) \n" +
-      "    { \n" +
-      "        return vec4(vec3(1.0, 0.0, 0.0), 1.0); \n" +
-      "    } \n" +
-      "    else if (true) \n" +
-      "    { \n" +
-      "        return vec4(vec3(0.0, 1.0, 0.0), 1.0); \n" +
-      "    } \n" +
-      "    return vec4(1.0); \n" +
-      "} \n";
+      "vec4 getColor()\n" +
+      "{\n" +
+      "    if ((a_height > 100.0))\n" +
+      "    {\n" +
+      "        return vec4(vec3(0.0, 0.0, 1.0), 1.0);\n" +
+      "    }\n" +
+      "    else if ((a_height > 50.0))\n" +
+      "    {\n" +
+      "        return vec4(vec3(1.0, 0.0, 0.0), 1.0);\n" +
+      "    }\n" +
+      "    else if (true)\n" +
+      "    {\n" +
+      "        return vec4(vec3(0.0, 1.0, 0.0), 1.0);\n" +
+      "    }\n" +
+      "    return vec4(1.0);\n" +
+      "}\n";
     expect(shaderFunction).toEqual(expected);
   });
 
@@ -133,5 +141,17 @@ describe("Scene/ConditionsExpression", function () {
       "vec4"
     );
     expect(shaderFunction).toBeUndefined();
+  });
+
+  it("gets variables", function () {
+    var expression = new ConditionsExpression(jsonExpMultipleVariables);
+    var variables = expression.getVariables();
+    expect(variables.sort()).toEqual(["FloorColor", "Height"]);
+  });
+
+  it("getVariables returns empty array when there are no conditions", function () {
+    var expression = new ConditionsExpression([]);
+    var variables = expression.getVariables();
+    expect(variables).toEqual([]);
   });
 });
