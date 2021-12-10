@@ -27,11 +27,6 @@ void main()
     cpuStylingStage(attributes.positionMC, feature);
     updateFeatureStruct(feature);
     #endif
-    
-    #ifdef HAS_CUSTOM_VERTEX_SHADER
-    czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
-    customShaderStage(vsOutput, attributes);
-    #endif
 
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING
@@ -46,6 +41,11 @@ void main()
         v_pickColor = a_pickColor;
         #endif
 
+    #endif
+
+    #ifdef HAS_CUSTOM_VERTEX_SHADER
+    czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
+    customShaderStage(vsOutput, attributes);
     #endif
 
     // Compute the final position in each coordinate system needed.
