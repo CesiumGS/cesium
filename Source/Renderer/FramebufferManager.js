@@ -64,6 +64,11 @@ Object.defineProperties(FramebufferManager.prototype, {
       return this._depthStencilTexture;
     },
   },
+  depthStencilRenderbuffer: {
+    get: function () {
+      return this._depthStencilRenderbuffer;
+    },
+  },
   status: {
     get: function () {
       return this._framebuffer.status;
