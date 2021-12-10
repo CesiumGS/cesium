@@ -159,8 +159,8 @@ function Globe(ellipsoid) {
   this.enableLighting = false;
 
   /**
-   * A multiplier to adjust terrain lambert lighting
-   * This number is multiplied to the result of czm_getLambertDiffuse in globeFS.glsl
+   * A multiplier to adjust terrain lambert lighting.
+   * This number is multiplied by the result of <code>czm_getLambertDiffuse</code> in GlobeFS.glsl.
    * This only takes effect when <code>enableLighting</code> is <code>true</code>.
    *
    * @type {Number}
