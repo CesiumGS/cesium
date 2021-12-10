@@ -319,7 +319,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
 
       var vertexAttribute = renderResources.attributes[0];
       expect(vertexAttribute.instanceDivisor).toEqual(0);
-      expect(vertexAttribute.vertexBuffer).not.toBeDefined();
+      expect(vertexAttribute.buffer).not.toBeDefined();
       expect(vertexAttribute.value).toBe(3);
     });
   });

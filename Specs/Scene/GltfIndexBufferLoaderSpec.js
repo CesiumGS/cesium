@@ -1,5 +1,6 @@
 import {
   Buffer,
+  clone,
   ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
@@ -413,9 +414,10 @@ describe(
         indexBufferLoader
       ) {
         loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
+        expect(indexBufferLoader.typedArray).toBeUndefined();
       });
     });
 
@@ -438,9 +440,38 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
+      });
+    });
+
+    it("loads as typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(Buffer, "createIndexBuffer").and.callThrough();
+
+      var indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: true,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray.byteLength).toBe(
+          indicesUint16.byteLength
+        );
+        expect(indexBufferLoader.buffer).toBeUndefined();
+        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
       });
     });
 
@@ -462,9 +493,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-          expectedByteLength
-        );
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
       });
     }
 
@@ -514,9 +543,40 @@ describe(
         indexBufferLoader
       ) {
         loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           decodedIndices.byteLength
         );
+      });
+    });
+
+    it("uses the decoded data's type instead of the accessor component type", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(DracoLoader, "decodeBufferView").and.returnValue(
+        when.resolve(decodeDracoResults)
+      );
+
+      var clonedGltf = clone(gltfDraco, true);
+      clonedGltf.accessors[2].componentType = 5125;
+
+      var indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: clonedGltf,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        draco: dracoExtension,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexDatatype).toBe(5123);
+        expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
       });
     });
 
@@ -548,12 +608,12 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(false);
 
         indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadBufferView).toHaveBeenCalled();
         expect(destroyIndexBuffer).toHaveBeenCalled();
@@ -593,12 +653,12 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(false);
 
         indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadDraco).toHaveBeenCalled();
         expect(destroyIndexBuffer).toHaveBeenCalled();
@@ -628,7 +688,7 @@ describe(
         baseResource: gltfResource,
       });
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       indexBufferLoader.destroy();
@@ -639,7 +699,7 @@ describe(
         deferredPromise.resolve(arrayBuffer);
       }
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(bufferViewLoaderCopy);
@@ -684,7 +744,7 @@ describe(
         draco: dracoExtension,
       });
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       loaderProcess(indexBufferLoader, scene);
@@ -698,7 +758,7 @@ describe(
         deferredPromise.resolve(decodeDracoResults);
       }
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(dracoLoaderCopy);

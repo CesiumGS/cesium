@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
@@ -82,14 +83,34 @@ function addDequantizationUniforms(renderResources, attributeInfo) {
     shaderBuilder.addUniform(glslType, offset, ShaderDestination.VERTEX);
     shaderBuilder.addUniform(glslType, stepSize, ShaderDestination.VERTEX);
 
+    var quantizedVolumeOffset = quantization.quantizedVolumeOffset;
+    var quantizedVolumeStepSize = quantization.quantizedVolumeStepSize;
+
+    // COLOR_n is promoted to a vec4 in the shader, so the alpha value
+    // defaults to 1. For correctness, the quantization uniforms must be
+    // promoted to vec4s. The alpha values are chosen so the alpha
+    // dequantization is the identity, i.e. 0.0 + 1.0 * color.a
+    if (/^color_\d+$/.test(variableName)) {
+      quantizedVolumeOffset = promoteToVec4(quantizedVolumeOffset, 0);
+      quantizedVolumeStepSize = promoteToVec4(quantizedVolumeStepSize, 1);
+    }
+
     uniformMap[offset] = function () {
-      return quantization.quantizedVolumeOffset;
+      return quantizedVolumeOffset;
     };
 
     uniformMap[stepSize] = function () {
-      return quantization.quantizedVolumeStepSize;
+      return quantizedVolumeStepSize;
     };
   }
+}
+
+function promoteToVec4(value, defaultAlpha) {
+  if (value instanceof Cartesian4) {
+    return value;
+  }
+
+  return new Cartesian4(value.x, value.y, value.z, defaultAlpha);
 }
 
 function updateDequantizationFunction(shaderBuilder, attributeInfo) {

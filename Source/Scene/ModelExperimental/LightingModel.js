@@ -1,9 +1,9 @@
 /**
- * The lighting model to use for lighting a {@link ModelExperimental}. This
- * is applied in the {@link LightingPipelineStage}.
+ * The lighting model to use for lighting a {@link ModelExperimental}.
  *
  * @enum {Number}
- * @private
+ *
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 var LightingModel = {
   /**

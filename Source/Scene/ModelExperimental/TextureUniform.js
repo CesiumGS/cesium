@@ -26,7 +26,6 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @alias TextureUniform
  * @constructor
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function TextureUniform(options) {

@@ -57,6 +57,8 @@ describe(
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     var boxVertexColors =
       "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
+    var pointCloudRGB =
+      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
     var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
     var buildingsMetadata =
@@ -700,6 +702,105 @@ describe(
             "attribute vec4 a_color_0;",
             "attribute vec2 a_texCoord_0;",
           ]
+        );
+        verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("promotes vec3 vertex colors to vec4 in the shader", function () {
+      var renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+      };
+
+      return loadGltf(pointCloudRGB).then(function (gltfLoader) {
+        var components = gltfLoader.components;
+        var primitive = components.nodes[0].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        var shaderBuilder = renderResources.shaderBuilder;
+        var attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(2);
+
+        var positionAttribute = attributes[0];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(0);
+        expect(positionAttribute.strideInBytes).toBe(24);
+
+        var color0Attribute = attributes[1];
+        expect(color0Attribute.index).toEqual(1);
+        expect(color0Attribute.vertexBuffer).toBeDefined();
+        expect(color0Attribute.componentsPerAttribute).toEqual(3);
+        expect(color0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(color0Attribute.offsetInBytes).toBe(12);
+        expect(color0Attribute.strideInBytes).toBe(24);
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          ["    vec3 positionMC;", "    vec4 color_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec4 color_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.color_0 = a_color_0;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    v_color_0 = attributes.color_0;"]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          ["    attributes.color_0 = v_color_0;"]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec4 v_color_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_COLOR_0",
+          "PRIMITIVE_TYPE_POINTS",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_COLOR_0",
+          "PRIMITIVE_TYPE_POINTS",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          ["attribute vec4 a_color_0;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });
