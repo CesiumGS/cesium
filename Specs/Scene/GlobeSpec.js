@@ -312,6 +312,59 @@ describe(
       });
     });
 
+    it("renders terrain with lambertDiffuseMultiplier", function () {
+      globe.enableLighting = true;
+
+      var layerCollection = globe.imageryLayers;
+      layerCollection.removeAll();
+      layerCollection.addImageryProvider(
+        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
+      );
+
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+
+      returnVertexNormalTileJson();
+
+      var terrainProvider = new CesiumTerrainProvider({
+        url: "made/up/url",
+        requestVertexNormals: true,
+      });
+
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+      });
+
+      return updateUntilDone(globe).then(function () {
+        var initialRgba;
+        expect(scene).toRenderAndCall(function (rgba) {
+          initialRgba = rgba;
+          expect(initialRgba).not.toEqual([0, 0, 0, 255]);
+        });
+        globe.lambertDiffuseMultiplier = 10.0;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(initialRgba);
+        });
+      });
+    });
+
     it("renders with hue shift", function () {
       var layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
