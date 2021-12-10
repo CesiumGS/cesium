@@ -38,9 +38,19 @@ Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
       return this._framebuffer.framebuffer;
     },
   },
+  packedDepthFramebuffer: {
+    get: function () {
+      return this._packedDepthFramebuffer.framebuffer;
+    },
+  },
   depthStencilTexture: {
     get: function () {
       return this._framebuffer.depthStencilTexture;
+    },
+  },
+  depthStencilRenderbuffer: {
+    get: function () {
+      return this._framebuffer.depthStencilRenderbuffer;
     },
   },
   packedDepthTexture: {
@@ -154,7 +164,8 @@ function updateCommands(globeTranslucency, context, width, height, passState) {
     globeTranslucency._packedDepthFramebuffer.framebuffer;
   globeTranslucency._packedDepthCommand.renderState =
     globeTranslucency._renderState;
-  globeTranslucency._clearCommand.framebuffer = globeTranslucency.framebuffer;
+  globeTranslucency._clearCommand.framebuffer =
+    globeTranslucency.classificationFramebuffer;
   globeTranslucency._clearCommand.renderState = globeTranslucency._renderState;
 }
 

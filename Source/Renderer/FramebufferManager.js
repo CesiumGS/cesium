@@ -22,20 +22,26 @@ function FramebufferManager(options) {
     options.colorAttachmentsLength,
     1
   );
+
+  this._depth = defaultValue(options.depth, false);
+  this._depthStencil = defaultValue(options.depthStencil, false);
+  //>>includeStart('debug', pragmas.debug);
+  if (this._depth && this._depthStencil) {
+    throw new DeveloperError(
+      "Cannot have both a depth and depth-stencil attachment."
+    );
+  }
+  //>>includeEnd('debug');
+
   this._createColorAttachments = defaultValue(
     options.createColorAttachments,
     true
   );
   this._createDepthAttachments = defaultValue(
-    options.createDepthStencilAttachments,
+    options.createDepthAttachments,
     true
   );
-  this._createDepthStencilAttachments = defaultValue(
-    options.createDepthStencilAttachments,
-    true
-  );
-  this._depth = defaultValue(options.depth, false);
-  this._depthStencil = defaultValue(options.depthStencil, false);
+
   this._useHdr = false;
 
   this._framebuffer = undefined;
@@ -43,6 +49,7 @@ function FramebufferManager(options) {
   this._colorTextures = [];
   this._depthStencilRenderbuffer = undefined;
   this._depthStencilTexture = undefined;
+  this._depthRenderbuffer = undefined;
   this._depthTexture = undefined;
 }
 
@@ -92,22 +99,21 @@ FramebufferManager.prototype.update = function (
   context,
   width,
   height,
-  depthStencilTexture,
+  depthTexture,
   hdr
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (
     (!defined(width) || !defined(height)) &&
     (this._createColorAttachments ||
-      (this._depthStencil && this._createDepthStencilAttachments) ||
-      (this._depth && this._createDepthAttachments))
+      ((this._depth || this._depthStencil) && this._createDepthAttachments))
   ) {
     throw new DeveloperError(
       "width and height must be provided if color or depth attachments are created"
     );
   }
   //>>includeEnd('debug');
-  depthStencilTexture = defaultValue(depthStencilTexture, false);
+  depthTexture = defaultValue(depthTexture, false);
   hdr = defaultValue(hdr, false);
 
   if (this.isDirty(width, height, hdr)) {
@@ -136,8 +142,8 @@ FramebufferManager.prototype.update = function (
     }
 
     // Create depth stencil texture or renderbuffer
-    if (this._depthStencil && this._createDepthStencilAttachments) {
-      if (depthStencilTexture) {
+    if (this._depthStencil && this._createDepthAttachments) {
+      if (depthTexture) {
         this._depthStencilTexture = new Texture({
           context: context,
           width: width,
@@ -158,20 +164,30 @@ FramebufferManager.prototype.update = function (
 
     // Create depth texture
     if (this._depth && this._createDepthAttachments) {
-      this._depthTexture = new Texture({
-        context: context,
-        width: width,
-        height: height,
-        pixelFormat: PixelFormat.DEPTH_COMPONENT,
-        pixelDatatype: PixelDatatype.UNSIGNED_INT,
-        sampler: Sampler.NEAREST,
-      });
+      if (depthTexture) {
+        this._depthTexture = new Texture({
+          context: context,
+          width: width,
+          height: height,
+          pixelFormat: PixelFormat.DEPTH_COMPONENT,
+          pixelDatatype: PixelDatatype.UNSIGNED_INT,
+          sampler: Sampler.NEAREST,
+        });
+      } else {
+        this._depthRenderbuffer = new Renderbuffer({
+          context: context,
+          width: width,
+          height: height,
+          format: RenderbufferFormat.DEPTH_COMPONENT16,
+        });
+      }
     }
 
     this._framebuffer = new Framebuffer({
       context: context,
       colorTextures: this._colorTextures,
       depthTexture: this._depthTexture,
+      depthRenderbuffer: this._depthRenderbuffer,
       depthStencilTexture: this._depthStencilTexture,
       depthStencilRenderbuffer: this._depthStencilRenderbuffer,
       destroyAttachments: false,
@@ -198,9 +214,9 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
 
 FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   //>>includeStart('debug', pragmas.debug);
-  if (this._createDepthStencilAttachments) {
+  if (this._createDepthAttachments) {
     throw new DeveloperError(
-      "If setDepthStencilTexture is called, createDepthStencilAttachments must be false."
+      "If setDepthStencilTexture is called, createDepthAttachments must be false."
     );
   }
   //>>includeEnd('debug');

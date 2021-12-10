@@ -37,11 +37,11 @@ function OIT(context) {
 
   this._translucentFBO = new FramebufferManager({
     createColorAttachments: false,
-    createDepthStencilAttachments: false,
+    createDepthAttachments: false,
   });
   this._alphaFBO = new FramebufferManager({
     createColorAttachments: false,
-    createDepthStencilAttachments: false,
+    createDepthAttachments: false,
   });
 
   this._adjustTranslucentFBO = new FramebufferManager({

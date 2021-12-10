@@ -23,15 +23,15 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
     var viewport = new BoundingRectangle(0, 0, 100, 100);
     var passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
-    expect(globeTranslucency._colorTexture).toBeDefined();
-    expect(globeTranslucency._framebuffer).toBeDefined();
-    expect(globeTranslucency._packedDepthTexture).toBeDefined();
-    expect(globeTranslucency._packedDepthFramebuffer).toBeDefined();
+    expect(globeTranslucency.classificationTexture).toBeDefined();
+    expect(globeTranslucency.classificationFramebuffer).toBeDefined();
+    expect(globeTranslucency.packedDepthTexture).toBeDefined();
+    expect(globeTranslucency.packedDepthFramebuffer).toBeDefined();
 
     if (context.depthTexture) {
-      expect(globeTranslucency._depthStencilTexture).toBeDefined();
+      expect(globeTranslucency.depthStencilTexture).toBeDefined();
     } else {
-      expect(globeTranslucency._depthStencilRenderbuffer).toBeDefined();
+      expect(globeTranslucency.depthStencilRenderbuffer).toBeDefined();
     }
 
     expect(globeTranslucency._packedDepthCommand).toBeDefined();
@@ -45,9 +45,9 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
     var viewport = new BoundingRectangle(0, 0, 100, 100);
     var passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
-    var firstColorTexture = globeTranslucency._colorTexture;
-    var firstFramebuffer = globeTranslucency._framebuffer;
-    var firstPackedDepthFramebuffer = globeTranslucency._packedDepthFramebuffer;
+    var firstColorTexture = globeTranslucency.classificationTexture;
+    var firstFramebuffer = globeTranslucency.classificationFramebuffer;
+    var firstPackedDepthFramebuffer = globeTranslucency.packedDepthFramebuffer;
     expect(globeTranslucency._clearCommand.framebuffer).toBe(firstFramebuffer);
     expect(globeTranslucency._packedDepthCommand.framebuffer).toBe(
       firstPackedDepthFramebuffer
@@ -76,15 +76,15 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
     var viewport = new BoundingRectangle(0, 0, 100, 100);
     var passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
-    var firstColorTexture = globeTranslucency._colorTexture;
+    var firstColorTexture = globeTranslucency.classificationTexture;
 
     var expectedPixelDatatype = context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT;
     globeTranslucency.updateAndClear(true, viewport, context, passState);
     expect(firstColorTexture.isDestroyed()).toBe(true);
-    expect(globeTranslucency._colorTexture).not.toBe(firstColorTexture);
-    expect(globeTranslucency._colorTexture.pixelDatatype).toBe(
+    expect(globeTranslucency.classificationTexture).not.toBe(firstColorTexture);
+    expect(globeTranslucency.classificationTexture.pixelDatatype).toBe(
       expectedPixelDatatype
     );
   });
