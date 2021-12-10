@@ -97,47 +97,88 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   var pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
   featureTable.featuresLength = pointsLength;
 
+  if (!defined(pointsLength)) {
+    throw new RuntimeError(
+      "Feature table global property: POINTS_LENGTH must be defined"
+    );
+  }
+
   var rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
   );
-  rtcCenter = Cartesian3.unpack(rtcCenter);
-
-  var dracoProperties = parseDracoProperties(featureTable, batchTableJson);
-  var results = {
-    pointsLength: pointsLength,
-    rtcCenter: rtcCenter,
-    draco: dracoProperties.draco,
-  };
-
-  if (!dracoProperties.hasPositions) {
-    results.positions = parsePositions(featureTable);
+  if (defined(rtcCenter)) {
+    rtcCenter = Cartesian3.unpack(rtcCenter);
   }
 
-  if (!dracoProperties.hasNormals) {
-    results.normals = parseNormals(featureTable);
+  // Start with the draco compressed properties and add in uncompressed
+  // properties.
+  var parsedContent = parseDracoProperties(featureTable, batchTableJson);
+  parsedContent.rtcCenter = rtcCenter;
+  parsedContent.pointsLength = pointsLength;
+
+  if (!parsedContent.hasPositions) {
+    var positions = parsePositions(featureTable);
+    parsedContent.positions = positions;
+    parsedContent.hasPositions =
+      parsedContent.hasPositions || defined(positions);
   }
 
-  if (!dracoProperties.hasColors) {
-    results.colors = parseColors(featureTable);
+  if (!parsedContent.hasPositions) {
+    throw new RuntimeError(
+      "Either POSITION or POSITION_QUANTIZED must be defined."
+    );
   }
 
-  if (!dracoProperties.hasBatchIds) {
-    results.batchIds = parseBatchIds(featureTable);
+  if (!parsedContent.hasNormals) {
+    var normals = parseNormals(featureTable);
+    parsedContent.normals = normals;
+    parsedContent.hasNormals = parsedContent.hasNormals || defined(normals);
   }
 
-  var hasBatchIds = defined(results.batchIds) || dracoProperties.hasBatchIds;
+  if (!parsedContent.hasColors) {
+    var colors = parseColors(featureTable);
+    parsedContent.colors = colors;
+    parsedContent.hasColors = parsedContent.hasColors || defined(colors);
+    parsedContent.hasConstantColor = defined(parsedContent.constantColor);
+  }
 
-  if (!hasBatchIds && defined(batchTableBinary)) {
-    results.styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
+  if (!parsedContent.hasBatchIds) {
+    var batchIds = parseBatchIds(featureTable);
+    parsedContent.batchIds = batchIds;
+    parsedContent.hasBatchIds = parsedContent.hasBatchIds || defined(batchIds);
+  }
+
+  if (parsedContent.hasBatchIds) {
+    var batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
+    if (!defined(batchLength)) {
+      throw new RuntimeError(
+        "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined."
+      );
+    }
+
+    if (defined(batchTableBinary)) {
+      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+      batchTableBinary = new Uint8Array(batchTableBinary);
+    }
+
+    parsedContent.batchLength = batchLength;
+    parsedContent.batchTableJson = batchTableJson;
+    parsedContent.batchTableBinary = batchTableBinary;
+  }
+
+  // If points are not batched and there are per-point properties, use the
+  // properties as metadata for styling purposes
+  if (!parsedContent.hasBatchIds && defined(batchTableBinary)) {
+    parsedContent.styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
       pointsLength,
       batchTableJson,
       batchTableBinary
     );
   }
 
-  return results;
+  return parsedContent;
 };
 
 function parseDracoProperties(featureTable, batchTableJson) {
