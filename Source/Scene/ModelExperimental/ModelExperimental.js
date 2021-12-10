@@ -253,12 +253,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The loader used by the model
-   *
-   * @memberof ModelExperimental.prototype
-   *
-   * @type {GltfLoader|B3dmLoader|I3dmLoader}
-   * @readonly
+   * @private
    */
   loader: {
     get: function () {

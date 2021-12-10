@@ -70,6 +70,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   });
 
   it("resolves readyPromise with I3DM", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.resolvesReadyPromise(
       scene,
