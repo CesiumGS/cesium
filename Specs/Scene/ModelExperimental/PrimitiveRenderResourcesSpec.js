@@ -17,7 +17,9 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
-  var mockModel = {};
+  var mockModel = {
+    modelMatrix: Matrix4.IDENTITY,
+  };
   var mockNode = {};
   var runtimeNode = new ModelExperimentalNode({
     node: mockNode,
