@@ -1309,6 +1309,30 @@ describe(
       s.destroyForSpecs();
     });
 
+    it("raises the camera changed event on heading changed", function () {
+      var s = createScene();
+
+      var spyListener = jasmine.createSpy("listener");
+      s.camera.changed.addEventListener(spyListener);
+
+      s.initializeFrame();
+      s.render();
+
+      s.camera.twistLeft(CesiumMath.PI * (s.camera.percentageChanged + 0.1));
+
+      s.initializeFrame();
+      s.render();
+
+      expect(spyListener.calls.count()).toBe(1);
+
+      var args = spyListener.calls.allArgs();
+      expect(args.length).toEqual(1);
+      expect(args[0].length).toEqual(1);
+      expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
+
+      s.destroyForSpecs();
+    });
+
     it("raises the camera changed event on position changed", function () {
       var s = createScene();
 
@@ -1318,7 +1342,7 @@ describe(
       s.initializeFrame();
       s.render();
 
-      s.camera.moveLeft(
+      s.camera.moveUp(
         s.camera.positionCartographic.height *
           (s.camera.percentageChanged + 0.1)
       );
