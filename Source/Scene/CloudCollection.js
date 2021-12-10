@@ -3,6 +3,7 @@ import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import Color from "../Core/Color.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CloudType from "./CloudType.js";
 import CloudCollectionFS from "../Shaders/CloudCollectionFS.js";
@@ -41,6 +42,7 @@ var attributeLocationsBatched = {
   positionLowAndScaleY: 1,
   packedAttribute0: 2, // show, brightness, direction
   packedAttribute1: 3, // cloudSize, slice
+  color: 4,
 };
 
 var attributeLocationsInstanced = {
@@ -49,6 +51,7 @@ var attributeLocationsInstanced = {
   positionLowAndScaleY: 2,
   packedAttribute0: 3, // show, brightness
   packedAttribute1: 4, // cloudSize, slice
+  color: 5,
 };
 
 var SHOW_INDEX = CumulusCloud.SHOW_INDEX;
@@ -58,6 +61,7 @@ var MAXIMUM_SIZE_INDEX = CumulusCloud.MAXIMUM_SIZE_INDEX;
 var SLICE_INDEX = CumulusCloud.SLICE_INDEX;
 var BRIGHTNESS_INDEX = CumulusCloud.BRIGHTNESS_INDEX;
 var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
+var COLOR_INDEX = CumulusCloud.COLOR_INDEX;
 
 /**
  * A renderable collection of clouds in the 3D scene.
@@ -580,6 +584,13 @@ function createVAF(context, numberOfClouds, instanced) {
       componentDatatype: ComponentDatatype.FLOAT,
       usage: BufferUsage.STATIC_DRAW,
     },
+    {
+      index: attributeLocations.color,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+      normalize: true,
+      usage: BufferUsage.STATIC_DRAW,
+    },
   ];
 
   if (instanced) {
@@ -663,10 +674,31 @@ function writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud) {
   }
 }
 
+function writeColor(cloudCollection, frameState, vafWriters, cloud) {
+  var i;
+  var writer = vafWriters[attributeLocations.color];
+  var color = cloud.color;
+  var red = Color.floatToByte(color.red);
+  var green = Color.floatToByte(color.green);
+  var blue = Color.floatToByte(color.blue);
+  var alpha = Color.floatToByte(color.alpha);
+
+  if (cloudCollection._instanced) {
+    i = cloud._index;
+    writer(i, red, green, blue, alpha);
+  } else {
+    i = cloud._index * 4;
+    writer(i + 0, red, green, blue, alpha);
+    writer(i + 1, red, green, blue, alpha);
+    writer(i + 2, red, green, blue, alpha);
+    writer(i + 3, red, green, blue, alpha);
+  }
+}
 function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
   writePositionAndScale(cloudCollection, frameState, vafWriters, cloud);
   writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud);
   writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud);
+  writeColor(cloudCollection, frameState, vafWriters, cloud);
 }
 
 function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
@@ -787,6 +819,10 @@ function updateClouds(cloudCollection, frameState) {
 
   if (properties[MAXIMUM_SIZE_INDEX] || properties[SLICE_INDEX]) {
     writers.push(writePackedAttribute1);
+  }
+
+  if (properties[COLOR_INDEX]) {
+    writers.push(writeColor);
   }
 
   var numWriters = writers.length;

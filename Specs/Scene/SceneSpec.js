@@ -310,31 +310,6 @@ describe(
       scene.debugShowFramesPerSecond = false;
     });
 
-    it("debugShowGlobeDepth", function () {
-      if (!scene.context.depthTexture) {
-        return;
-      }
-
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-      scene.camera.setView({ destination: rectangle });
-
-      var rectanglePrimitive = createRectangle(rectangle);
-      rectanglePrimitive.appearance.material.uniforms.color = new Color(
-        1.0,
-        0.0,
-        0.0,
-        1.0
-      );
-
-      scene.primitives.add(rectanglePrimitive);
-      expect(scene).toRender([255, 0, 0, 255]);
-
-      scene.debugShowGlobeDepth = true;
-      expect(scene).notToRender([255, 0, 0, 255]);
-
-      scene.debugShowGlobeDepth = false;
-    });
-
     it("opaque/translucent render order (1)", function () {
       var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 

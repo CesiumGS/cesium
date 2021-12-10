@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -134,6 +135,21 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
       return this._typedArray;
     },
   },
+
+  /**
+   * The index datatype after decode.
+   *
+   * @memberof GltfIndexBufferLoader.prototype
+   *
+   * @type {IndexDatatype}
+   * @readonly
+   * @private
+   */
+  indexDatatype: {
+    get: function () {
+      return this._indexDatatype;
+    },
+  },
 });
 
 /**
@@ -166,8 +182,12 @@ function loadFromDraco(indexBufferLoader) {
         return;
       }
       // Now wait for process() to run to finish loading
-      indexBufferLoader._typedArray =
-        dracoLoader.decodedData.indices.typedArray;
+      var typedArray = dracoLoader.decodedData.indices.typedArray;
+      indexBufferLoader._typedArray = typedArray;
+      // The index datatype may be a smaller datatype after draco decode
+      indexBufferLoader._indexDatatype = ComponentDatatype.fromTypedArray(
+        typedArray
+      );
       indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
     .otherwise(function (error) {
