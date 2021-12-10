@@ -295,7 +295,7 @@ function parseColors(featureTable) {
       setIndex: 0,
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-      componentsPerAttribute: 4,
+      type: AttributeType.VEC4,
       normalized: true,
       isRGB565: false,
     };
@@ -308,9 +308,10 @@ function parseColors(featureTable) {
     return {
       name: "COLOR",
       semantic: VertexAttributeSemantic.COLOR,
+      setIndex: 0,
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-      componentsPerAttribute: 3,
+      type: AttributeType.VEC3,
       normalized: true,
       isRGB565: false,
     };
@@ -323,9 +324,12 @@ function parseColors(featureTable) {
       1
     );
     return {
+      name: "COLOR",
+      semantic: VertexAttributeSemantic.COLOR,
+      setIndex: 0,
       typedArray: colors,
       componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
-      componentsPerAttribute: 1,
+      type: AttributeType.VEC3,
       normalized: false,
       isRGB565: true,
     };
@@ -335,7 +339,6 @@ function parseColors(featureTable) {
       ComponentDatatype.UNSIGNED_BYTE,
       4
     );
-    // TODO: default should be dark grey... where should that be handled?
     var constantColor = Color.fromBytes(
       constantRGBA[0],
       constantRGBA[1],
@@ -344,7 +347,13 @@ function parseColors(featureTable) {
     );
 
     return {
+      name: "COLOR",
+      semantic: VertexAttributeSemantic.COLOR,
+      setIndex: 0,
       constantColor: constantColor,
+      componentDatatype: ComponentDatatype.FLOAT,
+      type: AttributeType.VEC4,
+      isQuantized: false,
     };
   }
 
@@ -376,7 +385,7 @@ function parseNormals(featureTable) {
     );
     return {
       name: "NORMAL",
-      semantic: VertexAttributeSemantic.COLOR,
+      semantic: VertexAttributeSemantic.NORMAL,
       typedArray: normals,
       isOctEncoded: true,
       componentDatatype: ComponentDatatype.FLOAT,
@@ -396,6 +405,8 @@ function parseBatchIds(featureTable) {
       1
     );
     return {
+      name: "BATCH_ID",
+      semantic: VertexAttributeSemantic.BATCH_ID,
       typedArray: batchIds,
       componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
       componentsPerAttribute: 1,

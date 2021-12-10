@@ -1,4 +1,5 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
@@ -320,12 +321,17 @@ function makeAttribute(attributeInfo, context) {
   attribute.min = attributeInfo.min;
   attribute.max = attributeInfo.max;
   attribute.quantization = quantization;
-  attribute.buffer = Buffer.createVertexBuffer({
-    typedArray: typedArray,
-    context: context,
-    usage: BufferUsage.STATIC_DRAW,
-  });
-  attribute.typedArray = typedArray;
+
+  if (defined(attributeInfo.constant)) {
+    attribute.constant = Cartesian4.fromColor(attributeInfo.constant);
+  } else {
+    attribute.buffer = Buffer.createVertexBuffer({
+      typedArray: typedArray,
+      context: context,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    attribute.typedArray = typedArray;
+  }
 
   return attribute;
 }
