@@ -123,11 +123,26 @@ function initialize(sceneGraph) {
     var rootNodeModelMatrix = ModelExperimentalUtility.getNodeTransform(
       rootNode
     );
-    ModelExperimentalUtility.correctModelMatrix(
-      rootNodeModelMatrix,
-      scene.upAxis,
-      scene.forwardAxis
-    );
+
+    if (
+      defined(rootNode.instances) &&
+      rootNode.instances.transformInWorldSpace
+    ) {
+      // If the node's instances require transformation in world space, we preserve
+      // the node's transform within the model and correct it, if needed.
+      ModelExperimentalUtility.correctModelMatrix(
+        rootNodeModelMatrix,
+        scene.upAxis,
+        scene.forwardAxis
+      );
+    } else {
+      rootNodeModelMatrix = Matrix4.multiply(
+        modelMatrix,
+        rootNodeModelMatrix,
+        rootNodeModelMatrix
+      );
+    }
+
     traverseSceneGraph(sceneGraph, rootNode, rootNodeModelMatrix);
   }
 }
