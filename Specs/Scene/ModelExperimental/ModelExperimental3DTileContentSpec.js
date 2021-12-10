@@ -104,6 +104,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   });
 
   it("renders I3DM content", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
     setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
@@ -151,6 +155,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   });
 
   it("picks from I3DM", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
     setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
@@ -210,6 +218,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   });
 
   it("picks from I3DM batch table", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
     setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
