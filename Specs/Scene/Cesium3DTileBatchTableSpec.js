@@ -12,6 +12,7 @@ import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
 import { Cesium3DTileStyle } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
+import concatTypedArrays from "../concatTypedArrays.js";
 
 describe(
   "Scene/Cesium3DTileBatchTable",
@@ -40,14 +41,14 @@ describe(
     var result = new Color();
 
     var mockTileset = {
-      _statistics: {
+      statistics: {
         texturesByteLength: 0,
       },
       getFeature: function (batchId) {
         return { batchId: batchId };
       },
     };
-    mockTileset._tileset = mockTileset;
+    mockTileset.tileset = mockTileset;
 
     beforeAll(function () {
       scene = createScene();
@@ -78,7 +79,7 @@ describe(
         batchTable.setShow(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.setShow(2);
+        batchTable.setShow(1);
       }).toThrowDeveloperError();
     });
 
@@ -92,29 +93,12 @@ describe(
     it("setShow sets show", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
-      // Batch table resources are undefined by default
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-
-      // Check that batch table resources are still undefined because value is true by default
-      batchTable.setShow(0, true);
-      batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-      expect(batchTable.getShow(0)).toEqual(true);
+      // Show is true by default
+      expect(batchTable.getShow(0)).toBe(true);
 
       // Check that batch values are dirty and resources are created when value changes
       batchTable.setShow(0, false);
-      expect(batchTable._batchValuesDirty).toEqual(true);
       batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeDefined();
-      expect(batchTable._batchTexture).toBeDefined();
-      expect(batchTable._batchValuesDirty).toEqual(false);
-      expect(batchTable.getShow(0)).toEqual(false);
-
-      // Check that dirty stays false when value is the same
-      batchTable.setShow(0, false);
-      expect(batchTable._batchValuesDirty).toEqual(false);
       expect(batchTable.getShow(0)).toEqual(false);
     });
 
@@ -127,7 +111,7 @@ describe(
         batchTable.getShow(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getShow(2);
+        batchTable.getShow(1);
       }).toThrowDeveloperError();
     });
 
@@ -148,7 +132,7 @@ describe(
         batchTable.setColor(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.setColor(2);
+        batchTable.setColor(1);
       }).toThrowDeveloperError();
     });
 
@@ -162,29 +146,8 @@ describe(
     it("setColor", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
-      // Batch table resources are undefined by default
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-
-      // Check that batch table resources are still undefined because value is true by default
-      batchTable.setColor(0, Color.WHITE);
-      batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeUndefined();
-      expect(batchTable._batchTexture).toBeUndefined();
-      expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
-
-      // Check that batch values are dirty and resources are created when value changes
       batchTable.setColor(0, Color.YELLOW);
-      expect(batchTable._batchValuesDirty).toEqual(true);
       batchTable.update(mockTileset, scene.frameState);
-      expect(batchTable._batchValues).toBeDefined();
-      expect(batchTable._batchTexture).toBeDefined();
-      expect(batchTable._batchValuesDirty).toEqual(false);
-      expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
-
-      // Check that dirty stays false when value is the same
-      batchTable.setColor(0, Color.YELLOW);
-      expect(batchTable._batchValuesDirty).toEqual(false);
       expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
     });
 
@@ -225,7 +188,7 @@ describe(
         batchTable.getColor(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getColor(2);
+        batchTable.getColor(1);
       }).toThrowDeveloperError();
     });
 
@@ -253,7 +216,7 @@ describe(
         batchTable.hasProperty(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.hasProperty(2);
+        batchTable.hasProperty(1);
       }).toThrowDeveloperError();
     });
 
@@ -286,7 +249,7 @@ describe(
         batchTable.getPropertyNames(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getPropertyNames(2);
+        batchTable.getPropertyNames(1);
       }).toThrowDeveloperError();
     });
 
@@ -327,7 +290,7 @@ describe(
         batchTable.getProperty(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getProperty(2);
+        batchTable.getProperty(1);
       }).toThrowDeveloperError();
     });
 
@@ -359,7 +322,7 @@ describe(
         batchTable.setProperty(-1);
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.setProperty(2);
+        batchTable.setProperty(1);
       }).toThrowDeveloperError();
     });
 
@@ -489,27 +452,6 @@ describe(
         return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
       }).toThrowRuntimeError();
     });
-
-    function concatTypedArrays(arrays) {
-      var i;
-      var length = arrays.length;
-
-      var byteLength = 0;
-      for (i = 0; i < length; ++i) {
-        byteLength += arrays[i].byteLength;
-      }
-      var buffer = new Uint8Array(byteLength);
-
-      var byteOffset = 0;
-      for (i = 0; i < length; ++i) {
-        var data = new Uint8Array(arrays[i].buffer);
-        byteLength = data.length;
-        for (var j = 0; j < byteLength; ++j) {
-          buffer[byteOffset++] = data[j];
-        }
-      }
-      return buffer;
-    }
 
     it("getProperty and setProperty work for binary properties", function () {
       var propertyScalarBinary = new Float64Array([0, 1]);
@@ -889,7 +831,7 @@ describe(
         batchTable.isExactClass();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.isExactClass(2, "door");
+        batchTable.isExactClass(1, "door");
       }).toThrowDeveloperError();
       expect(function () {
         batchTable.isExactClass(-1, "door");
@@ -909,7 +851,7 @@ describe(
         batchTable.isClass();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.isClass(2, "door");
+        batchTable.isClass(1, "door");
       }).toThrowDeveloperError();
       expect(function () {
         batchTable.isClass(-1, "door");
@@ -929,7 +871,7 @@ describe(
         batchTable.getExactClassName();
       }).toThrowDeveloperError();
       expect(function () {
-        batchTable.getExactClassName(1000);
+        batchTable.getExactClassName(1);
       }).toThrowDeveloperError();
       expect(function () {
         batchTable.getExactClassName(-1);
@@ -1202,222 +1144,6 @@ describe(
           expect(Cesium3DTileBatchTable._deprecationWarning).toHaveBeenCalled();
         }
       );
-    });
-
-    it("validates hierarchy with multiple parents", function () {
-      //     building0
-      //     /      \
-      //  door0    door1
-      //     \      /
-      //      window0
-      var batchTableJson = {
-        HIERARCHY: {
-          instancesLength: 4,
-          classIds: [0, 1, 1, 2],
-          parentCounts: [2, 1, 1, 0],
-          parentIds: [1, 2, 3, 3],
-          classes: [
-            {
-              name: "window",
-              length: 1,
-              instances: {
-                window_name: ["window0"],
-              },
-            },
-            {
-              name: "door",
-              length: 2,
-              instances: {
-                door_name: ["door0", "door1"],
-              },
-            },
-            {
-              name: "building",
-              length: 1,
-              instances: {
-                building_name: ["building0"],
-              },
-            },
-          ],
-        },
-      };
-      var batchTable = new Cesium3DTileBatchTable(
-        mockTileset,
-        4,
-        batchTableJson
-      );
-      expect(batchTable.getPropertyNames(0).sort()).toEqual([
-        "building_name",
-        "door_name",
-        "window_name",
-      ]);
-    });
-
-    it("validates hierarchy with multiple parents (2)", function () {
-      //             zone
-      //             / |  \
-      //   building0   |   \
-      //     /      \  |    \
-      //    door0  door1    /
-      //        \    |     /
-      //           window0
-      var batchTableJson = {
-        HIERARCHY: {
-          instancesLength: 4,
-          classIds: [0, 1, 1, 2, 3],
-          parentCounts: [3, 1, 2, 1, 0],
-          parentIds: [1, 2, 4, 3, 3, 4, 4],
-          classes: [
-            {
-              name: "window",
-              length: 1,
-              instances: {
-                window_name: ["window0"],
-              },
-            },
-            {
-              name: "door",
-              length: 2,
-              instances: {
-                door_name: ["door0", "door1"],
-              },
-            },
-            {
-              name: "building",
-              length: 1,
-              instances: {
-                building_name: ["building0"],
-              },
-            },
-            {
-              name: "zone",
-              length: 1,
-              instances: {
-                zone_name: ["zone0"],
-              },
-            },
-          ],
-        },
-      };
-      var batchTable = new Cesium3DTileBatchTable(
-        mockTileset,
-        5,
-        batchTableJson
-      );
-      expect(batchTable.getPropertyNames(0).sort()).toEqual([
-        "building_name",
-        "door_name",
-        "window_name",
-        "zone_name",
-      ]); // check window
-      expect(batchTable.hasProperty(1, "zone_name")).toEqual(true); // check door0
-      expect(batchTable.hasProperty(2, "zone_name")).toEqual(true); // check door1
-    });
-
-    //>>includeStart('debug', pragmas.debug);
-    // Circular dependencies are only caught in debug builds.
-    it("throws if hierarchy has a circular dependency", function () {
-      // window0 -> door0 -> building0 -> window0
-      var batchTableJson = {
-        HIERARCHY: {
-          instancesLength: 3,
-          classIds: [0, 1, 2],
-          parentIds: [1, 2, 0],
-          classes: [
-            {
-              name: "window",
-              length: 1,
-              instances: {
-                window_name: ["window0"],
-              },
-            },
-            {
-              name: "door",
-              length: 1,
-              instances: {
-                door_name: ["door0"],
-              },
-            },
-            {
-              name: "building",
-              length: 1,
-              instances: {
-                building_name: ["building0"],
-              },
-            },
-          ],
-        },
-      };
-      expect(function () {
-        return new Cesium3DTileBatchTable(mockTileset, 3, batchTableJson);
-      }).toThrowDeveloperError();
-    });
-
-    it("throws if hierarchy has a circular dependency (2)", function () {
-      // window0 -> door0 -> building0 -> window1 -> door0
-      var batchTableJson = {
-        HIERARCHY: {
-          instancesLength: 4,
-          classIds: [0, 1, 2, 0],
-          parentIds: [1, 2, 3, 1],
-          classes: [
-            {
-              name: "window",
-              length: 2,
-              instances: {
-                window_name: ["window0", "window1"],
-              },
-            },
-            {
-              name: "door",
-              length: 1,
-              instances: {
-                door_name: ["door0"],
-              },
-            },
-            {
-              name: "building",
-              length: 1,
-              instances: {
-                building_name: ["building0"],
-              },
-            },
-          ],
-        },
-      };
-      expect(function () {
-        return new Cesium3DTileBatchTable(mockTileset, 4, batchTableJson);
-      }).toThrowDeveloperError();
-    });
-    //>>includeEnd('debug');
-
-    it("throws if an instance's parentId exceeds instancesLength", function () {
-      var batchTableJson = {
-        HIERARCHY: {
-          instancesLength: 2,
-          classIds: [0, 1],
-          parentIds: [1, 2],
-          classes: [
-            {
-              name: "window",
-              length: 1,
-              instances: {
-                window_name: ["window0"],
-              },
-            },
-            {
-              name: "door",
-              length: 1,
-              instances: {
-                door_name: ["door0"],
-              },
-            },
-          ],
-        },
-      };
-      expect(function () {
-        return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
-      }).toThrowDeveloperError();
     });
 
     it("destroys", function () {

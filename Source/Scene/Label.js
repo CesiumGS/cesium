@@ -58,7 +58,7 @@ function parseFont(label) {
     div.style.font = label._font;
     document.body.appendChild(div);
 
-    var lineHeight = Number.parseFloat(getCSSValue(div, "line-height"));
+    var lineHeight = parseFloat(getCSSValue(div, "line-height"));
     if (isNaN(lineHeight)) {
       // line-height isn't a number, i.e. 'normal'; apply default line-spacing
       lineHeight = undefined;
@@ -365,9 +365,12 @@ Object.defineProperties(Label.prototype, {
 
       if (this._text !== value) {
         this._text = value;
+
+        // Strip soft-hyphen (auto-wrap) characters from input string
+        var renderedValue = value.replace(/\u00ad/g, "");
         this._renderedText = Label.enableRightToLeftDetection
-          ? reverseRtl(value)
-          : value;
+          ? reverseRtl(renderedValue)
+          : renderedValue;
         rebindAllGlyphs(this);
       }
     },

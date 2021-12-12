@@ -47,7 +47,6 @@ import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
-import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
@@ -123,7 +122,7 @@ var requestRenderAfterFrame = function (scene) {
  * @alias Scene
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {Object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
@@ -131,7 +130,6 @@ var requestRenderAfterFrame = function (scene) {
  * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
  * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
- * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
  * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
@@ -475,18 +473,6 @@ function Scene(options) {
   /**
    * This property is for debugging only; it is not for production use.
    * <p>
-   * Displays depth information for the indicated frustum.
-   * </p>
-   *
-   * @type Boolean
-   *
-   * @default false
-   */
-  this.debugShowGlobeDepth = false;
-
-  /**
-   * This property is for debugging only; it is not for production use.
-   * <p>
    * Indicates which frustum will have depth information displayed.
    * </p>
    *
@@ -612,8 +598,6 @@ function Scene(options) {
   this.postProcessStages = new PostProcessStageCollection();
 
   this._brdfLutGenerator = new BrdfLutGenerator();
-
-  this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
   this._performanceDisplay = undefined;
   this._debugVolume = undefined;
@@ -744,7 +728,7 @@ function Scene(options) {
   this.sphericalHarmonicCoefficients = undefined;
 
   /**
-   * The url to the KTX file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
+   * The url to the KTX2 file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
    * @type {String}
    */
   this.specularEnvironmentMaps = undefined;
@@ -1432,18 +1416,6 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets the scalar used to exaggerate the terrain.
-   * @memberof Scene.prototype
-   * @type {Number}
-   * @readonly
-   */
-  terrainExaggeration: {
-    get: function () {
-      return this._terrainExaggeration;
-    },
-  },
-
-  /**
    * When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.
    * Used for cardboard and WebVR.
    * @memberof Scene.prototype
@@ -1673,8 +1645,14 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
       context.s3tc) ||
     ((format === "WEBGL_compressed_texture_pvrtc" || format === "pvrtc") &&
       context.pvrtc) ||
+    ((format === "WEBGL_compressed_texture_etc" || format === "etc") &&
+      context.etc) ||
     ((format === "WEBGL_compressed_texture_etc1" || format === "etc1") &&
-      context.etc1)
+      context.etc1) ||
+    ((format === "WEBGL_compressed_texture_astc" || format === "astc") &&
+      context.astc) ||
+    ((format === "EXT_texture_compression_bptc" || format === "bc7") &&
+      context.bc7)
   );
 };
 
@@ -1899,7 +1877,6 @@ Scene.prototype.updateFrameState = function () {
     camera.upWC
   );
   frameState.occluder = getOccluder(this);
-  frameState.terrainExaggeration = this._terrainExaggeration;
   frameState.minimumTerrainHeight = 0.0;
   frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
   frameState.invertClassification = this.invertClassification;
@@ -1912,6 +1889,11 @@ Scene.prototype.updateFrameState = function () {
   frameState.light = this.light;
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
+
+  if (defined(this.globe)) {
+    frameState.terrainExaggeration = this.globe.terrainExaggeration;
+    frameState.terrainExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
+  }
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -2250,16 +2232,6 @@ function executeTranslucentCommandsFrontToBack(
   }
 }
 
-function getDebugGlobeDepth(scene, index) {
-  var globeDepths = scene._view.debugGlobeDepths;
-  var globeDepth = globeDepths[index];
-  if (!defined(globeDepth) && scene.context.depthTexture) {
-    globeDepth = new GlobeDepth();
-    globeDepths[index] = globeDepth;
-  }
-  return globeDepth;
-}
-
 var scratchPerspectiveFrustum = new PerspectiveFrustum();
 var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -2407,30 +2379,10 @@ function executeCommands(scene, passState) {
       us.updateFrustum(frustum);
     }
 
-    var globeDepth = scene.debugShowGlobeDepth
-      ? getDebugGlobeDepth(scene, index)
-      : view.globeDepth;
+    var globeDepth = view.globeDepth;
 
     if (separatePrimitiveFramebuffer) {
       // Render to globe framebuffer in GLOBE pass
-      passState.framebuffer = globeDepth.framebuffer;
-    }
-
-    var fb;
-    if (
-      scene.debugShowGlobeDepth &&
-      defined(globeDepth) &&
-      environmentState.useGlobeDepthFramebuffer
-    ) {
-      globeDepth.update(
-        context,
-        passState,
-        view.viewport,
-        scene._hdr,
-        clearGlobeDepth
-      );
-      globeDepth.clear(context, passState, scene._clearColorCommand.color);
-      fb = passState.framebuffer;
       passState.framebuffer = globeDepth.framebuffer;
     }
 
@@ -2460,14 +2412,6 @@ function executeCommands(scene, passState) {
 
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
-    }
-
-    if (
-      scene.debugShowGlobeDepth &&
-      defined(globeDepth) &&
-      environmentState.useGlobeDepthFramebuffer
-    ) {
-      passState.framebuffer = fb;
     }
 
     // Draw terrain classification
@@ -2657,6 +2601,28 @@ function executeCommands(scene, passState) {
       commands,
       invertClassification
     );
+
+    // Classification for translucent 3D Tiles
+    var has3DTilesClassificationCommands =
+      frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
+    if (
+      has3DTilesClassificationCommands &&
+      view.translucentTileClassification.isSupported()
+    ) {
+      view.translucentTileClassification.executeTranslucentCommands(
+        scene,
+        executeCommand,
+        passState,
+        commands,
+        globeDepth.framebuffer
+      );
+      view.translucentTileClassification.executeClassificationCommands(
+        scene,
+        executeCommand,
+        passState,
+        frustumCommands
+      );
+    }
 
     if (
       context.depthTexture &&
@@ -3517,7 +3483,6 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
  */
 Scene.prototype.resolveFramebuffers = function (passState) {
   var context = this._context;
-  var frameState = this._frameState;
   var environmentState = this._environmentState;
   var view = this._view;
   var globeDepth = view.globeDepth;
@@ -3545,6 +3510,14 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     view.oit.execute(context, passState);
   }
 
+  var translucentTileClassification = view.translucentTileClassification;
+  if (
+    translucentTileClassification.hasTranslucentDepth &&
+    translucentTileClassification.isSupported()
+  ) {
+    translucentTileClassification.execute(this, passState);
+  }
+
   if (usePostProcess) {
     var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
@@ -3563,18 +3536,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
     passState.framebuffer = defaultFramebuffer;
     globeDepth.executeCopyColor(context, passState);
-  }
-
-  var useLogDepth = frameState.useLogDepth;
-
-  if (this.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
-    var gd = getDebugGlobeDepth(this, this.debugShowDepthFrustum - 1);
-    gd.executeDebugGlobeDepth(context, passState, useLogDepth);
-  }
-
-  if (this.debugShowPickDepth && useGlobeDepthFramebuffer) {
-    var pd = this._picking.getPickDepth(this, this.debugShowDepthFrustum - 1);
-    pd.executeDebugPickDepth(context, passState, useLogDepth);
   }
 };
 

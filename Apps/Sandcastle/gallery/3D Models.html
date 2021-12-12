@@ -80,6 +80,15 @@
             },
           },
           {
+            text: "Drone",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+                150.0
+              );
+            },
+          },
+          {
             text: "Ground Vehicle",
             onselect: function () {
               createModel(
@@ -121,6 +130,20 @@
               createModel(
                 "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
                 0
+              );
+            },
+          },
+          {
+            text: "KTX2 Compressed Balloon",
+            onselect: function () {
+              if (!Cesium.FeatureDetection.supportsBasis(viewer.scene)) {
+                window.alert(
+                  "This browser does not support Basis Universal compressed textures"
+                );
+              }
+              createModel(
+                "../../SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
+                1000.0
               );
             },
           },

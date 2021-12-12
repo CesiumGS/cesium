@@ -17,7 +17,7 @@ import LabelStyle from "./LabelStyle.js";
 import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "./TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
-import GraphemeSplitter from "../ThirdParty/graphemesplitter.js";
+import GraphemeSplitter from "../ThirdParty/grapheme-splitter.js";
 
 // A glyph represents a single character in a particular label.  It may or may
 // not have a billboard, depending on whether the texture info has an index into
@@ -387,9 +387,9 @@ function repositionAllGlyphs(label) {
       maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
 
       //Computing the line width must also account for the kerning that occurs between letters.
-      lastLineWidth += dimensions.width - dimensions.bounds.minx;
+      lastLineWidth += dimensions.width - dimensions.minx;
       if (glyphIndex < glyphLength - 1) {
-        lastLineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+        lastLineWidth += glyphs[glyphIndex + 1].dimensions.minx;
       }
       maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
     }
@@ -481,9 +481,7 @@ function repositionAllGlyphs(label) {
       if (glyphIndex < glyphLength - 1) {
         var nextGlyph = glyphs[glyphIndex + 1];
         glyphPixelOffset.x +=
-          (dimensions.width -
-            dimensions.bounds.minx +
-            nextGlyph.dimensions.bounds.minx) *
+          (dimensions.width - dimensions.minx + nextGlyph.dimensions.minx) *
           scale;
       }
     }
@@ -576,6 +574,7 @@ function destroyLabel(labelCollection, label) {
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the labels in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
@@ -630,6 +629,14 @@ function LabelCollection(options) {
   this._totalGlyphCount = 0;
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+
+  /**
+   * Determines if labels in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -887,6 +894,10 @@ LabelCollection.prototype.get = function (index) {
  *
  */
 LabelCollection.prototype.update = function (frameState) {
+  if (!this.show) {
+    return;
+  }
+
   var billboardCollection = this._billboardCollection;
   var backgroundBillboardCollection = this._backgroundBillboardCollection;
 

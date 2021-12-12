@@ -16,12 +16,12 @@ import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -43,14 +43,14 @@ import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import addDefaults from "../ThirdParty/GltfPipeline/addDefaults.js";
-import addPipelineExtras from "../ThirdParty/GltfPipeline/addPipelineExtras.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
-import parseGlb from "../ThirdParty/GltfPipeline/parseGlb.js";
-import updateVersion from "../ThirdParty/GltfPipeline/updateVersion.js";
+import addDefaults from "./GltfPipeline/addDefaults.js";
+import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
+import parseGlb from "./GltfPipeline/parseGlb.js";
+import updateVersion from "./GltfPipeline/updateVersion.js";
 import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import BlendingState from "./BlendingState.js";
@@ -75,6 +75,7 @@ import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import StencilConstants from "./StencilConstants.js";
 
 var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -173,8 +174,15 @@ var uriToGuid = {};
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
  * </li>
  * </ul>
+ * </p>
+ * <p>
+ * Note: for models with compressed textures using the KHR_texture_basisu extension, we recommend power of 2 textures in both dimensions
+ * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
+ * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
  * </p>
  * <p>
  * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
@@ -215,9 +223,10 @@ var uriToGuid = {};
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  *
  * @see Model.fromGltf
  *
@@ -509,6 +518,18 @@ function Model(options) {
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
+   * Whether to display the outline for models using the
+   * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+   * When true, outlines are displayed. When false, outlines are not displayed.
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @default true
+   */
+  this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
    * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
@@ -622,6 +643,7 @@ function Model(options) {
   this._geometryByteLength = 0;
   this._texturesByteLength = 0;
   this._trianglesLength = 0;
+  this._pointsLength = 0;
 
   // Hold references for shader reconstruction.
   // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
@@ -1032,6 +1054,17 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Gets the model's point count.
+   *
+   * @private
+   */
+  pointsLength: {
+    get: function () {
+      return this._pointsLength;
+    },
+  },
+
+  /**
    * Gets the model's geometry memory in bytes. This includes all vertex and index buffers.
    *
    * @private
@@ -1255,7 +1288,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+   * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
    *
    * @memberof Model.prototype
    * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
@@ -1351,6 +1384,8 @@ function containsGltfMagic(uint8Array) {
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md|KHR_texture_basisu}
  * </li>
  * </ul>
  * </p>
@@ -1388,7 +1423,7 @@ function containsGltfMagic(uint8Array) {
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
- *
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @returns {Model} The newly created model.
  *
  * @example
@@ -1480,8 +1515,8 @@ Model.fromGltf = function (options) {
           cachedGltf.makeReady(parsedGltf);
         } else {
           // Load text (JSON) glTF
-          var json = getStringFromTypedArray(array);
-          cachedGltf.makeReady(JSON.parse(json));
+          var json = getJsonFromTypedArray(array);
+          cachedGltf.makeReady(json);
         }
 
         var resourceCredits = model._resourceCredits;
@@ -1792,7 +1827,7 @@ function parseBufferViews(model) {
 function parseTechniques(model) {
   // retain references to gltf techniques
   var gltf = model.gltf;
-  if (!hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (!usesExtension(gltf, "KHR_techniques_webgl")) {
     return;
   }
 
@@ -1888,7 +1923,7 @@ function parseArticulations(model) {
 
   var gltf = model.gltf;
   if (
-    !hasExtension(gltf, "AGI_articulations") ||
+    !usesExtension(gltf, "AGI_articulations") ||
     !defined(gltf.extensions) ||
     !defined(gltf.extensions.AGI_articulations)
   ) {
@@ -1923,6 +1958,18 @@ function imageLoad(model, textureId) {
   return function (image) {
     var loadResources = model._loadResources;
     --loadResources.pendingTextureLoads;
+
+    // Images transcoded from KTX2 can contain multiple mip levels:
+    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+    var mipLevels;
+    if (Array.isArray(image)) {
+      // highest detail mip should be level 0
+      mipLevels = image.slice(1, image.length).map(function (mipLevel) {
+        return mipLevel.bufferView;
+      });
+      image = image[0];
+    }
+
     loadResources.texturesToCreate.enqueue({
       id: textureId,
       image: image,
@@ -1930,12 +1977,12 @@ function imageLoad(model, textureId) {
       width: image.width,
       height: image.height,
       internalFormat: image.internalFormat,
+      mipLevels: mipLevels,
     });
   };
 }
 
-var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
-var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
+var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function parseTextures(model, context, supportsWebP) {
   var gltf = model.gltf;
@@ -1950,52 +1997,19 @@ function parseTextures(model, context, supportsWebP) {
       supportsWebP
     ) {
       imageId = texture.extensions.EXT_texture_webp.source;
+    } else if (
+      defined(texture.extensions) &&
+      defined(texture.extensions.KHR_texture_basisu) &&
+      context.supportsBasis
+    ) {
+      imageId = texture.extensions.KHR_texture_basisu.source;
     }
 
     var gltfImage = images[imageId];
-    var extras = gltfImage.extras;
 
     var bufferViewId = gltfImage.bufferView;
     var mimeType = gltfImage.mimeType;
     uri = gltfImage.uri;
-
-    // First check for a compressed texture
-    if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-      var crunch = extras.compressedImage3DTiles.crunch;
-      var s3tc = extras.compressedImage3DTiles.s3tc;
-      var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-      var etc1 = extras.compressedImage3DTiles.etc1;
-
-      if (context.s3tc && defined(crunch)) {
-        mimeType = crunch.mimeType;
-        if (defined(crunch.bufferView)) {
-          bufferViewId = crunch.bufferView;
-        } else {
-          uri = crunch.uri;
-        }
-      } else if (context.s3tc && defined(s3tc)) {
-        mimeType = s3tc.mimeType;
-        if (defined(s3tc.bufferView)) {
-          bufferViewId = s3tc.bufferView;
-        } else {
-          uri = s3tc.uri;
-        }
-      } else if (context.pvrtc && defined(pvrtc)) {
-        mimeType = pvrtc.mimeType;
-        if (defined(pvrtc.bufferView)) {
-          bufferViewId = pvrtc.bufferView;
-        } else {
-          uri = pvrtc.uri;
-        }
-      } else if (context.etc1 && defined(etc1)) {
-        mimeType = etc1.mimeType;
-        if (defined(etc1.bufferView)) {
-          bufferViewId = etc1.bufferView;
-        } else {
-          uri = etc1.uri;
-        }
-      }
-    }
 
     // Image references either uri (external or base64-encoded) or bufferView
     if (defined(bufferViewId)) {
@@ -2013,12 +2027,13 @@ function parseTextures(model, context, supportsWebP) {
       });
 
       var promise;
-      if (ktxRegex.test(uri)) {
-        promise = loadKTX(imageResource);
-      } else if (crnRegex.test(uri)) {
-        promise = loadCRN(imageResource);
+      if (ktx2Regex.test(uri)) {
+        promise = loadKTX2(imageResource);
       } else {
-        promise = imageResource.fetchImage();
+        promise = imageResource.fetchImage({
+          skipColorSpaceConversion: true,
+          preferImageBitmap: true,
+        });
       }
       promise
         .then(imageLoad(model, id, imageId))
@@ -2749,13 +2764,13 @@ function loadTexturesFromBufferViews(model) {
       "id: " + gltfTexture.id + ", bufferView: " + gltfTexture.bufferView
     );
 
-    if (gltfTexture.mimeType === "image/ktx") {
-      loadKTX(loadResources.getBuffer(bufferView))
-        .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
-      ++model._loadResources.pendingTextureLoads;
-    } else if (gltfTexture.mimeType === "image/crn") {
-      loadCRN(loadResources.getBuffer(bufferView))
+    if (gltfTexture.mimeType === "image/ktx2") {
+      // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
+      // ArrayBuffer may be accessed on both the worker and the main thread and
+      // throw an error like "Cannot perform Construct on a detached ArrayBuffer".
+      // Look into SharedArrayBuffer at some point to get around this.
+      var ktxBuffer = new Uint8Array(loadResources.getBuffer(bufferView));
+      loadKTX2(ktxBuffer)
         .then(imageLoad(model, gltfTexture.id, imageId))
         .otherwise(onerror);
       ++model._loadResources.pendingTextureLoads;
@@ -2765,6 +2780,7 @@ function loadTexturesFromBufferViews(model) {
         uint8Array: loadResources.getBuffer(bufferView),
         format: gltfTexture.mimeType,
         flipY: false,
+        skipColorSpaceConversion: true,
       })
         .then(onload)
         .otherwise(onerror);
@@ -2876,8 +2892,8 @@ function createTexture(gltfTexture, model, context) {
     sampler = new Sampler({
       wrapS: sampler.wrapS,
       wrapT: sampler.wrapT,
-      textureMinificationFilter: minFilter,
-      textureMagnificationFilter: sampler.magnificationFilter,
+      minificationFilter: minFilter,
+      magnificationFilter: sampler.magnificationFilter,
     });
   }
 
@@ -2897,15 +2913,53 @@ function createTexture(gltfTexture, model, context) {
     wrapS === TextureWrap.MIRRORED_REPEAT ||
     wrapT === TextureWrap.REPEAT ||
     wrapT === TextureWrap.MIRRORED_REPEAT;
-
+  var npot;
   var tx;
   var source = gltfTexture.image;
 
   if (defined(internalFormat)) {
+    npot =
+      !CesiumMath.isPowerOfTwo(gltfTexture.width) ||
+      !CesiumMath.isPowerOfTwo(gltfTexture.height);
+
+    // Warning to encourage power of 2 texture dimensions with KHR_texture_basisu
+    if (
+      !context.webgl2 &&
+      PixelFormat.isCompressedFormat(internalFormat) &&
+      npot &&
+      requiresNpot
+    ) {
+      console.warn(
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly. See the Model.js constructor documentation for more information."
+      );
+    }
+
+    var minificationFilter = sampler.minificationFilter;
+    if (
+      !defined(gltfTexture.mipLevels) &&
+      (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
+        minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR)
+    ) {
+      minificationFilter = TextureMinificationFilter.NEAREST;
+    } else if (
+      !defined(gltfTexture.mipLevels) &&
+      (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
+        minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)
+    ) {
+      minificationFilter = TextureMinificationFilter.LINEAR;
+    }
+    sampler = new Sampler({
+      wrapS: sampler.wrapS,
+      wrapT: sampler.wrapT,
+      minificationFilter: minificationFilter,
+      magnificationFilter: sampler.magnificationFilter,
+    });
+
     tx = new Texture({
       context: context,
       source: {
         arrayBufferView: gltfTexture.bufferView,
+        mipLevels: gltfTexture.mipLevels,
       },
       width: gltfTexture.width,
       height: gltfTexture.height,
@@ -2913,10 +2967,9 @@ function createTexture(gltfTexture, model, context) {
       sampler: sampler,
     });
   } else if (defined(source)) {
-    var npot =
+    npot =
       !CesiumMath.isPowerOfTwo(source.width) ||
       !CesiumMath.isPowerOfTwo(source.height);
-
     if (requiresNpot && npot) {
       // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
       var canvas = document.createElement("canvas");
@@ -2944,6 +2997,7 @@ function createTexture(gltfTexture, model, context) {
       pixelDatatype: texture.type,
       sampler: sampler,
       flipY: false,
+      skipColorSpaceConversion: true,
     });
     // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
     if (mipmap) {
@@ -3003,12 +3057,10 @@ function getAttributeLocations(model, primitive) {
 
   var attributes = technique.attributes;
   var program = model._rendererResources.programs[technique.program];
-  var programVertexAttributes = program.vertexAttributes;
   var programAttributeLocations = program._attributeLocations;
 
-  // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
-  for (location in programVertexAttributes) {
-    if (programVertexAttributes.hasOwnProperty(location)) {
+  for (location in programAttributeLocations) {
+    if (programAttributeLocations.hasOwnProperty(location)) {
       var attribute = attributes[location];
       if (defined(attribute)) {
         index = programAttributeLocations[location];
@@ -3017,11 +3069,7 @@ function getAttributeLocations(model, primitive) {
     }
   }
 
-  // Always add pre-created attributes.
-  // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
-  // but should be included in the list of attribute locations for the pick program.
-  // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
-  // that programVertexAttributes optimizes out unused attributes.
+  // Add pre-created attributes.
   var precreatedAttributes = model._precreatedAttributes;
   if (defined(precreatedAttributes)) {
     for (location in precreatedAttributes) {
@@ -3825,6 +3873,10 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       count
     );
 
+    if (primitive.mode === PrimitiveType.POINTS) {
+      model._pointsLength += count;
+    }
+
     var um = uniformMaps[primitive.material];
     var uniformMap = um.uniformMap;
     if (defined(um.jointMatrixUniformName)) {
@@ -4487,20 +4539,26 @@ function updateShadows(model) {
   }
 }
 
-function getTranslucentRenderState(renderState) {
+function getTranslucentRenderState(model, renderState) {
   var rs = clone(renderState, true);
   rs.cull.enabled = false;
   rs.depthTest.enabled = true;
   rs.depthMask = false;
   rs.blending = BlendingState.ALPHA_BLEND;
 
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    rs.stencilTest = StencilConstants.setCesium3DTileBit();
+    rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
   return RenderState.fromCache(rs);
 }
 
-function deriveTranslucentCommand(command) {
+function deriveTranslucentCommand(model, command) {
   var translucentCommand = DrawCommand.shallowClone(command);
   translucentCommand.pass = Pass.TRANSLUCENT;
   translucentCommand.renderState = getTranslucentRenderState(
+    model,
     command.renderState
   );
   return translucentCommand;
@@ -4513,14 +4571,21 @@ function updateColor(model, frameState, forceDerive) {
   if (alpha > 0.0 && alpha < 1.0) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].translucentCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].translucentCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
-        nodeCommand.translucentCommand = deriveTranslucentCommand(command);
+        nodeCommand.translucentCommand = deriveTranslucentCommand(
+          model,
+          command
+        );
         if (!scene3DOnly) {
           var command2D = nodeCommand.command2D;
           nodeCommand.translucentCommand2D = deriveTranslucentCommand(
+            model,
             command2D
           );
         }
@@ -4549,7 +4614,10 @@ function updateBackFaceCulling(model, frameState, forceDerive) {
   if (!backFaceCulling) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].disableCullingCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].disableCullingCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
@@ -4819,12 +4887,13 @@ function updateSilhouette(model, frameState, force) {
 
   var nodeCommands = model._nodeCommands;
   var dirty =
-    alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
-    alphaDirty(
-      model.silhouetteColor.alpha,
-      model._silhouetteColorPreviousAlpha
-    ) ||
-    !defined(nodeCommands[0].silhouetteModelCommand);
+    nodeCommands.length > 0 &&
+    (alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
+      alphaDirty(
+        model.silhouetteColor.alpha,
+        model._silhouetteColorPreviousAlpha
+      ) ||
+      !defined(nodeCommands[0].silhouetteModelCommand));
 
   model._colorPreviousAlpha = model.color.alpha;
   model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
@@ -5120,10 +5189,11 @@ Model.prototype.update = function (frameState) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
-  var supportsWebP = FeatureDetection.supportsWebP();
 
   var context = frameState.context;
   this._defaultTexture = context.defaultTexture;
+
+  var supportsWebP = FeatureDetection.supportsWebP();
 
   if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
     // Use renderer resources from cache instead of loading/creating them?
@@ -5286,7 +5356,9 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
-        ModelOutlineLoader.outlinePrimitives(this);
+        if (this.showOutline) {
+          ModelOutlineLoader.outlinePrimitives(this);
+        }
         createResources(this, frameState);
       }
     }
@@ -5503,10 +5575,6 @@ Model.prototype.update = function (frameState) {
     // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
     var clippingPlanes = this._clippingPlanes;
     var currentClippingPlanesState = 0;
-    var useClippingPlanes =
-      defined(clippingPlanes) &&
-      clippingPlanes.enabled &&
-      clippingPlanes.length > 0;
 
     // If defined, use the reference matrix to transform miscellaneous properties like
     // clipping planes and IBL instead of the modelMatrix. This is so that when
@@ -5514,7 +5582,7 @@ Model.prototype.update = function (frameState) {
     // a common reference (such as the root).
     var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
 
-    if (useClippingPlanes) {
+    if (isClippingEnabled(this)) {
       var clippingPlanesMatrix = scratchClippingPlanesMatrix;
       clippingPlanesMatrix = Matrix4.multiply(
         context.uniformState.view3D,

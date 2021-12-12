@@ -302,11 +302,11 @@ function createShaders(primitive, context) {
     "a_batchId",
     undefined
   )(VectorTileVS);
-  var fsSource = batchTable.getFragmentShaderCallback()(
-    ShadowVolumeFS,
+  var fsSource = batchTable.getFragmentShaderCallback(
     false,
-    undefined
-  );
+    undefined,
+    true
+  )(ShadowVolumeFS);
 
   pickId = batchTable.getPickId();
 
@@ -427,7 +427,7 @@ var colorRenderState = {
     enabled: false,
   },
   depthMask: false,
-  blending: BlendingState.ALPHA_BLEND,
+  blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
 };
 
 var pickRenderState = {

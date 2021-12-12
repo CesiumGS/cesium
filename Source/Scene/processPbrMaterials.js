@@ -2,9 +2,9 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
-import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
+import addToArray from "./GltfPipeline/addToArray.js";
+import ForEach from "./GltfPipeline/ForEach.js";
+import usesExtension from "./GltfPipeline/usesExtension.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -15,7 +15,7 @@ function processPbrMaterials(gltf, options) {
 
   // No need to create new techniques if they already exist,
   // the shader should handle these values
-  if (hasExtension(gltf, "KHR_techniques_webgl")) {
+  if (usesExtension(gltf, "KHR_techniques_webgl")) {
     return gltf;
   }
 
@@ -273,7 +273,7 @@ function generateTechnique(
   var techniqueUniforms = {
     // Add matrices
     u_modelViewMatrix: {
-      semantic: hasExtension(gltf, "CESIUM_RTC")
+      semantic: usesExtension(gltf, "CESIUM_RTC")
         ? "CESIUM_RTC_MODELVIEW"
         : "MODELVIEW",
       type: WebGLConstants.FLOAT_MAT4,
@@ -289,8 +289,6 @@ function generateTechnique(
     defined(material.extensions.KHR_materials_unlit)
   ) {
     isUnlit = true;
-    hasNormals = false;
-    hasTangents = false;
   }
 
   if (hasNormals) {
@@ -480,15 +478,16 @@ function generateTechnique(
       semantic: "NORMAL",
     };
     vertexShader += "attribute vec3 a_normal;\n";
-    vertexShader += "varying vec3 v_normal;\n";
-    if (hasSkinning) {
-      vertexShaderMain +=
-        "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
-    } else {
-      vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+    if (!isUnlit) {
+      vertexShader += "varying vec3 v_normal;\n";
+      if (hasSkinning) {
+        vertexShaderMain +=
+          "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
+      } else {
+        vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+      }
+      fragmentShader += "varying vec3 v_normal;\n";
     }
-
-    fragmentShader += "varying vec3 v_normal;\n";
     fragmentShader += "varying vec3 v_positionEC;\n";
   }
 
@@ -638,7 +637,7 @@ function generateTechnique(
   vertexShader += "}\n";
 
   // Fragment shader lighting
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "const float M_PI = 3.141592653589793;\n";
 
     fragmentShader +=
@@ -737,7 +736,7 @@ function generateTechnique(
   fragmentShader += fragmentShaderMain;
 
   // Add normal mapping to fragment shader
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "    vec3 ng = normalize(v_normal);\n";
     fragmentShader +=
       "    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n";
@@ -814,7 +813,7 @@ function generateTechnique(
 
   fragmentShader += "    vec3 baseColor = baseColorWithAlpha.rgb;\n";
 
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     if (useSpecGloss) {
       if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
         fragmentShader +=
@@ -857,6 +856,10 @@ function generateTechnique(
       } else {
         fragmentShader += "    vec4 diffuse = vec4(1.0);\n";
       }
+
+      // the specular glossiness extension's alpha takes precedence over
+      // the base color alpha.
+      fragmentShader += "    baseColorWithAlpha.a = diffuse.a;\n";
     } else if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
       fragmentShader +=
         "    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, " +

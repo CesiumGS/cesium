@@ -146,7 +146,14 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
         tilingScheme.tileXYToRectangle(1, 1, 1),
       ];
 
-      return when(data.createMesh(tilingScheme, 0, 0, 0, 1))
+      return when(
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+        })
+      )
         .then(function () {
           var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
           var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
@@ -247,25 +254,45 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
     it("requires tilingScheme", function () {
       expect(function () {
-        data.createMesh(undefined, 0, 0, 0);
+        data.createMesh({
+          tilingScheme: undefined,
+          x: 0,
+          y: 0,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires x", function () {
       expect(function () {
-        data.createMesh(tilingScheme, undefined, 0, 0);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: undefined,
+          y: 0,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires y", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, undefined, 0);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: undefined,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires level", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, undefined);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: undefined,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -273,59 +300,79 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
       var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
 
       var wgs84 = Ellipsoid.WGS84;
-      return data.createMesh(tilingScheme, 0, 0, 0).then(function (mesh) {
-        expect(mesh).toBeInstanceOf(TerrainMesh);
-        expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
-        expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
-        expect(mesh.minimumHeight).toBe(0);
-        expect(mesh.maximumHeight).toBeCloseTo(20, 5);
+      return data
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+        })
+        .then(function (mesh) {
+          expect(mesh).toBeInstanceOf(TerrainMesh);
+          expect(mesh.vertices.length).toBe(17 * mesh.encoding.stride); // 9 regular + 8 skirt vertices
+          expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
+          expect(mesh.minimumHeight).toBe(0);
+          expect(mesh.maximumHeight).toBeCloseTo(20, 5);
 
-        var encoding = mesh.encoding;
-        var cartesian = new Cartesian3();
-        var cartographic = new Cartographic();
-        var count = mesh.vertices.length / mesh.encoding.getStride();
-        for (var i = 0; i < count; ++i) {
-          var height = encoding.decodeHeight(mesh.vertices, i);
-          if (i < 9) {
-            // Original vertices
-            expect(height).toBeBetween(0, 20);
+          var encoding = mesh.encoding;
+          var cartesian = new Cartesian3();
+          var cartographic = new Cartographic();
+          var count = mesh.vertices.length / mesh.encoding.stride;
+          for (var i = 0; i < count; ++i) {
+            var height = encoding.decodeHeight(mesh.vertices, i);
+            if (i < 9) {
+              // Original vertices
+              expect(height).toBeBetween(0, 20);
 
-            // Only test on original positions as the skirts angle outward
-            encoding.decodePosition(mesh.vertices, i, cartesian);
-            wgs84.cartesianToCartographic(cartesian, cartographic);
-            cartographic.longitude = CesiumMath.convertLongitudeRange(
-              cartographic.longitude
-            );
-            expect(Rectangle.contains(rectangle, cartographic)).toBe(true);
-          } else {
-            // Skirts
-            expect(height).toBeBetween(-1000, -980);
+              // Only test on original positions as the skirts angle outward
+              encoding.decodePosition(mesh.vertices, i, cartesian);
+              wgs84.cartesianToCartographic(cartesian, cartographic);
+              cartographic.longitude = CesiumMath.convertLongitudeRange(
+                cartographic.longitude
+              );
+              expect(Rectangle.contains(rectangle, cartographic)).toBe(true);
+            } else {
+              // Skirts
+              expect(height).toBeBetween(-1000, -980);
+            }
           }
-        }
-      });
+        });
     });
 
     it("exaggerates mesh", function () {
-      return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function (mesh) {
-        expect(mesh).toBeInstanceOf(TerrainMesh);
-        expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
-        expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
-        expect(mesh.minimumHeight).toBe(0);
-        expect(mesh.maximumHeight).toBeCloseTo(40, 5);
+      return data
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          exaggeration: 2,
+        })
+        .then(function (mesh) {
+          expect(mesh).toBeInstanceOf(TerrainMesh);
+          expect(mesh.vertices.length).toBe(17 * mesh.encoding.stride); // 9 regular + 8 skirt vertices
+          expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
 
-        var encoding = mesh.encoding;
-        var count = mesh.vertices.length / mesh.encoding.getStride();
-        for (var i = 0; i < count; ++i) {
-          var height = encoding.decodeHeight(mesh.vertices, i);
-          if (i < 9) {
-            // Original vertices
-            expect(height).toBeBetween(0, 40);
-          } else {
-            // Skirts
-            expect(height).toBeBetween(-1000, -960);
+          // Even though there's exaggeration, it doesn't affect the mesh's
+          // height, bounding sphere, or any other bounding volumes.
+          // The exaggeration is instead stored in the mesh's TerrainEncoding
+          expect(mesh.minimumHeight).toBe(0);
+          expect(mesh.maximumHeight).toBeCloseTo(20, 5);
+          expect(mesh.encoding.exaggeration).toBe(2.0);
+
+          var encoding = mesh.encoding;
+          var count = mesh.vertices.length / mesh.encoding.stride;
+          for (var i = 0; i < count; ++i) {
+            var height = encoding.decodeHeight(mesh.vertices, i);
+            if (i < 9) {
+              // Original vertices
+              expect(height).toBeBetween(0, 40);
+            } else {
+              // Skirts
+              expect(height).toBeBetween(-1000, -960);
+            }
           }
-        }
-      });
+        });
     });
   });
 

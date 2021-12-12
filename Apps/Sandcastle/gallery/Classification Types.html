@@ -152,6 +152,15 @@
           {
             text: "Textured Material",
             onselect: function () {
+              if (
+                !Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(
+                  viewer.scene
+                )
+              ) {
+                window.alert(
+                  "Terrain Entity materials are not supported on this platform"
+                );
+              }
               polygon.polygon.material = "../images/Cesium_Logo_Color.jpg";
             },
           },

@@ -159,6 +159,16 @@ function Globe(ellipsoid) {
   this.enableLighting = false;
 
   /**
+   * A multiplier to adjust terrain lambert lighting.
+   * This number is multiplied by the result of <code>czm_getLambertDiffuse</code> in GlobeFS.glsl.
+   * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   *
+   * @type {Number}
+   * @default 0.9
+   */
+  this.lambertDiffuseMultiplier = 0.9;
+
+  /**
    * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
    * when <code>enableLighting</code> is <code>true</code>.
    *
@@ -281,6 +291,26 @@ function Globe(ellipsoid) {
    * @default 0.0
    */
   this.atmosphereBrightnessShift = 0.0;
+
+  /**
+   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
+   * A value of <code>2.0</code> scales the terrain by 2x.
+   * A value of <code>0.0</code> makes the terrain completely flat.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * @type {Number}
+   * @default 1.0
+   */
+  this.terrainExaggeration = 1.0;
+
+  /**
+   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
+   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
+   * @type {Number}
+   * @default 0.0
+   */
+  this.terrainExaggerationRelativeHeight = 0.0;
 
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
@@ -672,7 +702,7 @@ Globe.prototype.pickWorldCoordinates = function (
       );
     } else if (defined(surfaceTile.renderedMesh)) {
       BoundingSphere.clone(
-        surfaceTile.renderedMesh.boundingSphere3D,
+        surfaceTile.tileBoundingRegion.boundingSphere,
         boundingVolume
       );
     } else {
@@ -813,6 +843,7 @@ Globe.prototype.getHeight = function (cartographic) {
     return undefined;
   }
 
+  var projection = this._surface._tileProvider.tilingScheme.projection;
   var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
 
   //cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
@@ -857,7 +888,7 @@ Globe.prototype.getHeight = function (cartographic) {
   var intersection = tile.data.pick(
     ray,
     undefined,
-    undefined,
+    projection,
     false,
     scratchGetHeightIntersection
   );
@@ -960,6 +991,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.backFaceCulling = this.backFaceCulling;
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
+    tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
     surface.beginFrame(frameState);
   }
 };

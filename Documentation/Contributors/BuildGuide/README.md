@@ -14,10 +14,10 @@
   - Recommended Git settings:
     - `git config --global pull.rebase preserve` - when pulling remote changes, rebase your local changes on top of the remote changes, to avoid unnecessary merge commits.
     - `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
-- Have [commit access](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
+- Have [commit access](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
   - No
     - Fork [cesium](https://github.com/CesiumGS/cesium).
-    - Use the [GitHub website](https://github.com/CesiumGS/cesium/branches/all) to delete all branches in your fork except `master`.
+    - Use the [GitHub website](https://github.com/CesiumGS/cesium/branches/all) to delete all branches in your fork except `main`.
     - Clone your fork, e.g., `git clone git@github.com:yourusername/cesium.git`.
     - Make changes in a branch, e.g., `git checkout -b my-feature`.
   - Yes
@@ -50,10 +50,10 @@ npm start
 
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
-- **Hello World** : an example using the combined and minified Cesium library to create a 3D globe. [Tutorial here](http://cesiumjs.org/tutorials/cesium-up-and-running/)
-- **Sandcastle** : an app for viewing and creating [code examples](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases), complete with a live preview
-- **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
-- **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
+- **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/)
+- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
+- **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/TestingGuide/README.md#testing-guide)
+- **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
 Cesium can be used in two different ways. Cesium can be either a set of modules using [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD), or it can be built as one combined file containing all modules. The basics:
 
@@ -95,12 +95,12 @@ Here's the full set of scripts and what they do.
   - `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`). Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. This runs automatically when saving files in Eclipse.
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed.
   - `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that exposes the entire Cesium API attached to a single global `Cesium` object. This version is useful if you don't want to use the modules directly with a standard AMD loader.
-  - `minify` - Runs `combine`, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
+  - `minify` - Runs `combine`, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) Cesium.js.
   - `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
   - `minifyRelease` - Runs `minify`, and removes debugging code.
   - `requirejs` - Used internally by the build system and can not be called directly.
   - `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
-  - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/master/Documentation/Contributors/DocumentationGuide).
+  - `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc). More [details here](https://github.com/rahwang/cesium/tree/main/Documentation/Contributors/DocumentationGuide).
   - `release` - A full release build that creates a shippable product, including building apps and generating documentation.
   - `makeZipFile` - Builds a zip file containing all release files. This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
 - **Utility scripts** -- code coverage, static code analysis, and other utilities
@@ -124,7 +124,7 @@ Here's the full set of scripts and what they do.
 
 ## Travis and Continuous Integration
 
-Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
+Cesium uses [Travis](https://travis-ci.com/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
 
 Travis triggers a build whenever someone opens a pull request or pushes code to the Cesium repository. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
 
@@ -138,7 +138,7 @@ Additional set up is required for deployment if you do not have commit access to
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
 - In `travis.yml`, edit the following line:
 
@@ -147,7 +147,7 @@ It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a d
 ```
 
 - Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
-- In `gulpfile.js`, edit the following line:
+- In `gulpfile.cjs`, edit the following line:
 
 ```
 var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
@@ -159,7 +159,7 @@ var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 
 To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the S3 bucket.
 
-- Go to [travis-ci.org](https://travis-ci.org/) and select your fork of Cesium
+- Go to [travis-ci.com](https://travis-ci.com/) and select your fork of Cesium
 - Go to "More Options">"Settings"
 - Under the "Environment Variables" section, add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
 
@@ -177,6 +177,6 @@ To configure the additional commit statuses on GitHub for your fork of Cesium, y
 ![Token Access](token.jpg)
 
 - Copy the token to your clipboard
-- Go to [travis-ci.org](https://travis-ci.org/) and select your fork of Cesium
+- Go to [travis-ci.com](https://travis-ci.com/) and select your fork of Cesium
 - Go to "More Options">"Settings"
 - Under the "Environment Variables" section, add the environment variable `TOKEN` and paste your token for the value

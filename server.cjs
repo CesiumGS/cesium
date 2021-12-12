@@ -1,15 +1,17 @@
 /*eslint-env node*/
+/* eslint-disable no-unused-vars */
+/* eslint-disable global-require */
 "use strict";
 (function () {
-  var express = require("express");
-  var compression = require("compression");
-  var fs = require("fs");
-  var url = require("url");
-  var request = require("request");
+  const express = require("express");
+  const compression = require("compression");
+  const fs = require("fs");
+  const url = require("url");
+  const request = require("request");
 
-  var gzipHeader = Buffer.from("1F8B08", "hex");
+  const gzipHeader = Buffer.from("1F8B08", "hex");
 
-  var yargs = require("yargs").options({
+  const yargs = require("yargs").options({
     port: {
       default: 8080,
       description: "Port to listen on.",
@@ -32,7 +34,7 @@
       description: "Show this help.",
     },
   });
-  var argv = yargs.argv;
+  const argv = yargs.argv;
 
   if (argv.help) {
     return yargs.showHelp();
@@ -41,13 +43,12 @@
   // eventually this mime type configuration will need to change
   // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
   // *NOTE* Any changes you make here must be mirrored in web.config.
-  var mime = express.static.mime;
+  const mime = express.static.mime;
   mime.define(
     {
       "application/json": ["czml", "json", "geojson", "topojson"],
       "application/wasm": ["wasm"],
-      "image/crn": ["crn"],
-      "image/ktx": ["ktx"],
+      "image/ktx2": ["ktx2"],
       "model/gltf+json": ["gltf"],
       "model/gltf-binary": ["bgltf", "glb"],
       "application/octet-stream": [
@@ -63,7 +64,7 @@
     true
   );
 
-  var app = express();
+  const app = express();
   app.use(compression());
   app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -75,10 +76,10 @@
   });
 
   function checkGzipAndNext(req, res, next) {
-    var reqUrl = url.parse(req.url, true);
-    var filePath = reqUrl.pathname.substring(1);
+    const reqUrl = url.parse(req.url, true);
+    const filePath = reqUrl.pathname.substring(1);
 
-    var readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
+    const readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
     readStream.on("error", function (err) {
       next();
     });
@@ -91,7 +92,7 @@
     });
   }
 
-  var knownTilesetFormats = [
+  const knownTilesetFormats = [
     /\.b3dm/,
     /\.pnts/,
     /\.i3dm/,
@@ -106,7 +107,7 @@
   app.use(express.static(__dirname));
 
   function getRemoteUrlFromParam(req) {
-    var remoteUrl = req.params[0];
+    let remoteUrl = req.params[0];
     if (remoteUrl) {
       // add http:// to the URL if no protocol is present
       if (!/^https?:\/\//.test(remoteUrl)) {
@@ -119,10 +120,10 @@
     return remoteUrl;
   }
 
-  var dontProxyHeaderRegex = /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
+  const dontProxyHeaderRegex = /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
 
   function filterHeaders(req, headers) {
-    var result = {};
+    const result = {};
     // filter out headers that are listed in the regex above
     Object.keys(headers).forEach(function (name) {
       if (!dontProxyHeaderRegex.test(name)) {
@@ -132,8 +133,8 @@
     return result;
   }
 
-  var upstreamProxy = argv["upstream-proxy"];
-  var bypassUpstreamProxyHosts = {};
+  const upstreamProxy = argv["upstream-proxy"];
+  const bypassUpstreamProxyHosts = {};
   if (argv["bypass-upstream-proxy-hosts"]) {
     argv["bypass-upstream-proxy-hosts"].split(",").forEach(function (host) {
       bypassUpstreamProxyHosts[host.toLowerCase()] = true;
@@ -142,7 +143,7 @@
 
   app.get("/proxy/*", function (req, res, next) {
     // look for request like http://localhost:8080/proxy/http://example.com/file?query=1
-    var remoteUrl = getRemoteUrlFromParam(req);
+    let remoteUrl = getRemoteUrlFromParam(req);
     if (!remoteUrl) {
       // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
       remoteUrl = Object.keys(req.query)[0];
@@ -159,7 +160,7 @@
       remoteUrl.protocol = "http:";
     }
 
-    var proxy;
+    let proxy;
     if (upstreamProxy && !(remoteUrl.host in bypassUpstreamProxyHosts)) {
       proxy = upstreamProxy;
     }
@@ -174,7 +175,7 @@
         proxy: proxy,
       },
       function (error, response, body) {
-        var code = 500;
+        let code = 500;
 
         if (response) {
           code = response.statusCode;
@@ -186,7 +187,7 @@
     );
   });
 
-  var server = app.listen(
+  const server = app.listen(
     argv.port,
     argv.public ? undefined : "localhost",
     function () {
@@ -228,7 +229,7 @@
     console.log("Cesium development server stopped.");
   });
 
-  var isFirstSig = true;
+  let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
       console.log("Cesium development server shutting down.");

@@ -310,31 +310,6 @@ describe(
       scene.debugShowFramesPerSecond = false;
     });
 
-    it("debugShowGlobeDepth", function () {
-      if (!scene.context.depthTexture) {
-        return;
-      }
-
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-      scene.camera.setView({ destination: rectangle });
-
-      var rectanglePrimitive = createRectangle(rectangle);
-      rectanglePrimitive.appearance.material.uniforms.color = new Color(
-        1.0,
-        0.0,
-        0.0,
-        1.0
-      );
-
-      scene.primitives.add(rectanglePrimitive);
-      expect(scene).toRender([255, 0, 0, 255]);
-
-      scene.debugShowGlobeDepth = true;
-      expect(scene).notToRender([255, 0, 0, 255]);
-
-      scene.debugShowGlobeDepth = false;
-    });
-
     it("opaque/translucent render order (1)", function () {
       var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -642,6 +617,32 @@ describe(
       it("renders a globe with a ElevationRamp", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.material = Material.fromType("ElevationRamp");
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(
+          Cartesian3.normalize(s.camera.position, new Cartesian3()),
+          new Cartesian3()
+        );
+
+        // To avoid Jasmine's spec has no expectations error
+        expect(true).toEqual(true);
+
+        return expect(s).toRenderAndCall(function () {
+          return pollToPromise(function () {
+            render(s.frameState, s.globe);
+            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
+              0,
+              0,
+              0,
+              0,
+            ]);
+          });
+        });
+      });
+
+      it("renders a globe with an ElevationBand", function () {
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.globe.material = Material.fromType("ElevationBand");
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
@@ -1308,6 +1309,30 @@ describe(
       s.destroyForSpecs();
     });
 
+    it("raises the camera changed event on heading changed", function () {
+      var s = createScene();
+
+      var spyListener = jasmine.createSpy("listener");
+      s.camera.changed.addEventListener(spyListener);
+
+      s.initializeFrame();
+      s.render();
+
+      s.camera.twistLeft(CesiumMath.PI * (s.camera.percentageChanged + 0.1));
+
+      s.initializeFrame();
+      s.render();
+
+      expect(spyListener.calls.count()).toBe(1);
+
+      var args = spyListener.calls.allArgs();
+      expect(args.length).toEqual(1);
+      expect(args[0].length).toEqual(1);
+      expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
+
+      s.destroyForSpecs();
+    });
+
     it("raises the camera changed event on position changed", function () {
       var s = createScene();
 
@@ -1317,7 +1342,7 @@ describe(
       s.initializeFrame();
       s.render();
 
-      s.camera.moveLeft(
+      s.camera.moveUp(
         s.camera.positionCartographic.height *
           (s.camera.percentageChanged + 0.1)
       );

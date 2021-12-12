@@ -215,7 +215,10 @@ function unpackBuffer(polygons, packedBuffer) {
   }
 }
 
-var createVerticesTaskProcessor = new TaskProcessor("createVectorTilePolygons");
+var createVerticesTaskProcessor = new TaskProcessor(
+  "createVectorTilePolygons",
+  5
+);
 var scratchColor = new Color();
 
 function createPrimitive(polygons) {

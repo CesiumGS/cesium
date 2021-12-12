@@ -59,7 +59,7 @@ function IonResource(endpoint, endpointResource) {
   this._ionEndpoint = endpoint;
   this._ionEndpointDomain = isExternal
     ? undefined
-    : new Uri(endpoint.url).authority;
+    : new Uri(endpoint.url).authority();
 
   // The endpoint resource to fetch when a new token is needed
   this._ionEndpointResource = endpointResource;
@@ -186,7 +186,7 @@ IonResource.prototype._makeRequest = function (options) {
   // Don't send ion access token to non-ion servers.
   if (
     this._isExternal ||
-    new Uri(this.url).authority !== this._ionEndpointDomain
+    new Uri(this.url).authority() !== this._ionEndpointDomain
   ) {
     return Resource.prototype._makeRequest.call(this, options);
   }
@@ -227,11 +227,16 @@ function retryCallback(that, error) {
   var ionRoot = defaultValue(that._ionRoot, that);
   var endpointResource = ionRoot._ionEndpointResource;
 
+  // Image is not available in worker threads, so this avoids
+  // a ReferenceError
+  var imageDefined = typeof Image !== "undefined";
+
   // We only want to retry in the case of invalid credentials (401) or image
   // requests(since Image failures can not provide a status code)
   if (
     !defined(error) ||
-    (error.statusCode !== 401 && !(error.target instanceof Image))
+    (error.statusCode !== 401 &&
+      !(imageDefined && error.target instanceof Image))
   ) {
     return when.resolve(false);
   }

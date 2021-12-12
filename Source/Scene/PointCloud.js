@@ -10,7 +10,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -45,7 +45,7 @@ var DecodingState = {
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}
  * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
  *
  * @alias PointCloud
@@ -235,12 +235,11 @@ function initialize(pointCloud, options) {
   var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  var featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJsonByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJsonByteLength;
 
   var featureTableBinary = new Uint8Array(
@@ -255,12 +254,11 @@ function initialize(pointCloud, options) {
   var batchTableBinary;
   if (batchTableJsonByteLength > 0) {
     // Has a batch table JSON
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJsonByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -834,20 +832,25 @@ function createResources(pointCloud, frameState) {
     },
   };
 
-  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
-    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
-    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
-  }
-
-  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
-
-  pointCloud._translucentRenderState = RenderState.fromCache({
+  var translucentRenderState = {
     depthTest: {
       enabled: true,
     },
     depthMask: false,
     blending: BlendingState.ALPHA_BLEND,
-  });
+  };
+
+  if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+    opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+    translucentRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    translucentRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
+  pointCloud._translucentRenderState = RenderState.fromCache(
+    translucentRenderState
+  );
 
   pointCloud._drawCommand = new DrawCommand({
     boundingVolume: new BoundingSphere(),
@@ -993,7 +996,8 @@ function getStyleablePropertyIds(source, propertyIds) {
 }
 
 function getBuiltinPropertyNames(source, propertyNames) {
-  // Get all the builtin property names used by this style
+  // Get all the builtin property names used by this style, ignoring the function signature
+  source = source.slice(source.indexOf("\n"));
   var regex = /czm_3dtiles_builtin_property_(\w+)/g;
   var matches = regex.exec(source);
   while (matches !== null) {
@@ -1015,25 +1019,12 @@ function getVertexAttribute(vertexArray, index) {
   }
 }
 
-var builtinPropertyNameMap = {
+var builtinVariableSubstitutionMap = {
   POSITION: "czm_3dtiles_builtin_property_POSITION",
   POSITION_ABSOLUTE: "czm_3dtiles_builtin_property_POSITION_ABSOLUTE",
   COLOR: "czm_3dtiles_builtin_property_COLOR",
   NORMAL: "czm_3dtiles_builtin_property_NORMAL",
 };
-
-function modifyStyleFunction(source) {
-  // Edit the function header to accept the point position, color, and normal
-  var functionHeader =
-    "(" +
-    "vec3 czm_3dtiles_builtin_property_POSITION, " +
-    "vec3 czm_3dtiles_builtin_property_POSITION_ABSOLUTE, " +
-    "vec4 czm_3dtiles_builtin_property_COLOR, " +
-    "vec3 czm_3dtiles_builtin_property_NORMAL" +
-    ")";
-
-  return source.replace("()", functionHeader);
-}
 
 function createShaders(pointCloud, frameState, style) {
   var i;
@@ -1062,13 +1053,14 @@ function createShaders(pointCloud, frameState, style) {
   var pointSizeStyleFunction;
   var styleTranslucent = isTranslucent;
 
-  var propertyNameMap = clone(builtinPropertyNameMap);
+  var variableSubstitutionMap = clone(builtinVariableSubstitutionMap);
   var propertyIdToAttributeMap = {};
   var styleableShaderAttributes = pointCloud._styleableShaderAttributes;
   for (name in styleableShaderAttributes) {
     if (styleableShaderAttributes.hasOwnProperty(name)) {
       attribute = styleableShaderAttributes[name];
-      propertyNameMap[name] = "czm_3dtiles_property_" + attribute.location;
+      variableSubstitutionMap[name] =
+        "czm_3dtiles_property_" + attribute.location;
       propertyIdToAttributeMap[attribute.location] = attribute;
     }
   }
@@ -1077,19 +1069,26 @@ function createShaders(pointCloud, frameState, style) {
     var shaderState = {
       translucent: false,
     };
+    var parameterList =
+      "(" +
+      "vec3 czm_3dtiles_builtin_property_POSITION, " +
+      "vec3 czm_3dtiles_builtin_property_POSITION_ABSOLUTE, " +
+      "vec4 czm_3dtiles_builtin_property_COLOR, " +
+      "vec3 czm_3dtiles_builtin_property_NORMAL" +
+      ")";
     colorStyleFunction = style.getColorShaderFunction(
-      "getColorFromStyle",
-      propertyNameMap,
+      "getColorFromStyle" + parameterList,
+      variableSubstitutionMap,
       shaderState
     );
     showStyleFunction = style.getShowShaderFunction(
-      "getShowFromStyle",
-      propertyNameMap,
+      "getShowFromStyle" + parameterList,
+      variableSubstitutionMap,
       shaderState
     );
     pointSizeStyleFunction = style.getPointSizeShaderFunction(
-      "getPointSizeFromStyle",
-      propertyNameMap,
+      "getPointSizeFromStyle" + parameterList,
+      variableSubstitutionMap,
       shaderState
     );
     if (defined(colorStyleFunction) && shaderState.translucent) {
@@ -1111,17 +1110,14 @@ function createShaders(pointCloud, frameState, style) {
   if (hasColorStyle) {
     getStyleablePropertyIds(colorStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(colorStyleFunction, builtinPropertyNames);
-    colorStyleFunction = modifyStyleFunction(colorStyleFunction);
   }
   if (hasShowStyle) {
     getStyleablePropertyIds(showStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(showStyleFunction, builtinPropertyNames);
-    showStyleFunction = modifyStyleFunction(showStyleFunction);
   }
   if (hasPointSizeStyle) {
     getStyleablePropertyIds(pointSizeStyleFunction, styleablePropertyIds);
     getBuiltinPropertyNames(pointSizeStyleFunction, builtinPropertyNames);
-    pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
   }
 
   var usesColorSemantic = builtinPropertyNames.indexOf("COLOR") >= 0;

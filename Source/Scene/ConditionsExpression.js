@@ -6,7 +6,7 @@ import Expression from "./Expression.js";
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Evaluates a conditions expression defined using the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * Implements the {@link StyleExpression} interface.
@@ -83,7 +83,7 @@ function setRuntime(expression, defines) {
 /**
  * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
  * the expression in the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
  * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
  * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
  * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -135,8 +135,8 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionName Name to give to the generated function.
- * @param {String} propertyNameMap Maps property variable names to shader attribute names.
+ * @param {String} functionSignature Signature of the generated function.
+ * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -145,8 +145,8 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
  * @private
  */
 ConditionsExpression.prototype.getShaderFunction = function (
-  functionName,
-  propertyNameMap,
+  functionSignature,
+  variableSubstitutionMap,
   shaderState,
   returnType
 ) {
@@ -161,11 +161,11 @@ ConditionsExpression.prototype.getShaderFunction = function (
     var statement = conditions[i];
 
     var condition = statement.condition.getShaderExpression(
-      propertyNameMap,
+      variableSubstitutionMap,
       shaderState
     );
     var expression = statement.expression.getShaderExpression(
-      propertyNameMap,
+      variableSubstitutionMap,
       shaderState
     );
 
@@ -175,26 +175,57 @@ ConditionsExpression.prototype.getShaderFunction = function (
       (i === 0 ? "if" : "else if") +
       " (" +
       condition +
-      ") \n" +
-      "    { \n" +
+      ")\n" +
+      "    {\n" +
       "        return " +
       expression +
-      "; \n" +
-      "    } \n";
+      ";\n" +
+      "    }\n";
   }
 
   shaderFunction =
     returnType +
     " " +
-    functionName +
-    "() \n" +
-    "{ \n" +
+    functionSignature +
+    "\n" +
+    "{\n" +
     shaderFunction +
     "    return " +
     returnType +
-    "(1.0); \n" + // Return a default value if no conditions are met
-    "} \n";
+    "(1.0);\n" + // Return a default value if no conditions are met
+    "}\n";
 
   return shaderFunction;
 };
+
+/**
+ * Gets the variables used by the expression.
+ *
+ * @returns {String[]} The variables used by the expression.
+ *
+ * @private
+ */
+ConditionsExpression.prototype.getVariables = function () {
+  var variables = [];
+
+  var conditions = this._runtimeConditions;
+  if (!defined(conditions) || conditions.length === 0) {
+    return variables;
+  }
+
+  var length = conditions.length;
+  for (var i = 0; i < length; ++i) {
+    var statement = conditions[i];
+    variables.push.apply(variables, statement.condition.getVariables());
+    variables.push.apply(variables, statement.expression.getVariables());
+  }
+
+  // Remove duplicates
+  variables = variables.filter(function (variable, index, variables) {
+    return variables.indexOf(variable) === index;
+  });
+
+  return variables;
+};
+
 export default ConditionsExpression;

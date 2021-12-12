@@ -1,5 +1,6 @@
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { QuantizedMeshTerrainData } from "../../Source/Cesium.js";
@@ -100,7 +101,9 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       var tilingScheme = new GeographicTilingScheme();
 
-      return when(data.createMesh(tilingScheme, 0, 0, 0, 1))
+      return when(
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+      )
         .then(function () {
           var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
           var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
@@ -194,7 +197,9 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       var tilingScheme = new GeographicTilingScheme();
 
-      return when(data.createMesh(tilingScheme, 0, 0, 0, 1))
+      return when(
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+      )
         .then(function () {
           var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
           var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
@@ -261,7 +266,9 @@ describe("Core/QuantizedMeshTerrainData", function () {
       });
 
       var tilingScheme = new GeographicTilingScheme();
-      return when(data.createMesh(tilingScheme, 0, 0, 0, 1))
+      return when(
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+      )
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -370,7 +377,9 @@ describe("Core/QuantizedMeshTerrainData", function () {
       });
 
       var tilingScheme = new GeographicTilingScheme();
-      return when(data.createMesh(tilingScheme, 0, 0, 0, 1))
+      return when(
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+      )
         .then(function () {
           var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
           var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
@@ -443,9 +452,8 @@ describe("Core/QuantizedMeshTerrainData", function () {
     var data;
     var tilingScheme;
 
-    beforeEach(function () {
-      tilingScheme = new GeographicTilingScheme();
-      data = new QuantizedMeshTerrainData({
+    function createSampleTerrainData() {
+      return new QuantizedMeshTerrainData({
         minimumHeight: 0.0,
         maximumHeight: 4.0,
         quantizedVertices: new Uint16Array([
@@ -479,54 +487,88 @@ describe("Core/QuantizedMeshTerrainData", function () {
         northSkirtHeight: 1.0,
         childTileMask: 15,
       });
+    }
+    beforeEach(function () {
+      tilingScheme = new GeographicTilingScheme();
+      data = createSampleTerrainData();
     });
 
     it("requires tilingScheme", function () {
       expect(function () {
-        data.createMesh(undefined, 0, 0, 0);
+        data.createMesh({ tilingScheme: undefined, x: 0, y: 0, level: 0 });
       }).toThrowDeveloperError();
     });
 
     it("requires x", function () {
       expect(function () {
-        data.createMesh(tilingScheme, undefined, 0, 0);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: undefined,
+          y: 0,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires y", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, undefined, 0);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: undefined,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires level", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, undefined);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: undefined,
+        });
       }).toThrowDeveloperError();
     });
 
     it("creates specified vertices plus skirt vertices", function () {
-      return data.createMesh(tilingScheme, 0, 0, 0).then(function (mesh) {
-        expect(mesh).toBeInstanceOf(TerrainMesh);
-        expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
-        expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
-        expect(mesh.minimumHeight).toBe(data._minimumHeight);
-        expect(mesh.maximumHeight).toBe(data._maximumHeight);
-        expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
-      });
+      return data
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+        .then(function (mesh) {
+          expect(mesh).toBeInstanceOf(TerrainMesh);
+          expect(mesh.vertices.length).toBe(12 * mesh.encoding.stride); // 4 regular vertices, 8 skirt vertices.
+          expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
+          expect(mesh.minimumHeight).toBe(data._minimumHeight);
+          expect(mesh.maximumHeight).toBe(data._maximumHeight);
+          expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
+        });
     });
 
     it("exaggerates mesh", function () {
-      return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function (mesh) {
-        expect(mesh).toBeInstanceOf(TerrainMesh);
-        expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
-        expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
-        expect(mesh.minimumHeight).toBe(data._minimumHeight);
-        expect(mesh.maximumHeight).toBeGreaterThan(data._maximumHeight);
-        expect(mesh.boundingSphere3D.radius).toBeGreaterThan(
-          data._boundingSphere.radius
-        );
-      });
+      return data
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          exaggeration: 2,
+        })
+        .then(function (mesh) {
+          expect(mesh).toBeInstanceOf(TerrainMesh);
+          expect(mesh.vertices.length).toBe(12 * mesh.encoding.stride); // 4 regular vertices, 8 skirt vertices.
+          expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
+
+          // Even though there's exaggeration, it doesn't affect the mesh's
+          // height, bounding sphere, or any other bounding volumes.
+          // The exaggeration is instead stored in the mesh's TerrainEncoding
+          expect(mesh.minimumHeight).toBe(data._minimumHeight);
+          expect(mesh.maximumHeight).toBe(data._maximumHeight);
+          expect(mesh.boundingSphere3D.radius).toBe(
+            data._boundingSphere.radius
+          );
+          expect(mesh.encoding.exaggeration).toBe(2.0);
+        });
     });
 
     it("requires 32bit indices for large meshes", function () {
@@ -560,10 +602,54 @@ describe("Core/QuantizedMeshTerrainData", function () {
         childTileMask: 15,
       });
 
-      return data.createMesh(tilingScheme, 0, 0, 0).then(function (mesh) {
-        expect(mesh).toBeInstanceOf(TerrainMesh);
-        expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
-      });
+      return data
+        .createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
+        .then(function (mesh) {
+          expect(mesh).toBeInstanceOf(TerrainMesh);
+          expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
+        });
+    });
+
+    it("enables throttling for asynchronous tasks", function () {
+      var options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        throttle: true,
+      };
+      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      var promises = new Array();
+      for (var i = 0; i < taskCount; i++) {
+        var tempData = createSampleTerrainData();
+        var promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
+      return when.all(promises);
+    });
+
+    it("disables throttling for asynchronous tasks", function () {
+      var options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        throttle: false,
+      };
+      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      var promises = new Array();
+      for (var i = 0; i < taskCount; i++) {
+        var tempData = createSampleTerrainData();
+        var promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(taskCount);
+      return when.all(promises);
     });
   });
 

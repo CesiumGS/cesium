@@ -42,6 +42,7 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
  * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
+ * @param {Boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
  *
  * @private
  */
@@ -69,6 +70,10 @@ function Vector3DTilePolylines(options) {
 
   this._transferrableBatchIds = undefined;
   this._packedBuffer = undefined;
+
+  this._keepDecodedPositions = options.keepDecodedPositions;
+  this._decodedPositions = undefined;
+  this._decodedPositionOffsets = undefined;
 
   this._currentPositions = undefined;
   this._previousPositions = undefined;
@@ -161,7 +166,8 @@ function packBuffer(polylines) {
 }
 
 var createVerticesTaskProcessor = new TaskProcessor(
-  "createVectorTilePolylines"
+  "createVectorTilePolylines",
+  5
 );
 var attributeLocations = {
   previousPosition: 0,
@@ -210,6 +216,7 @@ function createVertexArray(polylines, context) {
       counts: counts.buffer,
       batchIds: batchIds.buffer,
       packedBuffer: packedBuffer.buffer,
+      keepDecodedPositions: polylines._keepDecodedPositions,
     };
 
     var verticesPromise = (polylines._verticesPromise = createVerticesTaskProcessor.scheduleTask(
@@ -221,21 +228,36 @@ function createVertexArray(polylines, context) {
       return;
     }
 
-    when(verticesPromise, function (result) {
-      polylines._currentPositions = new Float32Array(result.currentPositions);
-      polylines._previousPositions = new Float32Array(result.previousPositions);
-      polylines._nextPositions = new Float32Array(result.nextPositions);
-      polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
-      polylines._vertexBatchIds = new Uint16Array(result.batchIds);
+    when(verticesPromise)
+      .then(function (result) {
+        if (polylines._keepDecodedPositions) {
+          polylines._decodedPositions = new Float64Array(
+            result.decodedPositions
+          );
+          polylines._decodedPositionOffsets = new Uint32Array(
+            result.decodedPositionOffsets
+          );
+        }
 
-      var indexDatatype = result.indexDatatype;
-      polylines._indices =
-        indexDatatype === IndexDatatype.UNSIGNED_SHORT
-          ? new Uint16Array(result.indices)
-          : new Uint32Array(result.indices);
+        polylines._currentPositions = new Float32Array(result.currentPositions);
+        polylines._previousPositions = new Float32Array(
+          result.previousPositions
+        );
+        polylines._nextPositions = new Float32Array(result.nextPositions);
+        polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
+        polylines._vertexBatchIds = new Uint16Array(result.batchIds);
 
-      polylines._ready = true;
-    });
+        var indexDatatype = result.indexDatatype;
+        polylines._indices =
+          indexDatatype === IndexDatatype.UNSIGNED_SHORT
+            ? new Uint16Array(result.indices)
+            : new Uint32Array(result.indices);
+
+        polylines._ready = true;
+      })
+      .otherwise(function (error) {
+        polylines._readyPromise.reject(error);
+      });
   }
 
   if (polylines._ready && !defined(polylines._va)) {
@@ -425,11 +447,11 @@ function createShaders(primitive, context) {
     "a_batchId",
     undefined
   )(Vector3DTilePolylinesVS);
-  var fsSource = batchTable.getFragmentShaderCallback()(
-    PolylineFS,
+  var fsSource = batchTable.getFragmentShaderCallback(
     false,
-    undefined
-  );
+    undefined,
+    false
+  )(PolylineFS);
 
   var vs = new ShaderSource({
     defines: [
@@ -470,6 +492,58 @@ function queueCommands(primitive, frameState) {
 
   frameState.commandList.push(primitive._command);
 }
+
+Vector3DTilePolylines.getPolylinePositions = function (polylines, batchId) {
+  var batchIds = polylines._batchIds;
+  var positions = polylines._decodedPositions;
+  var offsets = polylines._decodedPositionOffsets;
+
+  if (!defined(batchIds) || !defined(positions)) {
+    return undefined;
+  }
+
+  var i;
+  var j;
+  var polylinesLength = batchIds.length;
+  var positionsLength = 0;
+  var resultCounter = 0;
+
+  for (i = 0; i < polylinesLength; ++i) {
+    if (batchIds[i] === batchId) {
+      positionsLength += offsets[i + 1] - offsets[i];
+    }
+  }
+
+  if (positionsLength === 0) {
+    return undefined;
+  }
+
+  var results = new Float64Array(positionsLength * 3);
+
+  for (i = 0; i < polylinesLength; ++i) {
+    if (batchIds[i] === batchId) {
+      var offset = offsets[i];
+      var count = offsets[i + 1] - offset;
+      for (j = 0; j < count; ++j) {
+        var decodedOffset = (offset + j) * 3;
+        results[resultCounter++] = positions[decodedOffset];
+        results[resultCounter++] = positions[decodedOffset + 1];
+        results[resultCounter++] = positions[decodedOffset + 2];
+      }
+    }
+  }
+
+  return results;
+};
+
+/**
+ * Get the polyline positions for the given feature.
+ *
+ * @param {Number} batchId The batch ID of the feature.
+ */
+Vector3DTilePolylines.prototype.getPositions = function (batchId) {
+  return Vector3DTilePolylines.getPolylinePositions(this, batchId);
+};
 
 /**
  * Creates features for each polyline and places it at the batch id index of features.

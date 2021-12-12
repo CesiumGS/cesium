@@ -1,25 +1,29 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Color } from "../../Source/Cesium.js";
-import { ComponentDatatype } from "../../Source/Cesium.js";
-import { defined } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { HeadingPitchRoll } from "../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { PerspectiveFrustum } from "../../Source/Cesium.js";
-import { Transforms } from "../../Source/Cesium.js";
-import { Pass } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { Cesium3DTileRefine } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { DracoLoader } from "../../Source/Cesium.js";
-import { Expression } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cesium3DTilePass,
+  Cesium3DTileRefine,
+  Cesium3DTileStyle,
+  ClippingPlane,
+  ClippingPlaneCollection,
+  Color,
+  ComponentDatatype,
+  defined,
+  DracoLoader,
+  Expression,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Math as CesiumMath,
+  MetadataClass,
+  GroupMetadata,
+  Pass,
+  PerspectiveFrustum,
+  Transforms,
+  when,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/PointCloud3DTileContent",
@@ -902,20 +906,6 @@ describe(
       );
     });
 
-    it("throws when shader style reference a non-existent property", function () {
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        pointCloudWithPerPointPropertiesUrl
-      ).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: "color() * ${non_existent_property}",
-        });
-        expect(function () {
-          scene.renderForSpecs();
-        }).toThrowRuntimeError();
-      });
-    });
-
     it("does not apply shader style if the point cloud has a batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(
         function (tileset) {
@@ -1174,6 +1164,42 @@ describe(
 
     it("destroys", function () {
       return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
+    });
+
+    describe("3DTILES_metadata", function () {
+      var metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              componentType: "STRING",
+            },
+            height: {
+              componentType: "FLOAT32",
+            },
+          },
+        },
+      });
+      var groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns groupMetadata", function () {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
+          function (tileset) {
+            var content = tileset.root.content;
+            content.groupMetadata = groupMetadata;
+            expect(content.groupMetadata).toBe(groupMetadata);
+          }
+        );
+      });
     });
   },
   "WebGL"

@@ -12,6 +12,7 @@ import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
 import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
+import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 
@@ -116,8 +117,11 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
   },
 });
 
-var taskProcessor = new TaskProcessor(
-  "createVerticesFromGoogleEarthEnterpriseBuffer"
+var createMeshTaskName = "createVerticesFromGoogleEarthEnterpriseBuffer";
+var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
+var createMeshTaskProcessorThrottle = new TaskProcessor(
+  createMeshTaskName,
+  TerrainData.maximumAsynchronousTasks
 );
 
 var nativeRectangleScratch = new Rectangle();
@@ -128,33 +132,42 @@ var rectangleScratch = new Rectangle();
  *
  * @private
  *
- * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
- * @param {Number} x The X coordinate of the tile for which to create the terrain data.
- * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
- * @param {Number} level The level of the tile for which to create the terrain data.
- * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Object} options Object with the following properties:
+ * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+ * @param {Number} options.x The X coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
+ * @param {Number} options.level The level of the tile for which to create the terrain data.
+ * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {Number} [options.exaggerationRelativeHeight=0.0] The height from which terrain is exaggerated.
+ * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
  */
-GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (
-  tilingScheme,
-  x,
-  y,
-  level,
-  exaggeration
-) {
+GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("tilingScheme", tilingScheme);
-  Check.typeOf.number("x", x);
-  Check.typeOf.number("y", y);
-  Check.typeOf.number("level", level);
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
   //>>includeEnd('debug');
+
+  var tilingScheme = options.tilingScheme;
+  var x = options.x;
+  var y = options.y;
+  var level = options.level;
+  var exaggeration = defaultValue(options.exaggeration, 1.0);
+  var exaggerationRelativeHeight = defaultValue(
+    options.exaggerationRelativeHeight,
+    0.0
+  );
+  var throttle = defaultValue(options.throttle, true);
 
   var ellipsoid = tilingScheme.ellipsoid;
   tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);
   tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
-  exaggeration = defaultValue(exaggeration, 1.0);
 
   // Compute the center of the tile for RTC rendering.
   var center = ellipsoid.cartographicToCartesian(
@@ -165,7 +178,11 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (
   var thisLevelMaxError = levelZeroMaxError / (1 << level);
   this._skirtHeight = Math.min(thisLevelMaxError * 8.0, 1000.0);
 
-  var verticesPromise = taskProcessor.scheduleTask({
+  var createMeshTaskProcessor = throttle
+    ? createMeshTaskProcessorThrottle
+    : createMeshTaskProcessorNoThrottle;
+
+  var verticesPromise = createMeshTaskProcessor.scheduleTask({
     buffer: this._buffer,
     nativeRectangle: nativeRectangleScratch,
     rectangle: rectangleScratch,
@@ -173,6 +190,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (
     ellipsoid: ellipsoid,
     skirtHeight: this._skirtHeight,
     exaggeration: exaggeration,
+    exaggerationRelativeHeight: exaggerationRelativeHeight,
     includeWebMercatorT: true,
     negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
     negativeElevationThreshold: this._negativeElevationThreshold,
@@ -200,7 +218,6 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (
       result.numberOfAttributes,
       OrientedBoundingBox.clone(result.orientedBoundingBox),
       TerrainEncoding.clone(result.encoding),
-      exaggeration,
       result.westIndicesSouthToNorth,
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
@@ -249,7 +266,10 @@ GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function (
   return interpolateMeshHeight(this, u, v);
 };
 
-var upsampleTaskProcessor = new TaskProcessor("upsampleQuantizedTerrainMesh");
+var upsampleTaskProcessor = new TaskProcessor(
+  "upsampleQuantizedTerrainMesh",
+  TerrainData.maximumAsynchronousTasks
+);
 
 /**
  * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
@@ -318,7 +338,6 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
     isNorthChild: isNorthChild,
     childRectangle: childRectangle,
     ellipsoid: ellipsoid,
-    exaggeration: mesh.exaggeration,
   });
 
   if (!defined(upsamplePromise)) {

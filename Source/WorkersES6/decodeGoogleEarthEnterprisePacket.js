@@ -1,7 +1,7 @@
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import GoogleEarthEnterpriseTileInformation from "../Core/GoogleEarthEnterpriseTileInformation.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import pako from "../ThirdParty/pako_inflate.js";
+import pako from "../ThirdParty/pako.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 // Datatype sizes
@@ -198,25 +198,40 @@ function processMetadata(buffer, totalSize, quadKey) {
   return tileInfo;
 }
 
+var numMeshesPerPacket = 5;
+var numSubMeshesPerMesh = 4;
+
+// Each terrain packet will have 5 meshes - each containg 4 sub-meshes:
+//    1 even level mesh and its 4 odd level children.
+// Any remaining bytes after the 20 sub-meshes contains water surface meshes,
+// which are ignored.
 function processTerrain(buffer, totalSize, transferableObjects) {
   var dv = new DataView(buffer);
 
-  var offset = 0;
-  var terrainTiles = [];
-  while (offset < totalSize) {
-    // Each tile is split into 4 parts
-    var tileStart = offset;
-    for (var quad = 0; quad < 4; ++quad) {
-      var size = dv.getUint32(offset, true);
-      offset += sizeOfUint32;
-      offset += size;
+  // Find the sub-meshes.
+  var advanceMesh = function (pos) {
+    for (var sub = 0; sub < numSubMeshesPerMesh; ++sub) {
+      var size = dv.getUint32(pos, true);
+      pos += sizeOfUint32;
+      pos += size;
+      if (pos > totalSize) {
+        throw new RuntimeError("Malformed terrain packet found.");
+      }
     }
-    var tile = buffer.slice(tileStart, offset);
-    transferableObjects.push(tile);
-    terrainTiles.push(tile);
+    return pos;
+  };
+
+  var offset = 0;
+  var terrainMeshes = [];
+  while (terrainMeshes.length < numMeshesPerPacket) {
+    var start = offset;
+    offset = advanceMesh(offset);
+    var mesh = buffer.slice(start, offset);
+    transferableObjects.push(mesh);
+    terrainMeshes.push(mesh);
   }
 
-  return terrainTiles;
+  return terrainMeshes;
 }
 
 var compressedMagic = 0x7468dead;

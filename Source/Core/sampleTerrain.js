@@ -99,6 +99,33 @@ function doSampling(terrainProvider, level, positions) {
   });
 }
 
+/**
+ * Calls {@link TerrainData#interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
+ *  will assign the height property if the return value is not undefined.
+ *
+ * If the return value is false; it's suggesting that you should call {@link TerrainData#createMesh} first.
+ * @param {Cartographic} position The position to interpolate for and assign the height value to
+ * @param {TerrainData} terrainData
+ * @param {Rectangle} rectangle
+ * @returns {Boolean} If the height was actually interpolated and assigned
+ * @private
+ */
+function interpolateAndAssignHeight(position, terrainData, rectangle) {
+  var height = terrainData.interpolateHeight(
+    rectangle,
+    position.longitude,
+    position.latitude
+  );
+  if (height === undefined) {
+    // if height comes back as undefined, it may implicitly mean the terrain data
+    //  requires us to call TerrainData.createMesh() first (ArcGIS requires this in particular)
+    //  so we'll return false and do that next!
+    return false;
+  }
+  position.height = height;
+  return true;
+}
+
 function createInterpolateFunction(tileRequest) {
   var tilePositions = tileRequest.positions;
   var rectangle = tileRequest.tilingScheme.tileXYToRectangle(
@@ -107,14 +134,49 @@ function createInterpolateFunction(tileRequest) {
     tileRequest.level
   );
   return function (terrainData) {
+    var isMeshRequired = false;
     for (var i = 0; i < tilePositions.length; ++i) {
       var position = tilePositions[i];
-      position.height = terrainData.interpolateHeight(
-        rectangle,
-        position.longitude,
-        position.latitude
+      var isHeightAssigned = interpolateAndAssignHeight(
+        position,
+        terrainData,
+        rectangle
       );
+      // we've found a position which returned undefined - hinting to us
+      //  that we probably need to create a mesh for this terrain data.
+      // so break out of this loop and create the mesh - then we'll interpolate all the heights again
+      if (!isHeightAssigned) {
+        isMeshRequired = true;
+        break;
+      }
     }
+
+    if (!isMeshRequired) {
+      // all position heights were interpolated - we don't need the mesh
+      return when.resolve();
+    }
+
+    // create the mesh - and interpolate all the positions again
+    // note: terrain exaggeration is not passed in - we are only interested in the raw data
+    return terrainData
+      .createMesh({
+        tilingScheme: tileRequest.tilingScheme,
+        x: tileRequest.x,
+        y: tileRequest.y,
+        level: tileRequest.level,
+        // don't throttle this mesh creation because we've asked to sample these points;
+        //  so sample them! We don't care how many tiles that is!
+        throttle: false,
+      })
+      .then(function () {
+        // mesh has been created - so go through every position (maybe again)
+        //  and re-interpolate the heights - presumably using the mesh this time
+        for (var i = 0; i < tilePositions.length; ++i) {
+          var position = tilePositions[i];
+          // if it doesn't work this time - that's fine, we tried.
+          interpolateAndAssignHeight(position, terrainData, rectangle);
+        }
+      });
   };
 }
 

@@ -1,5 +1,6 @@
 import { DefaultProxy } from "../../Source/Cesium.js";
 import { defaultValue } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { queryToObject } from "../../Source/Cesium.js";
 import { Request } from "../../Source/Cesium.js";
 import { RequestErrorEvent } from "../../Source/Cesium.js";
@@ -8,6 +9,7 @@ import { Resource } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import { Uri } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
+import dataUriToBuffer from "../dataUriToBuffer.js";
 
 describe("Core/Resource", function () {
   var dataUri =
@@ -1453,6 +1455,147 @@ describe("Core/Resource", function () {
         });
     });
 
+    it("correctly ignores gamma color profile when ImageBitmapOptions are supported", function () {
+      // On newer versions of Safari and Firefox, the colorSpaceConversion option for createImageBitmap()
+      // is unsupported. See https://github.com/CesiumGS/cesium/issues/9875 for more information.
+      if (
+        FeatureDetection.isFirefox() ||
+        FeatureDetection.isSafari() ||
+        !supportsImageBitmapOptions
+      ) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/Gamma.png",
+        flipY: false,
+        skipColorSpaceConversion: true,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              0,
+              136,
+              0,
+              255,
+            ]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 59, 0, 255]);
+          }
+        });
+    });
+
+    it("correctly allows gamma color profile when ImageBitmapOptions are supported", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/Gamma.png",
+        flipY: false,
+        skipColorSpaceConversion: false,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 59, 0, 255]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 59, 0, 255]);
+          }
+        });
+    });
+
+    it("correctly ignores custom color profile when ImageBitmapOptions are supported", function () {
+      // On newer versions of Safari and Firefox, the colorSpaceConversion option for createImageBitmap()
+      // is unsupported. See https://github.com/CesiumGS/cesium/issues/9875 for more information.
+      if (
+        FeatureDetection.isFirefox() ||
+        FeatureDetection.isSafari() ||
+        !supportsImageBitmapOptions
+      ) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/CustomColorProfile.png",
+        flipY: false,
+        skipColorSpaceConversion: true,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              0,
+              136,
+              0,
+              255,
+            ]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              193,
+              0,
+              0,
+              255,
+            ]);
+          }
+        });
+    });
+
+    it("correctly allows custom color profile when ImageBitmapOptions are supported", function () {
+      if (!supportsImageBitmapOptions) {
+        return;
+      }
+
+      var loadedImage;
+
+      return Resource.fetchImage({
+        url: "./Data/Images/CustomColorProfile.png",
+        flipY: false,
+        skipColorSpaceConversion: false,
+        preferImageBitmap: true,
+      })
+        .then(function (image) {
+          loadedImage = image;
+          return Resource.supportsImageBitmapOptions();
+        })
+        .then(function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              193,
+              0,
+              0,
+              255,
+            ]);
+          } else {
+            expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([
+              193,
+              0,
+              0,
+              255,
+            ]);
+          }
+        });
+    });
+
     it("does not use ImageBitmap when ImageBitmapOptions are not supported", function () {
       if (!supportsImageBitmapOptions) {
         return;
@@ -1640,15 +1783,9 @@ describe("Core/Resource", function () {
         expect(headers).toEqual(expectedHeaders);
         expect(responseType).toEqual("blob");
 
-        var binary = atob(dataUri.split(",")[1]);
-        var array = [];
-        for (var i = 0; i < binary.length; i++) {
-          array.push(binary.charCodeAt(i));
-        }
+        var binary = dataUriToBuffer(dataUri);
 
-        deferred.resolve(
-          new Blob([new Uint8Array(array)], { type: "image/png" })
-        );
+        deferred.resolve(new Blob([binary], { type: "image/png" }));
       });
 
       var testResource = new Resource({
@@ -2619,7 +2756,7 @@ describe("Core/Resource", function () {
         expect(cb.calls.argsFor(0)[1]).toEqual("some error");
 
         var uri = new Uri(lastUrl);
-        var query = queryToObject(uri.query);
+        var query = queryToObject(uri.query());
         window[query.callback]("something good");
         expect(resolvedValue).toEqual("something good");
         expect(rejectedError).toBeUndefined();

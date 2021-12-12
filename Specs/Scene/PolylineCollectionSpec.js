@@ -511,6 +511,21 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
 
+    it("does not render polyline if show is false", function () {
+      var p = polylines.add();
+      p.positions = [
+        new Cartesian3(0.0, -1000000.0, 0.0),
+        new Cartesian3(0.0, 1000000.0, 0.0),
+        new Cartesian3(0.0, 2000000.0, 0.0),
+      ];
+
+      scene.primitives.add(polylines);
+      expect(scene).notToRender([0, 0, 0, 255]);
+
+      polylines.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)", function () {
       //Need to be in 2D or CV
       scene.mode = SceneMode.SCENE2D;

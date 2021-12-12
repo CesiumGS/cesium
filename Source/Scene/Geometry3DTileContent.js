@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
@@ -42,6 +42,7 @@ function Geometry3DTileContent(
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -122,6 +123,15 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
     },
   },
 });
@@ -290,12 +300,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  var featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJSONByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJSONByteLength;
 
   var featureTableBinary = new Uint8Array(
@@ -313,12 +322,11 @@ function initialize(content, arrayBuffer, byteOffset) {
     //
     // We could also make another request for it, but that would make the property set/get
     // API async, and would double the number of numbers in some cases.
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJSONByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJSONByteLength;
 
     if (batchTableBinaryByteLength > 0) {

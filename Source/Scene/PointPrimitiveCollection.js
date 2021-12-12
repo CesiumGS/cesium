@@ -63,6 +63,7 @@ var attributeLocations = {
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The point blending option. The default
  * is used for rendering both opaque and translucent points. However, if either all of the points are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the primitives in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many points, to
  * many collections with only a few points each.  Organize collections so that points
@@ -125,6 +126,14 @@ function PointPrimitiveCollection(options) {
   this._boundingVolumeDirty = false;
 
   this._colorCommands = [];
+
+  /**
+   * Determines if primitives in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each point in this collection from model to world coordinates.
@@ -838,6 +847,10 @@ var scratchWriterArray = [];
  */
 PointPrimitiveCollection.prototype.update = function (frameState) {
   removePointPrimitives(this);
+
+  if (!this.show) {
+    return;
+  }
 
   this._maxTotalPointSize = ContextLimits.maximumAliasedPointSize;
 

@@ -154,7 +154,8 @@ function createUpdateCV(
   heading,
   pitch,
   roll,
-  optionAltitude
+  optionAltitude,
+  optionPitchAdjustHeight
 ) {
   var camera = scene.camera;
 
@@ -171,13 +172,20 @@ function createUpdateCV(
     optionAltitude
   );
 
+  var pitchFunction = createPitchFunction(
+    startPitch,
+    pitch,
+    heightFunction,
+    optionPitchAdjustHeight
+  );
+
   function update(value) {
     var time = value.time / duration;
 
     camera.setView({
       orientation: {
         heading: CesiumMath.lerp(startHeading, heading, time),
-        pitch: CesiumMath.lerp(startPitch, pitch, time),
+        pitch: pitchFunction(time),
         roll: CesiumMath.lerp(startRoll, roll, time),
       },
     });
@@ -303,7 +311,8 @@ function createUpdate3D(
       var position = Cartesian3.fromRadians(
         CesiumMath.lerp(startLongitude, destLongitude, time),
         CesiumMath.lerp(startLatitude, destLatitude, time),
-        heightFunction(time)
+        heightFunction(time),
+        ellipsoid
       );
 
       camera.setView({

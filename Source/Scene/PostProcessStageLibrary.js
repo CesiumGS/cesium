@@ -21,7 +21,7 @@ import ModifiedReinhardTonemapping from "../Shaders/PostProcessStages/ModifiedRe
 import NightVision from "../Shaders/PostProcessStages/NightVision.js";
 import ReinhardTonemapping from "../Shaders/PostProcessStages/ReinhardTonemapping.js";
 import Silhouette from "../Shaders/PostProcessStages/Silhouette.js";
-import FXAA3_11 from "../ThirdParty/Shaders/FXAA3_11.js";
+import FXAA3_11 from "../Shaders/FXAA3_11.js";
 import AutoExposure from "./AutoExposure.js";
 import PostProcessStage from "./PostProcessStage.js";
 import PostProcessStageComposite from "./PostProcessStageComposite.js";
@@ -222,7 +222,7 @@ PostProcessStageLibrary.isDepthOfFieldSupported = function (scene) {
  * <p>
  * This stage is not supported in 2D.
  * </p>
- * @return {PostProcessStageComposite} A post-process stage that applies an edge detection effect.
+ * @return {PostProcessStage} A post-process stage that applies an edge detection effect.
  *
  * @example
  * // multiple silhouette effects

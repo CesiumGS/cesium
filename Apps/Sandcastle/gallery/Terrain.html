@@ -59,6 +59,40 @@
           credit: "Terrain data courtesy VT MÄK",
         });
 
+        var arcGisProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+        });
+
+        // Sine wave
+        var customHeightmapWidth = 32;
+        var customHeightmapHeight = 32;
+        var customHeightmapProvider = new Cesium.CustomHeightmapTerrainProvider(
+          {
+            width: customHeightmapWidth,
+            height: customHeightmapHeight,
+            callback: function (x, y, level) {
+              var width = customHeightmapWidth;
+              var height = customHeightmapHeight;
+              var buffer = new Float32Array(width * height);
+
+              for (var yy = 0; yy < height; yy++) {
+                for (var xx = 0; xx < width; xx++) {
+                  var u = (x + xx / (width - 1)) / Math.pow(2, level);
+                  var v = (y + yy / (height - 1)) / Math.pow(2, level);
+
+                  var heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
+
+                  var index = yy * width + xx;
+                  buffer[index] = heightValue;
+                }
+              }
+
+              return buffer;
+            },
+          }
+        );
+
         Sandcastle.addToolbarMenu(
           [
             {
@@ -98,9 +132,21 @@
               },
             },
             {
+              text: "CustomHeightmapTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = customHeightmapProvider;
+              },
+            },
+            {
               text: "VRTheWorldTerrainProvider",
               onselect: function () {
                 viewer.terrainProvider = vrTheWorldProvider;
+              },
+            },
+            {
+              text: "ArcGISTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = arcGisProvider;
               },
             },
           ],

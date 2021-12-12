@@ -276,7 +276,11 @@ function createTerrainData(terrainProvider, x, y, level, upsampled) {
   };
 
   var originalCreateMesh = terrainData.createMesh;
-  terrainData.createMesh = function (tilingScheme, x, y, level) {
+  terrainData.createMesh = function (options) {
+    var x = options.x;
+    var y = options.y;
+    var level = options.level;
+
     var willSucceed =
       terrainProvider._createMeshWillSucceed[createTileKey(x, y, level)];
     if (willSucceed === undefined) {

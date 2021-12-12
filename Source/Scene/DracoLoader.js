@@ -3,7 +3,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
+import ForEach from "./GltfPipeline/ForEach.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -28,9 +28,8 @@ DracoLoader._getDecoderTaskProcessor = function () {
     );
     processor
       .initWebAssemblyModule({
-        modulePath: "ThirdParty/Workers/draco_wasm_wrapper.js",
+        modulePath: "ThirdParty/Workers/draco_decoder_nodejs.js",
         wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-        fallbackModulePath: "ThirdParty/Workers/draco_decoder.js",
       })
       .then(function () {
         DracoLoader._taskProcessorReady = true;
@@ -284,6 +283,28 @@ DracoLoader.decodePointCloud = function (parameters) {
   return decoderTaskProcessor.scheduleTask(parameters, [
     parameters.buffer.buffer,
   ]);
+};
+
+/**
+ * Decodes a buffer view. Returns undefined if the task cannot be scheduled.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Uint8Array} options.array The typed array containing the buffer view data.
+ * @param {Object} options.bufferView The glTF buffer view object.
+ * @param {Object.<String, Number>} options.compressedAttributes The compressed attributes.
+ * @param {Boolean} options.dequantizeInShader Whether POSITION and NORMAL attributes should be dequantized on the GPU.
+ *
+ * @returns {Promise} A promise that resolves to the decoded indices and attributes.
+ * @private
+ */
+DracoLoader.decodeBufferView = function (options) {
+  var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
+  if (!DracoLoader._taskProcessorReady) {
+    // The task processor is not ready to schedule tasks
+    return;
+  }
+
+  return decoderTaskProcessor.scheduleTask(options, [options.array.buffer]);
 };
 
 /**

@@ -407,6 +407,22 @@ Cartesian2.dot = function (left, right) {
 };
 
 /**
+ * Computes the magnitude of the cross product that would result from implicitly setting the Z coordinate of the input vectors to 0
+ *
+ * @param {Cartesian2} left The first Cartesian.
+ * @param {Cartesian2} right The second Cartesian.
+ * @returns {Number} The cross product.
+ */
+Cartesian2.cross = function (left, right) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
+
+  return left.x * right.y - left.y * right.x;
+};
+
+/**
  * Computes the componentwise product of two Cartesians.
  *
  * @param {Cartesian2} left The first Cartesian.
@@ -701,6 +717,14 @@ Cartesian2.equalsEpsilon = function (
  * @constant
  */
 Cartesian2.ZERO = Object.freeze(new Cartesian2(0.0, 0.0));
+
+/**
+ * An immutable Cartesian2 instance initialized to (1.0, 1.0).
+ *
+ * @type {Cartesian2}
+ * @constant
+ */
+Cartesian2.ONE = Object.freeze(new Cartesian2(1.0, 1.0));
 
 /**
  * An immutable Cartesian2 instance initialized to (1.0, 0.0).
