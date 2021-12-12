@@ -18,7 +18,7 @@ var scratchCartesian3 = new Cartesian3();
  * @param {Cartesian2|Cartesian3} p1 The second point of the triangle, corresponding to the barycentric y-axis.
  * @param {Cartesian2|Cartesian3} p2 The third point of the triangle, corresponding to the barycentric z-axis.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+ * @returns {Cartesian3|undefined} The modified result parameter or a new Cartesian3 instance if one was not provided. If the triangle is degenerate the function will return undefined.
  *
  * @example
  * // Returns Cartesian3.UNIT_X
@@ -96,12 +96,13 @@ function barycentricCoordinates(point, p0, p1, p2, result) {
   result.z = dot00 * dot12 - dot01 * dot02;
   var q = dot00 * dot11 - dot01 * dot01;
 
-  // This is done to avoid dividing by 0
-  if (q !== 0) {
-    result.y /= q;
-    result.z /= q;
+  // Triangle is degenerate
+  if (q === 0) {
+    return undefined;
   }
 
+  result.y /= q;
+  result.z /= q;
   result.x = 1.0 - result.y - result.z;
   return result;
 }

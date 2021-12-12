@@ -6,6 +6,7 @@
 
 - Removed `Scene.debugShowGlobeDepth`. [#9965](https://github.com/CesiumGS/cesium/pull/9965)
 - Removed `CesiumInspectorViewModel.globeDepth` and `CesiumInspectorViewModel.pickDepth`. [#9965](https://github.com/CesiumGS/cesium/pull/9965)
+- `barycentricCoordinates` returns `undefined` when the input triangle is degenerate. [#9175](https://github.com/CesiumGS/cesium/pull/9175)
 
 ##### Additions :tada:
 
