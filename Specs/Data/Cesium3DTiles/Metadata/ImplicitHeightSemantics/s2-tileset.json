@@ -16,11 +16,11 @@
           "tile": {
             "properties": {
               "minimumHeight": {
-                "type": "FLOAT64",
+                "componentType": "FLOAT64",
                 "semantic": "TILE_MINIMUM_HEIGHT"
               },
               "maximumHeight": {
-                "type": "FLOAT64",
+                "componentType": "FLOAT64",
                 "semantic": "TILE_MAXIMUM_HEIGHT"
               }
             }

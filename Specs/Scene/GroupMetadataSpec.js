@@ -13,8 +13,6 @@ describe("Scene/GroupMetadata", function () {
 
     expect(groupMetadata.id).toBe("building");
     expect(groupMetadata.class).toBeUndefined();
-    expect(groupMetadata.name).toBeUndefined();
-    expect(groupMetadata.description).toBeUndefined();
     expect(groupMetadata.extras).toBeUndefined();
     expect(groupMetadata.extensions).toBeUndefined();
   });
@@ -25,9 +23,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -49,8 +46,6 @@ describe("Scene/GroupMetadata", function () {
       class: buildingClass,
       id: "building",
       group: {
-        name: "Building",
-        description: "Building Metadata",
         extras: extras,
         extensions: extensions,
         properties: properties,
@@ -59,8 +54,6 @@ describe("Scene/GroupMetadata", function () {
 
     expect(groupMetadata.id).toBe("building");
     expect(groupMetadata.class).toBe(buildingClass);
-    expect(groupMetadata.name).toBe("Building");
-    expect(groupMetadata.description).toBe("Building Metadata");
     expect(groupMetadata.extras).toBe(extras);
     expect(groupMetadata.extensions).toBe(extensions);
     expect(groupMetadata.getProperty("position")).toEqual(
@@ -98,7 +91,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -122,7 +115,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -146,7 +139,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             optional: true,
             default: 10.0,
           },
@@ -187,7 +180,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -211,7 +204,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "HEIGHT",
           },
         },
@@ -236,7 +229,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "HEIGHT",
             optional: true,
             default: 10.0,
@@ -279,10 +272,10 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -308,12 +301,12 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             optional: true,
             default: 10.0,
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -337,10 +330,10 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -378,7 +371,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -402,9 +395,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -433,9 +425,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
             optional: true,
             default: position,
           },
@@ -480,9 +471,8 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -540,7 +530,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -565,7 +555,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
@@ -602,7 +592,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
@@ -629,7 +619,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -665,7 +655,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },

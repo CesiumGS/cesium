@@ -40,15 +40,18 @@ var customShader = new Cesium.CustomShader({
   // Custom vertex shader. This is a function from model space -> model space.
   // VertexInput is documented below
   vertexShaderText: `
-    void vertexMain(VertexInput vsInput, inout vec3 position) {
-        // code goes here. e.g. for a no-op:
-        return position;
+    // IMPORTANT: the function signature must use these parameter names. This
+    // makes it easier for the runtime to generate the shader and make optimizations.
+    void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+        // code goes here. An empty body is a no-op.
     }
   `,
   // Custom fragment shader.
   // FragmentInput will be documented below
   // Regardless of the mode, this always takes in a material and modifies it in place.
   fragmentShaderText: `
+    // IMPORTANT: the function signature must use these parameter names. This
+    // makes it easier for the runtime to generate the shader and make optimizations.
     void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         // code goes here. e.g. to set the diffuse color to a translucent red:
         material.diffuse = vec3(1.0, 0.0, 0.0);
@@ -151,14 +154,13 @@ var customShader = new Cesium.CustomShader({
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
-    void vertexMain(VertexInput vsInput, inout vec3 position) {
-        float positiveX = step(0.0, position.x);
+    void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+        float positiveX = step(0.0, positionMC.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,
             vsInput.attributes.color_1,
-            position.x
+            vsOutput.positionMC.x
         );
-        return position;
     }
   `,
   // User uses the varying in the fragment shader
@@ -199,25 +201,10 @@ In the above, "material" does preprocessing of textures, resulting in a `czm_mod
 An automatically-generated GLSL struct that contains attributes.
 
 ```glsl
-// this struct represents the raw attribute values.
-struct Attributes {
-    // required semantics
-    vec3 position; // model space position. Always present.
-
-    // optional semantics (added if available in the 3D model file)
-    vec3 normal; // corresponds to attribute with semantic "NORMAL"
-    vec3 tangent;
-    vec2 texCoord_0;
-    // etc.
-
-    // custom attribues
-    vec3 custom_attribute; // corresponds to attribute "_CUSTOM_ATTRIBUTE"
-};
-
 struct VertexInput {
-    // raw attribute values
+    // Processed attributes. See the Attributes Struct section below.
     Attributes attributes;
-    // in the future we may add another struct for derived attributes (e.g. positionEC)
+    // In the future, metadata will be added here.
 };
 ```
 
@@ -227,34 +214,71 @@ This struct is similar to `VertexInput`, but there are a few more automatic
 variables for positions in various coordinate spaces.
 
 ```glsl
-// this struct represents the raw attributes from the 3D model file. The
-// varyings required to make this work are handled automatically.
-struct Attributes {
-    // required semantics
-    vec3 position; // Raw model space position. always present as POSITION is required
-
-    // optional semantics (added if available in the 3D model file)
-    vec3 normal; // corresponds to attribute with semantic "NORMAL"
-    vec3 tangent;
-    vec2 texCoord_0;
-    // etc.
-
-    // custom attribues
-    vec3 custom_attribute; // corresponds to attribute "_CUSTOM_ATTRIBUTE"
-};
-
 struct FragmentInput {
-    // raw attribute values interpolated (but not normalized) from varyings.
+    // Processed attribute values. See the Attributes Struct section below.
     Attributes attributes;
-    vec3 positionMC; // model space
-    vec3 positionWC; // World coords (ECEF). Low precision.
-    vec3 positionEC; // Eye coordinates
+    // In the future, metadata will be added here.
 };
 ```
 
+## Attributes Struct
+
+The `Attributes` struct is dynamically generated given the variables used in
+the custom shader and the attributes available in the primitive to render.
+
+For example, if the user uses `fsInput.attributes.texCoord_0` in the shader,
+the runtime will generate the code needed to supply this value from the
+attribute `TEXCOORD_0` in the model (where available)
+
+If a primitive does not have the attributes necessary to satisfy the custom
+shader, a default value will be inferred where possible so the shader still
+compiles. Otherwise, the custom vertex/fragment shader portion will be disabled
+for that primitive.
+
+The full list of built-in attributes are as follows. Some attributes have a set
+index, which is one of `0, 1, 2, ...` (e.g. `texCoord_0`), these are denoted
+with an `N`.
+
+| Corresponding Attribute in Model | variable in shader | Type    | Available in Vertex Shader? | Available in Fragment Shader? | Description                                                                                                                                                              |
+| -------------------------------- | ------------------ | ------- | --------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POSITION`                       | `positionMC`       | `vec3`  | Yes                         | Yes                           | Position in model coordinates                                                                                                                                            |
+| `POSITION`                       | `positionWC`       | `vec3`  | No                          | Yes                           | Position in world coordinates (WGS84 ECEF `(x, y, z)`). Low precision.                                                                                                   |
+| `POSITION`                       | `positionEC`       | `vec3`  | No                          | Yes                           | Position in eye coordinates.                                                                                                                                             |
+| `NORMAL`                         | `normalMC`         | `vec3`  | Yes                         | No                            | Unit-length normal vector in model coordinates. Only available in the vertex shader                                                                                      |
+| `NORMAL`                         | `normalEC`         | `vec3`  | No                          | Yes                           | Unit-length normal vector in eye coordinates. Only available in the vertex shader                                                                                        |
+| `TANGENT`                        | `tangentMC`        | `vec3`  | Yes                         | No                            | Unit-length tangent vector in model coordinates. This is always a `vec3`. For models that provide a `w` component, that is removed after computing the bitangent vector. |
+| `TANGENT`                        | `tangentEC`        | `vec3`  | No                          | Yes                           | Unit-length tangent vector in eye coordinates. This is always a `vec3`. For models that provide a `w` component, that is removed after computing the bitangent vector.   |
+| `NORMAL` & `TANGENT`             | `bitangentMC`      | `vec3`  | Yes                         | No                            | Unit-length bitangent vector in model coordinates. Only available when both normal and tangent vectors are available.                                                    |
+| `NORMAL` & `TANGENT`             | `bitangentEC`      | `vec3`  | No                          | Yes                           | Unit-length bitangent vector in eye coordinates. Only available when both normal and tangent vectors are available.                                                      |
+| `TEXCOORD_N`                     | `texCoord_N`       | `vec2`  | Yes                         | Yes                           | `N`-th set of texture coordinates.                                                                                                                                       |
+| `COLOR_N`                        | `color_N`          | `vec4`  | Yes                         | Yes                           | `N`-th set of vertex colors. This is always a `vec4`; if the model does not specify an alpha value, it is assumed to be 1.                                               |
+| `JOINTS_N`                       | `joints_N`         | `ivec4` | Yes                         | Yes                           | `N`-th set of joint indices                                                                                                                                              |
+| `WEIGHTS_N`                      | `weights_N`        | `vec4`  |
+
+Custom attributes are also available, though they are renamed to use lowercase
+letters and underscores. For example, an attribute called `_SURFACE_TEMPERATURE`
+in the model would become `fsInput.attributes.surface_temperature` in the shader.
+
+## `czm_modelVertexOutput` struct
+
+This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
+
+This struct contains the output of the custom vertex shader. This includes:
+
+- `positionMC` - The vertex position in model space coordinates. This struct
+  field can be used e.g. to perturb or animate vertices. It is initialized to
+  `vsInput.attributes.positionMC`. The custom shader may modify this, and the
+  result is used to compute `gl_Position`.
+- `pointSize` - corresponds to `gl_PointSize`. This is only applied for models
+  rendered as `gl.POINTS`, and ignored otherwise.
+
+> **Implementation Note**: `positionMC` does not modify the primitive's bounding
+> sphere. If vertices are moved outside the bounding sphere, the primitive may
+> be unintentionally culled depending on the view frustum.
+
 ## `czm_modelMaterial` struct
 
-This one is a built-in, see the [documentation comment](https://github.com/CesiumGS/cesium/blob/model-experimental-custom-shaders/Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 

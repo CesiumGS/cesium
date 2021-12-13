@@ -1,8 +1,8 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
-import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
 
@@ -63,6 +63,50 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.attributeIndex = nodeRenderResources.attributeIndex;
+
+  /**
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
+   * Inherited from the node render resources.
+   *
+   * @type {Number}
+   *
+   * @private
+   */
+  this.featureIdVertexAttributeSetIndex =
+    nodeRenderResources.featureIdVertexAttributeSetIndex;
+
+  /**
+   * Whether or not this primitive has feature IDs (at the node's instance or through primitive's feature ID attribute or texture).
+   *
+   * @type {Boolean}
+   * @default false
+   * @readonly
+   *
+   * @private
+   */
+  this.hasFeatureIds = false;
+
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values. Inherited from the node render resources.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = clone(nodeRenderResources.uniformMap);
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the node
+   * render resources.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
   /**
    * The computed model matrix for this primitive. This is cloned from the
@@ -158,16 +202,7 @@ export default function PrimitiveRenderResources(
     nodeRenderResources.instancingTranslationMax,
     nodeRenderResources.instancingTranslationMin
   );
-  /**
-   * A dictionary mapping uniform name to functions that return the uniform
-   * values.
-   *
-   * @type {Object.<String, Function>}
-   * @readonly
-   *
-   * @private
-   */
-  this.uniformMap = {};
+
   /**
    * Options for configuring the lighting stage such as selecting between
    * unlit and PBR shading.
@@ -178,15 +213,6 @@ export default function PrimitiveRenderResources(
    * @private
    */
   this.lightingOptions = new ModelLightingOptions();
-  /**
-   * Options for configuring the alpha stage such as pass and alpha mode.
-   *
-   * @type {ModelAlphaOptions}
-   * @readonly
-   *
-   * @private
-   */
-  this.alphaOptions = new ModelAlphaOptions();
 
   /**
    * The shader variable to use for picking.
@@ -215,4 +241,14 @@ export default function PrimitiveRenderResources(
     },
     blending: BlendingState.DISABLED,
   };
+
+  /**
+   * An enum describing the types of draw commands needed, based on the style.
+   *
+   * @type {StyleCommandsNeeded}
+   * @readonly
+   *
+   * @private
+   */
+  this.styleCommandsNeeded = undefined;
 }

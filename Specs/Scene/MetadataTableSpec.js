@@ -37,10 +37,10 @@ describe("Scene/MetadataTable", function () {
   it("creates metadata table", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
     };
     var propertyValues = {
@@ -88,7 +88,7 @@ describe("Scene/MetadataTable", function () {
   it("hasProperty returns false when there's no property with the given property ID", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -105,7 +105,7 @@ describe("Scene/MetadataTable", function () {
   it("hasProperty returns true when there's a property with the given property ID", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -122,12 +122,12 @@ describe("Scene/MetadataTable", function () {
   it("hasProperty returns true when the class has a default value for a missing property", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         default: 10.0,
         optional: true,
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
     };
     var propertyValues = {
@@ -161,7 +161,7 @@ describe("Scene/MetadataTable", function () {
   it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -178,7 +178,7 @@ describe("Scene/MetadataTable", function () {
   it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "HEIGHT",
       },
     };
@@ -196,13 +196,13 @@ describe("Scene/MetadataTable", function () {
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "HEIGHT",
         default: 10.0,
         optional: true,
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
     };
     var propertyValues = {
@@ -236,10 +236,10 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyIds returns array of property IDs", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
     };
     var propertyValues = {
@@ -258,12 +258,12 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyIds includes properties with default values", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         default: 10.0,
         optional: true,
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
     };
     var propertyValues = {
@@ -281,10 +281,10 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyIds uses results argument", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
     };
     var propertyValues = {
@@ -307,7 +307,7 @@ describe("Scene/MetadataTable", function () {
   it("getProperty", function () {
     var properties = {
       propertyInt8: {
-        type: "INT8",
+        componentType: "INT8",
       },
     };
 
@@ -337,7 +337,7 @@ describe("Scene/MetadataTable", function () {
   it("getProperty returns undefined when there's no property with the given property ID", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -356,17 +356,16 @@ describe("Scene/MetadataTable", function () {
 
     var properties = {
       position: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
         optional: true,
         default: position,
       },
       name: {
-        type: "STRING",
+        componentType: "STRING",
       },
       type: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
         optional: true,
         default: "Other",
@@ -391,7 +390,7 @@ describe("Scene/MetadataTable", function () {
   it("getProperty throws without index", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -410,7 +409,7 @@ describe("Scene/MetadataTable", function () {
   it("getProperty throws without propertyId", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -429,7 +428,7 @@ describe("Scene/MetadataTable", function () {
   it("getProperty throws if index is out of bounds", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -454,7 +453,7 @@ describe("Scene/MetadataTable", function () {
   it("setProperty sets values", function () {
     var properties = {
       propertyInt8: {
-        type: "INT8",
+        componentType: "INT8",
       },
     };
 
@@ -487,7 +486,7 @@ describe("Scene/MetadataTable", function () {
   it("setProperty returns false if the property ID doesn't exist", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -504,7 +503,7 @@ describe("Scene/MetadataTable", function () {
   it("setProperty throws without index", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -523,7 +522,7 @@ describe("Scene/MetadataTable", function () {
   it("setProperty throws without propertyId", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -542,7 +541,7 @@ describe("Scene/MetadataTable", function () {
   it("setProperty throws without value", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -561,7 +560,7 @@ describe("Scene/MetadataTable", function () {
   it("setProperty throws if index is out of bounds", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -594,7 +593,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -611,7 +610,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyBySemantic returns the property value", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -629,7 +628,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyBySemantic throws without index", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -649,7 +648,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyBySemantic throws without semantic", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -669,7 +668,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyBySemantic throws if index is out of bounds", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -705,7 +704,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic returns false if the semantic doesn't exist", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -722,7 +721,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic sets property value", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -741,7 +740,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic throws without index", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -761,7 +760,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic throws without semantic", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -781,7 +780,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic throws without value", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -801,7 +800,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic throws if index is out of bounds", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "_HEIGHT",
       },
     };
@@ -828,7 +827,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyTypedArray returns typed array", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -850,7 +849,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyTypedArray returns undefined if property does not exist", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {
@@ -878,7 +877,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyTypedArrayBySemantic returns typed array", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
         semantic: "HEIGHT",
       },
     };
@@ -901,7 +900,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyTypedArrayBySemantic returns undefined if semantic does not exist", function () {
     var properties = {
       height: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
     };
     var propertyValues = {

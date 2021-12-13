@@ -5,6 +5,8 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Axis from "../Axis.js";
+import AttributeType from "../AttributeType.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * Utility functions for {@link ModelExperimental}.
@@ -79,6 +81,72 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
       return attribute;
     }
   }
+};
+
+ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
+  if (!defined(attributes)) {
+    return false;
+  }
+
+  for (var i = 0; i < attributes.length; i++) {
+    var attribute = attributes[i];
+    if (defined(attribute.quantization)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * @param {ModelComponents.Attribute} attribute
+ *
+ * @private
+ */
+ModelExperimentalUtility.getAttributeInfo = function (attribute) {
+  var semantic = attribute.semantic;
+  var setIndex = attribute.setIndex;
+
+  var variableName;
+  var hasSemantic = false;
+  if (defined(semantic)) {
+    variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
+    hasSemantic = true;
+  } else {
+    variableName = attribute.name;
+    // According to the glTF 2.0 spec, custom attributes must be prepended with
+    // an underscore.
+    variableName = variableName.replace(/^_/, "");
+    variableName = variableName.toLowerCase();
+  }
+
+  var isVertexColor = /^color_\d+$/.test(variableName);
+  var attributeType = attribute.type;
+  var glslType = AttributeType.getGlslType(attributeType);
+
+  // color_n can be either a vec3 or a vec4. But in GLSL we can always use
+  // attribute vec4 since GLSL promotes vec3 attribute data to vec4 with
+  // the .a channel set to 1.0.
+  if (isVertexColor) {
+    glslType = "vec4";
+  }
+
+  var isQuantized = defined(attribute.quantization);
+  var quantizedGlslType;
+  if (isQuantized) {
+    // The quantized color_n attribute also is promoted to a vec4 in the shader
+    quantizedGlslType = isVertexColor
+      ? "vec4"
+      : AttributeType.getGlslType(attribute.quantization.type);
+  }
+
+  return {
+    attribute: attribute,
+    isQuantized: isQuantized,
+    variableName: variableName,
+    hasSemantic: hasSemantic,
+    glslType: glslType,
+    quantizedGlslType: quantizedGlslType,
+  };
 };
 
 var cartesianMaxScratch = new Cartesian3();

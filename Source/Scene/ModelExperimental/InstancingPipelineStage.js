@@ -32,6 +32,7 @@ InstancingPipelineStage.name = "InstancingPipelineStage"; // Helps with debuggin
  */
 InstancingPipelineStage.process = function (renderResources, node, frameState) {
   var instances = node.instances;
+  var count = instances.attributes[0].count;
   var instancingVertexAttributes = [];
 
   var shaderBuilder = renderResources.shaderBuilder;
@@ -61,6 +62,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   ) {
     instancingVertexAttributes = processMatrixAttributes(
       node,
+      count,
       renderResources,
       frameState
     );
@@ -110,7 +112,14 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     }
   }
 
-  renderResources.instanceCount = node.instances.attributes[0].count;
+  processFeatureIdAttributes(
+    renderResources,
+    frameState,
+    instances,
+    instancingVertexAttributes
+  );
+
+  renderResources.instanceCount = count;
   renderResources.attributes.push.apply(
     renderResources.attributes,
     instancingVertexAttributes
@@ -122,8 +131,7 @@ var rotationScratch = new Quaternion();
 var scaleScratch = new Cartesian3();
 var transformScratch = new Matrix4();
 
-function getInstanceTransformsTypedArray(instances, renderResources) {
-  var count = instances.attributes[0].count;
+function getInstanceTransformsTypedArray(instances, count, renderResources) {
   var elements = 12;
   var transformsTypedArray = new Float32Array(count * elements);
 
@@ -157,16 +165,16 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
 
   // Translations get initialized to (0, 0, 0).
   var translationTypedArray = hasTranslation
-    ? translationAttribute.typedArray
+    ? translationAttribute.packedTypedArray
     : new Float32Array(count * 3);
   // Rotations get initialized to (0, 0, 0, 0). The w-component is set to 1 in the loop below.
   var rotationTypedArray = hasRotation
-    ? rotationAttribute.typedArray
+    ? rotationAttribute.packedTypedArray
     : new Float32Array(count * 4);
   // Scales get initialized to (1, 1, 1).
   var scaleTypedArray;
   if (hasScale) {
-    scaleTypedArray = scaleAttribute.typedArray;
+    scaleTypedArray = scaleAttribute.packedTypedArray;
   } else {
     scaleTypedArray = new Float32Array(count * 3);
     scaleTypedArray.fill(1);
@@ -235,9 +243,62 @@ function getInstanceTransformsTypedArray(instances, renderResources) {
   return transformsTypedArray;
 }
 
-function processMatrixAttributes(node, renderResources, frameState) {
+function processFeatureIdAttributes(
+  renderResources,
+  frameState,
+  instances,
+  instancingVertexAttributes
+) {
+  var attributes = instances.attributes;
+  var model = renderResources.model;
+  var shaderBuilder = renderResources.shaderBuilder;
+
+  // Load Feature ID vertex attributes. These are loaded as typed arrays in GltfLoader
+  // because we want to expose the instance feature ID when picking.
+  for (var i = 0; i < attributes.length; i++) {
+    var attribute = attributes[i];
+    if (attribute.semantic !== InstanceAttributeSemantic.FEATURE_ID) {
+      continue;
+    }
+
+    if (
+      attribute.setIndex >= renderResources.featureIdVertexAttributeSetIndex
+    ) {
+      renderResources.featureIdVertexAttributeSetIndex = attribute.setIndex + 1;
+    }
+
+    var vertexBuffer = Buffer.createVertexBuffer({
+      context: frameState.context,
+      typedArray: attribute.packedTypedArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    vertexBuffer.vertexArrayDestroyable = false;
+    model._resources.push(vertexBuffer);
+
+    instancingVertexAttributes.push({
+      index: renderResources.attributeIndex++,
+      vertexBuffer: vertexBuffer,
+      componentsPerAttribute: AttributeType.getNumberOfComponents(
+        attribute.type
+      ),
+      componentDatatype: attribute.componentDatatype,
+      normalize: false,
+      offsetInBytes: attribute.byteOffset,
+      strideInBytes: attribute.byteStride,
+      instanceDivisor: 1,
+    });
+
+    shaderBuilder.addAttribute(
+      "float",
+      "a_instanceFeatureId_" + attribute.setIndex
+    );
+  }
+}
+
+function processMatrixAttributes(node, count, renderResources, frameState) {
   var transformsTypedArray = getInstanceTransformsTypedArray(
     node.instances,
+    count,
     renderResources
   );
   var transformsVertexBuffer = Buffer.createVertexBuffer({

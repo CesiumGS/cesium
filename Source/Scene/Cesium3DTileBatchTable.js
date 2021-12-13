@@ -69,7 +69,8 @@ function Cesium3DTileBatchTable(
   this._batchTexture = new BatchTexture({
     featuresLength: featuresLength,
     colorChangedCallback: colorChangedCallback,
-    content: content,
+    owner: content,
+    statistics: content.tileset.statistics,
   });
 }
 
@@ -342,6 +343,16 @@ Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   }
 
   return results;
+};
+
+/**
+ * @private
+ */
+Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (
+  batchId,
+  name
+) {
+  return undefined;
 };
 
 Cesium3DTileBatchTable.prototype.getProperty = function (batchId, name) {

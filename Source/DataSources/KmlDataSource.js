@@ -1,6 +1,7 @@
 import ArcType from "../Core/ArcType.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -42,6 +43,7 @@ import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import zip from "../ThirdParty/zip.js";
+import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import DataSource from "./DataSource.js";
@@ -181,7 +183,7 @@ var featureTypes = {
   NetworkLink: processNetworkLink,
   GroundOverlay: processGroundOverlay,
   PhotoOverlay: processUnsupportedFeature,
-  ScreenOverlay: processUnsupportedFeature,
+  ScreenOverlay: processScreenOverlay,
   Tour: processTour,
 };
 
@@ -2200,12 +2202,34 @@ function processDescription(
   //Rewrite any KMZ embedded urls
   if (defined(uriResolver) && uriResolver.keys.length > 1) {
     embedDataUris(scratchDiv, "a", "href", uriResolver);
+    embedDataUris(scratchDiv, "link", "href", uriResolver);
+    embedDataUris(scratchDiv, "area", "href", uriResolver);
     embedDataUris(scratchDiv, "img", "src", uriResolver);
+    embedDataUris(scratchDiv, "iframe", "src", uriResolver);
+    embedDataUris(scratchDiv, "video", "src", uriResolver);
+    embedDataUris(scratchDiv, "audio", "src", uriResolver);
+    embedDataUris(scratchDiv, "source", "src", uriResolver);
+    embedDataUris(scratchDiv, "track", "src", uriResolver);
+    embedDataUris(scratchDiv, "input", "src", uriResolver);
+    embedDataUris(scratchDiv, "embed", "src", uriResolver);
+    embedDataUris(scratchDiv, "script", "src", uriResolver);
+    embedDataUris(scratchDiv, "video", "poster", uriResolver);
   }
 
   //Make relative urls absolute using the sourceResource
   applyBasePath(scratchDiv, "a", "href", sourceResource);
+  applyBasePath(scratchDiv, "link", "href", sourceResource);
+  applyBasePath(scratchDiv, "area", "href", sourceResource);
   applyBasePath(scratchDiv, "img", "src", sourceResource);
+  applyBasePath(scratchDiv, "iframe", "src", sourceResource);
+  applyBasePath(scratchDiv, "video", "src", sourceResource);
+  applyBasePath(scratchDiv, "audio", "src", sourceResource);
+  applyBasePath(scratchDiv, "source", "src", sourceResource);
+  applyBasePath(scratchDiv, "track", "src", sourceResource);
+  applyBasePath(scratchDiv, "input", "src", sourceResource);
+  applyBasePath(scratchDiv, "embed", "src", sourceResource);
+  applyBasePath(scratchDiv, "script", "src", sourceResource);
+  applyBasePath(scratchDiv, "video", "poster", sourceResource);
 
   var tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
@@ -2487,6 +2511,160 @@ function processLookAt(featureNode, entity, ellipsoid) {
 
     entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);
   }
+}
+
+function processScreenOverlay(
+  dataSource,
+  screenOverlayNode,
+  processingData,
+  deferredLoading
+) {
+  var screenOverlay = processingData.screenOverlayContainer;
+  if (!defined(screenOverlay)) {
+    return undefined;
+  }
+
+  var sourceResource = processingData.sourceResource;
+  var uriResolver = processingData.uriResolver;
+
+  var iconNode = queryFirstNode(screenOverlayNode, "Icon", namespaces.kml);
+  var icon = getIconHref(
+    iconNode,
+    dataSource,
+    sourceResource,
+    uriResolver,
+    false
+  );
+
+  if (!defined(icon)) {
+    return undefined;
+  }
+
+  var img = document.createElement("img");
+  dataSource._screenOverlays.push(img);
+
+  img.src = icon.url;
+  img.onload = function () {
+    var styles = ["position: absolute"];
+
+    var screenXY = queryFirstNode(
+      screenOverlayNode,
+      "screenXY",
+      namespaces.kml
+    );
+    var overlayXY = queryFirstNode(
+      screenOverlayNode,
+      "overlayXY",
+      namespaces.kml
+    );
+    var size = queryFirstNode(screenOverlayNode, "size", namespaces.kml);
+
+    var x, y;
+    var xUnit, yUnit;
+    var xStyle, yStyle;
+
+    if (defined(size)) {
+      x = queryNumericAttribute(size, "x");
+      y = queryNumericAttribute(size, "y");
+      xUnit = queryStringAttribute(size, "xunits");
+      yUnit = queryStringAttribute(size, "yunits");
+
+      if (defined(x) && x !== -1 && x !== 0) {
+        if (xUnit === "fraction") {
+          xStyle = "width: " + Math.floor(x * 100) + "%";
+        } else if (xUnit === "pixels") {
+          xStyle = "width: " + x + "px";
+        }
+
+        styles.push(xStyle);
+      }
+
+      if (defined(y) && y !== -1 && y !== 0) {
+        if (yUnit === "fraction") {
+          yStyle = "height: " + Math.floor(y * 100) + "%";
+        } else if (yUnit === "pixels") {
+          yStyle = "height: " + y + "px";
+        }
+
+        styles.push(yStyle);
+      }
+    }
+
+    // set the interim style so the width/height properties get calculated
+    img.style = styles.join(";");
+
+    var xOrigin = 0;
+    var yOrigin = img.height;
+
+    if (defined(overlayXY)) {
+      x = queryNumericAttribute(overlayXY, "x");
+      y = queryNumericAttribute(overlayXY, "y");
+      xUnit = queryStringAttribute(overlayXY, "xunits");
+      yUnit = queryStringAttribute(overlayXY, "yunits");
+
+      if (defined(x)) {
+        if (xUnit === "fraction") {
+          xOrigin = x * img.width;
+        } else if (xUnit === "pixels") {
+          xOrigin = x;
+        } else if (xUnit === "insetPixels") {
+          xOrigin = x;
+        }
+      }
+
+      if (defined(y)) {
+        if (yUnit === "fraction") {
+          yOrigin = y * img.height;
+        } else if (yUnit === "pixels") {
+          yOrigin = y;
+        } else if (yUnit === "insetPixels") {
+          yOrigin = y;
+        }
+      }
+    }
+
+    if (defined(screenXY)) {
+      x = queryNumericAttribute(screenXY, "x");
+      y = queryNumericAttribute(screenXY, "y");
+      xUnit = queryStringAttribute(screenXY, "xunits");
+      yUnit = queryStringAttribute(screenXY, "yunits");
+
+      if (defined(x)) {
+        if (xUnit === "fraction") {
+          xStyle =
+            "left: " + "calc(" + Math.floor(x * 100) + "% - " + xOrigin + "px)";
+        } else if (xUnit === "pixels") {
+          xStyle = "left: " + (x - xOrigin) + "px";
+        } else if (xUnit === "insetPixels") {
+          xStyle = "right: " + (x - xOrigin) + "px";
+        }
+
+        styles.push(xStyle);
+      }
+
+      if (defined(y)) {
+        if (yUnit === "fraction") {
+          yStyle =
+            "bottom: " +
+            "calc(" +
+            Math.floor(y * 100) +
+            "% - " +
+            yOrigin +
+            "px)";
+        } else if (yUnit === "pixels") {
+          yStyle = "bottom: " + (y - yOrigin) + "px";
+        } else if (yUnit === "insetPixels") {
+          yStyle = "top: " + (y - yOrigin) + "px";
+        }
+
+        styles.push(yStyle);
+      }
+    }
+
+    img.style = styles.join(";");
+  };
+
+  screenOverlay.appendChild(img);
 }
 
 function processGroundOverlay(
@@ -2935,6 +3113,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
         sourceUri: newSourceUri,
         uriResolver: uriResolver,
         context: networkEntity.id,
+        screenOverlayContainer: processingData.screenOverlayContainer,
       };
       var networkLinkCollection = new EntityCollection();
       var promise = load(dataSource, networkLinkCollection, href, options)
@@ -3100,6 +3279,7 @@ function loadKml(
   kml,
   sourceResource,
   uriResolver,
+  screenOverlayContainer,
   context
 ) {
   entityCollection.removeAll();
@@ -3152,6 +3332,7 @@ function loadKml(
         sourceResource: sourceResource,
         uriResolver: uriResolver,
         context: context,
+        screenOverlayContainer: screenOverlayContainer,
       };
 
       entityCollection.suspendEvents();
@@ -3164,7 +3345,21 @@ function loadKml(
     });
 }
 
-function loadKmz(dataSource, entityCollection, blob, sourceResource) {
+function loadKmz(
+  dataSource,
+  entityCollection,
+  blob,
+  sourceResource,
+  screenOverlayContainer
+) {
+  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
+  zip.configure({
+    workerScripts: {
+      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
+      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
+    },
+  });
+
   var reader = new zip.ZipReader(new zip.BlobReader(blob));
   return when(reader.getEntries()).then(function (entries) {
     var promises = [];
@@ -3208,7 +3403,8 @@ function loadKmz(dataSource, entityCollection, blob, sourceResource) {
         entityCollection,
         uriResolver.kml,
         sourceResource,
-        uriResolver
+        uriResolver,
+        screenOverlayContainer
       );
     });
   });
@@ -3219,6 +3415,7 @@ function load(dataSource, entityCollection, data, options) {
   var sourceUri = options.sourceUri;
   var uriResolver = options.uriResolver;
   var context = options.context;
+  var screenOverlayContainer = options.screenOverlayContainer;
 
   var promise = data;
   if (typeof data === "string" || data instanceof Resource) {
@@ -3241,12 +3438,22 @@ function load(dataSource, entityCollection, data, options) {
 
   sourceUri = Resource.createIfNeeded(sourceUri);
 
+  if (defined(screenOverlayContainer)) {
+    screenOverlayContainer = getElement(screenOverlayContainer);
+  }
+
   return when(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return isZipFile(dataToLoad).then(function (isZip) {
           if (isZip) {
-            return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
+            return loadKmz(
+              dataSource,
+              entityCollection,
+              dataToLoad,
+              sourceUri,
+              screenOverlayContainer
+            );
           }
           return readBlobAsText(dataToLoad).then(function (text) {
             //There's no official way to validate if a parse was successful.
@@ -3293,6 +3500,7 @@ function load(dataSource, entityCollection, data, options) {
               kml,
               sourceUri,
               uriResolver,
+              screenOverlayContainer,
               context
             );
           });
@@ -3304,6 +3512,7 @@ function load(dataSource, entityCollection, data, options) {
         dataToLoad,
         sourceUri,
         uriResolver,
+        screenOverlayContainer,
         context
       );
     })
@@ -3325,6 +3534,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Element|String} [screenOverlayContainer] A container for ScreenOverlay images.
  */
 
 /**
@@ -3333,7 +3543,7 @@ function load(dataSource, entityCollection, data, options) {
  * KML support in Cesium is incomplete, but a large amount of the standard,
  * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
  * {@link https://github.com/CesiumGS/cesium/issues/873|#873} for a
- * detailed list of what is and isn't support. Cesium will also write information to the
+ * detailed list of what is and isn't supported. Cesium will also write information to the
  * console when it encounters most unsupported features.
  * </p>
  * <p>
@@ -3419,6 +3629,8 @@ function KmlDataSource(options) {
   this._resourceCredits = [];
 
   this._kmlTours = [];
+
+  this._screenOverlays = [];
 }
 
 /**
@@ -3598,6 +3810,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @param {Element|String} [options.screenOverlayContainer] A container for ScreenOverlay images.
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
@@ -3681,6 +3894,16 @@ KmlDataSource.prototype.load = function (data, options) {
       console.log(error);
       return when.reject(error);
     });
+};
+
+/**
+ * Cleans up any non-entity elements created by the data source. Currently this only affects ScreenOverlay elements.
+ */
+KmlDataSource.prototype.destroy = function () {
+  while (this._screenOverlays.length > 0) {
+    var elem = this._screenOverlays.pop();
+    elem.remove();
+  }
 };
 
 function mergeAvailabilityWithParent(child) {
@@ -3964,7 +4187,9 @@ KmlDataSource.prototype.update = function (time) {
           ellipsoid
         );
 
-        load(that, newEntityCollection, href, { context: entity.id })
+        load(that, newEntityCollection, href, {
+          context: entity.id,
+        })
           .then(
             getNetworkLinkUpdateCallback(
               that,

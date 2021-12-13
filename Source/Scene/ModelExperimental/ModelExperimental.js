@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -10,28 +11,36 @@ import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ModelFeatureTable from "./ModelFeatureTable.js";
+import B3dmLoader from "./B3dmLoader.js";
+import Color from "../../Core/Color.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
- *
+ * <p>
  * Do not call this function directly, instead use the `from` functions to create
  * the Model from your source data type.
+ * </p>
  *
  * @alias ModelExperimental
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {ResourceLoader} options.loader The loader responsible for loading the 3D model.
  * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+ * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -43,6 +52,8 @@ export default function ModelExperimental(options) {
 
   /**
    * The loader used to load resources for this model.
+   * The corresponding constructor parameter is undocumented, since
+   * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
    *
@@ -51,7 +62,9 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
+  this._modelMatrix = Matrix4.clone(
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+  );
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -59,13 +72,30 @@ export default function ModelExperimental(options) {
   this._ready = false;
   this._readyPromise = when.defer();
   this._customShader = options.customShader;
+  this._content = options.content;
 
   this._texturesLoaded = false;
+
+  var color = options.color;
+  this._color = defaultValue(color) ? Color.clone(color) : undefined;
+  this._colorBlendMode = defaultValue(
+    options.colorBlendMode,
+    ColorBlendMode.HIGHLIGHT
+  );
+  this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
   this._cull = defaultValue(options.cull, true);
   this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._show = defaultValue(options.show, true);
+
+  this._featureIdAttributeIndex = defaultValue(
+    options.featureIdAttributeIndex,
+    0
+  );
+  this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
+  this._featureTables = undefined;
+  this._featureTableId = undefined;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -81,33 +111,107 @@ export default function ModelExperimental(options) {
   initialize(this);
 }
 
+function createModelFeatureTables(model, featureMetadata) {
+  var modelFeatureTables = [];
+
+  var propertyTables = featureMetadata.propertyTables;
+  for (var i = 0; i < propertyTables.length; i++) {
+    var propertyTable = propertyTables[i];
+    var modelFeatureTable = new ModelFeatureTable({
+      model: model,
+      propertyTable: propertyTable,
+    });
+
+    if (modelFeatureTable.featuresLength > 0) {
+      modelFeatureTables.push(modelFeatureTable);
+    }
+  }
+
+  return modelFeatureTables;
+}
+
+function selectFeatureTableId(components, model) {
+  var featureIdAttributeIndex = model._featureIdAttributeIndex;
+  var featureIdTextureIndex = model._featureIdTextureIndex;
+
+  var i, j;
+  var featureIdAttribute;
+  var featureIdTexture;
+
+  var node;
+  // Scan the nodes till we find one with instances, get the feature table ID
+  // if the feature ID attribute of the user-selected index is present.
+  for (i = 0; i < components.nodes.length; i++) {
+    node = components.nodes[i];
+    if (defined(node.instances)) {
+      featureIdAttribute =
+        node.instances.featureIdAttributes[featureIdAttributeIndex];
+      if (defined(featureIdAttribute)) {
+        return featureIdAttribute.propertyTableId;
+      }
+    }
+  }
+
+  // Scan the primitives till we find one with textures or attributes, get the feature table ID
+  // if the feature ID attribute/texture of the user-selected index is present.
+  for (i = 0; i < components.nodes.length; i++) {
+    node = components.nodes[i];
+    for (j = 0; j < node.primitives.length; j++) {
+      var primitive = node.primitives[j];
+      featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+      featureIdAttribute =
+        primitive.featureIdAttributes[featureIdAttributeIndex];
+
+      if (defined(featureIdTexture)) {
+        return featureIdTexture.propertyTableId;
+      } else if (defined(featureIdAttribute)) {
+        return featureIdAttribute.propertyTableId;
+      }
+    }
+  }
+}
+
 function initialize(model) {
   var loader = model._loader;
   var resource = model._resource;
-  var modelMatrix = model._modelMatrix;
 
   loader.load();
 
   loader.promise
     .then(function (loader) {
+      Matrix4.multiply(
+        model._modelMatrix,
+        loader.transform,
+        model._modelMatrix
+      );
+
+      var components = loader.components;
+      var featureMetadata = components.featureMetadata;
+
+      if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
+        var featureTableId = selectFeatureTableId(components, model);
+        var featureTables = createModelFeatureTables(model, featureMetadata);
+        model.featureTables = featureTables;
+        model.featureTableId = featureTableId;
+      }
+
       model._sceneGraph = new ModelExperimentalSceneGraph({
         model: model,
-        modelComponents: loader.components,
-        modelMatrix: modelMatrix,
+        modelComponents: components,
       });
       model._resourcesLoaded = true;
     })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
-    });
+    .otherwise(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
 
   loader.texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
-    .otherwise(function () {
-      ModelExperimentalUtility.getFailedLoadFunction(this, "model", resource);
-    });
+    .otherwise(
+      ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
+    );
 }
 
 Object.defineProperties(ModelExperimental.prototype, {
@@ -175,19 +279,77 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._opaquePass;
     },
   },
+
   /**
-   * The model's custom shader if it exists
+   * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
+   * may lead to undefined behavior.
    *
    * @memberof ModelExperimental.prototype
    *
    * @type {CustomShader}
-   * @readonly
-   *
-   * @private
    */
   customShader: {
     get: function () {
       return this._customShader;
+    },
+    set: function (value) {
+      if (value !== this._customShader) {
+        this.resetDrawCommands();
+      }
+      this._customShader = value;
+    },
+  },
+
+  /**
+   * The tile content this model belongs to, if it is loaded as part of a {@link Cesium3DTileset}.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cesium3DTileContent}
+   * @readonly
+   *
+   * @private
+   */
+  content: {
+    get: function () {
+      return this._content;
+    },
+  },
+
+  /**
+   * The ID for the feature table to use for picking and styling in this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @private
+   */
+  featureTableId: {
+    get: function () {
+      return this._featureTableId;
+    },
+    set: function (value) {
+      this._featureTableId = value;
+    },
+  },
+
+  /**
+   * The feature tables for this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Array}
+   * @readonly
+   *
+   * @private
+   */
+  featureTables: {
+    get: function () {
+      return this._featureTables;
+    },
+    set: function (value) {
+      this._featureTables = value;
     },
   },
 
@@ -206,14 +368,82 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   *
+   * @type {Cesium3DTileStyle}
+   */
+  style: {
+    get: function () {
+      return this._style;
+    },
+    set: function (value) {
+      if (value !== this._style) {
+        this.applyStyle(value);
+      }
+      this._style = value;
+    },
+  },
+
+  /**
+   * The color to blend with the model's rendered color.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Color}
+   */
+  color: {
+    get: function () {
+      return this._color;
+    },
+    set: function (value) {
+      if (!Color.equals(this._color, value)) {
+        this.resetDrawCommands();
+      }
+      this._color = value;
+    },
+  },
+
+  /**
+   * Defines how the color blends with the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cesium3DTileColorBlendMode|ColorBlendMode}
+   * @default ColorBlendMode.HIGHLIGHT
+   */
+  colorBlendMode: {
+    get: function () {
+      return this._colorBlendMode;
+    },
+    set: function (value) {
+      this._colorBlendMode = value;
+    },
+  },
+
+  /**
+   * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   * @default 0.5
+   */
+  colorBlendAmount: {
+    get: function () {
+      return this._colorBlendAmount;
+    },
+    set: function (value) {
+      this._colorBlendAmount = value;
+    },
+  },
+
+  /**
    * Gets the model's bounding sphere.
    *
    * @memberof ModelExperimental.prototype
    *
    * @type {BoundingSphere}
    * @readonly
-   *
-   * @private
    */
   boundingSphere: {
     get: function () {
@@ -293,7 +523,51 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._show = value;
     },
   },
+
+  /**
+   * The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0
+   */
+  featureIdAttributeIndex: {
+    get: function () {
+      return this._featureIdAttributeIndex;
+    },
+  },
+
+  /**
+   * The index of the feature ID texture to use for picking features per-primitive.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0
+   */
+  featureIdTextureIndex: {
+    get: function () {
+      return this._featureIdTextureIndex;
+    },
+  },
 });
+
+/**
+ * Resets the draw commands for this model.
+ *
+ * @private
+ */
+ModelExperimental.prototype.resetDrawCommands = function () {
+  if (!this._drawCommandsBuilt) {
+    return;
+  }
+  this.destroyResources();
+  this._drawCommandsBuilt = false;
+  this._sceneGraph._drawCommands = [];
+};
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -323,17 +597,35 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].update(frameState);
+      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+      // to ensure that translucent and opaque features are handled in the correct passes.
+      if (featureTables[i].styleCommandsNeededDirty) {
+        this.resetDrawCommands();
+      }
+    }
+  }
+
   if (!this._drawCommandsBuilt) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
 
     var model = this;
-    // Set the model as ready after the first frame render since the user might set up events subscribed to
-    // the post render event, and the model may not be ready for those past the first frame.
-    frameState.afterRender.push(function () {
-      model._ready = true;
-      model._readyPromise.resolve(model);
-    });
+
+    if (!model._ready) {
+      // Set the model as ready after the first frame render since the user might set up events subscribed to
+      // the post render event, and the model may not be ready for those past the first frame.
+      frameState.afterRender.push(function () {
+        model._ready = true;
+        model._readyPromise.resolve(model);
+      });
+
+      // Don't render until the next frame after the ready promise is resolved
+      return;
+    }
   }
 
   if (this._debugShowBoundingVolumeDirty) {
@@ -387,12 +679,28 @@ ModelExperimental.prototype.destroy = function () {
     loader.destroy();
   }
 
+  var featureTables = this._featureTables;
+  if (defined(featureTables)) {
+    for (var i = 0; i < featureTables.length; i++) {
+      featureTables[i].destroy();
+    }
+  }
+
+  this.destroyResources();
+
+  destroyObject(this);
+};
+
+/**
+ * Destroys resources generated in the pipeline stages.
+ * @private
+ */
+ModelExperimental.prototype.destroyResources = function () {
   var resources = this._resources;
   for (var i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
-
-  destroyObject(this);
+  this._resources = [];
 };
 
 /**
@@ -415,12 +723,16 @@ ModelExperimental.prototype.destroy = function () {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
  * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+ * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
  *
  * @returns {ModelExperimental} The newly created model.
- *
- * @private
  */
 ModelExperimental.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -463,10 +775,50 @@ ModelExperimental.fromGltf = function (options) {
     opaquePass: options.opaquePass,
     allowPicking: options.allowPicking,
     customShader: options.customShader,
+    content: options.content,
     show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
   };
   var model = new ModelExperimental(modelOptions);
 
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromB3dm = function (options) {
+  var loaderOptions = {
+    b3dmResource: options.resource,
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+    releaseGltfJson: options.releaseGltfJson,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+  };
+
+  var loader = new B3dmLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.b3dmResource,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+  var model = new ModelExperimental(modelOptions);
   return model;
 };
 
@@ -476,3 +828,35 @@ function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
     drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
   }
 }
+
+/**
+ * @private
+ */
+ModelExperimental.prototype.applyColorAndShow = function (style) {
+  var hasColorStyle = defined(style) && defined(style.color);
+  var hasShowStyle = defined(style) && defined(style.show);
+
+  this._color = hasColorStyle
+    ? style.color.evaluateColor(undefined, this._color)
+    : Color.clone(Color.WHITE, this._color);
+  this._show = hasShowStyle ? style.show.evaluate(undefined) : true;
+};
+
+/**
+ * @private
+ */
+ModelExperimental.prototype.applyStyle = function (style) {
+  // The style is only set by the ModelFeatureTable. If there are no features,
+  // the color and show from the style are directly applied.
+  if (
+    defined(this.featureTableId) &&
+    this.featureTables[this.featureTableId].featuresLength > 0
+  ) {
+    var featureTable = this.featureTables[this.featureTableId];
+    featureTable.applyStyle(style);
+  } else {
+    this.applyColorAndShow(style);
+  }
+
+  this.resetDrawCommands();
+};

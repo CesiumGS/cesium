@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";
 
 /**
@@ -34,4 +35,25 @@ export default function ModelRenderResources(model) {
    * @private
    */
   this.model = model;
+
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values.
+   *
+   * @type {Object.<String, Function>}
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = {};
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = new ModelAlphaOptions();
 }

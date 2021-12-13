@@ -78,14 +78,13 @@ describe("Core/barycentricCoordinates", function () {
     );
   });
 
-  it("evaluates without throwing a NaN", function () {
-    var point = Cartesian3.multiplyByScalar(
-      Cartesian3.add(p1, p1, p1),
-      0.5,
-      new Cartesian3()
-    );
+  it("returns undefined for colinear points", function () {
+    var p0 = new Cartesian3(-1.0, -1.0, 0.0);
+    var p1 = new Cartesian3(0.0, 0.0, 0.0);
+    var p2 = new Cartesian3(1.0, 1.0, 0.0);
+    var point = new Cartesian3(0.5, 0.5, 0.0);
     var coord = barycentricCoordinates(point, p0, p1, p2);
-    expect(coord.z).not.toBeNaN();
+    expect(coord).toBeUndefined();
   });
 
   it("evaluates with equal length sides", function () {

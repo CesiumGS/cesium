@@ -1,4 +1,5 @@
 import {
+  AttributeType,
   Cartesian3,
   Math as CesiumMath,
   InstanceAttributeSemantic,
@@ -32,6 +33,158 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
       nodeWithTRS
     );
     expect(Matrix4.equals(computedTransform, Matrix4.IDENTITY)).toEqual(true);
+  });
+
+  it("hasQuantizedAttributes returns false for undefined attributes", function () {
+    expect(ModelExperimentalUtility.hasQuantizedAttributes()).toBe(false);
+  });
+
+  it("hasQuantizedAttributes detects quantized attributes", function () {
+    var attributes = [
+      {
+        semantic: "POSITION",
+        max: new Cartesian3(0.5, 0.5, 0.5),
+        min: new Cartesian3(-0.5, -0.5, -0.5),
+      },
+      {
+        semantic: "NORMAL",
+      },
+    ];
+
+    expect(ModelExperimentalUtility.hasQuantizedAttributes(attributes)).toBe(
+      false
+    );
+
+    attributes[1].quantization = {};
+    expect(ModelExperimentalUtility.hasQuantizedAttributes(attributes)).toBe(
+      true
+    );
+  });
+
+  it("getAttributeInfo works for built-in attributes", function () {
+    var attribute = {
+      semantic: "POSITION",
+      type: AttributeType.VEC3,
+      max: new Cartesian3(0.5, 0.5, 0.5),
+      min: new Cartesian3(-0.5, -0.5, -0.5),
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "positionMC",
+      hasSemantic: true,
+      glslType: "vec3",
+      quantizedGlslType: undefined,
+    });
+  });
+
+  it("getAttributeInfo works for attributes with a set index", function () {
+    var attribute = {
+      semantic: "TEXCOORD",
+      setIndex: 0,
+      type: AttributeType.VEC2,
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "texCoord_0",
+      hasSemantic: true,
+      glslType: "vec2",
+      quantizedGlslType: undefined,
+    });
+  });
+
+  it("getAttributeInfo promotes vertex colors to vec4 for GLSL", function () {
+    var attribute = {
+      semantic: "COLOR",
+      setIndex: 0,
+      type: AttributeType.VEC3,
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "color_0",
+      hasSemantic: true,
+      glslType: "vec4",
+      quantizedGlslType: undefined,
+    });
+  });
+
+  it("getAttributeInfo works for custom attributes", function () {
+    var attribute = {
+      name: "_TEMPERATURE",
+      type: AttributeType.SCALAR,
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "temperature",
+      hasSemantic: false,
+      glslType: "float",
+      quantizedGlslType: undefined,
+    });
+  });
+
+  it("getAttributeInfo works for quantized attributes", function () {
+    var attribute = {
+      semantic: "POSITION",
+      type: AttributeType.VEC3,
+      max: new Cartesian3(0.5, 0.5, 0.5),
+      min: new Cartesian3(-0.5, -0.5, -0.5),
+      quantization: {
+        type: AttributeType.VEC3,
+      },
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: true,
+      variableName: "positionMC",
+      hasSemantic: true,
+      glslType: "vec3",
+      quantizedGlslType: "vec3",
+    });
+
+    attribute = {
+      semantic: "NORMAL",
+      type: AttributeType.VEC3,
+      quantization: {
+        type: AttributeType.VEC2,
+      },
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: true,
+      variableName: "normalMC",
+      hasSemantic: true,
+      glslType: "vec3",
+      quantizedGlslType: "vec2",
+    });
+  });
+
+  it("getAttributeInfo handles quantized vertex colors correctly", function () {
+    var attribute = {
+      semantic: "COLOR",
+      setIndex: 0,
+      type: AttributeType.VEC3,
+      quantization: {
+        type: AttributeType.VEC3,
+      },
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: true,
+      variableName: "color_0",
+      hasSemantic: true,
+      glslType: "vec4",
+      quantizedGlslType: "vec4",
+    });
   });
 
   it("createBoundingSphere works", function () {

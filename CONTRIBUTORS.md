@@ -153,6 +153,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Alexander Gallegos](https://github.com/argallegos)
   - [Janine Liu](https://github.com/j9liu)
   - [Sam Rothstein](https://github.com/srothst1)
+  - [Daniel Krupka](https://github.com/krupkad)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -167,6 +168,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mark Aubin](https://github.com/markaubin)
   - [Michael Shantzis](https://github.com/shantzis1962)
   - [Sebastian Fernandez](https://github.com/SebastianPFernandez)
+- Beijing Xibushijie
+  - [Tang Xiaofei](https://github.com/vtxf)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -295,3 +298,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Calogero Mauceri](https://github.com/kalosma)
 - [Ren Jianqiang](https://github.com/renjianqiang)
 - [Yang Puxiao](https://github.com/puxiao)
+- [Brendan Smith](https://github.com/tantricllama)
+- [Ivan Ludvig](https://github.com/IvanLudvig)
+- [Yuki Noda](https://github.com/yukinoda)
+- [Robin Danielsson](https://github.com/robdan7)
+- [Oskar Havo](https://github.com/OskarHavo)
+- [Mark Williams](https://github.com/markw65)
+- [Rain Liang](https://github.com/rainliang000)
+- [lyqh-ctx](https://github.com/lyqh-ctx)
+- [David Tryse](https://github.com/dtryse)
+- [Martin Chan](https://github.com/martin-bom)

@@ -181,6 +181,142 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
   });
 
+  it("includes bbox parameters in URL for WMS version 1.3.0 and CRS EPSG:4326", function () {
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:4326",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        var uri = new Uri(request.url);
+        var params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("reverses axis order for EPSG code between 4000-5000 for WMS version 1.3.0", function () {
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:4321",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        var uri = new Uri(request.url);
+        var params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4321");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("reverses axis order for included EPSG code for WMS version 1.3.0", function () {
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:3035",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        var uri = new Uri(request.url);
+        var params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:3035");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("does not reverse axis order for excluded EPSG code for WMS version 1.3.0", function () {
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:4559",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        var uri = new Uri(request.url);
+        var params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4559");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-180,-90,0,90");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
   it("disregard crs parameters in URL for WMS version 1.1.0", function () {
     var provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
@@ -236,6 +372,40 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         var params = queryToObject(uri.query());
         expect(params.srs).toEqual("IAU2000:30118");
         expect(params.version).toEqual("1.1.0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("includes bbox parameters in URL for WMS version 1.1.1", function () {
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "CRS:27",
+      parameters: {
+        version: "1.1.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        var uri = new Uri(request.url);
+        var params = queryToObject(uri.query());
+        expect(params.srs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.1.0");
+        expect(params.bbox).toEqual("-180,-90,0,90");
 
         // Don't need to actually load image, but satisfy the request.
         deferred.resolve(true);
@@ -1865,6 +2035,37 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           expect(queryParameters.Time).toEqual("2017-04-26T00:00:00Z");
           expect(queryParameters.Test).toEqual("testValue");
         });
+    });
+  });
+
+  it("uses getFeatureInfoUrl in options for getting the getFeatureInfo URL", function () {
+    var featureUrl = "made/up/wms/feature/server";
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      getFeatureInfoUrl: featureUrl,
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource.url).toContain(featureUrl);
+    });
+  });
+
+  it("uses url in options if getFeatureInfoUrl is absent for pickResources", function () {
+    var featureUrl = "made/up/wms/feature/server";
+    var getCapabilitiesUrl = "made/up/wms/server";
+    var provider = new WebMapServiceImageryProvider({
+      url: getCapabilitiesUrl,
+      layers: "someLayer",
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource.url).not.toContain(featureUrl);
+      expect(provider._pickFeaturesResource.url).toContain(getCapabilitiesUrl);
     });
   });
 });

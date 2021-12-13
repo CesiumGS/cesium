@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
@@ -21,7 +22,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
 
   // Properties inherited from the ModelRenderResources.
   /**
-   * A reference to the model Inherited from the model render resources.
+   * A reference to the model. Inherited from the model render resources.
    *
    * @type {ModelExperimental}
    * @readonly
@@ -39,6 +40,29 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.shaderBuilder = modelRenderResources.shaderBuilder.clone();
+
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values. Inherited from the model render resources.
+   *
+   * @type {Object.<String, Function>}
+   *
+   * @readonly
+   *
+   * @private
+   */
+  this.uniformMap = clone(modelRenderResources.uniformMap);
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha mode. Inherited from the model
+   * render resources.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
+  this.alphaOptions = clone(modelRenderResources.alphaOptions);
 
   // other properties
   /**
@@ -80,6 +104,16 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.attributeIndex = 1;
+
+  /**
+   * The set index to assign to feature ID vertex attribute(s) created from the offset/repeat in the feature ID attribute.
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  this.featureIdVertexAttributeSetIndex = 0;
 
   /**
    * The number of instances. Default is 0, if instancing is not used.

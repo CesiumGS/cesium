@@ -6,12 +6,15 @@ import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 
 /**
  * A binary property in a {@MetadataTable}
  * <p>
- * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension}
+ * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension}
+ * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -40,25 +43,32 @@ function MetadataTableProperty(options) {
   Check.typeOf.object("options.bufferViews", bufferViews);
   //>>includeEnd('debug');
 
-  var isArray = classProperty.type === MetadataType.ARRAY;
+  var type = classProperty.type;
+  var isArray = type === MetadataType.ARRAY;
   var isVariableSizeArray = isArray && !defined(classProperty.componentCount);
+  var isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
   var valueType = classProperty.valueType;
   var enumType = classProperty.enumType;
 
-  var hasStrings = valueType === MetadataType.STRING;
-  var hasBooleans = valueType === MetadataType.BOOLEAN;
-
-  var offsetType = defaultValue(
-    MetadataType[property.offsetType],
-    MetadataType.UINT32
-  );
+  var hasStrings = valueType === MetadataComponentType.STRING;
+  var hasBooleans = valueType === MetadataComponentType.BOOLEAN;
 
   var arrayOffsets;
   if (isVariableSizeArray) {
+    // EXT_mesh_features uses arrayOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    var arrayOffsetType = defaultValue(
+      property.arrayOffsetType,
+      property.offsetType
+    );
+    arrayOffsetType = defaultValue(
+      MetadataComponentType[arrayOffsetType],
+      MetadataComponentType.UINT32
+    );
     arrayOffsets = new BufferView(
       bufferViews[property.arrayOffsetBufferView],
-      offsetType,
+      arrayOffsetType,
       count + 1
     );
   }
@@ -66,7 +76,7 @@ function MetadataTableProperty(options) {
   var componentCount;
   if (isVariableSizeArray) {
     componentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
-  } else if (isArray) {
+  } else if (isArray || isVectorOrMatrix) {
     componentCount = count * classProperty.componentCount;
   } else {
     componentCount = count;
@@ -74,16 +84,25 @@ function MetadataTableProperty(options) {
 
   var stringOffsets;
   if (hasStrings) {
+    // EXT_mesh_features uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    var stringOffsetType = defaultValue(
+      property.stringOffsetType,
+      property.offsetType
+    );
+    stringOffsetType = defaultValue(
+      MetadataComponentType[stringOffsetType],
+      MetadataComponentType.UINT32
+    );
     stringOffsets = new BufferView(
       bufferViews[property.stringOffsetBufferView],
-      offsetType,
+      stringOffsetType,
       componentCount + 1
     );
   }
 
   if (hasStrings || hasBooleans) {
     // STRING and BOOLEAN types need to be parsed differently than other types
-    valueType = MetadataType.UINT8;
+    valueType = MetadataComponentType.UINT8;
   }
 
   var valueCount;
@@ -192,7 +211,7 @@ MetadataTableProperty.prototype.get = function (index) {
 
   var value = get(this, index);
   value = this._classProperty.normalize(value);
-  return this._classProperty.unpackVectorTypes(value);
+  return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
 
 /**
@@ -214,7 +233,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   }
   //>>includeEnd('debug');
 
-  value = classProperty.packVectorTypes(value);
+  value = classProperty.packVectorAndMatrixTypes(value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
@@ -264,7 +283,11 @@ function get(property, index) {
     return value;
   }
 
-  if (classProperty.type !== MetadataType.ARRAY) {
+  var type = classProperty.type;
+  var isArray = classProperty.type === MetadataType.ARRAY;
+  var isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  if (!isArray && !isVectorOrMatrix) {
     return property._getValue(index);
   }
 
@@ -306,7 +329,11 @@ function set(property, index, value) {
   // Values are unpacked if the length of a variable-size array changes or the
   // property has strings. No need to handle these cases below.
 
-  if (classProperty.type !== MetadataType.ARRAY) {
+  var type = classProperty.type;
+  var isArray = classProperty.type === MetadataType.ARRAY;
+  var isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  if (!isArray && !isVectorOrMatrix) {
     property._setValue(index, value);
     return;
   }
@@ -437,23 +464,23 @@ function getUint64BigIntFallback(index, values) {
   return value;
 }
 
-function getComponentDatatype(type) {
-  switch (type) {
-    case MetadataType.INT8:
+function getComponentDatatype(componentType) {
+  switch (componentType) {
+    case MetadataComponentType.INT8:
       return ComponentDatatype.BYTE;
-    case MetadataType.UINT8:
+    case MetadataComponentType.UINT8:
       return ComponentDatatype.UNSIGNED_BYTE;
-    case MetadataType.INT16:
+    case MetadataComponentType.INT16:
       return ComponentDatatype.SHORT;
-    case MetadataType.UINT16:
+    case MetadataComponentType.UINT16:
       return ComponentDatatype.UNSIGNED_SHORT;
-    case MetadataType.INT32:
+    case MetadataComponentType.INT32:
       return ComponentDatatype.INT;
-    case MetadataType.UINT32:
+    case MetadataComponentType.UINT32:
       return ComponentDatatype.UNSIGNED_INT;
-    case MetadataType.FLOAT32:
+    case MetadataComponentType.FLOAT32:
       return ComponentDatatype.FLOAT;
-    case MetadataType.FLOAT64:
+    case MetadataComponentType.FLOAT64:
       return ComponentDatatype.DOUBLE;
   }
 }
@@ -465,13 +492,13 @@ function requiresUnpackForGet(property) {
 
   var valueType = property._classProperty.valueType;
 
-  if (valueType === MetadataType.STRING) {
+  if (valueType === MetadataComponentType.STRING) {
     // Unpack since UTF-8 decoding is expensive
     return true;
   }
 
   if (
-    valueType === MetadataType.INT64 &&
+    valueType === MetadataComponentType.INT64 &&
     !FeatureDetection.supportsBigInt64Array()
   ) {
     // Unpack since the fallback INT64 getters are expensive
@@ -479,7 +506,7 @@ function requiresUnpackForGet(property) {
   }
 
   if (
-    valueType === MetadataType.UINT64 &&
+    valueType === MetadataComponentType.UINT64 &&
     !FeatureDetection.supportsBigUint64Array()
   ) {
     // Unpack since the fallback UINT64 getters are expensive
@@ -560,14 +587,14 @@ function unpackValues(property) {
   return unpackedValues;
 }
 
-function BufferView(bufferView, type, length) {
+function BufferView(bufferView, componentType, length) {
   var that = this;
 
   var typedArray;
   var getFunction;
   var setFunction;
 
-  if (type === MetadataType.INT64) {
+  if (componentType === MetadataComponentType.INT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
         "INT64 type is not fully supported on this platform. Values greater than 2^53 - 1 or less than -(2^53 - 1) may lose precision when read."
@@ -601,7 +628,7 @@ function BufferView(bufferView, type, length) {
         that.typedArray[index] = BigInt(value); // eslint-disable-line
       };
     }
-  } else if (type === MetadataType.UINT64) {
+  } else if (componentType === MetadataComponentType.UINT64) {
     if (!FeatureDetection.supportsBigInt()) {
       oneTimeWarning(
         "UINT64 type is not fully supported on this platform. Values greater than 2^53 - 1 may lose precision when read."
@@ -636,7 +663,7 @@ function BufferView(bufferView, type, length) {
       };
     }
   } else {
-    var componentDatatype = getComponentDatatype(type);
+    var componentDatatype = getComponentDatatype(componentType);
     typedArray = ComponentDatatype.createArrayBufferView(
       componentDatatype,
       bufferView.buffer,
@@ -658,6 +685,9 @@ function BufferView(bufferView, type, length) {
   this.dataView = new DataView(typedArray.buffer, typedArray.byteOffset);
   this.get = getFunction;
   this.set = setFunction;
+
+  // for unit testing
+  this._componentType = componentType;
 }
 
 export default MetadataTableProperty;

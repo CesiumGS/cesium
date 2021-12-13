@@ -304,6 +304,8 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
+ * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {Boolean} [loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
@@ -319,6 +321,8 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   var bufferViewId = options.bufferViewId;
   var draco = options.draco;
   var attributeSemantic = options.attributeSemantic;
+  var dequantize = defaultValue(options.dequantize, false);
+  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -347,6 +351,14 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   }
   //>>includeEnd('debug');
 
+  var cacheKeySuffix = "";
+  if (dequantize) {
+    cacheKeySuffix += "-dequantize";
+  }
+  if (loadAsTypedArray) {
+    cacheKeySuffix += "-typed-array";
+  }
+
   if (defined(draco)) {
     var dracoCacheKey = getDracoCacheKey(
       gltf,
@@ -354,7 +366,13 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       gltfResource,
       baseResource
     );
-    return "vertex-buffer:" + dracoCacheKey + "-draco-" + attributeSemantic;
+    return (
+      "vertex-buffer:" +
+      dracoCacheKey +
+      "-draco-" +
+      attributeSemantic +
+      cacheKeySuffix
+    );
   }
 
   var bufferView = gltf.bufferViews[bufferViewId];
@@ -370,7 +388,13 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   var bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
-  return "vertex-buffer:" + bufferCacheKey + "-range-" + bufferViewCacheKey;
+  return (
+    "vertex-buffer:" +
+    bufferCacheKey +
+    "-range-" +
+    bufferViewCacheKey +
+    cacheKeySuffix
+  );
 };
 
 /**
@@ -382,6 +406,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
+ * @param {Boolean} [loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
  *
  * @returns {String} The index buffer cache key.
  * @private
@@ -393,6 +418,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var draco = options.draco;
+  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -401,6 +427,11 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
+  var cacheKeySuffix = "";
+  if (loadAsTypedArray) {
+    cacheKeySuffix += "-typed-array";
+  }
+
   if (defined(draco)) {
     var dracoCacheKey = getDracoCacheKey(
       gltf,
@@ -408,7 +439,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
       gltfResource,
       baseResource
     );
-    return "index-buffer:" + dracoCacheKey + "-draco";
+    return "index-buffer:" + dracoCacheKey + "-draco" + cacheKeySuffix;
   }
 
   var accessor = gltf.accessors[accessorId];
@@ -426,7 +457,13 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
 
   var accessorCacheKey = getAccessorCacheKey(accessor, bufferView);
 
-  return "index-buffer:" + bufferCacheKey + "-accessor-" + accessorCacheKey;
+  return (
+    "index-buffer:" +
+    bufferCacheKey +
+    "-accessor-" +
+    accessorCacheKey +
+    cacheKeySuffix
+  );
 };
 
 /**

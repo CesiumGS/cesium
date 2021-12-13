@@ -14,7 +14,7 @@ describe("Scene/TileMetadata", function () {
         isSquare: {
           description:
             "Is a square tile, rather than a rectangular partial tile",
-          type: "BOOLEAN",
+          componentType: "BOOLEAN",
         },
       },
     },

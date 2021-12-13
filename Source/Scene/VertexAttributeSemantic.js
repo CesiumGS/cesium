@@ -78,11 +78,11 @@ var VertexAttributeSemantic = {
 function semanticToVariableName(semantic) {
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
-      return "position";
+      return "positionMC";
     case VertexAttributeSemantic.NORMAL:
-      return "normal";
+      return "normalMC";
     case VertexAttributeSemantic.TANGENT:
-      return "tangent";
+      return "tangentMC";
     case VertexAttributeSemantic.TEXCOORD:
       return "texCoord";
     case VertexAttributeSemantic.COLOR:
@@ -170,7 +170,8 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.JOINTS;
     case "WEIGHTS":
       return VertexAttributeSemantic.WEIGHTS;
-    case "_FEATURE_ID":
+    case "_FEATURE_ID": // for EXT_feature_metadata
+    case "FEATURE_ID": // for EXT_mesh_features
     case "_BATCHID": // for b3dm compatibility
     case "BATCHID": // for legacy b3dm compatibility
       return VertexAttributeSemantic.FEATURE_ID;

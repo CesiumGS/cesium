@@ -86,7 +86,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(renderResources.instancingTranslationMin).toEqual(
         new Cartesian3(-2, -2, 0)
       );
-      expect(renderResources.attributes.length).toBe(3);
+      expect(renderResources.attributes.length).toBe(4);
     });
   });
 
@@ -143,7 +143,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       expect(renderResources.instancingTranslationMin).toEqual(
         new Cartesian3(-2, -2, 0)
       );
-      expect(renderResources.attributes.length).toBe(3);
+      expect(renderResources.attributes.length).toBe(4);
 
       var attributeLines = renderResources.shaderBuilder._attributeLines;
       var vertexDefineLines =
@@ -287,6 +287,7 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
       ]);
       var transformsTypedArray = InstancingPipelineStage._getInstanceTransformsTypedArray(
         node.instances,
+        node.instances.attributes[0].count,
         renderResources
       );
 

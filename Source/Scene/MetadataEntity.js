@@ -8,7 +8,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @alias MetadataEntity
@@ -276,7 +276,7 @@ MetadataEntity.getProperty = function (
 
   if (defined(classProperty)) {
     value = classProperty.normalize(value);
-    value = classProperty.unpackVectorTypes(value);
+    value = classProperty.unpackVectorAndMatrixTypes(value);
   }
 
   return value;
@@ -319,7 +319,7 @@ MetadataEntity.setProperty = function (
   if (defined(classDefinition)) {
     var classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty)) {
-      value = classProperty.packVectorTypes(value);
+      value = classProperty.packVectorAndMatrixTypes(value);
       value = classProperty.unnormalize(value);
     }
   }

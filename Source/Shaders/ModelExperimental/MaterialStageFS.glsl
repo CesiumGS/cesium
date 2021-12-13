@@ -1,3 +1,16 @@
+// If the style color is white, it implies the feature has not been styled.
+bool isDefaultStyleColor(vec3 color)
+{
+    return all(greaterThan(color, vec3(1.0 - czm_epsilon3)));
+}
+
+vec3 blend(vec3 sourceColor, vec3 styleColor, float styleColorBlend)
+{
+    vec3 blendColor = mix(sourceColor, styleColor, styleColorBlend);
+    vec3 color = isDefaultStyleColor(styleColor.rgb) ? sourceColor : blendColor;
+    return color;
+}
+
 vec3 SRGBtoLINEAR3(vec3 srgbIn) 
 {
     return pow(srgbIn, vec3(2.2));
@@ -15,9 +28,10 @@ vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
 }
 
 #ifdef HAS_NORMALS
-vec3 computeNormal()
+vec3 computeNormal(ProcessedAttributes attributes)
 {
-    vec3 ng = normalize(v_normal);
+    // Geometry normal. This is already normalized 
+    vec3 ng = attributes.normalEC;
 
     vec3 normal = ng;
     #ifdef HAS_NORMAL_TEXTURE
@@ -26,17 +40,18 @@ vec3 computeNormal()
         normalTexCoords = computeTextureTransform(normalTexCoords, u_normalTextureTransform);
         #endif
 
-        #ifdef HAS_TANGENTS
-        // read tangents from varying
-        vec3 t = normalize(v_tangent.xyz);
-        vec3 b = normalize(cross(ng, t) * v_tangent.w);
+        // If HAS_BITANGENTS is set, then HAS_TANGENTS is also set
+        #ifdef HAS_BITANGENTS
+        vec3 t = attributes.tangentEC;
+        vec3 b = attributes.bitangentEC;
         mat3 tbn = mat3(t, b, ng);
         vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
         normal = normalize(tbn * (2.0 * n - 1.0));
         #elif defined(GL_OES_standard_derivatives)
         // Compute tangents
-        vec3 pos_dx = dFdx(v_positionEC);
-        vec3 pos_dy = dFdy(v_positionEC);
+        vec3 positionEC = attributes.positionEC;
+        vec3 pos_dx = dFdx(positionEC);
+        vec3 pos_dy = dFdy(positionEC);
         vec3 tex_dx = dFdx(vec3(normalTexCoords,0.0));
         vec3 tex_dy = dFdy(vec3(normalTexCoords,0.0));
         vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);
@@ -52,12 +67,11 @@ vec3 computeNormal()
 }
 #endif
 
-czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
+void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes, Feature feature)
 {
-    czm_modelMaterial material = inputMaterial;
 
     #ifdef HAS_NORMALS
-    material.normal = computeNormal();
+    material.normalEC = computeNormal(attributes);
     #endif
 
     vec4 baseColorWithAlpha = vec4(1.0);
@@ -79,11 +93,15 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     #endif
 
     #ifdef HAS_COLOR_0
-    baseColorWithAlpha *= v_color_0;
+    baseColorWithAlpha *= attributes.color_0;
     #endif
 
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
+
+    #ifdef USE_CPU_STYLING
+    material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
+    #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
     vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;
@@ -160,6 +178,9 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
       glossiness
     );
     material.diffuse = parameters.diffuseColor;
+    // the specular glossiness extension's alpha overrides anything set
+    // by the base material.
+    material.alpha = diffuse.a;
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
     #elif defined(LIGHTING_PBR)
@@ -201,6 +222,4 @@ czm_modelMaterial materialStage(czm_modelMaterial inputMaterial)
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
     #endif
-
-    return material;
 }

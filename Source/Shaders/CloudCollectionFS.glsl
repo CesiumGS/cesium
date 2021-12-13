@@ -1,8 +1,9 @@
 uniform sampler2D u_noiseTexture;
-uniform float u_noiseTextureLength;
+uniform vec3 u_noiseTextureDimensions;
 uniform float u_noiseDetail;
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
+varying vec4 v_color;
 varying float v_slice;
 varying float v_brightness;
 
@@ -21,48 +22,42 @@ vec3 wrapVec(vec3 value, float rangeLength) {
                 wrap(value.z, rangeLength));
 }
 
-float noiseTextureLengthSquared = u_noiseTextureLength * u_noiseTextureLength;
-vec3 dimensions = vec3(noiseTextureLengthSquared,
-                       u_noiseTextureLength,
-                       u_noiseTextureLength);
+float textureSliceWidth = u_noiseTextureDimensions.x;
+float noiseTextureRows = u_noiseTextureDimensions.y;
+float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
+
+float textureSliceWidthSquared = textureSliceWidth * textureSliceWidth;
+vec2 inverseNoiseTextureDimensions = vec2(noiseTextureRows / textureSliceWidthSquared,
+                                          inverseNoiseTextureRows / textureSliceWidth);
+
+vec2 voxelToUV(vec3 voxelIndex) {
+    vec3 wrappedIndex = wrapVec(voxelIndex, textureSliceWidth);
+    float column = mod(wrappedIndex.z, textureSliceWidth * inverseNoiseTextureRows);
+    float row = floor(wrappedIndex.z / textureSliceWidth * noiseTextureRows);
+
+    float xPixelCoord = wrappedIndex.x + column * textureSliceWidth;
+    float yPixelCoord = wrappedIndex.y + row * textureSliceWidth;
+    return vec2(xPixelCoord, yPixelCoord) * inverseNoiseTextureDimensions;
+}
+
+// Interpolate a voxel with its neighbor (along the positive X-axis)
+vec4 lerpSamplesX(vec3 voxelIndex, float x) {
+    vec2 uv0 = voxelToUV(voxelIndex);
+    vec2 uv1 = voxelToUV(voxelIndex + vec3(1.0, 0.0, 0.0));
+    vec4 sample0 = texture2D(u_noiseTexture, uv0);
+    vec4 sample1 = texture2D(u_noiseTexture, uv1);
+    return mix(sample0, sample1, x);
+}
 
 vec4 sampleNoiseTexture(vec3 position) {
-    vec3 recenteredPos = position + vec3(u_noiseTextureLength / 2.0);
+    vec3 recenteredPos = position + vec3(textureSliceWidth / 2.0);
     vec3 lerpValue = fract(recenteredPos);
+    vec3 voxelIndex = floor(recenteredPos);
 
-    vec3 slice = floor(recenteredPos);
-    vec3 slice0 = wrapVec(slice, u_noiseTextureLength);
-    vec3 slice1 = wrapVec(slice0 + vec3(1.0), u_noiseTextureLength);
-    slice0 /= dimensions;
-    slice1 /= dimensions;
-
-    float u00 = slice0.x + slice0.z;
-    float u01 = slice0.x + slice1.z;
-    float u10 = slice1.x + slice0.z;
-    float u11 = slice1.x + slice1.z;
-
-    vec2 uv000 = vec2(u00, slice0.y);
-    vec2 uv001 = vec2(u01, slice0.y);
-    vec2 uv010 = vec2(u00, slice1.y);
-    vec2 uv011 = vec2(u01, slice1.y);
-    vec2 uv100 = vec2(u10, slice0.y);
-    vec2 uv101 = vec2(u11, slice0.y);
-    vec2 uv110 = vec2(u10, slice1.y);
-    vec2 uv111 = vec2(u11, slice1.y);
-
-    vec4 sample000 = texture2D(u_noiseTexture, uv000);
-    vec4 sample001 = texture2D(u_noiseTexture, uv001);
-    vec4 sample010 = texture2D(u_noiseTexture, uv010);
-    vec4 sample011 = texture2D(u_noiseTexture, uv011);
-    vec4 sample100 = texture2D(u_noiseTexture, uv100);
-    vec4 sample101 = texture2D(u_noiseTexture, uv101);
-    vec4 sample110 = texture2D(u_noiseTexture, uv110);
-    vec4 sample111 = texture2D(u_noiseTexture, uv111);
-
-    vec4 xLerp00 = mix(sample000, sample100, lerpValue.x);
-    vec4 xLerp01 = mix(sample001, sample101, lerpValue.x);
-    vec4 xLerp10 = mix(sample010, sample110, lerpValue.x);
-    vec4 xLerp11 = mix(sample011, sample111, lerpValue.x);
+    vec4 xLerp00 = lerpSamplesX(voxelIndex, lerpValue.x);
+    vec4 xLerp01 = lerpSamplesX(voxelIndex + vec3(0.0, 0.0, 1.0), lerpValue.x);
+    vec4 xLerp10 = lerpSamplesX(voxelIndex + vec3(0.0, 1.0, 0.0), lerpValue.x);
+    vec4 xLerp11 = lerpSamplesX(voxelIndex + vec3(0.0, 1.0, 1.0), lerpValue.x);
 
     vec4 yLerp0 = mix(xLerp00, xLerp10, lerpValue.y);
     vec4 yLerp1 = mix(xLerp01, xLerp11, lerpValue.y);
@@ -71,7 +66,7 @@ vec4 sampleNoiseTexture(vec3 position) {
 
 // Intersection with a unit sphere with radius 0.5 at center (0, 0, 0).
 bool intersectSphere(vec3 origin, vec3 dir, float slice,
-                     out vec3 point, out vec3 normal) {  
+                     out vec3 point, out vec3 normal) {
     float A = dot(dir, dir);
     float B = dot(origin, dir);
     float C = dot(origin, origin) - 0.25;
@@ -85,7 +80,7 @@ bool intersectSphere(vec3 origin, vec3 dir, float slice,
         t = (-B + root) / A;
     }
     point = origin + t * dir;
-    
+
     if(slice >= 0.0) {
         point.z = (slice / 2.0) - 0.5;
         if(length(point) > 0.5) {
@@ -95,7 +90,6 @@ bool intersectSphere(vec3 origin, vec3 dir, float slice,
 
     normal = normalize(point);
     point -= czm_epsilon2 * normal;
-
     return true;
 }
 
@@ -122,7 +116,7 @@ bool intersectEllipsoid(vec3 origin, vec3 dir, vec3 center, vec3 scale, float sl
 // the frequency is of i - 1. This saves us from doing extra
 // division / multiplication operations.
 vec2 phaseShift2D(vec2 p, vec2 freq) {
-    return (czm_pi / 2.0) * sin(freq.yx * p.yx); 
+    return (czm_pi / 2.0) * sin(freq.yx * p.yx);
 }
 
 vec2 phaseShift3D(vec3 p, vec2 freq) {
@@ -133,7 +127,7 @@ vec2 phaseShift3D(vec3 p, vec2 freq) {
 // "Visual Simulation of Clouds."
 // https://www.cs.drexel.edu/~david/Classes/Papers/p297-gardner.pdf
 const float T0    = 0.6;  // contrast of the texture pattern
-const float k     = 0.1;  // computed to produce a maximum value of 1 
+const float k     = 0.1;  // computed to produce a maximum value of 1
 const float C0    = 0.8;  // coefficient
 const float FX0   = 0.6;  // frequency X
 const float FY0   = 0.6;  // frequency Y
@@ -154,8 +148,8 @@ float T(vec3 point) {
     return k * sum.x * sum.y;
 }
 
-const float a = 0.5;  // fraction of surface reflection due to ambient or scattered light, 
-const float t = 0.4;  // fraction of texture shading 
+const float a = 0.5;  // fraction of surface reflection due to ambient or scattered light,
+const float t = 0.4;  // fraction of texture shading
 const float s = 0.25; // fraction of specular reflection
 
 float I(float Id, float Is, float It) {
@@ -176,7 +170,7 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
     float Is = max(pow(dot(-lightDir, -rayDir), 2.0), 0.0);   // specular reflection
     float It = T(cloudPoint);                                 // texture function
     float intensity = I(Id, Is, It);
-    vec3 color = intensity * clamp(brightness, 0.1, 1.0) * vec3(1.0);
+    vec3 color = vec3(intensity * clamp(brightness, 0.1, 1.0));
 
     vec4 noise = sampleNoiseTexture(u_noiseDetail * cloudPoint);
     float W = noise.x;
@@ -187,13 +181,13 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
     // in the center of the ellipsoid's surface. It decreases towards the edge.
     // Thus, it is used to blur the areas leading to the edges of the ellipsoid,
     // so that no harsh lines appear.
-    
+
     // The first (and biggest) layer of worley noise is then subtracted from this.
     // The final result is scaled up so that the base cloud is not too translucent.
     float ndDot = clamp(dot(cloudNormal, -rayDir), 0.0, 1.0);
     float TR = pow(ndDot, 3.0) - W; // translucency
     TR *= 1.3;
-    
+
     // Subtracting the second and third layers of worley noise is more complicated.
     // If these layers of noise were simply subtracted from the current translucency,
     // the shape derived from the first layer of noise would be completely deleted.
@@ -207,7 +201,7 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
     // erode too much of the cloud. The addition of it, however, will detailed
     // volume to the cloud. As long as the noise is only added and not subtracted,
     // the results are aesthetically pleasing.
-    
+
     // The minusDot product is mapped in a way that it is larger at the edges of
     // the ellipsoid, so a subtraction and min operation are used instead of
     // an addition and max one.
@@ -232,14 +226,13 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
 
     // Finally, the contrast of the cloud's color is increased.
     vec3 finalColor = mix(vec3(0.5), shading * color, 1.15);
-    return vec4(finalColor, clamp(TR, 0.0, 1.0));
+    return vec4(finalColor, clamp(TR, 0.0, 1.0)) * v_color;
 }
 
 void main() {
 #ifdef DEBUG_BILLBOARDS
     gl_FragColor = vec4(0.0, 0.5, 0.5, 1.0);
 #endif
-    
     // To avoid calculations with high values,
     // we raycast from an arbitrarily smaller space.
     vec2 coordinate = v_maximumSize.xy * v_offset;
@@ -251,17 +244,16 @@ void main() {
     vec3 eye = vec3(0, 0, -10.0 - zOffset);
     vec3 rayDir = normalize(vec3(coordinate, 1.0) - eye);
     vec3 rayOrigin = eye;
-
 #ifdef DEBUG_ELLIPSOIDS
     vec3 point, normal;
     if(intersectEllipsoid(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale, v_slice,
                           point, normal)) {
-        gl_FragColor = v_brightness * vec4(1.0);
+        gl_FragColor = v_brightness * v_color;
     }
 #else
 #ifndef DEBUG_BILLBOARDS
     vec4 cloud = drawCloud(rayOrigin, rayDir,
-                           ellipsoidCenter, ellipsoidScale, v_slice, v_brightness);    
+                           ellipsoidCenter, ellipsoidScale, v_slice, v_brightness);
     if(cloud.w < 0.01) {
         discard;
     }
