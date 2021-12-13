@@ -205,9 +205,10 @@ function WebMapServiceImageryProvider(options) {
   this.defaultMagnificationFilter = undefined;
 
   // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
-  if (defined(options.getFeatureInfoUrl))
-    this._getFeatureInfoUrl = options.getFeatureInfoUrl;
-  else this._getFeatureInfoUrl = options.url;
+  this._getFeatureInfoUrl = defaultValue(
+    options.getFeatureInfoUrl,
+    options.url
+  );
 
   var resource = Resource.createIfNeeded(options.url);
   var pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
@@ -620,15 +621,12 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets the getFeatureInfo URL of the WMS server.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {String}
+   * @type {Resource|String}
    * @readonly
    */
   getFeatureInfoUrl: {
     get: function () {
       return this._getFeatureInfoUrl;
-    },
-    set: function (value) {
-      this._getFeatureInfoUrl = value;
     },
   },
 });
