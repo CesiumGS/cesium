@@ -2049,7 +2049,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      expect(provider._pickFeaturesResource._url).toContain(featureUrl);
+      expect(provider._pickFeaturesResource.url).toContain(featureUrl);
     });
   });
 
@@ -2064,8 +2064,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      expect(provider._pickFeaturesResource._url).not.toContain(featureUrl);
-      expect(provider._pickFeaturesResource._url).toContain(getCapabilitiesUrl);
+      expect(provider._pickFeaturesResource.url).not.toContain(featureUrl);
+      expect(provider._pickFeaturesResource.url).toContain(getCapabilitiesUrl);
     });
   });
 });

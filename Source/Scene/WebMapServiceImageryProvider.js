@@ -204,7 +204,6 @@ function WebMapServiceImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  // Use the getFeatureInfoUrl value defined in options if it exists, else use the property value of url
   this._getFeatureInfoUrl = defaultValue(
     options.getFeatureInfoUrl,
     options.url
@@ -314,8 +313,8 @@ function WebMapServiceImageryProvider(options) {
     pickFeatureParams.y = "{j}";
   }
   pickFeatureResource.setQueryParameters(pickFeatureParams, true);
-  this._resource = resource;
 
+  this._resource = resource;
   this._pickFeaturesResource = pickFeatureResource;
   this._layers = options.layers;
 
