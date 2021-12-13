@@ -51,6 +51,8 @@ function FramebufferManager(options) {
   this._depthStencilTexture = undefined;
   this._depthRenderbuffer = undefined;
   this._depthTexture = undefined;
+
+  this._dirty = false;
 }
 
 Object.defineProperties(FramebufferManager.prototype, {
@@ -93,6 +95,7 @@ FramebufferManager.prototype.isDirty = function (width, height, hdr) {
     }
   }
   return (
+    this._dirty ||
     this._createColorAttachments ||
     length === 0 ||
     texturesDirty ||
@@ -122,7 +125,7 @@ FramebufferManager.prototype.update = function (
   hdr = defaultValue(hdr, false);
 
   if (this.isDirty(width, height, hdr)) {
-    this.destroyResources();
+    // this.destroyResources();
     this._useHdr = hdr;
 
     // Create color texture
@@ -197,6 +200,7 @@ FramebufferManager.prototype.update = function (
       depthStencilRenderbuffer: this._depthStencilRenderbuffer,
       destroyAttachments: false,
     });
+    this._dirty = false;
   }
 };
 
@@ -215,6 +219,7 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
   //>>includeEnd('debug');
   index = defaultValue(index, 0);
   this._colorTextures[index] = texture;
+  this._dirty = true;
 };
 
 FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
@@ -226,6 +231,7 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   }
   //>>includeEnd('debug');
   this._depthStencilTexture = texture;
+  this._dirty = true;
 };
 
 FramebufferManager.prototype.clear = function (
@@ -261,13 +267,13 @@ FramebufferManager.prototype.destroyResources = function () {
     !this._depthStencilTexture.isDestroyed()
   ) {
     this._depthStencilTexture.destroy();
+    this._depthStencilTexture = undefined;
   }
-  this._depthStencilTexture = undefined;
 
   if (defined(this._depthTexture) && !this._depthTexture.isDestroyed()) {
     this._depthTexture.destroy();
+    this._depthTexture = undefined;
   }
-  this._depthTexture = undefined;
 
   if (defined(this._framebuffer)) {
     this._framebuffer.destroy();

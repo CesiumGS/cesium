@@ -234,7 +234,9 @@ GlobeDepth.prototype.update = function (
 
   var textureChanged = this._colorFramebuffer.isDirty(width, height, hdr);
   if (textureChanged) {
+    this._colorFramebuffer.destroyResources();
     this._colorFramebuffer.update(context, width, height, true, hdr);
+    this._copyDepthFramebuffer.destroyResources();
     this._copyDepthFramebuffer.update(context, width, height);
   }
   updateCopyCommands(this, context, width, height, passState);

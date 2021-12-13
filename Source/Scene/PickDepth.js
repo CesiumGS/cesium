@@ -28,6 +28,7 @@ function updateFramebuffers(pickDepth, context, depthTexture) {
 
   var textureChanged = pickDepth._framebuffer.isDirty(width, height);
   if (!defined(pickDepth.framebuffer) || textureChanged) {
+    pickDepth._framebuffer.destroyResources();
     pickDepth._framebuffer.update(context, width, height);
   }
 }

@@ -80,20 +80,23 @@ function destroyResources(globeTranslucency) {
 // });
 
 function updateResources(globeTranslucency, context, width, height, hdr) {
-  globeTranslucency._framebuffer.update(
-    context,
-    width,
-    height,
-    context.depthTexture,
-    hdr
-  );
-  globeTranslucency._packedDepthFramebuffer.update(
-    context,
-    width,
-    height,
-    false,
-    false
-  );
+  if (globeTranslucency._framebuffer.isDirty(width, height, hdr)) {
+    destroyResources(globeTranslucency);
+    globeTranslucency._framebuffer.update(
+      context,
+      width,
+      height,
+      context.depthTexture,
+      hdr
+    );
+    globeTranslucency._packedDepthFramebuffer.update(
+      context,
+      width,
+      height,
+      false,
+      false
+    );
+  }
 }
 
 function updateCommands(globeTranslucency, context, width, height, passState) {

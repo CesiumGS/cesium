@@ -45,8 +45,12 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
   var width = viewport.width;
   var height = viewport.height;
   var depthTexture = context.depthTexture;
-  this._colorFramebuffer.update(context, width, height, depthTexture, hdr);
-  this._idFramebuffer.update(context, width, height, depthTexture);
+  if (this._colorFramebuffer.isDirty(width, height, hdr)) {
+    this._colorFramebuffer.destroyResources();
+    this._colorFramebuffer.update(context, width, height, depthTexture, hdr);
+    this._idFramebuffer.destroyResources();
+    this._idFramebuffer.update(context, width, height, depthTexture);
+  }
 };
 
 SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
