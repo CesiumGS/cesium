@@ -12,10 +12,14 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
+import parseBatchTable from "../parseBatchTable.js";
 import DracoLoader from "../DracoLoader.js";
+import FeatureMetadata from "../FeatureMetadata.js";
 import ResourceLoader from "../ResourceLoader.js";
+import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import PntsParser from "../PntsParser.js";
+import PropertyTable from "../PropertyTable.js";
 import ResourceLoaderState from "../ResourceLoaderState.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
@@ -316,14 +320,14 @@ function makeAttribute(attributeInfo, context) {
   attribute.semantic = attributeInfo.semantic;
   attribute.setIndex = attributeInfo.setIndex;
   attribute.componentDatatype = attributeInfo.componentDatatype;
-  attribute.type = AttributeType.VEC3;
+  attribute.type = attributeInfo.type;
   attribute.normalized = defaultValue(attributeInfo.normalized, false);
   attribute.min = attributeInfo.min;
   attribute.max = attributeInfo.max;
   attribute.quantization = quantization;
 
-  if (defined(attributeInfo.constant)) {
-    attribute.constant = Cartesian4.fromColor(attributeInfo.constant);
+  if (defined(attributeInfo.constantColor)) {
+    attribute.constant = Cartesian4.fromColor(attributeInfo.constantColor);
   } else {
     attribute.buffer = Buffer.createVertexBuffer({
       typedArray: typedArray,
@@ -406,8 +410,28 @@ function makeAttributes(parsedContent, context) {
 }
 
 function makeFeatureMetadata(parsedContent) {
-  // TODO:
-  return undefined;
+  var batchLength = parsedContent.batchLength;
+  var pointsLength = parsedContent.pointsLength;
+  var batchTableBinary = parsedContent.batchTableBinary;
+
+  if (defined(batchTableBinary)) {
+    var count = defaultValue(batchLength, pointsLength);
+    return parseBatchTable({
+      count: count,
+      batchTable: parsedContent.batchTableJson,
+      binaryBody: batchTableBinary,
+    });
+  }
+
+  // If batch table is not defined, create a property table without any properties.
+  var emptyPropertyTable = new PropertyTable({
+    name: MetadataClass.BATCH_TABLE_CLASS_NAME,
+    count: pointsLength,
+  });
+  return new FeatureMetadata({
+    schema: {},
+    propertyTables: [emptyPropertyTable],
+  });
 }
 
 function makeComponents(loader, context) {

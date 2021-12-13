@@ -25,6 +25,7 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
+import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import DracoLoader from "./DracoLoader.js";
 import getClipAndStyleCode from "./getClipAndStyleCode.js";
 import getClippingFunction from "./getClippingFunction.js";
@@ -200,6 +201,16 @@ function initialize(pointCloud, options) {
   pointCloud._hasNormals = parsedContent.hasNormals;
   pointCloud._hasColors = parsedContent.hasColors;
   pointCloud._hasBatchIds = parsedContent.hasBatchIds;
+
+  // If points are not batched and there are per-point properties, use the
+  // properties as metadata for styling purposes.
+  if (!parsedContent.hasBatchIds && defined(parsedContent.batchTableBinary)) {
+    parsedContent.styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
+      parsedContent.pointsLength,
+      parsedContent.batchTableJson,
+      parsedContent.batchTableBinary
+    );
+  }
 
   if (defined(parsedContent.draco)) {
     var draco = parsedContent.draco;

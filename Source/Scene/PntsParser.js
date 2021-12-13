@@ -8,7 +8,6 @@ import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import AttributeType from "./AttributeType.js";
-import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
@@ -157,25 +156,14 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
         "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined."
       );
     }
-
-    if (defined(batchTableBinary)) {
-      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-      batchTableBinary = new Uint8Array(batchTableBinary);
-    }
-
     parsedContent.batchLength = batchLength;
-    parsedContent.batchTableJson = batchTableJson;
-    parsedContent.batchTableBinary = batchTableBinary;
   }
 
-  // If points are not batched and there are per-point properties, use the
-  // properties as metadata for styling purposes
-  if (!parsedContent.hasBatchIds && defined(batchTableBinary)) {
-    parsedContent.styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
-      pointsLength,
-      batchTableJson,
-      batchTableBinary
-    );
+  if (defined(batchTableBinary)) {
+    // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+    batchTableBinary = new Uint8Array(batchTableBinary);
+    parsedContent.batchTableJson = batchTableJson;
+    parsedContent.batchTableBinary = batchTableBinary;
   }
 
   return parsedContent;
@@ -416,7 +404,7 @@ function parseNormals(featureTable) {
       typedArray: normals,
       isOctEncoded: false,
       componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 3,
+      type: AttributeType.VEC3,
     };
   } else if (defined(featureTableJson.NORMAL_OCT16P)) {
     normals = featureTable.getPropertyArray(
@@ -430,7 +418,7 @@ function parseNormals(featureTable) {
       typedArray: normals,
       isOctEncoded: true,
       componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 3,
+      type: AttributeType.VEC3,
     };
   }
 
