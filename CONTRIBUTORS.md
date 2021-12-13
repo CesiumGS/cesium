@@ -304,8 +304,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Robin Danielsson](https://github.com/robdan7)
 - [Oskar Havo](https://github.com/OskarHavo)
 - [Mark Williams](https://github.com/markw65)
-- [Martin Chan](https://github.com/martin-bom)
 - [Rain Liang](https://github.com/rainliang000)
-- [Mark Williams](https://github.com/markw65)
 - [lyqh-ctx](https://github.com/lyqh-ctx)
-
+- [David Tryse](https://github.com/dtryse)
+- [Martin Chan](https://github.com/martin-bom)

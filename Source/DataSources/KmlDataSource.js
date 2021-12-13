@@ -2202,12 +2202,34 @@ function processDescription(
   //Rewrite any KMZ embedded urls
   if (defined(uriResolver) && uriResolver.keys.length > 1) {
     embedDataUris(scratchDiv, "a", "href", uriResolver);
+    embedDataUris(scratchDiv, "link", "href", uriResolver);
+    embedDataUris(scratchDiv, "area", "href", uriResolver);
     embedDataUris(scratchDiv, "img", "src", uriResolver);
+    embedDataUris(scratchDiv, "iframe", "src", uriResolver);
+    embedDataUris(scratchDiv, "video", "src", uriResolver);
+    embedDataUris(scratchDiv, "audio", "src", uriResolver);
+    embedDataUris(scratchDiv, "source", "src", uriResolver);
+    embedDataUris(scratchDiv, "track", "src", uriResolver);
+    embedDataUris(scratchDiv, "input", "src", uriResolver);
+    embedDataUris(scratchDiv, "embed", "src", uriResolver);
+    embedDataUris(scratchDiv, "script", "src", uriResolver);
+    embedDataUris(scratchDiv, "video", "poster", uriResolver);
   }
 
   //Make relative urls absolute using the sourceResource
   applyBasePath(scratchDiv, "a", "href", sourceResource);
+  applyBasePath(scratchDiv, "link", "href", sourceResource);
+  applyBasePath(scratchDiv, "area", "href", sourceResource);
   applyBasePath(scratchDiv, "img", "src", sourceResource);
+  applyBasePath(scratchDiv, "iframe", "src", sourceResource);
+  applyBasePath(scratchDiv, "video", "src", sourceResource);
+  applyBasePath(scratchDiv, "audio", "src", sourceResource);
+  applyBasePath(scratchDiv, "source", "src", sourceResource);
+  applyBasePath(scratchDiv, "track", "src", sourceResource);
+  applyBasePath(scratchDiv, "input", "src", sourceResource);
+  applyBasePath(scratchDiv, "embed", "src", sourceResource);
+  applyBasePath(scratchDiv, "script", "src", sourceResource);
+  applyBasePath(scratchDiv, "video", "poster", sourceResource);
 
   var tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
