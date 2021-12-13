@@ -10,9 +10,9 @@
 
 ##### Additions :tada:
 
-- Added a `pointSize` field to custom vertex shaders for more control over
-  shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
+- Added a `pointSize` field to custom vertex shaders for more control over shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
 - Added `lambertDiffuseMultiplier` property to Globe object to enhance terrain lighting. [#9878](https://github.com/CesiumGS/cesium/pull/9878)
+- Added `getFeatureInfoUrl` option to `WebMapServiceImageryProvider` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
 
 ##### Fixes :wrench:
 
