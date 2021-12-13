@@ -3608,10 +3608,11 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   });
 };
 
-var scratchCartesian3_1 = new Cartesian3();
-var scratchCartesian3_2 = new Cartesian3();
-var scratchCartesian3_3 = new Cartesian3();
-var scratchCartesian3_4 = new Cartesian3();
+var scratchCartesian1 = new Cartesian3();
+var scratchCartesian2 = new Cartesian3();
+var scratchCartesian3 = new Cartesian3();
+var scratchCartesian4 = new Cartesian3();
+var scratchCartesian5 = new Cartesian3();
 var horizonPoints = [
   new Cartesian3(),
   new Cartesian3(),
@@ -3621,74 +3622,70 @@ var horizonPoints = [
 
 function computeHorizonQuad(camera, ellipsoid) {
   var radii = ellipsoid.radii;
-  var p = camera.positionWC;
+  var center, eastOffset, northOffset;
 
-  // Find the corresponding position in the scaled space of the ellipsoid.
-  var q = Cartesian3.multiplyComponents(
-    ellipsoid.oneOverRadii,
-    p,
-    scratchCartesian3_1
-  );
-
-  var qMagnitude = Cartesian3.magnitude(q);
-  var qUnit = Cartesian3.normalize(q, scratchCartesian3_2);
-
-  // Determine the east and north directions at q.
-  var eUnit;
-  var nUnit;
-  if (
-    Cartesian3.equalsEpsilon(qUnit, Cartesian3.UNIT_Z, CesiumMath.EPSILON10)
-  ) {
-    eUnit = new Cartesian3(0, 1, 0);
-    nUnit = new Cartesian3(0, 0, 1);
+  if (camera.frustum instanceof OrthographicFrustum) {
+    center = Cartesian3.ZERO;
+    eastOffset = camera.rightWC;
+    northOffset = camera.upWC;
   } else {
-    eUnit = Cartesian3.normalize(
-      Cartesian3.cross(Cartesian3.UNIT_Z, qUnit, scratchCartesian3_3),
-      scratchCartesian3_3
+    var p = camera.positionWC;
+
+    // Find the corresponding position in the scaled space of the ellipsoid.
+    var q = Cartesian3.multiplyComponents(
+      ellipsoid.oneOverRadii,
+      p,
+      scratchCartesian1
     );
-    nUnit = Cartesian3.normalize(
-      Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4),
-      scratchCartesian3_4
+
+    var qUnit = Cartesian3.normalize(q, scratchCartesian2);
+
+    // Determine the east and north directions at q.
+    var eUnit = Cartesian3.normalize(
+      Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3),
+      scratchCartesian3
     );
+    var nUnit = Cartesian3.normalize(
+      Cartesian3.cross(qUnit, eUnit, scratchCartesian4),
+      scratchCartesian4
+    );
+
+    var qMagnitude = Cartesian3.magnitude(q);
+
+    // Determine the radius of the 'limb' of the ellipsoid.
+    var wMagnitude = Math.sqrt(qMagnitude * qMagnitude - 1.0);
+
+    // Compute the center and offsets.
+    center = Cartesian3.multiplyByScalar(
+      qUnit,
+      1.0 / qMagnitude,
+      scratchCartesian1
+    );
+    var scalar = wMagnitude / qMagnitude;
+    eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
+    northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
   }
 
-  // Determine the radius of the 'limb' of the ellipsoid.
-  var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
-
-  // Compute the center and offsets.
-  var center = Cartesian3.multiplyByScalar(
-    qUnit,
-    1.0 / qMagnitude,
-    scratchCartesian3_1
-  );
-  var scalar = wMagnitude / qMagnitude;
-  var eastOffset = Cartesian3.multiplyByScalar(
-    eUnit,
-    scalar,
-    scratchCartesian3_2
-  );
-  var northOffset = Cartesian3.multiplyByScalar(
-    nUnit,
-    scalar,
-    scratchCartesian3_3
-  );
-
   // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-  var upperLeft = Cartesian3.add(center, northOffset, horizonPoints[0]);
+  var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian5);
   Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
   Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
+  Cartesian3.clone(upperLeft, horizonPoints[0]);
 
-  var lowerLeft = Cartesian3.subtract(center, northOffset, horizonPoints[1]);
+  var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian5);
   Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
   Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
+  Cartesian3.clone(lowerLeft, horizonPoints[1]);
 
-  var lowerRight = Cartesian3.subtract(center, northOffset, horizonPoints[2]);
-  Cartesian3.add(lowerRight, eastOffset, lowerRight);
-  Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
-
-  var upperRight = Cartesian3.add(center, northOffset, horizonPoints[3]);
+  var upperRight = Cartesian3.add(center, northOffset, scratchCartesian5);
   Cartesian3.add(upperRight, eastOffset, upperRight);
   Cartesian3.multiplyComponents(radii, upperRight, upperRight);
+  Cartesian3.clone(upperRight, horizonPoints[2]);
+
+  var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian5);
+  Cartesian3.add(lowerRight, eastOffset, lowerRight);
+  Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+  Cartesian3.clone(lowerRight, horizonPoints[3]);
 
   return horizonPoints;
 }
@@ -3709,10 +3706,10 @@ function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
     ellipsoid,
     scratchRectCartesian
   );
-  if (defined(r)) {
-    cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
-    return 1;
-  }
+  // if (defined(r)) {
+  //   cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
+  //   return 1;
+  // }
   cartoArray[index] = ellipsoid.cartesianToCartographic(
     computedHorizonQuad[index],
     cartoArray[index]
@@ -3784,10 +3781,10 @@ Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
     computedHorizonQuad
   );
 
-  if (successfulPickCount < 2) {
-    // If we have space non-globe in 3 or 4 corners then return the whole globe
-    return Rectangle.MAX_VALUE;
-  }
+  // if (successfulPickCount < 2) {
+  //   // If we have space non-globe in 3 or 4 corners then return the whole globe
+  //   return Rectangle.MAX_VALUE;
+  // }
 
   result = Rectangle.fromCartographicArray(cartoArray, result);
 
