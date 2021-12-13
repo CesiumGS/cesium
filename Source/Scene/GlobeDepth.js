@@ -60,13 +60,6 @@ function destroyFramebuffers(globeDepth) {
   globeDepth._updateDepthFramebuffer.destroyResources();
 }
 
-function destroyTextures(globeDepth) {
-  globeDepth._globeDepthTexture =
-    globeDepth._globeDepthTexture &&
-    !globeDepth._globeDepthTexture.isDestroyed() &&
-    globeDepth._globeDepthTexture.destroy();
-}
-
 function setUpdateDepthResources(globeDepth, passState) {
   var colorTexture = globeDepth._copyDepthFramebuffer.getColorTexture();
   globeDepth._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
@@ -316,7 +309,6 @@ GlobeDepth.prototype.isDestroyed = function () {
 
 GlobeDepth.prototype.destroy = function () {
   destroyFramebuffers(this);
-  destroyTextures(this);
 
   if (defined(this._copyColorCommand)) {
     this._copyColorCommand.shaderProgram = this._copyColorCommand.shaderProgram.destroy();
