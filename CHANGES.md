@@ -10,9 +10,9 @@
 
 ##### Additions :tada:
 
-- Added a `pointSize` field to custom vertex shaders for more control over
-  shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
+- Added a `pointSize` field to custom vertex shaders for more control over shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
 - Added `lambertDiffuseMultiplier` property to Globe object to enhance terrain lighting. [#9878](https://github.com/CesiumGS/cesium/pull/9878)
+- Added `WebMapServiceImageryProvider.getFeatureInfoUrl` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
 
 ##### Fixes :wrench:
 
@@ -31,12 +31,6 @@
 
 - Fixed a bug with .ktx2 textures having an incorrect minification filter. [#9876](https://github.com/CesiumGS/cesium/pull/9876/)
 - Fixed incorrect diffuse texture alpha in glTFs with the `KHR_materials_pbrSpecularGlossiness` extension. [#9943](https://github.com/CesiumGS/cesium/pull/9943)
-
-### 1.87.2 - 2021-11-09
-
-##### Additions :tada:
-
-- Added `WebMapServiceImageryProvider.getFeatureInfoUrl` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
 
 ### 1.87.1 - 2021-11-09
 
