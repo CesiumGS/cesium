@@ -178,6 +178,9 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
       glossiness
     );
     material.diffuse = parameters.diffuseColor;
+    // the specular glossiness extension's alpha overrides anything set
+    // by the base material.
+    material.alpha = diffuse.a;
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
     #elif defined(LIGHTING_PBR)

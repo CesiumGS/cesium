@@ -19,7 +19,7 @@ import when from "../ThirdParty/when.js";
  * Subtrees handle tile metadata from the <code>3DTILES_metadata</code> extension
  * </p>
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata#implicit-tile-metadata|Implicit Tile Metadata in the 3DTILES_metadata specification}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata#implicit-tile-properties|Implicit Tile Properties in the 3DTILES_metadata specification}
  *
  * @alias ImplicitSubtree
  * @constructor

@@ -3521,7 +3521,7 @@ function load(dataSource, entityCollection, data, options) {
  * KML support in Cesium is incomplete, but a large amount of the standard,
  * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
  * {@link https://github.com/CesiumGS/cesium/issues/873|#873} for a
- * detailed list of what is and isn't support. Cesium will also write information to the
+ * detailed list of what is and isn't supported. Cesium will also write information to the
  * console when it encounters most unsupported features.
  * </p>
  * <p>

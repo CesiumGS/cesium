@@ -86,7 +86,6 @@
         }
       },
       "tileset": {
-        "name": "Sample Tileset",
         "class": "tileset",
         "properties": {
           "author": "Cesium",

@@ -11,8 +11,6 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     expect(tilesetMetadata.class).toBeUndefined();
-    expect(tilesetMetadata.name).toBeUndefined();
-    expect(tilesetMetadata.description).toBeUndefined();
     expect(tilesetMetadata.extras).toBeUndefined();
   });
 
@@ -44,8 +42,6 @@ describe("Scene/TilesetMetadata", function () {
     var tilesetMetadata = new TilesetMetadata({
       class: cityClass,
       tileset: {
-        name: "City",
-        description: "City Metadata",
         extras: extras,
         extensions: extensions,
         properties: properties,
@@ -53,8 +49,6 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     expect(tilesetMetadata.class).toBe(cityClass);
-    expect(tilesetMetadata.name).toBe("City");
-    expect(tilesetMetadata.description).toBe("City Metadata");
     expect(tilesetMetadata.extras).toBe(extras);
     expect(tilesetMetadata.extensions).toBe(extensions);
     expect(tilesetMetadata.getProperty("neighborhoods")).toEqual(

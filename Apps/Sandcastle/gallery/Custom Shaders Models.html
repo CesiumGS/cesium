@@ -78,9 +78,9 @@
           vertexShaderText: [
             // If the mouse is dragged to the right, the model grows
             // If the mouse is dragged to the left, the model shrinks
-            "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+            "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
             "{",
-            "    positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;",
+            "    vsOutput.positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;",
             "}",
           ].join("\n"),
         });
@@ -275,6 +275,50 @@
           ].join("\n"),
         });
 
+        var pointCloudWaveShader = new Cesium.CustomShader({
+          uniforms: {
+            // elapsed time in seconds for animation
+            u_time: {
+              type: Cesium.UniformType.FLOAT,
+              value: 0,
+            },
+          },
+          vertexShaderText: [
+            "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
+            "{",
+            // This model's x and y coordinates are in the range [0, 1], which
+            // conveniently doubles as UV coordinates.
+            "    vec2 uv = vsInput.attributes.positionMC.xy;",
+            // Make the point cloud undulate in a complex wave that varies in
+            // both space and time. The amplitude is based on the original shape
+            // of the point cloud (which already is a wavy surface). The wave
+            // is computed relative to the center of the model, hence the
+            // transformations from [0, 1] -> [-1, 1] -> [0, 1]
+            "    float amplitude = 2.0 * vsInput.attributes.positionMC.z - 1.0;",
+            "    float wave = amplitude * sin(2.0 * czm_pi * uv.x - 2.0 * u_time) * sin(u_time);",
+            "    vsOutput.positionMC.z = 0.5 + 0.5 * wave;",
+            // Make the points pulse in and out by changing their size
+            "    vsOutput.pointSize = 10.0 + 5.0 * sin(u_time);",
+            "}",
+          ].join("\n"),
+          fragmentShaderText: [
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
+            "{",
+            // Make the points circular instead of square
+            "    float distance = length(gl_PointCoord - 0.5);",
+            "    if (distance > 0.5) {",
+            "        discard;",
+            "    }",
+            // Make a sinusoid color palette that moves in the general direction
+            // of the wave, but at a different speed.
+            // Coefficients were chosen arbitrarily
+            "    vec2 uv = fsInput.attributes.positionMC.xy;",
+            "    material.diffuse = 0.2 * fsInput.attributes.color_0.rgb;",
+            "    material.diffuse += vec3(0.2, 0.3, 0.4) + vec3(0.2, 0.3, 0.4) * sin(2.0 * czm_pi * vec3(3.0, 2.0, 1.0) * uv.x - 3.0 * u_time);",
+            "}",
+          ].join("\n"),
+        });
+
         // Demos ==============================================================
 
         var models = {
@@ -285,6 +329,8 @@
             "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
           groundVehicle:
             "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+          pointCloudWave:
+            "../../SampleData/models/PointCloudWave/PointCloudWave.glb",
         };
 
         var needsDrag = false;
@@ -338,6 +384,13 @@
               needsDrag = true;
             },
           },
+          {
+            text: "Animated Point Cloud",
+            onselect: function () {
+              selectModel(models.pointCloudWave, pointCloudWaveShader);
+              needsDrag = false;
+            },
+          },
         ];
 
         function selectModel(url, customShader) {
@@ -369,6 +422,7 @@
         viewer.scene.postUpdate.addEventListener(function () {
           var elapsedTimeSeconds = (performance.now() - startTime) / 1000;
           textureUniformShader.setUniform("u_time", elapsedTimeSeconds);
+          pointCloudWaveShader.setUniform("u_time", elapsedTimeSeconds);
         });
 
         var dragActive = false;
