@@ -1278,4 +1278,57 @@ describe("Core/AttributeCompression", function () {
       expect(result[i]).toEqual(expected[i]);
     }
   });
+
+  it("decodeRGB565 throws without typedArray", function () {
+    expect(function () {
+      return AttributeCompression.decodeRGB565();
+    }).toThrowDeveloperError();
+  });
+
+  it("decodeRGB565 throws if arrays are the wrong size", function () {
+    expect(function () {
+      return AttributeCompression.decodeRGB565(
+        new Uint16Array([0]),
+        new Float32Array(1)
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("decodeRGB565 works", function () {
+    var input = new Uint16Array([
+      0,
+      //0b00001_000001_00001
+      2881,
+      //0b10000_100000_01000
+      33800,
+      //0b11111_111111_11111
+      65535,
+    ]);
+    var expected = new Float32Array([
+      0,
+      0,
+      0,
+      1 / 31,
+      1 / 63,
+      1 / 31,
+      16 / 31,
+      32 / 63,
+      8 / 31,
+      31 / 31,
+      63 / 63,
+      31 / 31,
+    ]);
+
+    var result = new Float32Array(input.length * 3);
+    AttributeCompression.decodeRGB565(input, result);
+
+    for (var i = 0; i < input.length; i++) {
+      expect(result[i]).toEqual(expected[i]);
+    }
+  });
+
+  it("decodeRGB565 creates a result array if not defined", function () {
+    var result = AttributeCompression.decodeRGB565(new Uint16Array([0]));
+    expect(result).toEqual(new Float32Array([0, 0, 0]));
+  });
 });

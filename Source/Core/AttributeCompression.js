@@ -476,4 +476,50 @@ AttributeCompression.dequantize = function (
   return dequantizedTypedArray;
 };
 
+/**
+ * Decode RGB565-encoded colors into a floating point typed array containing
+ * normalized RGB values.
+ *
+ * @param {Uint16Array} typedArray Array of RGB565 values
+ * @param {Float32Array} [result] Array to store the normalized VEC3 result
+ */
+AttributeCompression.decodeRGB565 = function (typedArray, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("typedArray", typedArray);
+
+  var expectedLength = typedArray.length * 3;
+  if (defined(result)) {
+    Check.typeOf.number.equals(
+      "result.length",
+      "typedArray.length * 3",
+      result.length,
+      expectedLength
+    );
+  }
+  //>>includeEnd('debug');
+
+  var count = typedArray.length;
+  if (!defined(result)) {
+    result = new Float32Array(count * 3);
+  }
+
+  var mask5 = (1 << 5) - 1;
+  var mask6 = (1 << 6) - 1;
+  var normalize5 = 1.0 / 31.0;
+  var normalize6 = 1.0 / 63.0;
+  for (var i = 0; i < count; i++) {
+    var value = typedArray[i];
+    var red = value >> 11;
+    var green = (value >> 5) & mask6;
+    var blue = value & mask5;
+
+    var offset = 3 * i;
+    result[offset] = red * normalize5;
+    result[offset + 1] = green * normalize6;
+    result[offset + 2] = blue * normalize5;
+  }
+
+  return result;
+};
+
 export default AttributeCompression;
