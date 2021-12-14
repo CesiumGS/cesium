@@ -26,6 +26,7 @@ function GlobeDepth() {
   this._updateDepthFramebuffer = new FramebufferManager({
     createColorAttachments: false,
     createDepthAttachments: false,
+    depthStencil: true,
   });
 
   this._clearGlobeColorCommand = undefined;
@@ -262,16 +263,16 @@ GlobeDepth.prototype.executeUpdateDepth = function (
     // The additional texture and framebuffer resources are created on demand.
     if (defined(this._updateDepthCommand)) {
       if (
-        !defined(this._updateDepthFramebuffer) ||
-        this._updateDepthFramebuffer.depthStencilTexture !==
+        !defined(this._updateDepthFramebuffer.framebuffer) ||
+        this._updateDepthFramebuffer.framebuffer.depthStencilTexture !==
           depthTextureToCopy ||
-        this._updateDepthFramebuffer.getColorTexture(0) !==
+        this._updateDepthFramebuffer.getColorTexture() !==
           this._copyDepthFramebuffer.getColorTexture()
       ) {
         var width = this._copyDepthFramebuffer.getColorTexture().width;
         var height = this._copyDepthFramebuffer.getColorTexture().height;
+        this._tempCopyDepthFramebuffer.destroyResources();
         this._tempCopyDepthFramebuffer.update(context, width, height);
-        this._updateDepthFramebuffer.destroyResources();
         setUpdateDepthResources(this, passState);
         this._updateDepthFramebuffer.update(context, width, height);
         updateCopyCommands(this, context, width, height, passState);

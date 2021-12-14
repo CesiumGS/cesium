@@ -119,7 +119,7 @@ FramebufferManager.prototype.update = function (
   depthTexture = defaultValue(depthTexture, false);
   hdr = defaultValue(hdr, false);
 
-  if (this.isDirty(width, height, hdr)) {
+  if (this._texturesSet || this.isDirty(width, height, hdr)) {
     if (!this._texturesSet) {
       this.destroyResources();
     }
