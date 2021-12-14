@@ -231,7 +231,8 @@ function processDracoAttributes(loader, draco, result) {
       componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC3,
       isQuantized: false,
-      isOctEncoded: false,
+      octEncoded: false,
+      octEncodedZXY: false,
     };
 
     if (defined(result.NORMAL.data.quantization)) {
@@ -239,9 +240,9 @@ function processDracoAttributes(loader, draco, result) {
         (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
       attribute.quantizedRange = octEncodedRange;
       attribute.octEncoded = true;
-      attribute.octEncodedZYX = true;
+      attribute.octEncodedZXY = true;
       attribute.quantizedComponentDatatype = ComponentDatatype.UNSIGNED_BYTE;
-      attribute.quantizedType = AttributeType.VEC3;
+      attribute.quantizedType = AttributeType.VEC2;
     }
 
     parsedContent.normals = attribute;
@@ -300,6 +301,14 @@ function processDracoAttributes(loader, draco, result) {
 function makeAttribute(attributeInfo, context) {
   var typedArray = attributeInfo.typedArray;
   var quantization;
+  if (attributeInfo.octEncoded) {
+    quantization = new Quantization();
+    quantization.octEncoded = attributeInfo.octEncoded;
+    quantization.octEncodedZXY = attributeInfo.octEncodedZXY;
+    quantization.normalizationRange = attributeInfo.quantizedRange;
+    quantization.type = attributeInfo.quantizedType;
+    quantization.componentDatatype = attributeInfo.quantizedComponentDatatype;
+  }
   if (attributeInfo.isQuantized) {
     quantization = new Quantization();
     var normalizationRange = attributeInfo.quantizedRange;

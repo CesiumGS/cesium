@@ -197,7 +197,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(attribute.quantization).not.toBeDefined();
   }
 
-  function expectNormalOctEncoded(attribute) {
+  function expectNormalOctEncoded(attribute, componentDatatype, isDraco) {
     expect(attribute.name).toBe("NORMAL");
     expect(attribute.semantic).toBe(VertexAttributeSemantic.NORMAL);
     expect(attribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
@@ -205,16 +205,15 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(attribute.normalized).toBe(false);
 
     var quantization = attribute.quantization;
-    expect(quantization.componentDatatype).toBe(
-      ComponentDatatype.UNSIGNED_SHORT
-    );
+    expect(quantization.componentDatatype).toBe(componentDatatype);
     expect(quantization.normalizationRange).toBeDefined();
     expect(quantization.octEncoded).toBe(true);
-    expect(quantization.octEncodedZXY).toBe(true);
+    var isZXY = isDraco;
+    expect(quantization.octEncodedZXY).toBe(isZXY);
     expect(quantization.quantizedVolumeDimensions).not.toBeDefined();
     expect(quantization.quantizedVolumeOffset).not.toBeDefined();
     expect(quantization.quantizedVolumeStepSize).not.toBeDefined();
-    expect(quantization.type).toBe(AttributeType.SCALAR);
+    expect(quantization.type).toBe(AttributeType.VEC2);
   }
 
   it("loads PointCloudRGB", function () {
@@ -311,7 +310,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       var attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPosition(attributes[0]);
-      expectNormalOctEncoded(attributes[1]);
+      expectNormalOctEncoded(
+        attributes[1],
+        ComponentDatatype.UNSIGNED_BYTE,
+        false
+      );
       expectColorRGB(attributes[2]);
     });
   });
@@ -325,7 +328,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       var primitive = components.nodes[0].primitives[0];
       var attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
-      expectPositionQuantized(attributes[0]);
+      expectPositionQuantized(attributes[0], ComponentDatatype.UNSIGNED_BYTE);
       expectColorRGB(attributes[1]);
     });
   });
@@ -340,7 +343,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       var attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPositionQuantized(attributes[0]);
-      expectNormalOctEncoded(attributes[1]);
+      expectNormalOctEncoded(
+        attributes[1],
+        ComponentDatatype.UNSIGNED_BYTE,
+        false
+      );
       expectColorRGB(attributes[2]);
     });
   });
@@ -355,7 +362,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       var attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPositionQuantized(attributes[0]);
-      expectNormal(attributes[1]);
+      expectNormalOctEncoded(
+        attributes[1],
+        ComponentDatatype.UNSIGNED_BYTE,
+        true
+      );
       expectColorRGB(attributes[2]);
     });
   });
@@ -423,25 +434,26 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       var components = loader.components;
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
-        temperature: {
-          type: MetadataType.SINGLE,
-          componentType: MetadataComponentType.FLOAT32,
-        },
-        secondaryColor: {
+        dimensions: {
           type: MetadataType.VEC3,
           componentType: MetadataComponentType.FLOAT32,
         },
+        name: {
+          type: MetadataType.SINGLE,
+          componentType: MetadataComponentType.STRING,
+        },
         id: {
           type: MetadataType.SINGLE,
-          componentType: MetadataComponentType.UINT16,
+          componentType: MetadataComponentType.UINT32,
         },
       });
 
       var primitive = components.nodes[0].primitives[0];
       var attributes = primitive.attributes;
-      expect(attributes.length).toBe(2);
+      expect(attributes.length).toBe(3);
       expectPosition(attributes[0]);
-      expectColorRGB(attributes[1]);
+      expectNormal(attributes[1]);
+      expectColorRGB(attributes[2]);
     });
   });
 

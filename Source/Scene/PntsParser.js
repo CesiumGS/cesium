@@ -404,7 +404,8 @@ function parseNormals(featureTable) {
       name: "NORMAL",
       semantic: VertexAttributeSemantic.NORMAL,
       typedArray: normals,
-      isOctEncoded: false,
+      octEncoded: false,
+      octEncodedZXY: false,
       componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC3,
     };
@@ -414,11 +415,16 @@ function parseNormals(featureTable) {
       ComponentDatatype.UNSIGNED_BYTE,
       2
     );
+    var quantizationBits = 16;
     return {
       name: "NORMAL",
       semantic: VertexAttributeSemantic.NORMAL,
       typedArray: normals,
-      isOctEncoded: true,
+      octEncoded: true,
+      octEncodedZXY: false,
+      quantizedRange: (1 << quantizationBits) - 1,
+      quantizedType: AttributeType.VEC2,
+      quantizedComponentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC3,
     };
