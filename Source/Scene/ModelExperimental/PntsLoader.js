@@ -1,3 +1,4 @@
+import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import CesiumMath from "../../Core/Math.js";
@@ -325,6 +326,10 @@ function makeAttribute(attributeInfo, context) {
   attribute.min = attributeInfo.min;
   attribute.max = attributeInfo.max;
   attribute.quantization = quantization;
+
+  if (attributeInfo.isRGB565) {
+    typedArray = AttributeCompression.decodeRGB565(typedArray);
+  }
 
   if (defined(attributeInfo.constantColor)) {
     attribute.constant = Cartesian4.fromColor(attributeInfo.constantColor);

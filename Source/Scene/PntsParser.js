@@ -345,8 +345,6 @@ function parseColors(featureTable) {
       isRGB565: false,
     };
   } else if (defined(featureTableJson.RGB565)) {
-    // TODO: Parse on the CPU, this feature isn't used often enough to
-    // warrant the GPU complexity.
     colors = featureTable.getPropertyArray(
       "RGB565",
       ComponentDatatype.UNSIGNED_SHORT,
@@ -357,7 +355,11 @@ function parseColors(featureTable) {
       semantic: VertexAttributeSemantic.COLOR,
       setIndex: 0,
       typedArray: colors,
-      componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      // These settings are for the ModelExperimental implementation
+      // which decodes on the CPU and uploads a VEC3 of float colors.
+      // PointCloud does the decoding on the GPU so uploads a
+      // UNSIGNED_SHORT instead.
+      componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC3,
       normalized: false,
       isRGB565: true,

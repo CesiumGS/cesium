@@ -160,6 +160,15 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(attribute.normalized).toBe(true);
   }
 
+  function expectColorRGB565(attribute) {
+    expect(attribute.name).toBe("COLOR");
+    expect(attribute.semantic).toBe(VertexAttributeSemantic.COLOR);
+    expect(attribute.setIndex).toBe(0);
+    expect(attribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+    expect(attribute.type).toBe(AttributeType.VEC3);
+    expect(attribute.normalized).toBe(false);
+  }
+
   function expectColorRGBA(attribute) {
     expect(attribute.name).toBe("COLOR");
     expect(attribute.semantic).toBe(VertexAttributeSemantic.COLOR);
@@ -246,7 +255,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       var attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
-      expectColorRGB(attributes[1]);
+      expectColorRGB565(attributes[1]);
     });
   });
 
