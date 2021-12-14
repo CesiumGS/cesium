@@ -2501,7 +2501,7 @@ function executeCommands(scene, passState) {
       scene._invertClassification.clear(context, passState);
 
       var opaqueClassificationFramebuffer = passState.framebuffer;
-      passState.framebuffer = scene._invertClassification._fbo;
+      passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
       us.updatePass(Pass.CESIUM_3D_TILE);

@@ -23,6 +23,7 @@ function FramebufferManager(options) {
     1
   );
 
+  this._color = defaultValue(options.color, true);
   this._depth = defaultValue(options.depth, false);
   this._depthStencil = defaultValue(options.depthStencil, false);
   //>>includeStart('debug', pragmas.debug);
@@ -52,7 +53,7 @@ function FramebufferManager(options) {
   this._depthRenderbuffer = undefined;
   this._depthTexture = undefined;
 
-  this._texturesSet = false;
+  this._attachmentsSet = false;
 }
 
 Object.defineProperties(FramebufferManager.prototype, {
@@ -108,25 +109,30 @@ FramebufferManager.prototype.update = function (
   //>>includeStart('debug', pragmas.debug);
   if (
     (!defined(width) || !defined(height)) &&
-    (this._createColorAttachments ||
+    ((this._color && this._createColorAttachments) ||
       ((this._depth || this._depthStencil) && this._createDepthAttachments))
   ) {
     throw new DeveloperError(
-      "width and height must be provided if color or depth attachments are created"
+      "width and height must be provided if color or depth attachments are created."
+    );
+  }
+  if (!this._color && !this._depth && !this._depthStencil) {
+    throw new DeveloperError(
+      "must enable at least one type of framebuffer attachment."
     );
   }
   //>>includeEnd('debug');
   depthTexture = defaultValue(depthTexture, false);
   hdr = defaultValue(hdr, false);
 
-  if (this._texturesSet || this.isDirty(width, height, hdr)) {
-    if (!this._texturesSet) {
+  if (this._attachmentsSet || this.isDirty(width, height, hdr)) {
+    if (!this._attachmentsSet) {
       this.destroyResources();
     }
     this._useHdr = hdr;
 
     // Create color texture
-    if (this._createColorAttachments) {
+    if (this._color && this._createColorAttachments) {
       var pixelDatatype = hdr
         ? context.halfFloatingPointTexture
           ? PixelDatatype.HALF_FLOAT
@@ -197,7 +203,7 @@ FramebufferManager.prototype.update = function (
       depthStencilRenderbuffer: this._depthStencilRenderbuffer,
       destroyAttachments: false,
     });
-    this._texturesSet = false;
+    this._attachmentsSet = false;
   }
 };
 
@@ -216,7 +222,21 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
   //>>includeEnd('debug');
   index = defaultValue(index, 0);
   this._colorTextures[index] = texture;
-  this._texturesSet = true;
+  this._attachmentsSet = true;
+};
+
+FramebufferManager.prototype.setDepthStencilRenderbuffer = function (
+  renderbuffer
+) {
+  //>>includeStart('debug', pragmas.debug);
+  if (this._createDepthAttachments) {
+    throw new DeveloperError(
+      "If setDepthStencilRenderbuffer is called, createDepthAttachments must be false."
+    );
+  }
+  //>>includeEnd('debug');
+  this._depthStencilRenderbuffer = renderbuffer;
+  this._attachmentsSet = true;
 };
 
 FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
@@ -228,7 +248,7 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   }
   //>>includeEnd('debug');
   this._depthStencilTexture = texture;
-  this._texturesSet = true;
+  this._attachmentsSet = true;
 };
 
 FramebufferManager.prototype.clear = function (
@@ -248,10 +268,13 @@ FramebufferManager.prototype.clear = function (
   passState.framebuffer = framebuffer;
 };
 
+FramebufferManager.prototype.destroyFramebuffer = function () {
+  this._framebuffer = this._framebuffer && this._framebuffer.destroy();
+};
+
 FramebufferManager.prototype.destroyResources = function () {
-  var i;
   var length = this._colorTextures.length;
-  for (i = 0; i < length; ++i) {
+  for (var i = 0; i < length; ++i) {
     var texture = this._colorTextures[i];
     if (defined(texture) && !texture.isDestroyed()) {
       this._colorTextures[i].destroy();
@@ -272,9 +295,6 @@ FramebufferManager.prototype.destroyResources = function () {
     this._depthTexture = undefined;
   }
 
-  if (defined(this._framebuffer)) {
-    this._framebuffer.destroy();
-    this._framebuffer = undefined;
-  }
+  this.destroyFramebuffer();
 };
 export default FramebufferManager;

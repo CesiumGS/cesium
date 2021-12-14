@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
@@ -28,8 +28,14 @@ function InvertClassification() {
   this._texture = undefined;
   this._classifiedTexture = undefined;
   this._depthStencilTexture = undefined;
-  this._fbo = undefined;
-  this._fboClassified = undefined;
+  this._fbo = new FramebufferManager({
+    createColorAttachments: false,
+    createDepthAttachments: false,
+  });
+  this._fboClassified = new FramebufferManager({
+    createColorAttachments: false,
+    createDepthAttachments: false,
+  });
 
   this._rsUnclassified = undefined;
   this._rsClassified = undefined;
@@ -225,9 +231,13 @@ InvertClassification.prototype.update = function (context) {
     }
   }
 
-  if (!defined(this._fbo) || textureChanged || previousFramebufferChanged) {
-    this._fbo = this._fbo && this._fbo.destroy();
-    this._fboClassified = this._fboClassified && this._fboClassified.destroy();
+  if (
+    !defined(this._fbo.framebuffer) ||
+    textureChanged ||
+    previousFramebufferChanged
+  ) {
+    this._fbo.destroyFramebuffer();
+    this._fboClassified.destroyFramebuffer();
 
     var depthStencilTexture;
     var depthStencilRenderbuffer;
@@ -239,21 +249,17 @@ InvertClassification.prototype.update = function (context) {
       depthStencilTexture = this._depthStencilTexture;
     }
 
-    this._fbo = new Framebuffer({
-      context: context,
-      colorTextures: [this._texture],
-      depthStencilTexture: depthStencilTexture,
-      depthStencilRenderbuffer: depthStencilRenderbuffer,
-      destroyAttachments: false,
-    });
+    this._fbo.setColorTexture(this._texture);
+    this._fbo.setDepthStencilTexture(depthStencilTexture);
+    if (defined(depthStencilRenderbuffer)) {
+      this._fbo.setDepthStencilRenderbuffer(depthStencilRenderbuffer);
+    }
+    this._fbo.update(context);
 
     if (!defined(this._previousFramebuffer)) {
-      this._fboClassified = new Framebuffer({
-        context: context,
-        colorTextures: [this._classifiedTexture],
-        depthStencilTexture: depthStencilTexture,
-        destroyAttachments: false,
-      });
+      this._fboClassified.setColorTexture(this._classifiedTexture);
+      this._fboClassified.setDepthStencilTexture(depthStencilTexture);
+      this._fboClassified.update(context);
     }
   }
 
@@ -324,12 +330,12 @@ InvertClassification.prototype.clear = function (context, passState) {
   var framebuffer = passState.framebuffer;
 
   if (defined(this._previousFramebuffer)) {
-    passState.framebuffer = this._fbo;
+    passState.framebuffer = this._fbo.framebuffer;
     this._clearColorCommand.execute(context, passState);
   } else {
-    passState.framebuffer = this._fbo;
+    passState.framebuffer = this._fbo.framebuffer;
     this._clearCommand.execute(context, passState);
-    passState.framebuffer = this._fboClassified;
+    passState.framebuffer = this._fboClassified.framebuffer;
     this._clearCommand.execute(context, passState);
   }
 
@@ -343,7 +349,7 @@ InvertClassification.prototype.executeClassified = function (
   if (!defined(this._previousFramebuffer)) {
     var framebuffer = passState.framebuffer;
 
-    passState.framebuffer = this._fboClassified;
+    passState.framebuffer = this._fboClassified.framebuffer;
     this._translucentCommand.execute(context, passState);
 
     passState.framebuffer = framebuffer;
@@ -363,7 +369,7 @@ InvertClassification.prototype.isDestroyed = function () {
 };
 
 InvertClassification.prototype.destroy = function () {
-  this._fbo = this._fbo && this._fbo.destroy();
+  this._fbo.destroyFramebuffer();
   this._texture = this._texture && this._texture.destroy();
   this._depthStencilTexture =
     this._depthStencilTexture && this._depthStencilTexture.destroy();
