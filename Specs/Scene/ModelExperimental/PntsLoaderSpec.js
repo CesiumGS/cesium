@@ -102,21 +102,30 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     var batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
     var properties = batchClass.properties;
 
-    for (var propertyName in expectedProperties) {
-      if (expectedProperties.hasOwnProperty(propertyName)) {
-        var expectedProperty = expectedProperties[propertyName];
-        var property = properties[propertyName];
-        expect(property).toBeDefined();
-        expect(property.type).toEqual(expectedProperty.type);
-        expect(property.componentType).toEqual(expectedProperty.componentType);
-      }
-    }
-
     expect(featureMetadata.propertyTableCount).toEqual(1);
     var propertyTable = featureMetadata.getPropertyTable(0);
     expect(propertyTable.getPropertyIds(0).sort()).toEqual(
       Object.keys(expectedProperties).sort()
     );
+
+    for (var propertyName in expectedProperties) {
+      if (expectedProperties.hasOwnProperty(propertyName)) {
+        var expectedProperty = expectedProperties[propertyName];
+        var property = properties[propertyName];
+
+        if (expectedProperty.isJson) {
+          // If the batch table had JSON properties, the property will not
+          // be in the schema, so check if we can access it.
+          expect(propertyTable.getProperty(0, propertyName)).toBeDefined();
+        } else {
+          // Check the property declaration is expected
+          expect(property.type).toEqual(expectedProperty.type);
+          expect(property.componentType).toEqual(
+            expectedProperty.componentType
+          );
+        }
+      }
+    }
   }
 
   function expectPosition(attribute) {
@@ -214,6 +223,15 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(quantization.quantizedVolumeOffset).not.toBeDefined();
     expect(quantization.quantizedVolumeStepSize).not.toBeDefined();
     expect(quantization.type).toBe(AttributeType.VEC2);
+  }
+
+  function expectBatchId(attribute) {
+    expect(attribute.name).toBe("BATCH_ID");
+    expect(attribute.semantic).toBe(VertexAttributeSemantic.FEATURE_ID);
+    expect(attribute.componentDatatype).toBe(ComponentDatatype.UNSIGNED_SHORT);
+    expect(attribute.type).toBe(AttributeType.SCALAR);
+    expect(attribute.normalized).toBe(false);
+    expect(attribute.quantization).not.toBeDefined();
   }
 
   it("loads PointCloudRGB", function () {
@@ -397,20 +415,25 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         },
         name: {
           type: MetadataType.SINGLE,
-          componentType: MetadataComponentType.STRING,
+          isJson: true,
         },
         id: {
           type: MetadataType.SINGLE,
-          componentType: MetadataComponentType.UINT16,
+          componentType: MetadataComponentType.UINT32,
         },
       });
 
       var primitive = components.nodes[0].primitives[0];
       var attributes = primitive.attributes;
-      expect(attributes.length).toBe(3);
+      expect(attributes.length).toBe(4);
       expectPositionQuantized(attributes[0]);
-      expectNormal(attributes[1]);
+      expectNormalOctEncoded(
+        attributes[1],
+        ComponentDatatype.UNSIGNED_BYTE,
+        true
+      );
       expectColorRGB(attributes[2]);
+      expectBatchId(attributes[3]);
     });
   });
 
@@ -440,7 +463,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         },
         name: {
           type: MetadataType.SINGLE,
-          componentType: MetadataComponentType.STRING,
+          isJson: true,
         },
         id: {
           type: MetadataType.SINGLE,
@@ -453,7 +476,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       expect(attributes.length).toBe(3);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
-      expectColorRGB(attributes[2]);
+      expectBatchId(attributes[2]);
     });
   });
 

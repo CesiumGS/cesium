@@ -443,10 +443,10 @@ function parseBatchIds(featureTable) {
     );
     return {
       name: "BATCH_ID",
-      semantic: VertexAttributeSemantic.BATCH_ID,
+      semantic: VertexAttributeSemantic.FEATURE_ID,
       typedArray: batchIds,
       componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
-      componentsPerAttribute: 1,
+      type: AttributeType.SCALAR,
     };
   }
 

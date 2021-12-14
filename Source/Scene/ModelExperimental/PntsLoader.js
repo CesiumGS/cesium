@@ -273,7 +273,7 @@ function processDracoAttributes(loader, draco, result) {
   // Transcode Batch ID (3D Tiles 1.0) -> Feature ID (3D Tiles Next)
   if (defined(result.BATCH_ID)) {
     parsedContent.batchIds = {
-      name: "FEATURE_ID",
+      name: "BATCH_ID",
       semantic: VertexAttributeSemantic.FEATURE_ID,
       typedArray: result.BATCH_ID.array,
       componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
