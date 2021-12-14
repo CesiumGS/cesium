@@ -45,12 +45,12 @@ Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
   },
   depthStencilTexture: {
     get: function () {
-      return this._framebuffer.depthStencilTexture;
+      return this._framebuffer.getDepthStencilTexture();
     },
   },
   depthStencilRenderbuffer: {
     get: function () {
-      return this._framebuffer.depthStencilRenderbuffer;
+      return this._framebuffer.getDepthStencilRenderbuffer();
     },
   },
   packedDepthTexture: {

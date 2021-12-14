@@ -13,6 +13,16 @@ import PixelFormat from "../Core/PixelFormat.js";
 /**
  * Creates a wrapper object around a framebuffer and its resources.
  *
+ * @param {Object} options Object with the following properties:
+ * @param {Number} [options.colorAttachmentsLength=1] The number of color attachments this FramebufferManager will create.
+ * @param {Boolean} [options.color=true] Whether the FramebufferManager will use color attachments.
+ * @param {Boolean} [options.depth=false] Whether the FramebufferManager will use depth attachments.
+ * @param {Boolean} [options.depthStencil=false] Whether the FramebufferManager will use depth-stencil attachments.
+ * @param {Boolean} [options.createColorAttachments=true] Whether the FramebufferManager will construct its own color attachments.
+ * @param {Boolean} [options.createDepthAttachments=true] Whether the FramebufferManager will construct its own depth attachments.*
+ *
+ * @exception {DeveloperError} Cannot have both a depth and depth-stencil attachment.
+ *
  * @private
  * @constructor
  */
@@ -60,16 +70,6 @@ Object.defineProperties(FramebufferManager.prototype, {
   framebuffer: {
     get: function () {
       return this._framebuffer;
-    },
-  },
-  depthStencilTexture: {
-    get: function () {
-      return this._depthStencilTexture;
-    },
-  },
-  depthStencilRenderbuffer: {
-    get: function () {
-      return this._depthStencilRenderbuffer;
     },
   },
   status: {
@@ -225,6 +225,10 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
   this._attachmentsSet = true;
 };
 
+FramebufferManager.prototype.getDepthStencilRenderbuffer = function () {
+  return this._depthStencilRenderbuffer;
+};
+
 FramebufferManager.prototype.setDepthStencilRenderbuffer = function (
   renderbuffer
 ) {
@@ -237,6 +241,10 @@ FramebufferManager.prototype.setDepthStencilRenderbuffer = function (
   //>>includeEnd('debug');
   this._depthStencilRenderbuffer = renderbuffer;
   this._attachmentsSet = true;
+};
+
+FramebufferManager.prototype.getDepthStencilTexture = function () {
+  return this._depthStencilTexture;
 };
 
 FramebufferManager.prototype.setDepthStencilTexture = function (texture) {

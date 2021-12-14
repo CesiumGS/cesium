@@ -264,7 +264,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
     if (defined(this._updateDepthCommand)) {
       if (
         !defined(this._updateDepthFramebuffer.framebuffer) ||
-        this._updateDepthFramebuffer.framebuffer.depthStencilTexture !==
+        this._updateDepthFramebuffer.getDepthStencilTexture() !==
           depthTextureToCopy ||
         this._updateDepthFramebuffer.getColorTexture() !==
           this._copyDepthFramebuffer.getColorTexture()
