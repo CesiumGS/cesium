@@ -3,11 +3,8 @@ import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
-import Renderbuffer from "../Renderer/Renderbuffer.js";
-import RenderbufferFormat from "../Renderer/RenderbufferFormat.js";
-import Texture from "../Renderer/Texture.js";
 
 /**
  * @private
@@ -23,7 +20,9 @@ function PickFramebuffer(context) {
   passState.viewport = new BoundingRectangle();
 
   this._context = context;
-  this._fb = undefined;
+  this._fb = new FramebufferManager({
+    depthStencil: true,
+  });
   this._passState = passState;
   this._width = 0;
   this._height = 0;
@@ -38,30 +37,11 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
     this._passState.scissorTest.rectangle
   );
 
-  // Initially create or recreate renderbuffers and framebuffer used for picking
-  if (!defined(this._fb) || this._width !== width || this._height !== height) {
-    this._width = width;
-    this._height = height;
-
-    this._fb = this._fb && this._fb.destroy();
-    this._fb = new Framebuffer({
-      context: context,
-      colorTextures: [
-        new Texture({
-          context: context,
-          width: width,
-          height: height,
-        }),
-      ],
-      depthStencilRenderbuffer: new Renderbuffer({
-        context: context,
-        width: width,
-        height: height,
-        format: RenderbufferFormat.DEPTH_STENCIL,
-      }),
-    });
-    this._passState.framebuffer = this._fb;
-  }
+  // Create or recreate renderbuffers and framebuffer used for picking
+  this._width = width;
+  this._height = height;
+  this._fb.update(context, width, height, false, false);
+  this._passState.framebuffer = this._fb.framebuffer;
 
   this._passState.viewport.width = width;
   this._passState.viewport.height = height;
@@ -81,7 +61,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
     y: screenSpaceRectangle.y,
     width: width,
     height: height,
-    framebuffer: this._fb,
+    framebuffer: this._fb.framebuffer,
   });
 
   var max = Math.max(width, height);
@@ -139,7 +119,7 @@ PickFramebuffer.prototype.isDestroyed = function () {
 };
 
 PickFramebuffer.prototype.destroy = function () {
-  this._fb = this._fb && this._fb.destroy();
+  this._fb.destroyResources();
   return destroyObject(this);
 };
 export default PickFramebuffer;
