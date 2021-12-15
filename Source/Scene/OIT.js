@@ -36,6 +36,7 @@ function OIT(context) {
   this._accumulationTexture = undefined;
 
   this._translucentFBO = new FramebufferManager({
+    colorAttachmentsLength: 2,
     createColorAttachments: false,
     createDepthAttachments: false,
   });
@@ -45,6 +46,7 @@ function OIT(context) {
   });
 
   this._adjustTranslucentFBO = new FramebufferManager({
+    colorAttachmentsLength: 2,
     createColorAttachments: false,
     depthStencil: false,
   });
@@ -142,16 +144,19 @@ function updateFramebuffers(oit, context) {
   var completeFBO = WebGLConstants.FRAMEBUFFER_COMPLETE;
   var supported = true;
 
+  var width = oit._accumulationTexture.width;
+  var height = oit._accumulationTexture.height;
+
   // if MRT is supported, attempt to make an FBO with multiple color attachments
   if (oit._translucentMRTSupport) {
     oit._translucentFBO.setColorTexture(oit._accumulationTexture, 0);
     oit._translucentFBO.setColorTexture(oit._revealageTexture, 1);
     oit._translucentFBO.setDepthStencilTexture(oit._depthStencilTexture);
-    oit._translucentFBO.update(context);
+    oit._translucentFBO.update(context, width, height);
 
     oit._adjustTranslucentFBO.setColorTexture(oit._accumulationTexture, 0);
     oit._adjustTranslucentFBO.setColorTexture(oit._revealageTexture, 1);
-    oit._adjustTranslucentFBO.update(context);
+    oit._adjustTranslucentFBO.update(context, width, height);
 
     if (
       oit._translucentFBO.status !== completeFBO ||
@@ -166,17 +171,17 @@ function updateFramebuffers(oit, context) {
   if (!oit._translucentMRTSupport) {
     oit._translucentFBO.setColorTexture(oit._accumulationTexture);
     oit._translucentFBO.setDepthStencilTexture(oit._depthStencilTexture);
-    oit._translucentFBO.update(context);
+    oit._translucentFBO.update(context, width, height);
 
     oit._alphaFBO.setColorTexture(oit._revealageTexture);
     oit._alphaFBO.setDepthStencilTexture(oit._depthStencilTexture);
-    oit._alphaFBO.update(context);
+    oit._alphaFBO.update(context, width, height);
 
     oit._adjustTranslucentFBO.setColorTexture(oit._accumulationTexture);
-    oit._adjustTranslucentFBO.update(context);
+    oit._adjustTranslucentFBO.update(context, width, height);
 
     oit._adjustAlphaFBO.setColorTexture(oit._revealageTexture);
-    oit._adjustAlphaFBO.update(context);
+    oit._adjustAlphaFBO.update(context, width, height);
 
     var translucentComplete = oit._translucentFBO.status === completeFBO;
     var alphaComplete = oit._alphaFBO.status === completeFBO;

@@ -254,12 +254,12 @@ InvertClassification.prototype.update = function (context) {
     if (defined(depthStencilRenderbuffer)) {
       this._fbo.setDepthStencilRenderbuffer(depthStencilRenderbuffer);
     }
-    this._fbo.update(context);
+    this._fbo.update(context, width, height);
 
     if (!defined(this._previousFramebuffer)) {
       this._fboClassified.setColorTexture(this._classifiedTexture);
       this._fboClassified.setDepthStencilTexture(depthStencilTexture);
-      this._fboClassified.update(context);
+      this._fboClassified.update(context, width, height);
     }
   }
 

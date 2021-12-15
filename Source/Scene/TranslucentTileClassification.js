@@ -119,20 +119,14 @@ function updateFramebuffers(transpClass, context, width, height) {
   transpClass._drawClassificationFBO.setDepthStencilTexture(
     transpClass._translucentDepthStencilTexture
   );
-  transpClass._drawClassificationFBO.update(
-    context,
-    width,
-    height,
-    false,
-    false
-  );
+  transpClass._drawClassificationFBO.update(context, width, height);
 
   transpClass._accumulationFBO.setDepthStencilTexture(
     transpClass._translucentDepthStencilTexture
   );
-  transpClass._accumulationFBO.update(context, width, height, false, false);
+  transpClass._accumulationFBO.update(context, width, height);
 
-  transpClass._packFBO.update(context, width, height, false, false);
+  transpClass._packFBO.update(context, width, height);
 }
 
 function updateResources(

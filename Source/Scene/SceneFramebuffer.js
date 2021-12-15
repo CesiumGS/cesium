@@ -2,6 +2,7 @@ import Color from "../Core/Color.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * @private
@@ -45,12 +46,19 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
   var width = viewport.width;
   var height = viewport.height;
   var depthTexture = context.depthTexture;
-  if (this._colorFramebuffer.isDirty(width, height, hdr)) {
-    this._colorFramebuffer.destroyResources();
-    this._colorFramebuffer.update(context, width, height, depthTexture, hdr);
-    this._idFramebuffer.destroyResources();
-    this._idFramebuffer.update(context, width, height, depthTexture);
-  }
+  var pixelDatatype = hdr
+    ? context.halfFloatingPointTexture
+      ? PixelDatatype.HALF_FLOAT
+      : PixelDatatype.FLOAT
+    : PixelDatatype.UNSIGNED_BYTE;
+  this._colorFramebuffer.update(
+    context,
+    width,
+    height,
+    depthTexture,
+    pixelDatatype
+  );
+  this._idFramebuffer.update(context, width, height, depthTexture);
 };
 
 SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {

@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
@@ -141,7 +142,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
       {
         uniformMap: {
           u_depthTexture: function () {
-            return globeDepth._colorFramebuffer._depthStencilTexture;
+            return globeDepth._colorFramebuffer.getDepthStencilTexture();
           },
         },
         owner: globeDepth,
@@ -226,13 +227,13 @@ GlobeDepth.prototype.update = function (
   var width = viewport.width;
   var height = viewport.height;
 
-  var textureChanged = this._colorFramebuffer.isDirty(width, height, hdr);
-  if (textureChanged) {
-    this._colorFramebuffer.destroyResources();
-    this._colorFramebuffer.update(context, width, height, true, hdr);
-    this._copyDepthFramebuffer.destroyResources();
-    this._copyDepthFramebuffer.update(context, width, height);
-  }
+  var pixelDatatype = hdr
+    ? context.halfFloatingPointTexture
+      ? PixelDatatype.HALF_FLOAT
+      : PixelDatatype.FLOAT
+    : PixelDatatype.UNSIGNED_BYTE;
+  this._colorFramebuffer.update(context, width, height, true, pixelDatatype);
+  this._copyDepthFramebuffer.update(context, width, height);
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;
 
@@ -255,7 +256,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
   if (
     clearGlobeDepth ||
-    depthTextureToCopy !== this._colorFramebuffer._depthStencilTexture
+    depthTextureToCopy !== this._colorFramebuffer.getDepthStencilTexture()
   ) {
     // First copy the depth to a temporary globe depth texture, then update the
     // main globe depth texture where the stencil bit for 3D Tiles is set.

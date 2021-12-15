@@ -50,10 +50,8 @@ PickDepthFramebuffer.prototype.update = function (
   var width = viewport.width;
   var height = viewport.height;
 
-  if (this._framebuffer.isDirty(context, width, height)) {
-    destroyResources(this);
-    createResources(this, context);
-  }
+  destroyResources(this);
+  createResources(this, context);
 
   var framebuffer = this.framebuffer;
   var passState = this._passState;

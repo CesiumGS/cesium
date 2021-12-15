@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
 
@@ -28,6 +29,7 @@ function GlobeTranslucencyFramebuffer() {
 }
 
 Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
+  // Exposed for testing
   classificationTexture: {
     get: function () {
       return this._framebuffer.getColorTexture();
@@ -38,6 +40,7 @@ Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
       return this._framebuffer.framebuffer;
     },
   },
+  // Exposed for testing
   packedDepthFramebuffer: {
     get: function () {
       return this._packedDepthFramebuffer.framebuffer;
@@ -48,6 +51,7 @@ Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
       return this._framebuffer.getDepthStencilTexture();
     },
   },
+  // Exposed for testing
   depthStencilRenderbuffer: {
     get: function () {
       return this._framebuffer.getDepthStencilRenderbuffer();
@@ -65,38 +69,20 @@ function destroyResources(globeTranslucency) {
   globeTranslucency._packedDepthFramebuffer.destroyResources();
 }
 
-// var pixelDatatype = hdr
-//   ? context.halfFloatingPointTexture
-//     ? PixelDatatype.HALF_FLOAT
-//     : PixelDatatype.FLOAT
-//   : PixelDatatype.UNSIGNED_BYTE;
-// globeTranslucency._colorTexture = new Texture({
-//   context: context,
-//   width: width,
-//   height: height,
-//   pixelFormat: PixelFormat.RGBA,
-//   pixelDatatype: pixelDatatype,
-//   sampler: Sampler.NEAREST,
-// });
-
 function updateResources(globeTranslucency, context, width, height, hdr) {
-  if (globeTranslucency._framebuffer.isDirty(width, height, hdr)) {
-    destroyResources(globeTranslucency);
-    globeTranslucency._framebuffer.update(
-      context,
-      width,
-      height,
-      context.depthTexture,
-      hdr
-    );
-    globeTranslucency._packedDepthFramebuffer.update(
-      context,
-      width,
-      height,
-      false,
-      false
-    );
-  }
+  var pixelDatatype = hdr
+    ? context.halfFloatingPointTexture
+      ? PixelDatatype.HALF_FLOAT
+      : PixelDatatype.FLOAT
+    : PixelDatatype.UNSIGNED_BYTE;
+  globeTranslucency._framebuffer.update(
+    context,
+    width,
+    height,
+    context.depthTexture,
+    pixelDatatype
+  );
+  globeTranslucency._packedDepthFramebuffer.update(context, width, height);
 }
 
 function updateCommands(globeTranslucency, context, width, height, passState) {
