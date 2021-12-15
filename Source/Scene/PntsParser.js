@@ -1,5 +1,6 @@
 import arraySlice from "../Core/arraySlice.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -17,6 +18,9 @@ var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 PntsParser.parse = function (arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   var uint8Array = new Uint8Array(arrayBuffer);
   var view = new DataView(arrayBuffer);

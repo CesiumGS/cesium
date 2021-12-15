@@ -11,6 +11,7 @@ import {
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
+import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 
 describe("Scene/ModelExperimental/PntsLoader", function () {
   var pointCloudRGBUrl =
@@ -45,8 +46,6 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/pointCloudWithPerPointProperties.pnts";
   var pointCloudWithUnicodePropertyNamesUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyNames/pointCloudWithUnicodePropertyNames.pnts";
-  var pointCloudWithTransformUrl =
-    "./Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/pointCloudWithTransform.pnts";
 
   var scene;
   var pntsLoaders = [];
@@ -70,21 +69,25 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ResourceCache.clearForSpecs();
   });
 
-  function loadPnts(pntsPath) {
-    var resource = Resource.createIfNeeded(pntsPath);
+  function loadPntsTypedArray(arrayBuffer) {
+    var loader = new PntsLoader({
+      arrayBuffer: arrayBuffer,
+    });
+    pntsLoaders.push(loader);
+    loader.load();
+    return waitForLoaderProcess(loader, scene);
+  }
 
+  function loadPnts(pntsPath) {
     return Resource.fetchArrayBuffer({
       url: pntsPath,
-    }).then(function (arrayBuffer) {
-      var loader = new PntsLoader({
-        pntsResource: resource,
-        arrayBuffer: arrayBuffer,
-      });
-      pntsLoaders.push(loader);
-      loader.load();
+    }).then(loadPntsTypedArray);
+  }
 
-      return waitForLoaderProcess(loader, scene);
-    });
+  function expectLoadError(arrayBuffer) {
+    expect(function () {
+      return loadPntsTypedArray(arrayBuffer);
+    }).toThrowRuntimeError();
   }
 
   function expectEmptyMetadata(featureMetadata) {
@@ -437,7 +440,6 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   it("loads PointCloudWGS84", function () {
-    fail();
     return loadPnts(pointCloudWGS84Url).then(function (loader) {
       var components = loader.components;
       expect(components).toBeDefined();
@@ -537,22 +539,86 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     });
   });
 
-  it("loads PointCloudWithTransform", function () {
-    fail();
-    return loadPnts(pointCloudWithTransformUrl).then(function (loader) {
-      var components = loader.components;
-      expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
-
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
-      expect(attributes.length).toBe(2);
-      expectPosition(attributes[0]);
-      expectColorRGB(attributes[1]);
+  it("throws with invalid version", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      version: 2,
     });
+    expectLoadError(arrayBuffer);
   });
 
-  // check if it throws for invalid  version
-  // check if it throws for other problems
-  // check if it destroys
+  it("throws if featureTableJsonByteLength is 0", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJsonByteLength: 0,
+    });
+    expectLoadError(arrayBuffer);
+  });
+
+  it("throws if the feature table does not contain POINTS_LENGTH", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POSITION: {
+          byteOffset: 0,
+        },
+      },
+    });
+    expectLoadError(arrayBuffer);
+  });
+
+  it("throws if the feature table does not contain POSITION or POSITION_QUANTIZED", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POINTS_LENGTH: 1,
+      },
+    });
+    expectLoadError(arrayBuffer);
+  });
+
+  it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POINTS_LENGTH: 1,
+        POSITION_QUANTIZED: {
+          byteOffset: 0,
+        },
+        QUANTIZED_VOLUME_OFFSET: [0.0, 0.0, 0.0],
+      },
+    });
+    expectLoadError(arrayBuffer);
+  });
+
+  it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POINTS_LENGTH: 1,
+        POSITION_QUANTIZED: {
+          byteOffset: 0,
+        },
+        QUANTIZED_VOLUME_SCALE: [1.0, 1.0, 1.0],
+      },
+    });
+    expectLoadError(arrayBuffer);
+  });
+
+  it("throws if the BATCH_ID semantic is defined but BATCHES_LENGTH is not", function () {
+    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+      featureTableJson: {
+        POINTS_LENGTH: 2,
+        POSITION: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        BATCH_ID: [0, 1],
+      },
+    });
+    expectLoadError(arrayBuffer);
+  });
+
+  it("destroys pnts loader", function () {
+    return loadPnts(pointCloudBatchedUrl).then(function (loader) {
+      expect(loader.components).toBeDefined();
+      expect(loader.isDestroyed()).toBe(false);
+
+      loader.destroy();
+
+      expect(loader.components).toBeUndefined();
+      expect(loader.isDestroyed()).toBe(true);
+    });
+  });
 });

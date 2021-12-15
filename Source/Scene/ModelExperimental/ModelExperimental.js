@@ -831,7 +831,6 @@ ModelExperimental.fromB3dm = function (options) {
 
 ModelExperimental.fromPnts = function (options) {
   var loaderOptions = {
-    pntsResource: options.resource,
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
     releaseGltfJson: options.releaseGltfJson,
@@ -843,7 +842,7 @@ ModelExperimental.fromPnts = function (options) {
 
   var modelOptions = {
     loader: loader,
-    resource: loaderOptions.pntsResource,
+    resource: options.resource,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,

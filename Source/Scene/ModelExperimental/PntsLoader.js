@@ -37,18 +37,13 @@ var MetallicRoughness = ModelComponents.MetallicRoughness;
 export default function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var pntsResource = options.pntsResource;
-  var baseResource = options.baseResource;
   var arrayBuffer = options.arrayBuffer;
   var byteOffset = defaultValue(options.byteOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.pntsResource", pntsResource);
   Check.typeOf.object("options.arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
 
-  this._pntsResource = pntsResource;
-  this._baseResource = baseResource;
   this._arrayBuffer = arrayBuffer;
   this._byteOffset = byteOffset;
 
