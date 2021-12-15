@@ -378,15 +378,45 @@ function computeApproximateExtrema(positions) {
   var minValue = -Number.MAX_VALUE;
   var min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
   var max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
-  for (var i = 0; i < samplesLength; ++i) {
-    var index = Math.floor(randomValues[i] * pointsLength);
-    var position = Cartesian3.unpack(
-      positionsArray,
-      index * 3,
-      scratchPosition
-    );
-    Cartesian3.minimumByComponent(min, position, min);
-    Cartesian3.maximumByComponent(max, position, max);
+  var i;
+  var index;
+  var position;
+  if (positions.isQuantized) {
+    for (i = 0; i < samplesLength; ++i) {
+      index = Math.floor(randomValues[i] * pointsLength);
+      position = Cartesian3.unpack(positionsArray, index * 3, scratchPosition);
+
+      // Dequantize the sampled position before computing the min/max
+      var quantizedVolumeOffset = positions.quantizedVolumeOffset;
+      var quantizedVolumeScale = positions.quantizedVolumeScale;
+      var quantizedRange = positions.quantizedRange;
+      position = Cartesian3.multiplyComponents(
+        position,
+        quantizedVolumeScale,
+        scratchPosition
+      );
+      position = Cartesian3.divideByScalar(
+        position,
+        quantizedRange,
+        scratchPosition
+      );
+      position = Cartesian3.add(
+        position,
+        quantizedVolumeOffset,
+        scratchPosition
+      );
+
+      Cartesian3.minimumByComponent(min, position, min);
+      Cartesian3.maximumByComponent(max, position, max);
+    }
+  } else {
+    for (i = 0; i < samplesLength; ++i) {
+      index = Math.floor(randomValues[i] * pointsLength);
+      position = Cartesian3.unpack(positionsArray, index * 3, scratchPosition);
+
+      Cartesian3.minimumByComponent(min, position, min);
+      Cartesian3.maximumByComponent(max, position, max);
+    }
   }
 
   positions.min = min;
