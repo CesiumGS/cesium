@@ -9,7 +9,6 @@ import {
   ResourceCache,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
-//import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 

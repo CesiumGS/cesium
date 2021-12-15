@@ -228,7 +228,7 @@ function initialize(pointCloud, options) {
 
   var normals = parsedContent.normals;
   if (defined(normals)) {
-    pointCloud._isOctEncoded16P = normals.isOctEncoded16P;
+    pointCloud._isOctEncoded16P = normals.octEncoded;
   }
 
   var colors = parsedContent.colors;
@@ -246,10 +246,7 @@ function initialize(pointCloud, options) {
     pointCloud._isRGB565 = colors.isRGB565;
   }
 
-  if (
-    defined(parsedContent.batchTableBinary) &&
-    defined(pointCloud._batchTableLoaded)
-  ) {
+  if (parsedContent.hasBatchIds) {
     pointCloud._batchTableLoaded(
       parsedContent.batchLength,
       parsedContent.batchTableJson,
