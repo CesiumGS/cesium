@@ -1,13 +1,13 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
-import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
 import when from "../../ThirdParty/when.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
@@ -349,14 +349,17 @@ function makeAttribute(attributeInfo, context) {
   return attribute;
 }
 
+// Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
+// See https://github.com/CesiumGS/cesium/issues/9730
+var randomNumberGenerator = new MersenneTwister(0);
 var randomValues;
+
 function getRandomValues(samplesLength) {
   // Use same random values across all runs
   if (!defined(randomValues)) {
-    CesiumMath.setRandomNumberSeed(0);
     randomValues = new Array(samplesLength);
     for (var i = 0; i < samplesLength; ++i) {
-      randomValues[i] = CesiumMath.nextRandomNumber();
+      randomValues[i] = randomNumberGenerator.random();
     }
   }
   return randomValues;

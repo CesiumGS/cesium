@@ -23,6 +23,7 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import MersenneTwister from "../ThirdParty/mersenne-twister.js";
 import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
@@ -260,15 +261,18 @@ function initialize(pointCloud, options) {
 var scratchMin = new Cartesian3();
 var scratchMax = new Cartesian3();
 var scratchPosition = new Cartesian3();
+
+// Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
+// See https://github.com/CesiumGS/cesium/issues/9730
+var randomNumberGenerator = new MersenneTwister(0);
 var randomValues;
 
 function getRandomValues(samplesLength) {
   // Use same random values across all runs
   if (!defined(randomValues)) {
-    CesiumMath.setRandomNumberSeed(0);
     randomValues = new Array(samplesLength);
     for (var i = 0; i < samplesLength; ++i) {
-      randomValues[i] = CesiumMath.nextRandomNumber();
+      randomValues[i] = randomNumberGenerator.random();
     }
   }
   return randomValues;
