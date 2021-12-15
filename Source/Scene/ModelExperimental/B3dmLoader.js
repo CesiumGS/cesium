@@ -40,9 +40,9 @@ var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} options.b3dmResource The {@link Resource} containing the B3DM.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the B3DM contents.
- * @param {Number} [options.byteOffset] The byte offset to the beginning of the B3DM contents in the array buffer.
+ * @param {Resource} options.b3dmResource The {@link Resource} containing the b3dm.
+ * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
+ * @param {Number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
@@ -262,7 +262,7 @@ B3dmLoader.prototype.load = function () {
 function handleError(b3dmLoader, error) {
   b3dmLoader.unload();
   b3dmLoader._state = B3dmLoaderState.FAILED;
-  var errorMessage = "Failed to load B3DM";
+  var errorMessage = "Failed to load b3dm";
   error = b3dmLoader.getError(errorMessage, error);
   b3dmLoader._promise.reject(error);
 }

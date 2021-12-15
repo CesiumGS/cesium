@@ -146,7 +146,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
   });
 
-  it("destroys B3DM loader", function () {
+  it("destroys b3dm loader", function () {
     var unloadGltfLoader = spyOn(
       GltfLoader.prototype,
       "unload"
