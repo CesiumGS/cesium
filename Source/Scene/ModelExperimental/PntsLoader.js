@@ -53,6 +53,7 @@ export default function PntsLoader(options) {
 
   this._promise = when.defer();
   this._state = ResourceLoaderState.UNLOADED;
+  this._buffers = [];
 
   // The batch table object contains a json and a binary component access using keys of the same name.
   this._components = undefined;
@@ -293,7 +294,7 @@ function processDracoAttributes(loader, draco, result) {
   parsedContent.styleableProperties = styleableProperties;
 }
 
-function makeAttribute(attributeInfo, context) {
+function makeAttribute(loader, attributeInfo, context) {
   var typedArray = attributeInfo.typedArray;
   var quantization;
   if (attributeInfo.octEncoded) {
@@ -338,11 +339,13 @@ function makeAttribute(attributeInfo, context) {
   if (defined(attributeInfo.constantColor)) {
     attribute.constant = Cartesian4.fromColor(attributeInfo.constantColor);
   } else {
-    attribute.buffer = Buffer.createVertexBuffer({
+    var buffer = Buffer.createVertexBuffer({
       typedArray: typedArray,
       context: context,
       usage: BufferUsage.STATIC_DRAW,
     });
+    loader._buffers.push(buffer);
+    attribute.buffer = buffer;
     attribute.typedArray = typedArray;
   }
 
@@ -423,28 +426,28 @@ function computeApproximateExtrema(positions) {
   positions.max = max;
 }
 
-function makeAttributes(parsedContent, context) {
+function makeAttributes(loader, parsedContent, context) {
   var attributes = [];
   var attribute;
   var positions = parsedContent.positions;
   if (defined(positions)) {
     computeApproximateExtrema(positions);
-    attribute = makeAttribute(positions, context);
+    attribute = makeAttribute(loader, positions, context);
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.normals)) {
-    attribute = makeAttribute(parsedContent.normals, context);
+    attribute = makeAttribute(loader, parsedContent.normals, context);
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.colors)) {
-    attribute = makeAttribute(parsedContent.colors, context);
+    attribute = makeAttribute(loader, parsedContent.colors, context);
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.batchIds)) {
-    attribute = makeAttribute(parsedContent.batchIds, context);
+    attribute = makeAttribute(loader, parsedContent.batchIds, context);
     attributes.push(attribute);
   }
 
@@ -487,7 +490,7 @@ function makeComponents(loader, context) {
   material.metallicRoughness = metallicRoughness;
 
   var primitive = new Primitive();
-  primitive.attributes = makeAttributes(parsedContent, context);
+  primitive.attributes = makeAttributes(loader, parsedContent, context);
   primitive.primitiveType = PrimitiveType.POINTS;
   primitive.material = material;
 
@@ -519,5 +522,11 @@ function makeComponents(loader, context) {
 }
 
 PntsLoader.prototype.unload = function () {
+  var buffers = this._buffers;
+  for (var i = 0; i < buffers.length; i++) {
+    buffers[i].destroy();
+  }
+  buffers.length = 0;
+
   this._components = undefined;
 };
