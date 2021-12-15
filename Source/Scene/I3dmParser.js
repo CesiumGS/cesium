@@ -30,6 +30,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   //>>includeEnd('debug');
 
   var byteStart = defaultValue(byteOffset, 0);
+  byteOffset = byteStart;
 
   var uint8Array = new Uint8Array(arrayBuffer);
   var view = new DataView(arrayBuffer);

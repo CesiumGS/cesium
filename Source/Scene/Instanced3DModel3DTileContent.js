@@ -7,7 +7,6 @@ import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import I3dmParser from "./I3dmParser.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -21,6 +20,7 @@ import Axis from "./Axis.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
+import I3dmParser from "./I3dmParser.js";
 import ModelInstanceCollection from "./ModelInstanceCollection.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
