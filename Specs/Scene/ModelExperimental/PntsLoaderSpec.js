@@ -69,7 +69,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ResourceCache.clearForSpecs();
   });
 
-  function loadPntsTypedArray(arrayBuffer) {
+  function loadPntsArrayBuffer(arrayBuffer) {
     var loader = new PntsLoader({
       arrayBuffer: arrayBuffer,
     });
@@ -81,12 +81,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   function loadPnts(pntsPath) {
     return Resource.fetchArrayBuffer({
       url: pntsPath,
-    }).then(loadPntsTypedArray);
+    }).then(loadPntsArrayBuffer);
   }
 
   function expectLoadError(arrayBuffer) {
     expect(function () {
-      return loadPntsTypedArray(arrayBuffer);
+      return loadPntsArrayBuffer(arrayBuffer);
     }).toThrowRuntimeError();
   }
 
