@@ -180,9 +180,10 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
+      console.log(loader.components.transform);
       Matrix4.multiply(
         model._modelMatrix,
-        loader.transform,
+        loader.components.transform,
         model._modelMatrix
       );
 
