@@ -87,14 +87,12 @@ function B3dmLoader(options) {
   this._loadAsTypedArray = loadAsTypedArray;
 
   this._state = B3dmLoaderState.UNLOADED;
-
   this._promise = when.defer();
 
   this._gltfLoader = undefined;
 
   // Loaded results.
   this._batchLength = 0;
-  this._propertyTable = undefined;
 
   // The batch table object contains a json and a binary component access using keys of the same name.
   this._batchTable = undefined;
@@ -139,6 +137,7 @@ Object.defineProperties(B3dmLoader.prototype, {
       return this._gltfLoader.texturesLoadedPromise;
     },
   },
+
   /**
    * The cache key of the resource
    *
@@ -160,7 +159,6 @@ Object.defineProperties(B3dmLoader.prototype, {
    * @memberof B3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
-   * @default {@link Matrix4.IDENTITY}
    * @readonly
    * @private
    */
@@ -197,8 +195,9 @@ B3dmLoader.prototype.load = function () {
     ComponentDatatype.FLOAT,
     3
   );
+  var transform = Matrix4.clone(Matrix4.IDENTITY);
   if (defined(rtcCenter)) {
-    this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
+    transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
   }
 
   this._batchTable = {
@@ -229,7 +228,7 @@ B3dmLoader.prototype.load = function () {
       }
 
       var components = gltfLoader.components;
-      components.transform = that._transform;
+      components.transform = transform;
       createFeatureMetadata(that, components);
       that._components = components;
 

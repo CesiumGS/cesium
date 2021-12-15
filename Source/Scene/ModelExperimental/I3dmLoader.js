@@ -1,5 +1,7 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
+import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
+import AxisAlignedBoundingBox from "../../Core/AxisAlignedBoundingBox.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
@@ -11,6 +13,7 @@ import FeatureMetadata from "../FeatureMetadata.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
 import I3dmParser from "../I3dmParser.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import MetadataClass from "../MetadataClass.js";
@@ -22,9 +25,6 @@ import ResourceLoader from "../ResourceLoader.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Transforms from "../../Core/Transforms.js";
 import when from "../../ThirdParty/when.js";
-import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
-import AttributeType from "../AttributeType.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
 
 var I3dmLoaderState = {
   UNLOADED: 0,
@@ -65,8 +65,8 @@ function I3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   var i3dmResource = options.i3dmResource;
-  var arrayBuffer = options.arrayBuffer;
   var baseResource = options.baseResource;
+  var arrayBuffer = options.arrayBuffer;
   var byteOffset = defaultValue(options.byteOffset, 0);
   var releaseGltfJson = defaultValue(options.releaseGltfJson, false);
   var asynchronous = defaultValue(options.asynchronous, true);
@@ -105,6 +105,7 @@ function I3dmLoader(options) {
   this._batchTable = undefined;
   this._featureTable = undefined;
   this._instancesLength = 0;
+  this._components = undefined;
 }
 
 if (defined(Object.create)) {
@@ -144,6 +145,7 @@ Object.defineProperties(I3dmLoader.prototype, {
       return this._gltfLoader.texturesLoadedPromise;
     },
   },
+
   /**
    * The cache key of the resource
    *
@@ -165,7 +167,6 @@ Object.defineProperties(I3dmLoader.prototype, {
    * @memberof I3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
-   * @default {@link Matrix4.IDENTITY}
    * @readonly
    * @private
    */
@@ -213,6 +214,7 @@ I3dmLoader.prototype.load = function () {
     ComponentDatatype.FLOAT,
     3
   );
+
   if (defined(rtcCenter)) {
     this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
   }
@@ -261,9 +263,9 @@ I3dmLoader.prototype.load = function () {
       }
 
       var components = gltfLoader.components;
-      components.transform = that._transform;
       createInstances(that, components);
       createFeatureMetadata(that, components);
+      components.transform = that._transform;
       that._components = components;
 
       that._state = I3dmLoaderState.READY;
@@ -330,8 +332,7 @@ function createFeatureMetadata(loader, components) {
   components.featureMetadata = featureMetadata;
 }
 
-var positionScratch = new Cartesian3();
-var propertyScratch1 = new Array(4);
+var scratchPosition = new Cartesian3();
 function createInstances(loader, components) {
   var i;
   var featureTable = loader._featureTable;
@@ -346,6 +347,10 @@ function createInstances(loader, components) {
     ComponentDatatype.FLOAT,
     3
   );
+
+  if (defined(rtcCenter)) {
+    rtcCenter = Cartesian3.unpack(rtcCenter);
+  }
 
   var eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
   var hasRotation =
@@ -370,51 +375,37 @@ function createInstances(loader, components) {
 
   var instancePositions = Cartesian3.unpackArray(translationTypedArray);
   var instancePosition = new Cartesian3();
-
-  var instanceNormalRight = new Cartesian3();
-  var instanceNormalUp = new Cartesian3();
-  var instanceNormalForward = new Cartesian3();
-  var instanceRotation = new Matrix3();
   var instanceQuaternion = new Quaternion();
-  var instanceQuaternionArray = new Array(4);
-
   var instanceScale = new Cartesian3();
-  var instanceScaleArray = new Array(3);
 
-  var instanceTransform = new Matrix4();
-
-  // For I3DMs that do not define an RTC center, we manually compute a BoundingSphere and store
+  // For I3DMs that do not define an RTC center, we manually compute a center and store
   // positions relative to the center, to be uploaded to the GPU. This avoids jittering at higher
   // precisions.
   if (!defined(rtcCenter)) {
-    var positionBoundingSphere = BoundingSphere.fromPoints(instancePositions);
+    var center = AxisAlignedBoundingBox.fromPoints(instancePositions).center;
 
     for (i = 0; i < instancePositions.length; i++) {
-      Cartesian3.subtract(
+      var positionRtc = Cartesian3.subtract(
         instancePositions[i],
-        positionBoundingSphere.center,
-        positionScratch
+        center,
+        scratchPosition
       );
 
-      translationTypedArray[3 * i + 0] = positionScratch.x;
-      translationTypedArray[3 * i + 1] = positionScratch.y;
-      translationTypedArray[3 * i + 2] = positionScratch.z;
+      translationTypedArray[3 * i + 0] = positionRtc.x;
+      translationTypedArray[3 * i + 1] = positionRtc.y;
+      translationTypedArray[3 * i + 2] = positionRtc.z;
     }
 
     // Set the center of the bounding sphere as the RTC center transform.
-    loader._transform = Matrix4.fromTranslation(positionBoundingSphere.center);
+    loader._transform = Matrix4.fromTranslation(center);
   }
 
   for (i = 0; i < instancesLength; i++) {
-    // Get the instance position
-    instancePosition = Cartesian3.clone(instancePositions[i]);
+    // Get the global instance position
+    instancePosition = Cartesian3.clone(instancePositions[i], instancePosition);
 
     if (defined(rtcCenter)) {
-      Cartesian3.add(
-        instancePosition,
-        Cartesian3.unpack(rtcCenter),
-        instancePosition
-      );
+      Cartesian3.add(instancePosition, rtcCenter, instancePosition);
     }
 
     // Get the instance rotation, if present
@@ -423,28 +414,16 @@ function createInstances(loader, components) {
         featureTable,
         eastNorthUp,
         i,
-        instanceQuaternion,
         instancePosition,
-        instanceNormalUp,
-        instanceNormalRight,
-        instanceNormalForward,
-        instanceRotation,
-        instanceTransform
+        instanceQuaternion
       );
-      Quaternion.pack(instanceQuaternion, instanceQuaternionArray, 0);
-      rotationTypedArray[4 * i + 0] = instanceQuaternionArray[0];
-      rotationTypedArray[4 * i + 1] = instanceQuaternionArray[1];
-      rotationTypedArray[4 * i + 2] = instanceQuaternionArray[2];
-      rotationTypedArray[4 * i + 3] = instanceQuaternionArray[3];
+      Quaternion.pack(instanceQuaternion, rotationTypedArray, 4 * i);
     }
 
     // Get the instance scale, if present
     if (hasScale) {
       processScale(featureTable, i, instanceScale);
-      Cartesian3.pack(instanceScale, instanceScaleArray, 0);
-      scaleTypedArray[3 * i + 0] = instanceScaleArray[0];
-      scaleTypedArray[3 * i + 1] = instanceScaleArray[1];
-      scaleTypedArray[3 * i + 2] = instanceScaleArray[2];
+      Cartesian3.pack(instanceScale, instanceScaleArray, 3 * i);
     }
 
     // Get the batchId
@@ -527,7 +506,7 @@ function createInstances(loader, components) {
 
 /**
  * Returns a typed array of positions from the I3DM's feature table. The positions
- * returned are dequantized, if dequantization is applied.
+ * returned are dequantized, if quantization is applied.
  *
  * @private
  */
@@ -569,54 +548,64 @@ function getPositions(featureTable, instancesLength) {
       );
     }
 
-    for (var i = 0; i < quantizedPositions.length / 3; i++) {
-      var quantizedPosition = quantizedPositions[i];
+    var dequantizedPositions = new Float32Array(quantizedPositions.length);
+    for (var i = 0; i < instancesLength; i++) {
       for (var j = 0; j < 3; j++) {
-        quantizedPositions[3 * i + j] =
-          (quantizedPosition[j] / 65535.0) * quantizedVolumeScale[j] +
+        var index = 3 * i + j;
+        dequantizedPositions[index] =
+          (quantizedPosition[index] / 65535.0) * quantizedVolumeScale[j] +
           quantizedVolumeOffset[j];
       }
     }
 
-    return quantizedPositions;
-
-    // eslint-disable-next-line no-else-return
-  } else {
-    throw new RuntimeError(
-      "Either POSITION or POSITION_QUANTIZED must be defined for each instance."
-    );
+    return dequantizedPositions;
   }
+
+  throw new RuntimeError(
+    "Either POSITION or POSITION_QUANTIZED must be defined for each instance."
+  );
 }
 
-var propertyScratch2 = new Array(4);
+var scratchProperty1 = new Array(4);
+var scratchProperty2 = new Array(4);
+
+var scratchNormalUp = new Cartesian3();
+var scratchNormalRight = new Cartesian3();
+var scratchNormalForward = new Cartesian3();
+var scratchRotation = new Matrix3();
+var scratchInstanceTransform = new Matrix4();
+
 function processRotation(
   featureTable,
   eastNorthUp,
   i,
-  instanceQuaternion,
   instancePosition,
-  instanceNormalUp,
-  instanceNormalRight,
-  instanceNormalForward,
-  instanceRotation,
-  instanceTransform
+  result
 ) {
+  var hasCustomOrientation = false;
+  var instanceNormalUp = scratchNormalUp;
+  var instanceNormalRight = scratchNormalRight;
+  var instanceNormalForward = scratchNormalForward;
+  var instanceRotation = scratchRotation;
+  var instanceTransform = scratchInstanceTransform;
+  var instanceQuaternion = result;
+
   // Get the instance rotation
   var normalUp = featureTable.getProperty(
     "NORMAL_UP",
     ComponentDatatype.FLOAT,
     3,
     i,
-    propertyScratch1
+    scratchProperty1
   );
   var normalRight = featureTable.getProperty(
     "NORMAL_RIGHT",
     ComponentDatatype.FLOAT,
     3,
     i,
-    propertyScratch2
+    scratchProperty2
   );
-  var hasCustomOrientation = false;
+
   if (defined(normalUp)) {
     if (!defined(normalRight)) {
       throw new RuntimeError(
@@ -632,14 +621,14 @@ function processRotation(
       ComponentDatatype.UNSIGNED_SHORT,
       2,
       i,
-      propertyScratch1
+      scratchProperty1
     );
     var octNormalRight = featureTable.getProperty(
       "NORMAL_RIGHT_OCT32P",
       ComponentDatatype.UNSIGNED_SHORT,
       2,
       i,
-      propertyScratch2
+      scratchProperty2
     );
     if (defined(octNormalUp)) {
       if (!defined(octNormalRight)) {
@@ -696,7 +685,7 @@ function processRotation(
 }
 
 function processScale(featureTable, i, instanceScale) {
-  instanceScale = Cartesian3.fromElements(1.0, 1.0, 1.0, instanceScale);
+  instanceScale = Cartesian3.clone(Cartesian3.ONE, instanceScale);
   var scale = featureTable.getProperty("SCALE", ComponentDatatype.FLOAT, 1, i);
   if (defined(scale)) {
     Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);

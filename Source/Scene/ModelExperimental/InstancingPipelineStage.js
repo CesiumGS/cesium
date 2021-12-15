@@ -128,21 +128,9 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     shaderBuilder.addDefine("USE_LEGACY_INSTANCING", ShaderDestination.VERTEX);
     shaderBuilder.addUniform(
       "mat4",
-      "u_instance_modifiedModelView",
-      ShaderDestination.VERTEX
-    );
-    shaderBuilder.addUniform(
-      "mat4",
       "u_instance_nodeTransform",
       ShaderDestination.VERTEX
     );
-    uniformMap.u_instance_modifiedModelView = function () {
-      return Matrix4.multiply(
-        frameState.context.uniformState.view,
-        renderResources.model.loader.components.transform,
-        new Matrix4()
-      );
-    };
     uniformMap.u_instance_nodeTransform = function () {
       return renderResources.modelMatrix;
     };
@@ -252,12 +240,6 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
       scale,
       transformScratch
     );
-
-    // If the transforms are in world space, the Y_UP_TO_Z_UP transform that is applied to the model matrix
-    // should not be applied to the transform.
-    if (instances.transformInWorldSpace) {
-      Matrix4.multiplyTransformation(Axis.Z_UP_TO_Y_UP, transform, transform);
-    }
 
     var offset = elements * i;
 
