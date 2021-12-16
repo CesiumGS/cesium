@@ -14,6 +14,7 @@ import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
 function GlobeTranslucencyFramebuffer() {
   this._framebuffer = new FramebufferManager({
     depthStencil: true,
+    supportsDepthTexture: true,
   });
   this._packedDepthFramebuffer = new FramebufferManager();
 
@@ -75,13 +76,7 @@ function updateResources(globeTranslucency, context, width, height, hdr) {
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
-  globeTranslucency._framebuffer.update(
-    context,
-    width,
-    height,
-    context.depthTexture,
-    pixelDatatype
-  );
+  globeTranslucency._framebuffer.update(context, width, height, pixelDatatype);
   globeTranslucency._packedDepthFramebuffer.update(context, width, height);
 }
 

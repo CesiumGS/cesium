@@ -40,7 +40,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   // Create or recreate renderbuffers and framebuffer used for picking
   this._width = width;
   this._height = height;
-  this._fb.update(context, width, height, false);
+  this._fb.update(context, width, height);
   this._passState.framebuffer = this._fb.framebuffer;
 
   this._passState.viewport.width = width;

@@ -23,6 +23,7 @@ function PointCloudEyeDomeLighting() {
   this._framebuffer = new FramebufferManager({
     colorAttachmentsLength: 2,
     depth: true,
+    supportsDepthTexture: true,
   });
 
   this._drawCommand = undefined;

@@ -21,6 +21,7 @@ function GlobeDepth() {
 
   this._colorFramebuffer = new FramebufferManager({
     depthStencil: true,
+    supportsDepthTexture: true,
   });
   this._copyDepthFramebuffer = new FramebufferManager();
   this._tempCopyDepthFramebuffer = new FramebufferManager();
@@ -232,7 +233,7 @@ GlobeDepth.prototype.update = function (
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
-  this._colorFramebuffer.update(context, width, height, true, pixelDatatype);
+  this._colorFramebuffer.update(context, width, height, pixelDatatype);
   this._copyDepthFramebuffer.update(context, width, height);
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;

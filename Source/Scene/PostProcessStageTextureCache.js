@@ -300,7 +300,6 @@ function updateFramebuffers(cache, context) {
       context,
       textureWidth,
       textureHeight,
-      false,
       framebuffer.pixelDatatype,
       framebuffer.pixelFormat
     );

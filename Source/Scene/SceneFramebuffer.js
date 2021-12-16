@@ -10,9 +10,11 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
 function SceneFramebuffer() {
   this._colorFramebuffer = new FramebufferManager({
     depthStencil: true,
+    supportsDepthTexture: true,
   });
   this._idFramebuffer = new FramebufferManager({
     depthStencil: true,
+    supportsDepthTexture: true,
   });
 
   this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
@@ -45,20 +47,13 @@ Object.defineProperties(SceneFramebuffer.prototype, {
 SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
   var width = viewport.width;
   var height = viewport.height;
-  var depthTexture = context.depthTexture;
   var pixelDatatype = hdr
     ? context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
-  this._colorFramebuffer.update(
-    context,
-    width,
-    height,
-    depthTexture,
-    pixelDatatype
-  );
-  this._idFramebuffer.update(context, width, height, depthTexture);
+  this._colorFramebuffer.update(context, width, height, pixelDatatype);
+  this._idFramebuffer.update(context, width, height);
 };
 
 SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {

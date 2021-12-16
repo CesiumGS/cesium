@@ -10,6 +10,7 @@ function PickDepthFramebuffer() {
   this._framebuffer = new FramebufferManager({
     color: false,
     depthStencil: true,
+    supportsDepthTexture: true,
   });
   this._passState = undefined;
 }
@@ -30,7 +31,7 @@ function createResources(pickDepth, context) {
   var width = context.drawingBufferWidth;
   var height = context.drawingBufferHeight;
 
-  pickDepth._framebuffer.update(context, width, height, true);
+  pickDepth._framebuffer.update(context, width, height);
 
   var passState = new PassState(context);
   passState.blendingEnabled = false;

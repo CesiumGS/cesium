@@ -18,6 +18,7 @@ import PixelFormat from "../Core/PixelFormat.js";
  * @param {Boolean} [options.color=true] Whether the FramebufferManager will use color attachments.
  * @param {Boolean} [options.depth=false] Whether the FramebufferManager will use depth attachments.
  * @param {Boolean} [options.depthStencil=false] Whether the FramebufferManager will use depth-stencil attachments.
+ * @param {Boolean} [options.supportsDepthTexture=false] Whether the FramebufferManager will create a depth texture when the extensions are supported.
  * @param {Boolean} [options.createColorAttachments=true] Whether the FramebufferManager will construct its own color attachments.
  * @param {Boolean} [options.createDepthAttachments=true] Whether the FramebufferManager will construct its own depth attachments.*
  *
@@ -36,6 +37,10 @@ function FramebufferManager(options) {
   this._color = defaultValue(options.color, true);
   this._depth = defaultValue(options.depth, false);
   this._depthStencil = defaultValue(options.depthStencil, false);
+  this._supportsDepthTexture = defaultValue(
+    options.supportsDepthTexture,
+    false
+  );
   //>>includeStart('debug', pragmas.debug);
   if (!this._color && !this._depth && !this._depthStencil) {
     throw new DeveloperError(
@@ -103,7 +108,6 @@ FramebufferManager.prototype.update = function (
   context,
   width,
   height,
-  depthTexture,
   pixelDatatype,
   pixelFormat
 ) {
@@ -112,7 +116,6 @@ FramebufferManager.prototype.update = function (
     throw new DeveloperError("width and height must be defined.");
   }
   //>>includeEnd('debug');
-  depthTexture = defaultValue(depthTexture, false);
   pixelDatatype = defaultValue(
     pixelDatatype,
     this._color ? PixelDatatype.UNSIGNED_BYTE : undefined
@@ -141,7 +144,7 @@ FramebufferManager.prototype.update = function (
 
     // Create depth stencil texture or renderbuffer
     if (this._depthStencil && this._createDepthAttachments) {
-      if (depthTexture) {
+      if (this._supportsDepthTexture && context.depthTexture) {
         this._depthStencilTexture = new Texture({
           context: context,
           width: width,
@@ -162,7 +165,7 @@ FramebufferManager.prototype.update = function (
 
     // Create depth texture
     if (this._depth && this._createDepthAttachments) {
-      if (depthTexture) {
+      if (this._supportsDepthTexture && context.depthTexture) {
         this._depthTexture = new Texture({
           context: context,
           width: width,
