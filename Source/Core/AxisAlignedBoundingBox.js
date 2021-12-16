@@ -70,7 +70,7 @@ AxisAlignedBoundingBox.fromCorners = function (minimum, maximum, result) {
   result.minimum = Cartesian3.clone(minimum, result.minimum);
   result.maximum = Cartesian3.clone(maximum, result.maximum);
   result.center = Cartesian3.midpoint(minimum, maximum, result.center);
-
+  
   return result;
 };
 

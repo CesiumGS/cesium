@@ -341,7 +341,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
         minimumHeight: 0.0,
         maximumHeight: 6.0,
         quantizedVertices: new Uint16Array([
-          // order is sw, nw, se, ne, extra vertex in nw quadrant
+          // order is sw, nw, se, ne, extra vertex between nw and ne quadrant
           // u
           0,
           0,

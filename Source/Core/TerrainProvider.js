@@ -22,7 +22,7 @@ function TerrainProvider() {
 
 Object.defineProperties(TerrainProvider.prototype, {
   /**
-   * Gets an event that is raised when the terrain provider encounters an asynchronous error..  By subscribing
+   * Gets an event that is raised when the terrain provider encounters an asynchronous error. By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of {@link TileProviderError}.
    * @memberof TerrainProvider.prototype
@@ -106,7 +106,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
    * information is not available.
    * @memberof TerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -262,6 +262,67 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
 
 /**
  * @private
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast
+ * @returns {Number}
+ */
+TerrainProvider.getSkirtVertexCount = function (
+  westIndicesSouthToNorth,
+  southIndicesEastToWest,
+  eastIndicesNorthToSouth,
+  northIndicesWestToEast
+) {
+  return (
+    westIndicesSouthToNorth.length +
+    southIndicesEastToWest.length +
+    eastIndicesNorthToSouth.length +
+    northIndicesWestToEast.length
+  );
+};
+
+/**
+ * 3x3 grid
+ * - 16 edge triangles
+ * - 48 indices
+ *
+ *   |\|\|
+ * |/|   |/|
+ * |/|   |/|
+ *   |\|\|
+ *
+ * @private
+ * @param {Number} skirtVertexCount
+ * @returns {Number}
+ */
+TerrainProvider.getSkirtIndexCount = function (skirtVertexCount) {
+  return (skirtVertexCount - 4) * 2 * 3;
+};
+
+/**
+ * 3x3 grid
+ * - 16 edge triangles
+ * - 4 cap triangles
+ * - 60 indices
+ *
+ *  /|\|\|\
+ * |/|   |/|
+ * |/|   |/|
+ *  \|\|\|/
+ *
+ * @private
+ * @param {Number} skirtVertexCount
+ * @returns {Number}
+ */
+TerrainProvider.getSkirtIndexCountWithFilledCorners = function (
+  skirtVertexCount
+) {
+  return ((skirtVertexCount - 4) * 2 + 4) * 3;
+};
+
+/**
+ * @private
  */
 TerrainProvider.addSkirtIndices = function (
   westIndicesSouthToNorth,
@@ -295,6 +356,72 @@ TerrainProvider.addSkirtIndices = function (
   );
   vertexIndex += eastIndicesNorthToSouth.length;
   addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
+};
+
+TerrainProvider.addSkirtIndicesWithFilledCorners = function (
+  westIndicesSouthToNorth,
+  southIndicesEastToWest,
+  eastIndicesNorthToSouth,
+  northIndicesWestToEast,
+  vertexCount,
+  indices,
+  offset
+) {
+  // Add skirt indices without filled corners
+  TerrainProvider.addSkirtIndices(
+    westIndicesSouthToNorth,
+    southIndicesEastToWest,
+    eastIndicesNorthToSouth,
+    northIndicesWestToEast,
+    vertexCount,
+    indices,
+    offset
+  );
+
+  const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
+    westIndicesSouthToNorth,
+    southIndicesEastToWest,
+    eastIndicesNorthToSouth,
+    northIndicesWestToEast
+  );
+  const skirtIndexCountWithoutCaps = TerrainProvider.getSkirtIndexCount(
+    skirtVertexCount
+  );
+
+  const cornerStartIdx = offset + skirtIndexCountWithoutCaps;
+
+  const cornerSWIndex = westIndicesSouthToNorth[0];
+  const cornerNWIndex = northIndicesWestToEast[0];
+  const cornerNEIndex = eastIndicesNorthToSouth[0];
+  const cornerSEIndex = southIndicesEastToWest[0];
+
+  // Indices based on edge order in addSkirtIndices
+  const westSouthIndex = vertexCount;
+  const westNorthIndex = westSouthIndex + westIndicesSouthToNorth.length - 1;
+  const southEastIndex = westNorthIndex + 1;
+  const southWestIndex = southEastIndex + southIndicesEastToWest.length - 1;
+  const eastNorthIndex = southWestIndex + 1;
+  const eastSouthIndex = eastNorthIndex + eastIndicesNorthToSouth.length - 1;
+  const northWestIndex = eastSouthIndex + 1;
+  const northEastIndex = northWestIndex + northIndicesWestToEast.length - 1;
+
+  // Connect the corner vertices with the skirt vertices extending from the corner
+
+  indices[cornerStartIdx + 0] = cornerSWIndex;
+  indices[cornerStartIdx + 1] = westSouthIndex;
+  indices[cornerStartIdx + 2] = southWestIndex;
+
+  indices[cornerStartIdx + 3] = cornerSEIndex;
+  indices[cornerStartIdx + 4] = southEastIndex;
+  indices[cornerStartIdx + 5] = eastSouthIndex;
+
+  indices[cornerStartIdx + 6] = cornerNEIndex;
+  indices[cornerStartIdx + 7] = eastNorthIndex;
+  indices[cornerStartIdx + 8] = northEastIndex;
+
+  indices[cornerStartIdx + 9] = cornerNWIndex;
+  indices[cornerStartIdx + 10] = northWestIndex;
+  indices[cornerStartIdx + 11] = westNorthIndex;
 };
 
 function getEdgeIndices(width, height) {
@@ -446,7 +573,7 @@ TerrainProvider.prototype.getTileDataAvailable =
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {Promise<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 TerrainProvider.prototype.loadTileDataAvailability =
   DeveloperError.throwInstantiationError;

@@ -539,7 +539,7 @@ describe(
         });
       });
 
-      it("renders a globe with an ElevationContour", function () {
+      it("renders a globe with ElevationContour", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.material = Material.fromType("ElevationContour");
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
@@ -565,7 +565,7 @@ describe(
         });
       });
 
-      it("renders a globe with a SlopeRamp", function () {
+      it("renders a globe with SlopeRamp", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.material = Material.fromType("SlopeRamp");
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
@@ -617,7 +617,7 @@ describe(
         });
       });
 
-      it("renders a globe with a ElevationRamp", function () {
+      it("renders a globe with ElevationRamp", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.material = Material.fromType("ElevationRamp");
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);

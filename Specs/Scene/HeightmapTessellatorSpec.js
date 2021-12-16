@@ -185,10 +185,9 @@ describe("Scene/HeightmapTessellator", function () {
       height: heightSample,
     });
 
-    expect(encoding.decodePosition(vertices, index)).toEqualEpsilon(
-      expectedVertexPosition,
-      1.0
-    );
+    expect(
+      encoding.decodePosition(vertices, index, new Cartesian3())
+    ).toEqualEpsilon(expectedVertexPosition, 1.0);
   }
 
   it("creates mesh without skirt", function () {

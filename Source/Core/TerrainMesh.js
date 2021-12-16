@@ -24,10 +24,10 @@ import defaultValue from "./defaultValue.js";
  * @param {Number} [vertexStride=6] The number of components in each vertex.
  * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
  * @param {TerrainEncoding} encoding Information used to decode the mesh.
- * @param {Number[]} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
- * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
- * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
- * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
+ * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
  *
  * @private
  */
@@ -131,25 +131,25 @@ function TerrainMesh(
 
   /**
    * The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
-   * @type {Number[]}
+   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.westIndicesSouthToNorth = westIndicesSouthToNorth;
 
   /**
    * The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
-   * @type {Number[]}
+   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.southIndicesEastToWest = southIndicesEastToWest;
 
   /**
    * The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
-   * @type {Number[]}
+   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.eastIndicesNorthToSouth = eastIndicesNorthToSouth;
 
   /**
    * The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
-   * @type {Number[]}
+   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 }

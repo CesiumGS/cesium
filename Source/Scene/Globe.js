@@ -593,7 +593,7 @@ function makeShadersDirty(globe) {
   const fragmentSources = [GroundAtmosphere];
   if (
     defined(globe._material) &&
-    (!requireNormals || globe._terrainProvider.requestVertexNormals)
+    (!requireNormals || globe._terrainProvider.hasVertexNormals)
   ) {
     fragmentSources.push(globe._material.shaderSource);
     defines.push("APPLY_MATERIAL");

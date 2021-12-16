@@ -304,7 +304,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
    * information is not available.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -488,7 +488,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {Promise<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

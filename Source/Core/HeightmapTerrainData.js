@@ -168,7 +168,7 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof HeightmapTerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
    */
   waterMask: {
     get: function () {

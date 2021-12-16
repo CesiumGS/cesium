@@ -108,7 +108,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof GoogleEarthEnterpriseTerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
    */
   waterMask: {
     get: function () {
@@ -383,7 +383,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
 
 /**
  * Determines if a given child tile is available, based on the
- * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
+ * {@link GoogleEarthEnterpriseTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
  *

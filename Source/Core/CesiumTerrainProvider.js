@@ -1133,7 +1133,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * exists deeper in the tree rather than it all being discoverable at the root. However, a tile that
    * is available now will not become unavailable in the future.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {
@@ -1206,7 +1206,7 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {Promise<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
