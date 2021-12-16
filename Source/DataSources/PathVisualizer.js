@@ -452,7 +452,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   var showProperty = pathGraphics._show;
   var polyline = item.polyline;
   var show =
-    entity.isShowing && (!defined(showProperty) || showProperty.getValue(time));
+    entity.isShowing && entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
   //While we want to show the path, there may not actually be anything to show
   //depending on lead/trail settings.  Compute the interval of the path to
