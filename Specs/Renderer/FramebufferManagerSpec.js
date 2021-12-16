@@ -200,6 +200,10 @@ describe(
     });
 
     it("creates multiple color attachments", function () {
+      if (!context.drawBuffers) {
+        return;
+      }
+
       var length = 2;
       fbm = new FramebufferManager({
         colorAttachmentsLength: length,
@@ -284,6 +288,10 @@ describe(
     });
 
     it("destroyResources destroys attachments and framebuffer", function () {
+      if (!context.drawBuffers) {
+        return;
+      }
+
       fbm = new FramebufferManager({
         colorAttachmentsLength: 2,
         depth: true,
