@@ -104,7 +104,8 @@ FramebufferManager.prototype.update = function (
   width,
   height,
   depthTexture,
-  pixelDatatype
+  pixelDatatype,
+  pixelFormat
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
@@ -116,6 +117,7 @@ FramebufferManager.prototype.update = function (
     pixelDatatype,
     this._color ? PixelDatatype.UNSIGNED_BYTE : undefined
   );
+  pixelFormat = defaultValue(pixelFormat, PixelFormat.RGBA);
 
   if (this.isDirty(width, height, pixelDatatype)) {
     this.destroyResources();
@@ -130,7 +132,7 @@ FramebufferManager.prototype.update = function (
           context: context,
           width: width,
           height: height,
-          pixelFormat: PixelFormat.RGBA,
+          pixelFormat: pixelFormat,
           pixelDatatype: pixelDatatype,
           sampler: Sampler.NEAREST,
         });
