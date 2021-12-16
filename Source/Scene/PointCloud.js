@@ -468,7 +468,7 @@ function createResources(pointCloud, frameState) {
       );
     } else {
       pointCloud._boundingSphere = computeApproximateBoundingSphereFromPositions(
-        positions
+        positions.typedArray
       );
     }
   }
