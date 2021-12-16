@@ -218,6 +218,36 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
   this._colorTextures[index] = texture;
 };
 
+FramebufferManager.prototype.getDepthRenderbuffer = function () {
+  return this._depthRenderbuffer;
+};
+
+FramebufferManager.prototype.setDepthRenderbuffer = function (renderbuffer) {
+  //>>includeStart('debug', pragmas.debug);
+  if (this._createDepthAttachments) {
+    throw new DeveloperError(
+      "createDepthAttachments must be false if setDepthRenderbuffer is called."
+    );
+  }
+  //>>includeEnd('debug');
+  this._depthRenderbuffer = renderbuffer;
+};
+
+FramebufferManager.prototype.getDepthTexture = function () {
+  return this._depthTexture;
+};
+
+FramebufferManager.prototype.setDepthTexture = function (texture) {
+  //>>includeStart('debug', pragmas.debug);
+  if (this._createDepthAttachments) {
+    throw new DeveloperError(
+      "createDepthAttachments must be false if setDepthTexture is called."
+    );
+  }
+  //>>includeEnd('debug');
+  this._depthTexture = texture;
+};
+
 FramebufferManager.prototype.getDepthStencilRenderbuffer = function () {
   return this._depthStencilRenderbuffer;
 };
