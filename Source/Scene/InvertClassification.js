@@ -6,12 +6,8 @@ import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
-import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
-import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
-import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import TextureWrap from "../Renderer/TextureWrap.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import BlendingState from "./BlendingState.js";
 import StencilConstants from "./StencilConstants.js";
@@ -25,15 +21,11 @@ function InvertClassification() {
   this.previousFramebuffer = undefined;
   this._previousFramebuffer = undefined;
 
-  this._texture = undefined;
-  this._classifiedTexture = undefined;
   this._depthStencilTexture = undefined;
   this._fbo = new FramebufferManager({
-    createColorAttachments: false,
     createDepthAttachments: false,
   });
   this._fboClassified = new FramebufferManager({
-    createColorAttachments: false,
     createDepthAttachments: false,
   });
 
@@ -57,13 +49,13 @@ function InvertClassification() {
   var that = this;
   this._uniformMap = {
     colorTexture: function () {
-      return that._texture;
+      return that._fbo.getColorTexture();
     },
     depthTexture: function () {
       return that._depthStencilTexture;
     },
     classifiedTexture: function () {
-      return that._classifiedTexture;
+      return that._fboClassified.getColorTexture();
     },
   };
 }
@@ -176,51 +168,21 @@ var opaqueFS =
   "}\n";
 
 InvertClassification.prototype.update = function (context) {
-  var texture = this._texture;
+  var texture = this._fbo.getColorTexture();
   var previousFramebufferChanged =
-    !defined(texture) || this.previousFramebuffer !== this._previousFramebuffer;
+    this.previousFramebuffer !== this._previousFramebuffer;
   this._previousFramebuffer = this.previousFramebuffer;
 
   var width = context.drawingBufferWidth;
   var height = context.drawingBufferHeight;
-
   var textureChanged =
     !defined(texture) || texture.width !== width || texture.height !== height;
+
   if (textureChanged || previousFramebufferChanged) {
-    this._texture = this._texture && this._texture.destroy();
-    this._classifiedTexture =
-      this._classifiedTexture && this._classifiedTexture.destroy();
     this._depthStencilTexture =
       this._depthStencilTexture && this._depthStencilTexture.destroy();
 
-    this._texture = new Texture({
-      context: context,
-      width: width,
-      height: height,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      sampler: new Sampler({
-        wrapS: TextureWrap.CLAMP_TO_EDGE,
-        wrapT: TextureWrap.CLAMP_TO_EDGE,
-        minificationFilter: TextureMinificationFilter.LINEAR,
-        magnificationFilter: TextureMagnificationFilter.LINEAR,
-      }),
-    });
-
     if (!defined(this._previousFramebuffer)) {
-      this._classifiedTexture = new Texture({
-        context: context,
-        width: width,
-        height: height,
-        pixelFormat: PixelFormat.RGBA,
-        pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-        sampler: new Sampler({
-          wrapS: TextureWrap.CLAMP_TO_EDGE,
-          wrapT: TextureWrap.CLAMP_TO_EDGE,
-          minificationFilter: TextureMinificationFilter.LINEAR,
-          magnificationFilter: TextureMagnificationFilter.LINEAR,
-        }),
-      });
       this._depthStencilTexture = new Texture({
         context: context,
         width: width,
@@ -236,7 +198,7 @@ InvertClassification.prototype.update = function (context) {
     textureChanged ||
     previousFramebufferChanged
   ) {
-    this._fbo.destroyFramebuffer();
+    this._fbo.destroyResources();
     this._fboClassified.destroyFramebuffer();
 
     var depthStencilTexture;
@@ -249,7 +211,6 @@ InvertClassification.prototype.update = function (context) {
       depthStencilTexture = this._depthStencilTexture;
     }
 
-    this._fbo.setColorTexture(this._texture);
     this._fbo.setDepthStencilTexture(depthStencilTexture);
     if (defined(depthStencilRenderbuffer)) {
       this._fbo.setDepthStencilRenderbuffer(depthStencilRenderbuffer);
@@ -257,7 +218,6 @@ InvertClassification.prototype.update = function (context) {
     this._fbo.update(context, width, height);
 
     if (!defined(this._previousFramebuffer)) {
-      this._fboClassified.setColorTexture(this._classifiedTexture);
       this._fboClassified.setDepthStencilTexture(depthStencilTexture);
       this._fboClassified.update(context, width, height);
     }
@@ -369,8 +329,7 @@ InvertClassification.prototype.isDestroyed = function () {
 };
 
 InvertClassification.prototype.destroy = function () {
-  this._fbo.destroyFramebuffer();
-  this._texture = this._texture && this._texture.destroy();
+  this._fbo.destroyResources();
   this._depthStencilTexture =
     this._depthStencilTexture && this._depthStencilTexture.destroy();
 
