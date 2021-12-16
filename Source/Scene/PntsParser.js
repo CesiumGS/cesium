@@ -145,6 +145,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     parsedContent.colors = colors;
     parsedContent.hasColors = parsedContent.hasColors || defined(colors);
     parsedContent.hasConstantColor = defined(parsedContent.constantColor);
+    parsedContent.isTranslucent = defined(colors) && colors.isTranslucent;
   }
 
   if (!parsedContent.hasBatchIds) {
@@ -331,6 +332,7 @@ function parseColors(featureTable) {
       type: AttributeType.VEC4,
       normalized: true,
       isRGB565: false,
+      isTranslucent: true,
     };
   } else if (defined(featureTableJson.RGB)) {
     colors = featureTable.getPropertyArray(
@@ -347,6 +349,7 @@ function parseColors(featureTable) {
       type: AttributeType.VEC3,
       normalized: true,
       isRGB565: false,
+      isTranslucent: false,
     };
   } else if (defined(featureTableJson.RGB565)) {
     colors = featureTable.getPropertyArray(
@@ -367,6 +370,7 @@ function parseColors(featureTable) {
       type: AttributeType.VEC3,
       normalized: false,
       isRGB565: true,
+      isTranslucent: false,
     };
   } else if (defined(featureTableJson.CONSTANT_RGBA)) {
     var constantRGBA = featureTable.getGlobalProperty(
@@ -389,6 +393,7 @@ function parseColors(featureTable) {
       componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC4,
       isQuantized: false,
+      isTranslucent: true,
     };
   }
 

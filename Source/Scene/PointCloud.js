@@ -202,6 +202,7 @@ function initialize(pointCloud, options) {
   pointCloud._hasNormals = parsedContent.hasNormals;
   pointCloud._hasColors = parsedContent.hasColors;
   pointCloud._hasBatchIds = parsedContent.hasBatchIds;
+  pointCloud._isTranslucent = parsedContent.isTranslucent;
 
   // If points are not batched and there are per-point properties, use the
   // properties as metadata for styling purposes.
