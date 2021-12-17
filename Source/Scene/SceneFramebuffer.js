@@ -27,8 +27,8 @@ function SceneFramebuffer() {
 }
 
 function destroyResources(post) {
-  post._colorFramebuffer.destroyResources();
-  post._idFramebuffer.destroyResources();
+  post._colorFramebuffer.destroy();
+  post._idFramebuffer.destroy();
 }
 
 Object.defineProperties(SceneFramebuffer.prototype, {

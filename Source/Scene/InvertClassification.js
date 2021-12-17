@@ -198,8 +198,8 @@ InvertClassification.prototype.update = function (context) {
     textureChanged ||
     previousFramebufferChanged
   ) {
-    this._fbo.destroyResources();
-    this._fboClassified.destroyFramebuffer();
+    this._fbo.destroy();
+    this._fboClassified.destroy();
 
     var depthStencilTexture;
     var depthStencilRenderbuffer;
@@ -329,7 +329,8 @@ InvertClassification.prototype.isDestroyed = function () {
 };
 
 InvertClassification.prototype.destroy = function () {
-  this._fbo.destroyResources();
+  this._fbo.destroy();
+  this._fboClassified.destroy();
   this._depthStencilTexture =
     this._depthStencilTexture && this._depthStencilTexture.destroy();
 

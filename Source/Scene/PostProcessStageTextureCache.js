@@ -244,7 +244,10 @@ function getFramebuffer(cache, stageName, dependencies) {
     pixelDatatype: pixelDatatype,
     clearColor: clearColor,
     stages: [stageName],
-    buffer: new FramebufferManager(),
+    buffer: new FramebufferManager({
+      pixelFormat: pixelFormat,
+      pixelDatatype: pixelDatatype,
+    }),
     clear: undefined,
   };
 
@@ -270,7 +273,7 @@ function releaseResources(cache) {
   var length = framebuffers.length;
   for (var i = 0; i < length; ++i) {
     var framebuffer = framebuffers[i];
-    framebuffer.buffer.destroyResources();
+    framebuffer.buffer.destroy();
   }
 }
 
@@ -296,13 +299,7 @@ function updateFramebuffers(cache, context) {
       textureHeight = size;
     }
 
-    framebuffer.buffer.update(
-      context,
-      textureWidth,
-      textureHeight,
-      framebuffer.pixelDatatype,
-      framebuffer.pixelFormat
-    );
+    framebuffer.buffer.update(context, textureWidth, textureHeight);
     framebuffer.clear = new ClearCommand({
       color: framebuffer.clearColor,
       framebuffer: framebuffer.buffer.framebuffer,

@@ -116,7 +116,7 @@ function destroyFramebuffers(autoexposure) {
 
   var length = framebuffers.length;
   for (var i = 0; i < length; ++i) {
-    framebuffers[i].destroyResources();
+    framebuffers[i].destroy();
   }
   autoexposure._framebuffers = undefined;
 
@@ -140,7 +140,7 @@ function createFramebuffers(autoexposure, context) {
     width = Math.max(Math.ceil(width / 3.0), 1.0);
     height = Math.max(Math.ceil(height / 3.0), 1.0);
     framebuffers[i] = new FramebufferManager();
-    framebuffers[i].update(context, width, height, false, pixelDatatype);
+    framebuffers[i].update(context, width, height, pixelDatatype);
   }
 
   var lastTexture = framebuffers[length - 1].getColorTexture(0);
@@ -148,7 +148,6 @@ function createFramebuffers(autoexposure, context) {
     context,
     lastTexture.width,
     lastTexture.height,
-    false,
     pixelDatatype
   );
   autoexposure._framebuffers = framebuffers;

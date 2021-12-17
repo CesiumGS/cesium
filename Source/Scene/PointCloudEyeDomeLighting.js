@@ -52,7 +52,7 @@ Object.defineProperties(PointCloudEyeDomeLighting.prototype, {
 });
 
 function destroyFramebuffer(processor) {
-  processor._framebuffer.destroyResources();
+  processor._framebuffer.destroy();
   processor._drawCommand = undefined;
   processor._clearCommand = undefined;
 }

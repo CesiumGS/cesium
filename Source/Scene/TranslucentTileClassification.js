@@ -96,9 +96,9 @@ function destroyTextures(transpClass) {
 }
 
 function destroyFramebuffers(transpClass) {
-  transpClass._drawClassificationFBO.destroyResources();
-  transpClass._accumulationFBO.destroyResources();
-  transpClass._packFBO.destroyResources();
+  transpClass._drawClassificationFBO.destroy();
+  transpClass._accumulationFBO.destroy();
+  transpClass._packFBO.destroy();
 }
 
 function updateTextures(transpClass, context, width, height) {

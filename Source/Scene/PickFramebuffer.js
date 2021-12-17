@@ -119,7 +119,7 @@ PickFramebuffer.prototype.isDestroyed = function () {
 };
 
 PickFramebuffer.prototype.destroy = function () {
-  this._fb.destroyResources();
+  this._fb.destroy();
   return destroyObject(this);
 };
 export default PickFramebuffer;

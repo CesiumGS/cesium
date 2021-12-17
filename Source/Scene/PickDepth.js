@@ -28,7 +28,7 @@ function updateFramebuffers(pickDepth, context, depthTexture) {
 
   var textureChanged = pickDepth._framebuffer.isDirty(width, height);
   if (!defined(pickDepth.framebuffer) || textureChanged) {
-    pickDepth._framebuffer.destroyResources();
+    pickDepth._framebuffer.destroy();
     pickDepth._framebuffer.update(context, width, height);
   }
 }
@@ -98,7 +98,7 @@ PickDepth.prototype.isDestroyed = function () {
 };
 
 PickDepth.prototype.destroy = function () {
-  this._framebuffer.destroyResources();
+  this._framebuffer.destroy();
   if (defined(this._copyDepthCommand)) {
     this._copyDepthCommand.shaderProgram =
       defined(this._copyDepthCommand.shaderProgram) &&

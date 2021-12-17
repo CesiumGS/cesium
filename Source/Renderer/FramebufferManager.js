@@ -66,6 +66,7 @@ function FramebufferManager(options) {
   this._width = undefined;
   this._height = undefined;
   this._pixelDatatype = undefined;
+  this._pixelFormat = undefined;
 
   this._framebuffer = undefined;
   this._colorTextures = undefined;
@@ -76,6 +77,8 @@ function FramebufferManager(options) {
   this._depthStencilTexture = undefined;
   this._depthRenderbuffer = undefined;
   this._depthTexture = undefined;
+
+  this._attachmentsDirty = false;
 }
 
 Object.defineProperties(FramebufferManager.prototype, {
@@ -91,17 +94,24 @@ Object.defineProperties(FramebufferManager.prototype, {
   },
 });
 
-FramebufferManager.prototype.isDirty = function (width, height, pixelDatatype) {
+FramebufferManager.prototype.isDirty = function (
+  width,
+  height,
+  pixelDatatype,
+  pixelFormat
+) {
   var dimensionChanged = this._width !== width || this._height !== height;
-  var attachmentsNeedUpdate =
-    (this._color && !defined(this._colorTextures[0])) ||
-    (this._color && !this._createColorAttachments) ||
-    (this._depth && !this._createDepthAttachments) ||
-    (this._depthStencil && !this._createDepthAttachments);
-  var datatypeChanged =
-    defined(pixelDatatype) && this._pixelDatatype !== pixelDatatype;
+  var pixelChanged =
+    (defined(pixelDatatype) && this._pixelDatatype !== pixelDatatype) ||
+    (defined(pixelFormat) && this._pixelFormat !== pixelFormat);
 
-  return dimensionChanged || attachmentsNeedUpdate || datatypeChanged;
+  return (
+    this._attachmentsDirty ||
+    dimensionChanged ||
+    pixelChanged ||
+    !defined(this._framebuffer) ||
+    (this._color && !defined(this._colorTextures[0]))
+  );
 };
 
 FramebufferManager.prototype.update = function (
@@ -120,13 +130,18 @@ FramebufferManager.prototype.update = function (
     pixelDatatype,
     this._color ? PixelDatatype.UNSIGNED_BYTE : undefined
   );
-  pixelFormat = defaultValue(pixelFormat, PixelFormat.RGBA);
+  pixelFormat = defaultValue(
+    pixelFormat,
+    this._color ? PixelFormat.RGBA : undefined
+  );
 
   if (this.isDirty(width, height, pixelDatatype)) {
-    this.destroyResources();
+    this.destroy();
     this._width = width;
     this._height = height;
     this._pixelDatatype = pixelDatatype;
+    this._pixelFormat = pixelFormat;
+    this._attachmentsDirty = false;
 
     // Create color texture
     if (this._color && this._createColorAttachments) {
@@ -198,10 +213,18 @@ FramebufferManager.prototype.update = function (
 
 FramebufferManager.prototype.getColorTexture = function (index) {
   index = defaultValue(index, 0);
+  //>>includeStart('debug', pragmas.debug);
+  if (index >= this._colorAttachmentsLength) {
+    throw new DeveloperError(
+      "index must be smaller than total number of color attachments."
+    );
+  }
+  //>>includeEnd('debug');
   return this._colorTextures[index];
 };
 
 FramebufferManager.prototype.setColorTexture = function (texture, index) {
+  index = defaultValue(index, 0);
   //>>includeStart('debug', pragmas.debug);
   if (this._createColorAttachments) {
     throw new DeveloperError(
@@ -214,8 +237,8 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
     );
   }
   //>>includeEnd('debug');
-  index = defaultValue(index, 0);
   this._colorTextures[index] = texture;
+  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthRenderbuffer = function () {
@@ -231,6 +254,7 @@ FramebufferManager.prototype.setDepthRenderbuffer = function (renderbuffer) {
   }
   //>>includeEnd('debug');
   this._depthRenderbuffer = renderbuffer;
+  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthTexture = function () {
@@ -246,6 +270,7 @@ FramebufferManager.prototype.setDepthTexture = function (texture) {
   }
   //>>includeEnd('debug');
   this._depthTexture = texture;
+  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthStencilRenderbuffer = function () {
@@ -263,6 +288,7 @@ FramebufferManager.prototype.setDepthStencilRenderbuffer = function (
   }
   //>>includeEnd('debug');
   this._depthStencilRenderbuffer = renderbuffer;
+  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthStencilTexture = function () {
@@ -278,6 +304,7 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   }
   //>>includeEnd('debug');
   this._depthStencilTexture = texture;
+  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.clear = function (
@@ -301,7 +328,7 @@ FramebufferManager.prototype.destroyFramebuffer = function () {
   this._framebuffer = this._framebuffer && this._framebuffer.destroy();
 };
 
-FramebufferManager.prototype.destroyResources = function () {
+FramebufferManager.prototype.destroy = function () {
   if (this._color && this._createColorAttachments) {
     var length = this._colorTextures.length;
     for (var i = 0; i < length; ++i) {

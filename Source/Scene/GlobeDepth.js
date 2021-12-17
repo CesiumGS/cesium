@@ -58,19 +58,10 @@ Object.defineProperties(GlobeDepth.prototype, {
 });
 
 function destroyFramebuffers(globeDepth) {
-  globeDepth._colorFramebuffer.destroyResources();
-  globeDepth._copyDepthFramebuffer.destroyResources();
-  globeDepth._updateDepthFramebuffer.destroyResources();
-}
-
-function setUpdateDepthResources(globeDepth, passState) {
-  var colorTexture = globeDepth._copyDepthFramebuffer.getColorTexture();
-  globeDepth._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
-
-  var depthStencilTexture = passState.framebuffer.depthStencilTexture;
-  globeDepth._updateDepthFramebuffer.setDepthStencilTexture(
-    depthStencilTexture
-  );
+  globeDepth._colorFramebuffer.destroy();
+  globeDepth._copyDepthFramebuffer.destroy();
+  globeDepth._tempCopyDepthFramebuffer.destroy();
+  globeDepth._updateDepthFramebuffer.destroy();
 }
 
 function updateCopyCommands(globeDepth, context, width, height, passState) {
@@ -273,10 +264,17 @@ GlobeDepth.prototype.executeUpdateDepth = function (
       ) {
         var width = this._copyDepthFramebuffer.getColorTexture().width;
         var height = this._copyDepthFramebuffer.getColorTexture().height;
-        this._tempCopyDepthFramebuffer.destroyResources();
+        this._tempCopyDepthFramebuffer.destroy();
         this._tempCopyDepthFramebuffer.update(context, width, height);
-        setUpdateDepthResources(this, passState);
+
+        var colorTexture = this._copyDepthFramebuffer.getColorTexture();
+        var depthStencilTexture = passState.framebuffer.depthStencilTexture;
+        this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
+        this._updateDepthFramebuffer.setDepthStencilTexture(
+          depthStencilTexture
+        );
         this._updateDepthFramebuffer.update(context, width, height);
+
         updateCopyCommands(this, context, width, height, passState);
       }
       this._tempCopyDepthTexture = depthTextureToCopy;

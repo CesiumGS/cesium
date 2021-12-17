@@ -66,8 +66,8 @@ Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
 });
 
 function destroyResources(globeTranslucency) {
-  globeTranslucency._framebuffer.destroyResources();
-  globeTranslucency._packedDepthFramebuffer.destroyResources();
+  globeTranslucency._framebuffer.destroy();
+  globeTranslucency._packedDepthFramebuffer.destroy();
 }
 
 function updateResources(globeTranslucency, context, width, height, hdr) {

@@ -24,7 +24,7 @@ Object.defineProperties(PickDepthFramebuffer.prototype, {
 });
 
 function destroyResources(pickDepth) {
-  pickDepth._framebuffer.destroyResources();
+  pickDepth._framebuffer.destroy();
 }
 
 function createResources(pickDepth, context) {
@@ -51,8 +51,9 @@ PickDepthFramebuffer.prototype.update = function (
   var width = viewport.width;
   var height = viewport.height;
 
-  destroyResources(this);
-  createResources(this, context);
+  if (this._framebuffer.isDirty(width, height)) {
+    createResources(this, context);
+  }
 
   var framebuffer = this.framebuffer;
   var passState = this._passState;

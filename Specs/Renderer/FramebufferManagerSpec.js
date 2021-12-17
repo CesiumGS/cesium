@@ -24,7 +24,7 @@ describe(
 
     afterEach(function () {
       if (defined(fbm)) {
-        fbm.destroyResources();
+        fbm.destroy();
       }
     });
 
@@ -55,6 +55,16 @@ describe(
       }).toThrowDeveloperError();
       expect(function () {
         fbm.update(context, undefined, 1);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if getting color texture at an invalid index", function () {
+      fbm = new FramebufferManager({
+        colorAttachmentsLength: 2,
+        createColorAttachments: false,
+      });
+      expect(function () {
+        fbm.getColorTexture(2);
       }).toThrowDeveloperError();
     });
 
@@ -287,7 +297,7 @@ describe(
       expect(fbm.getDepthRenderbuffer()).toBeDefined();
     });
 
-    it("destroyResources destroys attachments and framebuffer", function () {
+    it("destroys attachments and framebuffer", function () {
       if (!context.drawBuffers) {
         return;
       }
@@ -305,7 +315,7 @@ describe(
       spyOn(Framebuffer.prototype, "destroy").and.callThrough();
       spyOn(Renderbuffer.prototype, "destroy").and.callThrough();
       spyOn(Texture.prototype, "destroy").and.callThrough();
-      fbm.destroyResources();
+      fbm.destroy();
 
       expect(Framebuffer.prototype.destroy).toHaveBeenCalledTimes(1);
       expect(fbm.framebuffer).toBeUndefined();
@@ -316,7 +326,7 @@ describe(
       expect(fbm.getColorTexture(1)).toBeUndefined();
     });
 
-    it("destroyResources does not destroy attachments that are not created by FramebufferManager", function () {
+    it("does not destroy attachments that are not created by FramebufferManager", function () {
       fbm = new FramebufferManager({
         createColorAttachments: false,
         createDepthAttachments: false,
@@ -338,7 +348,7 @@ describe(
       fbm.setDepthRenderbuffer(depthRenderbuffer);
 
       fbm.update(context, 1, 1);
-      fbm.destroyResources();
+      fbm.destroy();
       expect(fbm.framebuffer).toBeUndefined();
       expect(fbm.getColorTexture()).toBeDefined();
       expect(fbm.getDepthRenderbuffer()).toBeDefined();
@@ -349,22 +359,18 @@ describe(
 
     it("does not destroy resources if texture dimensions haven't changed", function () {
       fbm = new FramebufferManager();
-      spyOn(FramebufferManager.prototype, "destroyResources").and.callThrough();
+      spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
       fbm.update(context, 1, 1);
-      expect(
-        FramebufferManager.prototype.destroyResources
-      ).toHaveBeenCalledTimes(1);
+      expect(FramebufferManager.prototype.destroy).toHaveBeenCalledTimes(1);
     });
 
     it("destroys resources after texture dimensions change", function () {
       fbm = new FramebufferManager();
-      spyOn(FramebufferManager.prototype, "destroyResources").and.callThrough();
+      spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
       fbm.update(context, 2, 1);
-      expect(
-        FramebufferManager.prototype.destroyResources
-      ).toHaveBeenCalledTimes(2);
+      expect(FramebufferManager.prototype.destroy).toHaveBeenCalledTimes(2);
     });
 
     it("returns framebuffer status", function () {

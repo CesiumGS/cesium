@@ -36,7 +36,7 @@ function OIT(context) {
   this._accumulationTexture = undefined;
 
   this._translucentFBO = new FramebufferManager({
-    colorAttachmentsLength: 2,
+    colorAttachmentsLength: this._translucentMRTSupport ? 2 : 1,
     createColorAttachments: false,
     createDepthAttachments: false,
   });
@@ -46,7 +46,7 @@ function OIT(context) {
   });
 
   this._adjustTranslucentFBO = new FramebufferManager({
-    colorAttachmentsLength: 2,
+    colorAttachmentsLength: this._translucentMRTSupport ? 2 : 1,
     createColorAttachments: false,
   });
   this._adjustAlphaFBO = new FramebufferManager({
@@ -98,10 +98,10 @@ function destroyTextures(oit) {
 }
 
 function destroyFramebuffers(oit) {
-  oit._translucentFBO.destroyResources();
-  oit._alphaFBO.destroyResources();
-  oit._adjustTranslucentFBO.destroyResources();
-  oit._adjustAlphaFBO.destroyResources();
+  oit._translucentFBO.destroy();
+  oit._alphaFBO.destroy();
+  oit._adjustTranslucentFBO.destroy();
+  oit._adjustAlphaFBO.destroy();
 }
 
 function destroyResources(oit) {

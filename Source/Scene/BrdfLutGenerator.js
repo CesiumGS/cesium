@@ -58,7 +58,7 @@ BrdfLutGenerator.prototype.isDestroyed = function () {
 };
 
 BrdfLutGenerator.prototype.destroy = function () {
-  this._framebuffer.destroyResources();
+  this._framebuffer.destroy();
   return destroyObject(this);
 };
 export default BrdfLutGenerator;
