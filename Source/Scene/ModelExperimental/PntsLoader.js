@@ -529,6 +529,9 @@ function makeComponents(loader, context) {
   components.featureMetadata = makeFeatureMetadata(parsedContent);
 
   loader._components = components;
+
+  // Free the parsed content so we don't hold onto the large typed arrays.
+  loader._parsedContent = undefined;
 }
 
 PntsLoader.prototype.unload = function () {
@@ -539,4 +542,5 @@ PntsLoader.prototype.unload = function () {
   buffers.length = 0;
 
   this._components = undefined;
+  this._parsedContent = undefined;
 };
