@@ -282,6 +282,7 @@ function processDracoAttributes(loader, draco, result) {
     parsedContent.batchIds = {
       name: "BATCH_ID",
       semantic: VertexAttributeSemantic.FEATURE_ID,
+      setIndex: 0,
       typedArray: result.BATCH_ID.array,
       componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
       type: AttributeType.SCALAR,
