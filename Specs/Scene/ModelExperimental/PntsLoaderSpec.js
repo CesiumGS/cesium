@@ -599,7 +599,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expectLoadError(arrayBuffer);
   });
 
-  it("throws if the BATCH_ID semantic is defined but BATCHES_LENGTH is not", function () {
+  it("throws if the BATCH_ID semantic is defined but BATCH_LENGTH is not", function () {
     var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 2,
