@@ -12,6 +12,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import CesiumMath from "../Core/Math.js";
@@ -953,6 +954,11 @@ function Cesium3DTileset(options) {
 
   this._customShader = options.customShader;
 
+  this.enableModelExperimental = defaultValue(
+    options.enableModelExperimental,
+    ExperimentalFeatures.enableModelExperimental
+  );
+
   this._schemaLoader = undefined;
 
   var that = this;
@@ -1320,7 +1326,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * contents that use {@link ModelExperimental}. Using custom shaders with a
    * {@link Cesium3DTileStyle} may lead to undefined behavior.
    * <p>
-   * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code>.
+   * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} or tileset.enableModelExperimental to <code>true</code>.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype
