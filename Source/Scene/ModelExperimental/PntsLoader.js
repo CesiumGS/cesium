@@ -1,6 +1,6 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
+import Color from "../../Core/Color.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -348,7 +348,8 @@ function makeAttribute(loader, attributeInfo, context) {
   }
 
   if (defined(attributeInfo.constantColor)) {
-    attribute.constant = Cartesian4.fromColor(attributeInfo.constantColor);
+    var packedColor = new Array(4);
+    attribute.constant = Color.pack(attributeInfo.constantColor, packedColor);
   } else {
     var buffer = Buffer.createVertexBuffer({
       typedArray: typedArray,
