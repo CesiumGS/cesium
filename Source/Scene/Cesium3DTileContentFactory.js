@@ -35,7 +35,7 @@ var Cesium3DTileContentFactory = {
     );
   },
   pnts: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    if (ExperimentalFeatures.enableModelExperimental) {
+    if (tileset.enableModelExperimental) {
       return ModelExperimental3DTileContent.fromPnts(
         tileset,
         tile,
