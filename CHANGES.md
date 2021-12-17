@@ -2,16 +2,29 @@
 
 ### 1.89 - 2022-01-03
 
+##### Breaking Changes :mega:
+
+- Removed `Scene.debugShowGlobeDepth`. [#9965](https://github.com/CesiumGS/cesium/pull/9965)
+- Removed `CesiumInspectorViewModel.globeDepth` and `CesiumInspectorViewModel.pickDepth`. [#9965](https://github.com/CesiumGS/cesium/pull/9965)
+- `barycentricCoordinates` returns `undefined` when the input triangle is degenerate. [#9175](https://github.com/CesiumGS/cesium/pull/9175)
+
 ##### Additions :tada:
 
-- Added a `pointSize` field to custom vertex shaders for more control over
-  shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
+- Added a `pointSize` field to custom vertex shaders for more control over shading point clouds. [#9960](https://github.com/CesiumGS/cesium/pull/9960)
+- Added `lambertDiffuseMultiplier` property to Globe object to enhance terrain lighting. [#9878](https://github.com/CesiumGS/cesium/pull/9878)
+- Added `getFeatureInfoUrl` option to `WebMapServiceImageryProvider` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
+- Added `tileset.enableModelExperimental` so tilesets with `Model` and `ModelExperimental` can be mixed in the same scene. [#9982](https://github.com/CesiumGS/cesium/pull/9982)
 
 ##### Fixes :wrench:
 
 - Fixed handling of vec3 vertex colors in `ModelExperimental`. [#9955](https://github.com/CesiumGS/cesium/pull/9955)
 - Fixed handling of Draco quantized vec3 vertex colors in `ModelExperimental`. [#9957](https://github.com/CesiumGS/cesium/pull/9957)
 - Fixed handling of vec3 vertex colors in `CustomShaderPipelineStage`. [#9964](https://github.com/CesiumGS/cesium/pull/9964)
+- Fixes how `Camera.changed` handles changes in `heading`. [#9970](https://github.com/CesiumGS/cesium/pull/9970)
+- Fixed handling of subtree root transforms in `Implicit3DTileContent`. [#9971](https://github.com/CesiumGS/cesium/pull/9971)
+- Fixed issue in `ModelExperimental` where indices were not the correct data type after draco decode. [#9974](https://github.com/CesiumGS/cesium/pull/9974)
+- Fixed WMS 1.3.0 `GetMap` `bbox` parameter so that it follows the axis ordering as defined in the EPSG database. [#9797](https://github.com/CesiumGS/cesium/pull/9797)
+- Fixed KmlDataSource so that it can handle relative URLs for additional elements - video, audio, iframe etc. [#9328](https://github.com/CesiumGS/cesium/pull/9328)
 
 ### 1.88 - 2021-12-01
 
@@ -41,6 +54,7 @@
 
 - Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
 - Added back some support for Draco attribute quantization as a workaround until a full fix in the next Draco version. [#9904](https://github.com/CesiumGS/cesium/pull/9904)
+- Added `CumulusCloud.color` for customizing cloud colors. [#9877](https://github.com/CesiumGS/cesium/pull/9877)
 
 ##### Fixes :wrench:
 
