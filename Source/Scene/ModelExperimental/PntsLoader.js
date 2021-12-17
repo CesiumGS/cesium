@@ -362,14 +362,15 @@ function makeAttribute(loader, attributeInfo, context) {
   return attribute;
 }
 
-// Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
-// See https://github.com/CesiumGS/cesium/issues/9730
-var randomNumberGenerator = new MersenneTwister(0);
+var randomNumberGenerator;
 var randomValues;
 
 function getRandomValues(samplesLength) {
   // Use same random values across all runs
   if (!defined(randomValues)) {
+    // Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
+    // See https://github.com/CesiumGS/cesium/issues/9730
+    randomNumberGenerator = new MersenneTwister(0);
     randomValues = new Array(samplesLength);
     for (var i = 0; i < samplesLength; ++i) {
       randomValues[i] = randomNumberGenerator.random();
