@@ -954,6 +954,15 @@ function Cesium3DTileset(options) {
 
   this._customShader = options.customShader;
 
+  /**
+   * If true, {@link ModelExperimental} will be used instead of {@link Model}
+   * for each tile with a glTF or 3D Tiles 1.0 content (where applicable).
+   * <p>
+   * The value defaults to {@link ExperimentalFeatures.enableModelExperimental}.
+   * </p>
+   * @type {Boolean}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
   this.enableModelExperimental = defaultValue(
     options.enableModelExperimental,
     ExperimentalFeatures.enableModelExperimental
