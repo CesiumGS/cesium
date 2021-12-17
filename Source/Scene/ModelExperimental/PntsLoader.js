@@ -357,7 +357,6 @@ function makeAttribute(loader, attributeInfo, context) {
     });
     loader._buffers.push(buffer);
     attribute.buffer = buffer;
-    attribute.typedArray = typedArray;
   }
 
   return attribute;
