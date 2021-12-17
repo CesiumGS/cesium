@@ -821,6 +821,9 @@ ModelExperimental.fromB3dm = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
   };
@@ -829,14 +832,13 @@ ModelExperimental.fromB3dm = function (options) {
   return model;
 };
 
+/**
+ * @private
+ */
 ModelExperimental.fromPnts = function (options) {
   var loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
-    releaseGltfJson: options.releaseGltfJson,
-    incrementallyLoadTextures: options.incrementallyLoadTextures,
-    upAxis: options.upAxis,
-    forwardAxis: options.forwardAxis,
   };
   var loader = new PntsLoader(loaderOptions);
 
@@ -851,6 +853,9 @@ ModelExperimental.fromPnts = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
   };

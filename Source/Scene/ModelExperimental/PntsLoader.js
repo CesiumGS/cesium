@@ -34,6 +34,18 @@ var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 var Material = ModelComponents.Material;
 var MetallicRoughness = ModelComponents.MetallicRoughness;
 
+/**
+ * Loads a .pnts point cloud and transcodes it into a {@link ModelComponents}
+ *
+ * @alias PntsLoader
+ * @constructor
+ * @augments ResourceLoader
+ * @private
+ *
+ * @param {Object} options An object containing the following properties
+ * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
+ * @param {Number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+ */
 export default function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -101,7 +113,6 @@ Object.defineProperties(PntsLoader.prototype, {
    * @memberof PntsLoader.prototype
    *
    * @type {ModelComponents.Components}
-   * @default {@link Matrix4.IDENTITY}
    * @readonly
    * @private
    */

@@ -160,7 +160,6 @@ Object.defineProperties(B3dmLoader.prototype, {
    * @memberof B3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
-   * @default {@link Matrix4.IDENTITY}
    * @readonly
    * @private
    */

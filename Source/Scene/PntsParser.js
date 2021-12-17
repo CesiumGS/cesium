@@ -12,10 +12,25 @@ import AttributeType from "./AttributeType.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
+/**
+ * Handles parsing of a Point Cloud
+ *
+ * @namespace PntsParser
+ * @private
+ */
 var PntsParser = {};
 
 var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+/**
+ * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}.
+ *
+ * @private
+ *
+ * @param {*} arrayBuffer The array buffer containing the pnts
+ * @param {*} [byteOffset=0] The byte offset of the beginning of the pnts in the array buffer
+ * @returns {Object} An object containing a parsed representation of the point cloud
+ */
 PntsParser.parse = function (arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
   //>>includeStart('debug', pragmas.debug);
@@ -260,8 +275,8 @@ function parsePositions(featureTable) {
     );
 
     return {
-      name: "POSITION",
-      semantic: "POSITION",
+      name: VertexAttributeSemantic.POSITION,
+      semantic: VertexAttributeSemantic.POSITION,
       typedArray: positions,
       isQuantized: false,
       componentDatatype: ComponentDatatype.FLOAT,
@@ -298,7 +313,7 @@ function parsePositions(featureTable) {
     }
 
     return {
-      name: "POSITION",
+      name: VertexAttributeSemantic.POSITION,
       semantic: VertexAttributeSemantic.POSITION,
       typedArray: positions,
       isQuantized: true,
@@ -324,7 +339,7 @@ function parseColors(featureTable) {
       4
     );
     return {
-      name: "COLOR",
+      name: VertexAttributeSemantic.COLOR,
       semantic: VertexAttributeSemantic.COLOR,
       setIndex: 0,
       typedArray: colors,
@@ -386,7 +401,7 @@ function parseColors(featureTable) {
     );
 
     return {
-      name: "COLOR",
+      name: VertexAttributeSemantic.COLOR,
       semantic: VertexAttributeSemantic.COLOR,
       setIndex: 0,
       constantColor: constantColor,
@@ -410,7 +425,7 @@ function parseNormals(featureTable) {
       3
     );
     return {
-      name: "NORMAL",
+      name: VertexAttributeSemantic.NORMAL,
       semantic: VertexAttributeSemantic.NORMAL,
       typedArray: normals,
       octEncoded: false,
@@ -426,7 +441,7 @@ function parseNormals(featureTable) {
     );
     var quantizationBits = 16;
     return {
-      name: "NORMAL",
+      name: VertexAttributeSemantic.NORMAL,
       semantic: VertexAttributeSemantic.NORMAL,
       typedArray: normals,
       octEncoded: true,
