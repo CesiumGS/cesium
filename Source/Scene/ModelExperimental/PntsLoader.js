@@ -396,33 +396,9 @@ function computeApproximateExtrema(positions) {
   var index;
   var position;
   if (positions.isQuantized) {
-    for (i = 0; i < samplesLength; ++i) {
-      index = Math.floor(randomValues[i] * pointsLength);
-      position = Cartesian3.unpack(positionsArray, index * 3, scratchPosition);
-
-      // Dequantize the sampled position before computing the min/max
-      var quantizedVolumeOffset = positions.quantizedVolumeOffset;
-      var quantizedVolumeScale = positions.quantizedVolumeScale;
-      var quantizedRange = positions.quantizedRange;
-      position = Cartesian3.multiplyComponents(
-        position,
-        quantizedVolumeScale,
-        scratchPosition
-      );
-      position = Cartesian3.divideByScalar(
-        position,
-        quantizedRange,
-        scratchPosition
-      );
-      position = Cartesian3.add(
-        position,
-        quantizedVolumeOffset,
-        scratchPosition
-      );
-
-      Cartesian3.minimumByComponent(min, position, min);
-      Cartesian3.maximumByComponent(max, position, max);
-    }
+    // Use the quantized volume to compute the min and max without sampling
+    min = Cartesian3.clone(positions.quantizedVolumeOffset, scratchMin);
+    max = Cartesian3.add(min, positions.quantizedVolumeScale, scratchMax);
   } else {
     for (i = 0; i < samplesLength; ++i) {
       index = Math.floor(randomValues[i] * pointsLength);
@@ -433,8 +409,8 @@ function computeApproximateExtrema(positions) {
     }
   }
 
-  positions.min = min;
-  positions.max = max;
+  positions.min = Cartesian3.clone(min);
+  positions.max = Cartesian3.clone(max);
 }
 
 function makeAttributes(loader, parsedContent, context) {
