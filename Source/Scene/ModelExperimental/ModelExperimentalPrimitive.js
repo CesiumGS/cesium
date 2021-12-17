@@ -12,6 +12,7 @@ import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
+import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
@@ -94,8 +95,14 @@ function initialize(runtimePrimitive) {
   var hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
+  var is3DTiles = defined(model.content);
+  var hasPointCloudShading = is3DTiles || defined(model.pointCloudShading);
 
   pipelineStages.push(GeometryPipelineStage);
+
+  if (hasPointCloudShading) {
+    pipelineStages.push(PointCloudAttenuationPipelineStage);
+  }
 
   if (hasQuantization) {
     pipelineStages.push(DequantizationPipelineStage);

@@ -1,5 +1,7 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import defined from "../../Core/defined.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import PointCloudAttenuationStageVS from "../../Shaders/ModelExperimental/PointCloudAttenuationStageVS.js";
 import SceneMode from "../SceneMode.js";
@@ -14,6 +16,11 @@ PointCloudAttenuationPipelineStage.process = function (
   primitive,
   frameState
 ) {
+  // Attenuation only applies to point primitives
+  if (primitive.primitiveType !== PrimitiveType.POINTS) {
+    return;
+  }
+
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addVertexLines([PointCloudAttenuationStageVS]);
   shaderBuilder.addDefine(
@@ -22,8 +29,16 @@ PointCloudAttenuationPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  // TODO: what if it comes from the tileset?
-  var pointCloudShading = renderResources.model.pointCloudShading;
+  var model = renderResources.model;
+  var pointCloudShading;
+
+  // If this is 3D Tiles, use the point cloud shading object
+  if (defined(model.content)) {
+    var tileset = model.content.tileset;
+    pointCloudShading = tileset.pointCloudShading;
+  } else {
+    pointCloudShading = model.pointCloudShading;
+  }
 
   shaderBuilder.addUniform(
     "vec3",
