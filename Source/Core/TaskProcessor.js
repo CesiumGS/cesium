@@ -3,7 +3,7 @@ import when from "../ThirdParty/when.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import destroyObject from "./destroyObject.js";
+// import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
