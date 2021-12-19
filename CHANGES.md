@@ -25,6 +25,7 @@
 - Fixed issue in `ModelExperimental` where indices were not the correct data type after draco decode. [#9974](https://github.com/CesiumGS/cesium/pull/9974)
 - Fixed WMS 1.3.0 `GetMap` `bbox` parameter so that it follows the axis ordering as defined in the EPSG database. [#9797](https://github.com/CesiumGS/cesium/pull/9797)
 - Fixed KmlDataSource so that it can handle relative URLs for additional elements - video, audio, iframe etc. [#9328](https://github.com/CesiumGS/cesium/pull/9328)
+- Fixed memory leak when add big number of entities(polyline) [##9984](https://github.com/CesiumGS/cesium/pull/9984)
 
 ### 1.88 - 2021-12-01
 
