@@ -352,7 +352,13 @@ TaskProcessor.prototype.destroy = function () {
   if (defined(this._worker)) {
     this._worker.terminate();
   }
-  return destroyObject(this);
+  var t = this;
+  for (var key in t) {
+    if (key) {
+      t[key] = null;
+      delete t[key];
+    }
+  }
 };
 
 /**

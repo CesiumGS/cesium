@@ -1,3 +1,4 @@
+import { createTaskProcessorWorker } from "../Cesium.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -1203,7 +1204,14 @@ var numberOfCreationWorkers = Math.max(
   1
 );
 var createGeometryTaskProcessors;
-var combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
+function removeGeometryTaskProcessors() {
+  if (createGeometryTaskProcessors) {
+    for (var i = 0; i < createGeometryTaskProcessors.length; i++) {
+      createGeometryTaskProcessors[i].destroy();
+    }
+    createGeometryTaskProcessors.length = 0;
+  }
+}
 
 function loadAsynchronous(primitive, frameState) {
   var instances;
@@ -1240,6 +1248,7 @@ function loadAsynchronous(primitive, frameState) {
     }
 
     if (!defined(createGeometryTaskProcessors)) {
+      removeGeometryTaskProcessors();
       createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
       for (i = 0; i < numberOfCreationWorkers; i++) {
         createGeometryTaskProcessors[i] = new TaskProcessor("createGeometry");
@@ -1297,9 +1306,11 @@ function loadAsynchronous(primitive, frameState) {
       .all(promises, function (results) {
         primitive._createGeometryResults = results;
         primitive._state = PrimitiveState.CREATED;
+        removeGeometryTaskProcessors();
       })
       .otherwise(function (error) {
         setReady(primitive, frameState, PrimitiveState.FAILED, error);
+        removeGeometryTaskProcessors();
       });
   } else if (primitive._state === PrimitiveState.CREATED) {
     var transferableObjects = [];
@@ -1309,6 +1320,8 @@ function loadAsynchronous(primitive, frameState) {
 
     var scene3DOnly = frameState.scene3DOnly;
     var projection = frameState.mapProjection;
+
+    var combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
 
     var promise = combineGeometryTaskProcessor.scheduleTask(
       PrimitivePipeline.packCombineGeometryParameters(
@@ -1351,7 +1364,9 @@ function loadAsynchronous(primitive, frameState) {
       } else {
         setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
       }
+      combineGeometryTaskProcessor.destroy();
     }).otherwise(function (error) {
+      combineGeometryTaskProcessor.destroy();
       setReady(primitive, frameState, PrimitiveState.FAILED, error);
     });
   }
