@@ -242,6 +242,29 @@ function main() {
   }
 
   loadingIndicator.style.display = "none";
+
+  createLines(viewer);
+}
+
+function createLines(viewer) {
+  var ll = { lng: 26, lat: 36 };
+  var ur = { lng: 46, lat: 42 };
+
+  var reslng = (ur.lng - ll.lng) / 500;
+  var reslat = (ur.lat - ll.lat) / 500;
+  for (var i = ll.lng; i < ur.lng; i += reslng) {
+    var positions = [];
+    for (var j = ll.lat; j < ur.lat; j += reslat) {
+      positions.push(i);
+      positions.push(j);
+    }
+    viewer.entities.add({
+      polyline: {
+        positions: Cartesian3.fromDegreesArray(positions),
+        clampToGround: true,
+      },
+    });
+  }
 }
 
 main();
