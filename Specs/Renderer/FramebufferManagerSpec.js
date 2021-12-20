@@ -1,4 +1,6 @@
 import { defined } from "../../Source/Cesium.js";
+import { Color } from "../../Source/Cesium.js";
+import { ClearCommand } from "../../Source/Cesium.js";
 import { Framebuffer } from "../../Source/Cesium.js";
 import { FramebufferManager } from "../../Source/Cesium.js";
 import { PixelDatatype } from "../../Source/Cesium.js";
@@ -317,11 +319,11 @@ describe(
       spyOn(Texture.prototype, "destroy").and.callThrough();
       fbm.destroy();
 
-      expect(Framebuffer.prototype.destroy).toHaveBeenCalledTimes(1);
+      expect(Framebuffer.prototype.destroy.calls.count()).toEqual(1);
       expect(fbm.framebuffer).toBeUndefined();
-      expect(Renderbuffer.prototype.destroy).toHaveBeenCalledTimes(1);
+      expect(Renderbuffer.prototype.destroy.calls.count()).toEqual(1);
       expect(fbm.getDepthRenderbuffer()).toBeUndefined();
-      expect(Texture.prototype.destroy).toHaveBeenCalledTimes(2);
+      expect(Texture.prototype.destroy.calls.count()).toEqual(2);
       expect(fbm.getColorTexture(0)).toBeUndefined();
       expect(fbm.getColorTexture(1)).toBeUndefined();
     });
@@ -362,7 +364,7 @@ describe(
       spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
       fbm.update(context, 1, 1);
-      expect(FramebufferManager.prototype.destroy).toHaveBeenCalledTimes(1);
+      expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(1);
     });
 
     it("destroys resources after texture dimensions change", function () {
@@ -370,7 +372,68 @@ describe(
       spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
       fbm.update(context, 2, 1);
-      expect(FramebufferManager.prototype.destroy).toHaveBeenCalledTimes(2);
+      expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
+    });
+
+    it("Executes clear command", function () {
+      ClearCommand.ALL.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
+
+      fbm = new FramebufferManager();
+      fbm.update(context, 1, 1);
+
+      var clearCommand = new ClearCommand({
+        color: new Color(1.0, 0.0, 0.0, 1.0),
+      });
+      fbm.clear(context, clearCommand);
+
+      var fs =
+        "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+      var uniformMap = {
+        u_texture: function () {
+          return fbm.getColorTexture();
+        },
+      };
+
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+      }).contextToRender([255, 0, 0, 255]);
+    });
+
+    it("Preserves clear command framebuffer after clear()", function () {
+      ClearCommand.ALL.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
+
+      fbm = new FramebufferManager();
+      fbm.update(context, 1, 1);
+
+      var fb = new Framebuffer({
+        context: context,
+      });
+      var clearCommand = new ClearCommand({
+        color: new Color(1.0, 0.0, 0.0, 1.0),
+        framebuffer: fb,
+      });
+
+      fbm.clear(context, clearCommand);
+      expect(clearCommand.framebuffer).toBe(fb);
+
+      var fs =
+        "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+      var uniformMap = {
+        u_texture: function () {
+          return fbm.getColorTexture();
+        },
+      };
+
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+      }).contextToRender([255, 0, 0, 255]);
+      fb.destroy();
     });
 
     it("returns framebuffer status", function () {
