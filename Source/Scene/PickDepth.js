@@ -25,12 +25,7 @@ Object.defineProperties(PickDepth.prototype, {
 function updateFramebuffers(pickDepth, context, depthTexture) {
   var width = depthTexture.width;
   var height = depthTexture.height;
-
-  var textureChanged = pickDepth._framebuffer.isDirty(width, height);
-  if (!defined(pickDepth.framebuffer) || textureChanged) {
-    pickDepth._framebuffer.destroy();
-    pickDepth._framebuffer.update(context, width, height);
-  }
+  pickDepth._framebuffer.update(context, width, height);
 }
 
 function updateCopyCommands(pickDepth, context, depthTexture) {

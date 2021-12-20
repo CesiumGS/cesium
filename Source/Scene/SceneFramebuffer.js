@@ -57,18 +57,10 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
 };
 
 SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
-  this._colorFramebuffer.clear(
-    context,
-    passState,
-    clearColor,
-    this._clearCommand
-  );
-  this._idFramebuffer.clear(
-    context,
-    passState,
-    this._idClearColor,
-    this._clearCommand
-  );
+  Color.clone(clearColor, this._clearCommand.color);
+  Color.clone(this._idClearColor, this._clearCommand.color);
+  this._colorFramebuffer.clear(context, this._clearCommand, passState);
+  this._idFramebuffer.clear(context, this._clearCommand, passState);
 };
 
 SceneFramebuffer.prototype.getFramebuffer = function () {

@@ -287,19 +287,12 @@ InvertClassification.prototype.update = function (context) {
 };
 
 InvertClassification.prototype.clear = function (context, passState) {
-  var framebuffer = passState.framebuffer;
-
   if (defined(this._previousFramebuffer)) {
-    passState.framebuffer = this._fbo.framebuffer;
-    this._clearColorCommand.execute(context, passState);
+    this._fbo.clear(context, this._clearColorCommand, passState);
   } else {
-    passState.framebuffer = this._fbo.framebuffer;
-    this._clearCommand.execute(context, passState);
-    passState.framebuffer = this._fboClassified.framebuffer;
-    this._clearCommand.execute(context, passState);
+    this._fbo.clear(context, this._clearCommand, passState);
+    this._fboClassified.clear(context, this._clearCommand, passState);
   }
-
-  passState.framebuffer = framebuffer;
 };
 
 InvertClassification.prototype.executeClassified = function (

@@ -4,7 +4,6 @@ import Renderbuffer from "./Renderbuffer.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
-import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -309,19 +308,15 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
 
 FramebufferManager.prototype.clear = function (
   context,
-  passState,
-  clearColor,
-  clearCommand
+  clearCommand,
+  passState
 ) {
-  var framebuffer = passState.framebuffer;
-  var clearCommandColor = clearCommand.color;
+  var framebuffer = clearCommand.framebuffer;
 
-  passState.framebuffer = this._framebuffer;
-  clearCommand.color = Color.clone(clearColor, clearCommand.color);
+  clearCommand.framebuffer = this._framebuffer;
   clearCommand.execute(context, passState);
 
-  clearCommand.color = clearCommandColor;
-  passState.framebuffer = framebuffer;
+  clearCommand.framebuffer = framebuffer;
 };
 
 FramebufferManager.prototype.destroyFramebuffer = function () {

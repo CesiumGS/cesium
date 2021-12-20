@@ -109,11 +109,8 @@ function createCommands(processor, context) {
 function createResources(processor, context) {
   var width = context.drawingBufferWidth;
   var height = context.drawingBufferHeight;
-  var nowDirty = false;
   processor._framebuffer.update(context, width, height);
   createCommands(processor, context);
-  nowDirty = true;
-  return nowDirty;
 }
 
 function isSupported(context) {
@@ -180,7 +177,7 @@ PointCloudEyeDomeLighting.prototype.update = function (
   this._radius =
     pointCloudShading.eyeDomeLightingRadius * frameState.pixelRatio;
 
-  var dirty = createResources(this, frameState.context);
+  createResources(this, frameState.context);
 
   // Hijack existing point commands to render into an offscreen FBO.
   var i;
@@ -213,7 +210,6 @@ PointCloudEyeDomeLighting.prototype.update = function (
     if (
       !defined(derivedCommand) ||
       command.dirty ||
-      dirty ||
       originalShaderProgram !== command.shaderProgram ||
       derivedCommand.framebuffer !== this.framebuffer
     ) {

@@ -1,34 +1,31 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import FramebufferManager from "../Renderer/FramebufferManager.js";
+import PixelFormat from "../Core/PixelFormat.js";
+import Framebuffer from "../Renderer/Framebuffer.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
+import Sampler from "../Renderer/Sampler.js";
+import Texture from "../Renderer/Texture.js";
 import BrdfLutGeneratorFS from "../Shaders/BrdfLutGeneratorFS.js";
 
 /**
  * @private
  */
 function BrdfLutGenerator() {
-  this._framebuffer = new FramebufferManager();
+  this._colorTexture = undefined;
   this._drawCommand = undefined;
 }
 
 Object.defineProperties(BrdfLutGenerator.prototype, {
-  framebuffer: {
-    get: function () {
-      return this._framebuffer.framebuffer;
-    },
-  },
   colorTexture: {
     get: function () {
-      return this._framebuffer.getColorTexture();
+      return this._colorTexture;
     },
   },
 });
 
-function createCommand(generator, context) {
-  var framebuffer = generator.framebuffer;
-
+function createCommand(generator, context, framebuffer) {
   var drawCommand = context.createViewportQuadCommand(BrdfLutGeneratorFS, {
     framebuffer: framebuffer,
     renderState: RenderState.fromCache({
@@ -42,11 +39,25 @@ function createCommand(generator, context) {
 BrdfLutGenerator.prototype.update = function (frameState) {
   if (!defined(this.colorTexture)) {
     var context = frameState.context;
+    var colorTexture = new Texture({
+      context: context,
+      width: 256,
+      height: 256,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      sampler: Sampler.NEAREST,
+    });
 
-    this._framebuffer.update(context, 256, 256);
-    createCommand(this, context);
+    this._colorTexture = colorTexture;
+    var framebuffer = new Framebuffer({
+      context: context,
+      colorTextures: [colorTexture],
+      destroyAttachments: false,
+    });
+
+    createCommand(this, context, framebuffer);
     this._drawCommand.execute(context);
-    this._framebuffer.destroyFramebuffer();
+    framebuffer.destroy();
     this._drawCommand.shaderProgram =
       this._drawCommand.shaderProgram &&
       this._drawCommand.shaderProgram.destroy();
@@ -58,7 +69,7 @@ BrdfLutGenerator.prototype.isDestroyed = function () {
 };
 
 BrdfLutGenerator.prototype.destroy = function () {
-  this._framebuffer.destroy();
+  this._colorTexture = this._colorTexture && this._colorTexture.destroy();
   return destroyObject(this);
 };
 export default BrdfLutGenerator;

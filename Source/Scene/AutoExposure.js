@@ -293,8 +293,7 @@ AutoExposure.prototype.clear = function (context) {
 
   var length = framebuffers.length;
   for (var i = 0; i < length; ++i) {
-    clearCommand.framebuffer = framebuffers[i].framebuffer;
-    clearCommand.execute(context);
+    framebuffers[i].clear(context, clearCommand);
   }
 };
 

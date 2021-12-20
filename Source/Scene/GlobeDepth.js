@@ -300,7 +300,7 @@ GlobeDepth.prototype.clear = function (context, passState, clearColor) {
   var clear = this._clearGlobeColorCommand;
   if (defined(clear)) {
     Color.clone(clearColor, clear.color);
-    clear.execute(context, passState);
+    this._colorFramebuffer.clear(context, clear, passState);
   }
 };
 
