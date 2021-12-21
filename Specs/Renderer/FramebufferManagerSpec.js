@@ -145,6 +145,7 @@ describe(
       fbm.setDepthRenderbuffer(renderbuffer);
       expect(fbm.getDepthRenderbuffer()).toBeDefined();
       expect(fbm.getDepthRenderbuffer()).toEqual(renderbuffer);
+      renderbuffer.destroy();
     });
 
     it("throws if setting depth-stencil attachments when createDepthStencilAttachments is true", function () {
@@ -179,6 +180,7 @@ describe(
       fbm.setDepthStencilRenderbuffer(renderbuffer);
       expect(fbm.getDepthStencilRenderbuffer()).toBeDefined();
       expect(fbm.getDepthStencilRenderbuffer()).toEqual(renderbuffer);
+      renderbuffer.destroy();
     });
 
     it("creates framebuffer", function () {
@@ -293,10 +295,16 @@ describe(
         depth: true,
         supportsDepthTexture: true,
       });
+      // Disable extension
+      var depthTexture = context._depthTexture;
       context._depthTexture = false;
+
       fbm.update(context, 1, 1);
       expect(fbm.getDepthTexture()).toBeUndefined();
       expect(fbm.getDepthRenderbuffer()).toBeDefined();
+
+      // Re-enable extension
+      context._depthTexture = depthTexture;
     });
 
     it("destroys attachments and framebuffer", function () {
@@ -375,7 +383,44 @@ describe(
       expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
     });
 
-    it("Executes clear command", function () {
+    it("destroys resources after pixel datatype changes", function () {
+      fbm = new FramebufferManager({
+        pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      });
+      spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
+      fbm.update(context, 1, 1);
+      fbm.update(context, 1, 1, PixelDatatype.UNSIGNED_BYTE);
+      expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
+    });
+
+    it("destroys resources after pixel format changes", function () {
+      fbm = new FramebufferManager({
+        pixelFormat: PixelFormat.RGB,
+      });
+      spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
+      fbm.update(context, 1, 1);
+      fbm.update(context, 1, 1, undefined, PixelFormat.RGBA);
+      expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
+    });
+
+    it("destroys resources after new attachment is set", function () {
+      fbm = new FramebufferManager({
+        createColorAttachments: false,
+      });
+      var texture = new Texture({
+        context: context,
+        width: 1,
+        height: 1,
+      });
+      spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
+      fbm.setColorTexture(texture, 0);
+      fbm.update(context, 1, 1);
+      fbm.setColorTexture(texture, 0);
+      fbm.update(context, 1, 1);
+      expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(1);
+    });
+
+    it("executes clear command", function () {
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
@@ -402,7 +447,7 @@ describe(
       }).contextToRender([255, 0, 0, 255]);
     });
 
-    it("Preserves clear command framebuffer after clear()", function () {
+    it("preserves clear command framebuffer after clear()", function () {
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 

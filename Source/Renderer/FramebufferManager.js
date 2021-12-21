@@ -17,10 +17,13 @@ import PixelFormat from "../Core/PixelFormat.js";
  * @param {Boolean} [options.color=true] Whether the FramebufferManager will use color attachments.
  * @param {Boolean} [options.depth=false] Whether the FramebufferManager will use depth attachments.
  * @param {Boolean} [options.depthStencil=false] Whether the FramebufferManager will use depth-stencil attachments.
- * @param {Boolean} [options.supportsDepthTexture=false] Whether the FramebufferManager will create a depth texture when the extensions are supported.
+ * @param {Boolean} [options.supportsDepthTexture=false] Whether the FramebufferManager will create a depth texture when the extension is supported.
  * @param {Boolean} [options.createColorAttachments=true] Whether the FramebufferManager will construct its own color attachments.
- * @param {Boolean} [options.createDepthAttachments=true] Whether the FramebufferManager will construct its own depth attachments.*
+ * @param {Boolean} [options.createDepthAttachments=true] Whether the FramebufferManager will construct its own depth attachments.
+ * @param {PixelDatatype} [options.pixelDatatype=undefined] The default pixel datatype to use when creating color attachments.
+ * @param {PixelFormat} [options.pixelFormat=undefined] The default pixel format to use when creating color attachments.
  *
+ * @exception {DeveloperError} Must enable at least one type of framebuffer attachment.
  * @exception {DeveloperError} Cannot have both a depth and depth-stencil attachment.
  *
  * @private
@@ -43,7 +46,7 @@ function FramebufferManager(options) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._color && !this._depth && !this._depthStencil) {
     throw new DeveloperError(
-      "must enable at least one type of framebuffer attachment."
+      "Must enable at least one type of framebuffer attachment."
     );
   }
   if (this._depth && this._depthStencil) {
@@ -62,10 +65,11 @@ function FramebufferManager(options) {
     true
   );
 
+  this._pixelDatatype = options.pixelDatatype;
+  this._pixelFormat = options.pixelFormat;
+
   this._width = undefined;
   this._height = undefined;
-  this._pixelDatatype = undefined;
-  this._pixelFormat = undefined;
 
   this._framebuffer = undefined;
   this._colorTextures = undefined;
@@ -127,14 +131,16 @@ FramebufferManager.prototype.update = function (
   //>>includeEnd('debug');
   pixelDatatype = defaultValue(
     pixelDatatype,
-    this._color ? PixelDatatype.UNSIGNED_BYTE : undefined
+    this._color
+      ? defaultValue(this._pixelDatatype, PixelDatatype.UNSIGNED_BYTE)
+      : undefined
   );
   pixelFormat = defaultValue(
     pixelFormat,
-    this._color ? PixelFormat.RGBA : undefined
+    this._color ? defaultValue(this._pixelFormat, PixelFormat.RGBA) : undefined
   );
 
-  if (this.isDirty(width, height, pixelDatatype)) {
+  if (this.isDirty(width, height, pixelDatatype, pixelFormat)) {
     this.destroy();
     this._width = width;
     this._height = height;
@@ -236,8 +242,8 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
     );
   }
   //>>includeEnd('debug');
+  this._attachmentsDirty = texture !== this._colorTextures[index];
   this._colorTextures[index] = texture;
-  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthRenderbuffer = function () {
@@ -252,8 +258,8 @@ FramebufferManager.prototype.setDepthRenderbuffer = function (renderbuffer) {
     );
   }
   //>>includeEnd('debug');
+  this._attachmentsDirty = renderbuffer !== this._depthRenderbuffer;
   this._depthRenderbuffer = renderbuffer;
-  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthTexture = function () {
@@ -268,8 +274,8 @@ FramebufferManager.prototype.setDepthTexture = function (texture) {
     );
   }
   //>>includeEnd('debug');
+  this._attachmentsDirty = texture !== this._depthTexture;
   this._depthTexture = texture;
-  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthStencilRenderbuffer = function () {
@@ -286,8 +292,8 @@ FramebufferManager.prototype.setDepthStencilRenderbuffer = function (
     );
   }
   //>>includeEnd('debug');
+  this._attachmentsDirty = renderbuffer !== this._depthStencilRenderbuffer;
   this._depthStencilRenderbuffer = renderbuffer;
-  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.getDepthStencilTexture = function () {
@@ -302,8 +308,8 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
     );
   }
   //>>includeEnd('debug');
+  this._attachmentsDirty = texture !== this._depthStencilTexture;
   this._depthStencilTexture = texture;
-  this._attachmentsDirty = true;
 };
 
 FramebufferManager.prototype.clear = function (

@@ -37,7 +37,7 @@ function createCommand(generator, context, framebuffer) {
 }
 
 BrdfLutGenerator.prototype.update = function (frameState) {
-  if (!defined(this.colorTexture)) {
+  if (!defined(this._colorTexture)) {
     var context = frameState.context;
     var colorTexture = new Texture({
       context: context,
