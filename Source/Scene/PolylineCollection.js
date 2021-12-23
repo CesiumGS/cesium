@@ -123,7 +123,7 @@ function PolylineCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   /**
-   * Determines if polylines in this collection will be shown.
+   * Determines if polylines will be drawn on top of each other in the order they were added to the collection regardless of rendered depth.
    *
    * @type {Boolean}
    * @default true
