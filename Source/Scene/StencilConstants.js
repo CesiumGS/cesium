@@ -13,6 +13,7 @@ var StencilConstants = {
   SKIP_LOD_MASK: 0x70,
   SKIP_LOD_BIT_SHIFT: 4,
   CLASSIFICATION_MASK: 0x0f,
+  POLYLINE: 0x40, // 0b01000000
 };
 
 StencilConstants.setCesium3DTileBit = function () {

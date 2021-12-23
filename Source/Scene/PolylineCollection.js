@@ -20,6 +20,7 @@ import Plane from "../Core/Plane.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
+import ClearCommand from "../Renderer/ClearCommand.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
@@ -36,6 +37,9 @@ import BlendingState from "./BlendingState.js";
 import Material from "./Material.js";
 import Polyline from "./Polyline.js";
 import SceneMode from "./SceneMode.js";
+import StencilFunction from "./StencilFunction.js";
+import StencilOperation from "./StencilOperation.js";
+import StencilConstants from "./StencilConstants.js";
 
 var SHOW_INDEX = Polyline.SHOW_INDEX;
 var WIDTH_INDEX = Polyline.WIDTH_INDEX;
@@ -80,6 +84,7 @@ var attributeLocations = {
  * @param {Object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {Boolean} [options.preserveDrawOrder=false] Determines if the polylines in the collection will be drawn in the order they were added to the collection.
  * @param {Boolean} [options.show=true] Determines if the polylines in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many polylines, to
@@ -140,6 +145,14 @@ function PolylineCollection(options) {
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /**
+   * Determines if the polylines in the collection will be drawn in the order they were added to the collection.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.preserveDrawOrder = defaultValue(options.preserveDrawOrder, false);
+
+  /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
@@ -156,6 +169,7 @@ function PolylineCollection(options) {
 
   this._opaqueRS = undefined;
   this._translucentRS = undefined;
+  this._stencilClearCommand = undefined;
 
   this._colorCommands = [];
 
@@ -560,14 +574,37 @@ PolylineCollection.prototype.update = function (frameState) {
 
   if (
     !defined(this._opaqueRS) ||
-    this._opaqueRS.depthTest.enabled !== useDepthTest
+    this._opaqueRS.depthTest.enabled !== useDepthTest ||
+    this._opaqueRS.stencilTest.enabled !== this.preserveDrawOrder
   ) {
-    this._opaqueRS = RenderState.fromCache({
+    var renderStateOptions = {
       depthMask: useDepthTest,
       depthTest: {
         enabled: useDepthTest,
       },
-    });
+    };
+
+    if (this.preserveDrawOrder) {
+      renderStateOptions.stencilTest = {
+        enabled: true,
+        frontFunction: StencilFunction.NOT_EQUAL,
+        backFunction: StencilFunction.NOT_EQUAL,
+        reference: StencilConstants.POLYLINE,
+        mask: StencilConstants.POLYLINE,
+        frontOperation: {
+          fail: StencilOperation.REPLACE,
+          zFail: StencilOperation.REPLACE,
+          zPass: StencilOperation.REPLACE,
+        },
+        backOperation: {
+          fail: StencilOperation.REPLACE,
+          zFail: StencilOperation.REPLACE,
+          zPass: StencilOperation.REPLACE,
+        },
+      };
+    }
+
+    this._opaqueRS = RenderState.fromCache(renderStateOptions);
   }
 
   if (
@@ -591,6 +628,58 @@ PolylineCollection.prototype.update = function (frameState) {
   }
 };
 
+function createCommand(
+  polylineCollection,
+  commandList,
+  commands,
+  commandIndex,
+  offset,
+  count,
+  shaderProgram,
+  vertexArray,
+  modelMatrix,
+  boundingSphere,
+  material
+) {
+  var batchTable = polylineCollection._batchTable;
+  var uniformCallback = batchTable.getUniformMapCallback();
+
+  var command;
+  if (commandIndex >= commands.length) {
+    command = new DrawCommand({
+      owner: polylineCollection,
+    });
+    commands.push(command);
+  } else {
+    command = commands[commandIndex];
+  }
+
+  var uniformMap = combine(
+    uniformCallback(material._uniforms),
+    polylineCollection._uniformMap
+  );
+
+  command.boundingVolume = BoundingSphere.clone(
+    boundingSphere,
+    command.boundingVolume
+  );
+  command.modelMatrix = modelMatrix;
+  command.shaderProgram = shaderProgram;
+  command.vertexArray = vertexArray.va;
+  command.renderState = material.isTranslucent()
+    ? polylineCollection._translucentRS
+    : polylineCollection._opaqueRS;
+  command.pass = material.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
+  command.debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
+  command.pickId = "v_pickColor";
+
+  command.uniformMap = uniformMap;
+  command.count = count;
+  command.offset = offset;
+
+  commandList.push(command);
+}
+
 var boundingSphereScratch = new BoundingSphere();
 var boundingSphereScratch2 = new BoundingSphere();
 
@@ -602,97 +691,57 @@ function createCommandLists(
 ) {
   var context = frameState.context;
   var commandList = frameState.commandList;
-
-  var commandsLength = commands.length;
   var commandIndex = 0;
-  var cloneBoundingSphere = true;
-
   var vertexArrays = polylineCollection._vertexArrays;
-  var debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
-
-  var batchTable = polylineCollection._batchTable;
-  var uniformCallback = batchTable.getUniformMapCallback();
-
+  var preserveDrawOrder = polylineCollection.preserveDrawOrder;
   var length = vertexArrays.length;
+
   for (var m = 0; m < length; ++m) {
-    var va = vertexArrays[m];
-    var buckets = va.buckets;
+    var vertexArray = vertexArrays[m];
+    var buckets = vertexArray.buckets;
     var bucketLength = buckets.length;
 
     for (var n = 0; n < bucketLength; ++n) {
       var bucketLocator = buckets[n];
-
       var offset = bucketLocator.offset;
-      var sp = bucketLocator.bucket.shaderProgram;
-
+      var shaderProgram = bucketLocator.bucket.shaderProgram;
       var polylines = bucketLocator.bucket.polylines;
       var polylineLength = polylines.length;
       var currentId;
       var currentMaterial;
       var count = 0;
-      var command;
-      var uniformMap;
 
-      for (var s = 0; s < polylineLength; ++s) {
+      for (var ss = 0; ss < polylineLength; ++ss) {
+        var s = polylineLength - ss - 1;
         var polyline = polylines[s];
         var mId = createMaterialId(polyline._material);
-        if (mId !== currentId) {
-          if (defined(currentId) && count > 0) {
-            var translucent = currentMaterial.isTranslucent();
 
-            if (commandIndex >= commandsLength) {
-              command = new DrawCommand({
-                owner: polylineCollection,
-              });
-              commands.push(command);
-            } else {
-              command = commands[commandIndex];
-            }
+        // Check if the material changed. If so, start preparing a new draw command
+        if (mId !== currentId) {
+          // Check if a previous draw command needs to be finished up
+          if (defined(currentId) && count > 0) {
+            createCommand(
+              polylineCollection,
+              commandList,
+              commands,
+              commandIndex,
+              offset,
+              count,
+              shaderProgram,
+              vertexArray,
+              modelMatrix,
+              boundingSphereScratch,
+              currentMaterial
+            );
 
             ++commandIndex;
-
-            uniformMap = combine(
-              uniformCallback(currentMaterial._uniforms),
-              polylineCollection._uniformMap
-            );
-
-            command.boundingVolume = BoundingSphere.clone(
-              boundingSphereScratch,
-              command.boundingVolume
-            );
-            command.modelMatrix = modelMatrix;
-            command.shaderProgram = sp;
-            command.vertexArray = va.va;
-            command.renderState = translucent
-              ? polylineCollection._translucentRS
-              : polylineCollection._opaqueRS;
-            command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-            command.debugShowBoundingVolume = debugShowBoundingVolume;
-            command.pickId = "v_pickColor";
-
-            command.uniformMap = uniformMap;
-            command.count = count;
-            command.offset = offset;
-
             offset += count;
             count = 0;
-            cloneBoundingSphere = true;
-
-            commandList.push(command);
           }
 
           currentMaterial = polyline._material;
           currentMaterial.update(context);
           currentId = mId;
-        }
-
-        var locators = polyline._locatorBuckets;
-        var locatorLength = locators.length;
-        for (var t = 0; t < locatorLength; ++t) {
-          var locator = locators[t];
-          if (locator.locator === bucketLocator) {
-            count += locator.count;
-          }
         }
 
         var boundingVolume;
@@ -719,8 +768,7 @@ function createCommandLists(
           );
         }
 
-        if (cloneBoundingSphere) {
-          cloneBoundingSphere = false;
+        if (count == 0) {
           BoundingSphere.clone(boundingVolume, boundingSphereScratch);
         } else {
           BoundingSphere.union(
@@ -729,55 +777,55 @@ function createCommandLists(
             boundingSphereScratch
           );
         }
-      }
 
-      if (defined(currentId) && count > 0) {
-        if (commandIndex >= commandsLength) {
-          command = new DrawCommand({
-            owner: polylineCollection,
-          });
-          commands.push(command);
-        } else {
-          command = commands[commandIndex];
+        var locators = polyline._locatorBuckets;
+        var locatorLength = locators.length;
+        for (var t = 0; t < locatorLength; ++t) {
+          var locator = locators[t];
+          if (locator.locator === bucketLocator) {
+            count += locator.count;
+          }
         }
-
-        ++commandIndex;
-
-        uniformMap = combine(
-          uniformCallback(currentMaterial._uniforms),
-          polylineCollection._uniformMap
-        );
-
-        command.boundingVolume = BoundingSphere.clone(
-          boundingSphereScratch,
-          command.boundingVolume
-        );
-        command.modelMatrix = modelMatrix;
-        command.shaderProgram = sp;
-        command.vertexArray = va.va;
-        command.renderState = currentMaterial.isTranslucent()
-          ? polylineCollection._translucentRS
-          : polylineCollection._opaqueRS;
-        command.pass = currentMaterial.isTranslucent()
-          ? Pass.TRANSLUCENT
-          : Pass.OPAQUE;
-        command.debugShowBoundingVolume = debugShowBoundingVolume;
-        command.pickId = "v_pickColor";
-
-        command.uniformMap = uniformMap;
-        command.count = count;
-        command.offset = offset;
-
-        cloneBoundingSphere = true;
-
-        commandList.push(command);
       }
 
+      // Finish up the last draw command
+      if (defined(currentId) && count > 0) {
+        createCommand(
+          polylineCollection,
+          commandList,
+          commands,
+          commandIndex,
+          offset,
+          count,
+          shaderProgram,
+          vertexArray,
+          modelMatrix,
+          boundingSphereScratch,
+          currentMaterial
+        );
+        ++commandIndex;
+      }
       currentId = undefined;
     }
   }
 
+  // TODO for translucent, make the bounding volumes the same size so that they aren't sorted by scene
+
   commands.length = commandIndex;
+
+  if (preserveDrawOrder && !defined(polylineCollection._stencilClearCommand)) {
+    polylineCollection._stencilClearCommand = new ClearCommand({
+      stencil: 0,
+      pass: Pass.OPAQUE,
+      renderState: RenderState.fromCache({
+        stencilMask: StencilConstants.POLYLINE,
+      }),
+    });
+  }
+
+  if (defined(polylineCollection._stencilClearCommand)) {
+    commandList.push(polylineCollection._stencilClearCommand);
+  }
 }
 
 /**
