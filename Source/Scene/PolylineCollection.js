@@ -123,7 +123,7 @@ function PolylineCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   /**
-   * Determines if polylines will be drawn on top of each other in the order they were added to the collection regardless of rendered depth.
+   * Determines if polylines in this collection will be shown.
    *
    * @type {Boolean}
    * @default true
@@ -145,7 +145,7 @@ function PolylineCollection(options) {
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /**
-   * Determines if the polylines in the collection will be drawn in the order they were added to the collection.
+   * Determines if polylines will be drawn on top of each other in the order they were added to the collection regardless of rendered depth.
    *
    * @type {Boolean}
    * @default true
