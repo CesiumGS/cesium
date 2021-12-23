@@ -1890,6 +1890,113 @@ describe(
       );
     });
 
+    it("preserves draw order for opaque polylines", function () {
+      polylines.preserveDrawOrder = true;
+
+      var one = polylines.add({
+        positions: [
+          {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+          },
+          {
+            x: 2.0,
+            y: 3.0,
+            z: 4.0,
+          },
+        ],
+      });
+      one.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+      var two = polylines.add({
+        positions: [
+          {
+            x: 2.0,
+            y: 3.0,
+            z: 4.0,
+          },
+          {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
+          },
+        ],
+      });
+      two.material.uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
+
+      scene.primitives.add(polylines);
+      scene.render();
+
+      // The third draw command is a stencil clear command
+      expect(scene.frameState.commandList.length).toEqual(3);
+
+      // two will render before one in order to populate the stencil buffer first
+      expect(scene.frameState.commandList[0].boundingVolume).toEqual(
+        two._boundingVolume
+      );
+      expect(scene.frameState.commandList[1].boundingVolume).toEqual(
+        one._boundingVolume
+      );
+    });
+
+    it("preserves draw order for translucent polylines", function () {
+      polylines.preserveDrawOrder = true;
+
+      var one = polylines.add({
+        positions: [
+          {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+          },
+          {
+            x: 2.0,
+            y: 3.0,
+            z: 4.0,
+          },
+        ],
+      });
+      one.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+      var two = polylines.add({
+        positions: [
+          {
+            x: 2.0,
+            y: 3.0,
+            z: 4.0,
+          },
+          {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
+          },
+        ],
+      });
+      two.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+
+      scene.primitives.add(polylines);
+      scene.render();
+
+      expect(scene.frameState.commandList.length).toEqual(2);
+
+      // Both draw commands should have been set to the same bounding volume to avoid distance-based resorting.
+      var boundingVolume = BoundingSphere.union(
+        one._boundingVolume,
+        two._boundingVolume,
+        new BoundingSphere()
+      );
+
+      expect(scene.frameState.commandList[0].boundingVolume).toEqualEpsilon(
+        boundingVolume,
+        CesiumMath.EPSILON8
+      );
+      expect(scene.frameState.commandList[1].boundingVolume).toEqualEpsilon(
+        boundingVolume,
+        CesiumMath.EPSILON8
+      );
+    });
+
     it("isDestroyed", function () {
       expect(polylines.isDestroyed()).toEqual(false);
       polylines.destroy();
