@@ -585,6 +585,7 @@ PolylineCollection.prototype.update = function (frameState) {
     };
 
     if (this.preserveDrawOrder) {
+      // This stencil test forces polyline fragments to be discarded if a polyline from the same collection was already written there.
       renderStateOptions.stencilTest = {
         enabled: true,
         frontFunction: StencilFunction.NOT_EQUAL,
@@ -628,9 +629,9 @@ PolylineCollection.prototype.update = function (frameState) {
   }
 };
 
-var boundingSphereCommandScratch = new BoundingSphere();
-var boundingSpherePolylineScratch = new BoundingSphere();
-var boundingSphereTranslucentScratch = new BoundingSphere();
+var scratchBoundingSphereCommand = new BoundingSphere();
+var scratchBoundingSpherePolyline = new BoundingSphere();
+var scratchBoundingSphereTranslucent = new BoundingSphere();
 
 function createCommandLists(
   polylineCollection,
@@ -647,14 +648,8 @@ function createCommandLists(
   var batchTable = polylineCollection._batchTable;
   var uniformCallback = batchTable.getUniformMapCallback();
 
-  // These variables are updated when new draw commands are created.
-  var commandPoolIndex = 0;
-  var hasAnyTranslucentCommands = false;
-  var hasAnyNonTranslucentCommands = false;
-  var boundingSphereTranslucent = boundingSphereTranslucentScratch;
-
-  // These variable must be set before creating each draw command.
-  var boundingSphereCommand = boundingSphereCommandScratch;
+  // These variable must be set before draw commands are created.
+  var boundingSphereCommand = scratchBoundingSphereCommand;
   var material;
   var materialId;
   var vertexArray;
@@ -662,14 +657,23 @@ function createCommandLists(
   var vertexCount;
   var shaderProgram;
 
-  // This closure exists because it would be too messy to duplicate the code in each place it's called.
+  // These variables are updated when new draw commands are created.
+  var commandPoolIndex = 0;
+  var hasAnyTranslucentCommands = false;
+  var hasAnyNonTranslucentCommands = false;
+
   function finishCurrentCommand() {
     // Exit early if there is no active command or there is no geometry.
-    if (!defined(materialId) || vertexCount == 0) {
+    if (!defined(materialId) || vertexCount === 0) {
       return;
     }
 
     var isTranslucent = material.isTranslucent();
+    if (isTranslucent) {
+      hasAnyTranslucentCommands = true;
+    } else {
+      hasAnyNonTranslucentCommands = true;
+    }
 
     // Get a command object from the pool or create a new one.
     var command;
@@ -707,26 +711,6 @@ function createCommandLists(
     commandList.push(command);
 
     commandPoolIndex++;
-    vertexArrayOffset += vertexCount;
-    vertexCount = 0;
-
-    if (isTranslucent) {
-      if (!hasAnyTranslucentCommands) {
-        hasAnyTranslucentCommands = true;
-        boundingSphereTranslucent = BoundingSphere.clone(
-          boundingSphereCommand,
-          boundingSphereTranslucent
-        );
-      } else {
-        boundingSphereTranslucent = BoundingSphere.union(
-          boundingSphereCommand,
-          boundingSphereTranslucent,
-          boundingSphereTranslucent
-        );
-      }
-    } else {
-      hasAnyNonTranslucentCommands = true;
-    }
   }
 
   var length = vertexArrays.length;
@@ -756,10 +740,12 @@ function createCommandLists(
           material = polyline._material;
           material.update(context);
           materialId = mId;
+          vertexArrayOffset += vertexCount;
+          vertexCount = 0;
         }
 
         // Compute the polyline's bounding sphere.
-        var boundingSpherePolyline = boundingSpherePolylineScratch;
+        var boundingSpherePolyline = scratchBoundingSpherePolyline;
         if (frameState.mode === SceneMode.SCENE3D) {
           boundingSpherePolyline = polyline._boundingVolumeWC;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
@@ -814,12 +800,41 @@ function createCommandLists(
     }
   }
 
-  // All translucent draw commands use the same bounding sphere so that their draw order is not altered by scene.
+  // All translucent draw commands need to use the same bounding sphere so that their draw order is preserved.
   if (hasAnyTranslucentCommands) {
-    for (var c = 0; c < commandPoolIndex; c++) {
-      var command = commands[c];
+    var boundingSphereTranslucent = scratchBoundingSphereTranslucent;
+    var command;
+    var c;
+
+    // Initialize the shared bounding sphere with the first translucent bounding sphere
+    for (c = 0; c < commandPoolIndex; c++) {
+      command = commands[c];
       if (command.pass === Pass.TRANSLUCENT) {
-        command.boundingSphere = BoundingSphere.clone(
+        boundingSphereTranslucent = BoundingSphere.clone(
+          command.boundingVolume,
+          boundingSphereTranslucent
+        );
+        break;
+      }
+    }
+
+    // Union with the remaining translucent bounding spheres
+    for (; c < commandPoolIndex; c++) {
+      command = commands[c];
+      if (command.pass === Pass.TRANSLUCENT) {
+        boundingSphereTranslucent = BoundingSphere.union(
+          command.boundingVolume,
+          boundingSphereTranslucent,
+          boundingSphereTranslucent
+        );
+      }
+    }
+
+    // Set all translucent command bounding spheres to the shared bounding sphere
+    for (c = 0; c < commandPoolIndex; c++) {
+      command = commands[c];
+      if (command.pass === Pass.TRANSLUCENT) {
+        command.boundingVolume = BoundingSphere.clone(
           boundingSphereTranslucent,
           command.boundingVolume
         );
@@ -827,7 +842,7 @@ function createCommandLists(
     }
   }
 
-  if (hasAnyNonTranslucentCommands && polylineCollection.preserveDrawOrder) {
+  if (polylineCollection.preserveDrawOrder && hasAnyNonTranslucentCommands) {
     // Back-most polylines (i.e. polylines that are rendered on top) need to populate the
     // stencil buffer first, so reverse the command order for all non-translucent commands.
     var frontIndex = 0;
@@ -860,7 +875,7 @@ function createCommandLists(
       }
     }
 
-    // This stencil test forces polyline fragments to be discarded if a polyline was already written there.
+    // Stencil needs to be cleared so that other polyline collections aren't impacted
     if (!defined(polylineCollection._stencilClearCommand)) {
       polylineCollection._stencilClearCommand = new ClearCommand({
         stencil: 0,
