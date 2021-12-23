@@ -678,10 +678,13 @@ function createCommand(
   command.offset = offset;
 
   commandList.push(command);
+
+  return command;
 }
 
 var boundingSphereScratch = new BoundingSphere();
 var boundingSphereScratch2 = new BoundingSphere();
+var boundingSphereTranslucentScratch = new BoundingSphere();
 
 function createCommandLists(
   polylineCollection,
@@ -691,10 +694,14 @@ function createCommandLists(
 ) {
   var context = frameState.context;
   var commandList = frameState.commandList;
+  var commandListInitialLength = commandList.length;
   var commandIndex = 0;
   var vertexArrays = polylineCollection._vertexArrays;
   var preserveDrawOrder = polylineCollection.preserveDrawOrder;
   var length = vertexArrays.length;
+  var hasTranslucent = false;
+  var hasNonTranslucent = false;
+  var boundingSphereTranslucent;
 
   for (var m = 0; m < length; ++m) {
     var vertexArray = vertexArrays[m];
@@ -711,8 +718,7 @@ function createCommandLists(
       var currentMaterial;
       var count = 0;
 
-      for (var ss = 0; ss < polylineLength; ++ss) {
-        var s = polylineLength - ss - 1;
+      for (var s = 0; s < polylineLength; ++s) {
         var polyline = polylines[s];
         var mId = createMaterialId(polyline._material);
 
@@ -720,7 +726,7 @@ function createCommandLists(
         if (mId !== currentId) {
           // Check if a previous draw command needs to be finished up
           if (defined(currentId) && count > 0) {
-            createCommand(
+            var command = createCommand(
               polylineCollection,
               commandList,
               commands,
@@ -737,6 +743,24 @@ function createCommandLists(
             ++commandIndex;
             offset += count;
             count = 0;
+
+            if (command.pass === Pass.TRANSLUCENT) {
+              if (!hasTranslucent) {
+                hasTranslucent = true;
+                boundingSphereTranslucent = BoundingSphere.clone(
+                  boundingSphereScratch,
+                  boundingSphereTranslucentScratch
+                );
+              } else {
+                boundingSphereTranslucent = BoundingSphere.union(
+                  boundingSphereScratch,
+                  boundingSphereTranslucent,
+                  boundingSphereTranslucent
+                );
+              }
+            } else {
+              hasNonTranslucent = true;
+            }
           }
 
           currentMaterial = polyline._material;
@@ -790,7 +814,7 @@ function createCommandLists(
 
       // Finish up the last draw command
       if (defined(currentId) && count > 0) {
-        createCommand(
+        var command = createCommand(
           polylineCollection,
           commandList,
           commands,
@@ -804,26 +828,82 @@ function createCommandLists(
           currentMaterial
         );
         ++commandIndex;
+
+        if (command.pass === Pass.TRANSLUCENT) {
+          if (!hasTranslucent) {
+            hasTranslucent = true;
+            boundingSphereTranslucent = BoundingSphere.clone(
+              boundingSphereScratch,
+              boundingSphereTranslucentScratch
+            );
+          } else {
+            boundingSphereTranslucent = BoundingSphere.union(
+              boundingSphereScratch,
+              boundingSphereTranslucent,
+              boundingSphereTranslucent
+            );
+          }
+        } else {
+          hasNonTranslucent = true;
+        }
       }
       currentId = undefined;
     }
   }
 
-  // TODO for translucent, make the bounding volumes the same size so that they aren't sorted by scene
-
   commands.length = commandIndex;
 
-  if (preserveDrawOrder && !defined(polylineCollection._stencilClearCommand)) {
-    polylineCollection._stencilClearCommand = new ClearCommand({
-      stencil: 0,
-      pass: Pass.OPAQUE,
-      renderState: RenderState.fromCache({
-        stencilMask: StencilConstants.POLYLINE,
-      }),
-    });
+  // All translucent draw commands use the same bounding sphere so that order is preserved
+  if (hasTranslucent) {
+    for (var c = 0; c < commandIndex; c++) {
+      var command = commands[c];
+      if (command.pass === Pass.TRANSLUCENT) {
+        command.boundingSphere = BoundingSphere.clone(
+          boundingSphereTranslucent,
+          command.boundingVolume
+        );
+      }
+    }
   }
 
-  if (defined(polylineCollection._stencilClearCommand)) {
+  if (hasNonTranslucent && preserveDrawOrder) {
+    // Swap the order of non-translucent commands because topmost objects should populate the stencil buffer first
+    var frontIndex = commandListInitialLength;
+    var backIndex = commandListInitialLength + commandIndex - 1;
+    while (frontIndex < backIndex) {
+      // Find the next front command
+      while (
+        frontIndex < backIndex &&
+        commandList[frontIndex].pass === Pass.TRANSLUCENT
+      ) {
+        frontIndex++;
+      }
+      // Find the next back command
+      while (
+        backIndex > frontIndex &&
+        commandList[backIndex].pass === Pass.TRANSLUCENT
+      ) {
+        backIndex--;
+      }
+      // Swap the front and back
+      if (frontIndex < backIndex) {
+        var commandBottom = commandList[frontIndex];
+        commandList[frontIndex] = commandList[backIndex];
+        commandList[backIndex] = commandBottom;
+        frontIndex++;
+        backIndex--;
+      }
+    }
+
+    if (!defined(polylineCollection._stencilClearCommand)) {
+      polylineCollection._stencilClearCommand = new ClearCommand({
+        stencil: 0,
+        pass: Pass.OPAQUE,
+        renderState: RenderState.fromCache({
+          stencilMask: StencilConstants.POLYLINE,
+        }),
+      });
+    }
     commandList.push(polylineCollection._stencilClearCommand);
   }
 }
