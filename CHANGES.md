@@ -14,7 +14,7 @@
 - Added `lambertDiffuseMultiplier` property to Globe object to enhance terrain lighting. [#9878](https://github.com/CesiumGS/cesium/pull/9878)
 - Added `getFeatureInfoUrl` option to `WebMapServiceImageryProvider` which reads the getFeatureInfo request URL for WMS service if it differs with the getCapabilities URL. [#9563](https://github.com/CesiumGS/cesium/pull/9563)
 - Added `tileset.enableModelExperimental` so tilesets with `Model` and `ModelExperimental` can be mixed in the same scene. [#9982](https://github.com/CesiumGS/cesium/pull/9982)
-- Added a `preserveDrawOrder` option to `PolylineCollection` which allows polylines to be drawn on top of each other in the order they were added to the collection regardless of rendered depth. [#9985](https://github.com/CesiumGS/cesium/pull/9985)
+- Added a `preserveDrawOrder` option to `PolylineCollection` which allows polylines to be drawn on top of each other in the order they were added to the collection regardless of rendered depth. [#9986](https://github.com/CesiumGS/cesium/pull/9986)
 
 ##### Fixes :wrench:
 
