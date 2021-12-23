@@ -629,8 +629,8 @@ PolylineCollection.prototype.update = function (frameState) {
   }
 };
 
-var scratchBoundingSphereCommand = new BoundingSphere();
 var scratchBoundingSpherePolyline = new BoundingSphere();
+var scratchBoundingSphereCommand = new BoundingSphere();
 var scratchBoundingSphereTranslucent = new BoundingSphere();
 
 function createCommandLists(
@@ -736,6 +736,7 @@ function createCommandLists(
           material = polyline._material;
           material.update(context);
           materialId = mId;
+
           vertexArrayOffset += vertexCount;
           vertexCount = 0;
         }
@@ -765,8 +766,9 @@ function createCommandLists(
           );
         }
 
-        // If this is the first polyline in the draw command, set the draw command's bounding sphere to itself.
-        // Otherwise, union with the existing bounding sphere.
+        // If this is the first polyline in the draw command, set the draw command's
+        // bounding sphere to the polyline's bounding sphere. Otherwise, union with
+        // the existing bounding sphere.
         if (vertexCount === 0) {
           boundingSphereCommand = BoundingSphere.clone(
             boundingSpherePolyline,
@@ -803,7 +805,7 @@ function createCommandLists(
       var command;
       var c;
 
-      // Initialize the shared bounding sphere from the first translucent bounding sphere.
+      // Initialize the bounding sphere from the first translucent bounding sphere.
       for (c = 0; c < commandPoolIndex; c++) {
         command = commands[c];
         if (command.pass === Pass.TRANSLUCENT) {
@@ -827,7 +829,7 @@ function createCommandLists(
         }
       }
 
-      // Make all translucent commands use the shared bounding sphere.
+      // Make all translucent commands use the same bounding sphere.
       for (c = 0; c < commandPoolIndex; c++) {
         command = commands[c];
         if (command.pass === Pass.TRANSLUCENT) {
@@ -840,26 +842,26 @@ function createCommandLists(
     }
 
     if (hasAnyOpaqueCommands) {
-      // Back-most polylines (i.e. polylines that are rendered on top) need to populate the
-      // stencil buffer first, so reverse the command order for opaque commands.
+      // Most recently added polylines (i.e. polylines that are rendered on top) need to populate the
+      // stencil buffer first, so reverse the command order for opaque polyline commands.
       var frontIndex = 0;
       var backIndex = commandPoolIndex - 1;
       while (frontIndex < backIndex) {
-        // Find the next front command.
+        // Find the next least-recently added command.
         while (
           frontIndex < backIndex &&
           commands[frontIndex].pass === Pass.TRANSLUCENT
         ) {
           frontIndex++;
         }
-        // Find the next back command.
+        // Find the previous most-recently added command.
         while (
           backIndex > frontIndex &&
           commands[backIndex].pass === Pass.TRANSLUCENT
         ) {
           backIndex--;
         }
-        // Swap the front and back.
+        // Swap them.
         if (frontIndex < backIndex) {
           var commandFront = commands[frontIndex];
           var commandBack = commands[backIndex];
@@ -882,7 +884,7 @@ function createCommandLists(
   }
 
   if (polylineCollection.preserveDrawOrder && hasAnyOpaqueCommands) {
-    // Stencil needs to be cleared so that other polyline collections aren't impacted
+    // Stencil needs to be cleared so that other polyline collections aren't impacted by this collection.
     if (!defined(polylineCollection._stencilClearCommand)) {
       polylineCollection._stencilClearCommand = new ClearCommand({
         stencil: 0,
