@@ -3,7 +3,6 @@ import when from "../ThirdParty/when.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-// import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
@@ -351,13 +350,6 @@ TaskProcessor.prototype.isDestroyed = function () {
 TaskProcessor.prototype.destroy = function () {
   if (defined(this._worker)) {
     this._worker.terminate();
-  }
-  var t = this;
-  for (var key in t) {
-    if (key) {
-      t[key] = null;
-      delete t[key];
-    }
   }
 };
 
