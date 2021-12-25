@@ -1208,7 +1208,6 @@ function removeGeometryTaskProcessors() {
     for (var i = 0; i < createGeometryTaskProcessors.length; i++) {
       createGeometryTaskProcessors[i].destroy();
     }
-    createGeometryTaskProcessors.length = 0;
   }
 }
 
