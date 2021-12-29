@@ -1,5 +1,12 @@
 precision highp float;
 
+czm_modelVertexOutput defaultVertexOutput(vec3 positionMC) {
+    czm_modelVertexOutput vsOutput;
+    vsOutput.positionMC = positionMC;
+    vsOutput.pointSize = 1.0;
+    return vsOutput;
+}
+
 void main() 
 {
     // Initialize the attributes struct with all
@@ -29,7 +36,8 @@ void main()
     #endif
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER
-    customShaderStage(attributes);
+    czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
+    customShaderStage(vsOutput, attributes);
     #endif
 
     // Compute the final position in each coordinate system needed.
@@ -37,6 +45,10 @@ void main()
     geometryStage(attributes);    
 
     #ifdef PRIMITIVE_TYPE_POINTS
-    pointStage();
+        #ifdef HAS_CUSTOM_VERTEX_SHADER
+        gl_PointSize = vsOutput.pointSize;
+        #else
+        gl_PointSize = 1.0;
+        #endif
     #endif
 }

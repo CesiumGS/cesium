@@ -6,7 +6,7 @@ import MetadataEntity from "./MetadataEntity.js";
 /**
  * Metadata about a group of {@link Cesium3DTileContent}
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -34,8 +34,6 @@ function GroupMetadata(options) {
   this._class = options.class;
   this._properties = properties;
   this._id = id;
-  this._name = group.name;
-  this._description = group.description;
   this._extras = group.extras;
   this._extensions = group.extensions;
 }
@@ -66,34 +64,6 @@ Object.defineProperties(GroupMetadata.prototype, {
   id: {
     get: function () {
       return this._id;
-    },
-  },
-
-  /**
-   * The name of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  name: {
-    get: function () {
-      return this._name;
-    },
-  },
-
-  /**
-   * The description of the group.
-   *
-   * @memberof GroupMetadata.prototype
-   * @type {String}
-   * @readonly
-   * @private
-   */
-  description: {
-    get: function () {
-      return this._description;
     },
   },
 

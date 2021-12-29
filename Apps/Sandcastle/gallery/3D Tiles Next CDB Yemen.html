@@ -325,7 +325,7 @@
 
             tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
             tableHtmlScratch +=
-              "<tr><th colspan=2>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
+              "<tr><th>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
             var metadataClass = feature.content.batchTable._propertyTable.class;
             var propertyNames = feature.getPropertyNames();
             var length = propertyNames.length;
@@ -345,11 +345,11 @@
               var property = metadataClass.properties[propertyName];
 
               tableHtmlScratch +=
-                "<tr style='font-family: monospace'><th style='min-width:200px'><a href='' style='text-decoration:none'>" +
-                property.name +
-                "</a></th><th><a href='' title='" +
+                "<tr style='font-family: monospace;' title='" +
                 property.description +
-                "' style='text-decoration:none'>ℹ️</a></th><th><b>" +
+                "'><th>" +
+                property.name +
+                "</th><th><b>" +
                 property.id +
                 "</b></th><td>" +
                 property.componentType +
@@ -357,10 +357,19 @@
                 propertyValue +
                 "</td></tr>";
             }
-            tableHtmlScratch += "</tbody></table>";
+            tableHtmlScratch +=
+              "<tr><th colspan='4'><i style='font-size:10px'>Hover on a row for description</i></th></tr></tbody></table>";
             viewer.selectedEntity.description = tableHtmlScratch;
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        // Hide the terrain metadata overlay when the mouse is over the info box, to prevent overlaps.
+        var infoBoxContainer = document
+          .getElementsByClassName("cesium-viewer-infoBoxContainer")
+          .item(0);
+        infoBoxContainer.onmouseover = function (e) {
+          metadataOverlay.style.display = "none";
+        };
 
         // --- UI ---
 

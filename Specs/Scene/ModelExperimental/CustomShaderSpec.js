@@ -14,7 +14,7 @@ import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/CustomShader", function () {
   var emptyVertexShader =
-    "void vertexMain(VertexInput vsInput, inout vec3 positionMC) {}";
+    "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {}";
   var emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
@@ -164,7 +164,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   it("detects input variables in the shader text", function () {
     var customShader = new CustomShader({
       vertexShaderText: [
-        "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
         "{",
         "    positionMC += vsInput.attributes.expansion * vsInput.attributes.normalMC;",
         "}",
@@ -208,9 +208,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
     function makeSingleVariableVS(variableName) {
       return new CustomShader({
         vertexShaderText: [
-          "void vertexMain(VertexInput vsInput, inout vec3 positionMC)",
+          "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
-          "    positionMC = vsInput.attributes." + variableName + ";",
+          "    vsOutput.positionMC = vsInput.attributes." + variableName + ";",
           "}",
         ].join("\n"),
       });

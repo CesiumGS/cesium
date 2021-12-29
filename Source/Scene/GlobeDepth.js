@@ -8,7 +8,6 @@ import Framebuffer from "../Renderer/Framebuffer.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
@@ -50,11 +49,8 @@ function GlobeDepth() {
   this._useScissorTest = false;
   this._scissorRectangle = undefined;
 
-  this._useLogDepth = undefined;
   this._useHdr = undefined;
   this._clearGlobeDepth = undefined;
-
-  this._debugGlobeDepthViewportCommand = undefined;
 }
 
 Object.defineProperties(GlobeDepth.prototype, {
@@ -69,47 +65,6 @@ Object.defineProperties(GlobeDepth.prototype, {
     },
   },
 });
-
-function executeDebugGlobeDepth(globeDepth, context, passState, useLogDepth) {
-  if (
-    !defined(globeDepth._debugGlobeDepthViewportCommand) ||
-    useLogDepth !== globeDepth._useLogDepth
-  ) {
-    var fsSource =
-      "uniform highp sampler2D u_depthTexture;\n" +
-      "varying vec2 v_textureCoordinates;\n" +
-      "void main()\n" +
-      "{\n" +
-      "    float z_window = czm_unpackDepth(texture2D(u_depthTexture, v_textureCoordinates));\n" +
-      "    z_window = czm_reverseLogDepth(z_window); \n" +
-      "    float n_range = czm_depthRange.near;\n" +
-      "    float f_range = czm_depthRange.far;\n" +
-      "    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n" +
-      "    float scale = pow(z_ndc * 0.5 + 0.5, 8.0);\n" +
-      "    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);\n" +
-      "}\n";
-    var fs = new ShaderSource({
-      defines: [useLogDepth ? "LOG_DEPTH" : ""],
-      sources: [fsSource],
-    });
-
-    globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(
-      fs,
-      {
-        uniformMap: {
-          u_depthTexture: function () {
-            return globeDepth._globeDepthTexture;
-          },
-        },
-        owner: globeDepth,
-      }
-    );
-
-    globeDepth._useLogDepth = useLogDepth;
-  }
-
-  globeDepth._debugGlobeDepthViewportCommand.execute(context, passState);
-}
 
 function destroyTextures(globeDepth) {
   globeDepth._globeColorTexture =
@@ -464,14 +419,6 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
   globeDepth._mergeColorCommand.renderState = globeDepth._rsBlend;
 }
 
-GlobeDepth.prototype.executeDebugGlobeDepth = function (
-  context,
-  passState,
-  useLogDepth
-) {
-  executeDebugGlobeDepth(this, context, passState, useLogDepth);
-};
-
 GlobeDepth.prototype.update = function (
   context,
   passState,
@@ -587,10 +534,6 @@ GlobeDepth.prototype.destroy = function () {
 
   if (defined(this._mergeColorCommand)) {
     this._mergeColorCommand.shaderProgram = this._mergeColorCommand.shaderProgram.destroy();
-  }
-
-  if (defined(this._debugGlobeDepthViewportCommand)) {
-    this._debugGlobeDepthViewportCommand.shaderProgram = this._debugGlobeDepthViewportCommand.shaderProgram.destroy();
   }
 
   return destroyObject(this);

@@ -856,6 +856,10 @@ function generateTechnique(
       } else {
         fragmentShader += "    vec4 diffuse = vec4(1.0);\n";
       }
+
+      // the specular glossiness extension's alpha takes precedence over
+      // the base color alpha.
+      fragmentShader += "    baseColorWithAlpha.a = diffuse.a;\n";
     } else if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
       fragmentShader +=
         "    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, " +
