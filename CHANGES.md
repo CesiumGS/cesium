@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.90 - 2022-02-01
+
+##### Fixes :wrench:
+
+- Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values. [#9717](https://github.com/CesiumGS/cesium/pull/9717)
+
 ### 1.89 - 2022-01-03
 
 ##### Breaking Changes :mega:
