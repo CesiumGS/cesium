@@ -138,13 +138,18 @@ function initialize(sceneGraph) {
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} modelMatrix The current computed model matrix for this node.
  *
+ * @returns {Number} The index of this node in the runtimeNodes array.
+ *
  * @private
  */
 function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   // No processing needs to happen if node has no children and no mesh primitives.
   if (!defined(node.children) && !defined(node.primitives)) {
-    return;
+    return -1;
   }
+
+  // The indices of the children of this node in the runtimeNodes array.
+  var childrenIndices = [];
 
   // Traverse through scene graph.
   var i;
@@ -157,7 +162,14 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
         new Matrix4()
       );
 
-      traverseSceneGraph(sceneGraph, childNode, childNodeModelMatrix);
+      var childIndex = traverseSceneGraph(
+        sceneGraph,
+        childNode,
+        childNodeModelMatrix
+      );
+      if (childIndex > -1) {
+        childrenIndices.push(childIndex);
+      }
     }
   }
 
@@ -165,6 +177,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   var runtimeNode = new ModelExperimentalNode({
     node: node,
     modelMatrix: modelMatrix,
+    children: childrenIndices,
   });
 
   if (defined(node.primitives)) {
@@ -180,6 +193,9 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   }
 
   sceneGraph._runtimeNodes.push(runtimeNode);
+
+  // The position of the runtime node in the array.
+  return sceneGraph._runtimeNodes.length - 1;
 }
 
 /**
