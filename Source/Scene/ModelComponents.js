@@ -694,6 +694,9 @@ function Components() {
 
   /**
    * A world-space transform to apply to the primitives.
+   *
+   * @type {Matrix4}
+   * @private
    */
   this.transform = Matrix4.clone(Matrix4.IDENTITY);
 }
