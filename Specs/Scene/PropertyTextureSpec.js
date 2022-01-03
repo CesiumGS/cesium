@@ -1,5 +1,5 @@
 import {
-  FeatureTexture,
+  PropertyTexture,
   MetadataClass,
   PixelDatatype,
   PixelFormat,
@@ -7,7 +7,7 @@ import {
 } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 
-describe("Scene/FeatureTexture", function () {
+describe("Scene/PropertyTexture", function () {
   var classDefinition;
   var context;
   var texture0;
@@ -27,10 +27,10 @@ describe("Scene/FeatureTexture", function () {
             componentCount: 3,
           },
           intensity: {
-            type: "UINT8",
+            componentType: "UINT8",
           },
           ortho: {
-            type: "UINT8",
+            componentType: "UINT8",
             normalized: true,
           },
         },
@@ -98,7 +98,7 @@ describe("Scene/FeatureTexture", function () {
       },
     };
 
-    featureTexture = new FeatureTexture({
+    featureTexture = new PropertyTexture({
       featureTexture: featureTextureJson,
       class: classDefinition,
       textures: {
@@ -122,7 +122,7 @@ describe("Scene/FeatureTexture", function () {
 
   it("constructor throws without featureTexture", function () {
     expect(function () {
-      return new FeatureTexture({
+      return new PropertyTexture({
         class: classDefinition,
         textures: {},
       });
@@ -131,7 +131,7 @@ describe("Scene/FeatureTexture", function () {
 
   it("constructor throws without class", function () {
     expect(function () {
-      return new FeatureTexture({
+      return new PropertyTexture({
         featureTexture: {},
         textures: {},
       });
@@ -140,7 +140,7 @@ describe("Scene/FeatureTexture", function () {
 
   it("constructor throws without textures", function () {
     expect(function () {
-      return new FeatureTexture({
+      return new PropertyTexture({
         featureTexture: {},
         class: classDefinition,
       });

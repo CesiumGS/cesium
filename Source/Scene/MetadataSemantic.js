@@ -5,17 +5,9 @@
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/specification/Metadata/Semantics|Cesium Metadata Semantic Reference}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference}
  */
 var MetadataSemantic = {
-  /**
-   * A name, stored as a <code>STRING</code>. This does not have to be unique
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  NAME: "NAME",
   /**
    * A unique identifier, stored as a <code>STRING</code>.
    *
@@ -24,6 +16,22 @@ var MetadataSemantic = {
    * @private
    */
   ID: "ID",
+  /**
+   * A name, stored as a <code>STRING</code>. This does not have to be unique.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  NAME: "NAME",
+  /**
+   * A description, stored as a <code>STRING</code>.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  DESCRIPTION: "DESCRIPTION",
   /**
    * A bounding box for a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
@@ -65,7 +73,7 @@ var MetadataSemantic = {
    */
   TILE_MAXIMUM_HEIGHT: "TILE_MAXIMUM_HEIGHT",
   /**
-   * The horizon occlusion point for a tile, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
+   * The horizon occlusion point for a tile, stored as an <code>VEC3</code> of <code>FLOAT32</code> or <code>FLOAT64</code> components.
    *
    * @see {@link https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
    *
@@ -74,6 +82,14 @@ var MetadataSemantic = {
    * @private
    */
   TILE_HORIZON_OCCLUSION_POINT: "TILE_HORIZON_OCCLUSION_POINT",
+  /**
+   * The geometric error for a tile, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to override the geometric error implicitly calculated in <code>3DTILES_implicit_tiling</code>.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  TILE_GEOMETRIC_ERROR: "TILE_GEOMETRIC_ERROR",
   /**
    * A bounding box for the content of a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
@@ -115,7 +131,7 @@ var MetadataSemantic = {
    */
   CONTENT_MAXIMUM_HEIGHT: "CONTENT_MAXIMUM_HEIGHT",
   /**
-   * The horizon occlusion point for the content of a tile, stored as an <code>ARRAY</code> of 3 <code>FLOAT32</code> or <code>FLOAT64</code> components.
+   * The horizon occlusion point for the content of a tile, stored as an <code>VEC3</code> of <code>FLOAT32</code> or <code>FLOAT64</code> components.
    *
    * @see {@link https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
    *

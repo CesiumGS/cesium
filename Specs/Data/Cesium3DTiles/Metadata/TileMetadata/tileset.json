@@ -13,12 +13,11 @@
           "tile": {
             "properties": {
               "color": {
-                "type": "ARRAY",
-                "componentType": "FLOAT32",
-                "componentCount": 4
+                "type": "VEC4",
+                "componentType": "FLOAT32"
               },
               "population": {
-                "type": "UINT32"
+                "componentType": "UINT32"
               }
             }
           }

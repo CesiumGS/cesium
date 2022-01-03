@@ -12,6 +12,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
+import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import CesiumMath from "../Core/Math.js";
@@ -951,15 +952,21 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
+  this._customShader = options.customShader;
+
   /**
-   * A custom shader to apply to the tileset. Only used for contents that use
-   * {@link ModelExperimental}
-   *
-   * @type {CustomShader}
-   * @private
+   * If true, {@link ModelExperimental} will be used instead of {@link Model}
+   * for each tile with a glTF or 3D Tiles 1.0 content (where applicable).
+   * <p>
+   * The value defaults to {@link ExperimentalFeatures.enableModelExperimental}.
+   * </p>
+   * @type {Boolean}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  this.customShader = options.customShader;
+  this.enableModelExperimental = defaultValue(
+    options.enableModelExperimental,
+    ExperimentalFeatures.enableModelExperimental
+  );
 
   this._schemaLoader = undefined;
 
@@ -1320,6 +1327,31 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._styleEngine.style = value;
+    },
+  },
+
+  /**
+   * A custom shader to apply to all tiles in the tileset. Only used for
+   * contents that use {@link ModelExperimental}. Using custom shaders with a
+   * {@link Cesium3DTileStyle} may lead to undefined behavior.
+   * <p>
+   * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} or tileset.enableModelExperimental to <code>true</code>.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {CustomShader|undefined}
+   *
+   * @default undefined
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  customShader: {
+    get: function () {
+      return this._customShader;
+    },
+    set: function (value) {
+      this._customShader = value;
     },
   },
 

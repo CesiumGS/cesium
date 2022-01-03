@@ -1,3 +1,6 @@
+import Color from "../../Core/Color.js";
+import defined from "../../Core/defined.js";
+
 /**
  * A feature of a {@link ModelExperimental}.
  * <p>
@@ -7,8 +10,7 @@
  * Modifications to a <code>ModelFeature</code> object have the lifetime of the model.
  * </p>
  * <p>
- * Do not construct this directly. Access it through {@link ModelFeatureTable#getFeature}, {@link Cesium3DTileContent#getFeature} or
- * picking using {@link Scene#pick}.
+ * Do not construct this directly. Access it through picking using {@link Scene#pick}.
  * </p>
  *
  * @alias ModelFeature
@@ -17,7 +19,6 @@
  * @param {Object} options Object with the following properties:
  * @param {ModelExperimental} options.model The model the feature belongs to.
  * @param {Number} options.featureId The unique integral identifier for this feature.
- * @param {ModelFeatureTable} options.featureTable The {@link ModelFeatureTable} that this feature belongs to.
  *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
@@ -28,16 +29,61 @@
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeature(options) {
   this._model = options.model;
+
+  // This ModelFeatureTable is not documented as an option since it is
+  // part of the private API and should not appear in the documentation.
   this._featureTable = options.featureTable;
+
   this._featureId = options.featureId;
+  this._color = undefined; // for calling getColor
 }
 
 Object.defineProperties(ModelFeature.prototype, {
+  /**
+   * Gets or sets if the feature will be shown. This is set for all features
+   * when a style's show is evaluated.
+   *
+   * @memberof ModelFeature.prototype
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  show: {
+    get: function () {
+      return this._featureTable.getShow(this._featureId);
+    },
+    set: function (value) {
+      this._featureTable.setShow(this._featureId, value);
+    },
+  },
+
+  /**
+   * Gets or sets the highlight color multiplied with the feature's color.  When
+   * this is white, the feature's color is not changed. This is set for all features
+   * when a style's color is evaluated.
+   *
+   * @memberof ModelFeature.prototype
+   *
+   * @type {Color}
+   *
+   * @default {@link Color.WHITE}
+   */
+  color: {
+    get: function () {
+      if (!defined(this._color)) {
+        this._color = new Color();
+      }
+      return this._featureTable.getColor(this._featureId, this._color);
+    },
+    set: function (value) {
+      this._featureTable.setColor(this._featureId, value);
+    },
+  },
   /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
    * the model containing the feature.
@@ -98,6 +144,34 @@ ModelFeature.prototype.hasProperty = function (name) {
  * }
  */
 ModelFeature.prototype.getProperty = function (name) {
+  return this._featureTable.getProperty(this._featureId, name);
+};
+
+/**
+ * Returns a copy of the feature's property with the given name, examining all
+ * the metadata from the EXT_mesh_features and legacy EXT_feature_metadata glTF
+ * extensions. Metadata is checked against name from most specific to most
+ * general and the first match is returned. Metadata is checked in this order:
+ * <ol>
+ *   <li>Feature metadata property by semantic</li>
+ *   <li>Feature metadata property by property ID</li>
+ * </ol>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * </p>
+ *
+ * @param {String} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+ * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ *
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+ModelFeature.prototype.getPropertyInherited = function (name) {
+  var value = this._featureTable.getPropertyBySemantic(this._featureId, name);
+  if (defined(value)) {
+    return value;
+  }
+
   return this._featureTable.getProperty(this._featureId, name);
 };
 

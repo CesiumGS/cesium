@@ -1,9 +1,12 @@
-import buildDrawCommand from "./buildDrawCommand.js";
+import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
+import LightingPipelineStage from "./LightingPipelineStage.js";
+import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -192,7 +195,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   var modelRenderResources = new ModelRenderResources(this._model);
 
+  var modelPipelineStages = [];
+  var model = this._model;
+  if (defined(model.color)) {
+    modelPipelineStages.push(ModelColorPipelineStage);
+  }
+
   var i, j, k;
+  for (i = 0; i < modelPipelineStages.length; i++) {
+    var modelPipelineStage = modelPipelineStages[i];
+    modelPipelineStage.process(modelRenderResources, model, frameState);
+  }
+
   for (i = 0; i < this._runtimeNodes.length; i++) {
     var runtimeNode = this._runtimeNodes[i];
 
@@ -214,13 +228,28 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
+      // The pipeline stage array is copied because we don't want dynamic stages to be added to the primitive's default stages.
+      var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
+
+      if (defined(model.customShader)) {
+        // The custom shader stage needs to go before the lighting stage.
+        var lightingStageIndex = primitivePipelineStages.indexOf(
+          LightingPipelineStage
+        );
+        primitivePipelineStages.splice(
+          lightingStageIndex,
+          0,
+          CustomShaderPipelineStage
+        );
+      }
+
       var primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
         runtimePrimitive
       );
 
-      for (k = 0; k < runtimePrimitive.pipelineStages.length; k++) {
-        var primitivePipelineStage = runtimePrimitive.pipelineStages[k];
+      for (k = 0; k < primitivePipelineStages.length; k++) {
+        var primitivePipelineStage = primitivePipelineStages[k];
 
         primitivePipelineStage.process(
           primitiveRenderResources,
@@ -231,8 +260,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
-      var drawCommand = buildDrawCommand(primitiveRenderResources, frameState);
-      this._drawCommands.push(drawCommand);
+      var drawCommands = buildDrawCommands(
+        primitiveRenderResources,
+        frameState
+      );
+      this._drawCommands.push.apply(this._drawCommands, drawCommands);
     }
   }
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(

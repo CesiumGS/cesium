@@ -3,20 +3,22 @@ import {
   CustomShader,
   CustomShaderMode,
   FeatureIdPipelineStage,
-  CustomShaderPipelineStage,
+  CPUStylingPipelineStage,
   DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
   PickingPipelineStage,
+  VertexAttributeSemantic,
+  BatchTexturePipelineStage,
   ModelExperimentalPrimitive,
 } from "../../../Source/Cesium.js";
-import BatchTexturePipelineStage from "../../../Source/Scene/ModelExperimental/BatchTexturePipelineStage.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {
     featureIdAttributes: [],
     featureIdTextures: [],
+    attributes: [],
   };
   var mockNode = {};
   var mockModel = {
@@ -100,6 +102,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         allowPicking: false,
+        content: {},
       },
     });
 
@@ -130,6 +133,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       FeatureIdPipelineStage,
       BatchTexturePipelineStage,
+      CPUStylingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -142,11 +146,17 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: {
         featureIdAttributes: [{}, {}],
         featureIdTextures: [],
+        attributes: [
+          {
+            semantic: VertexAttributeSemantic.FEATURE_ID,
+          },
+        ],
       },
       node: {},
       model: {
         allowPicking: true,
         featureIdAttributeIndex: 1,
+        content: {},
       },
     });
 
@@ -156,6 +166,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       LightingPipelineStage,
       FeatureIdPipelineStage,
       BatchTexturePipelineStage,
+      CPUStylingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -166,11 +177,13 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: {
         featureIdAttributes: [],
         featureIdTextures: [{}, {}],
+        attributes: [],
       },
       node: {},
       model: {
         allowPicking: true,
         featureIdTextureIndex: 1,
+        content: {},
       },
     });
 
@@ -211,6 +224,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        content: {},
         customShader: new CustomShader({
           vertexShaderText: emptyVertexShader,
           fragmentShaderText: emptyFragmentShader,
@@ -222,7 +236,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -235,6 +248,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        content: {},
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
           vertexShaderText: emptyVertexShader,
@@ -246,7 +260,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     var expectedStages = [
       GeometryPipelineStage,
-      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -259,6 +272,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        content: {},
         customShader: new CustomShader({
           mode: CustomShaderMode.REPLACE_MATERIAL,
           vertexShaderText: emptyVertexShader,
@@ -270,7 +284,6 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];

@@ -13,7 +13,8 @@ import TextureManager from "./TextureManager.js";
  * @typedef {Object} UniformSpecifier
  * @property {UniformType} type The Glsl type of the uniform.
  * @property {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|TextureUniform} value The initial value of the uniform
- * @private
+ *
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
 /**
@@ -64,6 +65,9 @@ import TextureManager from "./TextureManager.js";
  *      is responsible for calling this method.
  *   </li>
  * </ul>
+ * <p>
+ * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
+ * </p>
  *
  * @param {Object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
@@ -77,7 +81,6 @@ import TextureManager from "./TextureManager.js";
  * @alias CustomShader
  * @constructor
  *
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @example
@@ -98,9 +101,9 @@ import TextureManager from "./TextureManager.js";
  *     v_selectedColor: Cesium.VaryingType.VEC3
  *   },
  *   vertexShaderText: `
- *   void vertexMain(VertexInput vsInput, inout vec3 position) {
+ *   void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
  *     v_selectedColor = mix(vsInput.attributes.color_0, vsInput.attributes.color_1, u_colorIndex);
- *     position += 0.1 * vsInput.attributes.normal;
+ *     vsOutput.positionMC += 0.1 * vsInput.attributes.normal;
  *   }
  *   `,
  *   fragmentShaderText: `
@@ -120,7 +123,6 @@ export default function CustomShader(options) {
    *
    * @type {CustomShaderMode}
    * @readonly
-   * @private
    */
   this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
   /**
@@ -129,7 +131,6 @@ export default function CustomShader(options) {
    *
    * @type {LightingModel}
    * @readonly
-   * @private
    */
   this.lightingModel = options.lightingModel;
   /**
@@ -137,7 +138,6 @@ export default function CustomShader(options) {
    *
    * @type {Object.<String, UniformSpecifier>}
    * @readonly
-   * @private
    */
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
   /**
@@ -146,7 +146,6 @@ export default function CustomShader(options) {
    *
    * @type {Object.<String, VaryingType>}
    * @readonly
-   * @private
    */
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
   /**
@@ -154,7 +153,6 @@ export default function CustomShader(options) {
    *
    * @type {String}
    * @readonly
-   * @private
    */
   this.vertexShaderText = options.vertexShaderText;
   /**
@@ -162,7 +160,6 @@ export default function CustomShader(options) {
    *
    * @type {String}
    * @readonly
-   * @private
    */
   this.fragmentShaderText = options.fragmentShaderText;
   /**
@@ -170,7 +167,6 @@ export default function CustomShader(options) {
    *
    * @type {Boolean}
    * @readonly
-   * @private
    */
   this.isTranslucent = defaultValue(options.isTranslucent, false);
 
@@ -223,6 +219,7 @@ export default function CustomShader(options) {
   };
 
   findUsedVariables(this);
+  validateBuiltinVariables(this);
 }
 
 function buildUniformMap(customShader) {
@@ -303,6 +300,77 @@ function findUsedVariables(customShader) {
     var materialSet = customShader.usedVariablesFragment.materialSet;
     getVariables(fragmentShaderText, materialRegex, materialSet);
   }
+}
+
+function expandCoordinateAbbreviations(variableName) {
+  var modelCoordinatesRegex = /^.*MC$/;
+  var worldCoordinatesRegex = /^.*WC$/;
+  var eyeCoordinatesRegex = /^.*EC$/;
+
+  if (modelCoordinatesRegex.test(variableName)) {
+    return variableName + " (model coordinates)";
+  }
+
+  if (worldCoordinatesRegex.test(variableName)) {
+    return variableName + " (Cartesian world coordinates)";
+  }
+
+  if (eyeCoordinatesRegex.test(variableName)) {
+    return variableName + " (eye coordinates)";
+  }
+
+  return variableName;
+}
+
+function validateVariableUsage(
+  variableSet,
+  incorrectVariable,
+  correctVariable,
+  vertexOrFragment
+) {
+  if (variableSet.hasOwnProperty(incorrectVariable)) {
+    var message =
+      expandCoordinateAbbreviations(incorrectVariable) +
+      " is not available in the " +
+      vertexOrFragment +
+      " shader. Did you mean " +
+      expandCoordinateAbbreviations(correctVariable) +
+      " instead?";
+    throw new DeveloperError(message);
+  }
+}
+
+function validateBuiltinVariables(customShader) {
+  var attributesVS = customShader.usedVariablesVertex.attributeSet;
+
+  // names without MC/WC/EC are ambiguous
+  validateVariableUsage(attributesVS, "position", "positionMC", "vertex");
+  validateVariableUsage(attributesVS, "normal", "normalMC", "vertex");
+  validateVariableUsage(attributesVS, "tangent", "tangentMC", "vertex");
+  validateVariableUsage(attributesVS, "bitangent", "bitangentMC", "vertex");
+
+  // world and eye coordinate positions are only available in the fragment shader.
+  validateVariableUsage(attributesVS, "positionWC", "positionMC", "vertex");
+  validateVariableUsage(attributesVS, "positionEC", "positionMC", "vertex");
+
+  // normal, tangent and bitangent are in model coordinates in the vertex shader
+  validateVariableUsage(attributesVS, "normalEC", "normalMC", "vertex");
+  validateVariableUsage(attributesVS, "tangentEC", "tangentMC", "vertex");
+  validateVariableUsage(attributesVS, "bitangentEC", "bitangentMC", "vertex");
+
+  var attributesFS = customShader.usedVariablesFragment.attributeSet;
+
+  // names without MC/WC/EC are ambiguous
+  validateVariableUsage(attributesFS, "position", "positionEC", "fragment");
+  validateVariableUsage(attributesFS, "normal", "normalEC", "fragment");
+  validateVariableUsage(attributesFS, "tangent", "tangentEC", "fragment");
+  validateVariableUsage(attributesFS, "bitangent", "bitangentEC", "fragment");
+
+  // normal, tangent, and bitangent are in eye coordinates in the fragment
+  // shader.
+  validateVariableUsage(attributesFS, "normalMC", "normalEC", "fragment");
+  validateVariableUsage(attributesFS, "tangentMC", "tangentEC", "fragment");
+  validateVariableUsage(attributesFS, "bitangentMC", "bitangentEC", "fragment");
 }
 
 /**

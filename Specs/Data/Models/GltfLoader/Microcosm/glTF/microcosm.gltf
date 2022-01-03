@@ -1,18 +1,18 @@
 {
-  "asset" : {
-    "version" : "2.0"
+  "asset": {
+    "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_feature_metadata"
+    "EXT_mesh_features"
   ],
   "extensions": {
-    "EXT_feature_metadata": {
+    "EXT_mesh_features": {
       "schema": {
         "classes": {
           "vegetation": {
             "properties": {
               "vegetationDensity": {
-                "type": "UINT8",
+                "componentType": "UINT8",
                 "normalized": true
               }
             }
@@ -20,19 +20,19 @@
           "landCover": {
             "properties": {
               "name": {
-                "type": "STRING"
+                "componentType": "STRING"
               },
               "color": {
-                "type": "ARRAY",
-                "componentType": "UINT8",
-                "componentCount": 3
+                "type": "VEC3",
+                "componentType": "UINT8"
               }
             }
           }
-        }  
+        }
       },
-      "featureTables": {
-        "landCoverTable": {
+      "propertyTables": [
+        {
+          "name": "Land Cover",
           "class": "landCover",
           "count": 256,
           "properties": {
@@ -45,81 +45,82 @@
             }
           }
         }
-      },
-      "featureTextures": {
-        "vegetationTexture": {
+      ],
+      "propertyTextures": [
+        {
+          "name": "Vegetation",
           "class": "vegetation",
+          "index": 1,
+          "texCoord": 0,
           "properties": {
-            "vegetationDensity": {
-              "texture": {
-                "index": 1,
-                "texCoord": 0
-              },
-              "channels": "r"
-            }
+            "vegetationDensity": [
+              0
+            ]
           }
         }
-      }
+      ]
     }
   },
-  "scene" : 0,
-  "scenes" : [
+  "scene": 0,
+  "scenes": [
     {
-      "nodes" : [0]
+      "nodes": [
+        0
+      ]
     }
   ],
-  "nodes" : [
+  "nodes": [
     {
-      "mesh" : 0
+      "mesh": 0
     }
   ],
-  "materials" : [
+  "materials": [
     {
-      "doubleSided" : true,
-      "name" : "Photogrammetry",
-      "pbrMetallicRoughness" : {
-        "baseColorTexture" : {
-          "index" : 0,
-          "texCoord" : 1
+      "doubleSided": true,
+      "name": "Photogrammetry",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0,
+          "texCoord": 1
         },
-        "metallicFactor" : 0,
-        "roughnessFactor" : 0.5
+        "metallicFactor": 0,
+        "roughnessFactor": 0.5
       }
     }
   ],
-  "meshes" : [
+  "meshes": [
     {
-      "primitives" : [
+      "primitives": [
         {
-          "attributes" : {
-            "POSITION" : 0,
-            "TEXCOORD_0" : 1,
-            "TEXCOORD_1" : 2
+          "attributes": {
+            "POSITION": 0,
+            "TEXCOORD_0": 1,
+            "TEXCOORD_1": 2
           },
-          "indices" : 3,
-          "material" : 0,
+          "indices": 3,
+          "material": 0,
           "extensions": {
-            "EXT_feature_metadata": {
-              "featureIdTextures": [
+            "EXT_mesh_features": {
+              "propertyTables": [
+                0
+              ],
+              "featureIds": [
                 {
-                  "featureTable": "landCoverTable",
-                  "featureIds": {
-                    "texture": {
-                      "texCoord": 0,
-                      "index": 2
-                    },
-                    "channels": "r"
-                  }
+                  "index": 2,
+                  "texCoord": 0,
+                  "channel": 0
                 }
               ],
-              "featureTextures": ["vegetationTexture"]
+              "propertyTextures": [
+                0
+              ]
             }
           }
         }
       ]
     }
   ],
-  "textures" : [
+  "textures": [
     {
       "name": "Photogrammetry Texture",
       "source": 0
@@ -133,7 +134,7 @@
       "source": 2
     }
   ],
-  "images" : [
+  "images": [
     {
       "name": "Photogrammetry",
       "uri": "photogrammetry.jpg"
@@ -147,70 +148,70 @@
       "uri": "land-cover.png"
     }
   ],
-  "accessors" : [
+  "accessors": [
     {
       "name": "Positions",
-      "bufferView" : 0,
-      "componentType" : 5126,
-      "count" : 1830,
-      "max" : [
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 1830,
+      "max": [
         50.01457214355469,
         19.920944213867188,
         50.0020866394043
       ],
-      "min" : [
+      "min": [
         -50.00897979736328,
         -16.473196029663086,
         -50.006893157958984
       ],
-      "type" : "VEC3"
+      "type": "VEC3"
     },
     {
       "name": "Ortho UVs",
-      "bufferView" : 1,
-      "componentType" : 5126,
-      "count" : 1830,
-      "type" : "VEC2"
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 1830,
+      "type": "VEC2"
     },
     {
       "name": "Photogrammetry UVs",
-      "bufferView" : 2,
-      "componentType" : 5126,
-      "count" : 1830,
-      "type" : "VEC2"
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1830,
+      "type": "VEC2"
     },
     {
       "name": "Indices",
-      "bufferView" : 3,
-      "componentType" : 5123,
-      "count" : 5964,
-      "type" : "SCALAR"
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 5964,
+      "type": "SCALAR"
     }
   ],
-  "bufferViews" : [
+  "bufferViews": [
     {
       "name": "Positions",
-      "buffer" : 0,
-      "byteLength" : 21960,
-      "byteOffset" : 0
+      "buffer": 0,
+      "byteLength": 21960,
+      "byteOffset": 0
     },
     {
       "name": "Ortho UVs",
-      "buffer" : 0,
-      "byteLength" : 14640,
-      "byteOffset" : 21960
+      "buffer": 0,
+      "byteLength": 14640,
+      "byteOffset": 21960
     },
     {
       "name": "Photogrammetry UVs",
-      "buffer" : 0,
-      "byteLength" : 14640,
-      "byteOffset" : 36600
+      "buffer": 0,
+      "byteLength": 14640,
+      "byteOffset": 36600
     },
     {
       "name": "Indices",
-      "buffer" : 0,
-      "byteLength" : 11928,
-      "byteOffset" : 51240
+      "buffer": 0,
+      "byteLength": 11928,
+      "byteOffset": 51240
     },
     {
       "name": "Land Cover Name",
@@ -231,11 +232,11 @@
       "byteOffset": 0
     }
   ],
-  "buffers" : [
+  "buffers": [
     {
       "name": "Geometry Buffer",
-      "byteLength" : 63168,
-      "uri" : "microcosm.bin"
+      "byteLength": 63168,
+      "uri": "microcosm.bin"
     },
     {
       "name": "Metadata Buffer",

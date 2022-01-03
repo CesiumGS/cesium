@@ -60,14 +60,14 @@ describe("Scene/MetadataSchema", function () {
         city: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
           },
         },
         neighborhood: {
           properties: {
             color: {
-              type: "ENUM",
+              componentType: "ENUM",
               enumType: "color",
             },
             coordinates: {
@@ -85,11 +85,12 @@ describe("Scene/MetadataSchema", function () {
               enumType: "species",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },
       },
+      id: "mySchema",
       name: "My Schema",
       description: "My Schema Description",
       version: "3.1.0",
@@ -115,6 +116,7 @@ describe("Scene/MetadataSchema", function () {
     expect(treeProperties.species.enumType.id).toBe("species");
     expect(treeProperties.height.id).toBe("height");
 
+    expect(schema.id).toBe("mySchema");
     expect(schema.name).toBe("My Schema");
     expect(schema.description).toBe("My Schema Description");
     expect(schema.version).toBe("3.1.0");

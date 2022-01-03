@@ -7,12 +7,6 @@ describe("Renderer/ShaderStruct", function () {
     expect(struct.fields).toEqual([]);
   });
 
-  it("constructor throws for undefined name", function () {
-    expect(function () {
-      return new ShaderStruct(undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("addField adds fields", function () {
     var struct = new ShaderStruct("TestStruct");
     struct.addField("vec3", "positionMC");
@@ -23,20 +17,6 @@ describe("Renderer/ShaderStruct", function () {
       "    float weights[4];",
       "    OtherStruct complex;",
     ]);
-  });
-
-  it("addField throws for undefined type", function () {
-    var struct = new ShaderStruct("TestStruct");
-    expect(function () {
-      return struct.addField(undefined, "positionMC");
-    }).toThrowDeveloperError();
-  });
-
-  it("addField throws for undefined identifier", function () {
-    var struct = new ShaderStruct("TestStruct");
-    expect(function () {
-      return struct.addField("vec3", undefined);
-    }).toThrowDeveloperError();
   });
 
   it("generateGlslLines generates a struct definition", function () {

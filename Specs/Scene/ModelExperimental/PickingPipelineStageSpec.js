@@ -5,6 +5,7 @@ import {
   ShaderBuilder,
   Resource,
   ResourceCache,
+  defined,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
@@ -70,7 +71,84 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
     }
   }
 
-  it("sets the picking variables in render resources", function () {
+  function verifyPickObject(pickObject, renderResources, instanceId) {
+    var model = renderResources.model;
+    var content = model.content;
+
+    expect(pickObject).toBeDefined();
+    if (defined(content)) {
+      // 3D Tiles case
+      expect(pickObject.primitive).toEqual(content.tileset);
+      expect(pickObject.content).toEqual(content);
+    } else {
+      // ModelExperimental case
+      expect(pickObject.primitive).toEqual(model);
+    }
+
+    if (defined(instanceId)) {
+      expect(pickObject.instanceId).toEqual(instanceId);
+    }
+
+    var detailPickObject = pickObject.detail;
+    expect(detailPickObject).toBeDefined();
+    expect(detailPickObject.model).toEqual(model);
+    expect(detailPickObject.node).toEqual(renderResources.runtimeNode);
+    expect(detailPickObject.primitive).toEqual(
+      renderResources.runtimePrimitive
+    );
+  }
+
+  it("sets the picking variables in render resources for 3D Tiles", function () {
+    var renderResources = {
+      attributeIndex: 1,
+      pickId: undefined,
+      shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+        // Setting the content property here makes PickingPipelineStage handle this
+        // as part of a tileset.
+        content: {
+          tileset: {},
+        },
+      },
+      runtimePrimitive: {},
+      runtimeNode: {
+        node: {},
+      },
+      uniformMap: {},
+    };
+
+    return loadGltf(boxVertexColors).then(function (gltfLoader) {
+      var components = gltfLoader.components;
+      var primitive = components.nodes[0].primitives[0];
+
+      var frameState = scene.frameState;
+      var context = frameState.context;
+      // Reset pick objects.
+      context._pickObjects = [];
+
+      PickingPipelineStage.process(renderResources, primitive, frameState);
+
+      var shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform vec4 czm_pickColor;",
+      ]);
+
+      var pickObject =
+        context._pickObjects[Object.keys(context._pickObjects)[0]];
+      verifyPickObject(pickObject, renderResources);
+
+      var uniformMap = renderResources.uniformMap;
+      expect(uniformMap.czm_pickColor).toBeDefined();
+      expect(uniformMap.czm_pickColor()).toBeDefined();
+
+      expect(renderResources.model._resources.length).toEqual(1);
+
+      expect(renderResources.pickId).toEqual("czm_pickColor");
+    });
+  });
+
+  it("sets the picking variables in render resources for models", function () {
     var renderResources = {
       attributeIndex: 1,
       pickId: undefined,
@@ -103,11 +181,9 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         "uniform vec4 czm_pickColor;",
       ]);
 
-      var pickObject = context._pickObjects["1"];
-      expect(pickObject).toBeDefined();
-      expect(pickObject.model).toBe(renderResources.model);
-      expect(pickObject.node).toBe(renderResources.runtimeNode);
-      expect(pickObject.primitive).toBe(renderResources.runtimePrimitive);
+      var pickObject =
+        context._pickObjects[Object.keys(context._pickObjects)[0]];
+      verifyPickObject(pickObject, renderResources);
 
       var uniformMap = renderResources.uniformMap;
       expect(uniformMap.czm_pickColor).toBeDefined();
@@ -133,7 +209,9 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       },
       runtimeNode: {
         node: {
-          instances: {},
+          instances: {
+            featureIdAttributes: [{}, {}],
+          },
         },
       },
       attributes: [],
@@ -142,6 +220,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
     return loadGltf(boxInstanced).then(function (gltfLoader) {
       var components = gltfLoader.components;
       var primitive = components.nodes[0].primitives[0];
+      renderResources.runtimeNode.node = components.nodes[0];
 
       var frameState = scene.frameState;
       var context = frameState.context;
@@ -162,11 +241,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       for (var key in context._pickObjects) {
         if (context._pickObjects.hasOwnProperty(key)) {
           var pickObject = context._pickObjects[key];
-          expect(pickObject).toBeDefined();
-          expect(pickObject.model).toBe(renderResources.model);
-          expect(pickObject.node).toBe(renderResources.runtimeNode);
-          expect(pickObject.primitive).toBe(renderResources.runtimePrimitive);
-          expect(pickObject.instanceId).toEqual(i++);
+          verifyPickObject(pickObject, renderResources, i++);
         }
       }
 
@@ -203,9 +278,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       model: {
         featureIdTextureIndex: 0,
         _resources: [],
-        featureTables: {
-          landCoverTable: mockModelFeatureTable,
-        },
+        featureTables: [mockModelFeatureTable],
       },
       runtimeNode: {
         node: {},
@@ -234,7 +307,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       ]);
 
       expect(renderResources.pickId).toEqual(
-        "((featureId < model_featuresLength) ? texture2D(model_pickTexture, featureSt) : vec4(0.0))"
+        "((feature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))"
       );
     });
   });

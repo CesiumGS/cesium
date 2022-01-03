@@ -11,8 +11,6 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     expect(tilesetMetadata.class).toBeUndefined();
-    expect(tilesetMetadata.name).toBeUndefined();
-    expect(tilesetMetadata.description).toBeUndefined();
     expect(tilesetMetadata.extras).toBeUndefined();
   });
 
@@ -44,8 +42,6 @@ describe("Scene/TilesetMetadata", function () {
     var tilesetMetadata = new TilesetMetadata({
       class: cityClass,
       tileset: {
-        name: "City",
-        description: "City Metadata",
         extras: extras,
         extensions: extensions,
         properties: properties,
@@ -53,8 +49,6 @@ describe("Scene/TilesetMetadata", function () {
     });
 
     expect(tilesetMetadata.class).toBe(cityClass);
-    expect(tilesetMetadata.name).toBe("City");
-    expect(tilesetMetadata.description).toBe("City Metadata");
     expect(tilesetMetadata.extras).toBe(extras);
     expect(tilesetMetadata.extensions).toBe(extensions);
     expect(tilesetMetadata.getProperty("neighborhoods")).toEqual(
@@ -81,7 +75,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -104,7 +98,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -127,7 +121,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             optional: true,
             default: 10.0,
           },
@@ -165,7 +159,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -188,7 +182,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "HEIGHT",
           },
         },
@@ -212,7 +206,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "HEIGHT",
             optional: true,
             default: 10.0,
@@ -252,10 +246,10 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -283,12 +277,12 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             optional: true,
             default: 10.0,
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -314,10 +308,10 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
           },
         },
       },
@@ -353,7 +347,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -376,9 +370,8 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -406,9 +399,8 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
             optional: true,
             default: position,
           },
@@ -450,9 +442,8 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           position: {
-            type: "ARRAY",
+            type: "VEC3",
             componentType: "FLOAT32",
-            componentCount: 3,
           },
         },
       },
@@ -506,7 +497,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -530,7 +521,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
@@ -565,7 +556,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },
@@ -591,7 +582,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
@@ -625,7 +616,7 @@ describe("Scene/TilesetMetadata", function () {
       class: {
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
         },

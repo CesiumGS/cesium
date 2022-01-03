@@ -8,6 +8,7 @@ import PointCloud3DTileContent from "./PointCloud3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import ModelExperimental3DTileContent from "./ModelExperimental/ModelExperimental3DTileContent.js";
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.
@@ -16,6 +17,15 @@ import RuntimeError from "../Core/RuntimeError.js";
  */
 var Cesium3DTileContentFactory = {
   b3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromB3dm(
+        tileset,
+        tile,
+        resource,
+        arrayBuffer,
+        byteOffset
+      );
+    }
     return new Batched3DModel3DTileContent(
       tileset,
       tile,
@@ -91,10 +101,25 @@ var Cesium3DTileContentFactory = {
     var dataView = new DataView(arrayBuffer, byteOffset);
     var byteLength = dataView.getUint32(8, true);
     var glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromGltf(
+        tileset,
+        tile,
+        resource,
+        glb
+      );
+    }
     return new Gltf3DTileContent(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromGltf(
+        tileset,
+        tile,
+        resource,
+        json
+      );
+    }
     return new Gltf3DTileContent(tileset, tile, resource, json);
   },
 };

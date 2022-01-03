@@ -283,7 +283,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * When <code>true</code>, the tile has multiple contents via the
    * <code>3DTILES_multiple_contents</code> extension.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
    *
    * @type {Boolean}
    * @readonly

@@ -10,7 +10,7 @@ import MetadataType from "./MetadataType.js";
  * used for representing binary properties of a batch table, as well as binary
  * metadata in 3D Tiles next extensions.
  * <p>
- * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -316,7 +316,7 @@ function getDefault(classDefinition, propertyId) {
         value = value.slice(); // clone
       }
       value = classProperty.normalize(value);
-      return classProperty.unpackVectorTypes(value);
+      return classProperty.unpackVectorAndMatrixTypes(value);
     }
   }
 }
