@@ -732,7 +732,6 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Object} options Object with the following properties:
  * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.is3DTiles=false] Flag to distinguish 3D Tiles from individual glTF files.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
@@ -786,7 +785,7 @@ ModelExperimental.fromGltf = function (options) {
   var loader = new GltfLoader(loaderOptions);
 
   // undocumented option for
-  var is3DTiles = defaultValue(options.is3DTiles, false);
+  var is3DTiles = defined(options.content);
   var type = is3DTiles
     ? ModelExperimentalType.TILE_GLTF
     : ModelExperimentalType.GLTF;

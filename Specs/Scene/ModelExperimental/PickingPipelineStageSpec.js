@@ -109,6 +109,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
         content: {
           tileset: {},
         },
+        type: ModelExperimentalType.TILE_GLTF,
       },
       runtimePrimitive: {},
       runtimeNode: {
@@ -154,6 +155,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        type: ModelExperimentalType.GLTF,
       },
       runtimePrimitive: {
         primitive: {},
@@ -202,6 +204,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       model: {
         _resources: [],
+        type: ModelExperimentalType.GLTF,
       },
       runtimePrimitive: {
         primitive: {},
@@ -276,6 +279,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       uniformMap: {},
       model: {
         featureIdTextureIndex: 0,
+        type: ModelExperimentalType.GLTF,
         _resources: [],
         featureTables: [mockModelFeatureTable],
       },
