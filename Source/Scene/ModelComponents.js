@@ -1,6 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Matrix3 from "../Core/Matrix3.js";
+import Matrix4 from "../Core/Matrix4.js";
 import AlphaMode from "./AlphaMode.js";
 
 /**
@@ -651,22 +652,6 @@ function Scene() {
    * @private
    */
   this.nodes = [];
-
-  /**
-   * The scene's up axis.
-   *
-   * @type {Axis}
-   * @private
-   */
-  this.upAxis = undefined;
-
-  /**
-   * The scene's forward axis.
-   *
-   * @type {Axis}
-   * @private
-   */
-  this.forwardAxis = undefined;
 }
 
 /**
@@ -700,6 +685,30 @@ function Components() {
    * @private
    */
   this.featureMetadata = undefined;
+
+  /**
+   * The model's up axis.
+   *
+   * @type {Axis}
+   * @private
+   */
+  this.upAxis = undefined;
+
+  /**
+   * The model's forward axis.
+   *
+   * @type {Axis}
+   * @private
+   */
+  this.forwardAxis = undefined;
+
+  /**
+   * A world-space transform to apply to the primitives.
+   *
+   * @type {Matrix4}
+   * @private
+   */
+  this.transform = Matrix4.clone(Matrix4.IDENTITY);
 }
 
 /**

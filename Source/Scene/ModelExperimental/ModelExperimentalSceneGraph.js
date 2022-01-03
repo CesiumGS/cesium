@@ -108,18 +108,18 @@ export default function ModelExperimentalSceneGraph(options) {
 }
 
 function initialize(sceneGraph) {
-  var modelMatrix = Matrix4.clone(sceneGraph._model.modelMatrix);
-  var scene = sceneGraph._modelComponents.scene;
+  var model = sceneGraph._model;
+  var modelComponents = sceneGraph._modelComponents;
+  var modelMatrix = Matrix4.clone(model.modelMatrix);
+  var scene = modelComponents.scene;
+  var upAxis = modelComponents.upAxis;
+  var forwardAxis = modelComponents.forwardAxis;
 
-  ModelExperimentalUtility.correctModelMatrix(
-    modelMatrix,
-    scene.upAxis,
-    scene.forwardAxis
-  );
+  ModelExperimentalUtility.correctModelMatrix(modelMatrix, upAxis, forwardAxis);
 
-  var rootNodes = sceneGraph._modelComponents.scene.nodes;
+  var rootNodes = scene.nodes;
   for (var i = 0; i < rootNodes.length; i++) {
-    var rootNode = sceneGraph._modelComponents.scene.nodes[i];
+    var rootNode = scene.nodes[i];
     var rootNodeModelMatrix = ModelExperimentalUtility.getNodeTransform(
       rootNode
     );
@@ -132,8 +132,8 @@ function initialize(sceneGraph) {
       // the node's transform within the model and correct it, if needed.
       ModelExperimentalUtility.correctModelMatrix(
         rootNodeModelMatrix,
-        scene.upAxis,
-        scene.forwardAxis
+        upAxis,
+        forwardAxis
       );
     } else {
       rootNodeModelMatrix = Matrix4.multiply(

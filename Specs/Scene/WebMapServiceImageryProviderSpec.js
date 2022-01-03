@@ -2037,4 +2037,35 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         });
     });
   });
+
+  it("uses getFeatureInfoUrl in options for getting the getFeatureInfo URL", function () {
+    var featureUrl = "made/up/wms/feature/server";
+    var provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      getFeatureInfoUrl: featureUrl,
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource.url).toContain(featureUrl);
+    });
+  });
+
+  it("uses url in options if getFeatureInfoUrl is absent for pickResources", function () {
+    var featureUrl = "made/up/wms/feature/server";
+    var getCapabilitiesUrl = "made/up/wms/server";
+    var provider = new WebMapServiceImageryProvider({
+      url: getCapabilitiesUrl,
+      layers: "someLayer",
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource.url).not.toContain(featureUrl);
+      expect(provider._pickFeaturesResource.url).toContain(getCapabilitiesUrl);
+    });
+  });
 });

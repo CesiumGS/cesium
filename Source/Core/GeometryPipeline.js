@@ -2211,6 +2211,9 @@ function computeTriangleAttributes(
   var p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
   var p2 = Cartesian3.fromArray(positions, i2 * 3, p2Scratch);
   var coords = barycentricCoordinates(point, p0, p1, p2, barycentricScratch);
+  if (!defined(coords)) {
+    return;
+  }
 
   if (defined(normals)) {
     interpolateAndPackCartesian3(

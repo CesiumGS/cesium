@@ -139,7 +139,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     uniformMap.u_instance_modifiedModelView = function () {
       return Matrix4.multiply(
         frameState.context.uniformState.view,
-        renderResources.model.loader.transform,
+        renderResources.model.loader.components.transform,
         new Matrix4()
       );
     };

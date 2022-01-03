@@ -266,7 +266,7 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
         25
       );
 
-      var transform = loader.transform;
+      var transform = loader.components.transform;
       expect(transform[Matrix4.COLUMN0ROW0]).toEqual(1.0);
       expect(transform[Matrix4.COLUMN1ROW0]).toEqual(0.0);
       expect(transform[Matrix4.COLUMN2ROW0]).toEqual(0.0);
