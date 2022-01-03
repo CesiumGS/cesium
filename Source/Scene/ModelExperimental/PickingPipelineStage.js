@@ -6,6 +6,7 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
 
 /**
  * The picking pipeline stage is responsible for handling picking of primitives.
@@ -77,12 +78,12 @@ function buildPickObject(renderResources, instanceId) {
     primitive: renderResources.runtimePrimitive,
   };
 
-  var content = model.content;
   var pickObject;
 
-  if (defined(content)) {
+  if (ModelExperimentalType.is3DTiles(model.content)) {
     // For 3D Tiles, the pick object's content and primitive are set to the Cesium3DTileContent that owns the model
     // and the tileset it belongs to, respectively. The detail pick object is returned under the detail key.
+    var content = model.content;
     pickObject = {
       content: content,
       primitive: content.tileset,

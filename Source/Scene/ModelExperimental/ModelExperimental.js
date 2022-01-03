@@ -4,8 +4,9 @@ import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
@@ -27,6 +28,7 @@ import Color from "../../Core/Color.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The Resource to the 3D model.
+ * @param {ModelExperimentalType} [options.type=ModelExperimentalType.GLTF] The type of model this instance represents
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
@@ -61,6 +63,8 @@ export default function ModelExperimental(options) {
    */
   this._loader = options.loader;
   this._resource = options.resource;
+
+  this._type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
   this._modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
@@ -248,6 +252,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise.promise;
+    },
+  },
+
+  /**
+   * Gets the type of this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalType}
+   * @readonly
+   */
+  type: {
+    get: function () {
+      return this._type;
     },
   },
 
@@ -714,6 +732,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Object} options Object with the following properties:
  * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.is3DTiles=false] Flag to distinguish 3D Tiles from individual glTF files.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
@@ -766,9 +785,16 @@ ModelExperimental.fromGltf = function (options) {
 
   var loader = new GltfLoader(loaderOptions);
 
+  // undocumented option for
+  var is3DTiles = defaultValue(options.is3DTiles, false);
+  var type = is3DTiles
+    ? ModelExperimentalType.TILE_GLTF
+    : ModelExperimentalType.GLTF;
+
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.gltfResource,
+    type: type,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
@@ -807,6 +833,7 @@ ModelExperimental.fromB3dm = function (options) {
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.b3dmResource,
+    type: ModelExperimentalType.TILE_B3DM,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
