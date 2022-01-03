@@ -11,7 +11,7 @@ import InstancingPipelineStage from "./InstancingPipelineStage.js";
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
  * @param {Matrix4} options.modelMatrix The model matrix associated with this node.
- * @param {ModelExperimentalSceneGraph} The scene graph this node belongs to.
+ * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this node belongs to.
  * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
  * @alias ModelExperimentalNode
@@ -24,6 +24,8 @@ export default function ModelExperimentalNode(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.node", options.node);
   Check.typeOf.object("options.modelMatrix", options.modelMatrix);
+  Check.typeOf.object("options.sceneGraph", options.sceneGraph);
+  Check.typeOf.object("options.children", options.children);
   //>>includeEnd('debug');
 
   /**
