@@ -1,5 +1,6 @@
 import {
   Buffer,
+  clone,
   ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
@@ -545,6 +546,37 @@ describe(
         expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           decodedIndices.byteLength
         );
+      });
+    });
+
+    it("uses the decoded data's type instead of the accessor component type", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(DracoLoader, "decodeBufferView").and.returnValue(
+        when.resolve(decodeDracoResults)
+      );
+
+      var clonedGltf = clone(gltfDraco, true);
+      clonedGltf.accessors[2].componentType = 5125;
+
+      var indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: clonedGltf,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        draco: dracoExtension,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexDatatype).toBe(5123);
+        expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
       });
     });
 

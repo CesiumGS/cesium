@@ -255,11 +255,8 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   var vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   var fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
   var variableName = attributeInfo.variableName;
-  if (variableName === "color") {
-    // Always declare color as a vec4, even if it was a vec3
-    shaderBuilder.addStructField(vsStructId, "vec4", "color");
-    shaderBuilder.addStructField(fsStructId, "vec4", "color");
-  } else if (variableName === "tangentMC") {
+
+  if (variableName === "tangentMC") {
     // declare tangent as vec3, the w component is only used for computing
     // the bitangent. Also, the tangent is in model coordinates in the vertex
     // shader but in eye space in the fragment coordinates

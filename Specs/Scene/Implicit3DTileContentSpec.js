@@ -41,6 +41,7 @@ describe(
       boundingVolume: {
         box: [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256],
       },
+      transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1],
       content: {
         uri: "https://example.com/{level}/{x}/{y}.b3dm",
         extras: {
@@ -138,6 +139,7 @@ describe(
         boundingVolume: {
           box: [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256],
         },
+        transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1],
       });
       mockPlaceholderTile.implicitCoordinates = rootCoordinates;
       mockPlaceholderTile.implicitTileset = implicitTileset;
@@ -236,7 +238,7 @@ describe(
       var parentGeometricError = implicitTileset.geometricError / 4;
       var childGeometricError = implicitTileset.geometricError / 8;
 
-      var rootBoundingVolume = [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
+      var rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
       var parentBox = Implicit3DTileContent._deriveBoundingBox(
         rootBoundingVolume,
         parentCoordinates.level,
@@ -543,7 +545,7 @@ describe(
           [2, 0, 3],
           [2, 1, 3],
         ];
-        var rootBoundingVolume = [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
+        var rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
 
         var subtreeRootTile = mockPlaceholderTile.children[0];
         var tiles = [];
@@ -566,6 +568,22 @@ describe(
           );
           expect(childBox).toEqual(expectedBounds);
         }
+      });
+    });
+
+    it("propagates transform", function () {
+      var content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeBuffer,
+        0
+      );
+      return content.readyPromise.then(function () {
+        var subtreeRootTile = mockPlaceholderTile.children[0];
+        expect(subtreeRootTile.computedTransform).toEqual(
+          mockPlaceholderTile.transform
+        );
       });
     });
 

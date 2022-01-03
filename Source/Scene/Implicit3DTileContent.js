@@ -476,6 +476,7 @@ function deriveChildTile(
   var deep = true;
   var rootHeader = clone(implicitTileset.tileHeader, deep);
   delete rootHeader.boundingVolume;
+  delete rootHeader.transform;
   var combinedTileJson = combine(tileJson, rootHeader, deep);
 
   var childTile = makeTile(

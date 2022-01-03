@@ -66,7 +66,7 @@ import TextureManager from "./TextureManager.js";
  *   </li>
  * </ul>
  * <p>
- * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code>.
+ * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
  * </p>
  *
  * @param {Object} options An object with the following options
@@ -101,9 +101,9 @@ import TextureManager from "./TextureManager.js";
  *     v_selectedColor: Cesium.VaryingType.VEC3
  *   },
  *   vertexShaderText: `
- *   void vertexMain(VertexInput vsInput, inout vec3 position) {
+ *   void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
  *     v_selectedColor = mix(vsInput.attributes.color_0, vsInput.attributes.color_1, u_colorIndex);
- *     position += 0.1 * vsInput.attributes.normal;
+ *     vsOutput.positionMC += 0.1 * vsInput.attributes.normal;
  *   }
  *   `,
  *   fragmentShaderText: `
