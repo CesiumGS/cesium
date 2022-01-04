@@ -2,12 +2,9 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
-import Sampler from "../Renderer/Sampler.js";
-import Texture from "../Renderer/Texture.js";
 
 /**
  * A post process stage that will get the luminance value at each pixel and
@@ -32,7 +29,7 @@ function AutoExposure() {
   this._useLogDepth = undefined;
 
   this._framebuffers = undefined;
-  this._previousLuminance = undefined;
+  this._previousLuminance = new FramebufferManager();
 
   this._commands = undefined;
   this._clearCommand = undefined;
@@ -133,7 +130,6 @@ function createFramebuffers(autoexposure, context) {
   var width = autoexposure._width;
   var height = autoexposure._height;
 
-  var pixelFormat = PixelFormat.RGBA;
   var pixelDatatype = context.halfFloatingPointTexture
     ? PixelDatatype.HALF_FLOAT
     : PixelDatatype.FLOAT;
@@ -143,36 +139,17 @@ function createFramebuffers(autoexposure, context) {
   for (var i = 0; i < length; ++i) {
     width = Math.max(Math.ceil(width / 3.0), 1.0);
     height = Math.max(Math.ceil(height / 3.0), 1.0);
-    framebuffers[i] = new Framebuffer({
-      context: context,
-      colorTextures: [
-        new Texture({
-          context: context,
-          width: width,
-          height: height,
-          pixelFormat: pixelFormat,
-          pixelDatatype: pixelDatatype,
-          sampler: Sampler.NEAREST,
-        }),
-      ],
-    });
+    framebuffers[i] = new FramebufferManager();
+    framebuffers[i].update(context, width, height, pixelDatatype);
   }
 
   var lastTexture = framebuffers[length - 1].getColorTexture(0);
-  autoexposure._previousLuminance = new Framebuffer({
-    context: context,
-    colorTextures: [
-      new Texture({
-        context: context,
-        width: lastTexture.width,
-        height: lastTexture.height,
-        pixelFormat: pixelFormat,
-        pixelDatatype: pixelDatatype,
-        sampler: Sampler.NEAREST,
-      }),
-    ],
-  });
-
+  autoexposure._previousLuminance.update(
+    context,
+    lastTexture.width,
+    lastTexture.height,
+    pixelDatatype
+  );
   autoexposure._framebuffers = framebuffers;
 }
 
@@ -287,7 +264,7 @@ function createCommands(autoexposure, context) {
     commands[i] = context.createViewportQuadCommand(
       getShaderSource(i, length),
       {
-        framebuffer: framebuffers[i],
+        framebuffer: framebuffers[i].framebuffer,
         uniformMap: createUniformMap(autoexposure, i),
       }
     );
@@ -316,8 +293,7 @@ AutoExposure.prototype.clear = function (context) {
 
   var length = framebuffers.length;
   for (var i = 0; i < length; ++i) {
-    clearCommand.framebuffer = framebuffers[i];
-    clearCommand.execute(context);
+    framebuffers[i].clear(context, clearCommand);
   }
 };
 
@@ -350,7 +326,7 @@ AutoExposure.prototype.update = function (context) {
   framebuffers[framebuffers.length - 1] = this._previousLuminance;
   this._commands[
     this._commands.length - 1
-  ].framebuffer = this._previousLuminance;
+  ].framebuffer = this._previousLuminance.framebuffer;
   this._previousLuminance = temp;
 };
 

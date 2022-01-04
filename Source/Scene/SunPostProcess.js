@@ -103,7 +103,7 @@ function SunPostProcess() {
         return that._uRadius;
       },
       colorTexture2: function () {
-        return that._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+        return that._sceneFramebuffer.framebuffer.getColorTexture(0);
       },
     },
   });
@@ -239,7 +239,7 @@ SunPostProcess.prototype.update = function (passState) {
 
   var sceneFramebuffer = this._sceneFramebuffer;
   sceneFramebuffer.update(context, viewport);
-  var framebuffer = sceneFramebuffer.getFramebuffer();
+  var framebuffer = sceneFramebuffer.framebuffer;
 
   this._textureCache.update(context);
   this._stages.update(context, false);
@@ -250,7 +250,7 @@ SunPostProcess.prototype.update = function (passState) {
 };
 
 SunPostProcess.prototype.execute = function (context) {
-  var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+  var colorTexture = this._sceneFramebuffer.framebuffer.getColorTexture(0);
   var stages = this._stages;
   var length = stages.length;
   stages.get(0).execute(context, colorTexture);

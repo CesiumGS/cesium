@@ -183,20 +183,26 @@ describe(
 
     function expectResources(translucentTileClassification, toBeDefined) {
       expect(
-        defined(translucentTileClassification._drawClassificationFBO)
+        defined(
+          translucentTileClassification._drawClassificationFBO.framebuffer
+        )
       ).toBe(toBeDefined);
-      expect(defined(translucentTileClassification._packFBO)).toBe(toBeDefined);
+      expect(defined(translucentTileClassification._packFBO.framebuffer)).toBe(
+        toBeDefined
+      );
       expect(
         defined(translucentTileClassification._opaqueDepthStencilTexture)
       ).toBe(toBeDefined);
-      expect(defined(translucentTileClassification._colorTexture)).toBe(
-        toBeDefined
-      );
+      expect(
+        defined(
+          translucentTileClassification._drawClassificationFBO.getColorTexture()
+        )
+      ).toBe(toBeDefined);
       expect(
         defined(translucentTileClassification._translucentDepthStencilTexture)
       ).toBe(toBeDefined);
       expect(
-        defined(translucentTileClassification._packedTranslucentDepth)
+        defined(translucentTileClassification._packFBO.getColorTexture())
       ).toBe(toBeDefined);
       expect(defined(translucentTileClassification._packDepthCommand)).toBe(
         toBeDefined
@@ -286,7 +292,7 @@ describe(
       }
       scene.render(); // prep scene
 
-      var packedDepthFBO = translucentTileClassification._packFBO;
+      var packedDepthFBO = translucentTileClassification._packFBO.framebuffer;
 
       translucentTileClassification.executeTranslucentCommands(
         scene,
@@ -322,7 +328,7 @@ describe(
       );
 
       var drawClassificationFBO =
-        translucentTileClassification._drawClassificationFBO;
+        translucentTileClassification._drawClassificationFBO.framebuffer;
       var preClassifyPixels = readPixels(drawClassificationFBO);
 
       var frustumCommands = {
@@ -363,9 +369,10 @@ describe(
         globeDepthFramebuffer
       );
 
-      var accumulationFBO = translucentTileClassification._accumulationFBO;
+      var accumulationFBO =
+        translucentTileClassification._accumulationFBO.framebuffer;
       var drawClassificationFBO =
-        translucentTileClassification._drawClassificationFBO;
+        translucentTileClassification._drawClassificationFBO.framebuffer;
 
       var frustumCommands = {
         commands: [],
@@ -425,7 +432,7 @@ describe(
       scene.render(); // prep scene
 
       var drawClassificationFBO =
-        translucentTileClassification._drawClassificationFBO;
+        translucentTileClassification._drawClassificationFBO.framebuffer;
 
       translucentTileClassification.executeTranslucentCommands(
         scene,
@@ -506,7 +513,7 @@ describe(
 
       var preCompositePixels = readPixels(targetColorFBO);
       var pixelsToComposite = readPixels(
-        translucentTileClassification._drawClassificationFBO
+        translucentTileClassification._drawClassificationFBO.framebuffer
       );
 
       var framebuffer = passState.framebuffer;
@@ -607,9 +614,10 @@ describe(
 
       // Replace classification and accumulation colors to distinguish which is composited
       passState.framebuffer =
-        translucentTileClassification._drawClassificationFBO;
+        translucentTileClassification._drawClassificationFBO.framebuffer;
       clearCommandRed.execute(context, passState);
-      passState.framebuffer = translucentTileClassification._accumulationFBO;
+      passState.framebuffer =
+        translucentTileClassification._accumulationFBO.framebuffer;
       clearCommandGreen.execute(context, passState);
 
       passState.framebuffer = targetColorFBO;
@@ -701,7 +709,7 @@ describe(
       );
 
       var drawClassificationFBO =
-        translucentTileClassification._drawClassificationFBO;
+        translucentTileClassification._drawClassificationFBO.framebuffer;
       var preClassifyPixels = readPixels(drawClassificationFBO);
 
       var frustumCommands = {
