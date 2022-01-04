@@ -74,6 +74,15 @@ export default function ModelExperimentalPrimitive(options) {
    */
   this.pipelineStages = [];
 
+  /**
+   * The generated {@link DrawCommand}s associated with this primitive.
+   *
+   * @type {DrawCommand[]}
+   *
+   * @private
+   */
+  this.drawCommands = [];
+
   initialize(this);
 }
 

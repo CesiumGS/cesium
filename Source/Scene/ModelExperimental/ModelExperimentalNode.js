@@ -74,7 +74,7 @@ export default function ModelExperimentalNode(options) {
    * @type {Matrix4}
    * @readonly
    */
-  this.transform = Matrix4.clone(options.modelMatrix);
+  this._transform = Matrix4.clone(options.modelMatrix);
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -104,11 +104,14 @@ export default function ModelExperimentalNode(options) {
 Object.defineProperties(ModelExperimentalNode.prototype, {
   transform: {
     get: function () {
-      return this.transform;
+      return this._transform;
     },
     set: function (value) {
-      // TODO: Set dirty flag.
-      this.transform = value;
+      if (Matrix4.equals(this._transform, value)) {
+        return;
+      }
+      this.sceneGraph._transformDirty = true;
+      this._transform = value;
     },
   },
 });

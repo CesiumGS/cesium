@@ -104,6 +104,8 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
+  this._transformDirty = false;
+
   initialize(this);
 }
 
@@ -143,11 +145,6 @@ function initialize(sceneGraph) {
  * @private
  */
 function traverseSceneGraph(sceneGraph, node, modelMatrix) {
-  // No processing needs to happen if node has no children and no mesh primitives.
-  if (!defined(node.children) && !defined(node.primitives)) {
-    return -1;
-  }
-
   // The indices of the children of this node in the runtimeNodes array.
   var childrenIndices = [];
 
@@ -167,9 +164,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
         childNode,
         childNodeModelMatrix
       );
-      if (childIndex > -1) {
-        childrenIndices.push(childIndex);
-      }
+      childrenIndices.push(childIndex);
     }
   }
 
@@ -178,6 +173,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
     node: node,
     modelMatrix: modelMatrix,
     children: childrenIndices,
+    sceneGraph: sceneGraph,
   });
 
   if (defined(node.primitives)) {
@@ -280,10 +276,29 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         primitiveRenderResources,
         frameState
       );
-      this._drawCommands.push.apply(this._drawCommands, drawCommands);
+
+      runtimePrimitive.drawCommands = drawCommands;
     }
   }
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(
     this._boundingSpheres
   );
+};
+
+/**
+ * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
+ * the draw commands associated with each primitive.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
+  var drawCommands = [];
+  for (var i = 0; i < this._runtimeNodes.length; i++) {
+    var runtimeNode = this._runtimeNodes[i];
+    for (var j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+    }
+  }
+  return drawCommands;
 };
