@@ -508,8 +508,7 @@ function Scene(options) {
    * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for enabling this to work.
    *
    * <p>
-   * Render must be called between picks.
-   * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
+   * There is a decrease in performance when enabled. There are extra draw calls to write depth for
    * translucent geometry.
    * </p>
    *
@@ -521,7 +520,6 @@ function Scene(options) {
    *          // nothing picked
    *          return;
    *      }
-   *      viewer.scene.render();
    *      var worldPosition = viewer.scene.pickPosition(movement.position);
    * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
    *
@@ -2853,14 +2851,13 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
 
   updateAndClearFramebuffers(scene, passState, backgroundColor);
 
-  if (!renderTranslucentDepthForPick) {
-    updateAndRenderPrimitives(scene);
-  }
+  updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
 
+  executeComputeCommands(scene);
+
   if (!renderTranslucentDepthForPick) {
-    executeComputeCommands(scene);
     executeShadowMapCastCommands(scene);
   }
 
@@ -3089,13 +3086,11 @@ function executeCommandsInViewport(
   var renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
 
-  if (!firstViewport && !renderTranslucentDepthForPick) {
+  if (!firstViewport) {
     scene.frameState.commandList.length = 0;
   }
 
-  if (!renderTranslucentDepthForPick) {
-    updateAndRenderPrimitives(scene);
-  }
+  updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
 
@@ -3103,8 +3098,8 @@ function executeCommandsInViewport(
     if (defined(backgroundColor)) {
       updateAndClearFramebuffers(scene, passState, backgroundColor);
     }
+    executeComputeCommands(scene);
     if (!renderTranslucentDepthForPick) {
-      executeComputeCommands(scene);
       executeShadowMapCastCommands(scene);
     }
   }
