@@ -2159,8 +2159,8 @@ describe(
         var material = primitive.material;
         var specularGlossiness = material.specularGlossiness;
 
-        expect(scene.upAxis).toBe(Axis.Y);
-        expect(scene.forwardAxis).toBe(Axis.Z);
+        expect(components.upAxis).toBe(Axis.Y);
+        expect(components.forwardAxis).toBe(Axis.Z);
         expect(material.occlusionTexture.texture.width).toBe(128);
         expect(material.normalTexture.texture.width).toBe(128);
         expect(material.emissiveTexture.texture.width).toBe(128);
@@ -2326,7 +2326,7 @@ describe(
 
     it("sets default transform", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
-        expect(gltfLoader.transform).toEqual(Matrix4.IDENTITY);
+        expect(gltfLoader.components.transform).toEqual(Matrix4.IDENTITY);
       });
     });
 

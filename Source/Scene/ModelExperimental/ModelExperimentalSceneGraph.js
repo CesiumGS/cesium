@@ -108,18 +108,18 @@ export default function ModelExperimentalSceneGraph(options) {
 }
 
 function initialize(sceneGraph) {
-  var modelMatrix = Matrix4.clone(sceneGraph._model.modelMatrix);
-  var scene = sceneGraph._modelComponents.scene;
+  var model = sceneGraph._model;
+  var modelComponents = sceneGraph._modelComponents;
+  var modelMatrix = Matrix4.clone(model.modelMatrix);
+  var scene = modelComponents.scene;
+  var upAxis = modelComponents.upAxis;
+  var forwardAxis = modelComponents.forwardAxis;
 
-  ModelExperimentalUtility.correctModelMatrix(
-    modelMatrix,
-    scene.upAxis,
-    scene.forwardAxis
-  );
+  ModelExperimentalUtility.correctModelMatrix(modelMatrix, upAxis, forwardAxis);
 
-  var rootNodes = sceneGraph._modelComponents.scene.nodes;
+  var rootNodes = scene.nodes;
   for (var i = 0; i < rootNodes.length; i++) {
-    var rootNode = sceneGraph._modelComponents.scene.nodes[i];
+    var rootNode = scene.nodes[i];
     var rootNodeModelMatrix = Matrix4.multiply(
       modelMatrix,
       ModelExperimentalUtility.getNodeTransform(rootNode),

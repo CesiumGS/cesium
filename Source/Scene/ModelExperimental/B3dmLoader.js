@@ -168,22 +168,6 @@ Object.defineProperties(B3dmLoader.prototype, {
       return this._components;
     },
   },
-
-  /**
-   * A world-space transform to apply to the primitives.
-   * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel#global-semantics}
-   *
-   * @memberof B3dmLoader.prototype
-   *
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  transform: {
-    get: function () {
-      return this._transform;
-    },
-  },
 });
 
 /**
@@ -222,8 +206,8 @@ B3dmLoader.prototype.load = function () {
   };
 
   var gltfLoader = new GltfLoader({
-    upAxis: this._upAxis,
     typedArray: b3dm.gltf,
+    upAxis: this._upAxis,
     forwardAxis: this._forwardAxis,
     gltfResource: this._b3dmResource,
     baseResource: this._baseResource,
@@ -244,6 +228,7 @@ B3dmLoader.prototype.load = function () {
       }
 
       var components = gltfLoader.components;
+      components.transform = that._transform;
       createFeatureMetadata(that, components);
       that._components = components;
 

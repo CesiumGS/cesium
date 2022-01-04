@@ -127,7 +127,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
 
-      expect(loader.transform).toEqual(
+      expect(loader.components.transform).toEqual(
         Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
       );
     });
