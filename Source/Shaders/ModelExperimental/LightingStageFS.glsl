@@ -1,13 +1,4 @@
 #ifdef LIGHTING_PBR
-vec3 applyTonemapping(vec3 linearIn) 
-{
-    #ifndef HDR 
-    return czm_acesTonemapping(linearIn);
-    #else 
-    return linearIn;
-    #endif 
-}
-
 vec3 computePbrLighting(czm_modelMaterial inputMaterial)
 {
     czm_pbrParameters pbrParameters;
@@ -31,8 +22,14 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     color *= inputMaterial.occlusion;
     color += inputMaterial.emissive;
 
-    // Convert high-dynamic range to low-dynamic range in HDR mode
-    color = applyTonemapping(color);
+    // In HDR mode, the frame buffer is in linear color space. The
+    // post-processing stages (see PostProcessStageCollection) will handle
+    // tonemapping. However, if HDR is not enabled, we must tonemap else large
+    // values may be clamped to 1.0
+    #ifndef HDR 
+    color = czm_acesTonemapping(linearIn);
+    #endif 
+
     return color;
 }
 #endif
@@ -49,8 +46,10 @@ void lightingStage(inout czm_modelMaterial material)
     color = material.diffuse;
     #endif
 
-    #ifdef HDR
-    color = czm_LINEARtoSRGB(color);
+    // If HDR is not enabled, the frame buffer stores sRGB colors rather than
+    // linear colors so the linear value must be converted.
+    #ifndef HDR
+    color = czm_linearToSrgb(color);
     #endif
 
     material.diffuse = color;

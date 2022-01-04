@@ -72,7 +72,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorTexCoords = computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
         #endif
 
-    baseColorWithAlpha = czm_SRGBtoLINEAR(texture2D(u_baseColorTexture, baseColorTexCoords));
+    baseColorWithAlpha = czm_srgbToLinear(texture2D(u_baseColorTexture, baseColorTexCoords));
 
         #ifdef HAS_BASE_COLOR_FACTOR
         baseColorWithAlpha *= u_baseColorFactor;
@@ -82,7 +82,12 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     #endif
 
     #ifdef HAS_COLOR_0
-    baseColorWithAlpha *= attributes.color_0;
+    vec4 color = attributes.color_0;
+        // .pnts files store colors in the sRGB color space
+        #ifdef HAS_SRGB_COLOR
+        color = czm_srgbToLinear(color);
+        #endif
+    baseColorWithAlpha *= color;
     #endif
 
     material.diffuse = baseColorWithAlpha.rgb;
@@ -106,7 +111,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         emissiveTexCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
         #endif
 
-    vec3 emissive = czm_SRGBtoLINEAR(texture2D(u_emissiveTexture, emissiveTexCoords).rgb);
+    vec3 emissive = czm_srgbToLinear(texture2D(u_emissiveTexture, emissiveTexCoords).rgb);
         #ifdef HAS_EMISSIVE_FACTOR
         emissive *= u_emissiveFactor;
         #endif
@@ -122,7 +127,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
           specularGlossinessTexCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
           #endif
 
-        vec4 specularGlossiness = czm_SRGBtoLINEAR(texture2D(u_specularGlossinessTexture, specularGlossinessTexCoords));
+        vec4 specularGlossiness = czm_srgbToLinear(texture2D(u_specularGlossinessTexture, specularGlossinessTexCoords));
         vec3 specular = specularGlossiness.rgb;
         float glossiness = specularGlossiness.a;
             #ifdef HAS_SPECULAR_FACTOR
@@ -152,7 +157,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
             diffuseTexCoords = computeTextureTransform(diffuseTexCoords, u_diffuseTextureTransform);
             #endif
 
-        vec4 diffuse = czm_SRGBtoLINEAR(texture2D(u_diffuseTexture, diffuseTexCoords));
+        vec4 diffuse = czm_srgbToLinear(texture2D(u_diffuseTexture, diffuseTexCoords));
             #ifdef HAS_DIFFUSE_FACTOR
             diffuse *= u_diffuseFactor;
             #endif
