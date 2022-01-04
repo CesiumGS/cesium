@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values. [#9717](https://github.com/CesiumGS/cesium/pull/9717)
+- Fixed `scene.pickTranslucentDepth` for translucent point clouds with eye dome lighting. [#9991](https://github.com/CesiumGS/cesium/pull/9991)
 
 ### 1.89 - 2022-01-03
 
