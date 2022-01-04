@@ -1,12 +1,3 @@
-vec3 LINEARtoSRGB(vec3 linearIn) 
-{
-    #ifndef HDR 
-    return pow(linearIn, vec3(1.0/2.2));
-    #else 
-    return linearIn;
-    #endif 
-}
-
 #ifdef LIGHTING_PBR
 vec3 applyTonemapping(vec3 linearIn) 
 {
@@ -58,7 +49,9 @@ void lightingStage(inout czm_modelMaterial material)
     color = material.diffuse;
     #endif
 
-    color = LINEARtoSRGB(color);
+    #ifdef HDR
+    color = czm_LINEARtoSRGB(color);
+    #endif
 
     material.diffuse = color;
 }
