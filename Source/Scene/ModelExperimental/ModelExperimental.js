@@ -28,7 +28,6 @@ import Color from "../../Core/Color.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The Resource to the 3D model.
- * @param {ModelExperimentalType} [options.type=ModelExperimentalType.GLTF] The type of model this instance represents
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
@@ -58,13 +57,21 @@ export default function ModelExperimental(options) {
    * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
-   *
    * @private
    */
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._type = defaultValue(options.type, ModelExperimentalType.GLTF);
+  /**
+   * Type of this model, to distinguish individual glTF files from 3D Tiles
+   * internally. The corresponding constructor parameter is undocumented, since
+   * ModelExperimentalType is part of the private API.
+   *
+   * @type {ModelExperimentalType}
+   * @private
+   * @readonly
+   */
+  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
   this._modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
@@ -252,20 +259,6 @@ Object.defineProperties(ModelExperimental.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise.promise;
-    },
-  },
-
-  /**
-   * Gets the type of this model.
-   *
-   * @memberof ModelExperimental.prototype
-   *
-   * @type {ModelExperimentalType}
-   * @readonly
-   */
-  type: {
-    get: function () {
-      return this._type;
     },
   },
 
@@ -784,7 +777,6 @@ ModelExperimental.fromGltf = function (options) {
 
   var loader = new GltfLoader(loaderOptions);
 
-  // undocumented option for
   var is3DTiles = defined(options.content);
   var type = is3DTiles
     ? ModelExperimentalType.TILE_GLTF
