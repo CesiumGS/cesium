@@ -116,7 +116,6 @@ export default function GltfLoader(options) {
   this._textureState = GltfLoaderState.UNLOADED;
   this._promise = when.defer();
   this._texturesLoadedPromise = when.defer();
-  this._transform = Matrix4.IDENTITY;
 
   // Loaders that need to be processed before the glTF becomes ready
   this._textureLoaders = [];
@@ -191,22 +190,6 @@ Object.defineProperties(GltfLoader.prototype, {
   texturesLoadedPromise: {
     get: function () {
       return this._texturesLoadedPromise.promise;
-    },
-  },
-
-  /**
-   * A world-space transform to apply to the primitives.
-   *
-   * @memberof GltfLoader.prototype
-   *
-   * @type {Matrix4}
-   * @default {@link Matrix4.IDENTITY}
-   * @readonly
-   * @private
-   */
-  transform: {
-    get: function () {
-      return this._transform;
     },
   },
 });
@@ -1344,10 +1327,8 @@ function getSceneNodeIds(gltf) {
   return nodesIds;
 }
 
-function loadScene(gltf, nodes, upAxis, forwardAxis) {
+function loadScene(gltf, nodes) {
   var scene = new Scene();
-  scene.upAxis = upAxis;
-  scene.forwardAxis = forwardAxis;
   var sceneNodeIds = getSceneNodeIds(gltf);
   scene.nodes = sceneNodeIds.map(function (sceneNodeId) {
     return nodes[sceneNodeId];
@@ -1376,13 +1357,13 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   }
 
   var nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
-  var upAxis = loader._upAxis;
-  var forwardAxis = loader._forwardAxis;
-  var scene = loadScene(gltf, nodes, upAxis, forwardAxis);
+  var scene = loadScene(gltf, nodes);
 
   var components = new Components();
   components.scene = scene;
   components.nodes = nodes;
+  components.upAxis = loader._upAxis;
+  components.forwardAxis = loader._forwardAxis;
 
   loader._components = components;
 

@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.90 - 2022-02-01
+
+##### Fixes :wrench:
+
+- Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values. [#9717](https://github.com/CesiumGS/cesium/pull/9717)
+
 ### 1.89 - 2022-01-03
 
 ##### Breaking Changes :mega:
@@ -26,6 +32,8 @@
 - Fixed WMS 1.3.0 `GetMap` `bbox` parameter so that it follows the axis ordering as defined in the EPSG database. [#9797](https://github.com/CesiumGS/cesium/pull/9797)
 - Fixed KmlDataSource so that it can handle relative URLs for additional elements - video, audio, iframe etc. [#9328](https://github.com/CesiumGS/cesium/pull/9328)
 - Fixed memory leak when add big number of entities(polyline) [##9984](https://github.com/CesiumGS/cesium/pull/9984)
+- Fixed `KmlDataSource` so that it can handle relative URLs for additional elements - video, audio, iframe etc. [#9328](https://github.com/CesiumGS/cesium/pull/9328)
+
 
 ### 1.88 - 2021-12-01
 
@@ -53,7 +61,7 @@
 
 ##### Additions :tada:
 
-- Added `ScreenOverlay` support to `KMLDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
+- Added `ScreenOverlay` support to `KmlDataSource`. [#9864](https://github.com/CesiumGS/cesium/pull/9864)
 - Added back some support for Draco attribute quantization as a workaround until a full fix in the next Draco version. [#9904](https://github.com/CesiumGS/cesium/pull/9904)
 - Added `CumulusCloud.color` for customizing cloud colors. [#9877](https://github.com/CesiumGS/cesium/pull/9877)
 

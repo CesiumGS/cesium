@@ -60,6 +60,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Stephen Davies](https://github.com/steve9164)
   - [Rowan Winsemius](https://github.com/rowanwins)
   - [Regina Pramesti](https://github.com/reginapramesti)
+  - [Nanda Sankaran](https://github.com/na9da)
 - [EU Edge](http://euedge.com/)
   - [Ákos Maróy](https://github.com/akosmaroy)
 - [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)

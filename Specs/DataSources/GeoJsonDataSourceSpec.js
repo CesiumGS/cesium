@@ -1267,6 +1267,43 @@ describe("DataSources/GeoJsonDataSource", function () {
     });
   });
 
+  it("Works with polyline using null simplestyle values but with opacity", function () {
+    var geoJson = {
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [100.0, 0.0],
+          [101.0, 1.0],
+        ],
+      },
+      properties: {
+        title: null,
+        description: null,
+        stroke: null,
+        "stroke-opacity": 0.42,
+        "stroke-width": null,
+      },
+    };
+
+    var dataSource = new GeoJsonDataSource();
+    return dataSource.load(geoJson).then(function () {
+      var entityCollection = dataSource.entities;
+      var entity = entityCollection.values[0];
+      expect(entity.name).toBeUndefined();
+      expect(entity.description).toBeUndefined();
+
+      var expectedMaterialColor = GeoJsonDataSource.stroke.clone();
+      expectedMaterialColor.alpha = 0.42;
+      expect(entity.polyline.material.color.getValue(time)).toEqual(
+        expectedMaterialColor
+      );
+      expect(entity.polyline.width.getValue(time)).toEqual(
+        GeoJsonDataSource.strokeWidth
+      );
+    });
+  });
+
   it("Works with polygon using simplestyle", function () {
     var geoJson = {
       type: "Feature",
@@ -1362,6 +1399,57 @@ describe("DataSources/GeoJsonDataSource", function () {
       );
       expect(entity.polygon.outlineColor.getValue(time)).toEqual(
         GeoJsonDataSource.stroke
+      );
+    });
+  });
+
+  it("Works with polygons using null simplestyle but with an opacity", function () {
+    var geoJson = {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [100.0, 0.0],
+            [101.0, 0.0],
+            [101.0, 1.0],
+            [100.0, 1.0],
+            [100.0, 0.0],
+          ],
+        ],
+      },
+      properties: {
+        title: null,
+        description: null,
+        stroke: null,
+        "stroke-opacity": 0.42,
+        "stroke-width": null,
+        fill: null,
+        "fill-opacity": 0.42,
+      },
+    };
+
+    var dataSource = new GeoJsonDataSource();
+    return dataSource.load(geoJson).then(function () {
+      var entityCollection = dataSource.entities;
+      var entity = entityCollection.values[0];
+      expect(entity.name).toBeUndefined();
+      expect(entity.description).toBeUndefined();
+
+      var expectedFill = GeoJsonDataSource.fill.clone();
+      expectedFill.alpha = geoJson.properties["fill-opacity"];
+      expect(entity.polygon.material.color.getValue(time)).toEqual(
+        expectedFill
+      );
+
+      var expectedOutlineColor = GeoJsonDataSource.stroke.clone();
+      expectedOutlineColor.alpha = 0.42;
+      expect(entity.polygon.outline.getValue(time)).toEqual(true);
+      expect(entity.polygon.outlineWidth.getValue(time)).toEqual(
+        GeoJsonDataSource.strokeWidth
+      );
+      expect(entity.polygon.outlineColor.getValue(time)).toEqual(
+        expectedOutlineColor
       );
     });
   });
