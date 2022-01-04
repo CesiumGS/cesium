@@ -181,7 +181,7 @@ function initialize(model) {
     .then(function (loader) {
       Matrix4.multiply(
         model._modelMatrix,
-        loader.transform,
+        loader.components.transform,
         model._modelMatrix
       );
 
