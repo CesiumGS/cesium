@@ -7,6 +7,7 @@ import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js"
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
@@ -145,9 +146,13 @@ function processAttribute(renderResources, attribute, attributeIndex) {
     addSemanticDefine(shaderBuilder, attribute);
   }
 
+  // .pnts point clouds store sRGB color rather than linear color
+  var isPnts = renderResources.model.type === ModelExperimentalType.TILE_PNTS;
+  var hasSRGBColor = isPnts;
+
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
-  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo);
+  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo, hasSRGBColor);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -281,7 +286,11 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   }
 }
 
-function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
+function updateInitialzeAttributesFunction(
+  shaderBuilder,
+  attributeInfo,
+  hasSRGBColor
+) {
   if (attributeInfo.isQuantized) {
     // Skip initialization, it will be handled in the dequantization stage.
     return;
@@ -292,6 +301,14 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
   var line;
   if (variableName === "tangentMC") {
     line = "attributes.tangentMC = a_tangentMC.xyz;";
+  } else if (hasSRGBColor && /^color_\d+/.test(variableName)) {
+    // .pnts models have COLOR_n attributes in sRGB rather than linear color space
+    line =
+      "attributes." +
+      variableName +
+      " = czm_SRGBToLINEAR(a_" +
+      variableName +
+      ");";
   } else {
     line = "attributes." + variableName + " = a_" + variableName + ";";
   }
