@@ -863,6 +863,7 @@ ModelExperimental.fromPnts = function (options) {
   var modelOptions = {
     loader: loader,
     resource: options.resource,
+    type: ModelExperimentalType.TILE_PNTS,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
