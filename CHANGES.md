@@ -1,11 +1,5 @@
 # Change Log
 
-### 1.90 - 2022-02-01
-
-##### Additions :tada:
-
-- Added `FramebufferManager` class for managing `Framebuffer` objects and their attachments. [#9966](https://github.com/CesiumGS/cesium/pull/9966)
-
 ### 1.89 - 2022-01-03
 
 ##### Breaking Changes :mega:
