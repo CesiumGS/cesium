@@ -493,10 +493,6 @@ function makeComponents(loader, context) {
   var node = new Node();
   node.primitives = [primitive];
 
-  if (defined(parsedContent.rtcCenter)) {
-    node.matrix = Matrix4.fromTranslation(parsedContent.rtcCenter);
-  }
-
   var scene = new Scene();
   scene.nodes = [node];
   scene.upAxis = Axis.Z;
@@ -506,6 +502,10 @@ function makeComponents(loader, context) {
   components.scene = scene;
   components.nodes = [node];
   components.featureMetadata = makeFeatureMetadata(parsedContent);
+
+  if (defined(parsedContent.rtcCenter)) {
+    components.transform = Matrix4.fromTranslation(parsedContent.rtcCenter);
+  }
 
   loader._components = components;
 
