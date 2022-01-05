@@ -324,7 +324,9 @@ function makeAttribute(loader, attributeInfo, context) {
     quantization = new Quantization();
     var normalizationRange = attributeInfo.quantizedRange;
     quantization.normalizationRange = normalizationRange;
-    quantization.quantizedVolumeOffset = attributeInfo.quantizedVolumeOffset;
+    // volume offset sometimes requires 64-bit precision so this is handled
+    // in the components.transform matrix.
+    quantization.quantizedVolumeOffset = Cartesian3.ZERO;
     var quantizedVolumeDimensions = attributeInfo.quantizedVolumeScale;
     quantization.quantizedVolumeDimensions = quantizedVolumeDimensions;
     quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(
@@ -401,9 +403,10 @@ function computeApproximateExtrema(positions) {
   var index;
   var position;
   if (positions.isQuantized) {
-    // Use the quantized volume to compute the min and max without sampling
-    min = Cartesian3.clone(positions.quantizedVolumeOffset, scratchMin);
-    max = Cartesian3.add(min, positions.quantizedVolumeScale, scratchMax);
+    // The quantized volume offset is not used here since it will become part of
+    // the model matrix.
+    min = Cartesian3.ZERO;
+    max = positions.quantizedVolumeScale;
   } else {
     for (i = 0; i < samplesLength; ++i) {
       index = Math.floor(randomValues[i] * pointsLength);
@@ -532,7 +535,22 @@ function makeComponents(loader, context) {
   components.featureMetadata = makeFeatureMetadata(parsedContent);
 
   if (defined(parsedContent.rtcCenter)) {
-    components.transform = Matrix4.fromTranslation(parsedContent.rtcCenter);
+    components.transform = Matrix4.multiplyByTranslation(
+      components.transform,
+      parsedContent.rtcCenter,
+      components.transform
+    );
+  }
+
+  var positions = parsedContent.positions;
+  if (defined(positions) && positions.isQuantized) {
+    // The volume offset is sometimes in ECEF, so this is applied here rather
+    // than the dequantization shader to avoid jitter
+    components.transform = Matrix4.multiplyByTranslation(
+      components.transform,
+      positions.quantizedVolumeOffset,
+      components.transform
+    );
   }
 
   loader._components = components;
