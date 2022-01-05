@@ -393,13 +393,16 @@ function parseColors(featureTable) {
       ComponentDatatype.UNSIGNED_BYTE,
       4
     );
+
+    var alpha = constantRGBA[3];
     var constantColor = Color.fromBytes(
       constantRGBA[0],
       constantRGBA[1],
       constantRGBA[2],
-      constantRGBA[3]
+      alpha
     );
 
+    var isTranslucent = alpha < 255;
     return {
       name: VertexAttributeSemantic.COLOR,
       semantic: VertexAttributeSemantic.COLOR,
@@ -408,7 +411,7 @@ function parseColors(featureTable) {
       componentDatatype: ComponentDatatype.FLOAT,
       type: AttributeType.VEC4,
       isQuantized: false,
-      isTranslucent: true,
+      isTranslucent: isTranslucent,
     };
   }
 

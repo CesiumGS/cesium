@@ -11,6 +11,7 @@ import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
 import when from "../../ThirdParty/when.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import AlphaMode from "../AlphaMode.js";
 import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import parseBatchTable from "../parseBatchTable.js";
@@ -264,6 +265,7 @@ function processDracoAttributes(loader, draco, result) {
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       type: AttributeType.VEC4,
       normalized: true,
+      isTranslucent: true,
     };
   } else if (defined(result.RGB)) {
     parsedContent.colors = {
@@ -274,6 +276,7 @@ function processDracoAttributes(loader, draco, result) {
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       type: AttributeType.VEC3,
       normalized: true,
+      isTranslucent: false,
     };
   }
 
@@ -424,7 +427,7 @@ var defaultColorAttribute = {
   componentDatatype: ComponentDatatype.FLOAT,
   type: AttributeType.VEC4,
   isQuantized: false,
-  isTranslucent: true,
+  isTranslucent: false,
 };
 
 function makeAttributes(loader, parsedContent, context) {
@@ -492,6 +495,11 @@ function makeComponents(loader, context) {
 
   var material = new Material();
   material.metallicRoughness = metallicRoughness;
+
+  var colors = parsedContent.colors;
+  if (defined(colors) && colors.isTranslucent) {
+    material.alphaMode = AlphaMode.BLEND;
+  }
 
   var primitive = new Primitive();
   primitive.attributes = makeAttributes(loader, parsedContent, context);
