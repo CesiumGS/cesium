@@ -147,12 +147,18 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   }
 
   // .pnts point clouds store sRGB color rather than linear color
-  var isPnts = renderResources.model.type === ModelExperimentalType.TILE_PNTS;
-  var hasSRGBColor = isPnts;
+  var modelType = renderResources.model.type;
+  if (modelType === ModelExperimentalType.TILE_PNTS) {
+    shaderBuilder.addDefine(
+      "HAS_SRGB_COLOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
 
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
-  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo, hasSRGBColor);
+  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -286,11 +292,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   }
 }
 
-function updateInitialzeAttributesFunction(
-  shaderBuilder,
-  attributeInfo,
-  hasSRGBColor
-) {
+function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
   if (attributeInfo.isQuantized) {
     // Skip initialization, it will be handled in the dequantization stage.
     return;
@@ -301,14 +303,6 @@ function updateInitialzeAttributesFunction(
   var line;
   if (variableName === "tangentMC") {
     line = "attributes.tangentMC = a_tangentMC.xyz;";
-  } else if (hasSRGBColor && /^color_\d+/.test(variableName)) {
-    // .pnts models have COLOR_n attributes in sRGB rather than linear color space
-    line =
-      "attributes." +
-      variableName +
-      " = czm_SRGBToLINEAR(a_" +
-      variableName +
-      ");";
   } else {
     line = "attributes." + variableName + " = a_" + variableName + ";";
   }
