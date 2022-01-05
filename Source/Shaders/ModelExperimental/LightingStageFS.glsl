@@ -27,7 +27,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     // tonemapping. However, if HDR is not enabled, we must tonemap else large
     // values may be clamped to 1.0
     #ifndef HDR 
-    color = czm_acesTonemapping(linearIn);
+    color = czm_acesTonemapping(color);
     #endif 
 
     return color;
