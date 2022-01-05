@@ -442,7 +442,7 @@ function parseNormals(featureTable) {
       ComponentDatatype.UNSIGNED_BYTE,
       2
     );
-    var quantizationBits = 16;
+    var quantizationBits = 8;
     return {
       name: VertexAttributeSemantic.NORMAL,
       semantic: VertexAttributeSemantic.NORMAL,
