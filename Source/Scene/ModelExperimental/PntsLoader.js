@@ -415,6 +415,18 @@ function computeApproximateExtrema(positions) {
   positions.max = Cartesian3.clone(max);
 }
 
+// By default, point clouds are rendered as dark gray.
+var defaultColorAttribute = {
+  name: VertexAttributeSemantic.COLOR,
+  semantic: VertexAttributeSemantic.COLOR,
+  setIndex: 0,
+  constantColor: Color.DARKGRAY,
+  componentDatatype: ComponentDatatype.FLOAT,
+  type: AttributeType.VEC4,
+  isQuantized: false,
+  isTranslucent: true,
+};
+
 function makeAttributes(loader, parsedContent, context) {
   var attributes = [];
   var attribute;
@@ -432,6 +444,9 @@ function makeAttributes(loader, parsedContent, context) {
 
   if (defined(parsedContent.colors)) {
     attribute = makeAttribute(loader, parsedContent.colors, context);
+    attributes.push(attribute);
+  } else {
+    attribute = makeAttribute(loader, defaultColorAttribute, context);
     attributes.push(attribute);
   }
 
