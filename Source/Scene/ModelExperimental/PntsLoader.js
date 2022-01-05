@@ -501,6 +501,11 @@ function makeComponents(loader, context) {
     material.alphaMode = AlphaMode.BLEND;
   }
 
+  // Render point clouds as unlit, unless normals are present, in which case
+  // render as a PBR material.
+  var isUnlit = !defined(parsedContent.normals);
+  material.unlit = isUnlit;
+
   var primitive = new Primitive();
   primitive.attributes = makeAttributes(loader, parsedContent, context);
   primitive.primitiveType = PrimitiveType.POINTS;
