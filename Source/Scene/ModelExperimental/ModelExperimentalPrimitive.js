@@ -83,6 +83,20 @@ export default function ModelExperimentalPrimitive(options) {
    */
   this.drawCommands = [];
 
+  /**
+   * The bounding sphere of this primitive (in object-space).
+   *
+   * @type {BoundingSphere}
+   *
+   * @private
+   */
+  this.boundingSphere = undefined;
+
+  /**
+   * Update stages to apply to this primitive.
+   */
+  this.updateStages = [];
+
   initialize(this);
 }
 

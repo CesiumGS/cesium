@@ -4,13 +4,14 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
+import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 /**
  * An in-memory representation of a node as part of
  * the {@link ModelExperimentalSceneGraph}
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
- * @param {Matrix4} options.modelMatrix The model matrix associated with this node.
+ * @param {Matrix4} options.transform The model space transform of this node.
  * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this node belongs to.
  * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
@@ -23,7 +24,7 @@ export default function ModelExperimentalNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.node", options.node);
-  Check.typeOf.object("options.modelMatrix", options.modelMatrix);
+  Check.typeOf.object("options.transform", options.transform);
   Check.typeOf.object("options.sceneGraph", options.sceneGraph);
   Check.typeOf.object("options.children", options.children);
   //>>includeEnd('debug');
@@ -59,24 +60,6 @@ export default function ModelExperimentalNode(options) {
   this.node = options.node;
 
   /**
-   * The model matrix associated with this node.
-   *
-   * @type {Matrix4}
-   * @readonly
-   *
-   * @private
-   */
-  this.modelMatrix = options.modelMatrix;
-
-  /**
-   * The runtime transform applied to this node.
-   *
-   * @type {Matrix4}
-   * @readonly
-   */
-  this._transform = Matrix4.clone(options.modelMatrix);
-
-  /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -98,10 +81,34 @@ export default function ModelExperimentalNode(options) {
    */
   this.runtimePrimitives = [];
 
+  /**
+   * Update stages to apply to this primitive.
+   */
+  this.updateStages = [];
+
+  this._transformDirty = false;
+
+  this._originalTransform = Matrix4.clone(options.transform);
+  this._transform = Matrix4.clone(options.transform);
+
+  var modelMatrix = this.sceneGraph._model.modelMatrix;
+  this._computedTransform = Matrix4.multiply(
+    modelMatrix,
+    this._transform,
+    new Matrix4()
+  );
+
   initialize(this);
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
+  /**
+   * The node's model space transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   *
+   */
   transform: {
     get: function () {
       return this._transform;
@@ -110,8 +117,37 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       if (Matrix4.equals(this._transform, value)) {
         return;
       }
-      this.sceneGraph._transformDirty = true;
+      this._transformDirty = true;
       this._transform = value;
+    },
+  },
+  /**
+   * The node's world space model transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  computedTransform: {
+    get: function () {
+      var modelMatrix = this.sceneGraph._model.modelMatrix;
+      return Matrix4.multiply(
+        modelMatrix,
+        this._transform,
+        this._computedTransform
+      );
+    },
+  },
+  /**
+   * The node's original model space transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  originalTransform: {
+    get: function () {
+      return this._originalTransform;
     },
   },
 });
@@ -147,10 +183,13 @@ ModelExperimentalNode.prototype.getChild = function (index) {
 function initialize(runtimeNode) {
   var node = runtimeNode.node;
   var pipelineStages = runtimeNode.pipelineStages;
+  var updateStages = runtimeNode.updateStages;
 
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPipelineStage);
   }
+
+  updateStages.push(ModelMatrixUpdateStage);
 
   return;
 }

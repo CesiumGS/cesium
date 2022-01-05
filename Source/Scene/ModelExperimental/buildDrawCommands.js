@@ -9,6 +9,8 @@ import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -50,9 +52,21 @@ export default function buildDrawCommands(
 
   var pass = primitiveRenderResources.alphaOptions.pass;
 
+  var modelMatrix = Matrix4.multiply(
+    primitiveRenderResources.model.modelMatrix,
+    primitiveRenderResources.transform,
+    new Matrix4()
+  );
+
+  BoundingSphere.transform(
+    primitiveRenderResources.boundingSphere,
+    modelMatrix,
+    primitiveRenderResources.boundingSphere
+  );
+
   var command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
-    modelMatrix: primitiveRenderResources.modelMatrix,
+    modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,

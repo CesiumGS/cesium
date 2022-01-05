@@ -64,6 +64,11 @@ export default function ModelExperimentalSceneGraph(options) {
   this._pipelineStages = [];
 
   /**
+   * Update stages to across the model.
+   */
+  this._updateStages = [];
+
+  /**
    * The runtime nodes that make up the scene graph
    *
    * @type {ModelExperimentalNode[]}
@@ -104,8 +109,6 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
-  this._transformDirty = false;
-
   initialize(this);
 }
 
@@ -122,13 +125,13 @@ function initialize(sceneGraph) {
   var rootNodes = sceneGraph._modelComponents.scene.nodes;
   for (var i = 0; i < rootNodes.length; i++) {
     var rootNode = sceneGraph._modelComponents.scene.nodes[i];
-    var rootNodeModelMatrix = Matrix4.multiply(
-      modelMatrix,
-      ModelExperimentalUtility.getNodeTransform(rootNode),
-      new Matrix4()
+    var rootNodeTransform = ModelExperimentalUtility.getNodeTransform(rootNode);
+    ModelExperimentalUtility.correctModelMatrix(
+      rootNodeTransform,
+      scene.upAxis,
+      scene.forwardAxis
     );
-
-    traverseSceneGraph(sceneGraph, rootNode, rootNodeModelMatrix);
+    traverseSceneGraph(sceneGraph, rootNode, rootNodeTransform);
   }
 }
 
@@ -138,13 +141,13 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} modelMatrix The current computed model matrix for this node.
+ * @param {Matrix4} transform The current computed transform for this node.
  *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, modelMatrix) {
+function traverseSceneGraph(sceneGraph, node, transform) {
   // The indices of the children of this node in the runtimeNodes array.
   var childrenIndices = [];
 
@@ -153,8 +156,8 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
       var childNode = node.children[i];
-      var childNodeModelMatrix = Matrix4.multiply(
-        modelMatrix,
+      var childNodeTransform = Matrix4.multiply(
+        transform,
         ModelExperimentalUtility.getNodeTransform(childNode),
         new Matrix4()
       );
@@ -162,7 +165,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
       var childIndex = traverseSceneGraph(
         sceneGraph,
         childNode,
-        childNodeModelMatrix
+        childNodeTransform
       );
       childrenIndices.push(childIndex);
     }
@@ -171,7 +174,7 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   // Process node and mesh primitives.
   var runtimeNode = new ModelExperimentalNode({
     node: node,
-    modelMatrix: modelMatrix,
+    transform: transform,
     children: childrenIndices,
     sceneGraph: sceneGraph,
   });
@@ -270,6 +273,9 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         );
       }
 
+      runtimePrimitive.boundingSphere = BoundingSphere.clone(
+        primitiveRenderResources.boundingSphere
+      );
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
       var drawCommands = buildDrawCommands(
@@ -283,6 +289,27 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(
     this._boundingSpheres
   );
+};
+
+ModelExperimentalSceneGraph.prototype.update = function (frameState) {
+  var i, j, k;
+
+  for (i = 0; i < this._runtimeNodes.length; i++) {
+    var runtimeNode = this._runtimeNodes[i];
+
+    for (j = 0; j < runtimeNode.updateStages.length; j++) {
+      var nodeUpdateStage = runtimeNode.updateStages[j];
+      nodeUpdateStage.update(runtimeNode, this, frameState);
+    }
+
+    for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
+        var stage = runtimePrimitive.updateStages[k];
+        stage.update(runtimePrimitive);
+      }
+    }
+  }
 };
 
 /**
