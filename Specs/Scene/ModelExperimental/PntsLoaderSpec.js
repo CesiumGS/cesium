@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Color,
   ComponentDatatype,
   MetadataClass,
   MetadataComponentType,
@@ -199,6 +200,16 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(attribute.constant).toBeDefined();
   }
 
+  function expectDefaultColor(attribute) {
+    expect(attribute.name).toBe("COLOR");
+    expect(attribute.semantic).toBe(VertexAttributeSemantic.COLOR);
+    expect(attribute.setIndex).toBe(0);
+    expect(attribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+    expect(attribute.type).toBe(AttributeType.VEC4);
+    expect(attribute.normalized).toBe(false);
+    expect(attribute.constant).toEqual(Color.pack(Color.DARKGRAY, []));
+  }
+
   function expectNormal(attribute) {
     expect(attribute.name).toBe("NORMAL");
     expect(attribute.semantic).toBe(VertexAttributeSemantic.NORMAL);
@@ -227,10 +238,10 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(quantization.type).toBe(AttributeType.VEC2);
   }
 
-  function expectBatchId(attribute) {
-    expect(attribute.name).toBe("BATCH_ID");
+  function expectBatchId(attribute, componentDatatype) {
+    expect(attribute.name).toBe("FEATURE_ID");
     expect(attribute.semantic).toBe(VertexAttributeSemantic.FEATURE_ID);
-    expect(attribute.componentDatatype).toBe(ComponentDatatype.UNSIGNED_SHORT);
+    expect(attribute.componentDatatype).toBe(componentDatatype);
     expect(attribute.type).toBe(AttributeType.SCALAR);
     expect(attribute.normalized).toBe(false);
     expect(attribute.quantization).not.toBeDefined();
@@ -286,8 +297,9 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
       var primitive = components.nodes[0].primitives[0];
       var attributes = primitive.attributes;
-      expect(attributes.length).toBe(1);
+      expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
+      expectDefaultColor(attributes[1]);
     });
   });
 
@@ -435,7 +447,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         true
       );
       expectColorRGB(attributes[2]);
-      expectBatchId(attributes[3]);
+      expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
     });
   });
 
@@ -474,10 +486,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
       var primitive = components.nodes[0].primitives[0];
       var attributes = primitive.attributes;
-      expect(attributes.length).toBe(3);
+      expect(attributes.length).toBe(4);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
-      expectBatchId(attributes[2]);
+      expectDefaultColor(attributes[2]);
+      expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
     });
   });
 
