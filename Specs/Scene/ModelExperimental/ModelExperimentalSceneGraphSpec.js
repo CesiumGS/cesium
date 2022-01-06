@@ -199,11 +199,10 @@ describe(
       ).then(function (model) {
         var sceneGraph = model._sceneGraph;
         var modelComponents = sceneGraph._modelComponents;
-        var scene = modelComponents.scene;
         var runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(scene.upAxis).toEqual(Axis.Z);
-        expect(scene.forwardAxis).toEqual(Axis.X);
+        expect(modelComponents.upAxis).toEqual(Axis.Z);
+        expect(modelComponents.forwardAxis).toEqual(Axis.X);
 
         expect(runtimeNodes[1].modelMatrix).toEqual(
           modelComponents.nodes[0].matrix

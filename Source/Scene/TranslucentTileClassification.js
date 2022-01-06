@@ -5,7 +5,7 @@ import destroyObject from "../Core/destroyObject.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import Pass from "../Renderer/Pass.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -27,20 +27,20 @@ var debugShowPackedDepth = false;
  * @private
  */
 function TranslucentTileClassification(context) {
-  this._drawClassificationFBO = undefined;
-  this._accumulationFBO = undefined;
-  this._packFBO = undefined;
+  this._drawClassificationFBO = new FramebufferManager({
+    createDepthAttachments: false,
+  });
+  this._accumulationFBO = new FramebufferManager({
+    createDepthAttachments: false,
+  });
+  this._packFBO = new FramebufferManager();
 
   this._opaqueDepthStencilTexture = undefined;
-
-  this._colorTexture = undefined;
-  this._accumulationTexture = undefined;
 
   // Reference to either colorTexture or accumulationTexture
   this._textureToComposite = undefined;
 
   this._translucentDepthStencilTexture = undefined;
-  this._packedTranslucentDepth = undefined;
 
   this._packDepthCommand = undefined;
   this._accumulateCommand = undefined;
@@ -87,59 +87,22 @@ Object.defineProperties(TranslucentTileClassification.prototype, {
 });
 
 function destroyTextures(transpClass) {
-  transpClass._colorTexture =
-    transpClass._colorTexture &&
-    !transpClass._colorTexture.isDestroyed() &&
-    transpClass._colorTexture.destroy();
-
-  transpClass._accumulationTexture =
-    transpClass._accumulationTexture &&
-    !transpClass._accumulationTexture.isDestroyed() &&
-    transpClass._accumulationTexture.destroy();
   transpClass._textureToComposite = undefined;
 
   transpClass._translucentDepthStencilTexture =
     transpClass._translucentDepthStencilTexture &&
     !transpClass._translucentDepthStencilTexture.isDestroyed() &&
     transpClass._translucentDepthStencilTexture.destroy();
-  transpClass._packedTranslucentDepth =
-    transpClass._packedTranslucentDepth &&
-    !transpClass._packedTranslucentDepth.isDestroyed() &&
-    transpClass._packedTranslucentDepth.destroy();
 }
 
 function destroyFramebuffers(transpClass) {
-  transpClass._drawClassificationFBO =
-    transpClass._drawClassificationFBO &&
-    !transpClass._drawClassificationFBO.isDestroyed() &&
-    transpClass._drawClassificationFBO.destroy();
-  transpClass._accumulationFBO =
-    transpClass._accumulationFBO &&
-    !transpClass._accumulationFBO.isDestroyed() &&
-    transpClass._accumulationFBO.destroy();
-
-  transpClass._packFBO =
-    transpClass._packFBO &&
-    !transpClass._packFBO.isDestroyed() &&
-    transpClass._packFBO.destroy();
-}
-
-function rgbaTexture(context, width, height) {
-  return new Texture({
-    context: context,
-    width: width,
-    height: height,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    sampler: Sampler.NEAREST,
-  });
+  transpClass._drawClassificationFBO.destroy();
+  transpClass._accumulationFBO.destroy();
+  transpClass._packFBO.destroy();
 }
 
 function updateTextures(transpClass, context, width, height) {
   destroyTextures(transpClass);
-
-  transpClass._colorTexture = rgbaTexture(context, width, height);
-  transpClass._accumulationTexture = rgbaTexture(context, width, height);
 
   transpClass._translucentDepthStencilTexture = new Texture({
     context: context,
@@ -149,39 +112,21 @@ function updateTextures(transpClass, context, width, height) {
     pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
     sampler: Sampler.NEAREST,
   });
-
-  transpClass._packedTranslucentDepth = new Texture({
-    context: context,
-    width: width,
-    height: height,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    sampler: Sampler.NEAREST,
-  });
 }
 
-function updateFramebuffers(transpClass, context) {
+function updateFramebuffers(transpClass, context, width, height) {
   destroyFramebuffers(transpClass);
+  transpClass._drawClassificationFBO.setDepthStencilTexture(
+    transpClass._translucentDepthStencilTexture
+  );
+  transpClass._drawClassificationFBO.update(context, width, height);
 
-  transpClass._drawClassificationFBO = new Framebuffer({
-    context: context,
-    colorTextures: [transpClass._colorTexture],
-    depthStencilTexture: transpClass._translucentDepthStencilTexture,
-    destroyAttachments: false,
-  });
+  transpClass._accumulationFBO.setDepthStencilTexture(
+    transpClass._translucentDepthStencilTexture
+  );
+  transpClass._accumulationFBO.update(context, width, height);
 
-  transpClass._accumulationFBO = new Framebuffer({
-    context: context,
-    colorTextures: [transpClass._accumulationTexture],
-    depthStencilTexture: transpClass._translucentDepthStencilTexture,
-    destroyAttachments: false,
-  });
-
-  transpClass._packFBO = new Framebuffer({
-    context: context,
-    colorTextures: [transpClass._packedTranslucentDepth],
-    destroyAttachments: false,
-  });
+  transpClass._packFBO.update(context, width, height);
 }
 
 function updateResources(
@@ -199,18 +144,9 @@ function updateResources(
 
   var width = transpClass._opaqueDepthStencilTexture.width;
   var height = transpClass._opaqueDepthStencilTexture.height;
-
-  var colorTexture = transpClass._colorTexture;
-  var textureChanged =
-    !defined(colorTexture) ||
-    colorTexture.width !== width ||
-    colorTexture.height !== height;
-  if (textureChanged) {
+  if (transpClass._drawClassificationFBO.isDirty(width, height)) {
     updateTextures(transpClass, context, width, height);
-  }
-
-  if (!defined(transpClass._drawClassificationFBO) || textureChanged) {
-    updateFramebuffers(transpClass, context);
+    updateFramebuffers(transpClass, context, width, height);
   }
 
   var fs;
@@ -250,7 +186,7 @@ function updateResources(
     if (debugShowPackedDepth) {
       fs.defines = ["DEBUG_SHOW_DEPTH"];
       uniformMap.u_packedTranslucentDepth = function () {
-        return transpClass._packedTranslucentDepth;
+        return transpClass._packFBO.getColorTexture();
       };
     }
 
@@ -285,7 +221,7 @@ function updateResources(
 
     uniformMap = {
       colorTexture: function () {
-        return transpClass._colorTexture;
+        return transpClass._drawClassificationFBO.getColorTexture();
       },
     };
 
@@ -302,7 +238,7 @@ function updateResources(
 
     uniformMap = {
       colorTexture: function () {
-        return transpClass._colorTexture;
+        return transpClass._drawClassificationFBO.getColorTexture();
       },
     };
 
@@ -437,7 +373,7 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
   updateResources(this, context, passState, globeDepthFramebuffer);
 
   // Get translucent depth
-  passState.framebuffer = this._drawClassificationFBO;
+  passState.framebuffer = this._drawClassificationFBO.framebuffer;
 
   // Clear depth for multifrustum
   this._clearDepthStencilCommand.execute(context, passState);
@@ -459,7 +395,7 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
 
   // Pack depth if any translucent depth commands were performed
   if (this._hasTranslucentDepth) {
-    passState.framebuffer = this._packFBO;
+    passState.framebuffer = this._packFBO.framebuffer;
     this._packDepthCommand.execute(context, passState);
   }
 
@@ -482,18 +418,18 @@ TranslucentTileClassification.prototype.executeClassificationCommands = function
 
   if (this._frustumsDrawn === 2) {
     // copy classification from first frustum
-    passState.framebuffer = this._accumulationFBO;
+    passState.framebuffer = this._accumulationFBO.framebuffer;
     this._copyCommand.execute(context, passState);
   }
 
-  passState.framebuffer = this._drawClassificationFBO;
+  passState.framebuffer = this._drawClassificationFBO.framebuffer;
   if (this._frustumsDrawn > 1) {
     this._clearColorCommand.execute(context, passState);
   }
 
   us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
   var swapGlobeDepth = us.globeDepthTexture;
-  us.globeDepthTexture = this._packedTranslucentDepth;
+  us.globeDepthTexture = this._packFBO.getColorTexture();
   var commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
   var length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
   for (var i = 0; i < length; ++i) {
@@ -507,7 +443,7 @@ TranslucentTileClassification.prototype.executeClassificationCommands = function
     return;
   }
 
-  passState.framebuffer = this._accumulationFBO;
+  passState.framebuffer = this._accumulationFBO.framebuffer;
   this._accumulateCommand.execute(context, passState);
 
   passState.framebuffer = framebuffer;
@@ -518,9 +454,9 @@ TranslucentTileClassification.prototype.execute = function (scene, passState) {
     return;
   }
   if (this._frustumsDrawn === 1) {
-    this._textureToComposite = this._colorTexture;
+    this._textureToComposite = this._drawClassificationFBO.getColorTexture();
   } else {
-    this._textureToComposite = this._accumulationTexture;
+    this._textureToComposite = this._accumulationFBO.getColorTexture();
   }
 
   var command = scene.frameState.passes.pick
@@ -538,7 +474,8 @@ function clear(translucentTileClassification, scene, passState) {
 
   var framebuffer = passState.framebuffer;
 
-  passState.framebuffer = translucentTileClassification._drawClassificationFBO;
+  passState.framebuffer =
+    translucentTileClassification._drawClassificationFBO.framebuffer;
   translucentTileClassification._clearColorCommand.execute(
     scene._context,
     passState
@@ -547,7 +484,8 @@ function clear(translucentTileClassification, scene, passState) {
   passState.framebuffer = framebuffer;
 
   if (translucentTileClassification._frustumsDrawn > 1) {
-    passState.framebuffer = translucentTileClassification._accumulationFBO;
+    passState.framebuffer =
+      translucentTileClassification._accumulationFBO.framebuffer;
     translucentTileClassification._clearColorCommand.execute(
       scene._context,
       passState
