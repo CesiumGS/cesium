@@ -7,6 +7,7 @@ import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperiment
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
+import StencilConstants from "../StencilConstants.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 
@@ -41,9 +42,16 @@ export default function buildDrawCommands(
   var model = primitiveRenderResources.model;
   model._resources.push(vertexArray);
 
-  var renderState = RenderState.fromCache(
-    primitiveRenderResources.renderStateOptions
-  );
+  var renderState = primitiveRenderResources.renderStateOptions;
+
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    // Set stencil values for classification on 3D Tiles
+    renderState = clone(renderState, true);
+    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  renderState = RenderState.fromCache(renderState);
 
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._resources.push(shaderProgram);
