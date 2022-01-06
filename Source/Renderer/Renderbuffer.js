@@ -25,6 +25,7 @@ function Renderbuffer(options) {
   var height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
+  var numSamples = defaultValue(options.numSamples, 1);
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {
@@ -59,7 +60,17 @@ function Renderbuffer(options) {
   this._renderbuffer = this._gl.createRenderbuffer();
 
   gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
-  gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  if (numSamples > 1) {
+    gl.renderbufferStorageMultisample(
+      gl.RENDERBUFFER,
+      numSamples,
+      format,
+      this._width,
+      this._height
+    );
+  } else {
+    gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  }
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
 

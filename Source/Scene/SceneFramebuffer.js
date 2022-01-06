@@ -44,7 +44,12 @@ Object.defineProperties(SceneFramebuffer.prototype, {
   },
 });
 
-SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
+SceneFramebuffer.prototype.update = function (
+  context,
+  viewport,
+  hdr,
+  numSamples
+) {
   var width = viewport.width;
   var height = viewport.height;
   var pixelDatatype = hdr
@@ -52,7 +57,13 @@ SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
-  this._colorFramebuffer.update(context, width, height, pixelDatatype);
+  this._colorFramebuffer.update(
+    context,
+    width,
+    height,
+    numSamples,
+    pixelDatatype
+  );
   this._idFramebuffer.update(context, width, height);
 };
 
@@ -69,6 +80,10 @@ SceneFramebuffer.prototype.getFramebuffer = function () {
 
 SceneFramebuffer.prototype.getIdFramebuffer = function () {
   return this._idFramebuffer.framebuffer;
+};
+
+SceneFramebuffer.prototype.blitFramebuffers = function (context) {
+  return this._colorFramebuffer.blitFramebuffers(context);
 };
 
 SceneFramebuffer.prototype.isDestroyed = function () {

@@ -590,6 +590,13 @@ function Scene(options) {
   this.eyeSeparation = undefined;
 
   /**
+   * The number of samples for MSAA (MSAA is disabled when numberSamples = 1).
+   * @type {Number}
+   * @default 1
+   */
+  this.numberSamples = 1;
+
+  /**
    * Post processing effects applied to the final render.
    * @type {PostProcessStageCollection}
    */
@@ -3389,10 +3396,16 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       postProcess.length > 0 ||
       postProcess.ambientOcclusion.enabled ||
       postProcess.fxaa.enabled ||
+      postProcess.passThrough.enabled ||
       postProcess.bloom.enabled));
   environmentState.usePostProcessSelected = false;
   if (usePostProcess) {
-    view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
+    view.sceneFramebuffer.update(
+      context,
+      view.viewport,
+      scene._hdr,
+      scene.numberSamples
+    );
     view.sceneFramebuffer.clear(context, passState, clearColor);
 
     postProcess.update(context, frameState.useLogDepth, scene._hdr);
@@ -3491,6 +3504,9 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   if (usePostProcess) {
+    if (this.numberSamples > 1) {
+      sceneFramebuffer = view.sceneFramebuffer.blitFramebuffers(context);
+    }
     var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;

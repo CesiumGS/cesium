@@ -224,7 +224,7 @@ GlobeDepth.prototype.update = function (
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
-  this._colorFramebuffer.update(context, width, height, pixelDatatype);
+  this._colorFramebuffer.update(context, width, height, 1, pixelDatatype);
   this._copyDepthFramebuffer.update(context, width, height);
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;

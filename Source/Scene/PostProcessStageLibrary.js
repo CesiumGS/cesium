@@ -15,6 +15,7 @@ import DepthView from "../Shaders/PostProcessStages/DepthView.js";
 import EdgeDetection from "../Shaders/PostProcessStages/EdgeDetection.js";
 import FilmicTonemapping from "../Shaders/PostProcessStages/FilmicTonemapping.js";
 import FXAA from "../Shaders/PostProcessStages/FXAA.js";
+import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
 import LensFlare from "../Shaders/PostProcessStages/LensFlare.js";
 import ModifiedReinhardTonemapping from "../Shaders/PostProcessStages/ModifiedReinhardTonemapping.js";
@@ -663,6 +664,13 @@ PostProcessStageLibrary.createFXAAStage = function () {
     name: "czm_FXAA",
     fragmentShader: fxaaFS,
     sampleMode: PostProcessStageSampleMode.LINEAR,
+  });
+};
+
+PostProcessStageLibrary.createPassThroughStage = function () {
+  return new PostProcessStage({
+    name: "czm_PassThrough",
+    fragmentShader: PassThrough,
   });
 };
 

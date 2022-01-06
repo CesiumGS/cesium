@@ -140,7 +140,7 @@ function createFramebuffers(autoexposure, context) {
     width = Math.max(Math.ceil(width / 3.0), 1.0);
     height = Math.max(Math.ceil(height / 3.0), 1.0);
     framebuffers[i] = new FramebufferManager();
-    framebuffers[i].update(context, width, height, pixelDatatype);
+    framebuffers[i].update(context, width, height, 1, pixelDatatype);
   }
 
   var lastTexture = framebuffers[length - 1].getColorTexture(0);
@@ -148,6 +148,7 @@ function createFramebuffers(autoexposure, context) {
     context,
     lastTexture.width,
     lastTexture.height,
+    1,
     pixelDatatype
   );
   autoexposure._framebuffers = framebuffers;

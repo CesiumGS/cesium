@@ -35,6 +35,7 @@ var stackScratch = [];
  */
 function PostProcessStageCollection() {
   var fxaa = PostProcessStageLibrary.createFXAAStage();
+  var passThrough = PostProcessStageLibrary.createPassThroughStage();
   var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
   var bloom = PostProcessStageLibrary.createBloomStage();
 
@@ -51,6 +52,7 @@ function PostProcessStageCollection() {
   var tonemapping = this._tonemapping;
 
   fxaa.enabled = false;
+  passThrough.enabled = false;
   ao.enabled = false;
   bloom.enabled = false;
   tonemapping.enabled = false; // will be enabled if necessary in update
@@ -59,7 +61,7 @@ function PostProcessStageCollection() {
 
   var stageNames = {};
   var stack = stackScratch;
-  stack.push(fxaa, ao, bloom, tonemapping);
+  stack.push(fxaa, passThrough, ao, bloom, tonemapping);
   while (stack.length > 0) {
     var stage = stack.pop();
     stageNames[stage.name] = stage;
@@ -87,11 +89,13 @@ function PostProcessStageCollection() {
   this._ao = ao;
   this._bloom = bloom;
   this._fxaa = fxaa;
+  this._passThrough = passThrough;
 
   this._aoEnabled = undefined;
   this._bloomEnabled = undefined;
   this._tonemappingEnabled = undefined;
   this._fxaaEnabled = undefined;
+  this._passThroughEnabled = undefined;
 
   this._activeStagesChanged = false;
   this._stagesRemoved = false;
@@ -120,17 +124,32 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       }
 
       var fxaa = this._fxaa;
+      var passThrough = this._passThrough;
       var ao = this._ao;
       var bloom = this._bloom;
       var tonemapping = this._tonemapping;
 
       readyAndEnabled = readyAndEnabled || (fxaa.ready && fxaa.enabled);
+      readyAndEnabled =
+        readyAndEnabled || (passThrough.ready && passThrough.enabled);
       readyAndEnabled = readyAndEnabled || (ao.ready && ao.enabled);
       readyAndEnabled = readyAndEnabled || (bloom.ready && bloom.enabled);
       readyAndEnabled =
         readyAndEnabled || (tonemapping.ready && tonemapping.enabled);
 
       return readyAndEnabled;
+    },
+  },
+  /**
+   * A no-op post-process stage.
+   *
+   * @memberof PostProcessStageCollection.prototype
+   * @type {PostProcessStage}
+   * @readonly
+   */
+  passThrough: {
+    get: function () {
+      return this._passThrough;
     },
   },
   /**
@@ -254,6 +273,11 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       var fxaa = this._fxaa;
       if (fxaa.enabled && fxaa.ready) {
         return this.getOutputTexture(fxaa.name);
+      }
+
+      var passThrough = this._passThrough;
+      if (passThrough.enabled && passThrough.ready) {
+        return this.getOutputTexture(passThrough.name);
       }
 
       var stages = this._stages;
@@ -592,6 +616,7 @@ PostProcessStageCollection.prototype.update = function (
   var autoexposure = this._autoExposure;
   var tonemapping = this._tonemapping;
   var fxaa = this._fxaa;
+  var passThrough = this._passThrough;
 
   tonemapping.enabled = useHdr;
 
@@ -600,6 +625,8 @@ PostProcessStageCollection.prototype.update = function (
   var tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
   var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+  var passThroughEnabled =
+    passThrough.enabled && passThrough._isSupported(context);
 
   if (
     activeStagesChanged ||
@@ -607,7 +634,8 @@ PostProcessStageCollection.prototype.update = function (
     aoEnabled !== this._aoEnabled ||
     bloomEnabled !== this._bloomEnabled ||
     tonemappingEnabled !== this._tonemappingEnabled ||
-    fxaaEnabled !== this._fxaaEnabled
+    fxaaEnabled !== this._fxaaEnabled ||
+    passThroughEnabled !== this._passThroughEnabled
   ) {
     // The number of stages to execute has changed.
     // Update dependencies and recreate framebuffers.
@@ -617,6 +645,7 @@ PostProcessStageCollection.prototype.update = function (
     this._bloomEnabled = bloomEnabled;
     this._tonemappingEnabled = tonemappingEnabled;
     this._fxaaEnabled = fxaaEnabled;
+    this._passThroughEnabled = passThroughEnabled;
     this._textureCacheDirty = false;
   }
 
@@ -653,6 +682,7 @@ PostProcessStageCollection.prototype.update = function (
   this._textureCache.update(context);
 
   fxaa.update(context, useLogDepth);
+  passThrough.update(context, useLogDepth);
   ao.update(context, useLogDepth);
   bloom.update(context, useLogDepth);
   tonemapping.update(context, useLogDepth);
@@ -764,6 +794,7 @@ PostProcessStageCollection.prototype.execute = function (
   var activeStages = this._activeStages;
   var length = activeStages.length;
   var fxaa = this._fxaa;
+  var passThrough = this._passThrough;
   var ao = this._ao;
   var bloom = this._bloom;
   var autoexposure = this._autoExposure;
@@ -775,9 +806,12 @@ PostProcessStageCollection.prototype.execute = function (
   var tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
   var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+  var passThroughEnabled =
+    passThrough.enabled && passThrough._isSupported(context);
 
   if (
     !fxaaEnabled &&
+    !passThroughEnabled &&
     !aoEnabled &&
     !bloomEnabled &&
     !tonemappingEnabled &&
@@ -821,6 +855,10 @@ PostProcessStageCollection.prototype.execute = function (
 
   if (fxaaEnabled && fxaa.ready) {
     execute(fxaa, context, lastTexture, depthTexture, idTexture);
+  }
+
+  if (passThroughEnabled && passThrough.ready) {
+    execute(passThrough, context, lastTexture, depthTexture, idTexture);
   }
 };
 
@@ -879,6 +917,7 @@ PostProcessStageCollection.prototype.isDestroyed = function () {
  */
 PostProcessStageCollection.prototype.destroy = function () {
   this._fxaa.destroy();
+  this._passThrough.destroy();
   this._ao.destroy();
   this._bloom.destroy();
   this._autoExposure.destroy();
