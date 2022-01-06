@@ -363,6 +363,7 @@ function makeAttribute(loader, attributeInfo, context) {
       context: context,
       usage: BufferUsage.STATIC_DRAW,
     });
+    buffer.vertexArrayDestroyable = false;
     loader._buffers.push(buffer);
     attribute.buffer = buffer;
   }
