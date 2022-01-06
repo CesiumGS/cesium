@@ -8,7 +8,9 @@ import {
 describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   var mockNode = {};
   var transform = Matrix4.IDENTITY;
-  var mockSceneGraph = {};
+  var mockSceneGraph = {
+    _computedModelMatrix: Matrix4.IDENTITY,
+  };
 
   it("throws for undefined node", function () {
     expect(function () {
@@ -63,9 +65,11 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     });
 
     expect(node.node).toBe(mockNode);
-    expect(node.transform).toBe(transform);
     expect(node.sceneGraph).toBe(mockSceneGraph);
     expect(node.children.length).toEqual(0);
+
+    verifyTransforms(transform, mockSceneGraph, node);
+
     expect(node.pipelineStages).toEqual([]);
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
@@ -79,13 +83,34 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     };
     var node = new ModelExperimentalNode({
       node: instancedMockNode,
-      modelMatrix: modelMatrix,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [],
     });
 
     expect(node.node).toBe(instancedMockNode);
-    expect(node.modelMatrix).toBe(modelMatrix);
+    expect(node.sceneGraph).toBe(mockSceneGraph);
+    expect(node.children.length).toEqual(0);
+
+    verifyTransforms(transform, mockSceneGraph, node);
+
     expect(node.pipelineStages.length).toBe(1);
     expect(node.pipelineStages[0]).toEqual(InstancingPipelineStage);
+    expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
   });
+
+  function verifyTransforms(transform, sceneGraph, runtimeNode) {
+    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+
+    var expectedComputedTransform = Matrix4.multiplyTransformation(
+      sceneGraph._computedModelMatrix,
+      transform,
+      new Matrix4()
+    );
+    expect(
+      Matrix4.equals(runtimeNode.computedTransform, expectedComputedTransform)
+    ).toEqual(true);
+  }
 });
