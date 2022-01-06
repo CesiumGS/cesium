@@ -47,13 +47,17 @@ describe(
       var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
         version: 2,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
+      expect(function () {
+        B3dmParser.parse(arrayBuffer);
+      }).toThrowRuntimeError();
     });
 
     it("throws with empty gltf", function () {
       // Expect to throw DeveloperError in Model due to invalid gltf magic
       var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
+      expect(function () {
+        B3dmParser.parse(arrayBuffer);
+      }).toThrowRuntimeError();
     });
 
     it("throws on undefined arrayBuffer", function () {

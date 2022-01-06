@@ -14,6 +14,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import B3dmLoader from "./B3dmLoader.js";
+import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 
 /**
@@ -216,7 +217,12 @@ function initialize(model) {
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
     );
 
-  loader.texturesLoadedPromise
+  // Transcoded .pnts models do not have textures
+  var texturesLoadedPromise = defaultValue(
+    loader.texturesLoadedPromise,
+    when.resolve()
+  );
+  texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
@@ -833,9 +839,46 @@ ModelExperimental.fromB3dm = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
   };
+
+  var model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/**
+ * @private
+ */
+ModelExperimental.fromPnts = function (options) {
+  var loaderOptions = {
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+  };
+  var loader = new PntsLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: options.resource,
+    type: ModelExperimentalType.TILE_PNTS,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+
   var model = new ModelExperimental(modelOptions);
   return model;
 };

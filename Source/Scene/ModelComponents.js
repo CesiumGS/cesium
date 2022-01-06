@@ -69,7 +69,7 @@ function Quantization() {
 
   /**
    * The step size of the quantization volume, equal to
-   * quantizedVolumeDimensions / quantizedVolumeOffset (component-wise).
+   * quantizedVolumeDimensions / normalizationRange (component-wise).
    * Not applicable for oct encoded attributes.
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.

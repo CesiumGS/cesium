@@ -7,6 +7,7 @@ import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js"
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
@@ -143,6 +144,16 @@ function processAttribute(renderResources, attribute, attributeIndex) {
   // already in GeometryStageVS, we just need to enable it
   if (defined(attribute.semantic)) {
     addSemanticDefine(shaderBuilder, attribute);
+  }
+
+  // .pnts point clouds store sRGB color rather than linear color
+  var modelType = renderResources.model.type;
+  if (modelType === ModelExperimentalType.TILE_PNTS) {
+    shaderBuilder.addDefine(
+      "HAS_SRGB_COLOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
   }
 
   // Some GLSL code must be dynamically generated
