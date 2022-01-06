@@ -113,24 +113,21 @@ export default function ModelExperimentalSceneGraph(options) {
 }
 
 function initialize(sceneGraph) {
-  var modelMatrix = Matrix4.clone(sceneGraph._model.modelMatrix);
-  var scene = sceneGraph._modelComponents.scene;
+  var model = sceneGraph._model;
+  var components = sceneGraph._modelComponents;
+
+  var scene = components.scene;
 
   ModelExperimentalUtility.correctModelMatrix(
-    modelMatrix,
+    model.modelMatrix,
     scene.upAxis,
     scene.forwardAxis
   );
 
-  var rootNodes = sceneGraph._modelComponents.scene.nodes;
+  var rootNodes = scene.nodes;
   for (var i = 0; i < rootNodes.length; i++) {
-    var rootNode = sceneGraph._modelComponents.scene.nodes[i];
+    var rootNode = scene.nodes[i];
     var rootNodeTransform = ModelExperimentalUtility.getNodeTransform(rootNode);
-    ModelExperimentalUtility.correctModelMatrix(
-      rootNodeTransform,
-      scene.upAxis,
-      scene.forwardAxis
-    );
     traverseSceneGraph(sceneGraph, rootNode, rootNodeTransform);
   }
 }

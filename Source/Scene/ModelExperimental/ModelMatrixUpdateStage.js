@@ -28,47 +28,51 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   if (runtimeNode._transformDirty) {
-    updateRuntimeNode(runtimeNode, sceneGraph);
+    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transform);
     runtimeNode._transformDirty = false;
   }
 };
 
+var transformScratch = new Matrix4();
+
 /**
- * Recursively update runtime nodes.
+ * Recursively update all child runtime nodes and their runtime primitives.
+ *
+ * @private
  */
-function updateRuntimeNode(runtimeNode, sceneGraph) {
+function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
   var i, j;
 
-  if (defined(runtimeNode.runtimePrimitives)) {
-    // Update the DrawCommand's model matrix and bounding volume for each runtime primitive that belongs to this runtime node.
-    for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
-      var runtimePrimitive = runtimeNode.runtimePrimitives[i];
-      for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
-        var drawCommand = runtimePrimitive.drawCommands[j];
+  for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
+    var runtimePrimitive = runtimeNode.runtimePrimitives[i];
+    for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
+      var drawCommand = runtimePrimitive.drawCommands[j];
 
-        Matrix4.clone(runtimeNode.computedTransform, drawCommand.modelMatrix);
+      Matrix4.multiplyTransformation(
+        sceneGraph._model.modelMatrix,
+        transform,
+        drawCommand.modelMatrix
+      );
 
-        BoundingSphere.transform(
-          runtimePrimitive.boundingSphere,
-          drawCommand.modelMatrix,
-          drawCommand.boundingVolume
-        );
-      }
+      BoundingSphere.transform(
+        runtimePrimitive.boundingSphere,
+        drawCommand.modelMatrix,
+        drawCommand.boundingVolume
+      );
     }
   }
 
   if (defined(runtimeNode.children)) {
-    // Update all children runtime nodes.
     for (i = 0; i < runtimeNode.children.length; i++) {
       var childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
       Matrix4.multiplyTransformation(
         runtimeNode.transform,
         childRuntimeNode.transform,
-        childRuntimeNode.transform
+        transformScratch
       );
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph);
+      updateRuntimeNode(childRuntimeNode, sceneGraph, transformScratch);
     }
   }
 }
