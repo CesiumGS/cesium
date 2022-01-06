@@ -469,10 +469,11 @@ function parseBatchIds(featureTable) {
       1
     );
     return {
-      name: "BATCH_ID",
+      name: VertexAttributeSemantic.FEATURE_ID,
       semantic: VertexAttributeSemantic.FEATURE_ID,
+      setIndex: 0,
       typedArray: batchIds,
-      componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      componentDatatype: ComponentDatatype.fromTypedArray(batchIds),
       type: AttributeType.SCALAR,
     };
   }
