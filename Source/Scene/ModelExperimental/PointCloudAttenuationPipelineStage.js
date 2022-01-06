@@ -79,3 +79,5 @@ PointCloudAttenuationPipelineStage.process = function (
     return scratch;
   };
 };
+
+export default PointCloudAttenuationPipelineStage;
