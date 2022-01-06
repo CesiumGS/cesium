@@ -2,26 +2,54 @@ import {
   InstancingPipelineStage,
   Matrix4,
   ModelExperimentalNode,
+  ModelMatrixUpdateStage,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   var mockNode = {};
-  var modelMatrix = Matrix4.IDENTITY;
+  var transform = Matrix4.IDENTITY;
+  var mockSceneGraph = {};
 
   it("throws for undefined node", function () {
     expect(function () {
       return new ModelExperimentalNode({
         node: undefined,
-        modelMatrix: modelMatrix,
+        transform: transform,
+        sceneGraph: mockSceneGraph,
+        children: [],
       });
     }).toThrowDeveloperError();
   });
 
-  it("throws for undefined modelMatrix", function () {
+  it("throws for undefined transform", function () {
     expect(function () {
       return new ModelExperimentalNode({
         node: mockNode,
-        modelMatrix: undefined,
+        transform: undefined,
+        sceneGraph: mockSceneGraph,
+        children: [],
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws for undefined scene graph", function () {
+    expect(function () {
+      return new ModelExperimentalNode({
+        node: mockNode,
+        transform: transform,
+        sceneGraph: undefined,
+        children: [],
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws for undefined children", function () {
+    expect(function () {
+      return new ModelExperimentalNode({
+        node: mockNode,
+        transform: transform,
+        sceneGraph: mockSceneGraph,
+        children: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -29,12 +57,17 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   it("constructs", function () {
     var node = new ModelExperimentalNode({
       node: mockNode,
-      modelMatrix: modelMatrix,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [],
     });
 
     expect(node.node).toBe(mockNode);
-    expect(node.modelMatrix).toBe(modelMatrix);
+    expect(node.transform).toBe(transform);
+    expect(node.sceneGraph).toBe(mockSceneGraph);
+    expect(node.children.length).toEqual(0);
     expect(node.pipelineStages).toEqual([]);
+    expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
   });
 

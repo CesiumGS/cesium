@@ -49,7 +49,7 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
       var drawCommand = runtimePrimitive.drawCommands[j];
 
       Matrix4.multiplyTransformation(
-        sceneGraph._model.modelMatrix,
+        sceneGraph._computedModelMatrix,
         transform,
         drawCommand.modelMatrix
       );

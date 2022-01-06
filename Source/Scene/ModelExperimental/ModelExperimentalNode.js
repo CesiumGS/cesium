@@ -29,35 +29,21 @@ export default function ModelExperimentalNode(options) {
   Check.typeOf.object("options.children", options.children);
   //>>includeEnd('debug');
 
-  /**
-   * The scene graph this node belongs to.
-   *
-   * @type {ModelExperimentalSceneGraph}
-   * @readonly
-   *
-   * @private
-   */
-  this.sceneGraph = options.sceneGraph;
+  var sceneGraph = options.sceneGraph;
+  var transform = options.transform;
 
-  /**
-   * The indices of the children of this node in the runtime nodes array of the scene graph.
-   *
-   * @type {Number[]}
-   * @readonly
-   *
-   * @private
-   */
-  this.children = options.children;
+  this._sceneGraph = sceneGraph;
+  this._children = options.children;
+  this._node = options.node;
 
-  /**
-   * The model components node associated with this scene graph node.
-   *
-   * @type {ModelComponents.Node}
-   * @readonly
-   *
-   * @private
-   */
-  this.node = options.node;
+  this._originalTransform = Matrix4.clone(transform);
+  this._transform = Matrix4.clone(transform);
+  this._computedTransform = Matrix4.multiplyTransformation(
+    sceneGraph._computedModelMatrix,
+    transform,
+    new Matrix4()
+  );
+  this._transformDirty = false;
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -86,22 +72,49 @@ export default function ModelExperimentalNode(options) {
    */
   this.updateStages = [];
 
-  this._transformDirty = false;
-
-  this._originalTransform = Matrix4.clone(options.transform);
-  this._transform = Matrix4.clone(options.transform);
-
-  var modelMatrix = this.sceneGraph._model.modelMatrix;
-  this._computedTransform = Matrix4.multiply(
-    modelMatrix,
-    this._transform,
-    new Matrix4()
-  );
-
   initialize(this);
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
+  /**
+   * The internal node this runtime node represents.
+   *
+   * @type {ModelComponents.Node}
+   * @readonly
+   *
+   * @private
+   */
+  node: {
+    get: function () {
+      return this._node;
+    },
+  },
+  /**
+   * The scene graph this node belongs to.
+   *
+   * @type {ModelExperimentalSceneGraph}
+   * @readonly
+   *
+   * @private
+   */
+  sceneGraph: {
+    get: function () {
+      return this._sceneGraph;
+    },
+  },
+
+  /**
+   * The indices of the children of this node in the scene graph.
+   *
+   * @type {Number[]}
+   * @readonly
+   */
+  children: {
+    get: function () {
+      return this._children;
+    },
+  },
+
   /**
    * The node's model space transform.
    *
@@ -119,6 +132,11 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = value;
+      Matrix4.multiplyTransformation(
+        this._sceneGraph._computedModelMatrix,
+        value,
+        this._computedTransform
+      );
     },
   },
   /**
@@ -130,12 +148,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    */
   computedTransform: {
     get: function () {
-      var modelMatrix = this.sceneGraph._model.modelMatrix;
-      return Matrix4.multiply(
-        modelMatrix,
-        this._transform,
-        this._computedTransform
-      );
+      return this._computedTransform;
     },
   },
   /**
@@ -193,3 +206,15 @@ function initialize(runtimeNode) {
 
   return;
 }
+
+/**
+ * @private
+ */
+ModelExperimentalNode.prototype.updateModelMatrix = function () {
+  this._transformDirty = true;
+  Matrix4.multiplyTransformation(
+    this._sceneGraph._computedModelMatrix,
+    this._transform,
+    this._computedTransform
+  );
+};

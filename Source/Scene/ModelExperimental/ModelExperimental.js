@@ -62,6 +62,7 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
+  this._modelMatrixDirty = false;
   this._modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
@@ -478,7 +479,11 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._modelMatrix;
     },
     set: function (value) {
+      if (Matrix4.equals(this._modelMatrix, value)) {
+        return;
+      }
       this._modelMatrix = value;
+      this._modelMatrixDirty = true;
     },
   },
 
@@ -631,6 +636,11 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this._debugShowBoundingVolumeDirty) {
     updateShowBoundingVolume(this._sceneGraph, this._debugShowBoundingVolume);
     this._debugShowBoundingVolumeDirty = false;
+  }
+
+  if (this._modelMatrixDirty) {
+    this._sceneGraph.updateModelMatrix(this);
+    this._modelMatrixDirty = false;
   }
 
   this._sceneGraph.update(frameState);

@@ -79,6 +79,16 @@ export default function ModelExperimentalSceneGraph(options) {
   this._runtimeNodes = [];
 
   /**
+   * The indices of the root nodes in the runtime nodes array.
+   *
+   * @type {Number[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._rootNodes = [];
+
+  /**
    * Once computed, the {@link DrawCommand}s that are used to render this
    * scene graph are stored here.
    *
@@ -109,17 +119,24 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
+  /**
+   * The corrected model matrix.
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+
   initialize(this);
 }
 
 function initialize(sceneGraph) {
-  var model = sceneGraph._model;
-  var components = sceneGraph._modelComponents;
-
-  var scene = components.scene;
+  var scene = sceneGraph._modelComponents.scene;
 
   ModelExperimentalUtility.correctModelMatrix(
-    model.modelMatrix,
+    sceneGraph._computedModelMatrix,
     scene.upAxis,
     scene.forwardAxis
   );
@@ -128,7 +145,13 @@ function initialize(sceneGraph) {
   for (var i = 0; i < rootNodes.length; i++) {
     var rootNode = scene.nodes[i];
     var rootNodeTransform = ModelExperimentalUtility.getNodeTransform(rootNode);
-    traverseSceneGraph(sceneGraph, rootNode, rootNodeTransform);
+    var rootNodeIndex = traverseSceneGraph(
+      sceneGraph,
+      rootNode,
+      rootNodeTransform
+    );
+
+    sceneGraph._rootNodes.push(rootNodeIndex);
   }
 }
 
@@ -306,6 +329,21 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
         stage.update(runtimePrimitive);
       }
     }
+  }
+};
+
+ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
+  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+  ModelExperimentalUtility.correctModelMatrix(
+    this._computedModelMatrix,
+    this._modelComponents.scene.upAxis,
+    this._modelComponents.scene.forwardAxis
+  );
+
+  var rootNodes = this._rootNodes;
+  for (var i = 0; i < rootNodes.length; i++) {
+    var node = this._runtimeNodes[rootNodes[i]];
+    node.updateModelMatrix();
   }
 };
 

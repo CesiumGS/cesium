@@ -53,7 +53,7 @@ export default function buildDrawCommands(
   var pass = primitiveRenderResources.alphaOptions.pass;
 
   var modelMatrix = Matrix4.multiply(
-    primitiveRenderResources.model.modelMatrix,
+    model._sceneGraph._computedModelMatrix,
     primitiveRenderResources.transform,
     new Matrix4()
   );
