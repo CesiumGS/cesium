@@ -5,6 +5,7 @@ import {
   FeatureIdPipelineStage,
   GltfLoader,
   GeometryPipelineStage,
+  ModelExperimentalType,
   Resource,
   ResourceCache,
   ShaderBuilder,
@@ -128,6 +129,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       GeometryPipelineStage.process(renderResources, positionOnlyPrimitive);
@@ -196,6 +200,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(boxTextured).then(function (gltfLoader) {
@@ -308,6 +315,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
@@ -450,6 +460,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(microcosm).then(function (gltfLoader) {
@@ -570,6 +583,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
@@ -712,6 +728,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(pointCloudRGB).then(function (gltfLoader) {
@@ -811,6 +830,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       GeometryPipelineStage.process(renderResources, customAttributePrimitive);
@@ -897,6 +919,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
@@ -994,6 +1019,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(weather).then(function (gltfLoader) {
@@ -1075,6 +1103,9 @@ describe(
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
       };
 
       return loadGltf(dracoMilkTruck).then(function (gltfLoader) {

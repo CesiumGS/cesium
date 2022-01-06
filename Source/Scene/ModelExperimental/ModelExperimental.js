@@ -4,8 +4,9 @@ import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
@@ -57,11 +58,21 @@ export default function ModelExperimental(options) {
    * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
-   *
    * @private
    */
   this._loader = options.loader;
   this._resource = options.resource;
+
+  /**
+   * Type of this model, to distinguish individual glTF files from 3D Tiles
+   * internally. The corresponding constructor parameter is undocumented, since
+   * ModelExperimentalType is part of the private API.
+   *
+   * @type {ModelExperimentalType}
+   * @private
+   * @readonly
+   */
+  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
   this._modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
@@ -182,7 +193,7 @@ function initialize(model) {
     .then(function (loader) {
       Matrix4.multiply(
         model._modelMatrix,
-        loader.transform,
+        loader.components.transform,
         model._modelMatrix
       );
 
@@ -772,9 +783,15 @@ ModelExperimental.fromGltf = function (options) {
 
   var loader = new GltfLoader(loaderOptions);
 
+  var is3DTiles = defined(options.content);
+  var type = is3DTiles
+    ? ModelExperimentalType.TILE_GLTF
+    : ModelExperimentalType.GLTF;
+
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.gltfResource,
+    type: type,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
@@ -813,6 +830,7 @@ ModelExperimental.fromB3dm = function (options) {
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.b3dmResource,
+    type: ModelExperimentalType.TILE_B3DM,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
@@ -845,6 +863,7 @@ ModelExperimental.fromPnts = function (options) {
   var modelOptions = {
     loader: loader,
     resource: options.resource,
+    type: ModelExperimentalType.TILE_PNTS,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,

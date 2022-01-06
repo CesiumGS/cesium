@@ -11,6 +11,7 @@ import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
 import when from "../../ThirdParty/when.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import AlphaMode from "../AlphaMode.js";
 import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import parseBatchTable from "../parseBatchTable.js";
@@ -264,6 +265,7 @@ function processDracoAttributes(loader, draco, result) {
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       type: AttributeType.VEC4,
       normalized: true,
+      isTranslucent: true,
     };
   } else if (defined(result.RGB)) {
     parsedContent.colors = {
@@ -274,17 +276,19 @@ function processDracoAttributes(loader, draco, result) {
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
       type: AttributeType.VEC3,
       normalized: true,
+      isTranslucent: false,
     };
   }
 
   // Transcode Batch ID (3D Tiles 1.0) -> Feature ID (3D Tiles Next)
   if (defined(result.BATCH_ID)) {
+    var batchIds = result.BATCH_ID.array;
     parsedContent.batchIds = {
-      name: "BATCH_ID",
+      name: "FEATURE_ID",
       semantic: VertexAttributeSemantic.FEATURE_ID,
       setIndex: 0,
-      typedArray: result.BATCH_ID.array,
-      componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      typedArray: batchIds,
+      componentDatatype: ComponentDatatype.fromTypedArray(batchIds),
       type: AttributeType.SCALAR,
     };
   }
@@ -321,7 +325,9 @@ function makeAttribute(loader, attributeInfo, context) {
     quantization = new Quantization();
     var normalizationRange = attributeInfo.quantizedRange;
     quantization.normalizationRange = normalizationRange;
-    quantization.quantizedVolumeOffset = attributeInfo.quantizedVolumeOffset;
+    // volume offset sometimes requires 64-bit precision so this is handled
+    // in the components.transform matrix.
+    quantization.quantizedVolumeOffset = Cartesian3.ZERO;
     var quantizedVolumeDimensions = attributeInfo.quantizedVolumeScale;
     quantization.quantizedVolumeDimensions = quantizedVolumeDimensions;
     quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(
@@ -357,6 +363,7 @@ function makeAttribute(loader, attributeInfo, context) {
       context: context,
       usage: BufferUsage.STATIC_DRAW,
     });
+    buffer.vertexArrayDestroyable = false;
     loader._buffers.push(buffer);
     attribute.buffer = buffer;
   }
@@ -398,9 +405,10 @@ function computeApproximateExtrema(positions) {
   var index;
   var position;
   if (positions.isQuantized) {
-    // Use the quantized volume to compute the min and max without sampling
-    min = Cartesian3.clone(positions.quantizedVolumeOffset, scratchMin);
-    max = Cartesian3.add(min, positions.quantizedVolumeScale, scratchMax);
+    // The quantized volume offset is not used here since it will become part of
+    // the model matrix.
+    min = Cartesian3.ZERO;
+    max = positions.quantizedVolumeScale;
   } else {
     for (i = 0; i < samplesLength; ++i) {
       index = Math.floor(randomValues[i] * pointsLength);
@@ -414,6 +422,18 @@ function computeApproximateExtrema(positions) {
   positions.min = Cartesian3.clone(min);
   positions.max = Cartesian3.clone(max);
 }
+
+// By default, point clouds are rendered as dark gray.
+var defaultColorAttribute = {
+  name: VertexAttributeSemantic.COLOR,
+  semantic: VertexAttributeSemantic.COLOR,
+  setIndex: 0,
+  constantColor: Color.DARKGRAY,
+  componentDatatype: ComponentDatatype.FLOAT,
+  type: AttributeType.VEC4,
+  isQuantized: false,
+  isTranslucent: false,
+};
 
 function makeAttributes(loader, parsedContent, context) {
   var attributes = [];
@@ -432,6 +452,9 @@ function makeAttributes(loader, parsedContent, context) {
 
   if (defined(parsedContent.colors)) {
     attribute = makeAttribute(loader, parsedContent.colors, context);
+    attributes.push(attribute);
+  } else {
+    attribute = makeAttribute(loader, defaultColorAttribute, context);
     attributes.push(attribute);
   }
 
@@ -478,6 +501,16 @@ function makeComponents(loader, context) {
   var material = new Material();
   material.metallicRoughness = metallicRoughness;
 
+  var colors = parsedContent.colors;
+  if (defined(colors) && colors.isTranslucent) {
+    material.alphaMode = AlphaMode.BLEND;
+  }
+
+  // Render point clouds as unlit, unless normals are present, in which case
+  // render as a PBR material.
+  var isUnlit = !defined(parsedContent.normals);
+  material.unlit = isUnlit;
+
   var primitive = new Primitive();
   primitive.attributes = makeAttributes(loader, parsedContent, context);
   primitive.primitiveType = PrimitiveType.POINTS;
@@ -493,10 +526,6 @@ function makeComponents(loader, context) {
   var node = new Node();
   node.primitives = [primitive];
 
-  if (defined(parsedContent.rtcCenter)) {
-    node.matrix = Matrix4.fromTranslation(parsedContent.rtcCenter);
-  }
-
   var scene = new Scene();
   scene.nodes = [node];
   scene.upAxis = Axis.Z;
@@ -506,6 +535,25 @@ function makeComponents(loader, context) {
   components.scene = scene;
   components.nodes = [node];
   components.featureMetadata = makeFeatureMetadata(parsedContent);
+
+  if (defined(parsedContent.rtcCenter)) {
+    components.transform = Matrix4.multiplyByTranslation(
+      components.transform,
+      parsedContent.rtcCenter,
+      components.transform
+    );
+  }
+
+  var positions = parsedContent.positions;
+  if (defined(positions) && positions.isQuantized) {
+    // The volume offset is sometimes in ECEF, so this is applied here rather
+    // than the dequantization shader to avoid jitter
+    components.transform = Matrix4.multiplyByTranslation(
+      components.transform,
+      positions.quantizedVolumeOffset,
+      components.transform
+    );
+  }
 
   loader._components = components;
 
