@@ -20,7 +20,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   var mockModel = {};
   var mockNode = {};
   var mockSceneGraph = {
-    _computedModelMatrix: Matrix4.IDENTITY,
+    computedModelMatrix: Matrix4.IDENTITY,
   };
 
   var runtimeNode = new ModelExperimentalNode({

@@ -39,7 +39,7 @@ export default function ModelExperimentalNode(options) {
   this._originalTransform = Matrix4.clone(transform);
   this._transform = Matrix4.clone(transform);
   this._computedTransform = Matrix4.multiplyTransformation(
-    sceneGraph._computedModelMatrix,
+    sceneGraph.computedModelMatrix,
     transform,
     new Matrix4()
   );

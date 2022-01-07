@@ -50,7 +50,7 @@ describe(
         );
         expect(node._transformDirty).toEqual(true);
         var expectedComputedTransform = Matrix4.multiplyTransformation(
-          sceneGraph._computedModelMatrix,
+          sceneGraph.computedModelMatrix,
           node.transform,
           new Matrix4()
         );
@@ -103,7 +103,7 @@ describe(
       expect(node._transformDirty).toEqual(true);
 
       var expectedComputedTransform = Matrix4.multiplyTransformation(
-        sceneGraph._computedModelMatrix,
+        sceneGraph.computedModelMatrix,
         node.transform,
         new Matrix4()
       );

@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   InstancingPipelineStage,
   Matrix4,
   ModelExperimentalNode,
@@ -7,9 +8,13 @@ import {
 
 describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   var mockNode = {};
-  var transform = Matrix4.IDENTITY;
+  var mockChildNode = {
+    transform: Matrix4.IDENTITY,
+  };
+  var transform = Matrix4.clone(Matrix4.IDENTITY);
   var mockSceneGraph = {
-    _computedModelMatrix: Matrix4.IDENTITY,
+    computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
+    runtimeNodes: [mockChildNode, mockNode],
   };
 
   it("throws for undefined node", function () {
@@ -105,7 +110,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
 
     var expectedComputedTransform = Matrix4.multiplyTransformation(
-      sceneGraph._computedModelMatrix,
+      sceneGraph.computedModelMatrix,
       transform,
       new Matrix4()
     );
@@ -113,4 +118,80 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
       Matrix4.equals(runtimeNode.computedTransform, expectedComputedTransform)
     ).toEqual(true);
   }
+
+  it("getChild throws for undefined index", function () {
+    var node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    expect(function () {
+      node.getChild();
+    }).toThrowDeveloperError();
+  });
+
+  it("getChild throws for invalid index", function () {
+    var node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    expect(function () {
+      node.getChild("s");
+    }).toThrowDeveloperError();
+  });
+
+  it("getChild throws for out of range index", function () {
+    var node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    expect(function () {
+      node.getChild(2);
+    }).toThrowDeveloperError();
+    expect(function () {
+      node.getChild(-1);
+    }).toThrowDeveloperError();
+  });
+
+  it("getChild works", function () {
+    var node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    var child = node.getChild(0);
+    expect(child).toBeDefined();
+    expect(child.transform).toBeDefined();
+  });
+
+  it("updateModelMatrix works", function () {
+    var node = new ModelExperimentalNode({
+      node: mockNode,
+      transform: transform,
+      sceneGraph: mockSceneGraph,
+      children: [0],
+    });
+
+    var expectedNodeTransform = Matrix4.multiplyByTranslation(
+      mockSceneGraph.computedModelMatrix,
+      new Cartesian3(10, 0, 0),
+      mockSceneGraph.computedModelMatrix
+    );
+
+    node.updateModelMatrix();
+
+    expect(Matrix4.equals(node.computedTransform, expectedNodeTransform)).toBe(
+      true
+    );
+  });
 });

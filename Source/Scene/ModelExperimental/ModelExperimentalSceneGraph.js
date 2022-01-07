@@ -353,13 +353,13 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
+  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
   Matrix4.multiply(
     this._computedModelMatrix,
     this._modelComponents.transform,
     this._computedModelMatrix
   );
 
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
   ModelExperimentalUtility.correctModelMatrix(
     this._computedModelMatrix,
     this._modelComponents.upAxis,
