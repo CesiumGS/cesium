@@ -191,12 +191,6 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
-      Matrix4.multiply(
-        model._modelMatrix,
-        loader.components.transform,
-        model._modelMatrix
-      );
-
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
 
@@ -309,6 +303,20 @@ Object.defineProperties(ModelExperimental.prototype, {
         this.resetDrawCommands();
       }
       this._customShader = value;
+    },
+  },
+
+  /**
+   * The scene graph of this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalSceneGraph}
+   * @private
+   */
+  sceneGraph: {
+    get: function () {
+      return this._sceneGraph;
     },
   },
 
@@ -467,7 +475,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph._boundingSphere;
+      return this._sceneGraph.boundingSphere;
     },
   },
 
@@ -582,7 +590,6 @@ ModelExperimental.prototype.resetDrawCommands = function () {
   }
   this.destroyResources();
   this._drawCommandsBuilt = false;
-  this._sceneGraph._drawCommands = [];
 };
 
 /**

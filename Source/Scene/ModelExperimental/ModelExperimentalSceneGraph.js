@@ -100,16 +100,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._drawCommands = [];
 
   /**
-   * The bounding sphere containing all the primitives in the scene graph.
-   *
-   * @type {BoundingSphere}
-   * @readonly
-   *
-   * @private
-   */
-  this._boundingSphere = undefined;
-
-  /**
    * The array of bounding spheres of all the primitives in the scene graph.
    *
    * @type {BoundingSphere[]}
@@ -119,22 +109,51 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
+  this._boundingSphere = undefined;
+  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+
+  initialize(this);
+}
+
+Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
   /**
-   * The corrected model matrix.
+   * The axis-corrected model matrix.
    *
    * @type {Matrix4}
    * @readonly
    *
    * @private
    */
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
-
-  initialize(this);
-}
+  computedModelMatrix: {
+    get: function () {
+      return this._computedModelMatrix;
+    },
+  },
+  /**
+   * The bounding sphere containing all the primitives in the scene graph.
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+});
 
 function initialize(sceneGraph) {
   var components = sceneGraph._modelComponents;
   var scene = components.scene;
+  var model = sceneGraph._model;
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
+    model.modelMatrix,
+    components.transform,
+    new Matrix4()
+  );
 
   ModelExperimentalUtility.correctModelMatrix(
     sceneGraph._computedModelMatrix,
@@ -334,6 +353,12 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
+  Matrix4.multiply(
+    this._computedModelMatrix,
+    this._modelComponents.transform,
+    this._computedModelMatrix
+  );
+
   this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
   ModelExperimentalUtility.correctModelMatrix(
     this._computedModelMatrix,

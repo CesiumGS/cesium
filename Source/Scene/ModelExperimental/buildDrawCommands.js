@@ -52,8 +52,9 @@ export default function buildDrawCommands(
 
   var pass = primitiveRenderResources.alphaOptions.pass;
 
+  var sceneGraph = model.sceneGraph;
   var modelMatrix = Matrix4.multiply(
-    model._sceneGraph._computedModelMatrix,
+    sceneGraph.computedModelMatrix,
     primitiveRenderResources.transform,
     new Matrix4()
   );
@@ -77,7 +78,7 @@ export default function buildDrawCommands(
     pickId: primitiveRenderResources.pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
-    debugShowBoundingVolume: true,
+    debugShowBoundingVolume: model.debugShowBoundingVolume,
   });
 
   var styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;

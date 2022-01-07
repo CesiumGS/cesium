@@ -120,7 +120,6 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
-   *
    */
   transform: {
     get: function () {
@@ -133,7 +132,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       this._transformDirty = true;
       this._transform = value;
       Matrix4.multiplyTransformation(
-        this._sceneGraph._computedModelMatrix,
+        this._sceneGraph.computedModelMatrix,
         value,
         this._computedTransform
       );
@@ -178,7 +177,6 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
  * {
  *   var childNode = runtimeNode.getChild(i);
  * }
- *
  */
 ModelExperimentalNode.prototype.getChild = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -213,7 +211,7 @@ function initialize(runtimeNode) {
 ModelExperimentalNode.prototype.updateModelMatrix = function () {
   this._transformDirty = true;
   Matrix4.multiplyTransformation(
-    this._sceneGraph._computedModelMatrix,
+    this._sceneGraph.computedModelMatrix,
     this._transform,
     this._computedTransform
   );
