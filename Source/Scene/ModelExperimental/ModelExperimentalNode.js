@@ -117,6 +117,10 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
 
   /**
    * The node's model space transform.
+   * <p>
+   * For changes to take effect, this property must be assigned to;
+   * setting individual elements of the matrix will not work.
+   * </p>
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
@@ -130,7 +134,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
         return;
       }
       this._transformDirty = true;
-      this._transform = value;
+      this._transform = Matrix4.clone(value, this._transform);
       Matrix4.multiplyTransformation(
         this._sceneGraph.computedModelMatrix,
         value,

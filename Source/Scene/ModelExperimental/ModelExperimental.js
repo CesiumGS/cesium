@@ -63,7 +63,6 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._modelMatrixDirty = false;
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
@@ -75,9 +74,24 @@ export default function ModelExperimental(options) {
    */
   this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
-  this._modelMatrix = Matrix4.clone(
+  /**
+   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
+   * Local reference frames can be used by providing a different transformation matrix, like that returned
+   * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
+   * @type {Matrix4}
+
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+   */
+  this.modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
+  this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -425,7 +439,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       if (!Color.equals(this._color, value)) {
         this.resetDrawCommands();
       }
-      this._color = value;
+      this._color = Color.clone(value, this._color);
     },
   },
 
@@ -482,33 +496,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       //>>includeEnd('debug');
 
       return this._sceneGraph.boundingSphere;
-    },
-  },
-
-  /**
-   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
-   * Local reference frames can be used by providing a different transformation matrix, like that returned
-   * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
-   * @type {Matrix4}
-
-   * @default {@link Matrix4.IDENTITY}
-   *
-   * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-   */
-  modelMatrix: {
-    get: function () {
-      return this._modelMatrix;
-    },
-    set: function (value) {
-      if (Matrix4.equals(this._modelMatrix, value)) {
-        return;
-      }
-      this._modelMatrix = value;
-      this._modelMatrixDirty = true;
     },
   },
 
@@ -662,9 +649,8 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  if (this._modelMatrixDirty) {
+  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._sceneGraph.updateModelMatrix(this);
-    this._modelMatrixDirty = false;
   }
 
   this._sceneGraph.update(frameState);
