@@ -208,7 +208,6 @@ describe(
           scene
         ).then(function (model) {
           expect(model.ready).toEqual(true);
-          expect(model._sceneGraph._drawCommands.length).toBeGreaterThan(0);
           expect(model.show).toEqual(false);
           verifyRender(model, false);
           model.show = true;
