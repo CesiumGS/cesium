@@ -133,12 +133,13 @@ export default function ModelExperimentalSceneGraph(options) {
 }
 
 function initialize(sceneGraph) {
-  var scene = sceneGraph._modelComponents.scene;
+  var components = sceneGraph._modelComponents;
+  var scene = components.scene;
 
   ModelExperimentalUtility.correctModelMatrix(
     sceneGraph._computedModelMatrix,
-    scene.upAxis,
-    scene.forwardAxis
+    components.upAxis,
+    components.forwardAxis
   );
 
   var rootNodes = scene.nodes;
@@ -336,8 +337,8 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
   ModelExperimentalUtility.correctModelMatrix(
     this._computedModelMatrix,
-    this._modelComponents.scene.upAxis,
-    this._modelComponents.scene.forwardAxis
+    this._modelComponents.upAxis,
+    this._modelComponents.forwardAxis
   );
 
   var rootNodes = this._rootNodes;

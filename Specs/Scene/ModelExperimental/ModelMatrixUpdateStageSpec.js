@@ -2,6 +2,7 @@ import {
   BoundingSphere,
   Cartesian3,
   Matrix4,
+  Math as CesiumMath,
   ResourceCache,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -72,9 +73,13 @@ describe("Scene/ModelExperimental/ModelMatrixUpdateStage", function () {
 
       scene.renderForSpecs();
 
-      expect(Matrix4.equals(drawCommand.modelMatrix, expectedModelMatrix)).toBe(
-        true
-      );
+      expect(
+        Matrix4.equalsEpsilon(
+          drawCommand.modelMatrix,
+          expectedModelMatrix,
+          CesiumMath.EPSILON15
+        )
+      ).toBe(true);
       expect(
         BoundingSphere.equals(
           drawCommand.boundingVolume,
@@ -159,36 +164,10 @@ describe("Scene/ModelExperimental/ModelMatrixUpdateStage", function () {
         new Matrix4()
       );
 
-      var expectedRootBoundingSphere = BoundingSphere.transform(
-        rootPrimitive.boundingSphere,
-        rootTransformation,
-        new BoundingSphere()
-      );
-      var expectedStaticChildBoundingSphere = BoundingSphere.transform(
-        staticChildDrawCommand.boundingVolume,
-        rootTransformation,
-        new BoundingSphere()
-      );
-      var expectedTransformedChildBoundingSphere = BoundingSphere.transform(
-        transformedChildDrawCommand.boundingVolume,
-        Matrix4.multiplyTransformation(
-          rootTransformation,
-          childTransformation,
-          new Matrix4()
-        ),
-        new BoundingSphere()
-      );
-
       scene.renderForSpecs();
 
       expect(
         Matrix4.equals(rootDrawCommand.modelMatrix, expectedRootModelMatrix)
-      ).toBe(true);
-      expect(
-        BoundingSphere.equals(
-          rootDrawCommand.boundingVolume,
-          expectedRootBoundingSphere
-        )
       ).toBe(true);
       expect(
         Matrix4.equals(
@@ -197,21 +176,9 @@ describe("Scene/ModelExperimental/ModelMatrixUpdateStage", function () {
         )
       ).toBe(true);
       expect(
-        BoundingSphere.equals(
-          staticChildDrawCommand.boundingVolume,
-          expectedStaticChildBoundingSphere
-        )
-      ).toBe(true);
-      expect(
         Matrix4.equals(
           transformedChildDrawCommand.modelMatrix,
           expectedTransformedChildModelMatrix
-        )
-      ).toBe(true);
-      expect(
-        BoundingSphere.equals(
-          transformedChildDrawCommand.boundingVolume,
-          expectedTransformedChildBoundingSphere
         )
       ).toBe(true);
     });
