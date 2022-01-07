@@ -63,7 +63,6 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._modelMatrixDirty = false;
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
@@ -652,7 +651,6 @@ ModelExperimental.prototype.update = function (frameState) {
 
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._sceneGraph.updateModelMatrix(this);
-    this._modelMatrixDirty = false;
   }
 
   this._sceneGraph.update(frameState);
