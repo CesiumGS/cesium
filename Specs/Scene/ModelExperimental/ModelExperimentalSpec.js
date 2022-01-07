@@ -465,19 +465,15 @@ describe(
         scene
       ).then(function (model) {
         var sceneGraph = model.sceneGraph;
-        expect(model._modelMatrixDirty).toBe(false);
 
         var transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
 
-        model.modelMatrix = Matrix4.multiplyTransformation(
+        Matrix4.multiplyTransformation(
           model.modelMatrix,
           transform,
-          new Matrix4()
+          model.modelMatrix
         );
-
-        expect(model._modelMatrixDirty).toBe(true);
         scene.renderForSpecs();
-        expect(model._modelMatrixDirty).toBe(false);
 
         expect(updateModelMatrix).toHaveBeenCalled();
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
