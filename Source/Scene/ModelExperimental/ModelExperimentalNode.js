@@ -134,7 +134,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
         return;
       }
       this._transformDirty = true;
-      this._transform = Matrix4.clone(value);
+      this._transform = Matrix4.clone(value, this._transform);
       Matrix4.multiplyTransformation(
         this._sceneGraph.computedModelMatrix,
         value,

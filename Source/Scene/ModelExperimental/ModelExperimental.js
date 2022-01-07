@@ -439,7 +439,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       if (!Color.equals(this._color, value)) {
         this.resetDrawCommands();
       }
-      this._color = Color.clone(value);
+      this._color = Color.clone(value, this._color);
     },
   },
 
