@@ -47,6 +47,8 @@ void main()
     #ifdef PRIMITIVE_TYPE_POINTS
         #ifdef HAS_CUSTOM_VERTEX_SHADER
         gl_PointSize = vsOutput.pointSize;
+        #elif defined(USE_POINT_CLOUD_ATTENUATION)
+        gl_PointSize = pointCloudAttenuationStage(v_positionEC);
         #else
         gl_PointSize = 1.0;
         #endif

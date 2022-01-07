@@ -1,10 +1,12 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import PointCloudAttenuationStageVS from "../../Shaders/ModelExperimental/PointCloudAttenuationStageVS.js";
 import SceneMode from "../SceneMode.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
 
 var PointCloudAttenuationPipelineStage = {};
 PointCloudAttenuationPipelineStage.name = "PointCloudAttenuationPipelineStage"; // Helps with debugging
@@ -31,11 +33,11 @@ PointCloudAttenuationPipelineStage.process = function (
 
   var model = renderResources.model;
   var pointCloudShading;
-
-  // If this is 3D Tiles, use the point cloud shading object
-  if (defined(model.content)) {
-    var tileset = model.content.tileset;
-    pointCloudShading = tileset.pointCloudShading;
+  var content;
+  var modelType = model.type;
+  if (ModelExperimentalType.is3DTiles(modelType)) {
+    content = model.content;
+    pointCloudShading = content.tileset.pointCloudShading;
   } else {
     pointCloudShading = model.pointCloudShading;
   }
@@ -49,12 +51,12 @@ PointCloudAttenuationPipelineStage.process = function (
     var scratch = scratchAttenuationUniform;
 
     scratch.x = pointCloudShading.attenuation
-      ? pointCloudShading.maximumAttenuation
+      ? defaultValue(pointCloudShading.maximumAttenuation, 1.0)
       : 1.0;
     scratch.x *= frameState.pixelRatio;
 
     if (pointCloudShading.attenuation) {
-      var context;
+      var context = frameState.context;
       var frustum = frameState.camera.frustum;
       var depthMultiplier;
       // Attenuation is maximumAttenuation in 2D/ortho
@@ -69,9 +71,7 @@ PointCloudAttenuationPipelineStage.process = function (
           frameState.camera.frustum.sseDenominator;
       }
 
-      // TODO: where to get the gE from? especially when not a part of a
-      // tileset?
-      var geometricError = 0;
+      var geometricError = getGeometricError(pointCloudShading, content);
       scratch.y = geometricError * pointCloudShading.geometricErrorScale;
       scratch.z = depthMultiplier;
     }
@@ -79,5 +79,25 @@ PointCloudAttenuationPipelineStage.process = function (
     return scratch;
   };
 };
+
+function getGeometricError(pointCloudShading, content) {
+  // 1. get tile's geometric error (if content is defined)
+  if (defined(content)) {
+    var geometricError = content._tile.geometricError;
+
+    if (geometricError > 0) {
+      return geometricError;
+    }
+  }
+
+  if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
+    return pointCloudShading.baseResolution;
+  }
+
+  // TODO: Waiting on another PR which has updates to the model matrix.
+  // estimate the geometric error. Originally it was done as
+  // cbrt(boundingVolume.volume() / pointsLength)
+  return 0.79;
+}
 
 export default PointCloudAttenuationPipelineStage;
