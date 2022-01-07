@@ -63,6 +63,7 @@ export default function ModelExperimental(options) {
   this._loader = options.loader;
   this._resource = options.resource;
 
+  this._modelMatrixDirty = false;
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally. The corresponding constructor parameter is undocumented, since
@@ -191,12 +192,6 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
-      Matrix4.multiply(
-        model._modelMatrix,
-        loader.components.transform,
-        model._modelMatrix
-      );
-
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
 
@@ -314,6 +309,20 @@ Object.defineProperties(ModelExperimental.prototype, {
         this.resetDrawCommands();
       }
       this._customShader = value;
+    },
+  },
+
+  /**
+   * The scene graph of this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalSceneGraph}
+   * @private
+   */
+  sceneGraph: {
+    get: function () {
+      return this._sceneGraph;
     },
   },
 
@@ -472,7 +481,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph._boundingSphere;
+      return this._sceneGraph.boundingSphere;
     },
   },
 
@@ -495,7 +504,11 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._modelMatrix;
     },
     set: function (value) {
+      if (Matrix4.equals(this._modelMatrix, value)) {
+        return;
+      }
       this._modelMatrix = value;
+      this._modelMatrixDirty = true;
     },
   },
 
@@ -583,7 +596,6 @@ ModelExperimental.prototype.resetDrawCommands = function () {
   }
   this.destroyResources();
   this._drawCommandsBuilt = false;
-  this._sceneGraph._drawCommands = [];
 };
 
 /**
@@ -650,13 +662,18 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
+  if (this._modelMatrixDirty) {
+    this._sceneGraph.updateModelMatrix(this);
+    this._modelMatrixDirty = false;
+  }
+
+  this._sceneGraph.update(frameState);
+
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
-    frameState.commandList.push.apply(
-      frameState.commandList,
-      this._sceneGraph._drawCommands
-    );
+    var drawCommands = this._sceneGraph.getDrawCommands();
+    frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
 

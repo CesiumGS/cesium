@@ -81,7 +81,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    *
    * @private
    */
-  this.modelMatrix = runtimeNode.modelMatrix;
+  this.modelMatrix = runtimeNode.transform;
   /**
    * An array of objects describing vertex attributes that will eventually
    * be used to create a {@link VertexArray} for the draw command. Attributes
