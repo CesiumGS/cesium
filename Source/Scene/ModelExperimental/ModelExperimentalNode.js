@@ -1,14 +1,19 @@
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import DeveloperError from "../../Core/DeveloperError.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
+import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 /**
  * An in-memory representation of a node as part of
  * the {@link ModelExperimentalSceneGraph}
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
- * @param {Matrix4} options.modelMatrix The model matrix associated with this node.
+ * @param {Matrix4} options.transform The model space transform of this node.
+ * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this node belongs to.
+ * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
  * @alias ModelExperimentalNode
  * @constructor
@@ -19,28 +24,26 @@ export default function ModelExperimentalNode(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.node", options.node);
-  Check.typeOf.object("options.modelMatrix", options.modelMatrix);
+  Check.typeOf.object("options.transform", options.transform);
+  Check.typeOf.object("options.sceneGraph", options.sceneGraph);
+  Check.typeOf.object("options.children", options.children);
   //>>includeEnd('debug');
 
-  /**
-   * The model components node associated with this scene graph node.
-   *
-   * @type {ModelComponents.Node}
-   * @readonly
-   *
-   * @private
-   */
-  this.node = options.node;
+  var sceneGraph = options.sceneGraph;
+  var transform = options.transform;
 
-  /**
-   * The model matrix associated with this node.
-   *
-   * @type {Matrix4}
-   * @readonly
-   *
-   * @private
-   */
-  this.modelMatrix = options.modelMatrix;
+  this._sceneGraph = sceneGraph;
+  this._children = options.children;
+  this._node = options.node;
+
+  this._originalTransform = Matrix4.clone(transform);
+  this._transform = Matrix4.clone(transform);
+  this._computedTransform = Matrix4.multiplyTransformation(
+    sceneGraph.computedModelMatrix,
+    transform,
+    new Matrix4()
+  );
+  this._transformDirty = false;
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -64,16 +67,152 @@ export default function ModelExperimentalNode(options) {
    */
   this.runtimePrimitives = [];
 
+  /**
+   * Update stages to apply to this primitive.
+   */
+  this.updateStages = [];
+
   initialize(this);
 }
+
+Object.defineProperties(ModelExperimentalNode.prototype, {
+  /**
+   * The internal node this runtime node represents.
+   *
+   * @type {ModelComponents.Node}
+   * @readonly
+   *
+   * @private
+   */
+  node: {
+    get: function () {
+      return this._node;
+    },
+  },
+  /**
+   * The scene graph this node belongs to.
+   *
+   * @type {ModelExperimentalSceneGraph}
+   * @readonly
+   *
+   * @private
+   */
+  sceneGraph: {
+    get: function () {
+      return this._sceneGraph;
+    },
+  },
+
+  /**
+   * The indices of the children of this node in the scene graph.
+   *
+   * @type {Number[]}
+   * @readonly
+   */
+  children: {
+    get: function () {
+      return this._children;
+    },
+  },
+
+  /**
+   * The node's model space transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   */
+  transform: {
+    get: function () {
+      return this._transform;
+    },
+    set: function (value) {
+      if (Matrix4.equals(this._transform, value)) {
+        return;
+      }
+      this._transformDirty = true;
+      this._transform = value;
+      Matrix4.multiplyTransformation(
+        this._sceneGraph.computedModelMatrix,
+        value,
+        this._computedTransform
+      );
+    },
+  },
+  /**
+   * The node's world space model transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  computedTransform: {
+    get: function () {
+      return this._computedTransform;
+    },
+  },
+  /**
+   * The node's original model space transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  originalTransform: {
+    get: function () {
+      return this._originalTransform;
+    },
+  },
+});
+
+/**
+ * Returns the child with the given index.
+ *
+ * @param {Number} index The index of the child.
+ *
+ * @returns {ModelExperimentalNode}
+ *
+ * @example
+ * // Iterate through all children of a runtime node.
+ * for (var i = 0; i < runtimeNode.children.length; i++)
+ * {
+ *   var childNode = runtimeNode.getChild(i);
+ * }
+ */
+ModelExperimentalNode.prototype.getChild = function (index) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  if (index < 0 || index >= this.children.length) {
+    throw new DeveloperError(
+      "index must be greater than or equal to 0 and less than the number of children."
+    );
+  }
+  //>>includeEnd('debug');
+
+  return this.sceneGraph.runtimeNodes[this.children[index]];
+};
 
 function initialize(runtimeNode) {
   var node = runtimeNode.node;
   var pipelineStages = runtimeNode.pipelineStages;
+  var updateStages = runtimeNode.updateStages;
 
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPipelineStage);
   }
 
+  updateStages.push(ModelMatrixUpdateStage);
+
   return;
 }
+
+/**
+ * @private
+ */
+ModelExperimentalNode.prototype.updateModelMatrix = function () {
+  this._transformDirty = true;
+  Matrix4.multiplyTransformation(
+    this._sceneGraph.computedModelMatrix,
+    this._transform,
+    this._computedTransform
+  );
+};

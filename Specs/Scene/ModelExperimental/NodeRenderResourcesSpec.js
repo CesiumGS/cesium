@@ -8,9 +8,15 @@ import {
 describe("Scene/ModelExperimental/NodeRenderResources", function () {
   var mockModel = {};
   var mockNode = {};
+  var mockSceneGraph = {
+    computedModelMatrix: Matrix4.IDENTITY,
+  };
+
   var runtimeNode = new ModelExperimentalNode({
     node: mockNode,
-    modelMatrix: Matrix4.IDENTITY,
+    transform: Matrix4.IDENTITY,
+    sceneGraph: mockSceneGraph,
+    children: [],
   });
 
   function checkShaderDefines(shaderBuilder, expectedDefines) {
@@ -36,7 +42,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
-    expect(nodeResources.modelMatrix).toBe(runtimeNode.modelMatrix);
+    expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
     expect(nodeResources.attributes).toEqual([]);
   });
 
