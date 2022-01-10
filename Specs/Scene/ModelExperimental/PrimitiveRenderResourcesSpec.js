@@ -9,6 +9,7 @@ import {
   Matrix4,
   ModelExperimentalNode,
   ModelExperimentalPrimitive,
+  ModelExperimentalType,
   PrimitiveType,
   ModelRenderResources,
   NodeRenderResources,
@@ -17,7 +18,9 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
-  var mockModel = {};
+  var mockModel = {
+    type: ModelExperimentalType.GLTF,
+  };
   var mockNode = {};
   var mockSceneGraph = {
     computedModelMatrix: Matrix4.IDENTITY,

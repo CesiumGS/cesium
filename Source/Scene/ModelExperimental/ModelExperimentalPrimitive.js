@@ -1,10 +1,11 @@
-import AlphaPipelineStage from "./AlphaPipelineStage.js";
-import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
 import Check from "../../Core/Check.js";
-import CustomShaderMode from "./CustomShaderMode.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import AlphaPipelineStage from "./AlphaPipelineStage.js";
+import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
+import CustomShaderMode from "./CustomShaderMode.js";
+import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
@@ -100,15 +101,23 @@ export default function ModelExperimentalPrimitive(options) {
    */
   this.updateStages = [];
 
-  initialize(this);
+  this.configurePipeline();
 }
 
-function initialize(runtimePrimitive) {
-  var pipelineStages = runtimePrimitive.pipelineStages;
+/**
+ * Configure the primitive pipeline stages. If the pipeline needs to be re-run, call
+ * this method again to ensure the correct sequence of pipeline stages are
+ * used.
+ *
+ * @private
+ */
+ModelExperimentalPrimitive.prototype.configurePipeline = function () {
+  var pipelineStages = this.pipelineStages;
+  pipelineStages.length = 0;
 
-  var primitive = runtimePrimitive.primitive;
-  var node = runtimePrimitive.node;
-  var model = runtimePrimitive.model;
+  var primitive = this.primitive;
+  var node = this.node;
+  var model = this.model;
   var customShader = model.customShader;
 
   var hasCustomShader = defined(customShader);
@@ -138,6 +147,10 @@ function initialize(runtimePrimitive) {
 
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);
+  }
+
+  if (defined(model.customShader)) {
+    pipelineStages.push(CustomShaderPipelineStage);
   }
 
   pipelineStages.push(LightingPipelineStage);
@@ -186,4 +199,4 @@ function initialize(runtimePrimitive) {
   pipelineStages.push(AlphaPipelineStage);
 
   return;
-}
+};

@@ -72,7 +72,7 @@ export default function ModelExperimentalNode(options) {
    */
   this.updateStages = [];
 
-  initialize(this);
+  this.configurePipeline();
 }
 
 Object.defineProperties(ModelExperimentalNode.prototype, {
@@ -191,19 +191,26 @@ ModelExperimentalNode.prototype.getChild = function (index) {
   return this.sceneGraph.runtimeNodes[this.children[index]];
 };
 
-function initialize(runtimeNode) {
-  var node = runtimeNode.node;
-  var pipelineStages = runtimeNode.pipelineStages;
-  var updateStages = runtimeNode.updateStages;
+/**
+ * Configure the node pipeline stages. If the pipeline needs to be re-run, call
+ * this method again to ensure the correct sequence of pipeline stages are
+ * used.
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.configurePipeline = function () {
+  var node = this.node;
+  var pipelineStages = this.pipelineStages;
+  pipelineStages.length = 0;
+  var updateStages = this.updateStages;
+  updateStages.length = 0;
 
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPipelineStage);
   }
 
   updateStages.push(ModelMatrixUpdateStage);
-
-  return;
-}
+};
 
 /**
  * @private
