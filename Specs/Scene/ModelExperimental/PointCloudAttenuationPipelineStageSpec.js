@@ -49,11 +49,12 @@ describe(
       expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
     });
 
-    it("point size is set when attenuation is enabled", function () {
+    it("point size is determined by maximumAttenuation", function () {
       var uniformMap = {};
-      var pointCloudShading = new PointCloudShading();
-      pointCloudShading.attenuation = true;
-      pointCloudShading.maximumAttenuation = 4;
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        maximumAttenuation: 4,
+      });
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
@@ -74,36 +75,12 @@ describe(
       expect(attenuation.x).toEqual(4 * frameState.pixelRatio);
     });
 
-    it("point size is set to 1dp when attenuation is disabled", function () {
-      var uniformMap = {};
-      var pointCloudShading = new PointCloudShading();
-      pointCloudShading.attenuation = false;
-      pointCloudShading.maximumAttenuation = 4;
-      var renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        model: {
-          type: ModelExperimentalType.GLTF,
-          pointCloudShading: pointCloudShading,
-        },
-      };
-
-      var frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
-        renderResources,
-        mockPrimitive,
-        frameState
-      );
-
-      var attenuation = uniformMap.model_pointCloudAttenuation();
-      expect(attenuation.x).toEqual(frameState.pixelRatio);
-    });
-
     it("point size defaults to 1dp when maximumAttenuation is not defined", function () {
       var uniformMap = {};
-      var pointCloudShading = new PointCloudShading();
-      pointCloudShading.attenuation = true;
-      pointCloudShading.maximumAttenuation = undefined;
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        maximumAttenuation: undefined,
+      });
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,

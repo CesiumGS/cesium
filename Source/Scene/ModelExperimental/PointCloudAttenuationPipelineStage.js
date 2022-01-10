@@ -9,7 +9,9 @@ import SceneMode from "../SceneMode.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 
 /**
- * Stage to handle point cloud attenuation.
+ * Stage to handle point cloud attenuation. This stage assumes that either
+ * tileset.pointCloudShading.attenuation (3D Tiles) or
+ * model.pointCloudShading.attenuation (individual model) is true
  *
  * @namespace PointCloudAttenuationPipelineStage
  *
@@ -45,9 +47,9 @@ PointCloudAttenuationPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  var model = renderResources.model;
   var pointCloudShading;
   var content;
+  var model = renderResources.model;
   if (ModelExperimentalType.is3DTiles(model.type)) {
     content = model.content;
     pointCloudShading = content.tileset.pointCloudShading;
@@ -64,9 +66,7 @@ PointCloudAttenuationPipelineStage.process = function (
     var scratch = scratchAttenuationUniform;
 
     // attenuation.x = pointSize
-    scratch.x = pointCloudShading.attenuation
-      ? defaultValue(pointCloudShading.maximumAttenuation, 1.0)
-      : 1.0;
+    scratch.x = defaultValue(pointCloudShading.maximumAttenuation, 1.0);
     scratch.x *= frameState.pixelRatio;
 
     var context = frameState.context;
