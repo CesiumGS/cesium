@@ -4,12 +4,14 @@ import Check from "../../Core/Check.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
@@ -118,12 +120,15 @@ function initialize(runtimePrimitive) {
   var hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
-  var is3DTiles = defined(model.content);
+  var is3DTiles = ModelExperimentalType.is3DTiles(model.type);
   var hasPointCloudShading = is3DTiles || defined(model.pointCloudShading);
 
   pipelineStages.push(GeometryPipelineStage);
 
-  if (hasPointCloudShading) {
+  if (
+    hasPointCloudShading &&
+    primitive.primitiveType === PrimitiveType.POINTS
+  ) {
     pipelineStages.push(PointCloudAttenuationPipelineStage);
   }
 

@@ -2,7 +2,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import PointCloudAttenuationStageVS from "../../Shaders/ModelExperimental/PointCloudAttenuationStageVS.js";
 import SceneMode from "../SceneMode.js";
@@ -37,11 +37,6 @@ PointCloudAttenuationPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  // Attenuation only applies to point primitives
-  if (primitive.primitiveType !== PrimitiveType.POINTS) {
-    return;
-  }
-
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addVertexLines([PointCloudAttenuationStageVS]);
   shaderBuilder.addDefine(
@@ -53,8 +48,7 @@ PointCloudAttenuationPipelineStage.process = function (
   var model = renderResources.model;
   var pointCloudShading;
   var content;
-  var modelType = model.type;
-  if (ModelExperimentalType.is3DTiles(modelType)) {
+  if (ModelExperimentalType.is3DTiles(model.type)) {
     content = model.content;
     pointCloudShading = content.tileset.pointCloudShading;
   } else {
@@ -69,6 +63,7 @@ PointCloudAttenuationPipelineStage.process = function (
   renderResources.uniformMap.model_pointCloudAttenuation = function () {
     var scratch = scratchAttenuationUniform;
 
+    // attenuation.x = pointSize
     scratch.x = pointCloudShading.attenuation
       ? defaultValue(pointCloudShading.maximumAttenuation, 1.0)
       : 1.0;
@@ -78,6 +73,7 @@ PointCloudAttenuationPipelineStage.process = function (
       var context = frameState.context;
       var frustum = frameState.camera.frustum;
       var depthMultiplier;
+
       // Attenuation is maximumAttenuation in 2D/ortho
       if (
         frameState.mode === SceneMode.SCENE2D ||
@@ -90,8 +86,11 @@ PointCloudAttenuationPipelineStage.process = function (
           frameState.camera.frustum.sseDenominator;
       }
 
+      // attenuation.y = geometricError
       var geometricError = getGeometricError(pointCloudShading, content);
       scratch.y = geometricError * pointCloudShading.geometricErrorScale;
+
+      // attenuation.z = depth multiplier
       scratch.z = depthMultiplier;
     }
 
