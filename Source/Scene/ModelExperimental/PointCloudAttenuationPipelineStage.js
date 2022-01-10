@@ -69,30 +69,27 @@ PointCloudAttenuationPipelineStage.process = function (
       : 1.0;
     scratch.x *= frameState.pixelRatio;
 
-    if (pointCloudShading.attenuation) {
-      var context = frameState.context;
-      var frustum = frameState.camera.frustum;
-      var depthMultiplier;
+    var context = frameState.context;
+    var frustum = frameState.camera.frustum;
+    var depthMultiplier;
 
-      // Attenuation is maximumAttenuation in 2D/ortho
-      if (
-        frameState.mode === SceneMode.SCENE2D ||
-        frustum instanceof OrthographicFrustum
-      ) {
-        depthMultiplier = Number.POSITIVE_INFINITY;
-      } else {
-        depthMultiplier =
-          context.drawingBufferHeight /
-          frameState.camera.frustum.sseDenominator;
-      }
-
-      // attenuation.y = geometricError
-      var geometricError = getGeometricError(pointCloudShading, content);
-      scratch.y = geometricError * pointCloudShading.geometricErrorScale;
-
-      // attenuation.z = depth multiplier
-      scratch.z = depthMultiplier;
+    // Attenuation is maximumAttenuation in 2D/ortho
+    if (
+      frameState.mode === SceneMode.SCENE2D ||
+      frustum instanceof OrthographicFrustum
+    ) {
+      depthMultiplier = Number.POSITIVE_INFINITY;
+    } else {
+      depthMultiplier =
+        context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
     }
+
+    // attenuation.y = geometricError
+    var geometricError = getGeometricError(pointCloudShading, content);
+    scratch.y = geometricError * pointCloudShading.geometricErrorScale;
+
+    // attenuation.z = depth multiplier
+    scratch.z = depthMultiplier;
 
     return scratch;
   };
@@ -107,7 +104,7 @@ function getGeometricError(pointCloudShading, content) {
     }
   }
 
-  if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
+  if (defined(pointCloudShading.baseResolution)) {
     return pointCloudShading.baseResolution;
   }
 

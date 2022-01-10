@@ -129,15 +129,19 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   var hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
-  var is3DTiles = ModelExperimentalType.is3DTiles(model.type);
-  var hasPointCloudShading = is3DTiles || defined(model.pointCloudShading);
+
+  var pointCloudShading;
+  if (ModelExperimentalType.is3DTiles(model.type)) {
+    pointCloudShading = model.content.tileset.pointCloudShading;
+  } else {
+    pointCloudShading = model.pointCloudShading;
+  }
+  var hasAttenuation =
+    defined(pointCloudShading) && pointCloudShading.attenuation;
 
   pipelineStages.push(GeometryPipelineStage);
 
-  if (
-    hasPointCloudShading &&
-    primitive.primitiveType === PrimitiveType.POINTS
-  ) {
+  if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
     pipelineStages.push(PointCloudAttenuationPipelineStage);
   }
 
