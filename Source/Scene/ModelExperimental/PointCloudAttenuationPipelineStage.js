@@ -8,11 +8,30 @@ import PointCloudAttenuationStageVS from "../../Shaders/ModelExperimental/PointC
 import SceneMode from "../SceneMode.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 
+/**
+ * Stage to handle point cloud attenuation.
+ *
+ * @namespace PointCloudAttenuationPipelineStage
+ *
+ * @private
+ */
 var PointCloudAttenuationPipelineStage = {};
 PointCloudAttenuationPipelineStage.name = "PointCloudAttenuationPipelineStage"; // Helps with debugging
 
 var scratchAttenuationUniform = new Cartesian3();
 
+/**
+ * This stage does the following:
+ * <ul>
+ *  <li>Add vertex shader code to compute attenuation and update gl_PointSize</li>
+ *  <li>Updates the uniform map to pass in the point cloud attenuation parameters</li>
+ * </ul>
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive
+ * @param {ModelComponents.primitive} primitive The primitive
+ * @param {FrameState} frameState The frame state
+ *
+ * @private
+ */
 PointCloudAttenuationPipelineStage.process = function (
   renderResources,
   primitive,
@@ -81,7 +100,6 @@ PointCloudAttenuationPipelineStage.process = function (
 };
 
 function getGeometricError(pointCloudShading, content) {
-  // 1. get tile's geometric error (if content is defined)
   if (defined(content)) {
     var geometricError = content._tile.geometricError;
 
