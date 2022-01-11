@@ -69,6 +69,10 @@ PointCloudAttenuationPipelineStage.process = function (
     scratch.x = defaultValue(pointCloudShading.maximumAttenuation, 1.0);
     scratch.x *= frameState.pixelRatio;
 
+    // attenuation.y = geometricError
+    var geometricError = getGeometricError(pointCloudShading, content);
+    scratch.y = geometricError * pointCloudShading.geometricErrorScale;
+
     var context = frameState.context;
     var frustum = frameState.camera.frustum;
     var depthMultiplier;
@@ -84,10 +88,6 @@ PointCloudAttenuationPipelineStage.process = function (
         context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
     }
 
-    // attenuation.y = geometricError
-    var geometricError = getGeometricError(pointCloudShading, content);
-    scratch.y = geometricError * pointCloudShading.geometricErrorScale;
-
     // attenuation.z = depth multiplier
     scratch.z = depthMultiplier;
 
@@ -97,7 +97,7 @@ PointCloudAttenuationPipelineStage.process = function (
 
 function getGeometricError(pointCloudShading, content) {
   if (defined(content)) {
-    var geometricError = content._tile.geometricError;
+    var geometricError = content.tile.geometricError;
 
     if (geometricError > 0) {
       return geometricError;
