@@ -1,10 +1,14 @@
 import {
   Camera,
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix4,
   ModelExperimentalType,
   OrthographicFrustum,
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
   ShaderBuilder,
+  VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
@@ -13,7 +17,20 @@ describe(
   "Scene/ModelExperimental/PointCloudAttenuationPipelineStage",
   function () {
     var scene;
-    var mockPrimitive = {};
+    var mockPrimitive = {
+      attributes: [
+        {
+          semantic: VertexAttributeSemantic.POSITION,
+          min: new Cartesian3(0, 0, 0),
+          max: new Cartesian3(1, 1, 1),
+          count: 64,
+        },
+      ],
+    };
+
+    var mockRuntimeNode = {
+      transform: new Matrix4(2, 0, 0, 1, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1),
+    };
 
     beforeAll(function () {
       scene = createScene();
@@ -35,6 +52,7 @@ describe(
       var renderResources = {
         shaderBuilder: shaderBuilder,
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
         },
@@ -70,6 +88,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
           content: {
@@ -104,6 +123,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,
@@ -130,6 +150,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,
@@ -189,6 +210,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
           content: {
@@ -223,6 +245,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
           content: {
@@ -257,6 +280,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,
@@ -284,6 +308,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,
@@ -298,7 +323,10 @@ describe(
       );
 
       var attenuation = uniformMap.model_pointCloudAttenuation();
-      expect(attenuation.y).toEqual(100);
+      var volume = 8;
+      var pointsLength = 64;
+      var expected = CesiumMath.cbrt(volume / pointsLength);
+      expect(attenuation.y).toEqual(expected);
     });
 
     it("computes depth multiplier from drawing buffer and frustum", function () {
@@ -309,6 +337,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,
@@ -338,6 +367,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,
@@ -369,6 +399,7 @@ describe(
       var renderResources = {
         shaderBuilder: new ShaderBuilder(),
         uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.GLTF,
           pointCloudShading: pointCloudShading,

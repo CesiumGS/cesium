@@ -1,12 +1,15 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import CesiumMath from "../../Core/Math.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
-
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import PointCloudAttenuationStageVS from "../../Shaders/ModelExperimental/PointCloudAttenuationStageVS.js";
 import SceneMode from "../SceneMode.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * Stage to handle point cloud attenuation. This stage assumes that either
@@ -70,7 +73,12 @@ PointCloudAttenuationPipelineStage.process = function (
     scratch.x *= frameState.pixelRatio;
 
     // attenuation.y = geometricError
-    var geometricError = getGeometricError(pointCloudShading, content);
+    var geometricError = getGeometricError(
+      renderResources,
+      primitive,
+      pointCloudShading,
+      content
+    );
     scratch.y = geometricError * pointCloudShading.geometricErrorScale;
 
     var context = frameState.context;
@@ -95,7 +103,13 @@ PointCloudAttenuationPipelineStage.process = function (
   };
 };
 
-function getGeometricError(pointCloudShading, content) {
+var scratchDimensions = new Cartesian3();
+function getGeometricError(
+  renderResources,
+  primitive,
+  pointCloudShading,
+  content
+) {
   if (defined(content)) {
     var geometricError = content.tile.geometricError;
 
@@ -108,10 +122,29 @@ function getGeometricError(pointCloudShading, content) {
     return pointCloudShading.baseResolution;
   }
 
-  // TODO: Waiting on another PR which has updates to the model matrix.
-  // estimate the geometric error. Originally it was done as
-  // cbrt(boundingVolume.volume() / pointsLength)
-  return 0.79;
+  var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.POSITION
+  );
+  var pointsLength = positionAttribute.count;
+
+  // Estimate the geometric error
+  var nodeTransform = renderResources.runtimeNode.transform;
+  var dimensions = Cartesian3.clone(positionAttribute.max, scratchDimensions);
+  dimensions = Cartesian3.subtract(
+    dimensions,
+    positionAttribute.min,
+    scratchDimensions
+  );
+  // dimensions is a vector, as (point - point) = displacement vector
+  dimensions = Matrix4.multiplyByPointAsVector(
+    nodeTransform,
+    dimensions,
+    scratchDimensions
+  );
+  var volume = dimensions.x * dimensions.y * dimensions.z;
+  var geometricErrorEstimate = CesiumMath.cbrt(volume / pointsLength);
+  return geometricErrorEstimate;
 }
 
 export default PointCloudAttenuationPipelineStage;
