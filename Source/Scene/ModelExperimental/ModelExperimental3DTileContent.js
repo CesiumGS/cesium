@@ -1,8 +1,11 @@
 import Axis from "../Axis.js";
 import defined from "../../Core/defined.js";
+import defaultValue from "../../Core/defaultValue.js";
 import destroyObject from "../../Core/destroyObject.js";
-import ModelExperimental from "./ModelExperimental.js";
 import Pass from "../../Renderer/Pass.js";
+import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
+import PointCloudShading from "../PointCloudShading.js";
+import ModelExperimental from "./ModelExperimental.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -163,6 +166,8 @@ ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
   this._model.applyStyle(style);
 };
 
+var defaultShading = new PointCloudShading();
+
 ModelExperimental3DTileContent.prototype.update = function (
   tileset,
   frameState
@@ -174,7 +179,20 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
-  model.pointCloudShading = tileset.pointCloudShading;
+
+  var pointCloudShading = defaultValue(
+    tileset.pointCloudShading,
+    defaultShading
+  );
+
+  model.pointCloudShading = pointCloudShading;
+
+  if (!defined(pointCloudShading.maximumAttenuation)) {
+    pointCloudShading.maximumAttenuation =
+      tile.refine === Cesium3DTileRefine.ADD
+        ? 5.0
+        : tileset.maximumScreenSpaceError;
+  }
 
   model.update(frameState);
 };
