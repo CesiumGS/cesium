@@ -50,14 +50,12 @@ PointCloudAttenuationPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  var pointCloudShading;
-  var content;
   var model = renderResources.model;
+  var pointCloudShading = model.pointCloudShading;
+
+  var content;
   if (ModelExperimentalType.is3DTiles(model.type)) {
     content = model.content;
-    pointCloudShading = content.tileset.pointCloudShading;
-  } else {
-    pointCloudShading = model.pointCloudShading;
   }
 
   shaderBuilder.addUniform(
@@ -136,7 +134,7 @@ function getGeometricError(
     positionAttribute.min,
     scratchDimensions
   );
-  // dimensions is a vector, as (point - point) = displacement vector
+  // dimensions is a vector, as it is a subtraction between two points
   dimensions = Matrix4.multiplyByPointAsVector(
     nodeTransform,
     dimensions,

@@ -174,6 +174,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
+  model.pointCloudShading = tileset.pointCloudShading;
 
   model.update(frameState);
 };

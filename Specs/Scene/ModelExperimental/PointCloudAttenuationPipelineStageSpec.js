@@ -75,45 +75,6 @@ describe(
       expect(uniformMap.model_pointCloudAttenuation).toBeDefined();
     });
 
-    it("uses tileset.pointCloudShading for 3D Tiles", function () {
-      var uniformMap = {};
-      var pointCloudShading1dp = new PointCloudShading({
-        attenuation: true,
-        maximumAttenuation: 1,
-      });
-      var pointCloudShading4dp = new PointCloudShading({
-        attenuation: true,
-        maximumAttenuation: 4,
-      });
-      var renderResources = {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: uniformMap,
-        runtimeNode: mockRuntimeNode,
-        model: {
-          type: ModelExperimentalType.TILE_GLTF,
-          content: {
-            tile: {
-              geometricError: 3,
-            },
-            tileset: {
-              pointCloudShading: pointCloudShading1dp,
-            },
-          },
-          pointCloudShading: pointCloudShading4dp,
-        },
-      };
-
-      var frameState = scene.frameState;
-      PointCloudAttenuationPipelineStage.process(
-        renderResources,
-        mockPrimitive,
-        frameState
-      );
-
-      var attenuation = uniformMap.model_pointCloudAttenuation();
-      expect(attenuation.x).toEqual(1 * frameState.pixelRatio);
-    });
-
     it("point size is determined by maximumAttenuation", function () {
       var uniformMap = {};
       var pointCloudShading = new PointCloudShading({
@@ -179,12 +140,10 @@ describe(
         uniformMap: uniformMap,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          pointCloudShading: pointCloudShading,
           content: {
             tile: {
               geometricError: 3,
-            },
-            tileset: {
-              pointCloudShading: pointCloudShading,
             },
           },
         },
@@ -213,12 +172,10 @@ describe(
         runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          pointCloudShading: pointCloudShading,
           content: {
             tile: {
               geometricError: 3,
-            },
-            tileset: {
-              pointCloudShading: pointCloudShading,
             },
           },
         },
@@ -248,12 +205,10 @@ describe(
         runtimeNode: mockRuntimeNode,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+          pointCloudShading: pointCloudShading,
           content: {
             tile: {
               geometricError: 0,
-            },
-            tileset: {
-              pointCloudShading: pointCloudShading,
             },
           },
         },
