@@ -147,6 +147,160 @@ describe(
       expect(attenuation.x).toEqual(frameState.pixelRatio);
     });
 
+    it("scales geometricError", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        geometricErrorScale: 2,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+          content: {
+            tile: {
+              geometricError: 3,
+            },
+            tileset: {
+              pointCloudShading: pointCloudShading,
+            },
+          },
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.y).toEqual(6);
+    });
+
+    it("uses tile geometric error when available", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        geometricErrorScale: 1,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+          content: {
+            tile: {
+              geometricError: 3,
+            },
+            tileset: {
+              pointCloudShading: pointCloudShading,
+            },
+          },
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.y).toEqual(3);
+    });
+
+    it("uses baseResolution when tile geometric error is 0", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        geometricErrorScale: 1,
+        baseResolution: 4,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+          content: {
+            tile: {
+              geometricError: 0,
+            },
+            tileset: {
+              pointCloudShading: pointCloudShading,
+            },
+          },
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.y).toEqual(4);
+    });
+
+    it("uses baseResolution for glTF models", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        geometricErrorScale: 1,
+        baseResolution: 4,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        model: {
+          type: ModelExperimentalType.GLTF,
+          pointCloudShading: pointCloudShading,
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.y).toEqual(4);
+    });
+
+    it("estimates geometric error when baseResolution is not available", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        geometricErrorScale: 1,
+        baseResolution: undefined,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        model: {
+          type: ModelExperimentalType.GLTF,
+          pointCloudShading: pointCloudShading,
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.y).toEqual(100);
+    });
+
     it("computes depth multiplier from drawing buffer and frustum", function () {
       var uniformMap = {};
       var pointCloudShading = new PointCloudShading({
