@@ -793,6 +793,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  *
  * @returns {ModelExperimental} The newly created model.
  */
@@ -850,6 +851,7 @@ ModelExperimental.fromGltf = function (options) {
     colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
+    pointCloudShading: options.pointCloudShading,
   };
   var model = new ModelExperimental(modelOptions);
 
