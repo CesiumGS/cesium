@@ -1430,7 +1430,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * Options for controlling point size based on geometric error and eye dome lighting.
    *
-   * @memberof ModelExperimental.prototype
+   * @memberof Cesium3DTileset.prototype
    *
    * @type {PointCloudShading}
    */
