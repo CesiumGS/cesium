@@ -4,8 +4,6 @@ import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
-import LightingPipelineStage from "./LightingPipelineStage.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
@@ -108,6 +106,18 @@ export default function ModelExperimentalSceneGraph(options) {
    * @private
    */
   this._boundingSpheres = [];
+
+  /**
+   * Pipeline stages to apply to this model. This
+   * is an array of classes, each with a static method called
+   * <code>process()</code>
+   *
+   * @type {Object[]}
+   * @readonly
+   *
+   * @private
+   */
+  this.modelPipelineStages = [];
 
   this._boundingSphere = undefined;
   this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
@@ -250,12 +260,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 ) {
   var modelRenderResources = new ModelRenderResources(this._model);
 
-  var modelPipelineStages = [];
-  var model = this._model;
-  if (defined(model.color)) {
-    modelPipelineStages.push(ModelColorPipelineStage);
-  }
+  this.configurePipeline();
+  var modelPipelineStages = this.modelPipelineStages;
 
+  var model = this.model;
   var i, j, k;
   for (i = 0; i < modelPipelineStages.length; i++) {
     var modelPipelineStage = modelPipelineStages[i];
@@ -264,14 +272,16 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
     var runtimeNode = this._runtimeNodes[i];
+    runtimeNode.configurePipeline();
+    var nodePipelineStages = runtimeNode.pipelineStages;
 
     var nodeRenderResources = new NodeRenderResources(
       modelRenderResources,
       runtimeNode
     );
 
-    for (j = 0; j < runtimeNode.pipelineStages.length; j++) {
-      var nodePipelineStage = runtimeNode.pipelineStages[j];
+    for (j = 0; j < nodePipelineStages.length; j++) {
+      var nodePipelineStage = nodePipelineStages[j];
 
       nodePipelineStage.process(
         nodeRenderResources,
@@ -283,20 +293,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       var runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      // The pipeline stage array is copied because we don't want dynamic stages to be added to the primitive's default stages.
-      var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
-
-      if (defined(model.customShader)) {
-        // The custom shader stage needs to go before the lighting stage.
-        var lightingStageIndex = primitivePipelineStages.indexOf(
-          LightingPipelineStage
-        );
-        primitivePipelineStages.splice(
-          lightingStageIndex,
-          0,
-          CustomShaderPipelineStage
-        );
-      }
+      runtimePrimitive.configurePipeline();
+      var primitivePipelineStages = runtimePrimitive.pipelineStages;
 
       var primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
@@ -329,6 +327,23 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(
     this._boundingSpheres
   );
+};
+
+/**
+ * Configure the model pipeline stages. If the pipeline needs to be re-run, call
+ * this method again to ensure the correct sequence of pipeline stages are
+ * used.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
+  var modelPipelineStages = this.modelPipelineStages;
+  modelPipelineStages.length = 0;
+
+  var model = this._model;
+  if (defined(model.color)) {
+    modelPipelineStages.push(ModelColorPipelineStage);
+  }
 };
 
 ModelExperimentalSceneGraph.prototype.update = function (frameState) {

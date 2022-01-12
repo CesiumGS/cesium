@@ -1,4 +1,5 @@
 import Check from "../../Core/Check.js";
+import Color from "../../Core/Color.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -13,9 +14,9 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
+import PointCloudShading from "../PointCloudShading.js";
 import B3dmLoader from "./B3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
-import Color from "../../Core/Color.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -42,6 +43,7 @@ import Color from "../../Core/Color.js";
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -128,6 +130,10 @@ export default function ModelExperimental(options) {
   this._resources = [];
 
   this._boundingSphere = undefined;
+
+  var pointCloudShading = new PointCloudShading(options.pointCloudShading);
+  this._attenuation = pointCloudShading.attenuation;
+  this._pointCloudShading = pointCloudShading;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
@@ -303,6 +309,30 @@ Object.defineProperties(ModelExperimental.prototype, {
   opaquePass: {
     get: function () {
       return this._opaquePass;
+    },
+  },
+
+  /**
+   * Point cloud shading settings for controlling point cloud attenuation
+   * and lighting. For 3D Tiles, this is inherited from the
+   * {@link Cesium3DTileset}.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {PointCloudShading}
+   */
+  pointCloudShading: {
+    get: function () {
+      return this._pointCloudShading;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("pointCloudShading", value);
+      //>>includeEnd('debug');
+      if (value !== this._pointCloudShading) {
+        this.resetDrawCommands();
+      }
+      this._pointCloudShading = value;
     },
   },
 
@@ -608,6 +638,13 @@ ModelExperimental.prototype.update = function (frameState) {
     this._customShader.update(frameState);
   }
 
+  // Check if the shader needs to be updated for point cloud attenuation
+  // settings.
+  if (this.pointCloudShading.attenuation !== this._attenuation) {
+    this.resetDrawCommands();
+    this._attenuation = this.pointCloudShading.attenuation;
+  }
+
   // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {
     return;
@@ -751,6 +788,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  *
  * @returns {ModelExperimental} The newly created model.
  */
@@ -808,6 +846,7 @@ ModelExperimental.fromGltf = function (options) {
     colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
+    pointCloudShading: options.pointCloudShading,
   };
   var model = new ModelExperimental(modelOptions);
 

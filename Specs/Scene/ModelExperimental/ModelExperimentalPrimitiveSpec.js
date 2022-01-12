@@ -2,13 +2,18 @@ import {
   AlphaPipelineStage,
   CustomShader,
   CustomShaderMode,
+  CustomShaderPipelineStage,
   FeatureIdPipelineStage,
   CPUStylingPipelineStage,
   DequantizationPipelineStage,
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
+  ModelExperimentalType,
   PickingPipelineStage,
+  PointCloudAttenuationPipelineStage,
+  PointCloudShading,
+  PrimitiveType,
   VertexAttributeSemantic,
   BatchTexturePipelineStage,
   ModelExperimentalPrimitive,
@@ -22,6 +27,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   };
   var mockNode = {};
   var mockModel = {
+    type: ModelExperimentalType.GLTF,
     allowPicking: true,
     featureIdAttributeIndex: 0,
   };
@@ -34,7 +40,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   function verifyExpectedStages(stages, expectedStages) {
     expect(stages.length, expectedStages.stages);
     for (var i = 0; i < stages.length; i++) {
-      expect(expectedStages[i].name).toEqual(stages[i].name);
+      expect(stages[i].name).toEqual(expectedStages[i].name);
     }
   }
 
@@ -101,6 +107,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        type: ModelExperimentalType.GLTF,
         allowPicking: false,
         content: {},
       },
@@ -154,6 +161,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
       node: {},
       model: {
+        type: ModelExperimentalType.GLTF,
         allowPicking: true,
         featureIdAttributeIndex: 1,
         content: {},
@@ -181,6 +189,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       },
       node: {},
       model: {
+        type: ModelExperimentalType.GLTF,
         allowPicking: true,
         featureIdTextureIndex: 1,
         content: {},
@@ -224,12 +233,160 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: mockNode,
       model: {
+        type: ModelExperimentalType.GLTF,
         content: {},
         customShader: new CustomShader({
           vertexShaderText: emptyVertexShader,
           fragmentShaderText: emptyFragmentShader,
         }),
         allowPicking: false,
+      },
+    });
+
+    var expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        content: {},
+        customShader: new CustomShader({
+          mode: CustomShaderMode.REPLACE_MATERIAL,
+          vertexShaderText: emptyVertexShader,
+          fragmentShaderText: emptyFragmentShader,
+        }),
+        allowPicking: false,
+      },
+    });
+
+    var expectedStages = [
+      GeometryPipelineStage,
+      CustomShaderPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("does not disable the material stage if the custom shader has no fragment shader", function () {
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: mockPrimitive,
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        content: {},
+        customShader: new CustomShader({
+          mode: CustomShaderMode.REPLACE_MATERIAL,
+          vertexShaderText: emptyVertexShader,
+        }),
+        allowPicking: false,
+      },
+    });
+
+    var expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      CustomShaderPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures point cloud attenuation stage for 3D Tiles point clouds", function () {
+    var pointCloudShading = new PointCloudShading({
+      attenuation: true,
+    });
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.TILE_PNTS,
+        featureIdAttributeIndex: 0,
+        pointCloudShading: pointCloudShading,
+        content: {
+          tileset: {
+            pointCloudShading: pointCloudShading,
+          },
+        },
+      },
+    });
+
+    var expectedStages = [
+      GeometryPipelineStage,
+      PointCloudAttenuationPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures point cloud attenuation stage for point clouds", function () {
+    var pointCloudShading = new PointCloudShading({
+      attenuation: true,
+    });
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdAttributeIndex: 0,
+        pointCloudShading: pointCloudShading,
+      },
+    });
+
+    var expectedStages = [
+      GeometryPipelineStage,
+      PointCloudAttenuationPipelineStage,
+      MaterialPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("skips point cloud attenuation if attenuation is false", function () {
+    var pointCloudShading = new PointCloudShading({
+      attenuation: false,
+    });
+    var primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdAttributeIndex: 0,
+        pointCloudShading: pointCloudShading,
       },
     });
 
@@ -243,41 +400,19 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 
-  it("disables the material stage if the custom shader mode is REPLACE_MATERIAL", function () {
+  it("skips point cloud attenuation if point cloud shading is not set", function () {
     var primitive = new ModelExperimentalPrimitive({
-      primitive: mockPrimitive,
-      node: mockNode,
-      model: {
-        content: {},
-        customShader: new CustomShader({
-          mode: CustomShaderMode.REPLACE_MATERIAL,
-          vertexShaderText: emptyVertexShader,
-          fragmentShaderText: emptyFragmentShader,
-        }),
-        allowPicking: false,
+      primitive: {
+        featureIdAttributes: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.POINTS,
       },
-    });
-
-    var expectedStages = [
-      GeometryPipelineStage,
-      LightingPipelineStage,
-      AlphaPipelineStage,
-    ];
-
-    verifyExpectedStages(primitive.pipelineStages, expectedStages);
-  });
-
-  it("does not disable the material stage if the custom shader has no fragment shader", function () {
-    var primitive = new ModelExperimentalPrimitive({
-      primitive: mockPrimitive,
       node: mockNode,
       model: {
-        content: {},
-        customShader: new CustomShader({
-          mode: CustomShaderMode.REPLACE_MATERIAL,
-          vertexShaderText: emptyVertexShader,
-        }),
-        allowPicking: false,
+        type: ModelExperimentalType.GLTF,
+        featureIdAttributeIndex: 0,
+        pointCloudShading: undefined,
       },
     });
 

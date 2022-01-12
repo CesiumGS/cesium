@@ -442,6 +442,7 @@ function makeAttributes(loader, parsedContent, context) {
   if (defined(positions)) {
     computeApproximateExtrema(positions);
     attribute = makeAttribute(loader, positions, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
