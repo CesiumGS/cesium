@@ -4,8 +4,9 @@ import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
-import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
+import ModelExperimentalType from "./ModelExperimentalType.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import when from "../../ThirdParty/when.js";
@@ -13,6 +14,7 @@ import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import B3dmLoader from "./B3dmLoader.js";
+import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import I3dmLoader from "./I3dmLoader.js";
 
@@ -57,15 +59,40 @@ export default function ModelExperimental(options) {
    * ResourceLoader is part of the private API.
    *
    * @type {ResourceLoader}
-   *
    * @private
    */
   this._loader = options.loader;
   this._resource = options.resource;
 
-  this._modelMatrix = Matrix4.clone(
+  /**
+   * Type of this model, to distinguish individual glTF files from 3D Tiles
+   * internally. The corresponding constructor parameter is undocumented, since
+   * ModelExperimentalType is part of the private API.
+   *
+   * @type {ModelExperimentalType}
+   * @private
+   * @readonly
+   */
+  this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
+
+  /**
+   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
+   * Local reference frames can be used by providing a different transformation matrix, like that returned
+   * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
+   * @type {Matrix4}
+
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+   */
+  this.modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
+  this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -180,12 +207,6 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
-      Matrix4.multiply(
-        model._modelMatrix,
-        loader.components.transform,
-        model._modelMatrix
-      );
-
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
 
@@ -206,7 +227,12 @@ function initialize(model) {
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
     );
 
-  loader.texturesLoadedPromise
+  // Transcoded .pnts models do not have textures
+  var texturesLoadedPromise = defaultValue(
+    loader.texturesLoadedPromise,
+    when.resolve()
+  );
+  texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
@@ -311,6 +337,20 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The scene graph of this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalSceneGraph}
+   * @private
+   */
+  sceneGraph: {
+    get: function () {
+      return this._sceneGraph;
+    },
+  },
+
+  /**
    * The tile content this model belongs to, if it is loaded as part of a {@link Cesium3DTileset}.
    *
    * @memberof ModelExperimental.prototype
@@ -409,7 +449,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       if (!Color.equals(this._color, value)) {
         this.resetDrawCommands();
       }
-      this._color = value;
+      this._color = Color.clone(value, this._color);
     },
   },
 
@@ -465,30 +505,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph._boundingSphere;
-    },
-  },
-
-  /**
-   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
-   * Local reference frames can be used by providing a different transformation matrix, like that returned
-   * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
-   * @type {Matrix4}
-
-   * @default {@link Matrix4.IDENTITY}
-   *
-   * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-   */
-  modelMatrix: {
-    get: function () {
-      return this._modelMatrix;
-    },
-    set: function (value) {
-      this._modelMatrix = value;
+      return this._sceneGraph.boundingSphere;
     },
   },
 
@@ -576,7 +593,6 @@ ModelExperimental.prototype.resetDrawCommands = function () {
   }
   this.destroyResources();
   this._drawCommandsBuilt = false;
-  this._sceneGraph._drawCommands = [];
 };
 
 /**
@@ -643,13 +659,17 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
+  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+    this._sceneGraph.updateModelMatrix(this);
+  }
+
+  this._sceneGraph.update(frameState);
+
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
-    frameState.commandList.push.apply(
-      frameState.commandList,
-      this._sceneGraph._drawCommands
-    );
+    var drawCommands = this._sceneGraph.getDrawCommands();
+    frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
 
@@ -776,9 +796,15 @@ ModelExperimental.fromGltf = function (options) {
 
   var loader = new GltfLoader(loaderOptions);
 
+  var is3DTiles = defined(options.content);
+  var type = is3DTiles
+    ? ModelExperimentalType.TILE_GLTF
+    : ModelExperimentalType.GLTF;
+
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.gltfResource,
+    type: type,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
@@ -817,6 +843,7 @@ ModelExperimental.fromB3dm = function (options) {
   var modelOptions = {
     loader: loader,
     resource: loaderOptions.b3dmResource,
+    type: ModelExperimentalType.TILE_B3DM,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
@@ -825,9 +852,46 @@ ModelExperimental.fromB3dm = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
   };
+
+  var model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/**
+ * @private
+ */
+ModelExperimental.fromPnts = function (options) {
+  var loaderOptions = {
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+  };
+  var loader = new PntsLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: options.resource,
+    type: ModelExperimentalType.TILE_PNTS,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+
   var model = new ModelExperimental(modelOptions);
   return model;
 };

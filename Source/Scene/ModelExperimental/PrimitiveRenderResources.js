@@ -109,25 +109,16 @@ export default function PrimitiveRenderResources(
    */
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
-  var instances = nodeRenderResources.runtimeNode.node.instances;
   /**
-   * The computed model matrix for this primitive. If the node's instances apply
-   * transforms in world space, the node's model matrix is stored with respect to
-   * the model and the primitive's model matrix needs to be applied to the primitive.
-   * If legacy instancing behaviour is not needed, we simply clone the node's model matrix.
+   * The model space transform for this primitive. This is cloned from the
+   * node render resources as the primitive may further modify it
    *
    * @type {Matrix4}
    *
    * @private
    */
-  this.modelMatrix =
-    defined(instances) && instances.transformInWorldSpace
-      ? Matrix4.multiplyTransformation(
-          this.model.modelMatrix,
-          nodeRenderResources.modelMatrix,
-          new Matrix4()
-        )
-      : nodeRenderResources.modelMatrix.clone();
+  this.transform = nodeRenderResources.runtimeNode.transform.clone();
+
   /**
    * An object used to build a shader incrementally. This is cloned from the
    * node render resources because each primitive can compute a different shader.
@@ -208,7 +199,7 @@ export default function PrimitiveRenderResources(
    */
   this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
     primitive,
-    this.modelMatrix,
+    Matrix4.IDENTITY,
     nodeRenderResources.instancingTranslationMax,
     nodeRenderResources.instancingTranslationMin
   );

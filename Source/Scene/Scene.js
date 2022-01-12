@@ -508,8 +508,7 @@ function Scene(options) {
    * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for enabling this to work.
    *
    * <p>
-   * Render must be called between picks.
-   * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
+   * There is a decrease in performance when enabled. There are extra draw calls to write depth for
    * translucent geometry.
    * </p>
    *
@@ -521,7 +520,6 @@ function Scene(options) {
    *          // nothing picked
    *          return;
    *      }
-   *      viewer.scene.render();
    *      var worldPosition = viewer.scene.pickPosition(movement.position);
    * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
    *
@@ -628,7 +626,6 @@ function Scene(options) {
 
     originalFramebuffer: undefined,
     useGlobeDepthFramebuffer: false,
-    separatePrimitiveFramebuffer: false,
     useOIT: false,
     useInvertClassification: false,
     usePostProcess: false,
@@ -2295,7 +2292,7 @@ function executeCommands(scene, passState) {
         if (environmentState.useGlobeDepthFramebuffer) {
           framebuffer = view.globeDepth.framebuffer;
         } else if (environmentState.usePostProcess) {
-          framebuffer = view.sceneFramebuffer.getFramebuffer();
+          framebuffer = view.sceneFramebuffer.framebuffer;
         } else {
           framebuffer = environmentState.originalFramebuffer;
         }
@@ -2346,7 +2343,6 @@ function executeCommands(scene, passState) {
   var globeTranslucencyState = scene._globeTranslucencyState;
   var globeTranslucent = globeTranslucencyState.translucent;
   var globeTranslucencyFramebuffer = scene._view.globeTranslucencyFramebuffer;
-  var separatePrimitiveFramebuffer = (environmentState.separatePrimitiveFramebuffer = false);
   var clearDepth = scene._depthClearCommand;
   var clearStencil = scene._stencilClearCommand;
   var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2379,13 +2375,6 @@ function executeCommands(scene, passState) {
       us.updateFrustum(frustum);
     }
 
-    var globeDepth = view.globeDepth;
-
-    if (separatePrimitiveFramebuffer) {
-      // Render to globe framebuffer in GLOBE pass
-      passState.framebuffer = globeDepth.framebuffer;
-    }
-
     clearDepth.execute(context, passState);
 
     if (context.stencilBuffer) {
@@ -2410,6 +2399,7 @@ function executeCommands(scene, passState) {
       }
     }
 
+    var globeDepth = view.globeDepth;
     if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
     }
@@ -2440,11 +2430,6 @@ function executeCommands(scene, passState) {
       if (useDepthPlane) {
         depthPlane.execute(context, passState);
       }
-    }
-
-    if (separatePrimitiveFramebuffer) {
-      // Render to primitive framebuffer in all other passes
-      passState.framebuffer = globeDepth.primitiveFramebuffer;
     }
 
     if (
@@ -2514,7 +2499,7 @@ function executeCommands(scene, passState) {
       scene._invertClassification.clear(context, passState);
 
       var opaqueClassificationFramebuffer = passState.framebuffer;
-      passState.framebuffer = scene._invertClassification._fbo;
+      passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
       us.updatePass(Pass.CESIUM_3D_TILE);
@@ -2637,11 +2622,6 @@ function executeCommands(scene, passState) {
       var pickDepth = scene._picking.getPickDepth(scene, index);
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
-    }
-
-    if (separatePrimitiveFramebuffer) {
-      // Reset framebuffer
-      passState.framebuffer = globeDepth.framebuffer;
     }
 
     if (picking || !usePostProcessSelected) {
@@ -2871,14 +2851,13 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
 
   updateAndClearFramebuffers(scene, passState, backgroundColor);
 
-  if (!renderTranslucentDepthForPick) {
-    updateAndRenderPrimitives(scene);
-  }
+  updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
 
+  executeComputeCommands(scene);
+
   if (!renderTranslucentDepthForPick) {
-    executeComputeCommands(scene);
     executeShadowMapCastCommands(scene);
   }
 
@@ -3107,13 +3086,11 @@ function executeCommandsInViewport(
   var renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
 
-  if (!firstViewport && !renderTranslucentDepthForPick) {
+  if (!firstViewport) {
     scene.frameState.commandList.length = 0;
   }
 
-  if (!renderTranslucentDepthForPick) {
-    updateAndRenderPrimitives(scene);
-  }
+  updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
 
@@ -3121,8 +3098,8 @@ function executeCommandsInViewport(
     if (defined(backgroundColor)) {
       updateAndClearFramebuffers(scene, passState, backgroundColor);
     }
+    executeComputeCommands(scene);
     if (!renderTranslucentDepthForPick) {
-      executeComputeCommands(scene);
       executeShadowMapCastCommands(scene);
     }
   }
@@ -3432,7 +3409,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   } else if (useGlobeDepthFramebuffer) {
     passState.framebuffer = view.globeDepth.framebuffer;
   } else if (usePostProcess) {
-    passState.framebuffer = view.sceneFramebuffer.getFramebuffer();
+    passState.framebuffer = view.sceneFramebuffer.framebuffer;
   }
 
   if (defined(passState.framebuffer)) {
@@ -3495,13 +3472,8 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   var globeFramebuffer = useGlobeDepthFramebuffer
     ? globeDepth.framebuffer
     : undefined;
-  var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
-  var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
-
-  if (environmentState.separatePrimitiveFramebuffer) {
-    // Merge primitive framebuffer into globe framebuffer
-    globeDepth.executeMergeColor(context, passState);
-  }
+  var sceneFramebuffer = view.sceneFramebuffer.framebuffer;
+  var idFramebuffer = view.sceneFramebuffer.idFramebuffer;
 
   if (useOIT) {
     passState.framebuffer = usePostProcess

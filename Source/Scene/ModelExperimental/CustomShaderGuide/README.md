@@ -84,7 +84,7 @@ var model = Cesium.ModelExperimental.fromGltf({,
 
 **Note**: As of this writing, only tilesets that use the `3DTILES_content_gltf`
 extension will support `CustomShaders`. Future releases will add support for
-other formats such as B3DM.
+other formats such as b3dm.
 
 ## Uniforms
 

@@ -1,5 +1,6 @@
 import {
   Cesium3DTileFeature,
+  ModelExperimentalType,
   ModelFeatureTable,
   ModelFeature,
 } from "../../../Source/Cesium.js";
@@ -32,7 +33,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   it("creates ModelFeatures when model does not have content", function () {
     var table = new ModelFeatureTable({
       propertyTable: mockPropertyTable,
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
     var modelFeatures = table._features;
@@ -49,6 +52,7 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
         content: {
           tileset: {},
         },
+        type: ModelExperimentalType.TILE_GLTF,
       },
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
@@ -61,7 +65,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("hasProperty works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     var modelFeatures = table._features;
@@ -74,7 +80,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getFeature works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
@@ -88,7 +96,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getProperty works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
@@ -108,7 +118,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getPropertyInherited works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     expect(table._featuresLength).toEqual(mockPropertyTable.count);
@@ -137,7 +149,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("getPropertyNames works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     var modelFeatures = table._features;
@@ -155,7 +169,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("setProperty works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     var feature = table._features[0];
@@ -166,7 +182,9 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
 
   it("destroy works", function () {
     var table = new ModelFeatureTable({
-      model: {},
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
       propertyTable: mockPropertyTable,
     });
     var batchTexture = table._batchTexture;

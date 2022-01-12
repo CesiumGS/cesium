@@ -21,9 +21,15 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     modelMatrix: Matrix4.IDENTITY,
   };
   var mockNode = {};
+  var mockSceneGraph = {
+    computedModelMatrix: Matrix4.IDENTITY,
+  };
+
   var runtimeNode = new ModelExperimentalNode({
     node: mockNode,
-    modelMatrix: Matrix4.IDENTITY,
+    transform: Matrix4.IDENTITY,
+    sceneGraph: mockSceneGraph,
+    children: [],
   });
 
   function checkShaderDefines(shaderBuilder, expectedDefines) {

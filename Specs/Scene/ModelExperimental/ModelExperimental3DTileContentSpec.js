@@ -64,7 +64,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.resolvesReadyPromise(scene, gltfContentUrl);
   });
 
-  it("resolves readyPromise with B3DM", function () {
+  it("resolves readyPromise with b3dm", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.resolvesReadyPromise(scene, withBatchTableUrl);
   });
@@ -89,7 +89,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("renders B3DM content", function () {
+  it("renders b3dm content", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
       function (tileset) {
@@ -98,7 +98,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("renders B3DM content without features", function () {
+  it("renders b3dm content without features", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function (
       tileset
@@ -139,7 +139,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("picks from B3DM", function () {
+  it("picks from b3dm", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
       function (tileset) {
@@ -201,7 +201,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("picks from B3DM batch table", function () {
+  it("picks from b3dm batch table", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
       function (tileset) {
