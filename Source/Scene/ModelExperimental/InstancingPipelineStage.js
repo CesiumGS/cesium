@@ -38,6 +38,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   var instances = node.instances;
   var count = instances.attributes[0].count;
   var instancingVertexAttributes = [];
+  var sceneGraph = renderResources.model.sceneGraph;
 
   var shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_INSTANCING");
@@ -139,12 +140,17 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     uniformMap.u_instance_modifiedModelView = function () {
       return Matrix4.multiply(
         frameState.context.uniformState.view,
-        renderResources.model.loader.components.transform,
+        sceneGraph._modelComponents.transform,
         new Matrix4()
       );
     };
     uniformMap.u_instance_nodeTransform = function () {
-      return renderResources.modelMatrix;
+      return Matrix4.multiplyTransformation(
+        Axis.Z_UP_TO_Y_UP,
+        renderResources.runtimeNode.transform,
+        new Matrix4()
+      );
+      //return renderResources.runtimeNode.transform;
     };
     shaderBuilder.addVertexLines([LegacyInstancingStageVS]);
   } else {
@@ -255,9 +261,9 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
 
     // If the transforms are in world space, the Y_UP_TO_Z_UP transform that is applied to the model matrix
     // should not be applied to the transform.
-    if (instances.transformInWorldSpace) {
-      Matrix4.multiplyTransformation(Axis.Z_UP_TO_Y_UP, transform, transform);
-    }
+    // if (instances.transformInWorldSpace) {
+    //   Matrix4.multiplyTransformation(Axis.Z_UP_TO_Y_UP, transform, transform);
+    // }
 
     var offset = elements * i;
 

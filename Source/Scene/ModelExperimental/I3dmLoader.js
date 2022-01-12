@@ -402,7 +402,9 @@ function createInstances(loader, components) {
     }
 
     // Set the center of the bounding sphere as the RTC center transform.
-    loader._transform = Matrix4.fromTranslation(positionBoundingSphere.center);
+    components.transform = Matrix4.fromTranslation(
+      positionBoundingSphere.center
+    );
   }
 
   for (i = 0; i < instancesLength; i++) {
