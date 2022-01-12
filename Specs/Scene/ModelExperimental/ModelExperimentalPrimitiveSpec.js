@@ -321,6 +321,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.TILE_PNTS,
         featureIdAttributeIndex: 0,
+        pointCloudShading: pointCloudShading,
         content: {
           tileset: {
             pointCloudShading: pointCloudShading,
