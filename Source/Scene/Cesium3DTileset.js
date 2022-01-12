@@ -453,12 +453,7 @@ function Cesium3DTileset(options) {
    */
   this.colorBlendAmount = 0.5;
 
-  /**
-   * Options for controlling point size based on geometric error and eye dome lighting.
-   * @type {PointCloudShading}
-   */
-  this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
-
+  this._pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
 
   /**
@@ -1429,6 +1424,25 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._maximumMemoryUsage = value;
+    },
+  },
+
+  /**
+   * Options for controlling point size based on geometric error and eye dome lighting.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {PointCloudShading}
+   */
+  pointCloudShading: {
+    get: function () {
+      return this._pointCloudShading;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("pointCloudShading", value);
+      //>>includeEnd('debug');
+      this._pointCloudShading = value;
     },
   },
 

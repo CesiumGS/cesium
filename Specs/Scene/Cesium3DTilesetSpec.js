@@ -4351,6 +4351,16 @@ describe(
       );
     });
 
+    it("throws if pointCloudShading is set to undefined", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        expect(function () {
+          tileset.pointCloudShading = undefined;
+        }).toThrowDeveloperError();
+      });
+    });
+
     describe("updateForPass", function () {
       it("updates for pass", function () {
         viewAllTiles();
