@@ -1,6 +1,7 @@
 import {
   Camera,
   Cartesian3,
+  Cesium3DTileRefine,
   Math as CesiumMath,
   Matrix4,
   ModelExperimentalType,
@@ -102,6 +103,76 @@ describe(
       expect(attenuation.x).toEqual(4 * frameState.pixelRatio);
     });
 
+    it("point size defaults to 5dp for 3D Tiles with additive refinement", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        maximumAttenuation: undefined,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+          pointCloudShading: pointCloudShading,
+          content: {
+            tile: {
+              refine: Cesium3DTileRefine.ADD,
+            },
+            tileset: {
+              maximumScreenSpaceError: 16,
+            },
+          },
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.x).toEqual(5 * frameState.pixelRatio);
+    });
+
+    it("point size defaults to tileset.maximumScreenSpaceError for 3D Tiles with replace refinement", function () {
+      var uniformMap = {};
+      var pointCloudShading = new PointCloudShading({
+        attenuation: true,
+        maximumAttenuation: undefined,
+      });
+      var renderResources = {
+        shaderBuilder: new ShaderBuilder(),
+        uniformMap: uniformMap,
+        runtimeNode: mockRuntimeNode,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+          pointCloudShading: pointCloudShading,
+          content: {
+            tile: {
+              refine: Cesium3DTileRefine.REPLACE,
+            },
+            tileset: {
+              maximumScreenSpaceError: 16,
+            },
+          },
+        },
+      };
+
+      var frameState = scene.frameState;
+      PointCloudAttenuationPipelineStage.process(
+        renderResources,
+        mockPrimitive,
+        frameState
+      );
+
+      var attenuation = uniformMap.model_pointCloudAttenuation();
+      expect(attenuation.x).toEqual(16 * frameState.pixelRatio);
+    });
+
     it("point size defaults to 1dp when maximumAttenuation is not defined", function () {
       var uniformMap = {};
       var pointCloudShading = new PointCloudShading({
@@ -144,6 +215,7 @@ describe(
           content: {
             tile: {
               geometricError: 3,
+              refine: Cesium3DTileRefine.ADD,
             },
           },
         },
@@ -176,6 +248,7 @@ describe(
           content: {
             tile: {
               geometricError: 3,
+              refine: Cesium3DTileRefine.ADD,
             },
           },
         },
@@ -209,6 +282,7 @@ describe(
           content: {
             tile: {
               geometricError: 0,
+              refine: Cesium3DTileRefine.ADD,
             },
           },
         },

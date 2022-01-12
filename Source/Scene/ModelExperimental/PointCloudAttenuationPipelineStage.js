@@ -6,6 +6,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import PointCloudAttenuationStageVS from "../../Shaders/ModelExperimental/PointCloudAttenuationStageVS.js";
+import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
 import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
@@ -54,8 +55,12 @@ PointCloudAttenuationPipelineStage.process = function (
   var pointCloudShading = model.pointCloudShading;
 
   var content;
+  var is3DTiles;
+  var usesAddRefinement;
   if (ModelExperimentalType.is3DTiles(model.type)) {
+    is3DTiles = true;
     content = model.content;
+    usesAddRefinement = content.tile.refine === Cesium3DTileRefine.ADD;
   }
 
   shaderBuilder.addUniform(
@@ -67,7 +72,16 @@ PointCloudAttenuationPipelineStage.process = function (
     var scratch = scratchAttenuationUniform;
 
     // attenuation.x = pointSize
-    scratch.x = defaultValue(pointCloudShading.maximumAttenuation, 1.0);
+    var defaultPointSize = 1.0;
+    if (is3DTiles) {
+      defaultPointSize = usesAddRefinement
+        ? 5.0
+        : content.tileset.maximumScreenSpaceError;
+    }
+    scratch.x = defaultValue(
+      pointCloudShading.maximumAttenuation,
+      defaultPointSize
+    );
     scratch.x *= frameState.pixelRatio;
 
     // attenuation.y = geometricError

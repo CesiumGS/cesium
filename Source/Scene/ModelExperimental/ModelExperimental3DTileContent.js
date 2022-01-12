@@ -1,10 +1,7 @@
 import Axis from "../Axis.js";
 import defined from "../../Core/defined.js";
-import defaultValue from "../../Core/defaultValue.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Pass from "../../Renderer/Pass.js";
-import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
-import PointCloudShading from "../PointCloudShading.js";
 import ModelExperimental from "./ModelExperimental.js";
 
 /**
@@ -166,8 +163,6 @@ ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
   this._model.applyStyle(style);
 };
 
-var defaultShading = new PointCloudShading();
-
 ModelExperimental3DTileContent.prototype.update = function (
   tileset,
   frameState
@@ -179,20 +174,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
-
-  var pointCloudShading = defaultValue(
-    tileset.pointCloudShading,
-    defaultShading
-  );
-
-  model.pointCloudShading = pointCloudShading;
-
-  if (!defined(pointCloudShading.maximumAttenuation)) {
-    pointCloudShading.maximumAttenuation =
-      tile.refine === Cesium3DTileRefine.ADD
-        ? 5.0
-        : tileset.maximumScreenSpaceError;
-  }
+  model.pointCloudShading = tileset.pointCloudShading;
 
   model.update(frameState);
 };
