@@ -12,7 +12,6 @@ import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
-import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
@@ -130,12 +129,7 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
     primitive.attributes
   );
 
-  var pointCloudShading;
-  if (ModelExperimentalType.is3DTiles(model.type)) {
-    pointCloudShading = model.content.tileset.pointCloudShading;
-  } else {
-    pointCloudShading = model.pointCloudShading;
-  }
+  var pointCloudShading = model.pointCloudShading;
   var hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
 

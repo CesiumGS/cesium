@@ -128,9 +128,8 @@ function getGeometricError(
 
   // Estimate the geometric error
   var nodeTransform = renderResources.runtimeNode.transform;
-  var dimensions = Cartesian3.clone(positionAttribute.max, scratchDimensions);
-  dimensions = Cartesian3.subtract(
-    dimensions,
+  var dimensions = Cartesian3.subtract(
+    positionAttribute.max,
     positionAttribute.min,
     scratchDimensions
   );
