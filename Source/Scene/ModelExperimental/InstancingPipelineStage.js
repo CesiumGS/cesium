@@ -12,7 +12,8 @@ import InstancingStageCommon from "../../Shaders/ModelExperimental/InstancingSta
 import InstancingStageVS from "../../Shaders/ModelExperimental/InstancingStageVS.js";
 import LegacyInstancingStageVS from "../../Shaders/ModelExperimental/LegacyInstancingStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import Axis from "../Axis.js";
+
+var matrixScratch = new Matrix4();
 
 /**
  * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
@@ -141,16 +142,11 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
       return Matrix4.multiply(
         frameState.context.uniformState.view,
         sceneGraph._modelComponents.transform,
-        new Matrix4()
+        matrixScratch
       );
     };
     uniformMap.u_instance_nodeTransform = function () {
-      return Matrix4.multiplyTransformation(
-        Axis.Z_UP_TO_Y_UP,
-        renderResources.runtimeNode.transform,
-        new Matrix4()
-      );
-      //return renderResources.runtimeNode.transform;
+      return renderResources.runtimeNode.axisCorrectedTransform;
     };
     shaderBuilder.addVertexLines([LegacyInstancingStageVS]);
   } else {

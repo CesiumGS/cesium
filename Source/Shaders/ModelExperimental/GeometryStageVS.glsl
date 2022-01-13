@@ -4,7 +4,7 @@ void geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
     vec3 positionMC = attributes.positionMC;
     v_positionMC = positionMC;
     v_positionEC = (modelView * vec4(positionMC, 1.0)).xyz;
-    gl_Position = czm_modelViewProjection * vec4(positionMC, 1.0);
+    gl_Position = czm_projection * vec4(v_positionEC, 1.0);
 
     // Sometimes the fragment shader needs this (e.g. custom shaders)
     #ifdef COMPUTE_POSITION_WC

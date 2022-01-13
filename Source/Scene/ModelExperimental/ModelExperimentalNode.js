@@ -5,6 +5,8 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+
 /**
  * An in-memory representation of a node as part of
  * the {@link ModelExperimentalSceneGraph}
@@ -36,7 +38,15 @@ export default function ModelExperimentalNode(options) {
   this._children = options.children;
   this._node = options.node;
 
+  var components = sceneGraph._modelComponents;
+
   this._originalTransform = Matrix4.clone(transform);
+  this._axisCorrectedTransform = Matrix4.clone(transform);
+  ModelExperimentalUtility.correctModelMatrix(
+    this._axisCorrectedTransform,
+    components.upAxis,
+    components.forwardAxis
+  );
   this._transform = Matrix4.clone(transform);
   this._computedTransform = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
@@ -135,6 +145,15 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
+      this._axisCorrectedTransform = Matrix4.clone(
+        value,
+        this._axisCorrectedTransform
+      );
+      ModelExperimentalUtility.correctModelMatrix(
+        this._axisCorrectedTransform,
+        this._sceneGraph.components.upAxis,
+        this._sceneGraph.components.forwardAxis
+      );
       Matrix4.multiplyTransformation(
         this._sceneGraph.computedModelMatrix,
         value,
@@ -142,6 +161,19 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       );
     },
   },
+
+  /**
+   * The node's axis corrected model space transform.
+   * @type {Matrix4}
+   * @private
+   * @readonly
+   */
+  axisCorrectedTransform: {
+    get: function () {
+      return this._axisCorrectedTransform;
+    },
+  },
+
   /**
    * The node's world space model transform.
    *
