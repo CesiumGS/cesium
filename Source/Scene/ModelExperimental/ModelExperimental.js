@@ -123,7 +123,7 @@ export default function ModelExperimental(options) {
     0
   );
   this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
-  this._featureTables = undefined;
+  this._featureTables = [];
   this._featureTableId = undefined;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
@@ -145,7 +145,7 @@ export default function ModelExperimental(options) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  var modelFeatureTables = [];
+  var featureTables = model._featureTables;
 
   var propertyTables = featureMetadata.propertyTables;
   for (var i = 0; i < propertyTables.length; i++) {
@@ -156,11 +156,11 @@ function createModelFeatureTables(model, featureMetadata) {
     });
 
     if (modelFeatureTable.featuresLength > 0) {
-      modelFeatureTables.push(modelFeatureTable);
+      featureTables.push(modelFeatureTable);
     }
   }
 
-  return modelFeatureTables;
+  return featureTables;
 }
 
 function selectFeatureTableId(components, model) {
@@ -216,10 +216,8 @@ function initialize(model) {
       var featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        var featureTableId = selectFeatureTableId(components, model);
-        var featureTables = createModelFeatureTables(model, featureMetadata);
-        model.featureTables = featureTables;
-        model.featureTableId = featureTableId;
+        model.featureTableId = selectFeatureTableId(components, model);
+        createModelFeatureTables(model, featureMetadata);
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -577,6 +575,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   * @readonly
    *
    * @default 0
    */
@@ -592,6 +591,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   * @readonly
    *
    * @default 0
    */
@@ -651,14 +651,12 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   var featureTables = this._featureTables;
-  if (defined(featureTables)) {
-    for (var i = 0; i < featureTables.length; i++) {
-      featureTables[i].update(frameState);
-      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-      // to ensure that translucent and opaque features are handled in the correct passes.
-      if (featureTables[i].styleCommandsNeededDirty) {
-        this.resetDrawCommands();
-      }
+  for (var i = 0; i < featureTables.length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      this.resetDrawCommands();
     }
   }
 
