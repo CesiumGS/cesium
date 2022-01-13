@@ -50,8 +50,6 @@ describe("Scene/VertexAttributeSemantic", function () {
       "WEIGHTS_1",
       "_FEATURE_ID_0",
       "_FEATURE_ID_1",
-      "_BATCHID",
-      "BATCHID",
       "_OTHER",
     ];
 
@@ -67,8 +65,6 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.WEIGHTS,
-      VertexAttributeSemantic.FEATURE_ID,
-      VertexAttributeSemantic.FEATURE_ID,
       VertexAttributeSemantic.FEATURE_ID,
       VertexAttributeSemantic.FEATURE_ID,
       undefined,

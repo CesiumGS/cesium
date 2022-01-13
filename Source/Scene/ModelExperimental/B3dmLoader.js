@@ -214,6 +214,7 @@ B3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAsTypedArray: this._loadAsTypedArray,
+    renameBatchIdSemantic: true,
   });
 
   this._gltfLoader = gltfLoader;
