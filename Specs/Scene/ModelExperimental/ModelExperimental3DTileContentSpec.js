@@ -161,6 +161,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
       return;
     }
 
+    setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
       InstancedWithBatchTableUrl
@@ -216,31 +217,6 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
         });
       }
     );
-  });
-
-  it("picks from i3dm batch table", function () {
-    if (!scene.context.instancedArrays) {
-      return;
-    }
-
-    setCamera(centerLongitude, centerLatitude, 50.0);
-    return Cesium3DTilesTester.loadTileset(
-      scene,
-      InstancedWithBatchTableUrl
-    ).then(function (tileset) {
-      var content = tileset.root.content;
-      tileset.show = false;
-      expect(scene).toPickPrimitive(undefined);
-      tileset.show = true;
-      expect(scene).toPickAndCall(function (result) {
-        expect(result).toBeDefined();
-        expect(result.primitive).toBe(tileset);
-        expect(result.content).toBe(content);
-        expect(content.batchTable).toBeDefined();
-        expect(content.hasProperty(0, "Height")).toBe(true);
-        expect(content.getFeature(0)).toBeDefined();
-      });
-    });
   });
 
   it("destroys", function () {
