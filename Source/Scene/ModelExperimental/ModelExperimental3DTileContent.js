@@ -1,8 +1,8 @@
 import Axis from "../Axis.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
-import ModelExperimental from "./ModelExperimental.js";
 import Pass from "../../Renderer/Pass.js";
+import ModelExperimental from "./ModelExperimental.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -174,6 +174,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
+  model.pointCloudShading = tileset.pointCloudShading;
 
   model.update(frameState);
 };

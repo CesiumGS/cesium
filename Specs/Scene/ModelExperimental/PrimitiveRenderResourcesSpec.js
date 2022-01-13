@@ -10,6 +10,7 @@ import {
   Matrix4,
   ModelExperimentalNode,
   ModelExperimentalPrimitive,
+  ModelExperimentalType,
   PrimitiveType,
   ModelRenderResources,
   NodeRenderResources,
@@ -20,6 +21,7 @@ import {
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   var mockModel = {
     modelMatrix: Matrix4.IDENTITY,
+    type: ModelExperimentalType.GLTF,
   };
   var mockNode = {};
   var mockSceneGraph = {

@@ -49,7 +49,6 @@
     "bitmap-sdf": "^1.0.3",
     "bluebird": "^3.7.2",
     "cloc": "^2.8.0",
-    "colors": "1.4.0",
     "compression": "^1.7.4",
     "dompurify": "^2.2.2",
     "draco3d": "^1.4.1",
