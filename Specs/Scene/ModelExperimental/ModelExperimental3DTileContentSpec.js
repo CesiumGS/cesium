@@ -22,8 +22,6 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
   var InstancedWithBatchTableUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
-  var InstancedWithoutBatchTableUrl =
-    "./Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/tileset.json";
 
   var scene;
   var centerLongitude = -1.31968;
@@ -158,15 +156,14 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("picks from I3DM", function () {
+  it("picks from i3dm", function () {
     if (!scene.context.instancedArrays) {
       return;
     }
 
-    setCamera(centerLongitude, centerLatitude, 25.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
-      InstancedWithoutBatchTableUrl
+      InstancedWithBatchTableUrl
     ).then(function (tileset) {
       var content = tileset.root.content;
       tileset.show = false;
@@ -221,12 +218,12 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("picks from I3DM batch table", function () {
+  it("picks from i3dm batch table", function () {
     if (!scene.context.instancedArrays) {
       return;
     }
 
-    setCamera(centerLongitude, centerLatitude, 25.0);
+    setCamera(centerLongitude, centerLatitude, 50.0);
     return Cesium3DTilesTester.loadTileset(
       scene,
       InstancedWithBatchTableUrl

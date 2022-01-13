@@ -38,7 +38,7 @@ export default function ModelExperimentalNode(options) {
   this._children = options.children;
   this._node = options.node;
 
-  var components = sceneGraph._modelComponents;
+  var components = sceneGraph.components;
 
   this._originalTransform = Matrix4.clone(transform);
   this._axisCorrectedTransform = Matrix4.clone(transform);

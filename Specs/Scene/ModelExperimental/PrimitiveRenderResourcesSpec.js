@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   BlendingState,
   Cartesian3,
   ComponentDatatype,
@@ -23,6 +24,10 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   var mockNode = {};
   var mockSceneGraph = {
     computedModelMatrix: Matrix4.IDENTITY,
+    components: {
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+    },
   };
 
   var runtimeNode = new ModelExperimentalNode({

@@ -1,4 +1,5 @@
 import {
+  Axis,
   Cartesian3,
   InstancingPipelineStage,
   Matrix4,
@@ -15,6 +16,10 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   var mockSceneGraph = {
     computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
     runtimeNodes: [mockChildNode, mockNode],
+    components: {
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+    },
   };
 
   it("throws for undefined node", function () {
