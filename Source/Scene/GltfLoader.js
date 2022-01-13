@@ -973,7 +973,9 @@ function loadPrimitiveMetadata(
   var featureIdAttributes = [];
   var featureIdTextures = [];
   var featureIdsArray = metadataExtension.featureIds;
-  var propertyTablesArray = metadataExtension.propertyTables;
+  var propertyTablesArray = defined(metadataExtension.propertyTables)
+    ? metadataExtension.propertyTables
+    : [];
 
   if (defined(featureIdsArray)) {
     for (i = 0; i < featureIdsArray.length; i++) {
