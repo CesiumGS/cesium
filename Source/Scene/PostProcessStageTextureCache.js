@@ -3,8 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
-import Texture from "../Renderer/Texture.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 
 /**
  * Creates a minimal amount of textures and framebuffers.
@@ -245,7 +244,10 @@ function getFramebuffer(cache, stageName, dependencies) {
     pixelDatatype: pixelDatatype,
     clearColor: clearColor,
     stages: [stageName],
-    buffer: undefined,
+    buffer: new FramebufferManager({
+      pixelFormat: pixelFormat,
+      pixelDatatype: pixelDatatype,
+    }),
     clear: undefined,
   };
 
@@ -271,8 +273,7 @@ function releaseResources(cache) {
   var length = framebuffers.length;
   for (var i = 0; i < length; ++i) {
     var framebuffer = framebuffers[i];
-    framebuffer.buffer = framebuffer.buffer && framebuffer.buffer.destroy();
-    framebuffer.buffer = undefined;
+    framebuffer.buffer.destroy();
   }
 }
 
@@ -298,21 +299,10 @@ function updateFramebuffers(cache, context) {
       textureHeight = size;
     }
 
-    framebuffer.buffer = new Framebuffer({
-      context: context,
-      colorTextures: [
-        new Texture({
-          context: context,
-          width: textureWidth,
-          height: textureHeight,
-          pixelFormat: framebuffer.pixelFormat,
-          pixelDatatype: framebuffer.pixelDatatype,
-        }),
-      ],
-    });
+    framebuffer.buffer.update(context, textureWidth, textureHeight);
     framebuffer.clear = new ClearCommand({
       color: framebuffer.clearColor,
-      framebuffer: framebuffer.buffer,
+      framebuffer: framebuffer.buffer.framebuffer,
     });
   }
 }
@@ -426,7 +416,7 @@ PostProcessStageTextureCache.prototype.getFramebuffer = function (name) {
   if (!defined(framebuffer)) {
     return undefined;
   }
-  return framebuffer.buffer;
+  return framebuffer.buffer.framebuffer;
 };
 
 /**

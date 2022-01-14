@@ -7,6 +7,9 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
       TEST: [0, 1, 2, 3, 4, 5],
     });
     featureTable.featuresLength = 3;
+
+    expect(featureTable.hasProperty("TEST")).toBe(true);
+
     var all = featureTable.getGlobalProperty(
       "TEST",
       ComponentDatatype.UNSIGNED_BYTE
@@ -38,6 +41,9 @@ describe("Scene/Cesium3DTileFeatureTable", function () {
       new Uint8Array([0, 0, 0, 0, 0, 1, 2, 3, 4, 5])
     );
     featureTable.featuresLength = 3;
+
+    expect(featureTable.hasProperty("TEST")).toBe(true);
+
     var all = featureTable.getGlobalProperty(
       "TEST",
       ComponentDatatype.UNSIGNED_BYTE,

@@ -70,6 +70,10 @@ Cesium3DTileFeatureTable.prototype.getGlobalProperty = function (
   return jsonValue;
 };
 
+Cesium3DTileFeatureTable.prototype.hasProperty = function (semantic) {
+  return defined(this.json[semantic]);
+};
+
 Cesium3DTileFeatureTable.prototype.getPropertyArray = function (
   semantic,
   componentType,

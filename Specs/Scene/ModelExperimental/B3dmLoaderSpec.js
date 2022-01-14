@@ -49,21 +49,32 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     ResourceCache.clearForSpecs();
   });
 
+  function loadB3dmArrayBuffer(resource, arrayBuffer) {
+    var loader = new B3dmLoader({
+      b3dmResource: resource,
+      arrayBuffer: arrayBuffer,
+    });
+    b3dmLoaders.push(loader);
+    loader.load();
+
+    return waitForLoaderProcess(loader, scene);
+  }
+
   function loadB3dm(b3dmPath) {
     var resource = Resource.createIfNeeded(b3dmPath);
 
     return Resource.fetchArrayBuffer({
       url: b3dmPath,
     }).then(function (arrayBuffer) {
-      var loader = new B3dmLoader({
-        b3dmResource: resource,
-        arrayBuffer: arrayBuffer,
-      });
-      b3dmLoaders.push(loader);
-      loader.load();
-
-      return waitForLoaderProcess(loader, scene);
+      return loadB3dmArrayBuffer(resource, arrayBuffer);
     });
+  }
+
+  function expectLoadError(arrayBuffer) {
+    var resource = new Resource("http://example.com/test.b3dm");
+    expect(function () {
+      return loadB3dmArrayBuffer(resource, arrayBuffer);
+    }).toThrowRuntimeError();
   }
 
   it("loads BatchedNoBatchIds", function () {
@@ -116,7 +127,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
 
-      expect(loader.transform).toEqual(
+      expect(loader.components.transform).toEqual(
         Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
       );
     });
@@ -137,16 +148,16 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
       version: 2,
     });
-    Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
+    expectLoadError(arrayBuffer);
   });
 
   it("throws with empty gltf", function () {
     // Expect to throw DeveloperError in Model due to invalid gltf magic
     var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-    Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "b3dm");
+    expectLoadError(arrayBuffer);
   });
 
-  it("destroys B3DM loader", function () {
+  it("destroys b3dm loader", function () {
     var unloadGltfLoader = spyOn(
       GltfLoader.prototype,
       "unload"

@@ -14,8 +14,10 @@ import {
   when,
   ShaderProgram,
   ModelFeature,
+  Axis,
   Color,
   StyleCommandsNeeded,
+  ModelExperimentalSceneGraph,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -208,7 +210,6 @@ describe(
           scene
         ).then(function (model) {
           expect(model.ready).toEqual(true);
-          expect(model._sceneGraph._drawCommands.length).toBeGreaterThan(0);
           expect(model.show).toEqual(false);
           verifyRender(model, false);
           model.show = true;
@@ -451,6 +452,33 @@ describe(
         scene
       ).then(function (model) {
         expect(model.featureTableId).toEqual(0);
+      });
+    });
+
+    it("changing model matrix works", function () {
+      var updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
+        scene
+      ).then(function (model) {
+        var sceneGraph = model.sceneGraph;
+
+        var transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
+
+        Matrix4.multiplyTransformation(
+          model.modelMatrix,
+          transform,
+          model.modelMatrix
+        );
+        scene.renderForSpecs();
+
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
+          true
+        );
       });
     });
 
