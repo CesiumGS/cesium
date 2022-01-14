@@ -226,7 +226,6 @@ I3dmLoader.prototype.load = function () {
   var loaderOptions = {
     upAxis: this._upAxis,
     forwardAxis: this._forwardAxis,
-    baseResource: this._baseResource,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAsTypedArray: this._loadAsTypedArray,
@@ -238,9 +237,11 @@ I3dmLoader.prototype.load = function () {
     // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
     // This removes all white space and null characters from the end of the string.
     gltfUrl = gltfUrl.replace(/[\s\0]+$/, "");
-    loaderOptions.gltfResource = this._i3dmResource.getDerivedResource({
+    var gltfResource = this._baseResource.getDerivedResource({
       url: gltfUrl,
     });
+    loaderOptions.gltfResource = gltfResource;
+    loaderOptions.baseResource = gltfResource;
   } else {
     loaderOptions.gltfResource = this._i3dmResource;
     loaderOptions.typedArray = i3dm.gltf;
