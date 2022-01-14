@@ -127,7 +127,11 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 
   if (instances.transformInWorldSpace) {
     var uniformMap = renderResources.uniformMap;
-    shaderBuilder.addDefine("USE_LEGACY_INSTANCING", ShaderDestination.VERTEX);
+    shaderBuilder.addDefine(
+      "USE_LEGACY_INSTANCING",
+      undefined,
+      ShaderDestination.VERTEX
+    );
     shaderBuilder.addUniform(
       "mat4",
       "u_instance_modifiedModelView",
@@ -141,7 +145,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     uniformMap.u_instance_modifiedModelView = function () {
       return Matrix4.multiply(
         frameState.context.uniformState.view,
-        sceneGraph._modelComponents.transform,
+        sceneGraph.components.transform,
         matrixScratch
       );
     };
