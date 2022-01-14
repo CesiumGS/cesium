@@ -127,6 +127,20 @@ export default function ModelExperimentalSceneGraph(options) {
 
 Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
   /**
+   * The model components this scene graph represents.
+   *
+   * @type {ModelComponents}
+   * @readonly
+   *
+   * @private
+   */
+  components: {
+    get: function () {
+      return this._modelComponents;
+    },
+  },
+
+  /**
    * The axis-corrected model matrix.
    *
    * @type {Matrix4}

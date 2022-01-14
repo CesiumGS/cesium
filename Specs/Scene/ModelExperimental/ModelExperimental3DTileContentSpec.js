@@ -20,6 +20,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
   var noBatchIdsUrl =
     "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
+  var InstancedWithBatchTableUrl =
+    "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
 
   var scene;
   var centerLongitude = -1.31968;
@@ -65,6 +67,18 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.resolvesReadyPromise(scene, withBatchTableUrl);
   });
 
+  it("resolves readyPromise with I3DM", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 15.0);
+    return Cesium3DTilesTester.resolvesReadyPromise(
+      scene,
+      InstancedWithBatchTableUrl
+    );
+  });
+
   it("renders glTF content", function () {
     return Cesium3DTilesTester.loadTileset(scene, buildingsMetadataUrl).then(
       function (tileset) {
@@ -87,6 +101,20 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function (
       tileset
     ) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
+  });
+
+  it("renders I3DM content", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 25.0);
+    return Cesium3DTilesTester.loadTileset(
+      scene,
+      InstancedWithBatchTableUrl
+    ).then(function (tileset) {
       Cesium3DTilesTester.expectRender(scene, tileset);
     });
   });
@@ -165,6 +193,30 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
         });
       }
     );
+  });
+
+  it("picks from i3dm batch table", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 25.0);
+    return Cesium3DTilesTester.loadTileset(
+      scene,
+      InstancedWithBatchTableUrl
+    ).then(function (tileset) {
+      var content = tileset.root.content;
+      tileset.show = false;
+      expect(scene).toPickPrimitive(undefined);
+      tileset.show = true;
+      expect(scene).toPickAndCall(function (result) {
+        expect(result).toBeDefined();
+        expect(result.primitive).toBe(tileset);
+        expect(result.content).toBe(content);
+        expect(content.hasProperty(0, "Height")).toBe(true);
+        expect(content.getFeature(0)).toBeDefined();
+      });
+    });
   });
 
   it("destroys", function () {

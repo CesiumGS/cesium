@@ -1,5 +1,4 @@
 import Check from "../../Core/Check.js";
-import Color from "../../Core/Color.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -17,6 +16,8 @@ import ModelFeatureTable from "./ModelFeatureTable.js";
 import PointCloudShading from "../PointCloudShading.js";
 import B3dmLoader from "./B3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
+import Color from "../../Core/Color.js";
+import I3dmLoader from "./I3dmLoader.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -280,6 +281,15 @@ Object.defineProperties(ModelExperimental.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise.promise;
+    },
+  },
+
+  /**
+   * @private
+   */
+  loader: {
+    get: function () {
+      return this._loader;
     },
   },
 
@@ -921,6 +931,41 @@ ModelExperimental.fromPnts = function (options) {
     featureIdTextureIndex: options.featureIdTextureIndex,
   };
 
+  var model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromI3dm = function (options) {
+  var loaderOptions = {
+    i3dmResource: options.resource,
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+    releaseGltfJson: options.releaseGltfJson,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+  };
+
+  var loader = new I3dmLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.i3dmResource,
+    type: ModelExperimentalType.TILE_I3DM,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
   var model = new ModelExperimental(modelOptions);
   return model;
 };

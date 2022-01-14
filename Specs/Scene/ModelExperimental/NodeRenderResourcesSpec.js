@@ -1,4 +1,5 @@
 import {
+  Axis,
   Matrix4,
   ModelExperimentalNode,
   ModelRenderResources,
@@ -10,6 +11,10 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
   var mockNode = {};
   var mockSceneGraph = {
     computedModelMatrix: Matrix4.IDENTITY,
+    components: {
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+    },
   };
 
   var runtimeNode = new ModelExperimentalNode({

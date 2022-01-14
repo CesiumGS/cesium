@@ -20,13 +20,6 @@ void main()
     dequantizationStage(attributes);
     #endif
 
-    // Update the position for this instance in place
-    #ifdef HAS_INSTANCING
-    instancingStage(attributes.positionMC);
-        #ifdef USE_PICKING
-        v_pickColor = a_pickColor;
-        #endif
-    #endif
 
     #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
     Feature feature;
@@ -34,7 +27,35 @@ void main()
     cpuStylingStage(attributes.positionMC, feature);
     updateFeatureStruct(feature);
     #endif
-    
+
+    mat4 modelView = czm_modelView;
+    mat3 normal = czm_normal;
+
+    // Update the position for this instance in place
+    #ifdef HAS_INSTANCING
+
+        // The legacy instance stage  is used when rendering I3DM models that 
+        // encode instances transforms in world space, as opposed to glTF models
+        // that use EXT_mesh_gpu_instancing, where instance transforms are encoded
+        // in object space.
+        #ifdef USE_LEGACY_INSTANCING
+        mat4 instanceModelView;
+        mat3 instanceModelViewInverseTranspose;
+        
+        legacyInstancingStage(attributes.positionMC, instanceModelView, instanceModelViewInverseTranspose);
+
+        modelView = instanceModelView;
+        normal = instanceModelViewInverseTranspose;
+        #else
+        instancingStage(attributes.positionMC);
+        #endif
+
+        #ifdef USE_PICKING
+        v_pickColor = a_pickColor;
+        #endif
+
+    #endif
+
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
     customShaderStage(vsOutput, attributes);
@@ -42,7 +63,7 @@ void main()
 
     // Compute the final position in each coordinate system needed.
     // This also sets gl_Position.
-    geometryStage(attributes);    
+    geometryStage(attributes, modelView, normal);    
 
     #ifdef PRIMITIVE_TYPE_POINTS
         #ifdef HAS_CUSTOM_VERTEX_SHADER
