@@ -255,12 +255,6 @@ function getInstanceTransformsTypedArray(instances, count, renderResources) {
       transformScratch
     );
 
-    // If the transforms are in world space, the Y_UP_TO_Z_UP transform that is applied to the model matrix
-    // should not be applied to the transform.
-    // if (instances.transformInWorldSpace) {
-    //   Matrix4.multiplyTransformation(Axis.Z_UP_TO_Y_UP, transform, transform);
-    // }
-
     var offset = elements * i;
 
     transformsTypedArray[offset + 0] = transform[0];
