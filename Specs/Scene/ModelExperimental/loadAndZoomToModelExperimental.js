@@ -17,8 +17,8 @@ function loadAndZoomToModelExperimental(options, scene) {
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
       debugShowBoundingVolume: options.debugShowBoundingVolume,
-      featureIdAttributeIndex: options.featureIdAttributeIndex,
-      featureIdTextureIndex: options.featureIdTextureIndex,
+      featureIdIndex: options.featureIdIndex,
+      instanceFeatureIdIndex: options.instanceFeatureIdIndex,
       incrementallyLoadTextures: options.incrementallyLoadTextures,
     });
   } catch (error) {

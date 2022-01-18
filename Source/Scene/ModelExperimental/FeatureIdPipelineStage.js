@@ -68,23 +68,19 @@ FeatureIdPipelineStage.process = function (
  * Generates an object containing information about the Feature ID attribute.
  * @private
  */
-function getFeatureIdAttributeInfo(
-  featureIdAttributeIndex,
-  primitive,
-  instances
-) {
+function getFeatureIdAttributeInfo(featureIdIndex, primitive, instances) {
   var featureIdCount;
   var featureIdAttribute;
   var featureIdAttributePrefix;
   var featureIdInstanceDivisor = 0;
 
   if (defined(instances)) {
-    featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+    featureIdAttribute = instances.featureIds[featureIdIndex];
     featureIdCount = instances.attributes[0].count;
     featureIdAttributePrefix = "a_instanceFeatureId_";
     featureIdInstanceDivisor = 1;
   } else {
-    featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+    featureIdAttribute = primitive.featureIds[featureIdIndex];
     var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.POSITION
@@ -179,10 +175,10 @@ function processFeatureIdAttributes(renderResources, frameState, primitive) {
   var model = renderResources.model;
   var instances = renderResources.runtimeNode.node.instances;
 
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+  var featureIdIndex = model.featureIdIndex;
 
   var featureIdAttributeInfo = getFeatureIdAttributeInfo(
-    featureIdAttributeIndex,
+    featureIdIndex,
     primitive,
     instances
   );
@@ -230,13 +226,12 @@ function processFeatureIdTextures(
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
   var uniformMap = renderResources.uniformMap;
-  var featureIdTextureIndex = renderResources.model.featureIdTextureIndex;
-  var featureIdTexture = featureIdTextures[featureIdTextureIndex];
+  var featureIdIndex = renderResources.model.featureIdIndex;
+  var featureIdTexture = featureIdTextures[featureIdIndex];
 
   var featureIdTextureReader = featureIdTexture.textureReader;
 
-  var featureIdTextureUniformName =
-    "u_featureIdTexture_" + featureIdTextureIndex;
+  var featureIdTextureUniformName = "u_featureIdTexture_" + featureIdIndex;
   shaderBuilder.addDefine(
     "FEATURE_ID_TEXTURE",
     featureIdTextureUniformName,

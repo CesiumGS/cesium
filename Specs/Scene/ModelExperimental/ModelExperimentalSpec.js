@@ -425,7 +425,7 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxInstanced,
-          featureIdAttributeIndex: 1,
+          featureIdIndex: 1,
         },
         scene
       ).then(function (model) {

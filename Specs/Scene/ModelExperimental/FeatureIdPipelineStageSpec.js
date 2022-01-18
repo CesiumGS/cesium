@@ -129,7 +129,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     var renderResources = {
       shaderBuilder: defaultShaderBuilder.clone(),
       model: {
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
       },
       runtimeNode: { node: {} },
       hasFeatureIds: false,
@@ -184,7 +184,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     var renderResources = {
       shaderBuilder: defaultShaderBuilder.clone(),
       model: {
-        featureIdAttributeIndex: 1,
+        featureIdIndex: 1,
         _resources: [],
       },
       attributeIndex: 4,
@@ -256,7 +256,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     var renderResources = {
       shaderBuilder: defaultShaderBuilder.clone(),
       model: {
-        featureIdAttributeIndex: 2,
+        featureIdIndex: 2,
         _resources: [],
       },
       attributeIndex: 4,
@@ -328,7 +328,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     var renderResources = {
       shaderBuilder: defaultShaderBuilder.clone(),
       model: {
-        featureIdAttributeIndex: 1,
+        featureIdIndex: 1,
       },
       runtimeNode: {},
       hasFeatureIds: false,
@@ -386,7 +386,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
     var renderResources = {
       shaderBuilder: defaultShaderBuilder.clone(),
       model: {
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         _resources: [],
       },
       attributeIndex: 4,
@@ -462,7 +462,7 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       hasFeatureIds: false,
       shaderBuilder: defaultShaderBuilder.clone(),
       model: {
-        featureIdTextureIndex: 0,
+        featureIdIndex: 0,
       },
       uniformMap: {},
     };

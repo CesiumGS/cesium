@@ -21,15 +21,14 @@ import {
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   var mockPrimitive = {
-    featureIdAttributes: [],
-    featureIdTextures: [],
+    featureIds: [],
     attributes: [],
   };
   var mockNode = {};
   var mockModel = {
     type: ModelExperimentalType.GLTF,
     allowPicking: true,
-    featureIdAttributeIndex: 0,
+    featureIdIndex: 0,
   };
 
   var emptyVertexShader =
@@ -128,7 +127,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: {
         instances: {
-          featureIdAttributes: [{}],
+          featureIds: [{}],
         },
       },
       model: mockModel,
@@ -151,7 +150,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages for feature picking", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [{}, {}],
+        featureIds: [{}, {}],
         featureIdTextures: [],
         attributes: [
           {
@@ -163,7 +162,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdAttributeIndex: 1,
+        featureIdIndex: 1,
         content: {},
       },
     });
@@ -183,7 +182,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [{}, {}],
         attributes: [],
       },
@@ -191,7 +190,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdTextureIndex: 1,
+        featureIdIndex: 1,
         content: {},
       },
     });
@@ -202,7 +201,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures dequantization", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [
           {
@@ -312,7 +311,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -320,7 +319,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.TILE_PNTS,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: pointCloudShading,
         content: {
           tileset: {
@@ -347,7 +346,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -355,7 +354,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: pointCloudShading,
       },
     });
@@ -377,7 +376,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -385,7 +384,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: pointCloudShading,
       },
     });
@@ -403,7 +402,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("skips point cloud attenuation if point cloud shading is not set", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -411,7 +410,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: undefined,
       },
     });

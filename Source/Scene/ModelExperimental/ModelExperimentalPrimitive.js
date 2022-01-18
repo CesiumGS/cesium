@@ -132,21 +132,13 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   var hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
 
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
-  var featureIdTextureIndex = model.featureIdTextureIndex;
-  var hasInstancedFeatureIdAttribute =
+  var featureIdIndex = model.featureIdIndex;
+  var instanceFeatureIdIndex = model.instanceFeatureIdIndex;
+  var hasInstanceFeatureIds =
     defined(node.instances) &&
-    defined(node.instances.featureIdAttributes[featureIdAttributeIndex]);
-  var hasFeatureIdVertexAttribute = defined(
-    primitive.featureIdAttributes[featureIdAttributeIndex]
-  );
-  var hasFeatureIdTexture = defined(
-    primitive.featureIdTextures[featureIdTextureIndex]
-  );
-  var hasFeatureIds =
-    hasInstancedFeatureIdAttribute ||
-    hasFeatureIdVertexAttribute ||
-    hasFeatureIdTexture;
+    defined(node.instances.featureIds[instanceFeatureIdIndex]);
+  var hasPrimitiveFeatureIds = defined(primitive.featureIds[featureIdIndex]);
+  var hasFeatureIds = hasInstanceFeatureIds || hasPrimitiveFeatureIds;
 
   // Start of pipeline -----------------------------------------------------
 

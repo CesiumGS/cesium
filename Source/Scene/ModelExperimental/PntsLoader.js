@@ -521,7 +521,7 @@ function makeComponents(loader, context) {
     var featureIdAttribute = new FeatureIdAttribute();
     featureIdAttribute.propertyTableId = 0;
     featureIdAttribute.setIndex = 0;
-    primitive.featureIdAttributes = [featureIdAttribute];
+    primitive.featureIds.push(featureIdAttribute);
   }
 
   var node = new Node();

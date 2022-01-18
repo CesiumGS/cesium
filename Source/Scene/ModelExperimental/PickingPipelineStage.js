@@ -109,23 +109,24 @@ function processPickTexture(renderResources, primitive, instances) {
   var model = renderResources.model;
   var featureTableId;
   var featureIdAttribute;
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+  var featureIdIndex = model.featureIdIndex;
+  var instanceFeatureIdIndex = model.featureIdIndex;
 
+  // TODO: This logic needs to be reworked with the new architecture
   if (defined(model.featureTableId)) {
     // Extract the Feature Table ID from the Cesium3DTileContent.
     featureTableId = model.featureTableId;
   } else if (defined(instances)) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
-    featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+    featureIdAttribute = instances.featureIds[instanceFeatureIdIndex];
     featureTableId = featureIdAttribute.propertyTableId;
   } else if (primitive.featureIdTextures.length > 0) {
     // Extract the Feature Table ID from the instanced Feature ID textures.
-    var featureIdTextureIndex = model.featureIdTextureIndex;
-    var featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
+    var featureIdTexture = primitive.features[featureIdIndex];
     featureTableId = featureIdTexture.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
-    featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+    featureIdAttribute = primitive.featureIds[featureIdIndex];
     featureTableId = featureIdAttribute.propertyTableId;
   }
 

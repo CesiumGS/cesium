@@ -212,7 +212,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       runtimeNode: {
         node: {
           instances: {
-            featureIdAttributes: [{}, {}],
+            featureIds: [{}, {}],
           },
         },
       },
@@ -278,7 +278,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
       model: {
-        featureIdTextureIndex: 0,
+        featureIdIndex: 0,
         type: ModelExperimentalType.GLTF,
         _resources: [],
         featureTables: [mockModelFeatureTable],

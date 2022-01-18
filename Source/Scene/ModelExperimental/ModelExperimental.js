@@ -41,8 +41,8 @@ import PntsLoader from "./PntsLoader.js";
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
- * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -118,11 +118,11 @@ export default function ModelExperimental(options) {
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._show = defaultValue(options.show, true);
 
-  this._featureIdAttributeIndex = defaultValue(
-    options.featureIdAttributeIndex,
+  this._featureIdIndex = defaultValue(options.featureIdIndex, 0);
+  this._instanceFeatureIdIndex = defaultValue(
+    options.instanceFeatureIdIndex,
     0
   );
-  this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
   this._featureTables = [];
   this._featureTableId = undefined;
 
@@ -164,8 +164,8 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model) {
-  var featureIdAttributeIndex = model._featureIdAttributeIndex;
-  var featureIdTextureIndex = model._featureIdTextureIndex;
+  var featureIdIndex = model._featureIdIndex;
+  var instanceFeatureIdIndex = model._instanceFeatureIdIndex;
 
   var i, j;
   var featureIdAttribute;
@@ -177,8 +177,7 @@ function selectFeatureTableId(components, model) {
   for (i = 0; i < components.nodes.length; i++) {
     node = components.nodes[i];
     if (defined(node.instances)) {
-      featureIdAttribute =
-        node.instances.featureIdAttributes[featureIdAttributeIndex];
+      featureIdAttribute = node.instances.featureIds[featureIdIndex];
       if (defined(featureIdAttribute)) {
         return featureIdAttribute.propertyTableId;
       }
@@ -191,9 +190,8 @@ function selectFeatureTableId(components, model) {
     node = components.nodes[i];
     for (j = 0; j < node.primitives.length; j++) {
       var primitive = node.primitives[j];
-      featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
-      featureIdAttribute =
-        primitive.featureIdAttributes[featureIdAttributeIndex];
+      featureIdTexture = primitive.featureIdTextures[instanceFeatureIdIndex];
+      featureIdAttribute = primitive.featureIds[featureIdIndex];
 
       if (defined(featureIdTexture)) {
         return featureIdTexture.propertyTableId;
@@ -579,9 +577,9 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @default 0
    */
-  featureIdAttributeIndex: {
+  featureIdIndex: {
     get: function () {
-      return this._featureIdAttributeIndex;
+      return this._featureIdIndex;
     },
   },
 
@@ -595,9 +593,9 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @default 0
    */
-  featureIdTextureIndex: {
+  instanceFeatureIdIndex: {
     get: function () {
-      return this._featureIdTextureIndex;
+      return this._instanceFeatureIdIndex;
     },
   },
 });
@@ -784,8 +782,8 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
- * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  *
  * @returns {ModelExperimental} The newly created model.
@@ -842,8 +840,8 @@ ModelExperimental.fromGltf = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
   };
   var model = new ModelExperimental(modelOptions);
@@ -882,8 +880,8 @@ ModelExperimental.fromB3dm = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
   };
 
   var model = new ModelExperimental(modelOptions);
@@ -915,8 +913,8 @@ ModelExperimental.fromPnts = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
   };
 
   var model = new ModelExperimental(modelOptions);
