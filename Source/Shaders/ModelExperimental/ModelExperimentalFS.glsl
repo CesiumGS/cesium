@@ -40,22 +40,24 @@ void main()
     ProcessedAttributes attributes;
     geometryStage(attributes);
 
-    #ifdef HAS_FEATURES
-    featureStage(feature);
-    #endif
+    FeatureIds featureIds;
+    featureIdStage(featureIds, attributes);
 
+    #ifdef HAS_SELECTED_FEATURE_ID
+    selectedFeatureIdStage(feature, featureIds);
+    #endif
 
     #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
     materialStage(material, attributes, feature);
     #endif
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-    customShaderStage(material, attributes);
+    customShaderStage(material, attributes, featureIds);
     #endif
 
     lightingStage(material);
 
-    #ifdef HAS_FEATURES
+    #ifdef HAS_SELECTED_FEATURE_ID
     cpuStylingStage(material, feature);
     #endif
     

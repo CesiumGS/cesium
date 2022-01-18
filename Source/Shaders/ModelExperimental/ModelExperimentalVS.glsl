@@ -28,7 +28,10 @@ void main()
         #endif
     #endif
 
-    #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
+    FeatureIds featureIds;
+    featureIdStage(featureIds, attributes);
+
+    #ifdef HAS_SELECTED_FEATURE_ID
     Feature feature;
     featureStage(feature);
     cpuStylingStage(attributes.positionMC, feature);

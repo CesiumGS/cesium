@@ -1,0 +1,5 @@
+void featureIdStage(out FeatureIds featureIds, ProcessedAttributes attributes) 
+{
+  initializeFeatureIds(featureIds, attributes);
+  setFeatureIdVaryings();
+}

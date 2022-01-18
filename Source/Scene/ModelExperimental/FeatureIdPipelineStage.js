@@ -7,7 +7,6 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelComponents from "../ModelComponents.js";
-import FeatureStageCommon from "../../Shaders/ModelExperimental/FeatureStageCommon.js";
 import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
 import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
 
@@ -57,8 +56,8 @@ FeatureIdPipelineStage.process = function (
   processInstanceFeatureIds(renderResources);
   processPrimitiveFeatureIds(renderResources, primitive, frameState);
 
-  shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
-  shaderBuilder.addVertexLines([FeatureStageCommon, FeatureStageVS]);
+  shaderBuilder.addVertexLines([FeatureStageVS]);
+  shaderBuilder.addFragmentLines([FeatureStageFS]);
 };
 
 function declareStructsAndFunctions(shaderBuilder) {
