@@ -132,13 +132,7 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   var hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
 
-  var featureIdIndex = model.featureIdIndex;
-  var instanceFeatureIdIndex = model.instanceFeatureIdIndex;
-  var hasInstanceFeatureIds =
-    defined(node.instances) &&
-    defined(node.instances.featureIds[instanceFeatureIdIndex]);
-  var hasPrimitiveFeatureIds = defined(primitive.featureIds[featureIdIndex]);
-  var hasFeatureIds = hasInstanceFeatureIds || hasPrimitiveFeatureIds;
+  var featureIdFlags = inspectFeatureIds(model, node, primitive);
 
   // Start of pipeline -----------------------------------------------------
 
@@ -156,13 +150,21 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
     pipelineStages.push(MaterialPipelineStage);
   }
 
-  if (hasFeatureIds) {
+  // Process feature IDs if needed for the batch texture or custom shader
+  if (
+    featureIdFlags.hasFeatureIds &&
+    (featureIdFlags.hasPropertyTable || hasCustomShader)
+  ) {
     pipelineStages.push(FeatureIdPipelineStage);
+  }
+
+  if (featureIdFlags.hasPropertyTable) {
+    //pipelineStages.push(SelectedFeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
     pipelineStages.push(CPUStylingPipelineStage);
   }
 
-  if (defined(model.customShader)) {
+  if (hasCustomShader) {
     pipelineStages.push(CustomShaderPipelineStage);
   }
 
@@ -176,3 +178,32 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
 
   return;
 };
+
+function inspectFeatureIds(model, node, primitive) {
+  var featureIds;
+  // Check instances first, as this is the most specific type of
+  // feature ID
+  if (defined(node.instances)) {
+    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+
+    if (defined(featureIds)) {
+      return {
+        hasFeatureIds: true,
+        hasPropertyTable: defined(featureIds.propertyTableId),
+      };
+    }
+  }
+
+  featureIds = primitive.featureIds[model.featureIdIndex];
+  if (defined(featureIds)) {
+    return {
+      hasFeatureIds: true,
+      hasPropertyTable: defined(featureIds.propertyTableId),
+    };
+  }
+
+  return {
+    hasFeatureIds: false,
+    hasPropertyTable: false,
+  };
+}
