@@ -19,6 +19,7 @@ import {
   Matrix4,
   MetadataComponentType,
   MetadataType,
+  ModelComponents,
   Resource,
   ResourceCache,
   ResourceLoaderState,
@@ -854,17 +855,18 @@ describe(
         var scene = components.scene;
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
-        var featureIdTexture = primitive.featureIdTextures[0];
         var material = primitive.material;
         var baseColorTexture = material.metallicRoughness.baseColorTexture;
         var featureMetadata = components.featureMetadata;
 
         expect(baseColorTexture.texCoord).toBe(1);
+        expect(primitive.featureIds.length).toBe(1);
+        expect(primitive.propertyTextureIds).toEqual([0]);
 
-        expect(primitive.featureIdAttributes.length).toBe(0);
-        expect(primitive.featureIdTextures.length).toBe(1);
-        expect(primitive.featureTextureIds).toEqual([0]);
-
+        var featureIdTexture = primitive.featureIds[0];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -917,17 +919,18 @@ describe(
         var scene = components.scene;
         var rootNode = scene.nodes[0];
         var primitive = rootNode.primitives[0];
-        var featureIdTexture = primitive.featureIdTextures[0];
         var material = primitive.material;
         var baseColorTexture = material.metallicRoughness.baseColorTexture;
         var featureMetadata = components.featureMetadata;
 
         expect(baseColorTexture.texCoord).toBe(1);
+        expect(primitive.featureIds.length).toBe(1);
+        expect(primitive.propertyTextureIds).toEqual([0]);
 
-        expect(primitive.featureIdAttributes.length).toBe(0);
-        expect(primitive.featureIdTextures.length).toBe(1);
-        expect(primitive.featureTextureIds).toEqual([0]);
-
+        var featureIdTexture = primitive.featureIds[0];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -1018,28 +1021,33 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
 
-        expect(primitive.featureIdAttributes.length).toBe(3);
-        expect(primitive.featureIdTextures.length).toBe(0);
-        expect(primitive.featureTextureIds.length).toBe(0);
+        expect(primitive.featureIds.length).toBe(3);
+        expect(primitive.propertyTextureIds.length).toBe(0);
 
         // feature ID via accessor
-        var featureIdAccessor = primitive.featureIdAttributes[0];
+        var featureIdAccessor = primitive.featureIds[0];
+        expect(featureIdAccessor).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
         expect(featureIdAccessor.propertyTableId).toBe(0);
         expect(featureIdAccessor.setIndex).toBe(0);
-        expect(featureIdAccessor.offset).toBe(0);
-        expect(featureIdAccessor.repeat).not.toBeDefined();
 
         // feature ID via offset + repeat
-        var featureIdImplicit = primitive.featureIdAttributes[1];
+        var featureIdImplicit = primitive.featureIds[1];
+        expect(featureIdImplicit).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
         expect(featureIdImplicit.propertyTableId).toBe(0);
         expect(featureIdImplicit.setIndex).not.toBeDefined();
         expect(featureIdImplicit.offset).toBe(0);
         expect(featureIdImplicit.repeat).toBe(2);
 
         // Feature ID via offset only. This one has no corresponding table
-        var featureIdConstant = primitive.featureIdAttributes[2];
+        var featureIdConstant = primitive.featureIds[2];
+        expect(featureIdConstant).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
         expect(featureIdConstant.propertyTableId).not.toBeDefined();
-        expect(featureIdConstant.setIndex).not.toBeDefined();
         expect(featureIdConstant.offset).toBe(3);
         expect(featureIdConstant.repeat).not.toBeDefined();
 
@@ -1084,21 +1092,23 @@ describe(
         expect(positionAttribute).toBeDefined();
         expect(featureIdAttribute).toBeDefined();
 
-        expect(primitive.featureIdAttributes.length).toBe(2);
-        expect(primitive.featureIdTextures.length).toBe(0);
-        expect(primitive.featureTextureIds.length).toBe(0);
+        expect(primitive.featureIds.length).toBe(2);
+        expect(primitive.propertyTextureIds.length).toBe(0);
 
-        var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
+        var featureIdAttributeMapping0 = primitive.featureIds[0];
+        expect(featureIdAttributeMapping0).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
-        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
+        var featureIdAttributeMapping1 = primitive.featureIds[1];
+        expect(featureIdAttributeMapping1).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
-        expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var weatherClass = featureMetadata.schema.classes.weather;
         var weatherProperties = weatherClass.properties;
@@ -1183,21 +1193,23 @@ describe(
         expect(positionAttribute).toBeDefined();
         expect(featureIdAttribute).toBeDefined();
 
-        expect(primitive.featureIdAttributes.length).toBe(2);
-        expect(primitive.featureIdTextures.length).toBe(0);
-        expect(primitive.featureTextureIds.length).toBe(0);
+        expect(primitive.featureIds.length).toBe(2);
+        expect(primitive.propertyTextureIds.length).toBe(0);
 
-        var featureIdAttributeMapping0 = primitive.featureIdAttributes[0];
+        var featureIdAttributeMapping0 = primitive.featureIds[0];
+        expect(featureIdAttributeMapping0).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
-        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = primitive.featureIdAttributes[1];
+        var featureIdAttributeMapping1 = primitive.featureIds[1];
+        expect(featureIdAttributeMapping1).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
-        expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var weatherClass = featureMetadata.schema.classes.weather;
         var weatherProperties = weatherClass.properties;
@@ -1389,19 +1401,22 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
 
-        expect(instances.featureIdAttributes.length).toBe(2);
+        expect(instances.featureIds.length).toBe(2);
 
-        var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
+        var featureIdAttributeMapping0 = instances.featureIds[0];
+        expect(featureIdAttributeMapping0).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
-        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
+        var featureIdAttributeMapping1 = instances.featureIds[1];
+        expect(featureIdAttributeMapping1).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
-        expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var boxClass = featureMetadata.schema.classes.box;
         var boxProperties = boxClass.properties;
@@ -1574,19 +1589,22 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(rotationAttribute.byteStride).toBeUndefined();
 
-        expect(instances.featureIdAttributes.length).toBe(2);
+        expect(instances.featureIds.length).toBe(2);
 
-        var featureIdAttributeMapping0 = instances.featureIdAttributes[0];
+        var featureIdAttributeMapping0 = instances.featureIds[0];
+        expect(featureIdAttributeMapping0).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
-        expect(featureIdAttributeMapping0.setIndex).toBeUndefined();
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = instances.featureIdAttributes[1];
+        var featureIdAttributeMapping1 = instances.featureIds[1];
+        expect(featureIdAttributeMapping1).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
-        expect(featureIdAttributeMapping1.offset).toBe(0);
-        expect(featureIdAttributeMapping1.repeat).not.toBeDefined();
 
         var boxClass = featureMetadata.schema.classes.box;
         var boxProperties = boxClass.properties;
