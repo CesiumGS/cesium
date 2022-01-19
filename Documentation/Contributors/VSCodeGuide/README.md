@@ -79,6 +79,4 @@ you quit VSCode, so should be restarted manually on next launch.
 
 ## Debugging CesiumJS
 
-To enable debugging from within VSCode, navigate to your [`settings.json` file](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations)
-and set `"debug.javascript.debugByLinkOptions"` to `"always"`. Once you save your changes to this file, you can start a debugging session from the VSCode integrated shell by holding down
-`CTRL` and clicking on the link that is printed to the console when running `npm run start` or `npm start`.
+To debug CesiumJS using the VSCode Chrome debugger, run the `"Start Server"` configuration or if the server was started in the terminal using `npm start`, use the `"Debug in Chrome"` configuration.
