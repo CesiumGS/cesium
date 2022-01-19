@@ -13,7 +13,7 @@ void filterByPassType(vec4 featureColor)
     }
 }
 
-void cpuStylingStage(inout czm_modelMaterial material, Feature feature)
+void cpuStylingStage(inout czm_modelMaterial material, SelectedFeature feature)
 {
     vec4 featureColor = feature.color;
 

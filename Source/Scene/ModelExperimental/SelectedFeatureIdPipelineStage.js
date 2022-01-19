@@ -1,5 +1,7 @@
+import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SelectedFeatureIdStageCommon from "../../Shaders/ModelExperimental/SelectedFeatureIdStageCommon.js";
+import ModelComponents from "../ModelComponents.js";
 
 /**
  * The feature ID pipeline stage is responsible for handling features in the model.
@@ -17,7 +19,7 @@ SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS =
 SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS =
   "updateFeatureStructFS";
 SelectedFeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE =
-  "void updateFeatureStruct(inout Feature feature)";
+  "void updateFeatureStruct(inout SelectedFeature feature)";
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:
@@ -41,23 +43,75 @@ SelectedFeatureIdPipelineStage.process = function (
 
   renderResources.hasPropertyTable = true;
 
+  var model = renderResources.model;
+  var node = renderResources.runtimeNode.node;
+  var selectedFeatureIds = getSelectedFeatureIds(model, node, primitive);
+
   shaderBuilder.addDefine(
     "HAS_SELECTED_FEATURE_ID",
     undefined,
-    ShaderDestination.BOTH
+    selectedFeatureIds.shaderDestination
   );
+
+  // Add a define to insert the variable to use.
+  // Example: #define SELECTED_FEATURE_ID featureId_1
+  // This corresponds to featureIds.featureId_1
+  shaderBuilder.addDefine(
+    "SELECTED_FEATURE_ID",
+    selectedFeatureIds.variableName,
+    selectedFeatureIds.shaderDestination
+  );
+
   updateFeatureStruct(shaderBuilder);
 
-  shaderBuilder.addVertexLines([SelectedFeatureIdStageCommon]);
+  if (selectedFeatureIds.shaderDestination === ShaderDestination.BOTH) {
+    shaderBuilder.addVertexLines([SelectedFeatureIdStageCommon]);
+  }
   shaderBuilder.addFragmentLines([SelectedFeatureIdStageCommon]);
 };
 
+function getShaderDestination(featureIds) {
+  // Feature ID textures are only supported in the fragment shader.
+  if (featureIds instanceof ModelComponents.FeatureIdTexture) {
+    return ShaderDestination.FRAGMENT;
+  }
+
+  return ShaderDestination.BOTH;
+}
+
+function getSelectedFeatureIds(model, node, primitive) {
+  var variableName;
+  var featureIds;
+  // Check instances first, as this is the most specific type of
+  // feature ID
+  if (defined(node.instances)) {
+    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+
+    if (defined(featureIds)) {
+      variableName = "instanceFeatureId_" + model.instanceFeatureIdIndex;
+      return {
+        featureIds: featureIds,
+        variableName: variableName,
+        shaderDestination: getShaderDestination(featureIds),
+      };
+    }
+  }
+
+  featureIds = primitive.featureIds[model.featureIdIndex];
+  variableName = "featureId_" + model.featureIdIndex;
+  return {
+    featureIds: featureIds,
+    variableName: variableName,
+    shaderDestination: getShaderDestination(featureIds),
+  };
+}
+
 /**
- * Populate the "Feature" struct in the shaders that holds information about the "active" (used for picking/styling) feature.
- * The struct is always added to the shader by the GeometryPipelineStage (required for compilation). The Feature struct looks
+ * Populate the "SelectedFeature" struct in the shaders that holds information about the "active" (used for picking/styling) feature.
+ * The struct is always added to the shader by the GeometryPipelineStage (required for compilation). The SelectedFeature struct looks
  * as follows:
  *
- * struct Feature {
+ * struct SelectedFeature {
  *   int id;
  *   vec2 st;
  *   vec4 color;
@@ -67,60 +121,22 @@ SelectedFeatureIdPipelineStage.process = function (
  */
 function updateFeatureStruct(shaderBuilder) {
   shaderBuilder.addStructField(
-    SelectedFeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "int",
     "id"
   );
 
   shaderBuilder.addStructField(
-    SelectedFeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "vec2",
     "st"
   );
 
   shaderBuilder.addStructField(
-    SelectedFeatureIdPipelineStage.STRUCT_ID_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "vec4",
     "color"
   );
 }
-
-/**
- * Generates functions in the vertex and fragment shaders to update the varyings from the Feature struct and to update the Feature struct from the varyings, respectively.
- * @private
- */
-/*
-function generateFeatureFunctions(shaderBuilder) {
-  // Add the function to the vertex shader.
-  shaderBuilder.addFunction(
-    SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
-    SelectedFeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
-    ShaderDestination.VERTEX
-  );
-  shaderBuilder.addFunctionLines(
-    SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS,
-    [
-      "v_activeFeatureId = float(feature.id);",
-      "v_activeFeatureSt = feature.st;",
-      "v_activeFeatureColor = feature.color;",
-    ]
-  );
-
-  // Add the function to the fragment shader.
-  shaderBuilder.addFunction(
-    SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
-    SelectedFeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE,
-    ShaderDestination.FRAGMENT
-  );
-  shaderBuilder.addFunctionLines(
-    SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS,
-    [
-      "feature.id = int(v_activeFeatureId);",
-      "feature.st = v_activeFeatureSt;",
-      "feature.color = v_activeFeatureColor;",
-    ]
-  );
-}
-*/
 
 export default SelectedFeatureIdPipelineStage;

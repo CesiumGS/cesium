@@ -167,7 +167,6 @@ function selectFeatureTableId(components, model) {
 
   var i, j;
   var featureIdAttribute;
-  var featureIdTexture;
 
   var node;
   // Scan the nodes till we find one with instances, get the feature table ID
@@ -194,7 +193,7 @@ function selectFeatureTableId(components, model) {
       var featureIds = primitive.featureIds[featureIdIndex];
 
       if (defined(featureIds)) {
-        return featureIdTexture.propertyTableId;
+        return featureIds.propertyTableId;
       }
     }
   }
