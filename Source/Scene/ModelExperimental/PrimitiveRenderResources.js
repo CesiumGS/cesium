@@ -77,7 +77,8 @@ export default function PrimitiveRenderResources(
     nodeRenderResources.featureIdVertexAttributeSetIndex;
 
   /**
-   * Whether or not this primitive has feature IDs (at the node's instance or through primitive's feature ID attribute or texture).
+   * Whether or not this primitive has a property table for storing metadata.
+   * When present, picking and styling can use this
    *
    * @type {Boolean}
    * @default false
@@ -85,7 +86,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.hasFeatureIds = false;
+  this.hasPropertyTable = false;
 
   /**
    * A dictionary mapping uniform name to functions that return the uniform

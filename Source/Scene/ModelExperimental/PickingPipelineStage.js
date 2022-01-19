@@ -1,7 +1,6 @@
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Color from "../../Core/Color.js";
-import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
@@ -40,7 +39,7 @@ PickingPipelineStage.process = function (
   var model = renderResources.model;
   var instances = runtimeNode.node.instances;
 
-  if (renderResources.hasFeatureIds) {
+  if (renderResources.hasPropertyTable) {
     processPickTexture(renderResources, primitive, instances, context);
   } else if (defined(instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
@@ -112,7 +111,6 @@ function processPickTexture(renderResources, primitive, instances) {
   var featureIdIndex = model.featureIdIndex;
   var instanceFeatureIdIndex = model.featureIdIndex;
 
-  // TODO: This logic needs to be reworked with the new architecture
   if (defined(model.featureTableId)) {
     // Extract the Feature Table ID from the Cesium3DTileContent.
     featureTableId = model.featureTableId;
@@ -120,10 +118,6 @@ function processPickTexture(renderResources, primitive, instances) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = instances.featureIds[instanceFeatureIdIndex];
     featureTableId = featureIdAttribute.propertyTableId;
-  } else if (primitive.featureIdTextures.length > 0) {
-    // Extract the Feature Table ID from the instanced Feature ID textures.
-    var featureIdTexture = primitive.features[featureIdIndex];
-    featureTableId = featureIdTexture.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
     featureIdAttribute = primitive.featureIds[featureIdIndex];
@@ -140,19 +134,9 @@ function processPickTexture(renderResources, primitive, instances) {
   );
 
   var batchTexture = featureTable.batchTexture;
-  var pickingUniforms = {
-    model_pickTexture: function () {
-      return defaultValue(
-        batchTexture.pickTexture,
-        batchTexture.defaultTexture
-      );
-    },
+  renderResources.uniformMap.model_pickTexture = function () {
+    return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
   };
-
-  renderResources.uniformMap = combine(
-    pickingUniforms,
-    renderResources.uniformMap
-  );
 
   // The feature ID  is ignored if it is greater than the number of features.
   renderResources.pickId =

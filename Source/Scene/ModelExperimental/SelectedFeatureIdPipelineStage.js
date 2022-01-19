@@ -1,6 +1,5 @@
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import FeatureStageCommon from "../../Shaders/ModelExperimental/FeatureStageCommon.js";
-import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
+import SelectedFeatureIdStageCommon from "../../Shaders/ModelExperimental/SelectedFeatureIdStageCommon.js";
 
 /**
  * The feature ID pipeline stage is responsible for handling features in the model.
@@ -11,8 +10,8 @@ import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
 var SelectedFeatureIdPipelineStage = {};
 SelectedFeatureIdPipelineStage.name = "SelectedFeatureIdPipelineStage"; // Helps with debugging
 
-SelectedFeatureIdPipelineStage.STRUCT_ID_FEATURE = "FeatureStruct";
-SelectedFeatureIdPipelineStage.STRUCT_NAME_FEATURE = "Feature";
+SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE = "SelectedFeature";
+SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE = "SelectedFeature";
 SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_VS =
   "updateFeatureStructVS";
 SelectedFeatureIdPipelineStage.FUNCTION_ID_FEATURE_VARYINGS_FS =
@@ -40,12 +39,17 @@ SelectedFeatureIdPipelineStage.process = function (
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
 
-  renderResources.hasFeatureIds = true;
+  renderResources.hasPropertyTable = true;
 
-  shaderBuilder.addDefine("HAS_FEATURES", undefined, ShaderDestination.BOTH);
+  shaderBuilder.addDefine(
+    "HAS_SELECTED_FEATURE_ID",
+    undefined,
+    ShaderDestination.BOTH
+  );
   updateFeatureStruct(shaderBuilder);
 
-  shaderBuilder.addFragmentLines([FeatureStageCommon, FeatureStageFS]);
+  shaderBuilder.addVertexLines([SelectedFeatureIdStageCommon]);
+  shaderBuilder.addFragmentLines([SelectedFeatureIdStageCommon]);
 };
 
 /**

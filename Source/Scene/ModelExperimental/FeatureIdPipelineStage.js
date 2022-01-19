@@ -7,8 +7,8 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelComponents from "../ModelComponents.js";
-import FeatureStageFS from "../../Shaders/ModelExperimental/FeatureStageFS.js";
-import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
+import FeatureIdStageFS from "../../Shaders/ModelExperimental/FeatureIdStageFS.js";
+import FeatureIdStageVS from "../../Shaders/ModelExperimental/FeatureIdStageVS.js";
 
 /**
  * The feature ID pipeline stage is responsible for handling features in the model.
@@ -53,11 +53,15 @@ FeatureIdPipelineStage.process = function (
 ) {
   var shaderBuilder = renderResources.shaderBuilder;
   declareStructsAndFunctions(shaderBuilder);
-  processInstanceFeatureIds(renderResources);
+
+  var instances = renderResources.runtimeNode.node.instances;
+  if (defined(instances)) {
+    processInstanceFeatureIds(renderResources, instances);
+  }
   processPrimitiveFeatureIds(renderResources, primitive, frameState);
 
-  shaderBuilder.addVertexLines([FeatureStageVS]);
-  shaderBuilder.addFragmentLines([FeatureStageFS]);
+  shaderBuilder.addVertexLines([FeatureIdStageVS]);
+  shaderBuilder.addFragmentLines([FeatureIdStageFS]);
 };
 
 function declareStructsAndFunctions(shaderBuilder) {
@@ -96,8 +100,7 @@ function declareStructsAndFunctions(shaderBuilder) {
   );
 }
 
-function processInstanceFeatureIds(renderResources) {
-  var instances = renderResources.runtimeNode.node.instances;
+function processInstanceFeatureIds(renderResources, instances) {
   var featureIdsArray = instances.featureIds;
   var count = instances.attributes[0].count;
 
@@ -169,11 +172,11 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   var initializationLines = [
     "featureIds." + variableName + " = attributes.featureId_" + setIndex + ";",
   ];
-  shaderBuilder.addFunctionLine(
+  shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
     initializationLines
   );
-  shaderBuilder.addFunctionLine(
+  shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
     initializationLines
   );
@@ -227,7 +230,7 @@ function processImplicitRange(
   // The varying needs initialization in the vertex shader
   // Example:
   // v_implicit_featureId_n = a_implicit_featureId_n;
-  shaderBuilder.addFunctionLine(
+  shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
     [implicitVaryingName + " = " + implicitAttributeName + ";"]
   );
@@ -236,11 +239,11 @@ function processImplicitRange(
   // Example:
   // featureIds.featureId_n = a_implicit_featureId_n; (VS)
   // featureIds.featureId_n = v_implicit_featureId_n; (FS)
-  shaderBuilder.addFunctionLine(
+  shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
     ["featureIds." + variableName + " = " + implicitAttributeName + ";"]
   );
-  shaderBuilder.addFunctionLine(
+  shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
     ["featureIds." + variableName + " = " + implicitVaryingName + ";"]
   );
@@ -297,7 +300,7 @@ function processTexture(
   var textureRead =
     "texture2D(" + uniformName + ", " + texCoord + ")." + channel;
   var rounded = "floor(" + textureRead + " * 255.0 + 0.5);";
-  shaderBuilder.addFunctionLine(
+  shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
     ["featureIds." + variableName + " = " + rounded + ";"]
   );

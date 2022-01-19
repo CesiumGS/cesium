@@ -1,7 +1,5 @@
 import combine from "../../Core/combine.js";
 import defaultValue from "../../Core/defaultValue.js";
-import defined from "../../Core/defined.js";
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The batch texture stage is responsible for setting up the batch texture for the primitive.
@@ -33,19 +31,7 @@ BatchTexturePipelineStage.process = function (
 
   var model = renderResources.model;
 
-  var featureTable;
-  if (defined(model.featureTable)) {
-    featureTable = model.featureTables[model.featureTableId];
-  }
-
-  if (!defined(featureTable)) {
-    shaderBuilder.addDefine(
-      "HAS_NO_PROPERTIES",
-      undefined,
-      ShaderDestination.BOTH
-    );
-    return;
-  }
+  var featureTable = model.featureTables[model.featureTableId];
 
   // Number of features in the feature table.
   var featuresLength = featureTable.featuresLength;

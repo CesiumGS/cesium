@@ -16,7 +16,7 @@ vec2 computeSt(float featureId)
     #endif
 }
 
-void selectedFeatureIdStage(out SelectedFeatureId feature, FeatureIds featureIds)
+void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
 {   
     float featureId = featureIds.SELECTED_FEATURE_ID;
 

@@ -155,9 +155,7 @@ function createModelFeatureTables(model, featureMetadata) {
       propertyTable: propertyTable,
     });
 
-    if (modelFeatureTable.featuresLength > 0) {
-      featureTables.push(modelFeatureTable);
-    }
+    featureTables.push(modelFeatureTable);
   }
 
   return featureTables;
@@ -177,8 +175,11 @@ function selectFeatureTableId(components, model) {
   for (i = 0; i < components.nodes.length; i++) {
     node = components.nodes[i];
     if (defined(node.instances)) {
-      featureIdAttribute = node.instances.featureIds[featureIdIndex];
-      if (defined(featureIdAttribute)) {
+      featureIdAttribute = node.instances.featureIds[instanceFeatureIdIndex];
+      if (
+        defined(featureIdAttribute) &&
+        defined(featureIdAttribute.propertyTableId)
+      ) {
         return featureIdAttribute.propertyTableId;
       }
     }
@@ -190,13 +191,10 @@ function selectFeatureTableId(components, model) {
     node = components.nodes[i];
     for (j = 0; j < node.primitives.length; j++) {
       var primitive = node.primitives[j];
-      featureIdTexture = primitive.featureIdTextures[instanceFeatureIdIndex];
-      featureIdAttribute = primitive.featureIds[featureIdIndex];
+      var featureIds = primitive.featureIds[featureIdIndex];
 
-      if (defined(featureIdTexture)) {
+      if (defined(featureIds)) {
         return featureIdTexture.propertyTableId;
-      } else if (defined(featureIdAttribute)) {
-        return featureIdAttribute.propertyTableId;
       }
     }
   }

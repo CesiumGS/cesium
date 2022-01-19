@@ -32,7 +32,7 @@ void main()
     featureIdStage(featureIds, attributes);
 
     #ifdef HAS_SELECTED_FEATURE_ID
-    Feature feature;
+    SelectedFeature feature;
     featureStage(feature);
     cpuStylingStage(attributes.positionMC, feature);
     updateFeatureStruct(feature);

@@ -4,7 +4,7 @@ import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
-import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
+import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
@@ -68,8 +68,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
 
   // The Feature struct is always added since it's required for compilation. It may be unused if features are not present.
   shaderBuilder.addStruct(
-    FeatureIdPipelineStage.STRUCT_ID_FEATURE,
-    FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
     ShaderDestination.BOTH
   );
 

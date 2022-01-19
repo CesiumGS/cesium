@@ -15,6 +15,7 @@ import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
+import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -150,16 +151,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
     pipelineStages.push(MaterialPipelineStage);
   }
 
-  // Process feature IDs if needed for the batch texture or custom shader
-  if (
-    featureIdFlags.hasFeatureIds &&
-    (featureIdFlags.hasPropertyTable || hasCustomShader)
-  ) {
-    pipelineStages.push(FeatureIdPipelineStage);
-  }
+  pipelineStages.push(FeatureIdPipelineStage);
 
   if (featureIdFlags.hasPropertyTable) {
-    //pipelineStages.push(SelectedFeatureIdPipelineStage);
+    pipelineStages.push(SelectedFeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
     pipelineStages.push(CPUStylingPipelineStage);
   }
