@@ -5,21 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch CesiumJS in Chrome",
-            "request": "launch",
-            "type": "pwa-chrome",
-            "url": "http://localhost:8080",
-            "webRoot": "${workspaceFolder}",
-            "preLaunchTask": "npm: start"
-        },
-        {
             "type": "node",
             "request": "launch",
-            "name": "Launch CesiumJS Server",
+            "name": "Start Server",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run-script", "start"],
-            "noDebug": true
+            "noDebug": true,
+            "serverReadyAction":{
+                "action": "startDebugging",
+                "name": "Debug in Chrome",
+                "pattern": "Cesium development server running locally."
+            }
+        },
+        {
+            "name": "Debug in Chrome",
+            "request": "launch",
+            "type": "pwa-chrome",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }
