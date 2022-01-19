@@ -24,19 +24,6 @@
       "problemMatcher": [],
       "label": "npm: test",
       "detail": "gulp test"
-    },
-    {
-      "label": "chrome-launch-delay",
-      "type": "shell",
-      "command": "sleep 2",
-      "windows": {
-        "command": "ping 127.0.0.1 -n 2 > nul"
-      },
-      "group": "none",
-      "presentation": {
-        "reveal": "silent",
-        "panel": "new"
-      }
     }
   ]
 }
