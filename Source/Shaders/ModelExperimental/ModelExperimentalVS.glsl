@@ -33,9 +33,8 @@ void main()
 
     #ifdef HAS_SELECTED_FEATURE_ID
     SelectedFeature feature;
-    featureStage(feature);
+    selectedFeatureIdStage(feature, featureIds);
     cpuStylingStage(attributes.positionMC, feature);
-    updateFeatureStruct(feature);
     #endif
     
     #ifdef HAS_CUSTOM_VERTEX_SHADER
