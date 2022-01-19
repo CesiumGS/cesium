@@ -14,6 +14,7 @@ import {
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
   PrimitiveType,
+  SelectedFeatureIdPipelineStage,
   VertexAttributeSemantic,
   BatchTexturePipelineStage,
   ModelExperimentalPrimitive,
@@ -95,6 +96,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -115,6 +117,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -127,19 +130,25 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: {
         instances: {
-          featureIds: [{}],
+          featureIds: [{}, { propertyTableId: 0 }],
         },
       },
-      model: mockModel,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        allowPicking: true,
+        instanceFeatureIdIndex: 1,
+        content: {},
+      },
     });
 
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      LightingPipelineStage,
       FeatureIdPipelineStage,
+      SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
+      LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -150,8 +159,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages for feature picking", function () {
     var primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIds: [{}, {}],
-        featureIdTextures: [],
+        featureIds: [{}, { propertyTableId: 0 }],
         attributes: [
           {
             semantic: VertexAttributeSemantic.FEATURE_ID,
@@ -170,10 +178,11 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      LightingPipelineStage,
       FeatureIdPipelineStage,
+      SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
+      LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -182,8 +191,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIds: [],
-        featureIdTextures: [{}, {}],
+        featureIds: [{}, { propertyTableId: 0 }],
         attributes: [],
       },
       node: {},
@@ -221,6 +229,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       DequantizationPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -245,6 +254,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -271,6 +281,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     var expectedStages = [
       GeometryPipelineStage,
+      FeatureIdPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -297,6 +308,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -333,6 +345,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       PointCloudAttenuationPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -363,6 +376,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       PointCloudAttenuationPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -392,6 +406,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -418,6 +433,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     var expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
