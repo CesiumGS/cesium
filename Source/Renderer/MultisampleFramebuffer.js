@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
 import Framebuffer from "./Framebuffer.js";
 
 /**
@@ -44,9 +45,14 @@ function MultisampleFramebuffer(options) {
     depthStencilTexture: depthStencilTexture,
     destroyAttachments: options.destroyAttachments,
   });
+
+  this._defaultToRender = true;
+  this._blitReady = false;
 }
 
 MultisampleFramebuffer.prototype.getFramebuffer = function () {
+  // if (this._defaultToRender) return this._renderFramebuffer;
+  // if (this._blitReady) return this._colorFramebuffer;
   return this._renderFramebuffer;
 };
 
@@ -59,11 +65,23 @@ MultisampleFramebuffer.prototype.getColorFramebuffer = function () {
 };
 
 MultisampleFramebuffer.prototype.blitFramebuffers = function (context) {
+  // if (!this._blitReady) {
+  // clearCommand.execute(context);
   this._renderFramebuffer.bindRead();
   this._colorFramebuffer.bindDraw();
   var width = context.canvas.clientWidth;
   var height = context.canvas.clientHeight;
   var gl = context._gl;
+  var mask = 0;
+  if (this._colorFramebuffer._colorTextures.length > 0) {
+    mask |= gl.COLOR_BUFFER_BIT;
+  }
+  if (defined(this._colorFramebuffer.depthTexture)) {
+    mask |= gl.DEPTH_BUFFER_BIT;
+  }
+  if (defined(this._colorFramebuffer.depthStencilTexture)) {
+    mask |= gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT;
+  }
   gl.blitFramebuffer(
     0,
     0,
@@ -73,15 +91,28 @@ MultisampleFramebuffer.prototype.blitFramebuffers = function (context) {
     0,
     width,
     height,
-    gl.COLOR_BUFFER_BIT,
-    gl.LINEAR
+    mask,
+    gl.NEAREST
   );
-  return this._colorFramebuffer;
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+  // this._blitReady = true;
+  // }
+};
+
+MultisampleFramebuffer.prototype.setRenderAsDefault = function (value) {
+  this._defaultToRender = value;
+};
+
+MultisampleFramebuffer.prototype.isDestroyed = function () {
+  return false;
 };
 
 MultisampleFramebuffer.prototype.destroy = function () {
+  this._blitReady = false;
   this._renderFramebuffer.destroy();
   this._colorFramebuffer.destroy();
+  return destroyObject(this);
 };
 
 export default MultisampleFramebuffer;

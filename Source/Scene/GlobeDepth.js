@@ -17,6 +17,7 @@ import StencilOperation from "./StencilOperation.js";
  * @private
  */
 function GlobeDepth() {
+  this._numSamples = 1;
   this._tempCopyDepthTexture = undefined;
 
   this._colorFramebuffer = new FramebufferManager({
@@ -53,6 +54,11 @@ Object.defineProperties(GlobeDepth.prototype, {
   framebuffer: {
     get: function () {
       return this._colorFramebuffer.framebuffer;
+    },
+  },
+  depthStencilTexture: {
+    get: function () {
+      return this._colorFramebuffer.getDepthStencilTexture();
     },
   },
 });
@@ -132,6 +138,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
     globeDepth._copyDepthCommand = context.createViewportQuadCommand(
       PassThroughDepth,
       {
+        // framebuffer: globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer(),
         uniformMap: {
           u_depthTexture: function () {
             return globeDepth._colorFramebuffer.getDepthStencilTexture();
@@ -166,6 +173,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
     globeDepth._tempCopyDepthCommand = context.createViewportQuadCommand(
       PassThroughDepth,
       {
+        // framebuffer: globeDepth.framebuffer,
         uniformMap: {
           u_depthTexture: function () {
             return globeDepth._tempCopyDepthTexture;
@@ -213,6 +221,7 @@ GlobeDepth.prototype.update = function (
   context,
   passState,
   viewport,
+  numSamples,
   hdr,
   clearGlobeDepth
 ) {
@@ -224,7 +233,14 @@ GlobeDepth.prototype.update = function (
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
-  this._colorFramebuffer.update(context, width, height, 1, pixelDatatype);
+  this._numSamples = numSamples;
+  this._colorFramebuffer.update(
+    context,
+    width,
+    height,
+    numSamples,
+    pixelDatatype
+  );
   this._copyDepthFramebuffer.update(context, width, height);
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;
@@ -235,6 +251,7 @@ GlobeDepth.prototype.update = function (
 
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
+    this._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(context);
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture = this._copyDepthFramebuffer.getColorTexture();
   }
@@ -243,9 +260,12 @@ GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
 GlobeDepth.prototype.executeUpdateDepth = function (
   context,
   passState,
-  clearGlobeDepth
+  clearGlobeDepth,
+  depthTexture
 ) {
-  var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
+  var depthTextureToCopy = defined(depthTexture)
+    ? depthTexture
+    : passState.framebuffer.depthStencilTexture;
   if (
     clearGlobeDepth ||
     depthTextureToCopy !== this._colorFramebuffer.getDepthStencilTexture()
@@ -268,11 +288,8 @@ GlobeDepth.prototype.executeUpdateDepth = function (
         this._tempCopyDepthFramebuffer.update(context, width, height);
 
         var colorTexture = this._copyDepthFramebuffer.getColorTexture();
-        var depthStencilTexture = passState.framebuffer.depthStencilTexture;
         this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
-        this._updateDepthFramebuffer.setDepthStencilTexture(
-          depthStencilTexture
-        );
+        this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
         this._updateDepthFramebuffer.update(context, width, height);
 
         updateCopyCommands(this, context, width, height, passState);
@@ -301,6 +318,18 @@ GlobeDepth.prototype.clear = function (context, passState, clearColor) {
   if (defined(clear)) {
     Color.clone(clearColor, clear.color);
     this._colorFramebuffer.clear(context, clear, passState);
+  }
+};
+
+GlobeDepth.prototype.prepareColorFramebuffer = function (context) {
+  if (this._numSamples > 1) {
+    this._colorFramebuffer.prepareColorFramebuffer(context);
+  }
+};
+
+GlobeDepth.prototype.prepareRenderFramebuffer = function () {
+  if (this._numSamples > 1) {
+    this._colorFramebuffer.prepareRenderFramebuffer();
   }
 };
 

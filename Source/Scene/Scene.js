@@ -594,7 +594,7 @@ function Scene(options) {
    * @type {Number}
    * @default 1
    */
-  this.numberSamples = 1;
+  this.numberSamples = 4;
 
   /**
    * Post processing effects applied to the final render.
@@ -2383,9 +2383,15 @@ function executeCommands(scene, passState) {
     }
 
     clearDepth.execute(context, passState);
+    // passState.framebuffer = view.globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
+    // clearDepth.execute(context, passState);
+    // passState.framebuffer = view.globeDepth._colorFramebuffer._multisampleFramebuffer.getRenderFramebuffer();
 
     if (context.stencilBuffer) {
       clearStencil.execute(context, passState);
+      // passState.framebuffer = view.globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
+      // clearStencil.execute(context, passState);
+      // passState.framebuffer = view.globeDepth._colorFramebuffer._multisampleFramebuffer.getRenderFramebuffer();
     }
 
     us.updatePass(Pass.GLOBE);
@@ -2434,6 +2440,9 @@ function executeCommands(scene, passState) {
 
     if (clearGlobeDepth) {
       clearDepth.execute(context, passState);
+      // passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
+      // clearDepth.execute(context, passState);
+      // passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getRenderFramebuffer();
       if (useDepthPlane) {
         depthPlane.execute(context, passState);
       }
@@ -2456,7 +2465,12 @@ function executeCommands(scene, passState) {
 
       if (length > 0) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+          globeDepth._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(
+            context
+          );
+          passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
           globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+          passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getRenderFramebuffer();
         }
 
         // Draw classifications. Modifies 3D Tiles color.
@@ -2505,6 +2519,7 @@ function executeCommands(scene, passState) {
       //
       scene._invertClassification.clear(context, passState);
 
+      // var opaqueClassificationFramebuffer = view.globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
       var opaqueClassificationFramebuffer = passState.framebuffer;
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
@@ -2517,7 +2532,17 @@ function executeCommands(scene, passState) {
       }
 
       if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-        globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+        scene._invertClassification._fbo._multisampleFramebuffer.blitFramebuffers(
+          context
+        );
+        passState.framebuffer = scene._invertClassification._fbo._multisampleFramebuffer.getColorFramebuffer();
+        globeDepth.executeUpdateDepth(
+          context,
+          passState,
+          clearGlobeDepth,
+          globeDepth.depthStencilTexture
+        );
+        passState.framebuffer = scene._invertClassification._fbo._multisampleFramebuffer.getRenderFramebuffer();
       }
 
       // Set stencil
@@ -2625,7 +2650,7 @@ function executeCommands(scene, passState) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
       var depthStencilTexture = renderTranslucentDepthForPick
         ? passState.framebuffer.depthStencilTexture
-        : globeDepth.framebuffer.depthStencilTexture;
+        : globeDepth.depthStencilTexture;
       var pickDepth = scene._picking.getPickDepth(scene, index);
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
@@ -3373,6 +3398,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       context,
       passState,
       view.viewport,
+      scene.numberSamples,
       scene._hdr,
       environmentState.clearGlobeDepth
     );
@@ -3435,13 +3461,14 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     var depthFramebuffer;
     if (scene.frameState.invertClassificationColor.alpha === 1.0) {
       if (environmentState.useGlobeDepthFramebuffer) {
-        depthFramebuffer = view.globeDepth.framebuffer;
+        // view.globeDepth._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(context);
+        depthFramebuffer = view.globeDepth._colorFramebuffer; //._multisampleFramebuffer.getRenderFramebuffer();
       }
     }
 
     if (defined(depthFramebuffer) || context.depthTexture) {
       scene._invertClassification.previousFramebuffer = depthFramebuffer;
-      scene._invertClassification.update(context);
+      scene._invertClassification.update(context, scene.numberSamples);
       scene._invertClassification.clear(context, passState);
 
       if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
@@ -3482,9 +3509,10 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   var usePostProcess = environmentState.usePostProcess;
 
   var defaultFramebuffer = environmentState.originalFramebuffer;
-  var globeFramebuffer = useGlobeDepthFramebuffer
-    ? globeDepth.framebuffer
-    : undefined;
+  globeDepth._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(
+    context
+  );
+  var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth : undefined;
   var sceneFramebuffer = view.sceneFramebuffer.framebuffer;
   var idFramebuffer = view.sceneFramebuffer.idFramebuffer;
 
@@ -3504,9 +3532,8 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   if (usePostProcess) {
-    if (this.numberSamples > 1) {
-      sceneFramebuffer = view.sceneFramebuffer.blitFramebuffers(context);
-    }
+    view.sceneFramebuffer.prepareColorFramebuffer(context);
+    sceneFramebuffer = view.sceneFramebuffer.framebuffer; // todo@eli: need color FB here
     var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;

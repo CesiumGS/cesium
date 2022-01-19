@@ -7,6 +7,8 @@ import PixelFormat from "../Core/PixelFormat.js";
 import ContextLimits from "./ContextLimits.js";
 import PixelDatatype from "./PixelDatatype.js";
 
+import createGuid from "../Core/createGuid.js";
+
 function attachTexture(framebuffer, attachment, texture) {
   var gl = framebuffer._gl;
   gl.framebufferTexture2D(
@@ -73,6 +75,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * @constructor
  */
 function Framebuffer(options) {
+  this._id = createGuid();
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   var context = options.context;

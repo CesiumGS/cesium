@@ -8,6 +8,7 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
  * @private
  */
 function SceneFramebuffer() {
+  this._numSamples = 1;
   this._colorFramebuffer = new FramebufferManager({
     depthStencil: true,
     supportsDepthTexture: true,
@@ -42,6 +43,11 @@ Object.defineProperties(SceneFramebuffer.prototype, {
       return this._idFramebuffer.framebuffer;
     },
   },
+  depthStencilTexture: {
+    get: function () {
+      return this._colorFramebuffer.getDepthStencilTexture();
+    },
+  },
 });
 
 SceneFramebuffer.prototype.update = function (
@@ -57,6 +63,7 @@ SceneFramebuffer.prototype.update = function (
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
+  this._numSamples = numSamples;
   this._colorFramebuffer.update(
     context,
     width,
@@ -82,8 +89,10 @@ SceneFramebuffer.prototype.getIdFramebuffer = function () {
   return this._idFramebuffer.framebuffer;
 };
 
-SceneFramebuffer.prototype.blitFramebuffers = function (context) {
-  return this._colorFramebuffer.blitFramebuffers(context);
+SceneFramebuffer.prototype.prepareColorFramebuffer = function (context) {
+  if (this._numSamples > 1) {
+    this._colorFramebuffer.prepareColorFramebuffer(context);
+  }
 };
 
 SceneFramebuffer.prototype.isDestroyed = function () {

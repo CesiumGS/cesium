@@ -843,7 +843,7 @@ OIT.prototype.clear = function (context, passState, clearColor) {
 };
 
 OIT.prototype.isSupported = function () {
-  return this._translucentMRTSupport || this._translucentMultipassSupport;
+  return false; //this._translucentMRTSupport || this._translucentMultipassSupport;
 };
 
 OIT.prototype.isDestroyed = function () {

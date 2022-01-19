@@ -74,6 +74,7 @@ function FramebufferManager(options) {
   this._height = undefined;
 
   this._framebuffer = undefined;
+  this._multisampleFramebuffer = undefined;
   this._colorTextures = undefined;
   if (this._color) {
     this._colorTextures = new Array(this._colorAttachmentsLength);
@@ -99,6 +100,9 @@ Object.defineProperties(FramebufferManager.prototype, {
   },
   status: {
     get: function () {
+      if (this._numSamples > 1) {
+        return this._multisampleFramebuffer.getFramebuffer().status;
+      }
       return this._framebuffer.status;
     },
   },
@@ -111,18 +115,23 @@ FramebufferManager.prototype.isDirty = function (
   pixelDatatype,
   pixelFormat
 ) {
+  // return true;
   var dimensionChanged = this._width !== width || this._height !== height;
   var samplesChanged = this._numSamples !== numSamples;
   var pixelChanged =
     (defined(pixelDatatype) && this._pixelDatatype !== pixelDatatype) ||
     (defined(pixelFormat) && this._pixelFormat !== pixelFormat);
+  var framebufferDefined =
+    numSamples === 1
+      ? defined(this._framebuffer)
+      : defined(this._multisampleFramebuffer);
 
   return (
     this._attachmentsDirty ||
     dimensionChanged ||
     samplesChanged ||
     pixelChanged ||
-    !defined(this._framebuffer) ||
+    !framebufferDefined ||
     (this._color && !defined(this._colorTextures[0]))
   );
 };
@@ -225,6 +234,15 @@ FramebufferManager.prototype.update = function (
           pixelDatatype: PixelDatatype.UNSIGNED_INT,
           sampler: Sampler.NEAREST,
         });
+        if (this._numSamples > 1) {
+          this._depthRenderbuffer = new Renderbuffer({
+            context: context,
+            width: width,
+            height: height,
+            format: RenderbufferFormat.DEPTH_COMPONENT16,
+            numSamples: this._numSamples,
+          });
+        }
         // TODO@eli create depth RB if numSamples > 1
       } else {
         this._depthRenderbuffer = new Renderbuffer({
@@ -388,9 +406,15 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   this._depthStencilTexture = texture;
 };
 
-FramebufferManager.prototype.blitFramebuffers = function (context) {
+FramebufferManager.prototype.prepareColorFramebuffer = function (context) {
   if (this._numSamples > 1) {
-    return this._multisampleFramebuffer.blitFramebuffers(context);
+    this._multisampleFramebuffer.blitFramebuffers(context);
+  }
+};
+
+FramebufferManager.prototype.prepareRenderFramebuffer = function () {
+  if (this._numSamples > 1) {
+    this._multisampleFramebuffer.setRenderAsDefault(true);
   }
 };
 
