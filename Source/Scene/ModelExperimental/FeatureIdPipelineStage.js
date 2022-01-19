@@ -56,7 +56,7 @@ FeatureIdPipelineStage.process = function (
 
   var instances = renderResources.runtimeNode.node.instances;
   if (defined(instances)) {
-    processInstanceFeatureIds(renderResources, instances);
+    processInstanceFeatureIds(renderResources, instances, frameState);
   }
   processPrimitiveFeatureIds(renderResources, primitive, frameState);
 
@@ -100,7 +100,7 @@ function declareStructsAndFunctions(shaderBuilder) {
   );
 }
 
-function processInstanceFeatureIds(renderResources, instances) {
+function processInstanceFeatureIds(renderResources, instances, frameState) {
   var featureIdsArray = instances.featureIds;
   var count = instances.attributes[0].count;
 
@@ -117,7 +117,8 @@ function processInstanceFeatureIds(renderResources, instances) {
         featureIds,
         variableName,
         count,
-        instanceDivisor
+        instanceDivisor,
+        frameState
       );
     }
   }
@@ -137,7 +138,15 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processAttribute(renderResources, featureIds, variableName);
     } else if (featureIds instanceof ModelComponents.FeatureIdImplicitRange) {
-      processImplicitRange(renderResources, featureIds, variableName, count);
+      var instanceDivisor = 0;
+      processImplicitRange(
+        renderResources,
+        featureIds,
+        variableName,
+        count,
+        instanceDivisor,
+        frameState
+      );
     } else {
       processTexture(renderResources, featureIds, variableName, i, frameState);
     }
@@ -187,7 +196,8 @@ function processImplicitRange(
   implicitFeatureIds,
   variableName,
   count,
-  instanceDivisor
+  instanceDivisor,
+  frameState
 ) {
   // Generate a vertex attribute for the implicit IDs since WebGL 1 does not
   // support gl_VertexID
@@ -195,7 +205,8 @@ function processImplicitRange(
     renderResources,
     implicitFeatureIds,
     count,
-    instanceDivisor
+    instanceDivisor,
+    frameState
   );
 
   // Declare the vertex attribute in the shader
@@ -308,10 +319,10 @@ function processTexture(
 
 function generateImplicitFeatureIdAttribute(
   renderResources,
-  frameState,
   implicitFeatureIds,
   count,
-  instanceDivisor
+  instanceDivisor,
+  frameState
 ) {
   var model = renderResources.model;
   var vertexBuffer;

@@ -6,9 +6,8 @@ import {
   ShaderDestination,
   Resource,
   ResourceCache,
-  _shadersFeatureStageCommon,
-  _shadersFeatureStageFS,
-  _shadersFeatureStageVS,
+  _shadersFeatureIdStageFS,
+  _shadersFeatureIdStageVS,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
@@ -169,13 +168,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageVS,
+        _shadersFeatureIdStageVS,
       ]);
 
       ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageFS,
+        _shadersFeatureIdStageFS,
       ]);
     });
   });
@@ -229,13 +226,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageVS,
+        _shadersFeatureIdStageVS,
       ]);
 
       ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageFS,
+        _shadersFeatureIdStageFS,
       ]);
 
       verifyFeatureStruct(shaderBuilder);
@@ -301,13 +296,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageVS,
+        _shadersFeatureIdStageVS,
       ]);
 
       ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageFS,
+        _shadersFeatureIdStageFS,
       ]);
 
       verifyFeatureStruct(shaderBuilder);
@@ -371,13 +364,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageVS,
+        _shadersFeatureIdStageVS,
       ]);
 
       ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageFS,
+        _shadersFeatureIdStageFS,
       ]);
     });
   });
@@ -436,13 +427,11 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function () {
       verifyFeatureStructFunctions(shaderBuilder);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageVS,
+        _shadersFeatureIdStageVS,
       ]);
 
       ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-        _shadersFeatureStageCommon,
-        _shadersFeatureStageFS,
+        _shadersFeatureIdStageFS,
       ]);
 
       expect(renderResources.featureIdVertexAttributeSetIndex).toEqual(2);
