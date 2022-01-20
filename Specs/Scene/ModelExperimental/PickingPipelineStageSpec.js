@@ -273,7 +273,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
     var renderResources = {
       attributeIndex: 1,
-      hasFeatureIds: true,
+      hasPropertyTable: true,
       pickId: undefined,
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},

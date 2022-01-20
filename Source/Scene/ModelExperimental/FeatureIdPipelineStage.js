@@ -138,13 +138,12 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processAttribute(renderResources, featureIds, variableName);
     } else if (featureIds instanceof ModelComponents.FeatureIdImplicitRange) {
-      var instanceDivisor = 0;
       processImplicitRange(
         renderResources,
         featureIds,
         variableName,
         count,
-        instanceDivisor,
+        undefined,
         frameState
       );
     } else {
@@ -340,12 +339,12 @@ function generateImplicitFeatureIdAttribute(
     vertexBuffer.vertexArrayDestroyable = false;
     model._resources.push(vertexBuffer);
   } else {
-    value = implicitFeatureIds.offset;
+    value = [implicitFeatureIds.offset];
   }
 
   var generatedFeatureIdAttribute = {
     index: renderResources.attributeIndex++,
-    instanceDivisor: defaultValue(instanceDivisor, 0),
+    instanceDivisor: instanceDivisor,
     value: value,
     vertexBuffer: vertexBuffer,
     normalize: false,
