@@ -121,18 +121,18 @@ Object.defineProperties(ModelFeature.prototype, {
    * Get the feature ID associated with this feature. For 3D Tiles 1.0, the
    * batch ID is returned. For EXT_mesh_features, this is the feature ID from
    * the selected feature ID set.
-   * 
+   *
    * @memberof ModelFeature.prototype
-   * 
+   *
    * @type {Number}
-   * 
+   *
    * @readonly
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-   featureId: {
-    get: function() {
+  featureId: {
+    get: function () {
       return this._featureId;
-    }
+    },
   },
 });
 
