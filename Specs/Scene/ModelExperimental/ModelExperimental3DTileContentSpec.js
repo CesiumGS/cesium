@@ -130,6 +130,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(result.featureId).toBeUndefined();
           expect(content.hasProperty(0, "id")).toBe(false);
           expect(content.getFeature(0)).toBeUndefined();
         });
@@ -149,8 +150,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
-          expect(content.hasProperty(0, "id")).toBe(false);
-          expect(content.getFeature(0)).toBeDefined();
+          var featureId = result.featureId;
+          expect(featureId).toBe(0);
+          expect(content.hasProperty(featureId, "id")).toBe(false);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
@@ -167,9 +170,11 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          var featureId = result.featureId;
+          expect(featureId).toBe(0);
           expect(content.batchTable).toBeDefined();
-          expect(content.hasProperty(0, "id")).toBe(true);
-          expect(content.getFeature(0)).toBeDefined();
+          expect(content.hasProperty(featureId, "id")).toBe(true);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
@@ -187,9 +192,11 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          var featureId = result.featureId;
+          expect(featureId).toBe(0);
           expect(content.batchTable).toBeDefined();
-          expect(content.hasProperty(0, "id")).toBe(true);
-          expect(content.getFeature(0)).toBeDefined();
+          expect(content.hasProperty(featureId, "id")).toBe(true);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
@@ -213,8 +220,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
         expect(result).toBeDefined();
         expect(result.primitive).toBe(tileset);
         expect(result.content).toBe(content);
-        expect(content.hasProperty(0, "Height")).toBe(true);
-        expect(content.getFeature(0)).toBeDefined();
+        var featureId = result.featureId;
+        expect(featureId).toBe(12);
+        expect(content.hasProperty(featureId, "Height")).toBe(true);
+        expect(content.getFeature(featureId)).toBeDefined();
       });
     });
   });
