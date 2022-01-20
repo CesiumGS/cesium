@@ -14,6 +14,7 @@ import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 import Plane from "./Plane.js";
 import Rectangle from "./Rectangle.js";
+import Region from "./Region.js";
 
 /**
  * Creates an instance of an OrientedBoundingBox.
@@ -604,6 +605,322 @@ OrientedBoundingBox.fromRectangle = function (
 };
 
 /**
+ * Computes an OrientedBoundingBox that bounds a {@link Region} on the surface of an {@link Ellipsoid}.
+ * There are no guarantees about the orientation of the bounding box.
+ *
+ * @param {Region} region The region.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the region is defined.
+ * @param {OrientedBoundingBox} [result] The object onto which to store the result.
+ * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
+ *
+ * @exception {DeveloperError} region.rectangle.width must be between 0 and pi.
+ * @exception {DeveloperError} region.rectangle.height must be between 0 and pi.
+ * @exception {DeveloperError} ellipsoid must be an ellipsoid of revolution (<code>radii.x == radii.y</code>)
+ */
+OrientedBoundingBox.fromRegion = function (region, ellipsoid, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("region", region);
+  //>>includeEnd('debug');
+
+  return OrientedBoundingBox.fromRectangle(
+    region.rectangle,
+    region.minimumHeight,
+    region.maximumHeight,
+    ellipsoid,
+    result
+  );
+};
+
+var scratchCorners = new Array(
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3()
+);
+var scratchCornersCartographic = new Array(
+  new Cartographic(),
+  new Cartographic(),
+  new Cartographic(),
+  new Cartographic(),
+  new Cartographic(),
+  new Cartographic(),
+  new Cartographic(),
+  new Cartographic()
+);
+
+var scratchPoint0 = new Cartesian3();
+var scratchPoint1 = new Cartesian3();
+
+var scratchPos00 = new Cartesian3();
+var scratchPos01 = new Cartesian3();
+var scratchPos10 = new Cartesian3();
+var scratchPos11 = new Cartesian3();
+
+function squareIntersect(pos, dir, scaleRight, scaleUp, ellipsoid) {
+  var posProj = project(pos, right, up);
+  var dirProj = project(dir, right, up);
+
+  if (dirProj.x > scaleRight || d.y > scaleUp) {
+    var m0x = (posProj.x + scale.x) / dirProj.x;
+    var m1x = (posProj.x - scale.x) / dirProj.x;
+    var m0y = (posProj.y + scale.y) / dirProj.y;
+    var m1y = (posProj.y - scale.y) / dirProj.y;
+
+    var t = Math.max(Math.min(m0x, m1x), Math.min(m0y, m1y));
+
+    minHeight = Cartographic.fromCartesian(
+      Cartesian3.fromElements(
+        p.x + t * d.x,
+        p.y + t * d.y,
+        p.z + t * d.z,
+        scratchPos
+      ),
+      ellipsoid,
+      scratchCartographic
+    ).height;
+  }
+}
+
+/**
+ * @param {Plane} plane
+ * @param {Ellipsoid} ellipsoid
+ * @returns {Cartesian2} result
+ */
+function planeEllipsoidDistance(distance, center, halfAxes, ellipsoid, result) {
+  var norm = plane.normal;
+  var rad = ellipsoid.radii;
+  var h = halfLength;
+  var c = Cartesian3.multiplyByScalar(n, -plane.distance);
+  // var right = Cartesian3.fromElements(plane.normal;
+
+  var posEllipsoid = Cartesian3.multiplyComponents(n, r, scratchPoint0);
+  var distToCenterPlane = -Plane.getPointDistance(plane, posEllipsoid);
+  // var distNear = distToCenter - halfLength;
+  // var distFar = distToCenter + halfLength;
+  // var vectorToNear = Cartesian3.multiplyByScalar(n, distNear, scratchPos00);
+  // var posNear = Cartesian3.add(posEllipsoid, vectorToNear, scratchPos00);
+  // var posFar = Cartesian3.add(posEllipsoid, vectorToFar, scratchPos00);
+
+  var posNear = Cartesian3.fromElements(
+    norm.x * (rad.x + distToCenterPlane - halfLength),
+    norm.y * (rad.y + distToCenterPlane - halfLength),
+    norm.z * (rad.z + distToCenterPlane - halfLength),
+    scratchPosNear
+  );
+
+  var posFar = Cartesian3.fromElements(
+    norm.x * (rad.x + distToCenterPlane + halfLength),
+    norm.y * (rad.y + distToCenterPlane + halfLength),
+    norm.z * (rad.z + distToCenterPlane + halfLength),
+    scratchPosNear
+  );
+
+  var toNearCenter = Cartesian3.fromElements(
+    posNear.x - (center.x - halfAxes[2].x),
+    posNear.y - (center.y - halfAxes[2].y),
+    posNear.z - (center.z - halfAxes[2].z)
+  );
+
+  var posNearProj = Cartesian2.fromElements(
+    Cartesian3.dot(posNear, right),
+    Cartesian3.dot(posNear, up)
+  );
+
+  var diffNearProj = Cartesian2.fromElements(
+    Cartesian3.dot(toNearCenter, right),
+    Cartesian3.dot(toNearCenter, up)
+  );
+
+  var resultX;
+  var resultY;
+
+  // 2D ray -> square for far and near planes
+  var halfLengthProj = Cartesian2.fromElements(
+    Cartesian3.magnitude(halfAxes[0]),
+    Cartesian3.magnitude(halfAxes[1])
+  );
+
+  var p = posNearProj;
+  var d = diffNearProj;
+  var h = halfLengthProj;
+  var t, x, y, z;
+  var minPos, maxPos;
+  var minHeight, maxHeight;
+
+  if (d.x > h.x || d.y > h.y) {
+    t = Math.max(
+      Math.min((p.x + h.x) / d.x, (p.x - h.x) / d.x),
+      Math.min((p.y + h.y) / d.y, (p.y - h.y) / d.y)
+    );
+    minHeight = Cartographic.fromCartesian(
+      Cartesian3.fromElements(
+        p.x + t * d.x,
+        p.y + t * d.y,
+        p.z + t * d.z,
+        scratchPos
+      ),
+      ellipsoid,
+      scratchCartographic
+    ).height;
+  }
+
+  if (diffFarProj.x > h || diffFarProj.y > h) {
+    var p = p01Proj;
+    var d = diffNearProj;
+    var t = Math.max(
+      Math.min((p.x + h.x) / d.x, (p.x - h.x) / d.x),
+      Math.min((p.y + h.y) / d.y, (p.y - h.y) / d.y)
+    );
+    minHeight = Cartographic.fromCartesian(
+      Cartesian3.fromElements(
+        p.x + t * d.x,
+        p.y + t * d.y,
+        p.z + t * d.z,
+        scratchPos
+      ),
+      ellipsoid,
+      scratchCartographic
+    ).height;
+  }
+  var surfacePos1 = Cartesian3.negate(e0, scratchPoint1);
+
+  // var ed0 = ;
+  var ed1 = -Plane.getPointDistance(plane, e1);
+
+  var d00 = Cartesian3.magnitude(p00);
+  var d01 = Cartesian3.magnitude(p01);
+  var d10 = Cartesian3.magnitude(p10);
+  var d11 = Cartesian3.magnitude(p11);
+
+  if (Cartesian3.dot(p00, n) >= 0 !== Cartesian3.dot(p01, n) >= 0) {
+    result.x = 0.0;
+    result.y = Math.max(d00, d01, d10, d11);
+  } else if (d00 <= d10) {
+    result.x = Math.min(d00, d01);
+    result.y = Math.max(d00, d01);
+  } else {
+    result.x = Math.min(d10, d11);
+    result.y = Math.max(d10, d11);
+  }
+  return result;
+}
+
+var scratchU = new Cartesian3();
+var scratchV = new Cartesian3();
+var scratchW = new Cartesian3();
+var scratchNormU = new Cartesian3();
+var scratchNormV = new Cartesian3();
+var scratchNormW = new Cartesian3();
+
+var scratchDistances = new Cartesian2();
+var scratchPlanes = new Array(
+  new Plane(Cartesian3.UNIT_X, 0.0),
+  new Plane(Cartesian3.UNIT_Y, 0.0),
+  new Plane(Cartesian3.UNIT_Z, 0.0)
+);
+var scratchLengths = new Array(3);
+
+/**
+ * Creates the smallest possible Region that encloses an oriented bounding box.
+ *
+ * @param {OrientedBoundingBox} orientedBoundingBox The oriented bounding box that will be converted.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid the oriented bounding box on.
+ * @param {Region} [result] The object onto which to store the result, or undefined if a new instance should be created.
+ * @returns {Region} The modified result parameter or a new Region instance if none was provided.
+ */
+OrientedBoundingBox.toRegion = function (
+  orientedBoundingBox,
+  ellipsoid,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("orientedBoundingBox", orientedBoundingBox);
+  //>>includeEnd('debug');
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+  if (!defined(result)) {
+    result = new Region();
+  }
+
+  // var planes = getPlanes(orientedBoundingBox, scratchPlanes);
+  var center = orientedBoundingBox.center;
+  var halfAxes = orientedBoundingBox.halfAxes;
+
+  var u = Matrix3.getColumn(halfAxes, 0, scratchU);
+  var v = Matrix3.getColumn(halfAxes, 1, scratchV);
+  var w = Matrix3.getColumn(halfAxes, 2, scratchW);
+
+  var uLen = Cartesian3.magnitude(u);
+  var vLen = Cartesian3.magnitude(v);
+  var wLen = Cartesian3.magnitude(w);
+
+  var uNorm = Cartesian3.divideByScalar(u, uLen > 0 ? uLen : 1.0, scratchNormU);
+  var vNorm = Cartesian3.divideByScalar(v, vLen > 0 ? vLen : 1.0, scratchNormV);
+  var wNorm = Cartesian3.divideByScalar(w, wLen > 0 ? wLen : 1.0, scratchNormW);
+
+  var planes = scratchPlanes;
+  planes[0] = Plane.fromPointNormal(center, uNorm, planes[0]);
+  planes[1] = Plane.fromPointNormal(center, vNorm, planes[1]);
+  planes[2] = Plane.fromPointNormal(center, wNorm, planes[2]);
+
+  var lens = scratchLengths;
+  lens[0] = uLen;
+  lens[1] = vLen;
+  lens[2] = wLen;
+
+  var minDist = 0.0;
+  var maxDist = 0.0;
+  for (var p = 0; p < planes.length; p++) {
+    var distances = planeEllipsoidDistance(
+      planes[p],
+      lens[p],
+      ellipsoid,
+      scratchDistances
+    );
+    minDist = Math.max(minDist, distances.x);
+    maxDist = Math.max(maxDist, distances.y);
+  }
+
+  var corners = OrientedBoundingBox.getCorners(
+    orientedBoundingBox,
+    scratchCorners
+  );
+  var cornersCartographic = scratchCornersCartographic;
+
+  // var minimumHeight = Number.MAX_VALUE;
+  // var maximumHeight = -Number.MAX_VALUE;
+
+  for (var c = 0; c < corners.length; c++) {
+    cornersCartographic[c] = Cartographic.fromCartesian(
+      corners[c],
+      ellipsoid,
+      cornersCartographic[c]
+    );
+    // minimumHeight = Math.min(minimumHeight, cartographic.height);
+    // maximumHeight = Math.max(maximumHeight, cartographic.height);
+  }
+
+  // if (orientedBoundingBox.containsPoint(Cartesian3.ZERO)) {
+  //   result.rectangle = Rectangle.clone(Rectangle.MAX_VALUE, result.rectangle);
+  // } else {
+
+  result.rectangle = Rectangle.fromCartographicArray(
+    cornersCartographic,
+    result.rectangle
+  );
+  result.minimumHeight = minDist;
+  result.maximumHeight = maxDist;
+  // }
+
+  // console.log(result.rectanglewest + " " + east);
+  return result;
+};
+
+/**
  * Duplicates a OrientedBoundingBox instance.
  *
  * @param {OrientedBoundingBox} box The bounding box to duplicate.
@@ -841,6 +1158,48 @@ OrientedBoundingBox.distanceSquaredTo = function (box, cartesian) {
   return distanceSquared;
 };
 
+/**
+ * Checks whether a point is inside the oriented bounding box.
+ *
+ * @param {OrientedBoundingBox} box The box.
+ * @param {Cartesian3} cartesian The point
+ * @returns {Boolean} <code>true</code> if the point is inside or on the surface of the box, <code>false</code> otherwise.
+ *
+ */
+OrientedBoundingBox.containsPoint = function (box, cartesian) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("box", box);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
+
+  var offset = Cartesian3.subtract(cartesian, box.center, scratchOffset);
+  var u = Matrix3.getColumn(box.halfAxes, 0, scratchCartesianU);
+  var v = Matrix3.getColumn(box.halfAxes, 1, scratchCartesianV);
+  var w = Matrix3.getColumn(box.halfAxes, 2, scratchCartesianW);
+
+  var uHalf = Cartesian3.magnitude(u);
+  var vHalf = Cartesian3.magnitude(v);
+  var wHalf = Cartesian3.magnitude(w);
+
+  if (uHalf > 0) {
+    Cartesian3.divideByScalar(u, uHalf, u);
+  }
+
+  if (vHalf > 0) {
+    Cartesian3.divideByScalar(v, vHalf, v);
+  }
+
+  if (wHalf > 0) {
+    Cartesian3.divideByScalar(w, wHalf, w);
+  }
+
+  return (
+    Math.abs(Cartesian3.dot(offset, u)) <= uHalf &&
+    Math.abs(Cartesian3.dot(offset, v)) <= vHalf &&
+    Math.abs(Cartesian3.dot(offset, w)) <= wHalf
+  );
+};
+
 var scratchCorner = new Cartesian3();
 var scratchToCenter = new Cartesian3();
 
@@ -983,6 +1342,79 @@ OrientedBoundingBox.computePlaneDistances = function (
   return result;
 };
 
+var scratchXAxis = new Cartesian3();
+var scratchYAxis = new Cartesian3();
+var scratchZAxis = new Cartesian3();
+
+OrientedBoundingBox.getCorners = function (box, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = [
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+    ];
+  }
+
+  var center = box.center;
+  var halfAxes = box.halfAxes;
+  var xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
+  var yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
+  var zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
+
+  Cartesian3.clone(center, result[0]);
+  Cartesian3.subtract(result[0], xAxis, result[0]);
+  Cartesian3.subtract(result[0], yAxis, result[0]);
+  Cartesian3.subtract(result[0], zAxis, result[0]);
+
+  Cartesian3.clone(center, result[1]);
+  Cartesian3.subtract(result[1], xAxis, result[1]);
+  Cartesian3.add(result[1], yAxis, result[1]);
+  Cartesian3.subtract(result[1], zAxis, result[1]);
+
+  Cartesian3.clone(center, result[2]);
+  Cartesian3.subtract(result[2], xAxis, result[2]);
+  Cartesian3.subtract(result[2], yAxis, result[2]);
+  Cartesian3.add(result[2], zAxis, result[2]);
+
+  Cartesian3.clone(center, result[3]);
+  Cartesian3.subtract(result[3], xAxis, result[3]);
+  Cartesian3.add(result[3], yAxis, result[3]);
+  Cartesian3.add(result[3], zAxis, result[3]);
+
+  Cartesian3.clone(center, result[4]);
+  Cartesian3.add(result[4], xAxis, result[4]);
+  Cartesian3.subtract(result[4], yAxis, result[4]);
+  Cartesian3.subtract(result[4], zAxis, result[4]);
+
+  Cartesian3.clone(center, result[5]);
+  Cartesian3.add(result[5], xAxis, result[5]);
+  Cartesian3.add(result[5], yAxis, result[5]);
+  Cartesian3.subtract(result[5], zAxis, result[5]);
+
+  Cartesian3.clone(center, result[6]);
+  Cartesian3.add(result[6], xAxis, result[6]);
+  Cartesian3.subtract(result[6], yAxis, result[6]);
+  Cartesian3.add(result[6], zAxis, result[6]);
+
+  Cartesian3.clone(center, result[7]);
+  Cartesian3.add(result[7], xAxis, result[7]);
+  Cartesian3.add(result[7], yAxis, result[7]);
+  Cartesian3.add(result[7], zAxis, result[7]);
+
+  return result;
+};
+
 var scratchBoundingSphere = new BoundingSphere();
 
 /**
@@ -1037,6 +1469,18 @@ OrientedBoundingBox.prototype.intersectPlane = function (plane) {
  */
 OrientedBoundingBox.prototype.distanceSquaredTo = function (cartesian) {
   return OrientedBoundingBox.distanceSquaredTo(this, cartesian);
+};
+
+/**
+ * Checks whether a point is inside the oriented bounding box.
+ *
+ * @param {OrientedBoundingBox} box The box.
+ * @param {Cartesian3} cartesian The point
+ * @returns {Boolean} <code>true</code> if the point is inside or on the surface of the box, <code>false</code> otherwise.
+ *
+ */
+OrientedBoundingBox.prototype.containsPoint = function (cartesian) {
+  return OrientedBoundingBox.containsPoint(this, cartesian);
 };
 
 /**

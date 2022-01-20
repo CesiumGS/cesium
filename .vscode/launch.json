@@ -10,8 +10,35 @@
             "name": "Launch Program",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "start"],
+            "runtimeArgs": [
+                "run-script",
+                "start"
+            ],
             "noDebug": true
+        },
+        {
+            "type": "firefox",
+            "request": "launch",
+            "name": "Region",
+            "url": "http://localhost:8080/Apps/Sandcastle/index.html?src=development%2FRegion.html",
+            "pathMappings": [
+                {
+                    "url": "http://localhost:8080/Source",
+                    "path": "${workspaceFolder}/Source"
+                }
+            ]
+        },
+        {
+            "type": "firefox",
+            "request": "launch",
+            "name": "Test Region",
+            "url": "http://localhost:8080/Specs/SpecRunner.html?spec=Core%2FOrientedBoundingBox%20toRegion%20produces%20expected%20values.",
+            "pathMappings": [
+                {
+                    "url": "http://localhost:8080/Source",
+                    "path": "${workspaceFolder}/Source"
+                }
+            ]
         }
     ]
 }

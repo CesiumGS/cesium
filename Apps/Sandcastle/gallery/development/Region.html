@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>West</td>
+            <td>
+              <input
+                type="range"
+                min="-180"
+                max="180"
+                step="1"
+                data-bind="value: west, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>East</td>
+            <td>
+              <input
+                type="range"
+                min="-180"
+                max="180"
+                step="1"
+                data-bind="value: east, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>South</td>
+            <td>
+              <input
+                type="range"
+                min="-90"
+                max="90"
+                step="1"
+                data-bind="value: south, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>North</td>
+            <td>
+              <input
+                type="range"
+                min="-90"
+                max="90"
+                step="1"
+                data-bind="value: north, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Min Height</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1000000"
+                step="0.01"
+                data-bind="value: minHeight, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Max Height</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1000000"
+                step="0.01"
+                data-bind="value: maxHeight, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Exaggeration</td>
+            <td>
+              <input
+                type="range"
+                min="0.01"
+                max="20.0"
+                step="0.01"
+                data-bind="value: exaggeration, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+
+        var viewModel = {
+          west: -120.0,
+          east: -50.0,
+          south: 20.0,
+          north: 40.0,
+          minHeight: 500000.0,
+          maxHeight: 1000000.0,
+          exaggeration: 10.0,
+        };
+
+        viewer.scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            1875182.453783835,
+            -44195644.09491992,
+            -22188177.439980697
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.09320393884694944,
+            -1.4795060036937584,
+            6.189435112750541
+          ),
+        });
+
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (var name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout.getObservable(viewModel, name).subscribe(update);
+          }
+        }
+
+        update();
+
+        function update() {
+          viewer.scene.primitives.removeAll();
+
+          var west = Number(viewModel.west);
+          var east = Number(viewModel.east);
+          var south = Number(viewModel.south);
+          var north = Number(viewModel.north);
+          var exaggeration = Number(viewModel.exaggeration);
+          var minHeight = Number(viewModel.minHeight);
+          var maxHeight = Number(viewModel.maxHeight);
+
+          if (north < south) {
+            var temp = north;
+            north = south;
+            south = temp;
+          }
+
+          var rectangle = Cesium.Rectangle.fromDegrees(
+            west,
+            south,
+            east,
+            north
+          );
+          var minHeightExaggeration = minHeight * exaggeration;
+          var maxHeightExaggeration = maxHeight * exaggeration;
+
+          var region = new Cesium.Region(
+            rectangle,
+            minHeightExaggeration,
+            maxHeightExaggeration
+          );
+          console.log(region.rectangle);
+
+          var orientedBoundingBox = Cesium.OrientedBoundingBox.fromRegion(
+            region
+          );
+
+          var region2 = Cesium.OrientedBoundingBox.toRegion(
+            orientedBoundingBox,
+            viewer.scene.globe.ellipsoid,
+            new Cesium.Region()
+          );
+
+          var orientedBoundingBox2 = Cesium.OrientedBoundingBox.fromRegion(
+            region2
+          );
+
+          var red = new Cesium.Color(1.0, 0.0, 0.0);
+          var pink = new Cesium.Color(1.0, 0.0, 1.0, 0.5);
+          renderRegion(region, red);
+          renderOrientedBoundingBox(orientedBoundingBox, red);
+          renderRegion(region2, pink);
+          renderOrientedBoundingBox(orientedBoundingBox2, pink);
+        }
+
+        function renderOrientedBoundingBox(obb, color) {
+          var a0 = Cesium.Matrix3.getColumn(
+            obb.halfAxes,
+            0,
+            new Cesium.Cartesian3()
+          );
+          var a1 = Cesium.Matrix3.getColumn(
+            obb.halfAxes,
+            1,
+            new Cesium.Cartesian3()
+          );
+          var a2 = Cesium.Matrix3.getColumn(
+            obb.halfAxes,
+            2,
+            new Cesium.Cartesian3()
+          );
+
+          var a0Len = 2.0 * Cesium.Cartesian3.magnitude(a0);
+          var a1Len = 2.0 * Cesium.Cartesian3.magnitude(a1);
+          var a2Len = 2.0 * Cesium.Cartesian3.magnitude(a2);
+
+          var a0Norm = Cesium.Cartesian3.normalize(a0, new Cesium.Cartesian3());
+          var a1Norm = Cesium.Cartesian3.normalize(a1, new Cesium.Cartesian3());
+          var a2Norm = Cesium.Cartesian3.normalize(a2, new Cesium.Cartesian3());
+
+          var dimensions = new Cesium.Cartesian3(a0Len, a1Len, a2Len);
+          var center = obb.center;
+
+          var boxModelMatrix = new Cesium.Matrix4(
+            a0Norm.x,
+            a1Norm.x,
+            a2Norm.x,
+            center.x,
+            a0Norm.y,
+            a1Norm.y,
+            a2Norm.y,
+            center.y,
+            a0Norm.z,
+            a1Norm.z,
+            a2Norm.z,
+            center.z,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          );
+
+          var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
+            dimensions: dimensions,
+          });
+
+          var boxOutlineInstance = new Cesium.GeometryInstance({
+            geometry: boxOutlineGeometry,
+            modelMatrix: boxModelMatrix,
+            attributes: {
+              color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
+            },
+          });
+
+          viewer.scene.primitives.add(
+            new Cesium.Primitive({
+              geometryInstances: boxOutlineInstance,
+              appearance: new Cesium.PerInstanceColorAppearance({
+                flat: true,
+                renderState: {
+                  lineWidth: Math.min(
+                    2.0,
+                    viewer.scene.maximumAliasedLineWidth
+                  ),
+                },
+              }),
+            })
+          );
+        }
+
+        function renderRegion(region, color) {
+          var rectangleInstance = new Cesium.GeometryInstance({
+            geometry: new Cesium.RectangleGeometry({
+              rectangle: region.rectangle,
+              vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+              extrudedHeight: region.minimumHeight,
+              height: region.maximumHeight,
+            }),
+            attributes: {
+              color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
+            },
+          });
+
+          viewer.scene.primitives.add(
+            new Cesium.Primitive({
+              geometryInstances: rectangleInstance,
+              appearance: new Cesium.PerInstanceColorAppearance({
+                closed: true,
+              }),
+            })
+          );
+        }
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

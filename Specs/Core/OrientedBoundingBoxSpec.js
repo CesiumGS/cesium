@@ -1,6 +1,7 @@
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
+import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -10,6 +11,7 @@ import { OrientedBoundingBox } from "../../Source/Cesium.js";
 import { Plane } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
+import Region from "../../Source/Core/Region.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/OrientedBoundingBox", function () {
@@ -885,6 +887,90 @@ describe("Core/OrientedBoundingBox", function () {
       new Matrix3(0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
       CesiumMath.EPSILON15
     );
+  });
+
+  it("toRegion produces expected values.", function () {
+    var ellipsoid = Ellipsoid.UNIT_SPHERE;
+    var boxCenterX = 2.0;
+    var boxLen = 1.0;
+
+    var west = Cartographic.fromCartesian(
+      Cartesian3.fromElements(boxCenterX - boxLen, -boxLen, 0.0),
+      ellipsoid
+    );
+    var south = Cartographic.fromCartesian(
+      Cartesian3.fromElements(boxCenterX - boxLen, 0.0, -boxLen),
+      ellipsoid
+    );
+    var east = Cartographic.fromCartesian(
+      Cartesian3.fromElements(boxCenterX - boxLen, +boxLen, 0.0),
+      ellipsoid
+    );
+    var north = Cartographic.fromCartesian(
+      Cartesian3.fromElements(boxCenterX - boxLen, 0.0, +boxLen),
+      ellipsoid
+    );
+    var rectangle = new Rectangle(west, south, east, north);
+    var minimumHeight = 0.0;
+    var maximumHeight = 2.0;
+
+    var orientedBoundingBox = new OrientedBoundingBox(
+      new Cartesian3(boxCenterX, 0.0, 0.0),
+      new Matrix3(boxLen, 0.0, 0.0, 0.0, boxLen, 0.0, 0.0, 0.0, boxLen)
+    );
+
+    var region = OrientedBoundingBox.toRegion(orientedBoundingBox, ellipsoid);
+
+    expect(region.rectangle).toEqual(rectangle);
+    expect(region.minimumHeight).toEqual(minimumHeight);
+    expect(region.maximumHeight).toEqual(maximumHeight);
+  });
+
+  it("toRegion produces region that crosses IDL.", function () {
+    var minLon = Cartographic.fromDegrees(-178, 3);
+    var minLat = Cartographic.fromDegrees(-179, -4);
+    var maxLon = Cartographic.fromDegrees(178, 3);
+    var maxLat = Cartographic.fromDegrees(179, 4);
+
+    var orientedBoundingBox = new OrientedBoundingBox(
+      new Cartesian3(),
+      new Matrix3()
+    );
+
+    var region = OrientedBoundingBox.toRegion(
+      orientedBoundingBox,
+      Ellipsoid.WGS84
+    );
+
+    expect(region.rectangle.east).toEqual(minLon.longitude);
+    expect(region.rectangle.south).toEqual(minLat.latitude);
+    expect(region.rectangle.west).toEqual(maxLon.longitude);
+    expect(region.rectangle.north).toEqual(maxLat.latitude);
+  });
+
+  it("toRectangle works with a result parameter.", function () {
+    var west = -0.1;
+    var south = 0.0;
+    var east = 0.3;
+    var north = 0.2;
+    var minimumHeight = 0.0;
+    var maximumHeight = 1.0;
+    var rectangle = new Rectangle(west, south, east, north);
+
+    var orientedBoundingBox = new OrientedBoundingBox(
+      new Cartesian3(),
+      new Matrix3()
+    );
+
+    var result = new Region();
+    var region = OrientedBoundingBox.toRegion(
+      orientedBoundingBox,
+      Ellipsoid.WGS84,
+      result
+    );
+    expect(region.rectangle).toEqual(rectangle);
+    expect(region.minimumHeight).toEqual(minimumHeight);
+    expect(region.maximumHeight).toEqual(maximumHeight);
   });
 
   var intersectPlaneTestCornersEdgesFaces = function (center, axes) {
