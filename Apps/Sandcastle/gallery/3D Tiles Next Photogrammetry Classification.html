@@ -256,7 +256,7 @@
                 "Component: " +
                 pickedObject.getProperty("component") +
                 "\nFeature ID: " +
-                pickedObject._batchId;
+                pickedObject.featureId;
               nameOverlay.textContent = message;
             } else {
               nameOverlay.style.display = "none";
@@ -272,11 +272,11 @@
             var pickedObject = scene.pick(movement.position);
             if (
               Cesium.defined(pickedObject) &&
-              Cesium.defined(pickedObject._batchId)
+              Cesium.defined(pickedObject.featureId)
             ) {
               selectFeatureShader.setUniform(
                 "u_selectedFeature",
-                pickedObject._batchId
+                pickedObject.featureId
               );
             } else {
               selectFeatureShader.setUniform(
