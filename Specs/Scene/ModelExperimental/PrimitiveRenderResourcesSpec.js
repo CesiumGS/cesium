@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   BlendingState,
   Cartesian3,
   ComponentDatatype,
@@ -19,11 +20,16 @@ import {
 
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   var mockModel = {
+    modelMatrix: Matrix4.IDENTITY,
     type: ModelExperimentalType.GLTF,
   };
   var mockNode = {};
   var mockSceneGraph = {
     computedModelMatrix: Matrix4.IDENTITY,
+    components: {
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+    },
   };
 
   var runtimeNode = new ModelExperimentalNode({

@@ -2,13 +2,11 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -22,6 +20,7 @@ import Axis from "./Axis.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
+import I3dmParser from "./I3dmParser.js";
 import ModelInstanceCollection from "./ModelInstanceCollection.js";
 import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
@@ -162,71 +161,18 @@ function getPickIdCallback(content) {
   };
 }
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 var propertyScratch1 = new Array(4);
 var propertyScratch2 = new Array(4);
 
 function initialize(content, arrayBuffer, byteOffset) {
-  var byteStart = defaultValue(byteOffset, 0);
-  byteOffset = byteStart;
+  var i3dm = I3dmParser.parse(arrayBuffer, byteOffset);
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
-  byteOffset += sizeOfUint32; // Skip magic
-
-  var version = view.getUint32(byteOffset, true);
-  if (version !== 1) {
-    throw new RuntimeError(
-      "Only Instanced 3D Model version 1 is supported. Version " +
-        version +
-        " is not."
-    );
-  }
-  byteOffset += sizeOfUint32;
-
-  var byteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var featureTableJsonByteLength = view.getUint32(byteOffset, true);
-  if (featureTableJsonByteLength === 0) {
-    throw new RuntimeError(
-      "featureTableJsonByteLength is zero, the feature table must be defined."
-    );
-  }
-  byteOffset += sizeOfUint32;
-
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var batchTableJsonByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var gltfFormat = view.getUint32(byteOffset, true);
-  if (gltfFormat !== 1 && gltfFormat !== 0) {
-    throw new RuntimeError(
-      "Only glTF format 0 (uri) or 1 (embedded) are supported. Format " +
-        gltfFormat +
-        " is not."
-    );
-  }
-  byteOffset += sizeOfUint32;
-
-  var featureTableJson = getJsonFromTypedArray(
-    uint8Array,
-    byteOffset,
-    featureTableJsonByteLength
-  );
-  byteOffset += featureTableJsonByteLength;
-
-  var featureTableBinary = new Uint8Array(
-    arrayBuffer,
-    byteOffset,
-    featureTableBinaryByteLength
-  );
-  byteOffset += featureTableBinaryByteLength;
+  var gltfFormat = i3dm.gltfFormat;
+  var gltfView = i3dm.gltf;
+  var featureTableJson = i3dm.featureTableJson;
+  var featureTableBinary = i3dm.featureTableBinary;
+  var batchTableJson = i3dm.batchTableJson;
+  var batchTableBinary = i3dm.batchTableBinary;
 
   var featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
@@ -241,56 +187,12 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
   }
 
-  var batchTableJson;
-  var batchTableBinary;
-  if (batchTableJsonByteLength > 0) {
-    batchTableJson = getJsonFromTypedArray(
-      uint8Array,
-      byteOffset,
-      batchTableJsonByteLength
-    );
-    byteOffset += batchTableJsonByteLength;
-
-    if (batchTableBinaryByteLength > 0) {
-      // Has a batch table binary
-      batchTableBinary = new Uint8Array(
-        arrayBuffer,
-        byteOffset,
-        batchTableBinaryByteLength
-      );
-      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-      batchTableBinary = new Uint8Array(batchTableBinary);
-      byteOffset += batchTableBinaryByteLength;
-    }
-  }
-
   content._batchTable = new Cesium3DTileBatchTable(
     content,
     instancesLength,
     batchTableJson,
     batchTableBinary
   );
-
-  var gltfByteLength = byteStart + byteLength - byteOffset;
-  if (gltfByteLength === 0) {
-    throw new RuntimeError(
-      "glTF byte length is zero, i3dm must have a glTF to instance."
-    );
-  }
-
-  var gltfView;
-  if (byteOffset % 4 === 0) {
-    gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
-  } else {
-    // Create a copy of the glb so that it is 4-byte aligned
-    Instanced3DModel3DTileContent._deprecationWarning(
-      "i3dm-glb-unaligned",
-      "The embedded glb is not aligned to a 4-byte boundary."
-    );
-    gltfView = new Uint8Array(
-      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength)
-    );
-  }
 
   var tileset = content._tileset;
 

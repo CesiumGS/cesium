@@ -4,6 +4,8 @@
 
 ##### Additions :tada:
 
+- Added getters `Cesium3DTileFeature.featureId` and `ModelFeature.featureId` so the feature ID or batch ID can be accessed from a picked feature. [#10022](https://github.com/CesiumGS/cesium/pull/10022)
+- Added `I3dmLoader` to transcode .i3dm to `ModelExperimental`. [#9968](https://github.com/CesiumGS/cesium/pull/9968)
 - Added `PntsLoader` to transcode .pnts to `ModelExperimental`. [#9978](https://github.com/CesiumGS/cesium/pull/9978)
 - Added point cloud attenuation support to `ModelExperimental`. [#9998](https://github.com/CesiumGS/cesium/pull/9998)
 
@@ -12,6 +14,8 @@
 - Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values. [#9717](https://github.com/CesiumGS/cesium/pull/9717)
 - Fixed `scene.pickTranslucentDepth` for translucent point clouds with eye dome lighting. [#9991](https://github.com/CesiumGS/cesium/pull/9991)
 - Added a setter for `tileset.pointCloudShading` that throws if set to `undefined` to clarify that this is disallowed. [#9998](https://github.com/CesiumGS/cesium/pull/9998)
+- Fixes handling .b3dm `_BATCHID` accessors in `ModelExperimental` [#10008](https://github.com/CesiumGS/cesium/pull/10008)
+- Fixed path entity being drawn when data is unavailable [#1704](https://github.com/CesiumGS/cesium/pull/1704)
 
 ### 1.89 - 2022-01-03
 

@@ -20,6 +20,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
   var noBatchIdsUrl =
     "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
+  var InstancedWithBatchTableUrl =
+    "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
 
   var scene;
   var centerLongitude = -1.31968;
@@ -65,6 +67,18 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.resolvesReadyPromise(scene, withBatchTableUrl);
   });
 
+  it("resolves readyPromise with I3DM", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 15.0);
+    return Cesium3DTilesTester.resolvesReadyPromise(
+      scene,
+      InstancedWithBatchTableUrl
+    );
+  });
+
   it("renders glTF content", function () {
     return Cesium3DTilesTester.loadTileset(scene, buildingsMetadataUrl).then(
       function (tileset) {
@@ -91,6 +105,20 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     });
   });
 
+  it("renders I3DM content", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 25.0);
+    return Cesium3DTilesTester.loadTileset(
+      scene,
+      InstancedWithBatchTableUrl
+    ).then(function (tileset) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
+  });
+
   it("picks from glTF", function () {
     return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
       function (tileset) {
@@ -102,6 +130,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(result.featureId).toBeUndefined();
           expect(content.hasProperty(0, "id")).toBe(false);
           expect(content.getFeature(0)).toBeUndefined();
         });
@@ -121,8 +150,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
-          expect(content.hasProperty(0, "id")).toBe(false);
-          expect(content.getFeature(0)).toBeDefined();
+          var featureId = result.featureId;
+          expect(featureId).toBe(0);
+          expect(content.hasProperty(featureId, "id")).toBe(false);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
@@ -139,9 +170,11 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          var featureId = result.featureId;
+          expect(featureId).toBe(0);
           expect(content.batchTable).toBeDefined();
-          expect(content.hasProperty(0, "id")).toBe(true);
-          expect(content.getFeature(0)).toBeDefined();
+          expect(content.hasProperty(featureId, "id")).toBe(true);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
@@ -159,12 +192,40 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          var featureId = result.featureId;
+          expect(featureId).toBe(0);
           expect(content.batchTable).toBeDefined();
-          expect(content.hasProperty(0, "id")).toBe(true);
-          expect(content.getFeature(0)).toBeDefined();
+          expect(content.hasProperty(featureId, "id")).toBe(true);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
+  });
+
+  it("picks from i3dm batch table", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 25.0);
+    return Cesium3DTilesTester.loadTileset(
+      scene,
+      InstancedWithBatchTableUrl
+    ).then(function (tileset) {
+      var content = tileset.root.content;
+      tileset.show = false;
+      expect(scene).toPickPrimitive(undefined);
+      tileset.show = true;
+      expect(scene).toPickAndCall(function (result) {
+        expect(result).toBeDefined();
+        expect(result.primitive).toBe(tileset);
+        expect(result.content).toBe(content);
+        var featureId = result.featureId;
+        expect(featureId).toBe(12);
+        expect(content.hasProperty(featureId, "Height")).toBe(true);
+        expect(content.getFeature(featureId)).toBeDefined();
+      });
+    });
   });
 
   it("destroys", function () {

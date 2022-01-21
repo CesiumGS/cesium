@@ -2,14 +2,19 @@ import {
   Cartesian3,
   combine,
   GltfLoader,
+  I3dmLoader,
   InstancingPipelineStage,
   Resource,
   ResourceCache,
   ShaderBuilder,
+  Matrix4,
   Math as CesiumMath,
+  _shadersInstancingStageCommon,
+  _shadersLegacyInstancingStageVS,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
+import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
   var boxInstanced =
@@ -18,6 +23,8 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
   var boxInstancedTranslationMinMax =
     "./Data/Models/GltfLoader/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
+  var i3dmInstancedOrientation =
+    "./Data/Cesium3DTiles/Instanced/InstancedOrientation/instancedOrientation.i3dm";
 
   var scene;
   var gltfLoaders = [];
@@ -53,12 +60,36 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
     });
   }
 
+  function getI3dmOptions(gltfPath, options) {
+    var resource = new Resource({
+      url: gltfPath,
+    });
+
+    return combine(options, {
+      i3dmResource: resource,
+      incrementallyLoadTexture: false,
+    });
+  }
+
   function loadGltf(gltfPath, options) {
     var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
     gltfLoaders.push(gltfLoader);
     gltfLoader.load();
 
     return waitForLoaderProcess(gltfLoader, scene);
+  }
+
+  function loadI3dm(i3dmPath) {
+    var result = Resource.fetchArrayBuffer(i3dmPath);
+
+    return result.then(function (arrayBuffer) {
+      var i3dmLoader = new I3dmLoader(
+        getI3dmOptions(i3dmPath, { arrayBuffer: arrayBuffer })
+      );
+      gltfLoaders.push(i3dmLoader);
+      i3dmLoader.load();
+      return waitForLoaderProcess(i3dmLoader, scene);
+    });
   }
 
   it("correctly computes instancing TRANSLATION min and max from typed arrays", function () {
@@ -343,6 +374,63 @@ describe("Scene/ModelExperimental/InstancingPipelineStage", function () {
 
       expect(attributeLines[0]).toEqual(
         "attribute vec3 a_instanceTranslation;"
+      );
+    });
+  });
+
+  it("adds uniforms for legacy instancing path", function () {
+    var renderResources = {
+      attributeIndex: 1,
+      attributes: [],
+      instancingTranslationMax: undefined,
+      instancingTranslationMin: undefined,
+      shaderBuilder: new ShaderBuilder(),
+      model: {
+        _resources: [],
+        sceneGraph: {
+          components: {
+            transform: Matrix4.ZERO,
+          },
+        },
+      },
+      uniformMap: {},
+      runtimeNode: {
+        axisCorrectedTransform: Matrix4.IDENTITY,
+      },
+    };
+
+    return loadI3dm(i3dmInstancedOrientation, {
+      i3dmResource: Resource.createIfNeeded(i3dmInstancedOrientation),
+    }).then(function (i3dmLoader) {
+      var components = i3dmLoader.components;
+      var node = components.nodes[0];
+      var shaderBuilder = renderResources.shaderBuilder;
+      var uniformMap = renderResources.uniformMap;
+      var runtimeNode = renderResources.runtimeNode;
+
+      scene.renderForSpecs();
+      InstancingPipelineStage.process(renderResources, node, scene.frameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_INSTANCING",
+        "HAS_INSTANCE_MATRICES",
+        "USE_LEGACY_INSTANCING",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform mat4 u_instance_modifiedModelView;",
+        "uniform mat4 u_instance_nodeTransform;",
+      ]);
+
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersInstancingStageCommon,
+        _shadersLegacyInstancingStageVS,
+      ]);
+
+      expect(uniformMap.u_instance_modifiedModelView()).toEqual(Matrix4.ZERO);
+
+      expect(uniformMap.u_instance_nodeTransform()).toEqual(
+        runtimeNode.axisCorrectedTransform
       );
     });
   });

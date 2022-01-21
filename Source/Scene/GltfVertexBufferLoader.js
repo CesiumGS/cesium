@@ -32,11 +32,11 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
- * @param {String} [options.accessorId] The accessor id.
+ * @param {Number} [options.accessorId] The accessor id.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
- * @param {Boolean} [loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
+ * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {Boolean} [options.loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
