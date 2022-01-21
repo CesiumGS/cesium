@@ -575,7 +575,10 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+   * The index into the list of primitive feature IDs used for picking and 
+   * styling. For EXT_feature_metadata, feature ID attributes are listed before
+   * feature ID textures. If both per-primitive and per-instance feature IDs are
+   * present, the instance feature IDs take priority.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -588,10 +591,21 @@ Object.defineProperties(ModelExperimental.prototype, {
     get: function () {
       return this._featureIdIndex;
     },
+    set: function(value) {
+      if (value === this._featureIdIndex) {
+        return;
+      }
+
+      this._featureIdIndex = value;
+      this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
+      this.resetDrawCommands();
+    }
   },
 
   /**
-   * The index of the feature ID texture to use for picking features per-primitive.
+   * The index into the list of instance feature IDs used for picking and 
+   * styling. If both per-primitive and per-instance feature IDs are present, 
+   * the instance feature IDs take priority.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -604,6 +618,15 @@ Object.defineProperties(ModelExperimental.prototype, {
     get: function () {
       return this._instanceFeatureIdIndex;
     },
+    set: function(value) {
+      if (value === this._instanceFeatureIdIndex) {
+        return;
+      }
+
+      this._instanceFeatureIdIndex = value;
+      this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
+      this.resetDrawCommands();
+    }
   },
 });
 

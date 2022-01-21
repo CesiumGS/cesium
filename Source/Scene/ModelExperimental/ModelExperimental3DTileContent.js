@@ -175,6 +175,8 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
   model.pointCloudShading = tileset.pointCloudShading;
+  model.featureIdIndex = tileset.featureIdIndex;
+  model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
 
   model.update(frameState);
 };
