@@ -307,7 +307,9 @@ function addOutline(
         // Hackily update it, or else we'll end up creating the wrong type
         // of index buffer later.
         loadResources.indexBuffersToCreate._array.forEach(function (toCreate) {
-          if (toCreate === undefined) return;
+          if (!defined(toCreate)) { 
+              return;
+          }
           if (toCreate.id === triangleIndexAccessorGltf.bufferView) {
             toCreate.componentType = triangleIndexAccessorGltf.componentType;
           }
