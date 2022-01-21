@@ -20,6 +20,7 @@ import BlendFunction from "./BlendFunction.js";
  * @private
  */
 function OIT(context) {
+  this._numSamples = 1;
   // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
   this._translucentMultipassSupport = false;
   this._translucentMRTSupport = false;
@@ -201,14 +202,20 @@ function updateFramebuffers(oit, context) {
   return supported;
 }
 
-OIT.prototype.update = function (context, passState, framebuffer, useHDR) {
+OIT.prototype.update = function (
+  context,
+  passState,
+  framebuffer,
+  useHDR,
+  numSamples
+) {
   if (!this.isSupported()) {
     return;
   }
 
   this._opaqueFBO = framebuffer;
   this._opaqueTexture = framebuffer.getColorTexture(0);
-  this._depthStencilTexture = framebuffer.depthStencilTexture;
+  this._depthStencilTexture = framebuffer.getDepthStencilTexture();
 
   var width = this._opaqueTexture.width;
   var height = this._opaqueTexture.height;
@@ -219,11 +226,17 @@ OIT.prototype.update = function (context, passState, framebuffer, useHDR) {
     accumulationTexture.width !== width ||
     accumulationTexture.height !== height ||
     useHDR !== this._useHDR;
-  if (textureChanged) {
+  var samplesChanged = this._numSamples !== numSamples;
+  this._numSamples = numSamples;
+  if (textureChanged || samplesChanged) {
     updateTextures(this, context, width, height);
   }
 
-  if (!defined(this._translucentFBO.framebuffer) || textureChanged) {
+  if (
+    !defined(this._translucentFBO.framebuffer) ||
+    textureChanged ||
+    samplesChanged
+  ) {
     if (!updateFramebuffers(this, context)) {
       // framebuffer creation failed
       return;
@@ -824,7 +837,7 @@ OIT.prototype.execute = function (context, passState) {
 OIT.prototype.clear = function (context, passState, clearColor) {
   var framebuffer = passState.framebuffer;
 
-  passState.framebuffer = this._opaqueFBO;
+  passState.framebuffer = this._opaqueFBO.framebuffer;
   Color.clone(clearColor, this._opaqueClearCommand.color);
   this._opaqueClearCommand.execute(context, passState);
 
@@ -843,7 +856,7 @@ OIT.prototype.clear = function (context, passState, clearColor) {
 };
 
 OIT.prototype.isSupported = function () {
-  return false; //this._translucentMRTSupport || this._translucentMultipassSupport;
+  return this._translucentMRTSupport || this._translucentMultipassSupport;
 };
 
 OIT.prototype.isDestroyed = function () {

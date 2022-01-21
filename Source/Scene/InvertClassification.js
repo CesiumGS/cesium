@@ -20,6 +20,7 @@ import StencilOperation from "./StencilOperation.js";
  * @private
  */
 function InvertClassification() {
+  this._numSamples = 1;
   this.previousFramebuffer = undefined;
   this._previousFramebuffer = undefined;
 
@@ -170,20 +171,29 @@ var opaqueFS =
   "#endif\n" +
   "}\n";
 
-InvertClassification.prototype.update = function (context, numSamples) {
+InvertClassification.prototype.update = function (
+  context,
+  numSamples,
+  globeFBM
+) {
   var texture = this._fbo.getColorTexture();
   var previousFramebufferChanged =
     this.previousFramebuffer !== this._previousFramebuffer;
   this._previousFramebuffer = this.previousFramebuffer;
+  var samplesChanged = this._numSamples !== numSamples;
 
   var width = context.drawingBufferWidth;
   var height = context.drawingBufferHeight;
   var textureChanged =
     !defined(texture) || texture.width !== width || texture.height !== height;
 
-  if (textureChanged || previousFramebufferChanged) {
+  if (textureChanged || previousFramebufferChanged || samplesChanged) {
+    this._numSamples = numSamples;
     this._depthStencilTexture =
       this._depthStencilTexture && this._depthStencilTexture.destroy();
+    this._depthStencilRenderbuffer =
+      this._depthStencilRenderbuffer &&
+      this._depthStencilRenderbuffer.destroy();
 
     if (!defined(this._previousFramebuffer)) {
       this._depthStencilTexture = new Texture({
@@ -193,13 +203,13 @@ InvertClassification.prototype.update = function (context, numSamples) {
         pixelFormat: PixelFormat.DEPTH_STENCIL,
         pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
       });
-      if (this._fbo._numSamples > 1) {
+      if (numSamples > 1) {
         this._depthStencilRenderbuffer = new Renderbuffer({
           context: context,
           width: width,
           height: height,
           format: RenderbufferFormat.DEPTH24_STENCIL8,
-          numSamples: this._fbo._numSamples,
+          numSamples: numSamples,
         });
       }
     }
@@ -208,7 +218,8 @@ InvertClassification.prototype.update = function (context, numSamples) {
   if (
     !defined(this._fbo.framebuffer) ||
     textureChanged ||
-    previousFramebufferChanged
+    previousFramebufferChanged ||
+    samplesChanged
   ) {
     this._fbo.destroy();
     this._fboClassified.destroy();
@@ -216,8 +227,8 @@ InvertClassification.prototype.update = function (context, numSamples) {
     var depthStencilTexture;
     var depthStencilRenderbuffer;
     if (defined(this._previousFramebuffer)) {
-      depthStencilTexture = this._previousFramebuffer.getDepthStencilTexture();
-      depthStencilRenderbuffer = this._previousFramebuffer.getDepthStencilRenderbuffer();
+      depthStencilTexture = globeFBM.getDepthStencilTexture();
+      depthStencilRenderbuffer = globeFBM.getDepthStencilRenderbuffer();
     } else {
       depthStencilTexture = this._depthStencilTexture;
       depthStencilRenderbuffer = this._depthStencilRenderbuffer;
@@ -241,7 +252,11 @@ InvertClassification.prototype.update = function (context, numSamples) {
     this._rsDefault = RenderState.fromCache(rsDefault);
   }
 
-  if (!defined(this._unclassifiedCommand) || previousFramebufferChanged) {
+  if (
+    !defined(this._unclassifiedCommand) ||
+    previousFramebufferChanged ||
+    samplesChanged
+  ) {
     if (defined(this._unclassifiedCommand)) {
       this._unclassifiedCommand.shaderProgram =
         this._unclassifiedCommand.shaderProgram &&
@@ -298,6 +313,12 @@ InvertClassification.prototype.update = function (context, numSamples) {
   }
 };
 
+InvertClassification.prototype.prepareTextures = function (context) {
+  if (this._fbo._numSamples > 1) {
+    this._fbo._multisampleFramebuffer.blitFramebuffers(context);
+  }
+};
+
 InvertClassification.prototype.clear = function (context, passState) {
   if (defined(this._previousFramebuffer)) {
     this._fbo.clear(context, this._clearColorCommand, passState);
@@ -314,7 +335,7 @@ InvertClassification.prototype.executeClassified = function (
   if (!defined(this._previousFramebuffer)) {
     var framebuffer = passState.framebuffer;
 
-    this._fbo._multisampleFramebuffer.blitFramebuffers(context);
+    this.prepareTextures(context);
     passState.framebuffer = this._fboClassified.framebuffer;
     this._translucentCommand.execute(context, passState);
 

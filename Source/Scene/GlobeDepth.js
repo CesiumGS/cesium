@@ -138,7 +138,6 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
     globeDepth._copyDepthCommand = context.createViewportQuadCommand(
       PassThroughDepth,
       {
-        // framebuffer: globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer(),
         uniformMap: {
           u_depthTexture: function () {
             return globeDepth._colorFramebuffer.getDepthStencilTexture();
@@ -173,7 +172,6 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
     globeDepth._tempCopyDepthCommand = context.createViewportQuadCommand(
       PassThroughDepth,
       {
-        // framebuffer: globeDepth.framebuffer,
         uniformMap: {
           u_depthTexture: function () {
             return globeDepth._tempCopyDepthTexture;
@@ -249,9 +247,15 @@ GlobeDepth.prototype.update = function (
   this._clearGlobeDepth = clearGlobeDepth;
 };
 
+GlobeDepth.prototype.prepareTextures = function (context) {
+  if (this._numSamples > 1) {
+    this._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(context);
+  }
+};
+
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
-    this._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(context);
+    this.prepareTextures(context);
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture = this._copyDepthFramebuffer.getColorTexture();
   }
@@ -318,18 +322,6 @@ GlobeDepth.prototype.clear = function (context, passState, clearColor) {
   if (defined(clear)) {
     Color.clone(clearColor, clear.color);
     this._colorFramebuffer.clear(context, clear, passState);
-  }
-};
-
-GlobeDepth.prototype.prepareColorFramebuffer = function (context) {
-  if (this._numSamples > 1) {
-    this._colorFramebuffer.prepareColorFramebuffer(context);
-  }
-};
-
-GlobeDepth.prototype.prepareRenderFramebuffer = function () {
-  if (this._numSamples > 1) {
-    this._colorFramebuffer.prepareRenderFramebuffer();
   }
 };
 
