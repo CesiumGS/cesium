@@ -330,7 +330,7 @@
           this.depthBias = Cesium.knockout.observable(options.depthBias);
         }
 
-        var viewModel = {
+        const viewModel = {
           lightAngle: 40.0,
           lightAngleEnabled: true,
           lightHorizon: 70.0,
@@ -422,7 +422,7 @@
           biasMode: Cesium.knockout.observable(),
         };
 
-        var uiOptions = {
+        const uiOptions = {
           all: [
             "lightHorizon",
             "lightAngle",
@@ -513,7 +513,7 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
         Cesium.knockout
           .getObservable(viewModel, "lightAngle")
@@ -582,8 +582,8 @@
           .getObservable(viewModel, "location")
           .subscribe(updateLocation);
 
-        for (var i = 0; i < viewModel.biasModes.length; ++i) {
-          var biasMode = viewModel.biasModes[i];
+        for (let i = 0; i < viewModel.biasModes.length; ++i) {
+          const biasMode = viewModel.biasModes[i];
           biasMode.polygonOffset.subscribe(updateSettings);
           biasMode.polygonOffsetFactor.subscribe(updateSettings);
           biasMode.polygonOffsetUnits.subscribe(updateSettings);
@@ -594,26 +594,26 @@
           biasMode.depthBias.subscribe(updateSettings);
         }
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           scene3DOnly: true,
           infoBox: false,
           selectionIndicator: false,
           timeline: false,
         });
 
-        var offset = new Cesium.Cartesian3();
-        var scene = viewer.scene;
-        var freeformLightCamera = new Cesium.Camera(scene);
+        const offset = new Cesium.Cartesian3();
+        const scene = viewer.scene;
+        const freeformLightCamera = new Cesium.Camera(scene);
 
         function updateLightDirection() {
-          var location = uiOptions.locations[viewModel.location];
-          var center = Cesium.Cartesian3.fromRadians(
+          const location = uiOptions.locations[viewModel.location];
+          const center = Cesium.Cartesian3.fromRadians(
             location.centerLongitude,
             location.centerLatitude,
             location.height
           );
-          var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
-          var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
+          const lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
+          const lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
           offset.z = Math.cos(lightHorizon);
           offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
           offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
@@ -621,10 +621,10 @@
           freeformLightCamera.lookAt(center, offset);
         }
 
-        var context = scene.context;
-        var camera = scene.camera;
-        var globe = scene.globe;
-        var shadowMap;
+        const context = scene.context;
+        const camera = scene.camera;
+        const globe = scene.globe;
+        let shadowMap;
 
         function updateSettings() {
           shadowMap.maximumDistance = Number(viewModel.distance);
@@ -639,9 +639,9 @@
           shadowMap.softShadows = viewModel.softShadows;
 
           // Update biases
-          for (var i = 0; i < viewModel.biasModes.length; ++i) {
-            var biasMode = viewModel.biasModes[i];
-            var bias = shadowMap["_" + biasMode.type + "Bias"];
+          for (let i = 0; i < viewModel.biasModes.length; ++i) {
+            const biasMode = viewModel.biasModes[i];
+            const bias = shadowMap["_" + biasMode.type + "Bias"];
             bias.polygonOffset =
               !shadowMap._isPointLight &&
               shadowMap._polygonOffsetSupported &&
@@ -669,23 +669,23 @@
           scene.skyAtmosphere.show = viewModel.globe;
         }
 
-        var sunCamera = scene._sunCamera;
-        var fixedLightCamera = new Cesium.Camera(scene);
-        var pointLightCamera = new Cesium.Camera(scene);
-        var spotLightCamera = new Cesium.Camera(scene);
+        const sunCamera = scene._sunCamera;
+        const fixedLightCamera = new Cesium.Camera(scene);
+        const pointLightCamera = new Cesium.Camera(scene);
+        const spotLightCamera = new Cesium.Camera(scene);
 
         function updateShadows() {
-          var cascades = viewModel.cascades;
-          var lightSource = viewModel.lightSource;
+          const cascades = viewModel.cascades;
+          const lightSource = viewModel.lightSource;
 
-          var lightCamera;
+          let lightCamera;
           if (lightSource === "Freeform") {
             lightCamera = freeformLightCamera;
           } else if (lightSource === "Sun") {
             lightCamera = sunCamera;
           }
 
-          var shadowOptions;
+          let shadowOptions;
 
           if (lightSource === "Fixed") {
             shadowOptions = {
@@ -743,9 +743,9 @@
 
         scene.debugShowFramesPerSecond = true;
 
-        var cesiumTerrainProvider = Cesium.createWorldTerrain();
+        const cesiumTerrainProvider = Cesium.createWorldTerrain();
 
-        var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
         updateLocation();
 
@@ -765,18 +765,18 @@
 
         function updateLocation() {
           // Get the height of the terrain at the given longitude/latitude, then create the scene.
-          var location = uiOptions.locations[viewModel.location];
-          var positions = [
+          const location = uiOptions.locations[viewModel.location];
+          const positions = [
             new Cesium.Cartographic(
               location.centerLongitude,
               location.centerLatitude
             ),
           ];
-          var terrainProvider = viewModel.terrain
+          const terrainProvider = viewModel.terrain
             ? cesiumTerrainProvider
             : ellipsoidTerrainProvider;
           globe.terrainProvider = terrainProvider;
-          var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+          const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
           Cesium.when(promise, function (updatedPositions) {
             location.height = updatedPositions[0].height + getModelPosition();
             createScene();
@@ -784,17 +784,17 @@
         }
 
         function createScene() {
-          var location = uiOptions.locations[viewModel.location];
-          var center = Cesium.Cartesian3.fromRadians(
+          const location = uiOptions.locations[viewModel.location];
+          const center = Cesium.Cartesian3.fromRadians(
             location.centerLongitude,
             location.centerLatitude,
             location.height
           );
 
-          var frustumSize = 55.0;
-          var frustumNear = 1.0;
-          var frustumFar = 400.0;
-          var frustum = new Cesium.OrthographicOffCenterFrustum();
+          const frustumSize = 55.0;
+          const frustumNear = 1.0;
+          const frustumFar = 400.0;
+          const frustum = new Cesium.OrthographicOffCenterFrustum();
           frustum.left = -frustumSize;
           frustum.right = frustumSize;
           frustum.bottom = -frustumSize;
@@ -829,27 +829,27 @@
         function updateModels() {
           scene.primitives.removeAll();
 
-          var location = uiOptions.locations[viewModel.location];
-          var centerLongitude = location.centerLongitude;
-          var centerLatitude = location.centerLatitude;
-          var height = location.height;
+          const location = uiOptions.locations[viewModel.location];
+          const centerLongitude = location.centerLongitude;
+          const centerLatitude = location.centerLatitude;
+          const height = location.height;
 
-          var position1 = Cesium.Cartesian3.fromRadians(
+          const position1 = Cesium.Cartesian3.fromRadians(
             centerLongitude,
             centerLatitude,
             height + 5.0
           );
-          var position2 = Cesium.Cartesian3.fromRadians(
+          const position2 = Cesium.Cartesian3.fromRadians(
             centerLongitude,
             centerLatitude,
             height + 10.0
           );
-          var position3 = Cesium.Cartesian3.fromRadians(
+          const position3 = Cesium.Cartesian3.fromRadians(
             centerLongitude,
             centerLatitude,
             height + 15.0
           );
-          var modelPosition = Cesium.Cartesian3.fromRadians(
+          const modelPosition = Cesium.Cartesian3.fromRadians(
             centerLongitude,
             centerLatitude,
             height
@@ -866,14 +866,15 @@
 
           // Add a grid of models
           if (viewModel.grid) {
-            var spacing = 0.00002;
-            var gridSize = 10;
-            for (var i = 0; i < gridSize * gridSize; ++i) {
-              var x = i % gridSize;
-              var y = Math.floor(i / gridSize);
-              var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
-              var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
-              var position = Cesium.Cartesian3.fromRadians(
+            const spacing = 0.00002;
+            const gridSize = 10;
+            for (let i = 0; i < gridSize * gridSize; ++i) {
+              const x = i % gridSize;
+              const y = Math.floor(i / gridSize);
+              const longitude =
+                centerLongitude + spacing * (x - gridSize / 2.0);
+              const latitude = centerLatitude + spacing * (y - gridSize / 2.0);
+              const position = Cesium.Cartesian3.fromRadians(
                 longitude,
                 latitude,
                 height
@@ -898,12 +899,12 @@
         }
 
         function createModel(url, origin) {
-          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          var model = scene.primitives.add(
+          const model = scene.primitives.add(
             Cesium.Model.fromGltf({
               url: url,
               modelMatrix: modelMatrix,
@@ -926,21 +927,21 @@
         }
 
         function createBoxRTC(origin) {
-          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          var boxGeometry = Cesium.BoxGeometry.createGeometry(
+          const boxGeometry = Cesium.BoxGeometry.createGeometry(
             Cesium.BoxGeometry.fromDimensions({
               vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
               dimensions: new Cesium.Cartesian3(1.0, 1.0, 1.0),
             })
           );
 
-          var positions = boxGeometry.attributes.position.values;
-          var newPositions = new Float32Array(positions.length);
-          for (var i = 0; i < positions.length; ++i) {
+          const positions = boxGeometry.attributes.position.values;
+          const newPositions = new Float32Array(positions.length);
+          for (let i = 0; i < positions.length; ++i) {
             newPositions[i] = positions[i];
           }
           boxGeometry.attributes.position.values = newPositions;
@@ -953,7 +954,7 @@
             boxGeometry.boundingSphere
           );
 
-          var boxGeometryInstance = new Cesium.GeometryInstance({
+          const boxGeometryInstance = new Cesium.GeometryInstance({
             geometry: boxGeometry,
             attributes: {
               color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -962,7 +963,7 @@
             },
           });
 
-          var box = new Cesium.Primitive({
+          const box = new Cesium.Primitive({
             geometryInstances: boxGeometryInstance,
             appearance: new Cesium.PerInstanceColorAppearance({
               translucent: false,
@@ -977,12 +978,12 @@
         }
 
         function createBox(origin) {
-          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          var box = new Cesium.Primitive({
+          const box = new Cesium.Primitive({
             geometryInstances: new Cesium.GeometryInstance({
               geometry: Cesium.BoxGeometry.fromDimensions({
                 dimensions: new Cesium.Cartesian3(0.5, 0.5, 0.5),
@@ -1007,12 +1008,12 @@
         }
 
         function createSphere(origin) {
-          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          var sphere = new Cesium.Primitive({
+          const sphere = new Cesium.Primitive({
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.SphereGeometry({
                 radius: 2.0,
@@ -1036,23 +1037,23 @@
           scene.primitives.add(sphere);
         }
 
-        var canvas = viewer.canvas;
+        const canvas = viewer.canvas;
         canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
         canvas.onclick = function () {
           // To get key events
           canvas.focus();
         };
 
-        var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
         // Click object to turn castShadows on/off
         handler.setInputAction(function (movement) {
-          var picked = scene.pick(movement.position);
+          const picked = scene.pick(movement.position);
           if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
-            var castShadows = Cesium.ShadowMode.castShadows(
+            const castShadows = Cesium.ShadowMode.castShadows(
               picked.primitive.shadows
             );
-            var receiveShadows = Cesium.ShadowMode.receiveShadows(
+            const receiveShadows = Cesium.ShadowMode.receiveShadows(
               picked.primitive.shadows
             );
             picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(
@@ -1064,12 +1065,12 @@
 
         // Middle click object to turn receiveShadows on/off
         handler.setInputAction(function (movement) {
-          var picked = scene.pick(movement.position);
+          const picked = scene.pick(movement.position);
           if (Cesium.defined(picked)) {
-            var castShadows = Cesium.ShadowMode.castShadows(
+            const castShadows = Cesium.ShadowMode.castShadows(
               picked.primitive.shadows
             );
-            var receiveShadows = Cesium.ShadowMode.receiveShadows(
+            const receiveShadows = Cesium.ShadowMode.receiveShadows(
               picked.primitive.shadows
             );
             picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(

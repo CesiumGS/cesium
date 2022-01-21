@@ -83,7 +83,7 @@ ConstantPositionProperty.prototype.getValue = function (time, result) {
  * @param {ReferenceFrame} [referenceFrame=this.referenceFrame] The reference frame in which the position is defined.
  */
 ConstantPositionProperty.prototype.setValue = function (value, referenceFrame) {
-  var definitionChanged = false;
+  let definitionChanged = false;
   if (!Cartesian3.equals(this._value, value)) {
     definitionChanged = true;
     this._value = Cartesian3.clone(value);

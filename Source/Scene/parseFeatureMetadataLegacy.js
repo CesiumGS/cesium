@@ -21,31 +21,31 @@ import MetadataTable from "./MetadataTable.js";
  */
 export default function parseFeatureMetadataLegacy(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var extension = options.extension;
+  const extension = options.extension;
 
   // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
-  var schema = options.schema;
+  const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.extension", extension);
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
-  var i;
-  var propertyTables = [];
-  var sortedIds;
+  let i;
+  const propertyTables = [];
+  let sortedIds;
   if (defined(extension.featureTables)) {
     // Store textures in an array sorted by the dictionary keys. This
     // allows compatibility with the newer EXT_mesh_features extension
     // which is array-based.
     sortedIds = Object.keys(extension.featureTables).sort();
     for (i = 0; i < sortedIds.length; i++) {
-      var featureTableId = sortedIds[i];
-      var featureTable = extension.featureTables[featureTableId];
-      var classDefinition = schema.classes[featureTable.class];
+      const featureTableId = sortedIds[i];
+      const featureTable = extension.featureTables[featureTableId];
+      const classDefinition = schema.classes[featureTable.class];
 
-      var metadataTable = new MetadataTable({
+      const metadataTable = new MetadataTable({
         count: featureTable.count,
         properties: featureTable.properties,
         class: classDefinition,
@@ -64,15 +64,15 @@ export default function parseFeatureMetadataLegacy(options) {
     }
   }
 
-  var propertyTextures = [];
+  const propertyTextures = [];
   if (defined(extension.featureTextures)) {
     // Store textures in an array sorted by the dictionary keys. This
     // allows compatibility with the newer EXT_mesh_features extension
     // which is array-based.
     sortedIds = Object.keys(extension.featureTextures).sort();
     for (i = 0; i < sortedIds.length; i++) {
-      var featureTextureId = sortedIds[i];
-      var featureTexture = extension.featureTextures[featureTextureId];
+      const featureTextureId = sortedIds[i];
+      const featureTexture = extension.featureTextures[featureTextureId];
       propertyTextures.push(
         new PropertyTexture({
           id: featureTextureId,

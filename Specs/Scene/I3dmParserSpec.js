@@ -11,7 +11,7 @@ describe(
     });
 
     it("throws with invalid version", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         version: 2,
       });
       expect(function () {
@@ -20,7 +20,7 @@ describe(
     });
 
     it("throws if there is no feature table json", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         featureTableJson: {},
       });
       expect(function () {
@@ -29,7 +29,7 @@ describe(
     });
 
     it("throws with invalid glTF format", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         gltfFormat: 2,
       });
       expect(function () {
@@ -38,7 +38,7 @@ describe(
     });
 
     it("throws if there is no glTF", function () {
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         gltfUri: "",
       });
       expect(function () {
@@ -49,7 +49,7 @@ describe(
     it("prints deprecation warning if glTF is not 4-byte aligned", function () {
       spyOn(I3dmParser, "_deprecationWarning");
 
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         featureTableBinary: new Uint8Array(1),
       });
       I3dmParser.parse(arrayBuffer);
@@ -58,27 +58,27 @@ describe(
     });
 
     it("parses i3dm", function () {
-      var instancesLength = 10;
+      const instancesLength = 10;
 
-      var positions = new Float32Array(instancesLength * 3);
-      var heights = new Float32Array(instancesLength);
-      for (var i = 0; i < instancesLength; ++i) {
+      const positions = new Float32Array(instancesLength * 3);
+      const heights = new Float32Array(instancesLength);
+      for (let i = 0; i < instancesLength; ++i) {
         positions[i * 3] = i;
         positions[i * 3 + 1] = i;
         positions[i * 3 + 2] = i;
         heights[i] = i;
       }
 
-      var featureTableJson = {
+      const featureTableJson = {
         INSTANCES_LENGTH: instancesLength,
         POSITION: {
           byteOffset: 0,
         },
       };
 
-      var featureTableBinary = positions;
+      const featureTableBinary = positions;
 
-      var batchTableJson = {
+      const batchTableJson = {
         height: {
           byteOffset: 0,
           componentType: "FLOAT",
@@ -86,11 +86,11 @@ describe(
         },
       };
 
-      var batchTableBinary = heights;
+      const batchTableBinary = heights;
 
-      var gltfUri = "model.gltf";
+      const gltfUri = "model.gltf";
 
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
+      const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         featureTableJson: featureTableJson,
         featureTableBinary: featureTableBinary,
         batchTableJson: batchTableJson,
@@ -98,7 +98,7 @@ describe(
         gltfUri: gltfUri,
       });
 
-      var results = I3dmParser.parse(arrayBuffer);
+      const results = I3dmParser.parse(arrayBuffer);
 
       expect(results.gltfFormat).toBe(1);
       expect(results.featureTableJson).toEqual(featureTableJson);

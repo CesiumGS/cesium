@@ -12,22 +12,22 @@
  * @private
  */
 function parseResponseHeaders(headerString) {
-  var headers = {};
+  const headers = {};
 
   if (!headerString) {
     return headers;
   }
 
-  var headerPairs = headerString.split("\u000d\u000a");
+  const headerPairs = headerString.split("\u000d\u000a");
 
-  for (var i = 0; i < headerPairs.length; ++i) {
-    var headerPair = headerPairs[i];
+  for (let i = 0; i < headerPairs.length; ++i) {
+    const headerPair = headerPairs[i];
     // Can't use split() here because it does the wrong thing
     // if the header value has the string ": " in it.
-    var index = headerPair.indexOf("\u003a\u0020");
+    const index = headerPair.indexOf("\u003a\u0020");
     if (index > 0) {
-      var key = headerPair.substring(0, index);
-      var val = headerPair.substring(index + 2);
+      const key = headerPair.substring(0, index);
+      const val = headerPair.substring(index + 2);
       headers[key] = val;
     }
   }

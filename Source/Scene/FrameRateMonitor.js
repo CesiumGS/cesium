@@ -100,7 +100,7 @@ function FrameRateMonitor(options) {
   this._lastFramesPerSecond = undefined;
   this._pauseCount = 0;
 
-  var that = this;
+  const that = this;
   this._preUpdateRemoveListener = this._scene.preUpdate.addEventListener(
     function (scene, time) {
       update(that, time);
@@ -118,7 +118,7 @@ function FrameRateMonitor(options) {
       ? "webkitHidden"
       : undefined;
 
-  var visibilityChangeEventName =
+  const visibilityChangeEventName =
     document.hidden !== undefined
       ? "visibilitychange"
       : document.mozHidden !== undefined
@@ -314,7 +314,7 @@ function update(monitor, time) {
     return;
   }
 
-  var timeStamp = getTimestamp();
+  const timeStamp = getTimestamp();
 
   if (monitor._needsQuietPeriod) {
     monitor._needsQuietPeriod = false;
@@ -328,7 +328,7 @@ function update(monitor, time) {
   } else if (timeStamp >= monitor._quietPeriodEndTime) {
     monitor._frameTimes.push(timeStamp);
 
-    var beginningOfWindow =
+    const beginningOfWindow =
       timeStamp -
       monitor.samplingWindow / TimeConstants.SECONDS_PER_MILLISECOND;
 
@@ -343,12 +343,12 @@ function update(monitor, time) {
         monitor._frameTimes.shift();
       }
 
-      var averageTimeBetweenFrames =
+      const averageTimeBetweenFrames =
         (timeStamp - monitor._frameTimes[0]) / (monitor._frameTimes.length - 1);
 
       monitor._lastFramesPerSecond = 1000.0 / averageTimeBetweenFrames;
 
-      var maximumFrameTime =
+      const maximumFrameTime =
         1000.0 /
         (timeStamp > monitor._warmupPeriodEndTime
           ? monitor.minimumFrameRateAfterWarmup

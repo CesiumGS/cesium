@@ -44,9 +44,9 @@
         //Sandcastle_Begin
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(75343),
           customShader: new Cesium.CustomShader({
             lightingModel: Cesium.LightingModel.UNLIT,

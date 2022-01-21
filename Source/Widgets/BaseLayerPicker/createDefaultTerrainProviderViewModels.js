@@ -7,7 +7,7 @@ import ProviderViewModel from "../BaseLayerPicker/ProviderViewModel.js";
  * @private
  */
 function createDefaultTerrainProviderViewModels() {
-  var providerViewModels = [];
+  const providerViewModels = [];
   providerViewModels.push(
     new ProviderViewModel({
       name: "WGS84 Ellipsoid",

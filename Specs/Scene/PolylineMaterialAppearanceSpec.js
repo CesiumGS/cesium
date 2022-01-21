@@ -11,8 +11,8 @@ import createScene from "../createScene.js";
 describe(
   "Scene/PolylineMaterialAppearance",
   function () {
-    var scene;
-    var primitive;
+    let scene;
+    let primitive;
 
     beforeAll(function () {
       scene = createScene();
@@ -29,7 +29,7 @@ describe(
     });
 
     it("constructor", function () {
-      var a = new PolylineMaterialAppearance();
+      const a = new PolylineMaterialAppearance();
 
       expect(a.material).toBeDefined();
       expect(a.material.type).toEqual(Material.ColorType);

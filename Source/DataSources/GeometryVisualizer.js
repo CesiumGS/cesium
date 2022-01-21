@@ -30,9 +30,9 @@ import StaticGroundGeometryPerMaterialBatch from "./StaticGroundGeometryPerMater
 import StaticOutlineGeometryBatch from "./StaticOutlineGeometryBatch.js";
 import WallGeometryUpdater from "./WallGeometryUpdater.js";
 
-var emptyArray = [];
+const emptyArray = [];
 
-var geometryUpdaters = [
+const geometryUpdaters = [
   BoxGeometryUpdater,
   CylinderGeometryUpdater,
   CorridorGeometryUpdater,
@@ -48,14 +48,14 @@ var geometryUpdaters = [
 function GeometryUpdaterSet(entity, scene) {
   this.entity = entity;
   this.scene = scene;
-  var updaters = new Array(geometryUpdaters.length);
-  var geometryChanged = new Event();
+  const updaters = new Array(geometryUpdaters.length);
+  const geometryChanged = new Event();
   function raiseEvent(geometry) {
     geometryChanged.raiseEvent(geometry);
   }
-  var eventHelper = new EventHelper();
-  for (var i = 0; i < updaters.length; i++) {
-    var updater = new geometryUpdaters[i](entity, scene);
+  const eventHelper = new EventHelper();
+  for (let i = 0; i < updaters.length; i++) {
+    const updater = new geometryUpdaters[i](entity, scene);
     eventHelper.add(updater.geometryChanged, raiseEvent);
     updaters[i] = updater;
   }
@@ -75,8 +75,8 @@ GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
   newValue,
   oldValue
 ) {
-  var updaters = this.updaters;
-  for (var i = 0; i < updaters.length; i++) {
+  const updaters = this.updaters;
+  for (let i = 0; i < updaters.length; i++) {
     updaters[i]._onEntityPropertyChanged(
       entity,
       propertyName,
@@ -87,16 +87,16 @@ GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
 };
 
 GeometryUpdaterSet.prototype.forEach = function (callback) {
-  var updaters = this.updaters;
-  for (var i = 0; i < updaters.length; i++) {
+  const updaters = this.updaters;
+  for (let i = 0; i < updaters.length; i++) {
     callback(updaters[i]);
   }
 };
 
 GeometryUpdaterSet.prototype.destroy = function () {
   this.eventHelper.removeAll();
-  var updaters = this.updaters;
-  for (var i = 0; i < updaters.length; i++) {
+  const updaters = this.updaters;
+  for (let i = 0; i < updaters.length; i++) {
     updaters[i].destroy();
   }
   this._removeEntitySubscription();
@@ -135,19 +135,19 @@ function GeometryVisualizer(
   this._removedObjects = new AssociativeArray();
   this._changedObjects = new AssociativeArray();
 
-  var numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
+  const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
   this._outlineBatches = new Array(numberOfShadowModes * 2);
   this._closedColorBatches = new Array(numberOfShadowModes * 2);
   this._closedMaterialBatches = new Array(numberOfShadowModes * 2);
   this._openColorBatches = new Array(numberOfShadowModes * 2);
   this._openMaterialBatches = new Array(numberOfShadowModes * 2);
 
-  var supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(
+  const supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(
     scene
   );
   this._supportsMaterialsforEntitiesOnTerrain = supportsMaterialsforEntitiesOnTerrain;
 
-  var i;
+  let i;
   for (i = 0; i < numberOfShadowModes; ++i) {
     this._outlineBatches[i] = new StaticOutlineGeometryBatch(
       primitives,
@@ -236,10 +236,10 @@ function GeometryVisualizer(
     );
   }
 
-  var numberOfClassificationTypes =
+  const numberOfClassificationTypes =
     ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
-  var groundColorBatches = new Array(numberOfClassificationTypes);
-  var groundMaterialBatches = [];
+  const groundColorBatches = new Array(numberOfClassificationTypes);
+  const groundMaterialBatches = [];
   if (supportsMaterialsforEntitiesOnTerrain) {
     for (i = 0; i < numberOfClassificationTypes; ++i) {
       groundMaterialBatches.push(
@@ -306,18 +306,18 @@ GeometryVisualizer.prototype.update = function (time) {
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var addedObjects = this._addedObjects;
-  var added = addedObjects.values;
-  var removedObjects = this._removedObjects;
-  var removed = removedObjects.values;
-  var changedObjects = this._changedObjects;
-  var changed = changedObjects.values;
+  const addedObjects = this._addedObjects;
+  const added = addedObjects.values;
+  const removedObjects = this._removedObjects;
+  const removed = removedObjects.values;
+  const changedObjects = this._changedObjects;
+  const changed = changedObjects.values;
 
-  var i;
-  var entity;
-  var id;
-  var updaterSet;
-  var that = this;
+  let i;
+  let entity;
+  let id;
+  let updaterSet;
+  const that = this;
 
   for (i = changed.length - 1; i > -1; i--) {
     entity = changed[i];
@@ -372,9 +372,9 @@ GeometryVisualizer.prototype.update = function (time) {
   removedObjects.removeAll();
   changedObjects.removeAll();
 
-  var isUpdated = true;
-  var batches = this._batches;
-  var length = batches.length;
+  let isUpdated = true;
+  const batches = this._batches;
+  const length = batches.length;
   for (i = 0; i < length; i++) {
     isUpdated = batches[i].update(time) && isUpdated;
   }
@@ -382,8 +382,8 @@ GeometryVisualizer.prototype.update = function (time) {
   return isUpdated;
 };
 
-var getBoundingSphereArrayScratch = [];
-var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+const getBoundingSphereArrayScratch = [];
+const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
 
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
@@ -402,20 +402,20 @@ GeometryVisualizer.prototype.getBoundingSphere = function (entity, result) {
   Check.defined("result", result);
   //>>includeEnd('debug');
 
-  var boundingSpheres = getBoundingSphereArrayScratch;
-  var tmp = getBoundingSphereBoundingSphereScratch;
+  const boundingSpheres = getBoundingSphereArrayScratch;
+  const tmp = getBoundingSphereBoundingSphereScratch;
 
-  var count = 0;
-  var state = BoundingSphereState.DONE;
-  var batches = this._batches;
-  var batchesLength = batches.length;
+  let count = 0;
+  let state = BoundingSphereState.DONE;
+  const batches = this._batches;
+  const batchesLength = batches.length;
 
-  var id = entity.id;
-  var updaters = this._updaterSets.get(id).updaters;
+  const id = entity.id;
+  const updaters = this._updaterSets.get(id).updaters;
 
-  for (var j = 0; j < updaters.length; j++) {
-    var updater = updaters[j];
-    for (var i = 0; i < batchesLength; i++) {
+  for (let j = 0; j < updaters.length; j++) {
+    const updater = updaters[j];
+    for (let i = 0; i < batchesLength; i++) {
       state = batches[i].getBoundingSphere(updater, tmp);
       if (state === BoundingSphereState.PENDING) {
         return BoundingSphereState.PENDING;
@@ -458,21 +458,21 @@ GeometryVisualizer.prototype.destroy = function () {
   this._addedObjects.removeAll();
   this._removedObjects.removeAll();
 
-  var i;
-  var batches = this._batches;
-  var length = batches.length;
+  let i;
+  const batches = this._batches;
+  let length = batches.length;
   for (i = 0; i < length; i++) {
     batches[i].removeAllPrimitives();
   }
 
-  var subscriptions = this._subscriptions.values;
+  const subscriptions = this._subscriptions.values;
   length = subscriptions.length;
   for (i = 0; i < length; i++) {
     subscriptions[i]();
   }
   this._subscriptions.removeAll();
 
-  var updaterSets = this._updaterSets.values;
+  const updaterSets = this._updaterSets.values;
   length = updaterSets.length;
   for (i = 0; i < length; i++) {
     updaterSets[i].destroy();
@@ -486,9 +486,9 @@ GeometryVisualizer.prototype.destroy = function () {
  */
 GeometryVisualizer.prototype._removeUpdater = function (updater) {
   //We don't keep track of which batch an updater is in, so just remove it from all of them.
-  var batches = this._batches;
-  var length = batches.length;
-  for (var i = 0; i < length; i++) {
+  const batches = this._batches;
+  const length = batches.length;
+  for (let i = 0; i < length; i++) {
     batches[i].remove(updater);
   }
 };
@@ -505,12 +505,12 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
     return;
   }
 
-  var shadows;
+  let shadows;
   if (updater.outlineEnabled || updater.fillEnabled) {
     shadows = updater.shadowsProperty.getValue(time);
   }
 
-  var numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
+  const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
   if (updater.outlineEnabled) {
     if (defined(updater.terrainOffsetProperty)) {
       this._outlineBatches[numberOfShadowModes + shadows].add(time, updater);
@@ -521,7 +521,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
 
   if (updater.fillEnabled) {
     if (updater.onTerrain) {
-      var classificationType = updater.classificationTypeProperty.getValue(
+      const classificationType = updater.classificationTypeProperty.getValue(
         time
       );
       if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
@@ -572,11 +572,11 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
  * @private
  */
 GeometryVisualizer._onGeometryChanged = function (updater) {
-  var removedObjects = this._removedObjects;
-  var changedObjects = this._changedObjects;
+  const removedObjects = this._removedObjects;
+  const changedObjects = this._changedObjects;
 
-  var entity = updater.entity;
-  var id = entity.id;
+  const entity = updater.entity;
+  const id = entity.id;
 
   if (!defined(removedObjects.get(id)) && !defined(changedObjects.get(id))) {
     changedObjects.set(id, entity);
@@ -591,13 +591,13 @@ GeometryVisualizer.prototype._onCollectionChanged = function (
   added,
   removed
 ) {
-  var addedObjects = this._addedObjects;
-  var removedObjects = this._removedObjects;
-  var changedObjects = this._changedObjects;
+  const addedObjects = this._addedObjects;
+  const removedObjects = this._removedObjects;
+  const changedObjects = this._changedObjects;
 
-  var i;
-  var id;
-  var entity;
+  let i;
+  let id;
+  let entity;
   for (i = removed.length - 1; i > -1; i--) {
     entity = removed[i];
     id = entity.id;

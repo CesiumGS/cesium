@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var PostProcessStageSampleMode = {
+const PostProcessStageSampleMode = {
   /**
    * Samples the texture by returning the closest texel.
    *

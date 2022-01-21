@@ -13,7 +13,7 @@ import Plane from "./Plane.js";
 import Ray from "./Ray.js";
 import Transforms from "./Transforms.js";
 
-var scratchCart4 = new Cartesian4();
+const scratchCart4 = new Cartesian4();
 /**
  * A plane tangent to the provided ellipsoid at the provided origin.
  * If origin is not on the surface of the ellipsoid, it's surface projection will be used.
@@ -42,7 +42,7 @@ function EllipsoidTangentPlane(origin, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
+  const eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
   this._ellipsoid = ellipsoid;
   this._origin = origin;
   this._xAxis = Cartesian3.fromCartesian4(
@@ -52,7 +52,7 @@ function EllipsoidTangentPlane(origin, ellipsoid) {
     Matrix4.getColumn(eastNorthUp, 1, scratchCart4)
   );
 
-  var normal = Cartesian3.fromCartesian4(
+  const normal = Cartesian3.fromCartesian4(
     Matrix4.getColumn(eastNorthUp, 2, scratchCart4)
   );
   this._plane = Plane.fromPointNormal(origin, normal);
@@ -130,7 +130,7 @@ Object.defineProperties(EllipsoidTangentPlane.prototype, {
   },
 });
 
-var tmp = new AxisAlignedBoundingBox();
+const tmp = new AxisAlignedBoundingBox();
 /**
  * Creates a new instance from the provided ellipsoid and the center
  * point of the provided Cartesians.
@@ -144,12 +144,12 @@ EllipsoidTangentPlane.fromPoints = function (cartesians, ellipsoid) {
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
 
-  var box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
+  const box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
   return new EllipsoidTangentPlane(box.center, ellipsoid);
 };
 
-var scratchProjectPointOntoPlaneRay = new Ray();
-var scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
+const scratchProjectPointOntoPlaneRay = new Ray();
+const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
 
 /**
  * Computes the projection of the provided 3D position onto the 2D plane, radially outward from the {@link EllipsoidTangentPlane.ellipsoid} coordinate system origin.
@@ -166,11 +166,11 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
   Check.defined("cartesian", cartesian);
   //>>includeEnd('debug');
 
-  var ray = scratchProjectPointOntoPlaneRay;
+  const ray = scratchProjectPointOntoPlaneRay;
   ray.origin = cartesian;
   Cartesian3.normalize(cartesian, ray.direction);
 
-  var intersectionPoint = IntersectionTests.rayPlane(
+  let intersectionPoint = IntersectionTests.rayPlane(
     ray,
     this._plane,
     scratchProjectPointOntoPlaneCartesian3
@@ -185,13 +185,13 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
   }
 
   if (defined(intersectionPoint)) {
-    var v = Cartesian3.subtract(
+    const v = Cartesian3.subtract(
       intersectionPoint,
       this._origin,
       intersectionPoint
     );
-    var x = Cartesian3.dot(this._xAxis, v);
-    var y = Cartesian3.dot(this._yAxis, v);
+    const x = Cartesian3.dot(this._xAxis, v);
+    const y = Cartesian3.dot(this._yAxis, v);
 
     if (!defined(result)) {
       return new Cartesian2(x, y);
@@ -225,10 +225,10 @@ EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function (
     result = [];
   }
 
-  var count = 0;
-  var length = cartesians.length;
-  for (var i = 0; i < length; i++) {
-    var p = this.projectPointOntoPlane(cartesians[i], result[count]);
+  let count = 0;
+  const length = cartesians.length;
+  for (let i = 0; i < length; i++) {
+    const p = this.projectPointOntoPlane(cartesians[i], result[count]);
     if (defined(p)) {
       result[count] = p;
       count++;
@@ -257,11 +257,11 @@ EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
     result = new Cartesian2();
   }
 
-  var ray = scratchProjectPointOntoPlaneRay;
+  const ray = scratchProjectPointOntoPlaneRay;
   ray.origin = cartesian;
   Cartesian3.clone(this._plane.normal, ray.direction);
 
-  var intersectionPoint = IntersectionTests.rayPlane(
+  let intersectionPoint = IntersectionTests.rayPlane(
     ray,
     this._plane,
     scratchProjectPointOntoPlaneCartesian3
@@ -275,13 +275,13 @@ EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
     );
   }
 
-  var v = Cartesian3.subtract(
+  const v = Cartesian3.subtract(
     intersectionPoint,
     this._origin,
     intersectionPoint
   );
-  var x = Cartesian3.dot(this._xAxis, v);
-  var y = Cartesian3.dot(this._yAxis, v);
+  const x = Cartesian3.dot(this._xAxis, v);
+  const y = Cartesian3.dot(this._yAxis, v);
 
   result.x = x;
   result.y = y;
@@ -309,15 +309,15 @@ EllipsoidTangentPlane.prototype.projectPointsToNearestOnPlane = function (
     result = [];
   }
 
-  var length = cartesians.length;
+  const length = cartesians.length;
   result.length = length;
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     result[i] = this.projectPointToNearestOnPlane(cartesians[i], result[i]);
   }
   return result;
 };
 
-var projectPointsOntoEllipsoidScratch = new Cartesian3();
+const projectPointsOntoEllipsoidScratch = new Cartesian3();
 /**
  * Computes the projection of the provided 2D position onto the 3D ellipsoid.
  *
@@ -337,11 +337,11 @@ EllipsoidTangentPlane.prototype.projectPointOntoEllipsoid = function (
     result = new Cartesian3();
   }
 
-  var ellipsoid = this._ellipsoid;
-  var origin = this._origin;
-  var xAxis = this._xAxis;
-  var yAxis = this._yAxis;
-  var tmp = projectPointsOntoEllipsoidScratch;
+  const ellipsoid = this._ellipsoid;
+  const origin = this._origin;
+  const xAxis = this._xAxis;
+  const yAxis = this._yAxis;
+  const tmp = projectPointsOntoEllipsoidScratch;
 
   Cartesian3.multiplyByScalar(xAxis, cartesian.x, tmp);
   result = Cartesian3.add(origin, tmp, result);
@@ -367,14 +367,14 @@ EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function (
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
 
-  var length = cartesians.length;
+  const length = cartesians.length;
   if (!defined(result)) {
     result = new Array(length);
   } else {
     result.length = length;
   }
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     result[i] = this.projectPointOntoEllipsoid(cartesians[i], result[i]);
   }
 

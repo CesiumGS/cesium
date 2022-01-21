@@ -7,7 +7,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/RenderState",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -18,7 +18,7 @@ describe(
     });
 
     it("creates with defaults", function () {
-      var defaultRS = {
+      const defaultRS = {
         frontFace: WindingOrder.COUNTER_CLOCKWISE,
         cull: {
           enabled: false,
@@ -94,7 +94,7 @@ describe(
         },
       };
 
-      var rs = RenderState.fromCache();
+      const rs = RenderState.fromCache();
 
       expect(rs.frontFace).toEqual(defaultRS.frontFace);
       expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
@@ -182,7 +182,7 @@ describe(
     });
 
     it("creates with all render states", function () {
-      var r = {
+      const r = {
         frontFace: WindingOrder.CLOCKWISE,
         cull: {
           enabled: true,
@@ -258,7 +258,7 @@ describe(
         },
       };
 
-      var rs = RenderState.fromCache(r);
+      const rs = RenderState.fromCache(r);
 
       expect(rs.frontFace).toEqual(r.frontFace);
       expect(rs.cull.enabled).toEqual(r.cull.enabled);
@@ -334,7 +334,7 @@ describe(
     });
 
     it("creates with some render states", function () {
-      var r = {
+      const r = {
         frontFace: WindingOrder.CLOCKWISE,
         depthRange: {
           near: 0.25,
@@ -342,12 +342,12 @@ describe(
         },
       };
 
-      var rs = RenderState.fromCache(r);
+      const rs = RenderState.fromCache(r);
       expect(rs.frontFace).toEqual(r.frontFace);
       expect(rs.depthRange.near).toEqual(r.depthRange.near);
       expect(rs.depthRange.far).toEqual(r.depthRange.far);
 
-      var defaultRS = RenderState.fromCache();
+      const defaultRS = RenderState.fromCache();
       expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
       expect(rs.cull.face).toEqual(defaultRS.cull.face);
       expect(rs.cull.lineWidth).toEqual(defaultRS.cull.lineWidth);
@@ -431,17 +431,17 @@ describe(
     });
 
     it("caches render states", function () {
-      var rs = RenderState.fromCache();
-      var rs2 = RenderState.fromCache();
+      const rs = RenderState.fromCache();
+      const rs2 = RenderState.fromCache();
       // rs3 is still the same state as rs and rs2, but with a partial definition
-      var rs3 = RenderState.fromCache({
+      const rs3 = RenderState.fromCache({
         depthTest: {
           enabled: false,
           func: WebGLConstants.LESS,
         },
       });
       // rs4 is a cache miss since it has a different depthTest
-      var rs4 = RenderState.fromCache({
+      const rs4 = RenderState.fromCache({
         depthTest: {
           enabled: true,
           func: WebGLConstants.NEVER,
@@ -454,29 +454,29 @@ describe(
 
     it("removes from render cache", function () {
       RenderState.clearCache();
-      var cache = RenderState.getCache();
+      const cache = RenderState.getCache();
 
-      var rs = RenderState.fromCache();
-      var undefinedKey = JSON.stringify(undefined);
-      var fullKey = JSON.stringify(new RenderState());
+      const rs = RenderState.fromCache();
+      const undefinedKey = JSON.stringify(undefined);
+      const fullKey = JSON.stringify(new RenderState());
 
       expect(cache[fullKey].referenceCount).toEqual(1);
       expect(cache[undefinedKey].referenceCount).toEqual(1);
 
-      var rs2 = RenderState.fromCache();
+      const rs2 = RenderState.fromCache();
 
       expect(cache[fullKey].referenceCount).toEqual(1);
       expect(cache[undefinedKey].referenceCount).toEqual(2);
 
       // rs3 is still the same state as rs and rs2, but with a partial definition
-      var param = {
+      const param = {
         depthTest: {
           enabled: false,
           func: WebGLConstants.LESS,
         },
       };
-      var rs3 = RenderState.fromCache(param);
-      var paramKey = JSON.stringify(param);
+      const rs3 = RenderState.fromCache(param);
+      const paramKey = JSON.stringify(param);
 
       expect(rs2).toBe(rs);
       expect(rs3).toBe(rs);
@@ -499,7 +499,7 @@ describe(
     });
 
     it("freezes render states", function () {
-      var rs = RenderState.fromCache();
+      const rs = RenderState.fromCache();
       expect(Object.isFrozen(rs)).toBe(!window.specsUsingRelease);
     });
 
@@ -797,7 +797,7 @@ describe(
     });
 
     it("clones", function () {
-      var r = {
+      const r = {
         frontFace: WindingOrder.CLOCKWISE,
         cull: {
           enabled: true,
@@ -873,7 +873,7 @@ describe(
         },
       };
 
-      var rs = RenderState.fromCache(RenderState.getState(r));
+      const rs = RenderState.fromCache(RenderState.getState(r));
 
       expect(rs.frontFace).toEqual(r.frontFace);
       expect(rs.cull.enabled).toEqual(r.cull.enabled);

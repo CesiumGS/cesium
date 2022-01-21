@@ -9,7 +9,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/Context",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -20,7 +20,7 @@ describe(
     });
 
     it("has a unique ID", function () {
-      var c = createContext();
+      const c = createContext();
       expect(c.id).toBeDefined();
       expect(c.id).not.toEqual(context.id);
       c.destroyForSpecs();
@@ -109,7 +109,7 @@ describe(
     });
 
     it("gets antialias", function () {
-      var c = createContext({
+      const c = createContext({
         webgl: {
           antialias: false,
         },
@@ -119,7 +119,7 @@ describe(
     });
 
     it("gets the standard derivatives extension", function () {
-      var fs = "";
+      let fs = "";
 
       if (context.standardDerivatives && !context.webgl2) {
         fs += "#extension GL_OES_standard_derivatives : enable\n";
@@ -135,7 +135,7 @@ describe(
 
       fs += "}";
 
-      var expected = context.standardDerivatives
+      const expected = context.standardDerivatives
         ? [0, 0, 255, 255]
         : [255, 255, 255, 255];
       expect({
@@ -146,7 +146,7 @@ describe(
 
     it("gets the element index uint extension", function () {
       if (context.elementIndexUint) {
-        var buffer = Buffer.createIndexBuffer({
+        const buffer = Buffer.createIndexBuffer({
           context: context,
           sizeInBytes: 6,
           usage: BufferUsage.STREAM_DRAW,
@@ -201,7 +201,7 @@ describe(
         return;
       }
 
-      var fs =
+      const fs =
         "void main()\n" +
         "{\n" +
         "  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
@@ -213,7 +213,7 @@ describe(
         depth: 0.5,
       }).contextToRender([255, 0, 0, 255]);
 
-      var fsFragDepth = "#extension GL_EXT_frag_depth : enable\n";
+      let fsFragDepth = "#extension GL_EXT_frag_depth : enable\n";
 
       fsFragDepth +=
         "void main()\n" +
@@ -230,7 +230,7 @@ describe(
 
       fsFragDepth += "}\n";
 
-      var expected = [0, 255, 0, 255];
+      const expected = [0, 255, 0, 255];
       expect({
         context: context,
         fragmentShader: fsFragDepth,
@@ -262,8 +262,8 @@ describe(
     });
 
     it("can create a pick ID and retrieve an object by pick color", function () {
-      var o = {};
-      var pickId = context.createPickId(o);
+      const o = {};
+      const pickId = context.createPickId(o);
 
       expect(pickId).toBeDefined();
       expect(context.getObjectByPickColor(pickId.color)).toBe(o);
@@ -292,15 +292,15 @@ describe(
     });
 
     it("isDestroyed", function () {
-      var c = createContext();
+      const c = createContext();
       expect(c.isDestroyed()).toEqual(false);
       c.destroyForSpecs();
       expect(c.isDestroyed()).toEqual(true);
     });
 
     it("destroying Context destroys objects in cache", function () {
-      var c = createContext();
-      var destroyableObject = jasmine.createSpyObj("destroyableObject", [
+      const c = createContext();
+      const destroyableObject = jasmine.createSpyObj("destroyableObject", [
         "destroy",
       ]);
       c.cache.foo = destroyableObject;
@@ -309,20 +309,20 @@ describe(
     });
 
     it("non-destroyable objects are allowed in the cache", function () {
-      var c = createContext();
-      var nonDestroyableObject = {};
+      const c = createContext();
+      const nonDestroyableObject = {};
       c.cache.foo = nonDestroyableObject;
       c.destroyForSpecs();
     });
 
     it("returns the underling drawingBufferWidth", function () {
-      var c = createContext(undefined, 1024, 768);
+      const c = createContext(undefined, 1024, 768);
       expect(c.drawingBufferWidth).toBe(1024);
       c.destroyForSpecs();
     });
 
     it("returns the underling drawingBufferHeight", function () {
-      var c = createContext(undefined, 1024, 768);
+      const c = createContext(undefined, 1024, 768);
       expect(c.drawingBufferHeight).toBe(768);
       c.destroyForSpecs();
     });

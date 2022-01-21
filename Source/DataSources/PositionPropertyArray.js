@@ -35,13 +35,13 @@ Object.defineProperties(PositionPropertyArray.prototype, {
    */
   isConstant: {
     get: function () {
-      var value = this._value;
+      const value = this._value;
       if (!defined(value)) {
         return true;
       }
 
-      var length = value.length;
-      for (var i = 0; i < length; i++) {
+      const length = value.length;
+      for (let i = 0; i < length; i++) {
         if (!Property.isConstant(value[i])) {
           return false;
         }
@@ -109,20 +109,20 @@ PositionPropertyArray.prototype.getValueInReferenceFrame = function (
   }
   //>>includeEnd('debug');
 
-  var value = this._value;
+  const value = this._value;
   if (!defined(value)) {
     return undefined;
   }
 
-  var length = value.length;
+  const length = value.length;
   if (!defined(result)) {
     result = new Array(length);
   }
-  var i = 0;
-  var x = 0;
+  let i = 0;
+  let x = 0;
   while (i < length) {
-    var property = value[i];
-    var itemValue = property.getValueInReferenceFrame(
+    const property = value[i];
+    const itemValue = property.getValueInReferenceFrame(
       time,
       referenceFrame,
       result[i]
@@ -143,14 +143,14 @@ PositionPropertyArray.prototype.getValueInReferenceFrame = function (
  * @param {Property[]} value An array of Property instances.
  */
 PositionPropertyArray.prototype.setValue = function (value) {
-  var eventHelper = this._eventHelper;
+  const eventHelper = this._eventHelper;
   eventHelper.removeAll();
 
   if (defined(value)) {
     this._value = value.slice();
-    var length = value.length;
-    for (var i = 0; i < length; i++) {
-      var property = value[i];
+    const length = value.length;
+    for (let i = 0; i < length; i++) {
+      const property = value[i];
       if (defined(property)) {
         eventHelper.add(
           property.definitionChanged,

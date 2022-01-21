@@ -14,7 +14,7 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var provider = new TileCoordinatesImageryProvider();
+    const provider = new TileCoordinatesImageryProvider();
 
     return provider.readyPromise.then(function (result) {
       expect(result).toBe(true);
@@ -23,7 +23,7 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
   });
 
   it("returns valid value for hasAlphaChannel", function () {
-    var provider = new TileCoordinatesImageryProvider();
+    const provider = new TileCoordinatesImageryProvider();
 
     return pollToPromise(function () {
       return provider.ready;
@@ -33,8 +33,8 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
   });
 
   it("can use a custom ellipsoid", function () {
-    var ellipsoid = new Ellipsoid(1, 2, 3);
-    var provider = new TileCoordinatesImageryProvider({
+    const ellipsoid = new Ellipsoid(1, 2, 3);
+    const provider = new TileCoordinatesImageryProvider({
       ellipsoid: ellipsoid,
     });
 
@@ -46,7 +46,7 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
   });
 
   it("can provide a root tile", function () {
-    var provider = new TileCoordinatesImageryProvider();
+    const provider = new TileCoordinatesImageryProvider();
 
     return pollToPromise(function () {
       return provider.ready;
@@ -67,8 +67,8 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
   });
 
   it("uses alternate tiling scheme if provided", function () {
-    var tilingScheme = new WebMercatorTilingScheme();
-    var provider = new TileCoordinatesImageryProvider({
+    const tilingScheme = new WebMercatorTilingScheme();
+    const provider = new TileCoordinatesImageryProvider({
       tilingScheme: tilingScheme,
     });
 
@@ -80,7 +80,7 @@ describe("Scene/TileCoordinatesImageryProvider", function () {
   });
 
   it("uses tile width and height if provided", function () {
-    var provider = new TileCoordinatesImageryProvider({
+    const provider = new TileCoordinatesImageryProvider({
       tileWidth: 123,
       tileHeight: 456,
     });

@@ -3,7 +3,7 @@ import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
 
 describe("Core/ShowGeometryInstanceAttribute", function () {
   it("constructor", function () {
-    var attribute = new ShowGeometryInstanceAttribute(false);
+    const attribute = new ShowGeometryInstanceAttribute(false);
     expect(attribute.componentDatatype).toEqual(
       ComponentDatatype.UNSIGNED_BYTE
     );
@@ -14,14 +14,14 @@ describe("Core/ShowGeometryInstanceAttribute", function () {
   });
 
   it("toValue", function () {
-    var expectedResult = new Uint8Array([true]);
+    const expectedResult = new Uint8Array([true]);
     expect(ShowGeometryInstanceAttribute.toValue(true)).toEqual(expectedResult);
   });
 
   it("toValue works with a result parameter", function () {
-    var expectedResult = new Uint8Array([true]);
-    var result = new Uint8Array(1);
-    var returnedResult = ShowGeometryInstanceAttribute.toValue(true, result);
+    const expectedResult = new Uint8Array([true]);
+    const result = new Uint8Array(1);
+    const returnedResult = ShowGeometryInstanceAttribute.toValue(true, result);
     expect(returnedResult).toEqual(expectedResult);
     expect(returnedResult).toBe(result);
   });

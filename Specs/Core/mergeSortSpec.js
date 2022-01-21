@@ -4,17 +4,17 @@ import { mergeSort } from "../../Source/Cesium.js";
 
 describe("Core/mergeSort", function () {
   it("sorts", function () {
-    var array = [0, 9, 1, 8, 2, 7, 3, 6, 4, 5];
+    const array = [0, 9, 1, 8, 2, 7, 3, 6, 4, 5];
     mergeSort(array, function (a, b) {
       return a - b;
     });
-    var expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     expect(array).toEqual(expected);
   });
 
   it("stable sorts", function () {
-    var array = [{ value: 5 }, { value: 10 }, { value: 5 }, { value: 0 }];
-    var expected = [array[3], array[0], array[2], array[1]];
+    const array = [{ value: 5 }, { value: 10 }, { value: 5 }, { value: 0 }];
+    const expected = [array[3], array[0], array[2], array[1]];
     mergeSort(array, function (a, b) {
       return a.value - b.value;
     });
@@ -22,19 +22,19 @@ describe("Core/mergeSort", function () {
   });
 
   it("sorts with user defined object", function () {
-    var array = [
+    const array = [
       new BoundingSphere(new Cartesian3(-2.0, 0.0, 0.0), 1.0),
       new BoundingSphere(new Cartesian3(-1.0, 0.0, 0.0), 1.0),
       new BoundingSphere(new Cartesian3(-3.0, 0.0, 0.0), 1.0),
     ];
-    var position = Cartesian3.ZERO;
-    var comparator = function (a, b, position) {
+    const position = Cartesian3.ZERO;
+    const comparator = function (a, b, position) {
       return (
         BoundingSphere.distanceSquaredTo(b, position) -
         BoundingSphere.distanceSquaredTo(a, position)
       );
     };
-    var expected = [array[2], array[0], array[1]];
+    const expected = [array[2], array[0], array[1]];
     mergeSort(array, comparator, position);
     expect(array).toEqual(expected);
   });

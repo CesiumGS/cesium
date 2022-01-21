@@ -7,11 +7,11 @@ import { SceneModePickerViewModel } from "../../../Source/Cesium.js";
 describe(
   "Widgets/SceneModePicker/SceneModePickerViewModel",
   function () {
-    var scene;
-    var ellipsoid = Ellipsoid.WGS84;
+    let scene;
+    const ellipsoid = Ellipsoid.WGS84;
     beforeEach(function () {
       scene = createScene();
-      var globe = new Globe(ellipsoid);
+      const globe = new Globe(ellipsoid);
       scene.globe = globe;
     });
 
@@ -20,7 +20,7 @@ describe(
     });
 
     it("Can construct and destroy", function () {
-      var viewModel = new SceneModePickerViewModel(scene, 1.0);
+      const viewModel = new SceneModePickerViewModel(scene, 1.0);
       expect(viewModel.scene).toBe(scene);
       expect(viewModel.duration).toEqual(1.0);
       expect(scene.morphStart.numberOfListeners).toEqual(1);
@@ -31,7 +31,7 @@ describe(
     });
 
     it("dropDownVisible and toggleDropDown work", function () {
-      var viewModel = new SceneModePickerViewModel(scene);
+      const viewModel = new SceneModePickerViewModel(scene);
 
       expect(viewModel.dropDownVisible).toEqual(false);
       viewModel.toggleDropDown();
@@ -43,7 +43,7 @@ describe(
     });
 
     it("morphing closes the dropDown", function () {
-      var viewModel = new SceneModePickerViewModel(scene);
+      const viewModel = new SceneModePickerViewModel(scene);
 
       viewModel.dropDownVisible = true;
       viewModel.morphToColumbusView();
@@ -61,7 +61,7 @@ describe(
     });
 
     it("morphing calls correct transition", function () {
-      var viewModel = new SceneModePickerViewModel(scene);
+      const viewModel = new SceneModePickerViewModel(scene);
 
       expect(scene.mode).toEqual(SceneMode.SCENE3D);
 
@@ -81,7 +81,7 @@ describe(
     });
 
     it("selectedTooltip changes on transition", function () {
-      var viewModel = new SceneModePickerViewModel(scene);
+      const viewModel = new SceneModePickerViewModel(scene);
 
       viewModel.morphToColumbusView();
       expect(viewModel.selectedTooltip).toEqual(viewModel.tooltipColumbusView);

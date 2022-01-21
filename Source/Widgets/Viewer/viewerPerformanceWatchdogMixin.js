@@ -32,7 +32,7 @@ function viewerPerformanceWatchdogMixin(viewer, options) {
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var performanceWatchdog = new PerformanceWatchdog({
+  const performanceWatchdog = new PerformanceWatchdog({
     scene: viewer.scene,
     container: viewer.bottomContainer,
     lowFrameRateMessage: options.lowFrameRateMessage,

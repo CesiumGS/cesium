@@ -261,8 +261,8 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
-  var value;
-  var batchTable = content.batchTable;
+  let value;
+  const batchTable = content.batchTable;
   if (defined(batchTable)) {
     value = batchTable.getPropertyBySemantic(batchId, name);
     if (defined(value)) {
@@ -275,7 +275,7 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  var tileMetadata = content.tile.metadata;
+  const tileMetadata = content.tile.metadata;
   if (defined(tileMetadata)) {
     value = tileMetadata.getPropertyBySemantic(name);
     if (defined(value)) {
@@ -288,7 +288,7 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  var groupMetadata = content.groupMetadata;
+  const groupMetadata = content.groupMetadata;
   if (defined(groupMetadata)) {
     value = groupMetadata.getPropertyBySemantic(name);
     if (defined(value)) {
@@ -301,7 +301,7 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  var tilesetMetadata = content.tileset.metadata;
+  let tilesetMetadata = content.tileset.metadata;
   if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
     tilesetMetadata = tilesetMetadata.tileset;
     value = tilesetMetadata.getPropertyBySemantic(name);

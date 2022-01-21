@@ -36,11 +36,11 @@ function NavigationHelpButton(options) {
   }
   //>>includeEnd('debug');
 
-  var container = getElement(options.container);
+  const container = getElement(options.container);
 
-  var viewModel = new NavigationHelpButtonViewModel();
+  const viewModel = new NavigationHelpButtonViewModel();
 
-  var showInsructionsDefault = defaultValue(
+  const showInsructionsDefault = defaultValue(
     options.instructionsInitiallyVisible,
     false
   );
@@ -49,11 +49,11 @@ function NavigationHelpButton(options) {
   viewModel._svgPath =
     "M16,1.466C7.973,1.466,1.466,7.973,1.466,16c0,8.027,6.507,14.534,14.534,14.534c8.027,0,14.534-6.507,14.534-14.534C30.534,7.973,24.027,1.466,16,1.466z M17.328,24.371h-2.707v-2.596h2.707V24.371zM17.328,19.003v0.858h-2.707v-1.057c0-3.19,3.63-3.696,3.63-5.963c0-1.034-0.924-1.826-2.134-1.826c-1.254,0-2.354,0.924-2.354,0.924l-1.541-1.915c0,0,1.519-1.584,4.137-1.584c2.487,0,4.796,1.54,4.796,4.136C21.156,16.208,17.328,16.627,17.328,19.003z";
 
-  var wrapper = document.createElement("span");
+  const wrapper = document.createElement("span");
   wrapper.className = "cesium-navigationHelpButton-wrapper";
   container.appendChild(wrapper);
 
-  var button = document.createElement("button");
+  const button = document.createElement("button");
   button.type = "button";
   button.className =
     "cesium-button cesium-toolbar-button cesium-navigation-help-button";
@@ -66,7 +66,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
   );
   wrapper.appendChild(button);
 
-  var instructionContainer = document.createElement("div");
+  const instructionContainer = document.createElement("div");
   instructionContainer.className = "cesium-navigation-help";
   instructionContainer.setAttribute(
     "data-bind",
@@ -74,7 +74,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
   );
   wrapper.appendChild(instructionContainer);
 
-  var mouseButton = document.createElement("button");
+  const mouseButton = document.createElement("button");
   mouseButton.type = "button";
   mouseButton.className =
     "cesium-navigation-button cesium-navigation-button-left";
@@ -82,7 +82,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "data-bind",
     'click: showClick, css: {"cesium-navigation-button-selected": !_touch, "cesium-navigation-button-unselected": _touch}'
   );
-  var mouseIcon = document.createElement("img");
+  const mouseIcon = document.createElement("img");
   mouseIcon.src = buildModuleUrl("Widgets/Images/NavigationHelp/Mouse.svg");
   mouseIcon.className = "cesium-navigation-button-icon";
   mouseIcon.style.width = "25px";
@@ -90,7 +90,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
   mouseButton.appendChild(mouseIcon);
   mouseButton.appendChild(document.createTextNode("Mouse"));
 
-  var touchButton = document.createElement("button");
+  const touchButton = document.createElement("button");
   touchButton.type = "button";
   touchButton.className =
     "cesium-navigation-button cesium-navigation-button-right";
@@ -98,7 +98,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "data-bind",
     'click: showTouch, css: {"cesium-navigation-button-selected": _touch, "cesium-navigation-button-unselected": !_touch}'
   );
-  var touchIcon = document.createElement("img");
+  const touchIcon = document.createElement("img");
   touchIcon.src = buildModuleUrl("Widgets/Images/NavigationHelp/Touch.svg");
   touchIcon.className = "cesium-navigation-button-icon";
   touchIcon.style.width = "25px";
@@ -109,7 +109,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
   instructionContainer.appendChild(mouseButton);
   instructionContainer.appendChild(touchButton);
 
-  var clickInstructions = document.createElement("div");
+  const clickInstructions = document.createElement("div");
   clickInstructions.className =
     "cesium-click-navigation-help cesium-navigation-help-instructions";
   clickInstructions.setAttribute(
@@ -152,7 +152,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
 
   instructionContainer.appendChild(clickInstructions);
 
-  var touchInstructions = document.createElement("div");
+  const touchInstructions = document.createElement("div");
   touchInstructions.className =
     "cesium-touch-navigation-help cesium-navigation-help-instructions";
   touchInstructions.setAttribute(

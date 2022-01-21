@@ -9,7 +9,7 @@ import FeatureDetection from "../Core/FeatureDetection.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-var MetadataComponentType = {
+const MetadataComponentType = {
   /**
    * An 8-bit signed integer
    *
@@ -403,8 +403,8 @@ MetadataComponentType.unnormalize = function (value, type) {
   }
   //>>includeEnd('debug');
 
-  var min = MetadataComponentType.getMinimum(type);
-  var max = MetadataComponentType.getMaximum(type);
+  const min = MetadataComponentType.getMinimum(type);
+  const max = MetadataComponentType.getMaximum(type);
 
   if (value >= 0.0) {
     value = value * Number(max);

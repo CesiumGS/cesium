@@ -69,20 +69,20 @@ AxisAlignedBoundingBox.fromPoints = function (positions, result) {
     return result;
   }
 
-  var minimumX = positions[0].x;
-  var minimumY = positions[0].y;
-  var minimumZ = positions[0].z;
+  let minimumX = positions[0].x;
+  let minimumY = positions[0].y;
+  let minimumZ = positions[0].z;
 
-  var maximumX = positions[0].x;
-  var maximumY = positions[0].y;
-  var maximumZ = positions[0].z;
+  let maximumX = positions[0].x;
+  let maximumY = positions[0].y;
+  let maximumZ = positions[0].z;
 
-  var length = positions.length;
-  for (var i = 1; i < length; i++) {
-    var p = positions[i];
-    var x = p.x;
-    var y = p.y;
-    var z = p.z;
+  const length = positions.length;
+  for (let i = 1; i < length; i++) {
+    const p = positions[i];
+    const x = p.x;
+    const y = p.y;
+    const z = p.z;
 
     minimumX = Math.min(x, minimumX);
     maximumX = Math.max(x, maximumX);
@@ -92,12 +92,12 @@ AxisAlignedBoundingBox.fromPoints = function (positions, result) {
     maximumZ = Math.max(z, maximumZ);
   }
 
-  var minimum = result.minimum;
+  const minimum = result.minimum;
   minimum.x = minimumX;
   minimum.y = minimumY;
   minimum.z = minimumZ;
 
-  var maximum = result.maximum;
+  const maximum = result.maximum;
   maximum.x = maximumX;
   maximum.y = maximumY;
   maximum.z = maximumZ;
@@ -148,7 +148,7 @@ AxisAlignedBoundingBox.equals = function (left, right) {
   );
 };
 
-var intersectScratch = new Cartesian3();
+let intersectScratch = new Cartesian3();
 /**
  * Determines which side of a plane a box is located.
  *
@@ -170,13 +170,17 @@ AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
     box.minimum,
     intersectScratch
   );
-  var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal
-  var normal = plane.normal;
-  var e =
+  const h = Cartesian3.multiplyByScalar(
+    intersectScratch,
+    0.5,
+    intersectScratch
+  ); //The positive half diagonal
+  const normal = plane.normal;
+  const e =
     h.x * Math.abs(normal.x) +
     h.y * Math.abs(normal.y) +
     h.z * Math.abs(normal.z);
-  var s = Cartesian3.dot(box.center, normal) + plane.distance; //signed distance from center
+  const s = Cartesian3.dot(box.center, normal) + plane.distance; //signed distance from center
 
   if (s - e > 0) {
     return Intersect.INSIDE;

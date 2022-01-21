@@ -5,7 +5,7 @@ import { Event } from "../Source/Cesium.js";
 function createGlobe(ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var globe = {
+  const globe = {
     callback: undefined,
     removedCallback: false,
     ellipsoid: ellipsoid,

@@ -28,10 +28,10 @@ function binarySearch(array, itemToFind, comparator) {
   Check.defined("comparator", comparator);
   //>>includeEnd('debug');
 
-  var low = 0;
-  var high = array.length - 1;
-  var i;
-  var comparison;
+  let low = 0;
+  let high = array.length - 1;
+  let i;
+  let comparison;
 
   while (low <= high) {
     i = ~~((low + high) / 2);

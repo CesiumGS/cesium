@@ -20,7 +20,7 @@ function getClipAndStyleCode(
   Check.typeOf.string("styleUniformName", styleUniformName);
   //>>includeEnd('debug');
 
-  var shaderCode =
+  const shaderCode =
     "    float clipDistance = clip(gl_FragCoord, " +
     samplerUniformName +
     ", " +

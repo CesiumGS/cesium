@@ -24,12 +24,12 @@ function HomeButton(container, scene, duration) {
 
   container = getElement(container);
 
-  var viewModel = new HomeButtonViewModel(scene, duration);
+  const viewModel = new HomeButtonViewModel(scene, duration);
 
   viewModel._svgPath =
     "M14,4l-10,8.75h20l-4.25-3.7188v-4.6562h-2.812v2.1875l-2.938-2.5625zm-7.0938,9.906v10.094h14.094v-10.094h-14.094zm2.1876,2.313h3.3122v4.25h-3.3122v-4.25zm5.8442,1.281h3.406v6.438h-3.406v-6.438z";
 
-  var element = document.createElement("button");
+  const element = document.createElement("button");
   element.type = "button";
   element.className = "cesium-button cesium-toolbar-button cesium-home-button";
   element.setAttribute(

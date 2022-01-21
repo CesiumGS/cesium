@@ -104,7 +104,7 @@ TimeIntervalCollectionProperty.prototype.getValue = function (time, result) {
   }
   //>>includeEnd('debug');
 
-  var value = this._intervals.findDataForIntervalContainingDate(time);
+  const value = this._intervals.findDataForIntervalContainingDate(time);
   if (defined(value) && typeof value.clone === "function") {
     return value.clone(result);
   }

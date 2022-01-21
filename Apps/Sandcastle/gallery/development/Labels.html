@@ -32,13 +32,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         function addLabel() {
           Sandcastle.declare(addLabel);
           scene.primitives.removeAll();
-          var labels = scene.primitives.add(new Cesium.LabelCollection());
+          const labels = scene.primitives.add(new Cesium.LabelCollection());
           labels.add({
             position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             text: "Philadelphia",
@@ -48,7 +48,7 @@
         function setFont() {
           Sandcastle.declare(setFont);
           scene.primitives.removeAll();
-          var labels = scene.primitives.add(new Cesium.LabelCollection());
+          const labels = scene.primitives.add(new Cesium.LabelCollection());
           labels.add({
             position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             text: "Philadelphia",
@@ -64,8 +64,8 @@
         function setProperties() {
           Sandcastle.declare(setProperties);
           scene.primitives.removeAll();
-          var labels = scene.primitives.add(new Cesium.LabelCollection());
-          var l = labels.add({
+          const labels = scene.primitives.add(new Cesium.LabelCollection());
+          const l = labels.add({
             position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             text: "Philadelphia",
           });
@@ -81,8 +81,8 @@
         function inReferenceFrame() {
           Sandcastle.declare(inReferenceFrame);
           scene.primitives.removeAll();
-          var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-          var labels = scene.primitives.add(new Cesium.LabelCollection());
+          const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+          const labels = scene.primitives.add(new Cesium.LabelCollection());
           labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             center
           );
@@ -115,9 +115,9 @@
         function offsetByDistance() {
           Sandcastle.declare(offsetByDistance);
           scene.primitives.removeAll();
-          var image = new Image();
+          const image = new Image();
           image.onload = function () {
-            var billboards = scene.primitives.add(
+            const billboards = scene.primitives.add(
               new Cesium.BillboardCollection()
             );
             billboards.add({
@@ -126,7 +126,7 @@
               image: image,
             });
 
-            var labels = scene.primitives.add(new Cesium.LabelCollection());
+            const labels = scene.primitives.add(new Cesium.LabelCollection());
             labels.add({
               position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
               text: "Label on top of scaling billboard",
@@ -148,7 +148,7 @@
         function fadeByDistance() {
           Sandcastle.declare(fadeByDistance);
           scene.primitives.removeAll();
-          var labels = scene.primitives.add(new Cesium.LabelCollection());
+          const labels = scene.primitives.add(new Cesium.LabelCollection());
           labels.add({
             position: Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
             text: "New York",

@@ -24,17 +24,17 @@
     while (base64String.length % 4 !== 0) {
       base64String += "=";
     }
-    var jsonString = pako.inflate(atob(base64String), {
+    let jsonString = pako.inflate(atob(base64String), {
       raw: true,
       to: "string",
     });
     // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
     jsonString = '["' + jsonString + '"]';
-    var json = JSON.parse(jsonString);
+    const json = JSON.parse(jsonString);
     // index 0 is code, index 1 is html
-    var code = json[0];
-    var html = json[1];
-    var baseHref = json[2];
+    const code = json[0];
+    const html = json[1];
+    const baseHref = json[2];
     return {
       code: code,
       html: html,

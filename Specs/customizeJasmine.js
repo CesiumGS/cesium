@@ -15,7 +15,7 @@ function customizeJasmine(
 
   window.specsUsingRelease = release;
 
-  var originalDescribe = window.describe;
+  const originalDescribe = window.describe;
 
   window.describe = function (name, suite, categories) {
     // exclude this spec if we're filtering by category and it's not the selected category
@@ -31,13 +31,13 @@ function customizeJasmine(
 
   // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
   // call done() when a returned promise resolves.
-  var originalIt = window.it;
+  const originalIt = window.it;
 
   window.it = function (description, f, timeout, categories) {
     originalIt(
       description,
       function (done) {
-        var result = f();
+        const result = f();
         when(
           result,
           function () {
@@ -53,11 +53,11 @@ function customizeJasmine(
     );
   };
 
-  var originalBeforeEach = window.beforeEach;
+  const originalBeforeEach = window.beforeEach;
 
   window.beforeEach = function (f) {
     originalBeforeEach(function (done) {
-      var result = f();
+      const result = f();
       when(
         result,
         function () {
@@ -70,11 +70,11 @@ function customizeJasmine(
     });
   };
 
-  var originalAfterEach = window.afterEach;
+  const originalAfterEach = window.afterEach;
 
   window.afterEach = function (f) {
     originalAfterEach(function (done) {
-      var result = f();
+      const result = f();
       when(
         result,
         function () {
@@ -87,11 +87,11 @@ function customizeJasmine(
     });
   };
 
-  var originalBeforeAll = window.beforeAll;
+  const originalBeforeAll = window.beforeAll;
 
   window.beforeAll = function (f) {
     originalBeforeAll(function (done) {
-      var result = f();
+      const result = f();
       when(
         result,
         function () {
@@ -104,11 +104,11 @@ function customizeJasmine(
     });
   };
 
-  var originalAfterAll = window.afterAll;
+  const originalAfterAll = window.afterAll;
 
   window.afterAll = function (f) {
     originalAfterAll(function (done) {
-      var result = f();
+      const result = f();
       when(
         result,
         function () {

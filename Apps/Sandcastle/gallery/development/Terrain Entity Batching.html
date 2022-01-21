@@ -35,16 +35,16 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var worldTerrain = Cesium.createWorldTerrain({
+        const worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
           requestVertexNormals: true,
         });
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
 
-        var concavePositions = [
+        const concavePositions = [
           new Cesium.Cartesian3(
             -2353381.4891308164,
             -3747386.1222378365,
@@ -118,15 +118,15 @@
         });
 
         // Randomly colored, nonoverlapping squares
-        var latitude = 46.2522;
-        var longitude = -122.2534;
+        const latitude = 46.2522;
+        const longitude = -122.2534;
 
         Cesium.Math.setRandomNumberSeed(133);
 
-        for (var x = 0; x < 10; ++x) {
-          for (var y = 0; y < 10; ++y) {
-            var cornerLat = latitude + 0.01 * x;
-            var cornerLon = longitude + 0.01 * y;
+        for (let x = 0; x < 10; ++x) {
+          for (let y = 0; y < 10; ++y) {
+            const cornerLat = latitude + 0.01 * x;
+            const cornerLon = longitude + 0.01 * y;
             viewer.entities.add({
               id: x + " " + y,
               rectangle: {
@@ -144,7 +144,7 @@
         }
 
         // Checkerboard
-        var checkerboard = new Cesium.CheckerboardMaterialProperty({
+        const checkerboard = new Cesium.CheckerboardMaterialProperty({
           evenColor: Cesium.Color.ORANGE,
           oddColor: Cesium.Color.YELLOW,
           repeat: new Cesium.Cartesian2(14, 14),
