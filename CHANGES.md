@@ -4,6 +4,7 @@
 
 ##### Additions :tada:
 
+- Added support for all types of feature IDs in `CustomShader`. [#10018](https://github.com/CesiumGS/cesium/pull/10018)
 - Added getters `Cesium3DTileFeature.featureId` and `ModelFeature.featureId` so the feature ID or batch ID can be accessed from a picked feature. [#10022](https://github.com/CesiumGS/cesium/pull/10022)
 - Added `I3dmLoader` to transcode .i3dm to `ModelExperimental`. [#9968](https://github.com/CesiumGS/cesium/pull/9968)
 - Added `PntsLoader` to transcode .pnts to `ModelExperimental`. [#9978](https://github.com/CesiumGS/cesium/pull/9978)
