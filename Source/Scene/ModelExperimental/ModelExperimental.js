@@ -597,8 +597,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
 
       this._featureIdIndex = value;
-      this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
-      this.resetDrawCommands();
+      if (defined(this._sceneGraph)) {
+        this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
+        this.resetDrawCommands();
+      }
     }
   },
 
@@ -624,8 +626,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
 
       this._instanceFeatureIdIndex = value;
-      this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
-      this.resetDrawCommands();
+      if (defined(this._sceneGraph)) {
+        this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
+        this.resetDrawCommands();
+      }
     }
   },
 });

@@ -204,6 +204,8 @@ An automatically-generated GLSL struct that contains attributes.
 struct VertexInput {
     // Processed attributes. See the Attributes Struct section below.
     Attributes attributes;
+    // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
+    FeatureIds featureIds;
     // In the future, metadata will be added here.
 };
 ```
@@ -217,6 +219,8 @@ variables for positions in various coordinate spaces.
 struct FragmentInput {
     // Processed attribute values. See the Attributes Struct section below.
     Attributes attributes;
+    // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
+    FeatureIds featureIds;
     // In the future, metadata will be added here.
 };
 ```
@@ -258,6 +262,18 @@ with an `N`.
 Custom attributes are also available, though they are renamed to use lowercase
 letters and underscores. For example, an attribute called `_SURFACE_TEMPERATURE`
 in the model would become `fsInput.attributes.surface_temperature` in the shader.
+
+## `FeatureIds` struct
+
+This struct is dynamically generated to gather all the various feature IDs into
+a single collection, regardless of whether the value came from an attribute,
+texture or varying.
+
+### 3D Tiles 1.0 Batch IDs
+
+### `EXT_mesh_features` Feature IDs
+
+### Legacy `EXT_feature_metadata` Feature IDs
 
 ## `czm_modelVertexOutput` struct
 
