@@ -436,35 +436,70 @@ FramebufferManager.prototype.destroyFramebuffer = function () {
 };
 
 FramebufferManager.prototype.destroy = function () {
-  if (this._color && this._createColorAttachments) {
+  if (this._color) {
     var i;
     var length = this._colorTextures.length;
     for (i = 0; i < length; ++i) {
       var texture = this._colorTextures[i];
-      if (defined(texture) && !texture.isDestroyed()) {
-        this._colorTextures[i].destroy();
+      if (this._createColorAttachments) {
+        if (defined(texture) && !texture.isDestroyed()) {
+          this._colorTextures[i].destroy();
+          this._colorTextures[i] = undefined;
+        }
+      }
+      if (defined(texture) && texture.isDestroyed()) {
         this._colorTextures[i] = undefined;
       }
       var renderbuffer = this._colorRenderbuffers[i];
-      if (defined(renderbuffer) && !renderbuffer.isDestroyed()) {
-        this._colorRenderbuffers[i].destroy();
+      if (this._createColorAttachments) {
+        if (defined(renderbuffer) && !renderbuffer.isDestroyed()) {
+          this._colorRenderbuffers[i].destroy();
+          this._colorRenderbuffers[i] = undefined;
+        }
+      }
+      if (defined(renderbuffer) && renderbuffer.isDestroyed()) {
         this._colorRenderbuffers[i] = undefined;
       }
     }
   }
 
-  if (this._depthStencil && this._createDepthAttachments) {
-    this._depthStencilTexture =
-      this._depthStencilTexture && this._depthStencilTexture.destroy();
-    this._depthStencilRenderbuffer =
-      this._depthStencilRenderbuffer &&
-      this._depthStencilRenderbuffer.destroy();
+  if (this._depthStencil) {
+    if (this._createDepthAttachments) {
+      this._depthStencilTexture =
+        this._depthStencilTexture && this._depthStencilTexture.destroy();
+      this._depthStencilRenderbuffer =
+        this._depthStencilRenderbuffer &&
+        this._depthStencilRenderbuffer.destroy();
+    }
+    if (
+      defined(this._depthStencilTexture) &&
+      this._depthStencilTexture.isDestroyed()
+    ) {
+      this._depthStencilTexture = undefined;
+    }
+    if (
+      defined(this._depthStencilRenderbuffer) &&
+      this._depthStencilRenderbuffer.isDestroyed()
+    ) {
+      this._depthStencilRenderbuffer = undefined;
+    }
   }
 
-  if (this._depth && this._createDepthAttachments) {
-    this._depthTexture = this._depthTexture && this._depthTexture.destroy();
-    this._depthRenderbuffer =
-      this._depthRenderbuffer && this._depthRenderbuffer.destroy();
+  if (this._depth) {
+    if (this._createDepthAttachments) {
+      this._depthTexture = this._depthTexture && this._depthTexture.destroy();
+      this._depthRenderbuffer =
+        this._depthRenderbuffer && this._depthRenderbuffer.destroy();
+    }
+    if (defined(this._depthTexture) && this._depthTexture.isDestroyed()) {
+      this._depthTexture = undefined;
+    }
+    if (
+      defined(this._depthRenderbuffer) &&
+      this._depthRenderbuffer.isDestroyed()
+    ) {
+      this._depthRenderbuffer = undefined;
+    }
   }
 
   this.destroyFramebuffer();

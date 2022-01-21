@@ -27,9 +27,11 @@ function InvertClassification() {
   this._depthStencilTexture = undefined;
   this._depthStencilRenderbuffer = undefined;
   this._fbo = new FramebufferManager({
+    depthStencil: true,
     createDepthAttachments: false,
   });
   this._fboClassified = new FramebufferManager({
+    depthStencil: true,
     createDepthAttachments: false,
   });
 
@@ -174,7 +176,7 @@ var opaqueFS =
 InvertClassification.prototype.update = function (
   context,
   numSamples,
-  globeFBM
+  globeFramebuffer
 ) {
   var texture = this._fbo.getColorTexture();
   var previousFramebufferChanged =
@@ -227,8 +229,8 @@ InvertClassification.prototype.update = function (
     var depthStencilTexture;
     var depthStencilRenderbuffer;
     if (defined(this._previousFramebuffer)) {
-      depthStencilTexture = globeFBM.getDepthStencilTexture();
-      depthStencilRenderbuffer = globeFBM.getDepthStencilRenderbuffer();
+      depthStencilTexture = globeFramebuffer.getDepthStencilTexture();
+      depthStencilRenderbuffer = globeFramebuffer.getDepthStencilRenderbuffer();
     } else {
       depthStencilTexture = this._depthStencilTexture;
       depthStencilRenderbuffer = this._depthStencilRenderbuffer;

@@ -3499,13 +3499,15 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   var environmentState = this._environmentState;
   var view = this._view;
   var globeDepth = view.globeDepth;
+  if (defined(globeDepth)) {
+    globeDepth.prepareTextures(context);
+  }
 
   var useOIT = environmentState.useOIT;
   var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
   var usePostProcess = environmentState.usePostProcess;
 
   var defaultFramebuffer = environmentState.originalFramebuffer;
-  globeDepth.prepareTextures(context);
   var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth : undefined;
   var sceneFramebuffer = view.sceneFramebuffer.framebuffer;
   var idFramebuffer = view.sceneFramebuffer.idFramebuffer;

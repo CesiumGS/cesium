@@ -5,11 +5,13 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ContextLimits from "./ContextLimits.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
+import createGuid from "../Core/createGuid.js";
 
 /**
  * @private
  */
 function Renderbuffer(options) {
+  this._id = createGuid();
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
