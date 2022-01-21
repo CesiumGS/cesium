@@ -177,8 +177,10 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   // Since this uses the ProcessedAttributes struct, the line is the same
   // for both vertex and fragment shader.
   var setIndex = featureIdAttribute.setIndex;
+  var prefix = variableName.replace(/_\d+$/, "_");
+
   var initializationLines = [
-    "featureIds." + variableName + " = attributes.featureId_" + setIndex + ";",
+    "featureIds." + variableName + " = attributes." + prefix + setIndex + ";",
   ];
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
@@ -309,7 +311,7 @@ function processTexture(
   var channel = textureReader.channels;
   var textureRead =
     "texture2D(" + uniformName + ", " + texCoord + ")." + channel;
-  var rounded = "floor(" + textureRead + " * 255.0 + 0.5);";
+  var rounded = "floor(" + textureRead + " * 255.0 + 0.5)";
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
     ["featureIds." + variableName + " = " + rounded + ";"]
