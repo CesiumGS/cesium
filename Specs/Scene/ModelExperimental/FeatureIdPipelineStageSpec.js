@@ -388,4 +388,4 @@ describe("Scene/ModelExperimental/FeatureIdPipelineStage", function() {
       expect(uniformMap).toEqual({});
     });
   });
-});
+}, "WebGL");

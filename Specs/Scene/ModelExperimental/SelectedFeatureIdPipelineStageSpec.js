@@ -179,4 +179,4 @@ describe("Scene/ModelExperimental/SelectedFeatureIdPipelineStage", function () {
       ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [_shadersSelectedFeatureIdStageCommon]);
     });
   });
-});
+}, "WebGL");
