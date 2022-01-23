@@ -9,6 +9,7 @@ import Ellipsoid from "../../Core/Ellipsoid.js";
 import FeatureDetection from "../../Core/FeatureDetection.js";
 import formatError from "../../Core/formatError.js";
 import requestAnimationFrame from "../../Core/requestAnimationFrame.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import createWorldImagery from "../../Scene/createWorldImagery.js";
 import Globe from "../../Scene/Globe.js";
@@ -373,7 +374,16 @@ function CesiumWidget(container, options) {
         that.showErrorPanel(title, undefined, error);
       }
     };
+
     scene.renderError.addEventListener(this._onRenderError);
+    canvas.addEventListener("webglcontextlost", function () {
+      that._onRenderError(
+        scene,
+        new RuntimeError(
+          "The browser lost webgl context, please refresh the page to restore functionality!"
+        )
+      );
+    });
   } catch (error) {
     if (showRenderLoopErrors) {
       var title = "Error constructing CesiumWidget.";
