@@ -272,12 +272,12 @@ function traverseSceneGraph(sceneGraph, node, transform) {
 ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
 ) {
-  var modelRenderResources = new ModelRenderResources(this._model);
+  var model = this._model;
+  var modelRenderResources = new ModelRenderResources(model);
 
   this.configurePipeline();
   var modelPipelineStages = this.modelPipelineStages;
 
-  var model = this.model;
   var i, j, k;
   for (i = 0; i < modelPipelineStages.length; i++) {
     var modelPipelineStage = modelPipelineStages[i];
