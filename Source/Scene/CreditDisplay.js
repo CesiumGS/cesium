@@ -366,7 +366,7 @@ CreditDisplay.prototype.addCredit = function (credit) {
 
   if (credit._isIon) {
     // If this is the an ion logo credit from the ion server
-    // Juse use the default credit (which is identical) to avoid blinking
+    // Just use the default credit (which is identical) to avoid blinking
     if (!defined(this._defaultCredit)) {
       this._defaultCredit = Credit.clone(getDefaultCredit());
     }

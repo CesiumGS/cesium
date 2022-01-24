@@ -2461,6 +2461,7 @@ function updateTiles(tileset, frameState, passOptions) {
   var emptyLength = emptyTiles.length;
   var tileVisible = tileset.tileVisible;
   var i;
+  var j;
   var tile;
 
   var bivariateVisibilityTest =
@@ -2491,6 +2492,15 @@ function updateTiles(tileset, frameState, passOptions) {
     // handler makes changes that update needs to apply to WebGL resources
     if (isRender) {
       tileVisible.raiseEvent(tile);
+
+      // Add tile credits
+      var tileCredits = tile.credits;
+      if (defined(tileCredits)) {
+        var tileCreditsLength = tileCredits.length;
+        for (j = 0; j < tileCreditsLength; ++j) {
+          frameState.creditDisplay.addCredit(tileCredits[j]);
+        }
+      }
     }
     tile.update(tileset, frameState, passOptions);
     statistics.incrementSelectionCounts(tile.content);

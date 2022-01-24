@@ -2,6 +2,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
+import Credit from "../Core/Credit.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -32,6 +33,7 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import hasExtension from "./hasExtension.js";
+import MetadataSemantic from "./MetadataSemantic.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
@@ -315,6 +317,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metadata = metadata;
+
+  this._credits = createCredits(metadata, parent, hasEmptyContent);
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -738,7 +742,44 @@ Object.defineProperties(Cesium3DTile.prototype, {
       return this._commandsLength;
     },
   },
+
+  /**
+   * Returns the tile credits.
+   *
+   * @readonly
+   *
+   * @private
+   */
+  credits: {
+    get: function () {
+      return this._credits;
+    },
+  },
 });
+
+function createCredits(metadata, parent, hasEmptyContent) {
+  if (hasEmptyContent) {
+    return undefined;
+  }
+
+  if (!defined(metadata)) {
+    return defined(parent) ? parent.credits : undefined;
+  }
+
+  var attribution = metadata.getPropertyBySemantic(
+    MetadataSemantic.ATTRIBUTION
+  );
+  if (!defined(attribution) || attribution.length === 0) {
+    return defined(parent) ? parent.credits : undefined;
+  }
+
+  var attributionLength = attribution.length;
+  var credits = new Array(attributionLength);
+  for (var i = 0; i < attributionLength; ++i) {
+    credits[i] = new Credit(attribution[i]);
+  }
+  return credits;
+}
 
 var scratchCartesian = new Cartesian3();
 function isPriorityDeferred(tile, frameState) {

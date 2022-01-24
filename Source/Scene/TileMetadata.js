@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
@@ -20,17 +21,18 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 export default function TileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var tile = options.tile;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tile", options.tile);
   //>>includeEnd('debug');
 
-  this._class = options.class;
+  var properties = defined(tile.properties) ? tile.properties : {};
 
-  var tileMetadata = options.tile;
-  this._properties = tileMetadata.properties;
-  this._extensions = tileMetadata.extensions;
-  this._extras = tileMetadata.extras;
+  this._class = options.class;
+  this._properties = properties;
+  this._extensions = tile.extensions;
+  this._extras = tile.extras;
 }
 
 Object.defineProperties(TileMetadata.prototype, {

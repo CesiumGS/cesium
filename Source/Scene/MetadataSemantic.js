@@ -33,6 +33,14 @@ var MetadataSemantic = {
    */
   DESCRIPTION: "DESCRIPTION",
   /**
+   * Attribution, stored as a variable-length array of <code>STRING</code> or variable-length array of <code>ENUM</code>.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  ATTRIBUTION: "ATTRIBUTION",
+  /**
    * A bounding box for a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in <code>3DTILES_implicit_tiling</code>
    *
    * @type {String}
