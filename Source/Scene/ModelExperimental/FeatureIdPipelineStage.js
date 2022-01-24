@@ -11,7 +11,9 @@ import FeatureIdStageFS from "../../Shaders/ModelExperimental/FeatureIdStageFS.j
 import FeatureIdStageVS from "../../Shaders/ModelExperimental/FeatureIdStageVS.js";
 
 /**
- * The feature ID pipeline stage is responsible for handling features in the model.
+ * The feature ID pipeline stage is responsible for processing feature IDs
+ * (both attributes and textures), updating the shader in preparation for
+ * custom shaders, picking, and/or styling.
  *
  * @namespace FeatureIdPipelineStage
  * @private
@@ -36,10 +38,10 @@ FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS =
 /**
  * Process a primitive. This modifies the following parts of the render resources:
  * <ul>
- *  <li>sets the defines for the feature ID attribute or texture coordinates to use for feature picking</li>
- *  <li>adds uniforms for the batch texture</li>
- *  <li>sets up varying for the feature coordinates</li>
- *  <li>adds vertex shader code for computing feature coordinates</li>
+ *  <li>Adds the FeatureIds struct and corresponding initialization functions in the vertex and fragment shader</li>
+ *  <li>For each feature ID attribute, the attributes were already uploaded in the geometry stage, so just update the shader code </li>
+ *  <li>For each feature ID implicit range, a new attribute is created and uploaded to the GPU since gl_VertexID is not available in WebGL 1. The shader is updated with an attribute, varying, and initialization code.</li>
+ *  <li>For each feature ID texture, the texture is added to the uniform map, and shader code is added to perform the texture read.</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.

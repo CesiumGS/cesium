@@ -4,7 +4,8 @@ import SelectedFeatureIdStageCommon from "../../Shaders/ModelExperimental/Select
 import ModelComponents from "../ModelComponents.js";
 
 /**
- * The feature ID pipeline stage is responsible for handling features in the model.
+ * The selected feature ID pipeline stage is responsible for handling the
+ * set of feature IDs selected for styling/picking.
  *
  * @namespace SelectedFeatureIdPipelineStage
  * @private
@@ -24,10 +25,8 @@ SelectedFeatureIdPipelineStage.FUNCTION_SIGNATURE_UPDATE_FEATURE =
 /**
  * Process a primitive. This modifies the following parts of the render resources:
  * <ul>
- *  <li>sets the defines for the feature ID attribute or texture coordinates to use for feature picking</li>
- *  <li>adds uniforms for the batch texture</li>
- *  <li>sets up varying for the feature coordinates</li>
- *  <li>adds vertex shader code for computing feature coordinates</li>
+ *  <li>sets the defines for the feature ID attribute to use for styling/picking</li>
+ *  <li>adds fields to the SelectedFeature struct in the shader</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
