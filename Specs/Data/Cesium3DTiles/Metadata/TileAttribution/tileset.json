@@ -18,6 +18,15 @@
               }
             }
           },
+          "group": {
+            "properties": {
+              "attribution": {
+                "semantic": "ATTRIBUTION",
+                "type": "ARRAY",
+                "componentType": "STRING"
+              }
+            }
+          },
           "tile": {
             "properties": {
               "attribution": {
@@ -35,6 +44,44 @@
           "attribution": [
             "<a href = \"https://github.com/CesiumGS/3d-tiles\" target=\"_blank\" rel=\"noopener\"><img alt=\"3D Tiles\" src=\"https://cesium.com/logo-kit/3d-tiles/3DTiles_light_color.png\" width=\"128\"></a>"
           ]
+        }
+      },
+      "groups": {
+        "groupA": {
+          "class": "group",
+          "properties": {
+            "attribution": [
+              "Attribution Group First",
+              "Attribution Group Second"
+            ]
+          }
+        },
+        "groupB": {
+          "class": "group",
+          "properties": {
+            "attribution": [
+              "Attribution Group First"
+            ]
+          }
+        },
+        "groupC": {
+          "class": "group"
+        },
+        "groupD": {
+          "class": "group",
+          "properties": {
+            "attribution": [
+              "Attribution Group Third"
+            ]
+          }
+        },
+        "groupE": {
+          "class": "group",
+          "properties": {
+            "attribution": [
+              "Attribution Group Fourth"
+            ]
+          }
         }
       }
     }
@@ -90,7 +137,12 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ll.b3dm"
+          "uri": "ll.b3dm",
+          "extensions": {
+            "3DTILES_metadata": {
+              "group": "groupA"
+            }
+          }
         },
         "extensions": {
           "3DTILES_metadata": {
@@ -118,7 +170,12 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "lr.b3dm"
+          "uri": "lr.b3dm",
+          "extensions": {
+            "3DTILES_metadata": {
+              "group": "groupB"
+            }
+          }
         },
         "extensions": {
           "3DTILES_metadata": {
@@ -144,7 +201,12 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ur.b3dm"
+          "uri": "ur.b3dm",
+          "extensions": {
+            "3DTILES_metadata": {
+              "group": "groupC"
+            }
+          }
         },
         "extensions": {
           "3DTILES_metadata": {
@@ -165,7 +227,47 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ul.b3dm"
+          "uri": "ul.b3dm",
+          "extensions": {
+            "3DTILES_metadata": {
+              "group": "groupC"
+            }
+          }
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197004795898053,
+            0.6988582109,
+            -1.3196595204101946,
+            0.6988897891,
+            0,
+            30
+          ]
+        },
+        "geometricError": 0,
+        "extensions": {
+          "3DTILES_multiple_contents": {
+            "content": [
+              {
+                "uri": "batched.b3dm",
+                "extensions": {
+                  "3DTILES_metadata": {
+                    "group": "groupD"
+                  }
+                }
+              },
+              {
+                "uri": "instanced.i3dm",
+                "extensions": {
+                  "3DTILES_metadata": {
+                    "group": "groupE"
+                  }
+                }
+              }
+            ]
+          }
         }
       }
     ]

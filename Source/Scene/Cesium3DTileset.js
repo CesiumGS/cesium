@@ -176,6 +176,7 @@ function Cesium3DTileset(options) {
   this._previousModelMatrix = undefined;
   this._extras = undefined;
   this._credits = undefined;
+  this._creditsByGroup = undefined;
 
   this._cullWithChildrenBounds = defaultValue(
     options.cullWithChildrenBounds,
@@ -1009,6 +1010,7 @@ function Cesium3DTileset(options) {
 
       var i;
       var credits = defined(that._credits) ? that._credits : [];
+      var creditsByGroup = {};
 
       var extras = asset.extras;
       if (
@@ -1023,20 +1025,49 @@ function Cesium3DTileset(options) {
         }
       }
 
-      if (defined(that.metadata) && defined(that.metadata.tileset)) {
-        var attribution = that.metadata.tileset.getPropertyBySemantic(
-          MetadataSemantic.ATTRIBUTION
-        );
-        if (defined(attribution)) {
-          var attributionLength = attribution.length;
-          for (i = 0; i < attributionLength; ++i) {
-            credits.push(new Credit(attribution[i]));
+      if (defined(that.metadata)) {
+        var tilesetMetadata = that.metadata.tileset;
+        var groupsMetadata = that.metadata.groups;
+
+        if (defined(tilesetMetadata)) {
+          var tilesetAttribution = tilesetMetadata.getPropertyBySemantic(
+            MetadataSemantic.ATTRIBUTION
+          );
+          if (defined(tilesetAttribution)) {
+            var tilesetAttributionLength = tilesetAttribution.length;
+            for (i = 0; i < tilesetAttributionLength; ++i) {
+              credits.push(new Credit(tilesetAttribution[i]));
+            }
+          }
+        }
+        if (defined(groupsMetadata)) {
+          for (var groupId in groupsMetadata) {
+            if (groupsMetadata.hasOwnProperty(groupId)) {
+              var groupMetadata = groupsMetadata[groupId];
+              var groupAttribution = groupMetadata.getPropertyBySemantic(
+                MetadataSemantic.ATTRIBUTION
+              );
+              if (defined(groupAttribution)) {
+                var groupAttributionLength = groupAttribution.length;
+                if (groupAttributionLength > 0) {
+                  var groupCredits = new Array(groupAttributionLength);
+                  for (i = 0; i < groupAttributionLength; ++i) {
+                    groupCredits[i] = new Credit(groupAttribution[i]);
+                  }
+                  creditsByGroup[groupId] = groupCredits;
+                }
+              }
+            }
           }
         }
       }
 
       if (credits.length > 0) {
         that._credits = credits;
+      }
+
+      if (Object.keys(creditsByGroup).length > 0) {
+        that._creditsByGroup = creditsByGroup;
       }
 
       // Save the original, untransformed bounding volume position so we can apply
@@ -2463,6 +2494,44 @@ function updateTileDebugLabels(tileset, frameState) {
   tileset._tileDebugLabels.update(frameState);
 }
 
+function addGroupCredits(tileset, content, frameState) {
+  if (!defined(tileset._creditsByGroup)) {
+    return;
+  }
+
+  var i;
+  var innerContents = content.innerContents;
+  if (defined(innerContents)) {
+    var length = innerContents.length;
+    for (i = 0; i < length; ++i) {
+      addGroupCredits(tileset, innerContents[i], frameState);
+    }
+    return;
+  }
+
+  var groupMetadata = content.groupMetadata;
+  if (defined(groupMetadata)) {
+    var groupId = groupMetadata.id;
+    var groupCredits = tileset._creditsByGroup[groupId];
+    if (defined(groupCredits)) {
+      var groupCreditsLength = groupCredits.length;
+      for (i = 0; i < groupCreditsLength; ++i) {
+        frameState.creditDisplay.addCredit(groupCredits[i]);
+      }
+    }
+  }
+}
+
+function addTileCredits(tile, frameState) {
+  var tileCredits = tile.credits;
+  if (defined(tileCredits)) {
+    var tileCreditsLength = tileCredits.length;
+    for (var i = 0; i < tileCreditsLength; ++i) {
+      frameState.creditDisplay.addCredit(tileCredits[i]);
+    }
+  }
+}
+
 function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
 
@@ -2507,15 +2576,8 @@ function updateTiles(tileset, frameState, passOptions) {
     // handler makes changes that update needs to apply to WebGL resources
     if (isRender) {
       tileVisible.raiseEvent(tile);
-
-      // Add tile credits
-      var tileCredits = tile.credits;
-      if (defined(tileCredits)) {
-        var tileCreditsLength = tileCredits.length;
-        for (j = 0; j < tileCreditsLength; ++j) {
-          frameState.creditDisplay.addCredit(tileCredits[j]);
-        }
-      }
+      addTileCredits(tile, frameState);
+      addGroupCredits(tileset, tile.content, frameState);
     }
     tile.update(tileset, frameState, passOptions);
     statistics.incrementSelectionCounts(tile.content);
